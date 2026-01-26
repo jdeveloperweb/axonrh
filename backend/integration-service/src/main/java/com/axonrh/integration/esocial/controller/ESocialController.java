@@ -1,7 +1,6 @@
 package com.axonrh.integration.esocial.controller;
 
 import com.axonrh.integration.esocial.entity.ESocialEvent;
-import com.axonrh.integration.esocial.entity.enums.ESocialEventStatus;
 import com.axonrh.integration.esocial.entity.enums.ESocialEventType;
 import com.axonrh.integration.esocial.service.ESocialService;
 import com.axonrh.integration.esocial.service.ESocialTransmitter;

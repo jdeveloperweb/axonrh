@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -33,146 +34,47 @@ public class ESocialService {
 
     // ==================== Event Creation ====================
 
-    public ESocialEvent createEvent(UUID tenantId, ESocialEventType eventType, UUID employeeId, Object eventData) {
-        return switch (eventType) {
-            case S_2200 -> createS2200(tenantId, employeeId, eventData);
-            case S_2206 -> createS2206(tenantId, employeeId, eventData);
-            case S_2299 -> createS2299(tenantId, employeeId, eventData);
+    public ESocialEvent createEvent(UUID tenantId,
+                                    ESocialEventType eventType,
+                                    UUID employeeId,
+                                    Map<String, Object> eventData) {
+        String xml = switch (eventType) {
+            case S_2200 -> xmlGenerator.generateS2200(eventData);
+            case S_2206 -> xmlGenerator.generateS2206(eventData);
+            case S_2299 -> xmlGenerator.generateS2299(eventData);
+            default -> throw new IllegalArgumentException("Tipo de evento nao suportado: " + eventType);
         };
+
+        ESocialEvent event = new ESocialEvent();
+        event.setTenantId(tenantId);
+        event.setEventType(eventType);
+        event.setReferenceId(employeeId);
+        event.setReferenceType(referenceTypeFor(eventType));
+        event.setXmlContent(xml);
+
+        return eventRepository.save(event);
     }
 
     public ESocialEvent createS2200(UUID tenantId, UUID employeeId, Object employeeData) {
-        String xml = xmlGenerator.generateS2200(employeeData);
-
-        ESocialEvent event = new ESocialEvent();
-        event.setTenantId(tenantId);
-        event.setEventType(ESocialEventType.S_2200);
-        event.setReferenceId(employeeId);
-        event.setReferenceType("EMPLOYEE");
-        event.setXmlContent(xml);
-
-        return eventRepository.save(event);
+        return createEvent(tenantId, ESocialEventType.S_2200, employeeId, Map.of("payload", employeeData));
     }
 
     public ESocialEvent createS2206(UUID tenantId, UUID employeeId, Object contractChange) {
-        String xml = xmlGenerator.generateS2206(contractChange);
-
-        ESocialEvent event = new ESocialEvent();
-        event.setTenantId(tenantId);
-        event.setEventType(ESocialEventType.S_2206);
-        event.setReferenceId(employeeId);
-        event.setReferenceType("CONTRACT_CHANGE");
-        event.setXmlContent(xml);
-
-        return eventRepository.save(event);
+        return createEvent(tenantId, ESocialEventType.S_2206, employeeId, Map.of("payload", contractChange));
     }
 
     public ESocialEvent createS2299(UUID tenantId, UUID employeeId, Object termination) {
-        String xml = xmlGenerator.generateS2299(termination);
-
-        ESocialEvent event = new ESocialEvent();
-        event.setTenantId(tenantId);
-        event.setEventType(ESocialEventType.S_2299);
-        event.setReferenceId(employeeId);
-        event.setReferenceType("TERMINATION");
-        event.setXmlContent(xml);
-
-        return eventRepository.save(event);
+        return createEvent(tenantId, ESocialEventType.S_2299, employeeId, Map.of("payload", termination));
     }
 
     // ==================== Transmission ====================
 
-    public ESocialEvent sendEvent(UUID tenantId, UUID eventId) {
-        ESocialEvent event = getEvent(tenantId, eventId);
+    public ESocialTransmitter.TransmissionResult transmitEvent(UUID tenantId, UUID eventId) {
+        ESocialEvent event = getEventOrThrow(tenantId, eventId);
 
         if (event.getStatus() != ESocialEventStatus.PENDING) {
             throw new IllegalStateException("Evento ja foi enviado ou processado");
         }
-
-        try {
-            // Assinar XML
-            String signedXml = transmitter.signXml(event.getXmlContent(), tenantId);
-            event.setXmlSigned(signedXml);
-
-            // Transmitir
-            ESocialTransmitter.TransmissionResult result = transmitter.sendBatch(signedXml, tenantId);
-
-            if (result.isSuccess()) {
-                event.markAsSent(result.getProtocolNumber());
-            } else {
-                event.markAsError(result.getErrorMessage());
-            }
-        } catch (Exception e) {
-            event.markAsError(e.getMessage());
-        }
-
-        return eventRepository.save(event);
-    }
-
-    public void sendPendingEvents(UUID tenantId) {
-        List<ESocialEvent> pending = eventRepository.findByTenantIdAndStatus(tenantId, ESocialEventStatus.PENDING);
-        for (ESocialEvent event : pending) {
-            sendEvent(tenantId, event.getId());
-        }
-    }
-
-    // ==================== Query ====================
-
-    public ESocialEvent queryEventStatus(UUID tenantId, UUID eventId) {
-        ESocialEvent event = getEvent(tenantId, eventId);
-
-        if (event.getStatus() != ESocialEventStatus.SENT) {
-            return event;
-        }
-
-        try {
-            ESocialTransmitter.TransmissionResult result = transmitter.consultBatch(event.getProtocolNumber(), tenantId);
-
-            if (result.isSuccess() && result.getReceiptNumber() != null) {
-                event.markAsAccepted(result.getReceiptNumber());
-            } else if (!result.isSuccess()) {
-                event.markAsRejected("CONSULTA_FALHA", result.getErrorMessage());
-            }
-        } catch (Exception e) {
-            // Nao altera status, apenas registra tentativa
-        }
-
-        return eventRepository.save(event);
-    }
-
-    // ==================== CRUD ====================
-
-    public ESocialEvent getEvent(UUID tenantId, UUID eventId) {
-        return eventRepository.findByTenantIdAndId(tenantId, eventId)
-                .orElseThrow(() -> new EntityNotFoundException("Evento nao encontrado"));
-    }
-
-    public Page<ESocialEvent> listEvents(UUID tenantId, Pageable pageable) {
-        return eventRepository.findByTenantId(tenantId, pageable);
-    }
-
-    public List<ESocialEvent> listEvents(UUID tenantId) {
-        return eventRepository.findByTenantId(tenantId, Pageable.unpaged()).getContent();
-    }
-
-    public List<ESocialEvent> listByStatus(UUID tenantId, ESocialEventStatus status) {
-        return eventRepository.findByTenantIdAndStatus(tenantId, status);
-    }
-
-    public List<ESocialEvent> listByReference(UUID tenantId, UUID referenceId, String referenceType) {
-        return eventRepository.findByTenantIdAndReferenceIdAndReferenceType(tenantId, referenceId, referenceType);
-    }
-
-    public List<ESocialEvent> getPendingEvents(UUID tenantId) {
-        return eventRepository.findPendingEvents(tenantId);
-    }
-
-    public List<ESocialEvent> getEventsByEmployee(UUID tenantId, UUID employeeId) {
-        return eventRepository.findByTenantIdAndReferenceIdAndReferenceType(tenantId, employeeId, "EMPLOYEE");
-    }
-
-    public ESocialTransmitter.TransmissionResult transmitEvent(UUID tenantId, UUID eventId) {
-        ESocialEvent event = getEvent(tenantId, eventId);
 
         try {
             String signedXml = transmitter.signXml(event.getXmlContent(), tenantId);
@@ -191,7 +93,7 @@ public class ESocialService {
         } catch (Exception e) {
             event.markAsError(e.getMessage());
             eventRepository.save(event);
-            return buildErrorResult(e.getMessage());
+            return failedTransmissionResult(e.getMessage());
         }
     }
 
@@ -202,59 +104,97 @@ public class ESocialService {
     }
 
     public ESocialTransmitter.TransmissionResult consultEvent(UUID tenantId, UUID eventId) {
-        ESocialEvent event = getEvent(tenantId, eventId);
+        ESocialEvent event = getEventOrThrow(tenantId, eventId);
+
         if (event.getProtocolNumber() == null) {
-            return buildErrorResult("Evento sem protocolo para consulta");
+            return failedTransmissionResult("Evento sem protocolo para consulta");
         }
 
         try {
-            ESocialTransmitter.TransmissionResult result = transmitter.consultBatch(event.getProtocolNumber(), tenantId);
+            ESocialTransmitter.TransmissionResult result =
+                    transmitter.consultBatch(event.getProtocolNumber(), tenantId);
+
             if (result.isSuccess() && result.getReceiptNumber() != null) {
                 event.markAsAccepted(result.getReceiptNumber());
-            } else if (!result.isSuccess()) {
-                event.markAsRejected("CONSULTA_FALHA", result.getErrorMessage());
+            } else if (!result.isSuccess() && "ERROR".equalsIgnoreCase(result.getStatus())) {
+                event.markAsError(result.getErrorMessage());
             }
+
             eventRepository.save(event);
             return result;
         } catch (Exception e) {
             event.markAsError(e.getMessage());
             eventRepository.save(event);
-            return buildErrorResult(e.getMessage());
+            return failedTransmissionResult(e.getMessage());
         }
     }
 
     public ESocialEvent retryEvent(UUID tenantId, UUID eventId) {
-        ESocialEvent event = getEvent(tenantId, eventId);
+        ESocialEvent event = getEventOrThrow(tenantId, eventId);
+
         if (!event.canRetry(3)) {
-            return event;
+            throw new IllegalStateException("Evento nao pode ser reenviado");
         }
 
+        event.setStatus(ESocialEventStatus.PENDING);
+        event.setLastError(null);
+        event.setProtocolNumber(null);
+        event.setReceiptNumber(null);
+
+        eventRepository.save(event);
         transmitEvent(tenantId, eventId);
-        return getEvent(tenantId, eventId);
+
+        return getEventOrThrow(tenantId, eventId);
     }
 
     public ESocialEvent cancelEvent(UUID tenantId, UUID eventId, String reason) {
-        ESocialEvent event = getEvent(tenantId, eventId);
-        event.markAsRejected("CANCELLED", reason != null ? reason : "Cancelado");
+        ESocialEvent event = getEventOrThrow(tenantId, eventId);
+        event.markAsRejected("CANCELLED", reason);
         return eventRepository.save(event);
+    }
+
+    // ==================== CRUD ====================
+
+    public Optional<ESocialEvent> getEvent(UUID tenantId, UUID eventId) {
+        return eventRepository.findByTenantIdAndId(tenantId, eventId);
+    }
+
+    public ESocialEvent getEventOrThrow(UUID tenantId, UUID eventId) {
+        return getEvent(tenantId, eventId)
+                .orElseThrow(() -> new EntityNotFoundException("Evento nao encontrado"));
+    }
+
+    public Page<ESocialEvent> listEvents(UUID tenantId, Pageable pageable) {
+        return eventRepository.findByTenantId(tenantId, pageable);
+    }
+
+    public List<ESocialEvent> getPendingEvents(UUID tenantId) {
+        return eventRepository.findPendingEvents(tenantId);
+    }
+
+    public List<ESocialEvent> getEventsByEmployee(UUID tenantId, UUID employeeId) {
+        return eventRepository.findByTenantIdAndReferenceIdAndReferenceType(
+                tenantId,
+                employeeId,
+                "EMPLOYEE"
+        );
     }
 
     // ==================== Statistics ====================
 
     public ESocialStatistics getStatistics(UUID tenantId) {
+        long total = eventRepository.countByTenantId(tenantId);
         long pending = eventRepository.countByTenantIdAndStatus(tenantId, ESocialEventStatus.PENDING);
         long transmitted = eventRepository.countByTenantIdAndStatus(tenantId, ESocialEventStatus.SENT);
-        long accepted = eventRepository.countByTenantIdAndStatus(tenantId, ESocialEventStatus.ACCEPTED);
-        long rejected = eventRepository.countByTenantIdAndStatus(tenantId, ESocialEventStatus.REJECTED);
+        long processed = eventRepository.countByTenantIdAndStatus(tenantId, ESocialEventStatus.ACCEPTED)
+                + eventRepository.countByTenantIdAndStatus(tenantId, ESocialEventStatus.REJECTED);
         long error = eventRepository.countByTenantIdAndStatus(tenantId, ESocialEventStatus.ERROR);
 
-        long processed = accepted + rejected;
-        long total = pending + transmitted + processed + error;
-
-        Map<ESocialEventType, Long> byEventType = new HashMap<>();
-        for (Object[] row : eventRepository.countByEventType(tenantId)) {
-            byEventType.put((ESocialEventType) row[0], (Long) row[1]);
-        }
+        Map<String, Long> byEventType = eventRepository.countByEventType(tenantId).stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        entry -> ((ESocialEventType) entry[0]).name(),
+                        entry -> (Long) entry[1]
+                ));
 
         return new ESocialStatistics(total, pending, transmitted, processed, error, byEventType);
     }
@@ -265,14 +205,23 @@ public class ESocialService {
             long transmitted,
             long processed,
             long error,
-            Map<ESocialEventType, Long> byEventType
+            Map<String, Long> byEventType
     ) {}
 
-    private ESocialTransmitter.TransmissionResult buildErrorResult(String message) {
+    private String referenceTypeFor(ESocialEventType eventType) {
+        return switch (eventType) {
+            case S_2200 -> "EMPLOYEE";
+            case S_2206 -> "CONTRACT_CHANGE";
+            case S_2299 -> "TERMINATION";
+            default -> "UNKNOWN";
+        };
+    }
+
+    private ESocialTransmitter.TransmissionResult failedTransmissionResult(String errorMessage) {
         ESocialTransmitter.TransmissionResult result = new ESocialTransmitter.TransmissionResult();
         result.setSuccess(false);
         result.setStatus("ERROR");
-        result.setErrorMessage(message);
+        result.setErrorMessage(errorMessage);
         return result;
     }
 }

@@ -22,6 +22,8 @@ public interface ESocialEventRepository extends JpaRepository<ESocialEvent, UUID
 
     Page<ESocialEvent> findByTenantId(UUID tenantId, Pageable pageable);
 
+    long countByTenantId(UUID tenantId);
+
     List<ESocialEvent> findByTenantIdAndStatus(UUID tenantId, ESocialEventStatus status);
 
     List<ESocialEvent> findByTenantIdAndEventType(UUID tenantId, ESocialEventType eventType);
@@ -40,9 +42,12 @@ public interface ESocialEventRepository extends JpaRepository<ESocialEvent, UUID
                                            @Param("maxRetries") int maxRetries);
 
     @Query("SELECT e FROM ESocialEvent e WHERE e.tenantId = :tenantId " +
-           "AND e.employeeId = :employeeId ORDER BY e.createdAt DESC")
-    List<ESocialEvent> findByEmployee(@Param("tenantId") UUID tenantId,
-                                      @Param("employeeId") UUID employeeId);
+           "AND e.referenceId = :referenceId AND e.referenceType = :referenceType " +
+           "ORDER BY e.createdAt DESC")
+    List<ESocialEvent> findByTenantIdAndReferenceIdAndReferenceType(
+            @Param("tenantId") UUID tenantId,
+            @Param("referenceId") UUID referenceId,
+            @Param("referenceType") String referenceType);
 
     @Query("SELECT e FROM ESocialEvent e WHERE e.tenantId = :tenantId " +
            "AND e.createdAt BETWEEN :startDate AND :endDate")
@@ -62,6 +67,6 @@ public interface ESocialEventRepository extends JpaRepository<ESocialEvent, UUID
 
     long countByTenantIdAndStatus(UUID tenantId, ESocialEventStatus status);
 
-    boolean existsByTenantIdAndEmployeeIdAndEventTypeAndStatusIn(
-            UUID tenantId, UUID employeeId, ESocialEventType eventType, List<ESocialEventStatus> statuses);
+    boolean existsByTenantIdAndReferenceIdAndEventTypeAndStatusIn(
+            UUID tenantId, UUID referenceId, ESocialEventType eventType, List<ESocialEventStatus> statuses);
 }

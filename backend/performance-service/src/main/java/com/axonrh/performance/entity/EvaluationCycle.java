@@ -155,10 +155,16 @@ public class EvaluationCycle {
     }
 
     public void activate() {
+        if (this.status != CycleStatus.DRAFT) {
+            throw new IllegalStateException("Apenas ciclos em rascunho podem ser ativados");
+        }
         this.status = CycleStatus.ACTIVE;
     }
 
     public void complete() {
+        if (this.status == CycleStatus.COMPLETED) {
+            throw new IllegalStateException("Ciclo ja foi concluido");
+        }
         this.status = CycleStatus.COMPLETED;
     }
 }
