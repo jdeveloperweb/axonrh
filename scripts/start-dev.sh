@@ -31,6 +31,28 @@ check_docker() {
     echo -e "${GREEN}✓ Docker is running${NC}"
 }
 
+check_pm2() {
+    if ! command -v pm2 > /dev/null 2>&1; then
+        echo -e "${RED}pm2 is not installed. Please install it with: npm install -g pm2${NC}"
+        exit 1
+    fi
+    echo -e "${GREEN}✓ pm2 is available${NC}"
+}
+
+git_pull() {
+    echo -e "\n${YELLOW}Pulling latest changes...${NC}"
+    cd "$PROJECT_ROOT"
+    git pull
+}
+
+pm2_delete_if_exists() {
+    local process_name="$1"
+    if pm2 describe "$process_name" > /dev/null 2>&1; then
+        echo -e "${YELLOW}Stopping existing pm2 process: ${process_name}${NC}"
+        pm2 delete "$process_name"
+    fi
+}
+
 # Start infrastructure services (PostgreSQL, MongoDB, Redis, etc.)
 start_infrastructure() {
     echo -e "\n${YELLOW}Starting infrastructure services...${NC}"
@@ -143,13 +165,13 @@ start_backend() {
     echo -e "${YELLOW}Building backend services...${NC}"
     ./mvnw clean package -DskipTests -T 4
 
-    # Start services in background
-    echo -e "${YELLOW}Starting microservices...${NC}"
+    # Start services with pm2
+    echo -e "${YELLOW}Starting microservices with pm2...${NC}"
 
     # Start config-service first
     echo -e "Starting config-service..."
-    cd "$PROJECT_ROOT/backend/config-service"
-    nohup ../mvnw spring-boot:run > /tmp/config-service.log 2>&1 &
+    pm2_delete_if_exists "axonrh-config-service"
+    pm2 start ../mvnw --name "axonrh-config-service" --cwd "$PROJECT_ROOT/backend/config-service" -- spring-boot:run
     sleep 10
 
     # Start remaining services
@@ -168,15 +190,15 @@ start_backend() {
 
     for service in "${services[@]}"; do
         echo -e "Starting ${service}..."
-        cd "$PROJECT_ROOT/backend/${service}"
-        nohup ../mvnw spring-boot:run > "/tmp/${service}.log" 2>&1 &
+        pm2_delete_if_exists "axonrh-${service}"
+        pm2 start ../mvnw --name "axonrh-${service}" --cwd "$PROJECT_ROOT/backend/${service}" -- spring-boot:run
         sleep 5
     done
 
     # Start api-gateway last
     echo -e "Starting api-gateway..."
-    cd "$PROJECT_ROOT/backend/api-gateway"
-    nohup ../mvnw spring-boot:run > /tmp/api-gateway.log 2>&1 &
+    pm2_delete_if_exists "axonrh-api-gateway"
+    pm2 start ../mvnw --name "axonrh-api-gateway" --cwd "$PROJECT_ROOT/backend/api-gateway" -- spring-boot:run
 
     echo -e "${GREEN}✓ Backend services starting...${NC}"
     echo -e "  - Config Service: http://localhost:8888"
@@ -198,31 +220,120 @@ start_frontend() {
     fi
 
     # Start Next.js development server
-    echo -e "${YELLOW}Starting Next.js development server...${NC}"
-    npm run dev &
+    echo -e "${YELLOW}Starting Next.js development server with pm2...${NC}"
+    pm2_delete_if_exists "axonrh-frontend"
+    pm2 start npm --name "axonrh-frontend" --cwd "$PROJECT_ROOT/frontend/web" -- run dev
 
     echo -e "${GREEN}✓ Frontend started at http://localhost:3000${NC}"
 }
 
+# Start a single backend service with pm2
+start_single_backend_service() {
+    local service="$1"
+
+    cd "$PROJECT_ROOT/backend"
+
+    if [ ! -f "mvnw" ]; then
+        echo -e "${YELLOW}Creating Maven wrapper...${NC}"
+        mvn -N wrapper:wrapper
+    fi
+
+    chmod +x mvnw
+
+    echo -e "${YELLOW}Building ${service}...${NC}"
+    ./mvnw -pl "${service}" -am clean package -DskipTests
+
+    echo -e "${YELLOW}Starting ${service} with pm2...${NC}"
+    pm2_delete_if_exists "axonrh-${service}"
+    pm2 start ../mvnw --name "axonrh-${service}" --cwd "$PROJECT_ROOT/backend/${service}" -- spring-boot:run
+}
+
+select_backend_service() {
+    local services=(
+        "config-service"
+        "auth-service"
+        "core-service"
+        "employee-service"
+        "timesheet-service"
+        "vacation-service"
+        "performance-service"
+        "learning-service"
+        "ai-assistant-service"
+        "notification-service"
+        "integration-service"
+        "api-gateway"
+    )
+
+    echo -e "\n${YELLOW}Select a backend service to redeploy:${NC}"
+    select service in "${services[@]}"; do
+        if [ -n "$service" ]; then
+            start_single_backend_service "$service"
+            break
+        else
+            echo -e "${RED}Invalid option. Please try again.${NC}"
+        fi
+    done
+}
+
+menu() {
+    echo -e "\n${BLUE}========================================${NC}"
+    echo -e "${BLUE}   Redeploy menu - AxonRH               ${NC}"
+    echo -e "${BLUE}========================================${NC}"
+    echo -e "${YELLOW}Choose an option:${NC}"
+    echo -e "  1) Redeploy all (infra + backend + frontend)"
+    echo -e "  2) Redeploy backend (all services)"
+    echo -e "  3) Redeploy a single backend service"
+    echo -e "  4) Redeploy frontend only"
+    echo -e "  5) Start infrastructure only"
+    echo -e "  6) Exit"
+
+    read -r -p "Enter your choice [1-6]: " choice
+
+    case "$choice" in
+        1)
+            check_docker
+            check_pm2
+            git_pull
+            start_infrastructure
+            wait_for_postgres
+            start_backend
+            start_frontend
+            ;;
+        2)
+            check_docker
+            check_pm2
+            git_pull
+            start_backend
+            ;;
+        3)
+            check_pm2
+            git_pull
+            select_backend_service
+            ;;
+        4)
+            check_pm2
+            git_pull
+            start_frontend
+            ;;
+        5)
+            check_docker
+            start_infrastructure
+            wait_for_postgres
+            ;;
+        6)
+            echo -e "${YELLOW}Exiting.${NC}"
+            exit 0
+            ;;
+        *)
+            echo -e "${RED}Invalid option.${NC}"
+            menu
+            ;;
+    esac
+}
+
 # Main execution
 main() {
-    check_docker
-    start_infrastructure
-    wait_for_postgres
-
-    echo -e "\n${BLUE}========================================${NC}"
-    echo -e "${GREEN}Infrastructure is ready!${NC}"
-    echo -e "${BLUE}========================================${NC}"
-
-    echo -e "\n${YELLOW}Starting backend and frontend...${NC}"
-    start_backend
-    start_frontend
-
-    echo -e "\n${YELLOW}Access points:${NC}"
-    echo -e "  - Frontend: http://localhost:3000"
-    echo -e "  - API Gateway: http://localhost:8080"
-    echo -e "  - RabbitMQ Management: http://localhost:15672"
-    echo -e "  - MailHog: http://localhost:8025"
+    menu
 }
 
 # Run main function
