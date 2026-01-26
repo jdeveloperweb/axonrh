@@ -85,7 +85,7 @@ public class NotificationEvent extends DomainEvent {
         return EVENT_TYPE;
     }
 
-    public static NotificationEventBuilder<?> create() {
+    public static NotificationEventBuilder<?, ?> create() {
         return NotificationEvent.builder()
                 .eventType(EVENT_TYPE)
                 .schemaVersion(1);

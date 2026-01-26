@@ -36,7 +36,7 @@ public class EmployeeUpdatedEvent extends EmployeeEvent {
         return EVENT_TYPE;
     }
 
-    public static EmployeeUpdatedEventBuilder<?> create() {
+    public static EmployeeUpdatedEventBuilder<?, ?> create() {
         return EmployeeUpdatedEvent.builder()
                 .eventType(EVENT_TYPE)
                 .schemaVersion(1);

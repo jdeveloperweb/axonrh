@@ -33,7 +33,7 @@ public class ClockInEvent extends TimesheetEvent {
         return EVENT_TYPE;
     }
 
-    public static ClockInEventBuilder<?> create() {
+    public static ClockInEventBuilder<?, ?> create() {
         return ClockInEvent.builder()
                 .eventType(EVENT_TYPE)
                 .schemaVersion(1);
