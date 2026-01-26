@@ -9,6 +9,7 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
   hint?: string;
+  success?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
 }
@@ -23,6 +24,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       label,
       error,
       hint,
+      success,
       leftIcon,
       rightIcon,
       id,
@@ -56,6 +58,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
               leftIcon && 'pl-10',
               rightIcon && 'pr-10',
               error && 'input-error',
+              success && !error && 'input-success',
               className
             )}
             aria-invalid={!!error}
