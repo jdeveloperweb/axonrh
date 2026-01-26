@@ -53,12 +53,14 @@ public class SetupWizardService {
                 .orElseThrow(() -> new IllegalStateException("Setup não iniciado"));
 
         try {
+            log.info("Salvando dados da etapa {} do setup para tenant {}", step, tenantId);
             String jsonData = objectMapper.writeValueAsString(data);
             progress.setStepData(step, jsonData);
             progress.setLastActivityAt(LocalDateTime.now());
 
             return progressRepository.save(progress);
         } catch (Exception e) {
+            log.error("Falha ao salvar dados da etapa {} do setup para tenant {}", step, tenantId, e);
             throw new RuntimeException("Erro ao salvar dados da etapa: " + e.getMessage(), e);
         }
     }
@@ -76,6 +78,7 @@ public class SetupWizardService {
         }
 
         try {
+            log.info("Completando etapa {} do setup para tenant {}", step, tenantId);
             if (data != null && !data.isEmpty()) {
                 String jsonData = objectMapper.writeValueAsString(data);
                 progress.setStepData(step, jsonData);
@@ -95,6 +98,7 @@ public class SetupWizardService {
 
             return progressRepository.save(progress);
         } catch (Exception e) {
+            log.error("Falha ao completar etapa {} do setup para tenant {}", step, tenantId, e);
             throw new RuntimeException("Erro ao completar etapa: " + e.getMessage(), e);
         }
     }
@@ -193,8 +197,14 @@ public class SetupWizardService {
 
     // Step 1: Save company data
     public CompanyProfile saveCompanyProfile(UUID tenantId, CompanyProfile profile) {
-        profile.setTenantId(tenantId);
-        return companyProfileRepository.save(profile);
+        try {
+            log.info("Salvando perfil da empresa do setup para tenant {}", tenantId);
+            profile.setTenantId(tenantId);
+            return companyProfileRepository.save(profile);
+        } catch (Exception e) {
+            log.error("Falha ao salvar perfil da empresa do setup para tenant {}", tenantId, e);
+            throw e;
+        }
     }
 
     public Optional<CompanyProfile> getCompanyProfile(UUID tenantId) {

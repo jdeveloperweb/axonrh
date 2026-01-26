@@ -4,6 +4,8 @@ import com.axonrh.core.setup.entity.CompanyProfile;
 import com.axonrh.core.setup.entity.SetupProgress;
 import com.axonrh.core.setup.service.SetupWizardService;
 import com.axonrh.core.setup.service.SetupWizardService.SetupSummary;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,6 +16,7 @@ import java.util.UUID;
 @RequestMapping("/api/v1/setup")
 public class SetupWizardController {
 
+    private static final Logger log = LoggerFactory.getLogger(SetupWizardController.class);
     private final SetupWizardService setupService;
 
     public SetupWizardController(SetupWizardService setupService) {
@@ -52,6 +55,7 @@ public class SetupWizardController {
             @PathVariable int step,
             @RequestBody Map<String, Object> data) {
 
+        log.info("Recebido save da etapa {} do setup para tenant {}", step, tenantId);
         SetupProgress progress = setupService.saveStepData(tenantId, step, data);
         return ResponseEntity.ok(progress);
     }
@@ -62,6 +66,7 @@ public class SetupWizardController {
             @PathVariable int step,
             @RequestBody(required = false) Map<String, Object> data) {
 
+        log.info("Recebido complete da etapa {} do setup para tenant {}", step, tenantId);
         SetupProgress progress = setupService.completeStep(tenantId, step, data);
         return ResponseEntity.ok(progress);
     }
@@ -98,6 +103,7 @@ public class SetupWizardController {
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @RequestBody CompanyProfile profile) {
 
+        log.info("Recebido save do perfil da empresa para tenant {}", tenantId);
         CompanyProfile saved = setupService.saveCompanyProfile(tenantId, profile);
         return ResponseEntity.ok(saved);
     }

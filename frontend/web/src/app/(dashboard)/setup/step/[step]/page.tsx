@@ -114,6 +114,19 @@ export default function SetupStepPage() {
         router.push('/setup');
       }
     } catch (error: any) {
+      const payload =
+        stepNumber === 1
+          ? companyProfile
+          : stepNumber === 3
+            ? laborRules
+            : stepNumber === 5
+              ? modules
+              : null;
+      console.error('Erro ao salvar etapa do setup', {
+        stepNumber,
+        payload,
+        error,
+      });
       setError(error.message || 'Erro ao salvar');
     } finally {
       setSaving(false);
