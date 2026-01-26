@@ -55,8 +55,6 @@ public interface ESocialEventRepository extends JpaRepository<ESocialEvent, UUID
                                        @Param("startDate") LocalDateTime startDate,
                                        @Param("endDate") LocalDateTime endDate);
 
-    List<ESocialEvent> findByTenantIdAndReferenceIdAndReferenceType(UUID tenantId, UUID referenceId, String referenceType);
-
     @Query("SELECT e.eventType, COUNT(e) FROM ESocialEvent e " +
            "WHERE e.tenantId = :tenantId GROUP BY e.eventType")
     List<Object[]> countByEventType(@Param("tenantId") UUID tenantId);

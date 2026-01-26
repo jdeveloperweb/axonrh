@@ -113,7 +113,7 @@ class AdmissionServiceTest {
         assertThat(response.getAccessToken()).isNotNull();
         assertThat(response.getPublicLink()).contains(response.getAccessToken());
         assertThat(response.getCurrentStep()).isEqualTo(1);
-        assertThat(response.isLinkValid()).isTrue();
+        assertThat(response.getLinkValid()).isTrue();
 
         ArgumentCaptor<AdmissionProcess> captor = ArgumentCaptor.forClass(AdmissionProcess.class);
         verify(admissionRepository).save(captor.capture());
@@ -161,7 +161,7 @@ class AdmissionServiceTest {
 
         Position pos = new Position();
         pos.setId(posId);
-        pos.setName("Desenvolvedor");
+        pos.setTitle("Desenvolvedor");
 
         when(admissionRepository.existsByTenantIdAndCandidateEmailAndStatusNotIn(any(), any(), anyList()))
                 .thenReturn(false);
