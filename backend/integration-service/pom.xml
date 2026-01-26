@@ -6,7 +6,7 @@
 
     <parent>
         <groupId>com.axonrh</groupId>
-        <artifactId>axonrh-parent</artifactId>
+        <artifactId>axonrh-backend</artifactId>
         <version>1.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
