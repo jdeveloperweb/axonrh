@@ -20,7 +20,7 @@ export default function SetupWizardPage() {
   const loadSummary = async () => {
     try {
       const data = await setupApi.getSummary();
-      setSummary(data.data);
+      setSummary(data);
 
       // If setup is completed, redirect to dashboard
       // If setup is completed, redirect to dashboard

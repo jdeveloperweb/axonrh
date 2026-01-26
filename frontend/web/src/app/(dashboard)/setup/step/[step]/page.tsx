@@ -57,13 +57,13 @@ export default function SetupStepPage() {
     try {
       setLoading(true);
       const progressResponse = await setupApi.getProgress();
-      setProgress(progressResponse.data);
+      setProgress(progressResponse);
 
       // Load step-specific data
       if (stepNumber === 1) {
         try {
           const company = await setupApi.getCompanyProfile();
-          setCompanyProfile(company.data);
+          setCompanyProfile(company);
         } catch {
           // No company profile yet
         }

@@ -186,32 +186,32 @@ export interface ModuleConfig {
 
 export const setupApi = {
   getProgress: () =>
-    api.get<SetupProgress>('/setup/progress'),
+    api.get<SetupProgress, SetupProgress>('/setup/progress'),
 
   getSummary: () =>
-    api.get<SetupSummary>('/setup/summary'),
+    api.get<SetupSummary, SetupSummary>('/setup/summary'),
 
   getStepData: (step: number) =>
-    api.get<Record<string, unknown>>(`/setup/steps/${step}`),
+    api.get<Record<string, unknown>, Record<string, unknown>>(`/setup/steps/${step}`),
 
   saveStepData: (step: number, data: Record<string, unknown>) =>
-    api.post<SetupProgress>(`/setup/steps/${step}/save`, data),
+    api.post<SetupProgress, SetupProgress>(`/setup/steps/${step}/save`, data),
 
   completeStep: (step: number, data?: Record<string, unknown>) =>
-    api.post<SetupProgress>(`/setup/steps/${step}/complete`, data || {}),
+    api.post<SetupProgress, SetupProgress>(`/setup/steps/${step}/complete`, data || {}),
 
   goToStep: (step: number) =>
-    api.post<SetupProgress>(`/setup/steps/${step}/goto`),
+    api.post<SetupProgress, SetupProgress>(`/setup/steps/${step}/goto`),
 
   finishSetup: () =>
-    api.post<SetupProgress>('/setup/finish'),
+    api.post<SetupProgress, SetupProgress>('/setup/finish'),
 
   // Company Profile
   getCompanyProfile: () =>
-    api.get<CompanyProfile>('/setup/company'),
+    api.get<CompanyProfile, CompanyProfile>('/setup/company'),
 
   saveCompanyProfile: (profile: CompanyProfile) =>
-    api.post<CompanyProfile>('/setup/company', profile),
+    api.post<CompanyProfile, CompanyProfile>('/setup/company', profile),
 };
 
 // ==================== Import API ====================
@@ -221,28 +221,28 @@ export const importApi = {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('type', type);
-    return api.post<ImportJob>('/setup/import/upload', formData, {
+    return api.post<ImportJob, ImportJob>('/setup/import/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },
 
   process: (jobId: string) =>
-    api.post<void>(`/setup/import/jobs/${jobId}/process`),
+    api.post<void, void>(`/setup/import/jobs/${jobId}/process`),
 
   rollback: (jobId: string) =>
-    api.post<ImportJob>(`/setup/import/jobs/${jobId}/rollback`),
+    api.post<ImportJob, ImportJob>(`/setup/import/jobs/${jobId}/rollback`),
 
   listJobs: () =>
-    api.get<ImportJob[]>('/setup/import/jobs'),
+    api.get<ImportJob[], ImportJob[]>('/setup/import/jobs'),
 
   getJob: (jobId: string) =>
-    api.get<ImportJob>(`/setup/import/jobs/${jobId}`),
+    api.get<ImportJob, ImportJob>(`/setup/import/jobs/${jobId}`),
 
   getTemplate: (type: ImportType) =>
-    api.get<ImportTemplate>(`/setup/import/templates/${type}`),
+    api.get<ImportTemplate, ImportTemplate>(`/setup/import/templates/${type}`),
 
   getImportTypes: () =>
-    api.get<ImportType[]>('/setup/import/types'),
+    api.get<ImportType[], ImportType[]>('/setup/import/types'),
 };
 
 // ==================== Setup Steps ====================
