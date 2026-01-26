@@ -253,7 +253,7 @@ volumes:
 EOF
     fi
 
-    docker-compose up -d
+    docker compose up -d
 
     echo -e "${GREEN}✓ Infrastructure services started${NC}"
     echo -e "  - PostgreSQL: localhost:5433"
