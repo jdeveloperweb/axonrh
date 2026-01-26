@@ -50,7 +50,7 @@ public class ESocialController {
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID eventId) {
 
-        return ResponseEntity.ok(esocialService.getEvent(tenantId, eventId));
+        return ResponseEntity.ok(esocialService.getEventOrThrow(tenantId, eventId));
     }
 
     @GetMapping("/events/pending")

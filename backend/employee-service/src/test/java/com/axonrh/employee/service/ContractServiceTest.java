@@ -18,7 +18,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
@@ -62,7 +61,7 @@ class ContractServiceTest {
         template.setName("Contrato CLT Padrão");
         template.setContractType("CLT");
         template.setTemplateContent(TEMPLATE_CONTENT);
-        template.setActive(true);
+        template.setIsActive(true);
 
         process = createAdmissionProcess();
     }
@@ -107,7 +106,10 @@ class ContractServiceTest {
 
         // Then
         assertThat(result).contains("R$");
-        assertThat(result).contains("5.000,00").or(assertThat(result)::contains, "5000,00");
+        assertThat(result).satisfiesAnyOf(
+                value -> assertThat(value).contains("5.000,00"),
+                value -> assertThat(value).contains("5000,00")
+        );
         assertThat(result.toLowerCase()).contains("cinco mil reais");
     }
 
@@ -174,8 +176,8 @@ class ContractServiceTest {
     @DisplayName("Deve gerar contrato e armazenar no storage")
     void shouldGenerateContractAndStore() {
         // Given
-        when(contractTemplateRepository.findByTenantIdAndContractTypeAndActiveTrue(any(), eq("CLT")))
-                .thenReturn(Optional.of(template));
+        when(contractTemplateRepository.findByTenantIdAndContractTypeAndIsActiveTrue(any(), eq("CLT")))
+                .thenReturn(java.util.List.of(template));
         when(storageService.uploadFile(any(byte[].class), anyString(), anyString(), anyString()))
                 .thenReturn("contratos/" + process.getId() + "/contrato_trabalho.pdf");
 
@@ -191,8 +193,8 @@ class ContractServiceTest {
     @DisplayName("Deve buscar template específico do tenant")
     void shouldFindTenantSpecificTemplate() {
         // Given
-        when(contractTemplateRepository.findByTenantIdAndContractTypeAndActiveTrue(TENANT_ID, "CLT"))
-                .thenReturn(Optional.of(template));
+        when(contractTemplateRepository.findByTenantIdAndContractTypeAndIsActiveTrue(TENANT_ID, "CLT"))
+                .thenReturn(java.util.List.of(template));
         when(storageService.uploadFile(any(byte[].class), anyString(), anyString(), anyString()))
                 .thenReturn("path");
 
@@ -200,17 +202,17 @@ class ContractServiceTest {
         contractService.generateContract(process, TENANT_ID);
 
         // Then
-        verify(contractTemplateRepository).findByTenantIdAndContractTypeAndActiveTrue(TENANT_ID, "CLT");
+        verify(contractTemplateRepository).findByTenantIdAndContractTypeAndIsActiveTrue(TENANT_ID, "CLT");
     }
 
     @Test
     @DisplayName("Deve usar template padrão se não existir específico")
     void shouldUseFallbackTemplate() {
         // Given
-        when(contractTemplateRepository.findByTenantIdAndContractTypeAndActiveTrue(TENANT_ID, "CLT"))
-                .thenReturn(Optional.empty());
-        when(contractTemplateRepository.findByTenantIdAndContractTypeAndActiveTrue(null, "CLT"))
-                .thenReturn(Optional.of(template));
+        when(contractTemplateRepository.findByTenantIdAndContractTypeAndIsActiveTrue(TENANT_ID, "CLT"))
+                .thenReturn(java.util.List.of());
+        when(contractTemplateRepository.findByTenantIdAndContractTypeAndIsActiveTrue(null, "CLT"))
+                .thenReturn(java.util.List.of(template));
         when(storageService.uploadFile(any(byte[].class), anyString(), anyString(), anyString()))
                 .thenReturn("path");
 
@@ -218,15 +220,15 @@ class ContractServiceTest {
         contractService.generateContract(process, TENANT_ID);
 
         // Then
-        verify(contractTemplateRepository).findByTenantIdAndContractTypeAndActiveTrue(null, "CLT");
+        verify(contractTemplateRepository).findByTenantIdAndContractTypeAndIsActiveTrue(null, "CLT");
     }
 
     @Test
     @DisplayName("Deve gerar preview HTML do contrato")
     void shouldGenerateContractPreview() {
         // Given
-        when(contractTemplateRepository.findByTenantIdAndContractTypeAndActiveTrue(any(), eq("CLT")))
-                .thenReturn(Optional.of(template));
+        when(contractTemplateRepository.findByTenantIdAndContractTypeAndIsActiveTrue(any(), eq("CLT")))
+                .thenReturn(java.util.List.of(template));
 
         // When
         String preview = contractService.getContractPreview(process, TENANT_ID);
@@ -257,8 +259,8 @@ class ContractServiceTest {
     void shouldConvertValueToWords() {
         // Given
         Position positionWithDifferentSalary = new Position();
-        positionWithDifferentSalary.setName("Gerente");
-        positionWithDifferentSalary.setBaseSalary(new BigDecimal("12500.50"));
+        positionWithDifferentSalary.setTitle("Gerente");
+        positionWithDifferentSalary.setSalaryRangeMin(new BigDecimal("12500.50"));
         process.setPosition(positionWithDifferentSalary);
 
         String templateWithExtenso = "<p>{{SALARIO_EXTENSO}}</p>";
@@ -282,7 +284,7 @@ class ContractServiceTest {
         p.setCandidateName("João Silva Santos");
         p.setCandidateEmail("joao@example.com");
         p.setCandidateCpf("12345678901");
-        p.setAdmissionDate(LocalDate.now().plusDays(15));
+        p.setExpectedHireDate(LocalDate.now().plusDays(15));
         p.setStatus(AdmissionStatus.CONTRACT_PENDING);
 
         Department dept = new Department();
@@ -290,10 +292,9 @@ class ContractServiceTest {
         p.setDepartment(dept);
 
         Position pos = new Position();
-        pos.setName("Desenvolvedor Senior");
+        pos.setTitle("Desenvolvedor Senior");
         pos.setCboCode("212405");
-        pos.setBaseSalary(new BigDecimal("5000.00"));
-        pos.setWorkHoursPerWeek(44);
+        pos.setSalaryRangeMin(new BigDecimal("5000.00"));
         p.setPosition(pos);
 
         Map<String, Object> data = new HashMap<>();
@@ -313,6 +314,7 @@ class ContractServiceTest {
         data.put("dataNascimento", "15/05/1990");
         data.put("nacionalidade", "Brasileira");
         data.put("estadoCivil", "Solteiro");
+        data.put("weeklyHours", 44);
         p.setCandidateData(data);
 
         return p;

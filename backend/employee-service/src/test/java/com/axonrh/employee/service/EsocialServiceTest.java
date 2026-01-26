@@ -2,6 +2,8 @@ package com.axonrh.employee.service;
 
 import com.axonrh.employee.entity.*;
 import com.axonrh.employee.entity.enums.AdmissionStatus;
+import com.axonrh.employee.entity.enums.Gender;
+import com.axonrh.employee.entity.enums.MaritalStatus;
 import com.axonrh.employee.repository.AdmissionProcessRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -261,11 +263,11 @@ class EsocialServiceTest {
     @DisplayName("Deve converter código de sexo corretamente")
     void shouldConvertGenderCodeCorrectly() {
         // Given - Male
-        employee.setGender("MALE");
+        employee.setGender(Gender.MALE);
         String xmlMale = esocialService.generateS2200Xml(employee, process, TENANT_ID);
 
         // Given - Female
-        employee.setGender("FEMALE");
+        employee.setGender(Gender.FEMALE);
         String xmlFemale = esocialService.generateS2200Xml(employee, process, TENANT_ID);
 
         // Then
@@ -281,18 +283,18 @@ class EsocialServiceTest {
         e.setRegistrationNumber("EMP001");
         e.setCpf("12345678901");
         e.setFullName("João Silva Santos");
-        e.setGender("MALE");
-        e.setMaritalStatus("SINGLE");
+        e.setGender(Gender.MALE);
+        e.setMaritalStatus(MaritalStatus.SINGLE);
         e.setBirthDate(LocalDate.of(1990, 5, 15));
-        e.setAdmissionDate(LocalDate.now());
-        e.setPersonalPhone("11999999999");
+        e.setHireDate(LocalDate.now());
+        e.setMobile("11999999999");
         e.setPersonalEmail("joao@example.com");
-        e.setSalary(new BigDecimal("8500.00"));
+        e.setBaseSalary(new BigDecimal("8500.00"));
+        e.setWeeklyHours(44);
 
         Position pos = new Position();
-        pos.setName("Desenvolvedor Senior");
+        pos.setTitle("Desenvolvedor Senior");
         pos.setCboCode("212405");
-        pos.setWorkHoursPerWeek(44);
         e.setPosition(pos);
 
         return e;
