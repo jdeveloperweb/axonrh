@@ -294,7 +294,7 @@ public class AdmissionService {
         }
 
         // Gera contrato
-        String contractUrl = contractService.generateContract(process, templateId);
+        String contractUrl = contractService.generateContract(process, tenantId.toString());
 
         process.setContractDocumentUrl(contractUrl);
         process.setContractGeneratedAt(LocalDateTime.now());

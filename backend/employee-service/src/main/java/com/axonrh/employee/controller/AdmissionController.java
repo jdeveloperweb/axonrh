@@ -25,6 +25,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -55,7 +56,7 @@ public class AdmissionController {
             @AuthenticationPrincipal Jwt jwt) {
 
         UUID userId = UUID.fromString(jwt.getSubject());
-        log.info("Creating admission process for candidate: {} by user: {}", request.candidateEmail(), userId);
+        log.info("Creating admission process for candidate: {} by user: {}", request.getCandidateEmail(), userId);
 
         AdmissionProcessResponse response = admissionService.createAdmissionProcess(request, userId);
 
@@ -210,13 +211,18 @@ public class AdmissionController {
         log.info("Uploading document type: {} for token", documentType);
 
         // Validate file
-        documentValidationService.validateFile(file);
+        documentValidationService.validateFile(file, documentType);
 
         // Process upload and OCR
         AdmissionDocument document = admissionService.uploadDocument(token, file, documentType, tenantId);
 
         // Process OCR
-        Map<String, Object> ocrResult = documentValidationService.processDocumentOcr(document, tenantId);
+        Map<String, Object> ocrResult;
+        try {
+            ocrResult = documentValidationService.processDocumentOcr(document, file.getBytes());
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Erro ao ler arquivo enviado", e);
+        }
 
         return ResponseEntity.ok(Map.of(
             "documentId", document.getId(),

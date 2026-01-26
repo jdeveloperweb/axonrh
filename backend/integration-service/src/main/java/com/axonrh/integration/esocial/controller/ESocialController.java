@@ -50,9 +50,7 @@ public class ESocialController {
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID eventId) {
 
-        return esocialService.getEvent(tenantId, eventId)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(esocialService.getEvent(tenantId, eventId));
     }
 
     @GetMapping("/events/pending")
