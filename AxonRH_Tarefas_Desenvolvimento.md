@@ -366,7 +366,7 @@ TOTAL:                    [▓▓▓▓▓▓▓░░░] 228/313 tarefas (73%)
 
 ---
 
-## 2.5 Learning Service (Porta 8087)
+## 2.5 Learning Service (Porta 8187)
 
 ### 2.5.1 Estrutura do Serviço
 - [x] **T192** - Criar projeto Spring Boot para learning-service

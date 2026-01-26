@@ -229,7 +229,7 @@ services:
     container_name: axonrh-learning-service
     command: ./mvnw -pl learning-service -am spring-boot:run
     ports:
-      - "8087:8087"
+      - "8187:8087"
     environment:
       <<: *backend-env
       SERVER_PORT: 8087
