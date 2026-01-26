@@ -152,19 +152,28 @@ start_backend() {
     nohup ../mvnw spring-boot:run > /tmp/config-service.log 2>&1 &
     sleep 10
 
-    # Start auth-service
-    echo -e "Starting auth-service..."
-    cd "$PROJECT_ROOT/backend/auth-service"
-    nohup ../mvnw spring-boot:run > /tmp/auth-service.log 2>&1 &
-    sleep 5
+    # Start remaining services
+    local services=(
+        "auth-service"
+        "core-service"
+        "employee-service"
+        "timesheet-service"
+        "vacation-service"
+        "performance-service"
+        "learning-service"
+        "ai-assistant-service"
+        "notification-service"
+        "integration-service"
+    )
 
-    # Start core-service
-    echo -e "Starting core-service..."
-    cd "$PROJECT_ROOT/backend/core-service"
-    nohup ../mvnw spring-boot:run > /tmp/core-service.log 2>&1 &
-    sleep 5
+    for service in "${services[@]}"; do
+        echo -e "Starting ${service}..."
+        cd "$PROJECT_ROOT/backend/${service}"
+        nohup ../mvnw spring-boot:run > "/tmp/${service}.log" 2>&1 &
+        sleep 5
+    done
 
-    # Start api-gateway
+    # Start api-gateway last
     echo -e "Starting api-gateway..."
     cd "$PROJECT_ROOT/backend/api-gateway"
     nohup ../mvnw spring-boot:run > /tmp/api-gateway.log 2>&1 &
@@ -205,11 +214,9 @@ main() {
     echo -e "${GREEN}Infrastructure is ready!${NC}"
     echo -e "${BLUE}========================================${NC}"
 
-    echo -e "\n${YELLOW}To start the backend (requires Java 21):${NC}"
-    echo -e "  cd backend && ./mvnw spring-boot:run"
-
-    echo -e "\n${YELLOW}To start the frontend:${NC}"
-    echo -e "  cd frontend/web && npm install && npm run dev"
+    echo -e "\n${YELLOW}Starting backend and frontend...${NC}"
+    start_backend
+    start_frontend
 
     echo -e "\n${YELLOW}Access points:${NC}"
     echo -e "  - Frontend: http://localhost:3000"
