@@ -23,9 +23,13 @@ export default function SetupWizardPage() {
       setSummary(data);
 
       // If setup is completed, redirect to dashboard
-      // If setup is completed, redirect to dashboard
-      // Replace 2 with the correct numeric value for COMPLETED if different
-      if (data.status === 2) {
+      const status = data.status as unknown;
+      const isSetupCompleted =
+        (typeof status === 'string' && status === 'COMPLETED') ||
+        (typeof status === 'number' && status === 2) ||
+        data.progressPercentage === 100;
+
+      if (isSetupCompleted) {
         router.push('/dashboard');
       }
     } catch (error) {
