@@ -20,10 +20,19 @@ export const apiClient = api;
 
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const { accessToken } = useAuthStore.getState();
+    const { accessToken, user } = useAuthStore.getState();
 
     if (accessToken && config.headers) {
       config.headers.Authorization = `Bearer ${accessToken}`;
+    }
+
+    if (config.headers) {
+      if (user?.tenantId) {
+        config.headers['X-Tenant-ID'] = user.tenantId;
+      }
+      if (user?.id) {
+        config.headers['X-User-ID'] = user.id;
+      }
     }
 
     return config;
