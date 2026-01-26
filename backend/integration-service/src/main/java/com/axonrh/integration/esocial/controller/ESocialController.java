@@ -51,9 +51,7 @@ public class ESocialController {
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID eventId) {
 
-        return esocialService.getEvent(tenantId, eventId)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(esocialService.getEvent(tenantId, eventId));
     }
 
     @GetMapping("/events/pending")
@@ -127,7 +125,7 @@ public class ESocialController {
     }
 
     @GetMapping("/statistics")
-    public ResponseEntity<ESocialStatistics> getStatistics(
+    public ResponseEntity<ESocialService.ESocialStatistics> getStatistics(
             @RequestHeader("X-Tenant-ID") UUID tenantId) {
 
         return ResponseEntity.ok(esocialService.getStatistics(tenantId));
@@ -151,12 +149,4 @@ public class ESocialController {
 
     public record CancelEventRequest(String reason) {}
 
-    public record ESocialStatistics(
-            long total,
-            long pending,
-            long transmitted,
-            long processed,
-            long error,
-            Map<String, Long> byEventType
-    ) {}
 }

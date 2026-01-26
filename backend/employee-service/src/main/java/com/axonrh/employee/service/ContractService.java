@@ -68,11 +68,26 @@ public class ContractService {
     private ContractTemplate findTemplate(AdmissionProcess process, String tenantId) {
         // First try to find tenant-specific template for the contract type
         String contractType = determineContractType(process);
+        UUID tenantUuid = tenantId != null ? UUID.fromString(tenantId) : null;
 
-        return contractTemplateRepository.findByTenantIdAndContractTypeAndActiveTrue(tenantId, contractType)
-            .or(() -> contractTemplateRepository.findByTenantIdAndContractTypeAndActiveTrue(null, contractType))
-            .or(() -> contractTemplateRepository.findByTenantIdAndContractTypeAndActiveTrue(null, "CLT"))
+        return findTemplateForTenant(tenantUuid, contractType)
+            .or(() -> findTemplateForTenant(null, contractType))
+            .or(() -> findTemplateForTenant(null, "CLT"))
             .orElseThrow(() -> new ResourceNotFoundException("Template de contrato não encontrado"));
+    }
+
+    private java.util.Optional<ContractTemplate> findTemplateForTenant(UUID tenantId, String contractType) {
+        if (tenantId != null) {
+            var defaultTemplate = contractTemplateRepository
+                .findByTenantIdAndContractTypeAndIsDefaultTrue(tenantId, contractType);
+            if (defaultTemplate.isPresent()) {
+                return defaultTemplate;
+            }
+        }
+
+        return contractTemplateRepository.findByTenantIdAndContractTypeAndIsActiveTrue(tenantId, contractType)
+            .stream()
+            .findFirst();
     }
 
     /**
@@ -112,13 +127,13 @@ public class ContractService {
             result = replaceVariable(result, "DEPARTAMENTO", dept.getName());
         }
         if (pos != null) {
-            result = replaceVariable(result, "CARGO", pos.getName());
+            result = replaceVariable(result, "CARGO", pos.getTitle());
             result = replaceVariable(result, "CBO", pos.getCboCode() != null ? pos.getCboCode() : "");
         }
 
         // Salary (from position or candidate data)
-        BigDecimal salary = pos != null && pos.getBaseSalary() != null ?
-            pos.getBaseSalary() :
+        BigDecimal salary = pos != null && pos.getSalaryRangeMin() != null ?
+            pos.getSalaryRangeMin() :
             data != null && data.get("salario") != null ?
                 new BigDecimal(data.get("salario").toString()) : BigDecimal.ZERO;
 
@@ -126,14 +141,14 @@ public class ContractService {
         result = replaceVariable(result, "SALARIO_EXTENSO", valorPorExtenso(salary));
 
         // Work hours
-        Integer workHours = pos != null && pos.getWorkHoursPerWeek() != null ?
-            pos.getWorkHoursPerWeek() : 44;
+        Integer workHours = data != null && data.get("weeklyHours") != null ?
+            Integer.parseInt(data.get("weeklyHours").toString()) : 44;
         result = replaceVariable(result, "JORNADA", workHours + " horas semanais");
         result = replaceVariable(result, "CARGA_HORARIA", workHours.toString());
 
         // Dates
-        LocalDate admissionDate = process.getAdmissionDate() != null ?
-            process.getAdmissionDate() : LocalDate.now();
+        LocalDate admissionDate = process.getExpectedHireDate() != null ?
+            process.getExpectedHireDate() : LocalDate.now();
         result = replaceVariable(result, "DATA_ADMISSAO", admissionDate.format(DATE_FORMATTER));
         result = replaceVariable(result, "DATA_ADMISSAO_EXTENSO", admissionDate.format(DATE_EXTENSO_FORMATTER));
         result = replaceVariable(result, "DATA_ATUAL", LocalDate.now().format(DATE_FORMATTER));

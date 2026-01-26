@@ -153,4 +153,12 @@ public class EvaluationCycle {
                 || status == CycleStatus.CALIBRATION
                 || status == CycleStatus.FEEDBACK;
     }
+
+    public void activate() {
+        this.status = CycleStatus.ACTIVE;
+    }
+
+    public void complete() {
+        this.status = CycleStatus.COMPLETED;
+    }
 }

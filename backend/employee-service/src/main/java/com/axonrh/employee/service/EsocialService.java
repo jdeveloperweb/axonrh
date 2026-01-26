@@ -3,6 +3,8 @@ package com.axonrh.employee.service;
 import com.axonrh.employee.entity.AdmissionProcess;
 import com.axonrh.employee.entity.Employee;
 import com.axonrh.employee.entity.enums.AdmissionStatus;
+import com.axonrh.employee.entity.enums.Gender;
+import com.axonrh.employee.entity.enums.MaritalStatus;
 import com.axonrh.employee.repository.AdmissionProcessRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -171,8 +173,9 @@ public class EsocialService {
 
         // contato - Contact
         xml.append("      <contato>\n");
-        if (employee.getPersonalPhone() != null) {
-            xml.append("        <fonePrinc>").append(employee.getPersonalPhone().replaceAll("[^0-9]", "")).append("</fonePrinc>\n");
+        String contactPhone = employee.getPhone() != null ? employee.getPhone() : employee.getMobile();
+        if (contactPhone != null) {
+            xml.append("        <fonePrinc>").append(contactPhone.replaceAll("[^0-9]", "")).append("</fonePrinc>\n");
         }
         if (employee.getPersonalEmail() != null) {
             xml.append("        <emailPrinc>").append(employee.getPersonalEmail()).append("</emailPrinc>\n");
@@ -191,7 +194,7 @@ public class EsocialService {
         // infoRegimeTrab - Work regime info
         xml.append("      <infoRegimeTrab>\n");
         xml.append("        <infoCeletista>\n");
-        xml.append("          <dtAdm>").append(employee.getAdmissionDate().format(DATE_FORMAT)).append("</dtAdm>\n");
+        xml.append("          <dtAdm>").append(employee.getHireDate().format(DATE_FORMAT)).append("</dtAdm>\n");
         xml.append("          <tpAdmissao>1</tpAdmissao>\n"); // 1 = Admissão
         xml.append("          <indAdmissao>1</indAdmissao>\n"); // 1 = Normal
         xml.append("          <tpRegJor>1</tpRegJor>\n"); // 1 = Jornada com horário diário
@@ -202,7 +205,7 @@ public class EsocialService {
         // FGTS
         xml.append("          <FGTS>\n");
         xml.append("            <opcFGTS>1</opcFGTS>\n"); // 1 = Optante
-        xml.append("            <dtOpcFGTS>").append(employee.getAdmissionDate().format(DATE_FORMAT)).append("</dtOpcFGTS>\n");
+        xml.append("            <dtOpcFGTS>").append(employee.getHireDate().format(DATE_FORMAT)).append("</dtOpcFGTS>\n");
         xml.append("          </FGTS>\n");
 
         xml.append("        </infoCeletista>\n");
@@ -213,13 +216,13 @@ public class EsocialService {
 
         // cargo - Position
         if (employee.getPosition() != null) {
-            xml.append("        <nmCargo>").append(escapeXml(employee.getPosition().getName())).append("</nmCargo>\n");
+            xml.append("        <nmCargo>").append(escapeXml(employee.getPosition().getTitle())).append("</nmCargo>\n");
             xml.append("        <CBOCargo>").append(employee.getPosition().getCboCode() != null ? employee.getPosition().getCboCode() : "").append("</CBOCargo>\n");
         }
 
         // remuneracao - Remuneration
         xml.append("        <remuneracao>\n");
-        xml.append("          <vrSalFx>").append(formatSalary(employee.getSalary())).append("</vrSalFx>\n");
+        xml.append("          <vrSalFx>").append(formatSalary(employee.getBaseSalary())).append("</vrSalFx>\n");
         xml.append("          <undSalFixo>5</undSalFixo>\n"); // 5 = Mensal
         xml.append("          <dscSalVar></dscSalVar>\n");
         xml.append("        </remuneracao>\n");
@@ -239,7 +242,7 @@ public class EsocialService {
 
         // horContratual - Work hours
         xml.append("        <horContratual>\n");
-        xml.append("          <qtdHrsSem>").append(employee.getPosition() != null ? employee.getPosition().getWorkHoursPerWeek() : 44).append("</qtdHrsSem>\n");
+        xml.append("          <qtdHrsSem>").append(employee.getWeeklyHours() != null ? employee.getWeeklyHours() : 44).append("</qtdHrsSem>\n");
         xml.append("          <tpJornada>2</tpJornada>\n"); // 2 = Jornada com horário diário
         xml.append("          <horario>\n");
         xml.append("            <dia>2</dia>\n"); // Segunda
@@ -369,7 +372,7 @@ public class EsocialService {
         for (AdmissionProcess process : pendingProcesses) {
             try {
                 if (process.getEmployee() != null) {
-                    sendS2200Event(process.getEmployee(), process, process.getTenantId());
+                    sendS2200Event(process.getEmployee(), process, process.getTenantId().toString());
                 }
             } catch (Exception e) {
                 log.error("Failed to retry S-2200 for process {}: {}", process.getId(), e.getMessage());
@@ -395,10 +398,11 @@ public class EsocialService {
         return value != null ? value.toString() : defaultValue;
     }
 
-    private String getSexoCode(String gender) {
+    private String getSexoCode(Gender gender) {
         if (gender == null) return "M";
-        return switch (gender.toUpperCase()) {
-            case "FEMALE", "F", "FEMININO" -> "F";
+        return switch (gender) {
+            case FEMALE -> "F";
+            case MALE -> "M";
             default -> "M";
         };
     }
@@ -415,14 +419,15 @@ public class EsocialService {
         };
     }
 
-    private String getEstCivCode(String maritalStatus) {
+    private String getEstCivCode(MaritalStatus maritalStatus) {
         if (maritalStatus == null) return "1";
-        return switch (maritalStatus.toUpperCase()) {
-            case "MARRIED", "CASADO" -> "2";
-            case "DIVORCED", "DIVORCIADO" -> "3";
-            case "SEPARATED", "SEPARADO" -> "4";
-            case "WIDOWED", "VIUVO" -> "5";
-            default -> "1"; // Solteiro
+        return switch (maritalStatus) {
+            case MARRIED -> "2";
+            case DIVORCED -> "3";
+            case SEPARATED -> "4";
+            case WIDOWED -> "5";
+            case STABLE_UNION -> "6";
+            default -> "1";
         };
     }
 
