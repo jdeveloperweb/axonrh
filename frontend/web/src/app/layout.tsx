@@ -15,22 +15,23 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: 'AxonRH - Gest√£o de RH e DP',
-  description: 'Sistema Integrado de Gest√£o de RH e Departamento Pessoal com IA Conversacional',
-  keywords: ['RH', 'Departamento Pessoal', 'Gest√£o de Pessoas', 'IA', 'HRIS'],
+  title: 'AxonRH - Gest„o de RH e DP',
+  description: 'Sistema Integrado de Gest„o de RH e Departamento Pessoal com IA Conversacional',
+  keywords: ['RH', 'Departamento Pessoal', 'Gest„o de Pessoas', 'IA', 'HRIS'],
 };
+
+import { StatusIndicator } from "@/components/StatusIndicator";
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
-    <html lang="pt-BR" suppressHydrationWarning>
-      <body className={`${plusJakarta.variable} ${outfit.variable} font-sans antialiased`}>
-        <Providers>
-          {children}
-        </Providers>
+    <html lang="pt-BR">
+      <body>
+        {children}
+        <StatusIndicator />
       </body>
     </html>
   );
