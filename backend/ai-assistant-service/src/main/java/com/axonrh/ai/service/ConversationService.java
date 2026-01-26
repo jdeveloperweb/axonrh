@@ -1,0 +1,460 @@
+package com.axonrh.ai.service;
+
+import com.axonrh.ai.dto.ChatMessage;
+import com.axonrh.ai.dto.ChatRequest;
+import com.axonrh.ai.dto.ChatResponse;
+import com.axonrh.ai.dto.StreamChunk;
+import com.axonrh.ai.entity.AiIntent;
+import com.axonrh.ai.entity.Conversation;
+import com.axonrh.ai.entity.Conversation.ConversationContext;
+import com.axonrh.ai.entity.Conversation.ConversationMetadata;
+import com.axonrh.ai.entity.Conversation.Message;
+import com.axonrh.ai.entity.AiPrompt;
+import com.axonrh.ai.repository.AiPromptRepository;
+import com.axonrh.ai.repository.ConversationRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.stream.Collectors;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class ConversationService {
+
+    private final ConversationRepository conversationRepository;
+    private final AiPromptRepository promptRepository;
+    private final LlmService llmService;
+    private final NluService nluService;
+    private final QueryBuilderService queryBuilderService;
+    private final CalculationService calculationService;
+    private final KnowledgeService knowledgeService;
+    private final ObjectMapper objectMapper;
+
+    @Value("${assistant.conversation.context-window:10}")
+    private int contextWindow;
+
+    @Value("${assistant.conversation.auto-summarize-after:20}")
+    private int autoSummarizeAfter;
+
+    public Conversation createConversation(UUID tenantId, UUID userId, ConversationContext context) {
+        Conversation conversation = Conversation.builder()
+                .tenantId(tenantId)
+                .userId(userId)
+                .status(Conversation.ConversationStatus.ACTIVE)
+                .context(context)
+                .metadata(new ConversationMetadata())
+                .messages(new ArrayList<>())
+                .build();
+
+        // Add system message
+        String systemPrompt = buildSystemPrompt(tenantId, context);
+        Message systemMessage = Message.builder()
+                .id(UUID.randomUUID().toString())
+                .role(Message.MessageRole.SYSTEM)
+                .content(systemPrompt)
+                .type(Message.MessageType.TEXT)
+                .timestamp(Instant.now())
+                .build();
+        conversation.addMessage(systemMessage);
+
+        return conversationRepository.save(conversation);
+    }
+
+    public ChatResponse chat(String conversationId, String userMessage, UUID tenantId, UUID userId) {
+        Conversation conversation = getOrCreateConversation(conversationId, tenantId, userId);
+
+        // Add user message
+        Message userMsg = Message.builder()
+                .id(UUID.randomUUID().toString())
+                .role(Message.MessageRole.USER)
+                .content(userMessage)
+                .type(Message.MessageType.TEXT)
+                .timestamp(Instant.now())
+                .build();
+        conversation.addMessage(userMsg);
+
+        // Analyze intent
+        NluService.NluResult nluResult = nluService.analyze(userMessage, tenantId);
+        log.debug("NLU Result: intent={}, confidence={}", nluResult.getIntent(), nluResult.getConfidence());
+
+        // Process based on intent
+        String response;
+        Message.MessageType responseType = Message.MessageType.TEXT;
+
+        try {
+            response = switch (nluResult.getActionType()) {
+                case DATABASE_QUERY -> handleDatabaseQuery(userMessage, nluResult, tenantId, userId);
+                case CALCULATION -> handleCalculation(nluResult);
+                case KNOWLEDGE_SEARCH -> handleKnowledgeSearch(userMessage, nluResult, tenantId);
+                default -> handleGeneralChat(conversation, userMessage);
+            };
+
+            if (nluResult.getActionType() == AiIntent.ActionType.DATABASE_QUERY) {
+                responseType = Message.MessageType.QUERY_RESULT;
+            } else if (nluResult.getActionType() == AiIntent.ActionType.CALCULATION) {
+                responseType = Message.MessageType.CALCULATION;
+            }
+        } catch (Exception e) {
+            log.error("Error processing message: {}", e.getMessage(), e);
+            response = "Desculpe, ocorreu um erro ao processar sua solicitação. Por favor, tente novamente.";
+            responseType = Message.MessageType.ERROR;
+        }
+
+        // Add assistant message
+        Message assistantMsg = Message.builder()
+                .id(UUID.randomUUID().toString())
+                .role(Message.MessageRole.ASSISTANT)
+                .content(response)
+                .type(responseType)
+                .metadata(Map.of("intent", nluResult.getIntent(), "confidence", nluResult.getConfidence()))
+                .timestamp(Instant.now())
+                .build();
+        conversation.addMessage(assistantMsg);
+
+        // Update metadata
+        conversation.getMetadata().setLastIntent(nluResult.getIntent());
+
+        // Auto-summarize if needed
+        if (conversation.getMessages().size() > autoSummarizeAfter) {
+            summarizeConversation(conversation);
+        }
+
+        conversationRepository.save(conversation);
+
+        return ChatResponse.builder()
+                .id(assistantMsg.getId())
+                .content(response)
+                .role(ChatMessage.Role.ASSISTANT)
+                .timestamp(Instant.now())
+                .build();
+    }
+
+    public Flux<StreamChunk> streamChat(String conversationId, String userMessage, UUID tenantId, UUID userId) {
+        Conversation conversation = getOrCreateConversation(conversationId, tenantId, userId);
+
+        // Add user message
+        Message userMsg = Message.builder()
+                .id(UUID.randomUUID().toString())
+                .role(Message.MessageRole.USER)
+                .content(userMessage)
+                .type(Message.MessageType.TEXT)
+                .timestamp(Instant.now())
+                .build();
+        conversation.addMessage(userMsg);
+        conversationRepository.save(conversation);
+
+        // Build chat request with conversation history
+        List<ChatMessage> messages = buildChatMessages(conversation);
+
+        ChatRequest request = ChatRequest.builder()
+                .messages(messages)
+                .stream(true)
+                .build();
+
+        StringBuilder fullResponse = new StringBuilder();
+
+        return llmService.streamChat(request)
+                .doOnNext(chunk -> {
+                    if (!chunk.isDone()) {
+                        fullResponse.append(chunk.getContent());
+                    }
+                })
+                .doOnComplete(() -> {
+                    // Save assistant response
+                    Message assistantMsg = Message.builder()
+                            .id(UUID.randomUUID().toString())
+                            .role(Message.MessageRole.ASSISTANT)
+                            .content(fullResponse.toString())
+                            .type(Message.MessageType.TEXT)
+                            .timestamp(Instant.now())
+                            .build();
+                    conversation.addMessage(assistantMsg);
+                    conversationRepository.save(conversation);
+                });
+    }
+
+    private Conversation getOrCreateConversation(String conversationId, UUID tenantId, UUID userId) {
+        if (conversationId != null) {
+            return conversationRepository.findByIdAndTenantId(conversationId, tenantId)
+                    .orElseGet(() -> createConversation(tenantId, userId, null));
+        }
+        return createConversation(tenantId, userId, null);
+    }
+
+    private String buildSystemPrompt(UUID tenantId, ConversationContext context) {
+        List<AiPrompt> prompts = promptRepository.findByNameWithSystem(tenantId, "hr_assistant_main");
+        String template = prompts.isEmpty() ?
+                getDefaultSystemPrompt() :
+                prompts.get(0).getPromptTemplate();
+
+        return template
+                .replace("{company_context}", context != null && context.getCompanyName() != null ?
+                        context.getCompanyName() : "Empresa")
+                .replace("{user_context}", context != null && context.getUserName() != null ?
+                        String.format("%s (%s)", context.getUserName(), context.getUserRole()) : "Usuário")
+                .replace("{current_date}", LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+    }
+
+    private String getDefaultSystemPrompt() {
+        return """
+            Você é o Assistente de RH da AxonRH, uma plataforma de gestão de recursos humanos.
+
+            Suas capacidades incluem:
+            - Responder perguntas sobre políticas de RH
+            - Realizar cálculos trabalhistas (férias, rescisão, horas extras)
+            - Consultar dados de funcionários e folha de pagamento
+            - Explicar legislação trabalhista brasileira
+
+            Sempre responda em português brasileiro. Seja preciso com números e datas.
+            Cite a legislação quando relevante (CLT, eSocial).
+            Proteja informações sensíveis.
+
+            Data atual: {current_date}
+            Empresa: {company_context}
+            Usuário: {user_context}
+            """;
+    }
+
+    private String handleDatabaseQuery(String question, NluService.NluResult nluResult,
+                                        UUID tenantId, UUID userId) {
+        QueryBuilderService.QueryResult result = queryBuilderService.buildAndExecuteQuery(
+                question,
+                nluResult.getEntities(),
+                tenantId,
+                List.of() // User permissions would come from auth context
+        );
+
+        if (!result.isSuccess()) {
+            return "Não foi possível executar a consulta: " + result.getError();
+        }
+
+        if (result.getData().isEmpty()) {
+            return "Não encontrei registros para a sua consulta.";
+        }
+
+        // Format results
+        StringBuilder response = new StringBuilder();
+        response.append(String.format("Encontrei %d registro(s):\n\n", result.getRowCount()));
+
+        if (result.getExplanation() != null) {
+            response.append(result.getExplanation()).append("\n\n");
+        }
+
+        // Format as table for small result sets
+        if (result.getRowCount() <= 10) {
+            response.append(formatAsTable(result.getData()));
+        } else {
+            response.append(formatAsSummary(result.getData()));
+        }
+
+        return response.toString();
+    }
+
+    private String handleCalculation(NluService.NluResult nluResult) {
+        Map<String, Object> entities = nluResult.getEntities();
+
+        CalculationService.CalculationResult result;
+
+        switch (nluResult.getIntent()) {
+            case "calculate_vacation" -> {
+                BigDecimal salary = entities.containsKey("salary") ?
+                        new BigDecimal(entities.get("salary").toString()) : new BigDecimal("3000");
+                int days = entities.containsKey("days") ?
+                        (Integer) entities.get("days") : 30;
+                boolean abono = entities.containsKey("abono") && (Boolean) entities.get("abono");
+                int dependents = entities.containsKey("dependents") ?
+                        (Integer) entities.get("dependents") : 0;
+
+                result = calculationService.calculateVacation(salary, days, abono, dependents);
+            }
+            case "calculate_termination" -> {
+                BigDecimal salary = entities.containsKey("salary") ?
+                        new BigDecimal(entities.get("salary").toString()) : new BigDecimal("3000");
+                String type = entities.containsKey("type") ?
+                        (String) entities.get("type") : "SEM_JUSTA_CAUSA";
+                LocalDate hireDate = LocalDate.now().minusYears(2);
+                LocalDate termDate = LocalDate.now();
+
+                result = calculationService.calculateTermination(salary, hireDate, termDate,
+                        type, 0, false, BigDecimal.ZERO);
+            }
+            default -> {
+                return "Não consegui identificar o tipo de cálculo solicitado. " +
+                        "Posso calcular: férias, rescisão, horas extras.";
+            }
+        }
+
+        return formatCalculationResult(result);
+    }
+
+    private String handleKnowledgeSearch(String question, NluService.NluResult nluResult, UUID tenantId) {
+        String topic = nluResult.getEntities().containsKey("topic") ?
+                (String) nluResult.getEntities().get("topic") : "";
+
+        List<KnowledgeService.SearchResult> results = knowledgeService.search(question, tenantId, 3);
+
+        if (results.isEmpty()) {
+            return handleGeneralChat(null, question);
+        }
+
+        StringBuilder response = new StringBuilder();
+        response.append("Encontrei as seguintes informações relevantes:\n\n");
+
+        for (int i = 0; i < results.size(); i++) {
+            KnowledgeService.SearchResult r = results.get(i);
+            response.append(String.format("%d. **%s**\n", i + 1, r.getDocumentTitle()));
+            response.append(r.getContent()).append("\n\n");
+        }
+
+        return response.toString();
+    }
+
+    private String handleGeneralChat(Conversation conversation, String userMessage) {
+        List<ChatMessage> messages = conversation != null ?
+                buildChatMessages(conversation) :
+                List.of(
+                        ChatMessage.builder()
+                                .role(ChatMessage.Role.SYSTEM)
+                                .content(getDefaultSystemPrompt())
+                                .build(),
+                        ChatMessage.builder()
+                                .role(ChatMessage.Role.USER)
+                                .content(userMessage)
+                                .build()
+                );
+
+        ChatRequest request = ChatRequest.builder()
+                .messages(messages)
+                .build();
+
+        ChatResponse response = llmService.chat(request);
+        return response.getContent();
+    }
+
+    private List<ChatMessage> buildChatMessages(Conversation conversation) {
+        List<Message> recentMessages = conversation.getRecentMessages(contextWindow);
+
+        return recentMessages.stream()
+                .map(m -> ChatMessage.builder()
+                        .role(mapRole(m.getRole()))
+                        .content(m.getContent())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    private ChatMessage.Role mapRole(Message.MessageRole role) {
+        return switch (role) {
+            case SYSTEM -> ChatMessage.Role.SYSTEM;
+            case USER -> ChatMessage.Role.USER;
+            case ASSISTANT -> ChatMessage.Role.ASSISTANT;
+            case TOOL -> ChatMessage.Role.TOOL;
+        };
+    }
+
+    private String formatAsTable(List<Map<String, Object>> data) {
+        if (data.isEmpty()) return "";
+
+        Set<String> columns = data.get(0).keySet();
+        StringBuilder sb = new StringBuilder();
+
+        // Header
+        sb.append("| ");
+        for (String col : columns) {
+            sb.append(formatColumnName(col)).append(" | ");
+        }
+        sb.append("\n|");
+        for (String ignored : columns) {
+            sb.append("---|");
+        }
+        sb.append("\n");
+
+        // Rows
+        for (Map<String, Object> row : data) {
+            sb.append("| ");
+            for (String col : columns) {
+                Object value = row.get(col);
+                sb.append(formatValue(value)).append(" | ");
+            }
+            sb.append("\n");
+        }
+
+        return sb.toString();
+    }
+
+    private String formatAsSummary(List<Map<String, Object>> data) {
+        return String.format("Mostrando %d de %d resultados. Use filtros para refinar a busca.",
+                Math.min(10, data.size()), data.size());
+    }
+
+    private String formatColumnName(String name) {
+        return name.replace("_", " ")
+                .substring(0, 1).toUpperCase() + name.substring(1);
+    }
+
+    private String formatValue(Object value) {
+        if (value == null) return "-";
+        if (value instanceof BigDecimal bd) {
+            return String.format("R$ %.2f", bd);
+        }
+        return value.toString();
+    }
+
+    private String formatCalculationResult(CalculationService.CalculationResult result) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format("## Cálculo de %s\n\n", formatCalculationType(result.getType())));
+        sb.append("### Memória de Cálculo:\n");
+        sb.append("```\n").append(result.getSteps()).append("```\n\n");
+        sb.append(String.format("**Valor Bruto:** R$ %.2f\n", result.getGrossValue()));
+        sb.append(String.format("**Valor Líquido:** R$ %.2f\n\n", result.getNetValue()));
+        sb.append(String.format("*Base Legal: %s*", result.getLegalBasis()));
+        return sb.toString();
+    }
+
+    private String formatCalculationType(String type) {
+        return switch (type) {
+            case "FERIAS" -> "Férias";
+            case "RESCISAO" -> "Rescisão";
+            case "HORAS_EXTRAS" -> "Horas Extras";
+            default -> type;
+        };
+    }
+
+    private void summarizeConversation(Conversation conversation) {
+        // TODO: Implement conversation summarization
+    }
+
+    public Page<Conversation> listConversations(UUID tenantId, UUID userId, Pageable pageable) {
+        return conversationRepository.findByTenantIdAndUserIdOrderByUpdatedAtDesc(tenantId, userId, pageable);
+    }
+
+    public Optional<Conversation> getConversation(String id, UUID tenantId) {
+        return conversationRepository.findByIdAndTenantId(id, tenantId);
+    }
+
+    public void archiveConversation(String id, UUID tenantId) {
+        conversationRepository.findByIdAndTenantId(id, tenantId).ifPresent(c -> {
+            c.setStatus(Conversation.ConversationStatus.ARCHIVED);
+            c.setClosedAt(Instant.now());
+            conversationRepository.save(c);
+        });
+    }
+
+    public void deleteConversation(String id, UUID tenantId) {
+        conversationRepository.findByIdAndTenantId(id, tenantId).ifPresent(c -> {
+            c.setStatus(Conversation.ConversationStatus.DELETED);
+            conversationRepository.save(c);
+        });
+    }
+}

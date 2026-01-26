@@ -1,0 +1,198 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  # Redis para rate limiting
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:axonrh_redis_2026}
+
+  cloud:
+    gateway:
+      # Configuracoes globais
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
+        - name: RequestRateLimiter
+          args:
+            redis-rate-limiter.replenishRate: 100
+            redis-rate-limiter.burstCapacity: 200
+            redis-rate-limiter.requestedTokens: 1
+            key-resolver: "#{@tenantKeyResolver}"
+
+      # Rotas para microservicos
+      routes:
+        # Auth Service
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/v1/auth/**
+          filters:
+            - StripPrefix=2
+
+        # Config Service
+        - id: config-service
+          uri: lb://config-service
+          predicates:
+            - Path=/api/v1/config/**
+          filters:
+            - StripPrefix=2
+            - name: JwtAuthFilter
+
+        # Employee Service
+        - id: employee-service
+          uri: lb://employee-service
+          predicates:
+            - Path=/api/v1/employees/**, /api/v1/departments/**, /api/v1/positions/**
+          filters:
+            - StripPrefix=2
+            - name: JwtAuthFilter
+
+        # Timesheet Service
+        - id: timesheet-service
+          uri: lb://timesheet-service
+          predicates:
+            - Path=/api/v1/timesheet/**, /api/v1/time-records/**
+          filters:
+            - StripPrefix=2
+            - name: JwtAuthFilter
+
+        # Vacation Service
+        - id: vacation-service
+          uri: lb://vacation-service
+          predicates:
+            - Path=/api/v1/vacations/**
+          filters:
+            - StripPrefix=2
+            - name: JwtAuthFilter
+
+        # Performance Service
+        - id: performance-service
+          uri: lb://performance-service
+          predicates:
+            - Path=/api/v1/performance/**, /api/v1/evaluations/**
+          filters:
+            - StripPrefix=2
+            - name: JwtAuthFilter
+
+        # Learning Service
+        - id: learning-service
+          uri: lb://learning-service
+          predicates:
+            - Path=/api/v1/learning/**, /api/v1/courses/**
+          filters:
+            - StripPrefix=2
+            - name: JwtAuthFilter
+
+        # AI Assistant Service
+        - id: ai-assistant-service
+          uri: lb://ai-assistant-service
+          predicates:
+            - Path=/api/v1/ai/**, /api/v1/chat/**
+          filters:
+            - StripPrefix=2
+            - name: JwtAuthFilter
+
+        # Notification Service
+        - id: notification-service
+          uri: lb://notification-service
+          predicates:
+            - Path=/api/v1/notifications/**
+          filters:
+            - StripPrefix=2
+            - name: JwtAuthFilter
+
+        # Analytics Service
+        - id: analytics-service
+          uri: lb://analytics-service
+          predicates:
+            - Path=/api/v1/analytics/**, /api/v1/reports/**
+          filters:
+            - StripPrefix=2
+            - name: JwtAuthFilter
+
+        # Integration Service
+        - id: integration-service
+          uri: lb://integration-service
+          predicates:
+            - Path=/api/v1/integrations/**, /api/v1/esocial/**
+          filters:
+            - StripPrefix=2
+            - name: JwtAuthFilter
+
+      # CORS Global
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns:
+              - "https://*.axonrh.com.br"
+              - "http://localhost:*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - PATCH
+              - DELETE
+              - OPTIONS
+            allowedHeaders:
+              - "*"
+            exposedHeaders:
+              - "X-Request-Id"
+              - "X-Tenant-Id"
+            allowCredentials: true
+            maxAge: 3600
+
+# Actuator e metricas
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+  endpoint:
+    health:
+      show-details: when_authorized
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.axonrh: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:axonrh-jwt-secret-key-change-in-production-2026}
+  expiration: 28800000  # 8 horas em ms
+
+# Rate Limiting por Tenant
+rate-limit:
+  default:
+    requests-per-second: 100
+    burst-capacity: 200
+  plans:
+    TRIAL:
+      requests-per-second: 10
+      burst-capacity: 20
+    STARTER:
+      requests-per-second: 50
+      burst-capacity: 100
+    PROFESSIONAL:
+      requests-per-second: 100
+      burst-capacity: 200
+    ENTERPRISE:
+      requests-per-second: 500
+      burst-capacity: 1000

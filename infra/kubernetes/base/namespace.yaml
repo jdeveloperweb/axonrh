@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: axonrh
+  labels:
+    app.kubernetes.io/name: axonrh
+    app.kubernetes.io/part-of: axonrh-system

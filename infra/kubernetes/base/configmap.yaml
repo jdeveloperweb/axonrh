@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: axonrh-config
+  namespace: axonrh
+  labels:
+    app.kubernetes.io/name: axonrh
+    app.kubernetes.io/component: config
+data:
+  # Spring profiles
+  SPRING_PROFILES_ACTIVE: "kubernetes"
+
+  # Server configs
+  SERVER_PORT: "8080"
+
+  # Database
+  POSTGRES_HOST: "postgres-service"
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: "axonrh_dev"
+
+  # Redis
+  REDIS_HOST: "redis-service"
+  REDIS_PORT: "6379"
+
+  # MongoDB
+  MONGODB_HOST: "mongodb-service"
+  MONGODB_PORT: "27017"
+  MONGODB_DATABASE: "axonrh_logs"
+
+  # Kafka
+  KAFKA_BOOTSTRAP_SERVERS: "kafka-service:9092"
+
+  # MinIO
+  MINIO_ENDPOINT: "http://minio-service:9000"
+
+  # Observability
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://jaeger-service:4317"
+  MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,info,metrics,prometheus"
+  MANAGEMENT_METRICS_EXPORT_PROMETHEUS_ENABLED: "true"

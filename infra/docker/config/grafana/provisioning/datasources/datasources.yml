@@ -1,0 +1,45 @@
+# AxonRH - Grafana Datasources
+
+apiVersion: 1
+
+datasources:
+  # Prometheus - Metricas
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false
+    jsonData:
+      timeInterval: "15s"
+
+  # Loki - Logs
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    editable: false
+    jsonData:
+      maxLines: 1000
+
+  # Jaeger - Tracing
+  - name: Jaeger
+    type: jaeger
+    access: proxy
+    url: http://jaeger:16686
+    editable: false
+
+  # PostgreSQL - Direct queries (opcional)
+  - name: PostgreSQL
+    type: postgres
+    url: postgres:5432
+    user: axonrh
+    secureJsonData:
+      password: axonrh_dev_2026
+    jsonData:
+      database: axonrh_dev
+      sslmode: disable
+      maxOpenConns: 5
+      maxIdleConns: 2
+      connMaxLifetime: 14400
+    editable: false

@@ -1,0 +1,91 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: auth-service
+
+  # Datasource PostgreSQL
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:axonrh_dev}?currentSchema=shared
+    username: ${POSTGRES_USER:axonrh}
+    password: ${POSTGRES_PASSWORD:axonrh_dev_2026}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
+
+  # JPA
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        default_schema: shared
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  # Redis
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:axonrh_redis_2026}
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:axonrh-jwt-secret-key-change-in-production-2026-minimum-256-bits}
+  access-token-expiration: 28800000  # 8 horas em ms
+  refresh-token-expiration: 604800000  # 7 dias em ms
+
+# Security Configuration
+security:
+  password:
+    min-length: 8
+    require-uppercase: true
+    require-lowercase: true
+    require-digit: true
+    require-special: true
+  login:
+    max-attempts: 5
+    lockout-duration-minutes: 15
+  totp:
+    issuer: AxonRH
+    digits: 6
+    period: 30
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.axonrh: DEBUG
+    org.springframework.security: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# OpenAPI
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true

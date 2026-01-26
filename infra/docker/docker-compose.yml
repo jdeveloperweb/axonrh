@@ -1,0 +1,253 @@
+version: '3.9'
+
+services:
+  # ===== POSTGRESQL 15 com PostGIS =====
+  postgres:
+    image: postgis/postgis:15-3.4
+    container_name: axonrh-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: axonrh
+      POSTGRES_PASSWORD: axonrh_dev_2026
+      POSTGRES_DB: axonrh_dev
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts/postgres:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U axonrh -d axonrh_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - axonrh-network
+
+  # ===== REDIS 7 (Cache e Sessions) =====
+  redis:
+    image: redis:7-alpine
+    container_name: axonrh-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass axonrh_redis_2026
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "axonrh_redis_2026", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - axonrh-network
+
+  # ===== MONGODB 7 (Logs e AI History) =====
+  mongodb:
+    image: mongo:7
+    container_name: axonrh-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: axonrh
+      MONGO_INITDB_ROOT_PASSWORD: axonrh_mongo_2026
+      MONGO_INITDB_DATABASE: axonrh_logs
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./init-scripts/mongodb:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - axonrh-network
+
+  # ===== ZOOKEEPER (Kafka Dependency) =====
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.0
+    container_name: axonrh-zookeeper
+    restart: unless-stopped
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+      - zookeeper_logs:/var/lib/zookeeper/log
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - axonrh-network
+
+  # ===== APACHE KAFKA =====
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: axonrh-kafka
+    restart: unless-stopped
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+    ports:
+      - "29092:29092"
+      - "9092:9092"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    networks:
+      - axonrh-network
+
+  # ===== KAFKA UI =====
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: axonrh-kafka-ui
+    restart: unless-stopped
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      KAFKA_CLUSTERS_0_NAME: axonrh-local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+    ports:
+      - "8090:8080"
+    networks:
+      - axonrh-network
+
+  # ===== MINIO (Object Storage - S3 Compatible) =====
+  minio:
+    image: minio/minio:latest
+    container_name: axonrh-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: axonrh_minio
+      MINIO_ROOT_PASSWORD: axonrh_minio_2026
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - axonrh-network
+
+  # ===== PROMETHEUS (Metrics) =====
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: axonrh-prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - axonrh-network
+
+  # ===== GRAFANA (Dashboards) =====
+  grafana:
+    image: grafana/grafana:10.4.0
+    container_name: axonrh-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: axonrh_grafana_2026
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./config/grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+      - loki
+    networks:
+      - axonrh-network
+
+  # ===== LOKI (Log Aggregation) =====
+  loki:
+    image: grafana/loki:2.9.6
+    container_name: axonrh-loki
+    restart: unless-stopped
+    command: -config.file=/etc/loki/local-config.yaml
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./config/loki/loki-config.yml:/etc/loki/local-config.yaml
+      - loki_data:/loki
+    networks:
+      - axonrh-network
+
+  # ===== JAEGER (Distributed Tracing) =====
+  jaeger:
+    image: jaegertracing/all-in-one:1.55
+    container_name: axonrh-jaeger
+    restart: unless-stopped
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "16686:16686"  # UI
+      - "14268:14268"  # HTTP collector
+      - "4317:4317"    # OTLP gRPC
+      - "4318:4318"    # OTLP HTTP
+    networks:
+      - axonrh-network
+
+# ===== VOLUMES =====
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  mongodb_data:
+    driver: local
+  zookeeper_data:
+    driver: local
+  zookeeper_logs:
+    driver: local
+  kafka_data:
+    driver: local
+  minio_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  loki_data:
+    driver: local
+
+# ===== NETWORK =====
+networks:
+  axonrh-network:
+    driver: bridge
+    name: axonrh-network

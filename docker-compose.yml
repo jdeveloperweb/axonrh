@@ -1,0 +1,102 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: axonrh-postgres
+    environment:
+      POSTGRES_USER: axonrh
+      POSTGRES_PASSWORD: axonrh123
+      POSTGRES_DB: axonrh
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./mnt/c/projetos/axonrh/scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U axonrh"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - axonrh-network
+
+  # MongoDB for AI conversations
+  mongodb:
+    image: mongo:7
+    container_name: axonrh-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: axonrh
+      MONGO_INITDB_ROOT_PASSWORD: axonrh123
+      MONGO_INITDB_DATABASE: axonrh
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - axonrh-network
+
+  # Redis for caching and sessions
+  redis:
+    image: redis:7-alpine
+    container_name: axonrh-redis
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - axonrh-network
+
+  # RabbitMQ for messaging
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: axonrh-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: axonrh
+      RABBITMQ_DEFAULT_PASS: axonrh123
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - axonrh-network
+
+  # MailHog for email testing
+  mailhog:
+    image: mailhog/mailhog
+    container_name: axonrh-mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - axonrh-network
+
+  # MinIO for file storage (S3 compatible)
+  minio:
+    image: minio/minio
+    container_name: axonrh-minio
+    environment:
+      MINIO_ROOT_USER: axonrh
+      MINIO_ROOT_PASSWORD: axonrh123
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - axonrh-network
+
+volumes:
+  postgres_data:
+  mongodb_data:
+  redis_data:
+  rabbitmq_data:
+  minio_data:
+
+networks:
+  axonrh-network:
+    driver: bridge

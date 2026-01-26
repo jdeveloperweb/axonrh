@@ -1,0 +1,50 @@
+server:
+  port: 0
+
+spring:
+  application:
+    name: config-service-test
+
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+    show-sql: true
+
+  cache:
+    type: simple
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+minio:
+  endpoint: http://localhost:9000
+  access-key: test
+  secret-key: test123
+  bucket:
+    logos: test-logos
+    assets: test-assets
+
+config:
+  theme:
+    validation:
+      max-logo-size-kb: 500
+      allowed-logo-formats: png,jpg,jpeg,svg
+      min-contrast-ratio: 4.5
+  versioning:
+    max-versions: 5
+    auto-cleanup: true
+
+logging:
+  level:
+    com.axonrh.config: DEBUG

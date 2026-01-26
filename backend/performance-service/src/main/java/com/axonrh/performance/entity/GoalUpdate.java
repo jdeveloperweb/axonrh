@@ -1,0 +1,104 @@
+package com.axonrh.performance.entity;
+
+import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+/**
+ * Atualizacao de progresso de meta.
+ */
+@Entity
+@Table(name = "goal_updates")
+public class GoalUpdate {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "goal_id", nullable = false)
+    private Goal goal;
+
+    @Column(name = "previous_value", precision = 15, scale = 2)
+    private BigDecimal previousValue;
+
+    @Column(name = "new_value", precision = 15, scale = 2)
+    private BigDecimal newValue;
+
+    @Column(name = "progress_percentage", precision = 5, scale = 2)
+    private BigDecimal progressPercentage;
+
+    @Column(columnDefinition = "TEXT")
+    private String notes;
+
+    @Column(name = "updated_by")
+    private UUID updatedBy;
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    // Getters and Setters
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public Goal getGoal() {
+        return goal;
+    }
+
+    public void setGoal(Goal goal) {
+        this.goal = goal;
+    }
+
+    public BigDecimal getPreviousValue() {
+        return previousValue;
+    }
+
+    public void setPreviousValue(BigDecimal previousValue) {
+        this.previousValue = previousValue;
+    }
+
+    public BigDecimal getNewValue() {
+        return newValue;
+    }
+
+    public void setNewValue(BigDecimal newValue) {
+        this.newValue = newValue;
+    }
+
+    public BigDecimal getProgressPercentage() {
+        return progressPercentage;
+    }
+
+    public void setProgressPercentage(BigDecimal progressPercentage) {
+        this.progressPercentage = progressPercentage;
+    }
+
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
+    }
+
+    public UUID getUpdatedBy() {
+        return updatedBy;
+    }
+
+    public void setUpdatedBy(UUID updatedBy) {
+        this.updatedBy = updatedBy;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+}

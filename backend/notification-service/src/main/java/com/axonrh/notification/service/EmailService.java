@@ -1,0 +1,226 @@
+package com.axonrh.notification.service;
+
+import com.axonrh.notification.entity.EmailLog;
+import com.axonrh.notification.entity.EmailLog.EmailStatus;
+import com.axonrh.notification.entity.EmailTemplate;
+import com.axonrh.notification.repository.EmailLogRepository;
+import com.axonrh.notification.repository.EmailTemplateRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import software.amazon.awssdk.services.sesv2.SesV2Client;
+import software.amazon.awssdk.services.sesv2.model.*;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+@Service
+@Transactional
+public class EmailService {
+
+    private static final Logger log = LoggerFactory.getLogger(EmailService.class);
+    private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\{\\{(\\w+)}}");
+
+    @Value("${email.from-address:noreply@axonrh.com}")
+    private String fromAddress;
+
+    @Value("${email.from-name:AxonRH}")
+    private String fromName;
+
+    @Value("${email.enabled:true}")
+    private boolean emailEnabled;
+
+    private final EmailTemplateRepository templateRepository;
+    private final EmailLogRepository logRepository;
+    private final SesV2Client sesClient;
+
+    public EmailService(EmailTemplateRepository templateRepository,
+                        EmailLogRepository logRepository,
+                        SesV2Client sesClient) {
+        this.templateRepository = templateRepository;
+        this.logRepository = logRepository;
+        this.sesClient = sesClient;
+    }
+
+    /**
+     * Envia email usando template.
+     */
+    @Async
+    public void sendTemplateEmail(UUID tenantId, String templateCode, String recipientEmail,
+                                  String recipientName, Map<String, String> variables) {
+        EmailTemplate template = templateRepository.findByTenantIdAndCode(tenantId, templateCode)
+                .or(() -> templateRepository.findSystemTemplate(templateCode))
+                .orElseThrow(() -> new IllegalArgumentException("Template não encontrado: " + templateCode));
+
+        String subject = replaceVariables(template.getSubject(), variables);
+        String bodyHtml = replaceVariables(template.getBodyHtml(), variables);
+        String bodyText = template.getBodyText() != null ?
+                replaceVariables(template.getBodyText(), variables) : null;
+
+        sendEmail(tenantId, recipientEmail, recipientName, subject, bodyHtml, bodyText,
+                template, null, null);
+    }
+
+    /**
+     * Envia email customizado.
+     */
+    @Async
+    public void sendCustomEmail(UUID tenantId, String recipientEmail, String recipientName,
+                                String subject, String bodyHtml, String bodyText) {
+        sendEmail(tenantId, recipientEmail, recipientName, subject, bodyHtml, bodyText,
+                null, null, null);
+    }
+
+    /**
+     * Envia email com CC e BCC.
+     */
+    @Async
+    public void sendEmailWithCopy(UUID tenantId, String recipientEmail, String recipientName,
+                                  String subject, String bodyHtml, String[] ccEmails, String[] bccEmails) {
+        sendEmail(tenantId, recipientEmail, recipientName, subject, bodyHtml, null,
+                null, ccEmails, bccEmails);
+    }
+
+    private void sendEmail(UUID tenantId, String recipientEmail, String recipientName,
+                           String subject, String bodyHtml, String bodyText,
+                           EmailTemplate template, String[] ccEmails, String[] bccEmails) {
+        // Create log entry
+        EmailLog emailLog = new EmailLog();
+        emailLog.setTenantId(tenantId);
+        emailLog.setRecipientEmail(recipientEmail);
+        emailLog.setRecipientName(recipientName);
+        emailLog.setSubject(subject);
+        emailLog.setBodyHtml(bodyHtml);
+        emailLog.setBodyText(bodyText);
+        emailLog.setCcEmails(ccEmails);
+        emailLog.setBccEmails(bccEmails);
+
+        if (template != null) {
+            emailLog.setTemplate(template);
+            emailLog.setTemplateCode(template.getCode());
+        }
+
+        if (!emailEnabled) {
+            log.info("Email disabled - would send to: {}", recipientEmail);
+            emailLog.setStatus(EmailStatus.SENT);
+            emailLog.setErrorMessage("Email disabled in configuration");
+            logRepository.save(emailLog);
+            return;
+        }
+
+        try {
+            emailLog.setStatus(EmailStatus.SENDING);
+            logRepository.save(emailLog);
+
+            // Build destination
+            Destination.Builder destinationBuilder = Destination.builder()
+                    .toAddresses(recipientEmail);
+
+            if (ccEmails != null && ccEmails.length > 0) {
+                destinationBuilder.ccAddresses(ccEmails);
+            }
+            if (bccEmails != null && bccEmails.length > 0) {
+                destinationBuilder.bccAddresses(bccEmails);
+            }
+
+            // Build email content
+            EmailContent.Builder contentBuilder = EmailContent.builder();
+
+            Body.Builder bodyBuilder = Body.builder();
+            bodyBuilder.html(Content.builder().data(bodyHtml).charset("UTF-8").build());
+            if (bodyText != null) {
+                bodyBuilder.text(Content.builder().data(bodyText).charset("UTF-8").build());
+            }
+
+            Message message = Message.builder()
+                    .subject(Content.builder().data(subject).charset("UTF-8").build())
+                    .body(bodyBuilder.build())
+                    .build();
+
+            contentBuilder.simple(message);
+
+            // Send email
+            SendEmailRequest request = SendEmailRequest.builder()
+                    .fromEmailAddress(String.format("%s <%s>", fromName, fromAddress))
+                    .destination(destinationBuilder.build())
+                    .content(contentBuilder.build())
+                    .build();
+
+            SendEmailResponse response = sesClient.sendEmail(request);
+
+            emailLog.markAsSent(response.messageId());
+            log.info("Email sent successfully to {} - MessageId: {}", recipientEmail, response.messageId());
+
+        } catch (Exception e) {
+            log.error("Failed to send email to {}: {}", recipientEmail, e.getMessage());
+            emailLog.markAsFailed(e.getMessage());
+        }
+
+        logRepository.save(emailLog);
+    }
+
+    /**
+     * Reenvia email falho.
+     */
+    public void retryEmail(UUID tenantId, UUID emailLogId) {
+        EmailLog emailLog = logRepository.findByTenantIdAndId(tenantId, emailLogId)
+                .orElseThrow(() -> new IllegalArgumentException("Email log não encontrado"));
+
+        if (emailLog.getRetryCount() >= 3) {
+            throw new IllegalStateException("Número máximo de tentativas atingido");
+        }
+
+        sendEmail(tenantId, emailLog.getRecipientEmail(), emailLog.getRecipientName(),
+                emailLog.getSubject(), emailLog.getBodyHtml(), emailLog.getBodyText(),
+                emailLog.getTemplate(), emailLog.getCcEmails(), emailLog.getBccEmails());
+    }
+
+    /**
+     * Lista templates disponíveis.
+     */
+    public List<EmailTemplate> listTemplates(UUID tenantId) {
+        return templateRepository.findByTenantIdOrSystem(tenantId);
+    }
+
+    /**
+     * Cria ou atualiza template customizado.
+     */
+    public EmailTemplate saveTemplate(UUID tenantId, EmailTemplate template) {
+        template.setTenantId(tenantId);
+        template.setSystem(false);
+        return templateRepository.save(template);
+    }
+
+    /**
+     * Busca histórico de emails.
+     */
+    public List<EmailLog> getEmailHistory(UUID tenantId, String recipientEmail) {
+        if (recipientEmail != null) {
+            return logRepository.findByTenantIdAndRecipientEmail(tenantId, recipientEmail);
+        }
+        return logRepository.findByTenantId(tenantId);
+    }
+
+    private String replaceVariables(String text, Map<String, String> variables) {
+        if (text == null || variables == null) return text;
+
+        Matcher matcher = VARIABLE_PATTERN.matcher(text);
+        StringBuffer result = new StringBuffer();
+
+        while (matcher.find()) {
+            String variableName = matcher.group(1);
+            String replacement = variables.getOrDefault(variableName, "");
+            matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));
+        }
+        matcher.appendTail(result);
+
+        return result.toString();
+    }
+}
