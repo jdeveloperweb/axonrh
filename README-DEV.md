@@ -34,10 +34,12 @@ cd C:\Projetos\AxonRH
 ### 3. Suba a infraestrutura com Docker
 ```bash
 docker-compose up -d
+# Para subir o PostgreSQL local (se você não tiver um já rodando)
+docker-compose --profile local-postgres up -d
 ```
 
 Isso irá iniciar:
-- PostgreSQL (porta 5432)
+- PostgreSQL (porta 5432, somente com profile `local-postgres`)
 - MongoDB (porta 27017)
 - Redis (porta 6379)
 - RabbitMQ (porta 5672,管理: http://localhost:15672)
@@ -64,6 +66,8 @@ http://localhost:3000
 ```bash
 cd /mnt/c/Projetos/AxonRH
 docker-compose up -d
+# Para subir o PostgreSQL local (se você não tiver um já rodando)
+docker-compose --profile local-postgres up -d
 ```
 
 ### 2. Backend (requer Java 21)
@@ -100,7 +104,7 @@ npm run dev
 | Auth Service | 8081 | http://localhost:8081 |
 | Core Service | 8082 | http://localhost:8082 |
 | Config Service | 8888 | http://localhost:8888 |
-| PostgreSQL | 5432 | - |
+| PostgreSQL (externo ou profile local-postgres) | 5432 | - |
 | MongoDB | 27017 | - |
 | Redis | 6379 | - |
 | RabbitMQ | 5672/15672 | http://localhost:15672 |
@@ -112,7 +116,7 @@ npm run dev
 ## Credenciais de Desenvolvimento
 
 ### PostgreSQL
-- **Host:** localhost:5432
+- **Host:** localhost:5432 (externo ou profile `local-postgres`)
 - **User:** axonrh
 - **Password:** axonrh123
 - **Database:** axonrh
@@ -144,7 +148,7 @@ npm run dev
 docker-compose ps
 
 # Ver logs
-docker-compose logs -f postgres
+docker-compose --profile local-postgres logs -f postgres
 docker-compose logs -f mongodb
 
 # Parar tudo

@@ -5,6 +5,8 @@ services:
   postgres:
     image: postgres:15-alpine
     container_name: axonrh-postgres
+    profiles:
+      - local-postgres
     environment:
       POSTGRES_USER: axonrh
       POSTGRES_PASSWORD: axonrh123
