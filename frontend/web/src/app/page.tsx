@@ -3,19 +3,38 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
+import { setupApi } from '@/lib/api/setup';
 
 export default function HomePage() {
   const router = useRouter();
   const { isAuthenticated, isLoading } = useAuthStore();
 
   useEffect(() => {
-    if (!isLoading) {
+    const handleRedirect = async () => {
+      if (isLoading) {
+        return;
+      }
+
+      try {
+        const summaryResponse = await setupApi.getSummary();
+        const isSetupCompleted = summaryResponse.status === 2;
+
+        if (!isSetupCompleted) {
+          router.replace('/setup');
+          return;
+        }
+      } catch (error) {
+        console.error('Error loading setup summary:', error);
+      }
+
       if (isAuthenticated) {
         router.replace('/dashboard');
       } else {
         router.replace('/login');
       }
-    }
+    };
+
+    void handleRedirect();
   }, [isAuthenticated, isLoading, router]);
 
   // Loading state
