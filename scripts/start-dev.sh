@@ -77,6 +77,107 @@ start_background_process() {
     (cd "$workdir" && nohup bash -c "$command" > "$log_file" 2>&1 & echo $! > "$(process_pid_file "$process_name")")
 }
 
+pause_for_user() {
+    read -r -p "Pressione Enter para voltar ao menu..." _
+}
+
+tail_process_log() {
+    local process_name="$1"
+    local log_file="$PROCESS_DIR/${process_name}.log"
+
+    if [ -f "$log_file" ]; then
+        echo -e "\n${BLUE}==== Logs: ${process_name} ====${NC}"
+        tail -n 200 "$log_file"
+    else
+        echo -e "${RED}Log não encontrado para ${process_name}.${NC}"
+    fi
+
+    pause_for_user
+}
+
+tail_docker_log() {
+    local container_name="$1"
+
+    if docker ps --format '{{.Names}}' | rg -q "^${container_name}$"; then
+        echo -e "\n${BLUE}==== Logs: ${container_name} ====${NC}"
+        docker logs --tail 200 "$container_name"
+    else
+        echo -e "${RED}Container ${container_name} não está em execução.${NC}"
+    fi
+
+    pause_for_user
+}
+
+logs_menu() {
+    ensure_process_dir
+
+    local app_services=(
+        "axonrh-config-service"
+        "axonrh-auth-service"
+        "axonrh-core-service"
+        "axonrh-employee-service"
+        "axonrh-timesheet-service"
+        "axonrh-vacation-service"
+        "axonrh-performance-service"
+        "axonrh-learning-service"
+        "axonrh-ai-assistant-service"
+        "axonrh-notification-service"
+        "axonrh-integration-service"
+        "axonrh-api-gateway"
+        "axonrh-frontend"
+    )
+
+    local infra_services=(
+        "axonrh-postgres"
+        "axonrh-mongodb"
+        "axonrh-redis"
+        "axonrh-rabbitmq"
+        "axonrh-mailhog"
+    )
+
+    echo -e "\n${BLUE}========================================${NC}"
+    echo -e "${BLUE}   Logs - AxonRH                         ${NC}"
+    echo -e "${BLUE}========================================${NC}"
+    echo -e "${YELLOW}Logs de aplicações:${NC}"
+    local index=1
+    for service in "${app_services[@]}"; do
+        echo -e "  ${index}) ${service}"
+        index=$((index + 1))
+    done
+
+    echo -e "\n${YELLOW}Logs de infraestrutura (Docker):${NC}"
+    for service in "${infra_services[@]}"; do
+        echo -e "  ${index}) ${service}"
+        index=$((index + 1))
+    done
+
+    echo -e "  ${index}) Voltar"
+
+    read -r -p "Escolha um serviço para ver os logs: " log_choice
+
+    local total_apps=${#app_services[@]}
+    local total_infra=${#infra_services[@]}
+    local back_option=$((total_apps + total_infra + 1))
+
+    if [[ "$log_choice" =~ ^[0-9]+$ ]]; then
+        if [ "$log_choice" -ge 1 ] && [ "$log_choice" -le "$total_apps" ]; then
+            tail_process_log "${app_services[$((log_choice - 1))]}"
+        elif [ "$log_choice" -gt "$total_apps" ] && [ "$log_choice" -le $((total_apps + total_infra)) ]; then
+            tail_docker_log "${infra_services[$((log_choice - total_apps - 1))]}"
+        elif [ "$log_choice" -eq "$back_option" ]; then
+            return
+        else
+            echo -e "${RED}Opção inválida.${NC}"
+            pause_for_user
+        fi
+    else
+        echo -e "${RED}Opção inválida.${NC}"
+        pause_for_user
+    fi
+
+    logs_menu
+}
+
 # Start infrastructure services (PostgreSQL, MongoDB, Redis, etc.)
 start_infrastructure() {
     echo -e "\n${YELLOW}Starting infrastructure services...${NC}"
@@ -301,9 +402,10 @@ menu() {
     echo -e "  3) Redeploy a single backend service"
     echo -e "  4) Redeploy frontend only"
     echo -e "  5) Start infrastructure only"
-    echo -e "  6) Exit"
+    echo -e "  6) Ver logs dos serviços"
+    echo -e "  7) Exit"
 
-    read -r -p "Enter your choice [1-6]: " choice
+    read -r -p "Enter your choice [1-7]: " choice
 
     case "$choice" in
         1)
@@ -333,6 +435,9 @@ menu() {
             wait_for_postgres
             ;;
         6)
+            logs_menu
+            ;;
+        7)
             echo -e "${YELLOW}Exiting.${NC}"
             exit 0
             ;;
