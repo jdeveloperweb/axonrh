@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
@@ -12,16 +12,18 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { isAuthenticated, isLoading } = useAuthStore();
+  const isSetupRoute = pathname?.startsWith('/setup');
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (!isLoading && !isAuthenticated && !isSetupRoute) {
       router.replace('/login');
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, isSetupRoute, router]);
 
   // Loading state
-  if (isLoading) {
+  if (isLoading && !isSetupRoute) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[var(--color-background)]">
         <div className="w-12 h-12 border-4 border-[var(--color-primary)] border-t-transparent rounded-full animate-spin" />
@@ -30,8 +32,12 @@ export default function DashboardLayout({
   }
 
   // Not authenticated
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !isSetupRoute) {
     return null;
+  }
+
+  if (isSetupRoute) {
+    return <>{children}</>;
   }
 
   return (
