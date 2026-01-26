@@ -239,6 +239,10 @@ function Step1CompanyData({
   profile: CompanyProfile;
   onChange: (profile: CompanyProfile) => void;
 }) {
+  const inputClassName =
+    'mt-2 block w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 hover:border-gray-300 placeholder:text-gray-400';
+  const selectClassName = `${inputClassName} pr-10`;
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -250,7 +254,7 @@ function Step1CompanyData({
             type="text"
             value={profile.legalName}
             onChange={(e) => onChange({ ...profile, legalName: e.target.value })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className={inputClassName}
           />
         </div>
         <div>
@@ -261,7 +265,7 @@ function Step1CompanyData({
             type="text"
             value={profile.tradeName || ''}
             onChange={(e) => onChange({ ...profile, tradeName: e.target.value })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className={inputClassName}
           />
         </div>
         <div>
@@ -273,7 +277,7 @@ function Step1CompanyData({
             value={profile.cnpj}
             onChange={(e) => onChange({ ...profile, cnpj: e.target.value.replace(/\D/g, '') })}
             placeholder="00.000.000/0000-00"
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className={inputClassName}
           />
         </div>
         <div>
@@ -283,7 +287,7 @@ function Step1CompanyData({
           <select
             value={profile.taxRegime || ''}
             onChange={(e) => onChange({ ...profile, taxRegime: e.target.value as any })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className={selectClassName}
           >
             <option value="">Selecione</option>
             <option value="SIMPLES">Simples Nacional</option>
@@ -303,7 +307,7 @@ function Step1CompanyData({
             type="text"
             value={profile.addressStreet || ''}
             onChange={(e) => onChange({ ...profile, addressStreet: e.target.value })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className={inputClassName}
           />
         </div>
         <div>
@@ -312,7 +316,7 @@ function Step1CompanyData({
             type="text"
             value={profile.addressNumber || ''}
             onChange={(e) => onChange({ ...profile, addressNumber: e.target.value })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className={inputClassName}
           />
         </div>
         <div>
@@ -321,7 +325,7 @@ function Step1CompanyData({
             type="text"
             value={profile.addressNeighborhood || ''}
             onChange={(e) => onChange({ ...profile, addressNeighborhood: e.target.value })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className={inputClassName}
           />
         </div>
         <div>
@@ -330,7 +334,7 @@ function Step1CompanyData({
             type="text"
             value={profile.addressCity || ''}
             onChange={(e) => onChange({ ...profile, addressCity: e.target.value })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className={inputClassName}
           />
         </div>
         <div>
@@ -338,7 +342,7 @@ function Step1CompanyData({
           <select
             value={profile.addressState || ''}
             onChange={(e) => onChange({ ...profile, addressState: e.target.value })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className={selectClassName}
           >
             <option value="">Selecione</option>
             {BRAZIL_STATES.map((state) => (
