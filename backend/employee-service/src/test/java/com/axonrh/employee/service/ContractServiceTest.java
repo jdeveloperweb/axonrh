@@ -39,7 +39,7 @@ class ContractServiceTest {
     @InjectMocks
     private ContractService contractService;
 
-    private static final String TENANT_ID = UUID.randomUUID().toString();
+    private static final UUID TENANT_ID = UUID.randomUUID();
     private static final String TEMPLATE_CONTENT = """
             <h1>CONTRATO DE TRABALHO</h1>
             <p>Contratado: {{NOME}}</p>
@@ -182,11 +182,11 @@ class ContractServiceTest {
                 .thenReturn("contratos/" + process.getId() + "/contrato_trabalho.pdf");
 
         // When
-        String storagePath = contractService.generateContract(process, TENANT_ID);
+        String storagePath = contractService.generateContract(process, TENANT_ID.toString());
 
         // Then
         assertThat(storagePath).contains("contrato_trabalho.pdf");
-        verify(storageService).uploadFile(any(byte[].class), anyString(), eq("application/pdf"), eq(TENANT_ID));
+        verify(storageService).uploadFile(any(byte[].class), anyString(), eq("application/pdf"), eq(TENANT_ID.toString()));
     }
 
     @Test
@@ -199,7 +199,7 @@ class ContractServiceTest {
                 .thenReturn("path");
 
         // When
-        contractService.generateContract(process, TENANT_ID);
+        contractService.generateContract(process, TENANT_ID.toString());
 
         // Then
         verify(contractTemplateRepository).findByTenantIdAndContractTypeAndIsActiveTrue(TENANT_ID, "CLT");
@@ -217,7 +217,7 @@ class ContractServiceTest {
                 .thenReturn("path");
 
         // When
-        contractService.generateContract(process, TENANT_ID);
+        contractService.generateContract(process, TENANT_ID.toString());
 
         // Then
         verify(contractTemplateRepository).findByTenantIdAndContractTypeAndIsActiveTrue(null, "CLT");
@@ -231,7 +231,7 @@ class ContractServiceTest {
                 .thenReturn(java.util.List.of(template));
 
         // When
-        String preview = contractService.getContractPreview(process, TENANT_ID);
+        String preview = contractService.getContractPreview(process, TENANT_ID.toString());
 
         // Then
         assertThat(preview).contains("<!DOCTYPE html>");
