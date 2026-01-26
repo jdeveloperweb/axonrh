@@ -26,8 +26,11 @@ export default function HomePage() {
 
       try {
         const summaryResponse = await setupApi.getSummary();
+        const status = summaryResponse.status as unknown;
         const isSetupCompleted =
-          summaryResponse.status === 'COMPLETED' || summaryResponse.progressPercentage === 100;
+          (typeof status === 'string' && status === 'COMPLETED') ||
+          (typeof status === 'number' && status === 2) ||
+          summaryResponse.progressPercentage === 100;
 
         if (!isSetupCompleted) {
           router.replace('/setup');
