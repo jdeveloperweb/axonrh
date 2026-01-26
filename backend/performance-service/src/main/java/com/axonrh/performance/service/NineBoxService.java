@@ -5,6 +5,9 @@ import com.axonrh.performance.dto.NineBoxEmployee;
 import com.axonrh.performance.dto.NineBoxMatrix;
 import com.axonrh.performance.dto.NineBoxPosition;
 import com.axonrh.performance.entity.Evaluation;
+import com.axonrh.performance.entity.EvaluationCycle;
+import com.axonrh.performance.entity.enums.EvaluationType;
+import com.axonrh.performance.repository.EvaluationCycleRepository;
 import com.axonrh.performance.repository.EvaluationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +28,7 @@ import java.util.stream.Collectors;
 public class NineBoxService {
 
     private final EvaluationRepository evaluationRepository;
+    private final EvaluationCycleRepository cycleRepository;
 
     /**
      * Gera matriz 9Box para um ciclo de avaliacao.
@@ -34,16 +38,14 @@ public class NineBoxService {
         UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
 
         List<Evaluation> evaluations = evaluationRepository
-                .findCompletedByCycleWithScores(tenantId, cycleId);
+                .findCompletedForNineBox(tenantId, cycleId, EvaluationType.MANAGER);
 
         // Agrupar por colaborador (pode ter multiplas avaliacoes)
         Map<UUID, List<Evaluation>> byEmployee = evaluations.stream()
-                .collect(Collectors.groupingBy(Evaluation::getEvaluateeId));
+                .collect(Collectors.groupingBy(Evaluation::getEmployeeId));
 
         // Calcular posicao 9Box para cada colaborador
         List<NineBoxEmployee> employees = new ArrayList<>();
-        Map<String, List<NineBoxEmployee>> positionMap = new HashMap<>();
-
         for (Map.Entry<UUID, List<Evaluation>> entry : byEmployee.entrySet()) {
             UUID employeeId = entry.getKey();
             List<Evaluation> empEvaluations = entry.getValue();
@@ -57,111 +59,39 @@ public class NineBoxService {
 
             // Calcular media de potencial (se disponivel)
             double avgPotential = empEvaluations.stream()
-                    .filter(e -> e.getPotentialRating() != null)
-                    .mapToDouble(e -> e.getPotentialRating())
+                    .filter(e -> e.getPotentialScore() != null)
+                    .mapToDouble(e -> e.getPotentialScore().doubleValue())
                     .average()
                     .orElse(2.0); // Padrao: medio
 
-            // Converter para rating 1-3
-            int performanceRating = convertToRating(avgPerformance, 1, 5, 1, 3);
-            int potentialRating = (int) Math.round(avgPotential);
-
-            // Determinar posicao 9Box
-            NineBoxPosition position = determinePosition(performanceRating, potentialRating);
-
             Evaluation firstEval = empEvaluations.get(0);
-            NineBoxEmployee employee = NineBoxEmployee.builder()
-                    .employeeId(employeeId)
-                    .employeeName(firstEval.getEvaluateeName())
-                    .departmentName(firstEval.getEvaluateeDepartmentName())
-                    .positionName(firstEval.getEvaluateePosition())
-                    .performanceScore(BigDecimal.valueOf(avgPerformance).setScale(2, RoundingMode.HALF_UP))
-                    .performanceRating(performanceRating)
-                    .potentialRating(potentialRating)
-                    .nineBoxPosition(position)
-                    .build();
+            NineBoxEmployee employee = new NineBoxEmployee();
+            employee.setEmployeeId(employeeId.toString());
+            employee.setEmployeeName(firstEval.getEmployeeName());
+            employee.setPerformanceScore(BigDecimal.valueOf(avgPerformance).setScale(2, RoundingMode.HALF_UP));
+            employee.setPotentialScore(BigDecimal.valueOf(avgPotential).setScale(2, RoundingMode.HALF_UP));
 
             employees.add(employee);
-            positionMap.computeIfAbsent(position.name(), k -> new ArrayList<>()).add(employee);
-        }
-
-        // Calcular estatisticas
-        Map<String, Integer> positionCounts = new HashMap<>();
-        for (NineBoxPosition pos : NineBoxPosition.values()) {
-            positionCounts.put(pos.name(), positionMap.getOrDefault(pos.name(), Collections.emptyList()).size());
         }
 
         // Identificar HiPos (High Potentials)
         List<NineBoxEmployee> hiPos = employees.stream()
-                .filter(e -> e.getNineBoxPosition() == NineBoxPosition.STAR ||
-                             e.getNineBoxPosition() == NineBoxPosition.HIGH_POTENTIAL ||
-                             e.getNineBoxPosition() == NineBoxPosition.FUTURE_STAR)
+                .filter(e -> e.getPosition() == NineBoxPosition.STAR ||
+                             e.getPosition() == NineBoxPosition.HIGH_POTENTIAL ||
+                             e.getPosition() == NineBoxPosition.FUTURE_STAR)
                 .toList();
 
         // Identificar colaboradores em risco
         List<NineBoxEmployee> atRisk = employees.stream()
-                .filter(e -> e.getNineBoxPosition() == NineBoxPosition.UNDERPERFORMER ||
-                             e.getNineBoxPosition() == NineBoxPosition.DILEMMA)
+                .filter(e -> e.getPosition() == NineBoxPosition.UNDERPERFORMER ||
+                             e.getPosition() == NineBoxPosition.DILEMMA)
                 .toList();
 
-        return NineBoxMatrix.builder()
-                .cycleId(cycleId)
-                .totalEmployees(employees.size())
-                .employees(employees)
-                .positionCounts(positionCounts)
-                .hiPoCount(hiPos.size())
-                .atRiskCount(atRisk.size())
-                .hiPoPercentage(employees.isEmpty() ? 0 : (hiPos.size() * 100.0 / employees.size()))
-                .positions(positionMap)
-                .build();
-    }
-
-    /**
-     * Determina posicao 9Box baseado em performance e potencial.
-     */
-    public NineBoxPosition determinePosition(int performance, int potential) {
-        // Matriz 9Box:
-        //          | Baixo Pot (1) | Medio Pot (2) | Alto Pot (3)
-        // ---------+---------------+---------------+--------------
-        // Alto (3) | WORKHORSE     | KEY_PLAYER    | STAR
-        // Medio(2) | SOLID         | CORE          | HIGH_POTENTIAL
-        // Baixo(1) | UNDERPERFORMER| DILEMMA       | FUTURE_STAR
-
-        return switch (performance) {
-            case 3 -> switch (potential) {
-                case 1 -> NineBoxPosition.WORKHORSE;
-                case 2 -> NineBoxPosition.KEY_PLAYER;
-                case 3 -> NineBoxPosition.STAR;
-                default -> NineBoxPosition.CORE;
-            };
-            case 2 -> switch (potential) {
-                case 1 -> NineBoxPosition.SOLID_PERFORMER;
-                case 2 -> NineBoxPosition.CORE;
-                case 3 -> NineBoxPosition.HIGH_POTENTIAL;
-                default -> NineBoxPosition.CORE;
-            };
-            case 1 -> switch (potential) {
-                case 1 -> NineBoxPosition.UNDERPERFORMER;
-                case 2 -> NineBoxPosition.DILEMMA;
-                case 3 -> NineBoxPosition.FUTURE_STAR;
-                default -> NineBoxPosition.DILEMMA;
-            };
-            default -> NineBoxPosition.CORE;
-        };
-    }
-
-    /**
-     * Converte score de uma escala para outra.
-     */
-    private int convertToRating(double value, double fromMin, double fromMax, int toMin, int toMax) {
-        if (value <= fromMin) return toMin;
-        if (value >= fromMax) return toMax;
-
-        double range = fromMax - fromMin;
-        double normalized = (value - fromMin) / range;
-        double toRange = toMax - toMin;
-
-        return (int) Math.round(toMin + (normalized * toRange));
+        EvaluationCycle cycle = cycleRepository.findByTenantIdAndId(tenantId, cycleId).orElse(null);
+        String cycleName = cycle != null ? cycle.getName() : null;
+        NineBoxMatrix matrix = new NineBoxMatrix(cycleId.toString(), cycleName, employees);
+        log.debug("Matriz 9Box gerada: {} colaboradores, {} HiPos, {} em risco", employees.size(), hiPos.size(), atRisk.size());
+        return matrix;
     }
 
     /**
@@ -173,9 +103,9 @@ public class NineBoxService {
 
         // Retornar Stars, High Potentials e Future Stars como candidatos
         return matrix.getEmployees().stream()
-                .filter(e -> e.getNineBoxPosition() == NineBoxPosition.STAR ||
-                             e.getNineBoxPosition() == NineBoxPosition.HIGH_POTENTIAL ||
-                             e.getNineBoxPosition() == NineBoxPosition.FUTURE_STAR)
+                .filter(e -> e.getPosition() == NineBoxPosition.STAR ||
+                             e.getPosition() == NineBoxPosition.HIGH_POTENTIAL ||
+                             e.getPosition() == NineBoxPosition.FUTURE_STAR)
                 .sorted(Comparator.comparing(NineBoxEmployee::getPerformanceScore).reversed())
                 .toList();
     }
