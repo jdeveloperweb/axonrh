@@ -37,62 +37,8 @@ git_pull() {
     git pull
 }
 
-PROCESS_DIR="$PROJECT_ROOT/.dev-processes"
-
-ensure_process_dir() {
-    mkdir -p "$PROCESS_DIR"
-}
-
-process_pid_file() {
-    local process_name="$1"
-    echo "$PROCESS_DIR/${process_name}.pid"
-}
-
-stop_process_if_running() {
-    local process_name="$1"
-    local pid_file
-    pid_file="$(process_pid_file "$process_name")"
-
-    if [ -f "$pid_file" ]; then
-        local pid
-        pid="$(cat "$pid_file")"
-        if [ -n "$pid" ] && kill -0 "$pid" > /dev/null 2>&1; then
-            echo -e "${YELLOW}Stopping existing process: ${process_name} (PID: ${pid})${NC}"
-            kill "$pid" || true
-        fi
-        rm -f "$pid_file"
-    fi
-}
-
-start_background_process() {
-    local process_name="$1"
-    local workdir="$2"
-    local command="$3"
-    local log_file="$PROCESS_DIR/${process_name}.log"
-
-    ensure_process_dir
-    stop_process_if_running "$process_name"
-
-    echo -e "${YELLOW}Starting ${process_name}...${NC}"
-    (cd "$workdir" && nohup bash -c "$command" > "$log_file" 2>&1 & echo $! > "$(process_pid_file "$process_name")")
-}
-
 pause_for_user() {
     read -r -p "Pressione Enter para voltar ao menu..." _
-}
-
-tail_process_log() {
-    local process_name="$1"
-    local log_file="$PROCESS_DIR/${process_name}.log"
-
-    if [ -f "$log_file" ]; then
-        echo -e "\n${BLUE}==== Logs: ${process_name} ====${NC}"
-        tail -n 200 "$log_file"
-    else
-        echo -e "${RED}Log não encontrado para ${process_name}.${NC}"
-    fi
-
-    pause_for_user
 }
 
 tail_docker_log() {
@@ -109,8 +55,6 @@ tail_docker_log() {
 }
 
 logs_menu() {
-    ensure_process_dir
-
     local app_services=(
         "axonrh-config-service"
         "axonrh-auth-service"
@@ -133,6 +77,7 @@ logs_menu() {
         "axonrh-redis"
         "axonrh-rabbitmq"
         "axonrh-mailhog"
+        "axonrh-minio"
     )
 
     echo -e "\n${BLUE}========================================${NC}"
@@ -161,7 +106,7 @@ logs_menu() {
 
     if [[ "$log_choice" =~ ^[0-9]+$ ]]; then
         if [ "$log_choice" -ge 1 ] && [ "$log_choice" -le "$total_apps" ]; then
-            tail_process_log "${app_services[$((log_choice - 1))]}"
+            tail_docker_log "${app_services[$((log_choice - 1))]}"
         elif [ "$log_choice" -gt "$total_apps" ] && [ "$log_choice" -le $((total_apps + total_infra)) ]; then
             tail_docker_log "${infra_services[$((log_choice - total_apps - 1))]}"
         elif [ "$log_choice" -eq "$back_option" ]; then
@@ -183,76 +128,6 @@ start_infrastructure() {
     echo -e "\n${YELLOW}Starting infrastructure services...${NC}"
 
     cd "$PROJECT_ROOT"
-
-    # Create docker-compose for infrastructure if it doesn't exist
-    if [ ! -f "docker-compose.yml" ]; then
-        cat > docker-compose.yml << 'EOF'
-version: '3.8'
-
-services:
-  postgres:
-    image: postgres:15-alpine
-    container_name: axonrh-postgres
-    environment:
-      POSTGRES_USER: axonrh
-      POSTGRES_PASSWORD: axonrh123
-      POSTGRES_DB: axonrh
-    ports:
-      - "5433:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U axonrh"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  mongodb:
-    image: mongo:7
-    container_name: axonrh-mongodb
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: axonrh
-      MONGO_INITDB_ROOT_PASSWORD: axonrh123
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-
-  redis:
-    image: redis:7-alpine
-    container_name: axonrh-redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-
-  rabbitmq:
-    image: rabbitmq:3-management-alpine
-    container_name: axonrh-rabbitmq
-    environment:
-      RABBITMQ_DEFAULT_USER: axonrh
-      RABBITMQ_DEFAULT_PASS: axonrh123
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-
-  mailhog:
-    image: mailhog/mailhog
-    container_name: axonrh-mailhog
-    ports:
-      - "1025:1025"
-      - "8025:8025"
-
-volumes:
-  postgres_data:
-  mongodb_data:
-  redis_data:
-  rabbitmq_data:
-EOF
-    fi
-
     docker compose up -d
 
     echo -e "${GREEN}✓ Infrastructure services started${NC}"
@@ -276,48 +151,8 @@ wait_for_postgres() {
 start_backend() {
     echo -e "\n${YELLOW}Starting backend services...${NC}"
 
-    cd "$PROJECT_ROOT/backend"
-
-    # Check if Maven wrapper exists
-    if [ ! -f "mvnw" ]; then
-        echo -e "${YELLOW}Creating Maven wrapper...${NC}"
-        mvn -N wrapper:wrapper
-    fi
-
-    chmod +x mvnw
-
-    # Build all services
-    echo -e "${YELLOW}Building backend services...${NC}"
-    ./mvnw clean package -DskipTests -T 4
-
-    # Start services in the background
-    echo -e "${YELLOW}Starting microservices...${NC}"
-
-    # Start config-service first
-    start_background_process "axonrh-config-service" "$PROJECT_ROOT/backend/config-service" "../mvnw spring-boot:run"
-    sleep 10
-
-    # Start remaining services
-    local services=(
-        "auth-service"
-        "core-service"
-        "employee-service"
-        "timesheet-service"
-        "vacation-service"
-        "performance-service"
-        "learning-service"
-        "ai-assistant-service"
-        "notification-service"
-        "integration-service"
-    )
-
-    for service in "${services[@]}"; do
-        start_background_process "axonrh-${service}" "$PROJECT_ROOT/backend/${service}" "../mvnw spring-boot:run"
-        sleep 5
-    done
-
-    # Start api-gateway last
-    start_background_process "axonrh-api-gateway" "$PROJECT_ROOT/backend/api-gateway" "../mvnw spring-boot:run"
+    cd "$PROJECT_ROOT"
+    docker compose --profile backend up -d --build
 
     echo -e "${GREEN}✓ Backend services starting...${NC}"
     echo -e "  - Config Service: http://localhost:8888"
@@ -330,17 +165,8 @@ start_backend() {
 start_frontend() {
     echo -e "\n${YELLOW}Starting frontend...${NC}"
 
-    cd "$PROJECT_ROOT/frontend/web"
-
-    # Check if node_modules exists
-    if [ ! -d "node_modules" ]; then
-        echo -e "${YELLOW}Installing frontend dependencies...${NC}"
-        npm install
-    fi
-
-    # Start Next.js development server
-    echo -e "${YELLOW}Starting Next.js development server...${NC}"
-    start_background_process "axonrh-frontend" "$PROJECT_ROOT/frontend/web" "npm run dev"
+    cd "$PROJECT_ROOT"
+    docker compose --profile frontend up -d --build
 
     echo -e "${GREEN}✓ Frontend started at http://localhost:3000${NC}"
 }
@@ -349,20 +175,9 @@ start_frontend() {
 start_single_backend_service() {
     local service="$1"
 
-    cd "$PROJECT_ROOT/backend"
-
-    if [ ! -f "mvnw" ]; then
-        echo -e "${YELLOW}Creating Maven wrapper...${NC}"
-        mvn -N wrapper:wrapper
-    fi
-
-    chmod +x mvnw
-
-    echo -e "${YELLOW}Building ${service}...${NC}"
-    ./mvnw -pl "${service}" -am clean package -DskipTests
-
+    cd "$PROJECT_ROOT"
     echo -e "${YELLOW}Starting ${service}...${NC}"
-    start_background_process "axonrh-${service}" "$PROJECT_ROOT/backend/${service}" "../mvnw spring-boot:run"
+    docker compose --profile backend up -d --build "${service}"
 }
 
 select_backend_service() {
@@ -411,10 +226,9 @@ menu() {
         1)
             check_docker
             git_pull
-            start_infrastructure
-            wait_for_postgres
-            start_backend
-            start_frontend
+            echo -e "\n${YELLOW}Starting all services with Docker Compose...${NC}"
+            cd "$PROJECT_ROOT"
+            docker compose --profile backend --profile frontend up -d --build
             ;;
         2)
             check_docker

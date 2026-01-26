@@ -1,5 +1,44 @@
 version: '3.8'
 
+x-backend-env: &backend-env
+  DB_HOST: postgres
+  DB_PORT: 5432
+  DB_NAME: axonrh
+  DB_USER: axonrh
+  DB_PASSWORD: axonrh123
+  REDIS_HOST: redis
+  REDIS_PORT: 6379
+  MINIO_ENDPOINT: http://minio:9000
+  MINIO_ACCESS_KEY: axonrh
+  MINIO_SECRET_KEY: axonrh123
+  MONGODB_URI: mongodb://axonrh:axonrh123@mongodb:27017/axonrh_conversations?authSource=admin
+  SPRING_FLYWAY_ENABLED: "false"
+  SPRING_LIQUIBASE_ENABLED: "false"
+
+x-backend-service: &backend-service
+  image: maven:3.9.6-eclipse-temurin-21
+  working_dir: /workspace/backend
+  volumes:
+    - ./backend:/workspace/backend
+    - maven_repo:/root/.m2
+  environment:
+    <<: *backend-env
+  depends_on:
+    postgres:
+      condition: service_healthy
+    mongodb:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+    rabbitmq:
+      condition: service_healthy
+    minio:
+      condition: service_healthy
+  networks:
+    - axonrh-network
+  profiles:
+    - backend
+
 services:
   # PostgreSQL Database
   postgres:
@@ -115,12 +154,154 @@ services:
     networks:
       - axonrh-network
 
+  config-service:
+    <<: *backend-service
+    container_name: axonrh-config-service
+    command: ./mvnw -pl config-service -am spring-boot:run
+    ports:
+      - "8888:8888"
+    environment:
+      <<: *backend-env
+      SERVER_PORT: 8888
+
+  auth-service:
+    <<: *backend-service
+    container_name: axonrh-auth-service
+    command: ./mvnw -pl auth-service -am spring-boot:run
+    ports:
+      - "8081:8081"
+    environment:
+      <<: *backend-env
+      SERVER_PORT: 8081
+
+  core-service:
+    <<: *backend-service
+    container_name: axonrh-core-service
+    command: ./mvnw -pl core-service -am spring-boot:run
+    ports:
+      - "8082:8082"
+    environment:
+      <<: *backend-env
+      SERVER_PORT: 8082
+
+  employee-service:
+    <<: *backend-service
+    container_name: axonrh-employee-service
+    command: ./mvnw -pl employee-service -am spring-boot:run
+    ports:
+      - "8083:8083"
+    environment:
+      <<: *backend-env
+      SERVER_PORT: 8083
+
+  timesheet-service:
+    <<: *backend-service
+    container_name: axonrh-timesheet-service
+    command: ./mvnw -pl timesheet-service -am spring-boot:run
+    ports:
+      - "8084:8084"
+    environment:
+      <<: *backend-env
+      SERVER_PORT: 8084
+
+  vacation-service:
+    <<: *backend-service
+    container_name: axonrh-vacation-service
+    command: ./mvnw -pl vacation-service -am spring-boot:run
+    ports:
+      - "8085:8085"
+    environment:
+      <<: *backend-env
+      SERVER_PORT: 8085
+
+  performance-service:
+    <<: *backend-service
+    container_name: axonrh-performance-service
+    command: ./mvnw -pl performance-service -am spring-boot:run
+    ports:
+      - "8086:8086"
+    environment:
+      <<: *backend-env
+      SERVER_PORT: 8086
+
+  learning-service:
+    <<: *backend-service
+    container_name: axonrh-learning-service
+    command: ./mvnw -pl learning-service -am spring-boot:run
+    ports:
+      - "8087:8087"
+    environment:
+      <<: *backend-env
+      SERVER_PORT: 8087
+
+  ai-assistant-service:
+    <<: *backend-service
+    container_name: axonrh-ai-assistant-service
+    command: ./mvnw -pl ai-assistant-service -am spring-boot:run
+    ports:
+      - "8088:8088"
+    environment:
+      <<: *backend-env
+      SERVER_PORT: 8088
+
+  notification-service:
+    <<: *backend-service
+    container_name: axonrh-notification-service
+    command: ./mvnw -pl notification-service -am spring-boot:run
+    ports:
+      - "8089:8089"
+    environment:
+      <<: *backend-env
+      SERVER_PORT: 8089
+
+  integration-service:
+    <<: *backend-service
+    container_name: axonrh-integration-service
+    command: ./mvnw -pl integration-service -am spring-boot:run
+    ports:
+      - "8090:8090"
+    environment:
+      <<: *backend-env
+      SERVER_PORT: 8090
+
+  api-gateway:
+    <<: *backend-service
+    container_name: axonrh-api-gateway
+    command: ./mvnw -pl api-gateway -am spring-boot:run
+    ports:
+      - "8080:8080"
+    environment:
+      <<: *backend-env
+      SERVER_PORT: 8080
+
+  frontend:
+    image: node:20-alpine
+    container_name: axonrh-frontend
+    working_dir: /workspace/frontend
+    volumes:
+      - ./frontend/web:/workspace/frontend
+      - frontend_node_modules:/workspace/frontend/node_modules
+    command: sh -c "npm install && npm run dev"
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+    depends_on:
+      api-gateway:
+        condition: service_started
+    networks:
+      - axonrh-network
+    profiles:
+      - frontend
+
 volumes:
   postgres_data:
   mongodb_data:
   redis_data:
   rabbitmq_data:
   minio_data:
+  maven_repo:
+  frontend_node_modules:
 
 networks:
   axonrh-network:
