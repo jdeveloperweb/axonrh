@@ -6,7 +6,7 @@ spring:
     name: timesheet-service
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/axonrh
+    url: jdbc:postgresql://localhost:5433/axonrh
     username: ${DB_USERNAME:axonrh}
     password: ${DB_PASSWORD:axonrh}
     hikari:
