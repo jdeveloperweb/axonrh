@@ -31,26 +31,50 @@ check_docker() {
     echo -e "${GREEN}✓ Docker is running${NC}"
 }
 
-check_pm2() {
-    if ! command -v pm2 > /dev/null 2>&1; then
-        echo -e "${RED}pm2 is not installed. Please install it with: npm install -g pm2${NC}"
-        exit 1
-    fi
-    echo -e "${GREEN}✓ pm2 is available${NC}"
-}
-
 git_pull() {
     echo -e "\n${YELLOW}Pulling latest changes...${NC}"
     cd "$PROJECT_ROOT"
     git pull
 }
 
-pm2_delete_if_exists() {
+PROCESS_DIR="$PROJECT_ROOT/.dev-processes"
+
+ensure_process_dir() {
+    mkdir -p "$PROCESS_DIR"
+}
+
+process_pid_file() {
     local process_name="$1"
-    if pm2 describe "$process_name" > /dev/null 2>&1; then
-        echo -e "${YELLOW}Stopping existing pm2 process: ${process_name}${NC}"
-        pm2 delete "$process_name"
+    echo "$PROCESS_DIR/${process_name}.pid"
+}
+
+stop_process_if_running() {
+    local process_name="$1"
+    local pid_file
+    pid_file="$(process_pid_file "$process_name")"
+
+    if [ -f "$pid_file" ]; then
+        local pid
+        pid="$(cat "$pid_file")"
+        if [ -n "$pid" ] && kill -0 "$pid" > /dev/null 2>&1; then
+            echo -e "${YELLOW}Stopping existing process: ${process_name} (PID: ${pid})${NC}"
+            kill "$pid" || true
+        fi
+        rm -f "$pid_file"
     fi
+}
+
+start_background_process() {
+    local process_name="$1"
+    local workdir="$2"
+    local command="$3"
+    local log_file="$PROCESS_DIR/${process_name}.log"
+
+    ensure_process_dir
+    stop_process_if_running "$process_name"
+
+    echo -e "${YELLOW}Starting ${process_name}...${NC}"
+    (cd "$workdir" && nohup bash -c "$command" > "$log_file" 2>&1 & echo $! > "$(process_pid_file "$process_name")")
 }
 
 # Start infrastructure services (PostgreSQL, MongoDB, Redis, etc.)
@@ -165,13 +189,11 @@ start_backend() {
     echo -e "${YELLOW}Building backend services...${NC}"
     ./mvnw clean package -DskipTests -T 4
 
-    # Start services with pm2
-    echo -e "${YELLOW}Starting microservices with pm2...${NC}"
+    # Start services in the background
+    echo -e "${YELLOW}Starting microservices...${NC}"
 
     # Start config-service first
-    echo -e "Starting config-service..."
-    pm2_delete_if_exists "axonrh-config-service"
-    pm2 start ../mvnw --name "axonrh-config-service" --cwd "$PROJECT_ROOT/backend/config-service" -- spring-boot:run
+    start_background_process "axonrh-config-service" "$PROJECT_ROOT/backend/config-service" "../mvnw spring-boot:run"
     sleep 10
 
     # Start remaining services
@@ -189,16 +211,12 @@ start_backend() {
     )
 
     for service in "${services[@]}"; do
-        echo -e "Starting ${service}..."
-        pm2_delete_if_exists "axonrh-${service}"
-        pm2 start ../mvnw --name "axonrh-${service}" --cwd "$PROJECT_ROOT/backend/${service}" -- spring-boot:run
+        start_background_process "axonrh-${service}" "$PROJECT_ROOT/backend/${service}" "../mvnw spring-boot:run"
         sleep 5
     done
 
     # Start api-gateway last
-    echo -e "Starting api-gateway..."
-    pm2_delete_if_exists "axonrh-api-gateway"
-    pm2 start ../mvnw --name "axonrh-api-gateway" --cwd "$PROJECT_ROOT/backend/api-gateway" -- spring-boot:run
+    start_background_process "axonrh-api-gateway" "$PROJECT_ROOT/backend/api-gateway" "../mvnw spring-boot:run"
 
     echo -e "${GREEN}✓ Backend services starting...${NC}"
     echo -e "  - Config Service: http://localhost:8888"
@@ -220,14 +238,13 @@ start_frontend() {
     fi
 
     # Start Next.js development server
-    echo -e "${YELLOW}Starting Next.js development server with pm2...${NC}"
-    pm2_delete_if_exists "axonrh-frontend"
-    pm2 start npm --name "axonrh-frontend" --cwd "$PROJECT_ROOT/frontend/web" -- run dev
+    echo -e "${YELLOW}Starting Next.js development server...${NC}"
+    start_background_process "axonrh-frontend" "$PROJECT_ROOT/frontend/web" "npm run dev"
 
     echo -e "${GREEN}✓ Frontend started at http://localhost:3000${NC}"
 }
 
-# Start a single backend service with pm2
+# Start a single backend service
 start_single_backend_service() {
     local service="$1"
 
@@ -243,9 +260,8 @@ start_single_backend_service() {
     echo -e "${YELLOW}Building ${service}...${NC}"
     ./mvnw -pl "${service}" -am clean package -DskipTests
 
-    echo -e "${YELLOW}Starting ${service} with pm2...${NC}"
-    pm2_delete_if_exists "axonrh-${service}"
-    pm2 start ../mvnw --name "axonrh-${service}" --cwd "$PROJECT_ROOT/backend/${service}" -- spring-boot:run
+    echo -e "${YELLOW}Starting ${service}...${NC}"
+    start_background_process "axonrh-${service}" "$PROJECT_ROOT/backend/${service}" "../mvnw spring-boot:run"
 }
 
 select_backend_service() {
@@ -292,7 +308,6 @@ menu() {
     case "$choice" in
         1)
             check_docker
-            check_pm2
             git_pull
             start_infrastructure
             wait_for_postgres
@@ -301,17 +316,14 @@ menu() {
             ;;
         2)
             check_docker
-            check_pm2
             git_pull
             start_backend
             ;;
         3)
-            check_pm2
             git_pull
             select_backend_service
             ;;
         4)
-            check_pm2
             git_pull
             start_frontend
             ;;
