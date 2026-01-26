@@ -162,14 +162,14 @@ export default function LoginClient() {
             {loginConfig.logoUrl ? (
               <img src={loginConfig.logoUrl} alt="Logo" className="h-12" />
             ) : (
-              <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight">
+              <h1 className="font-heading text-4xl sm:text-5xl font-extrabold tracking-tight">
                 <span className="text-white">Axon</span>
                 <span className="text-sky-400">RH</span>
               </h1>
             )}
           </div>
 
-          <h2 className="text-2xl sm:text-3xl font-semibold text-white/95">
+          <h2 className="font-heading text-2xl sm:text-3xl font-semibold text-white/95">
             Gerencie sua equipe{" "}
             <span className="text-emerald-300">conversando naturalmente</span>{" "}
             com a IA
@@ -198,7 +198,7 @@ export default function LoginClient() {
         <div className="w-full">
           <div className="rounded-3xl border border-white/15 bg-white/10 shadow-2xl shadow-slate-900/40 backdrop-blur-xl p-8 sm:p-10">
             <div className="mb-6 text-center">
-              <h2 className="text-2xl font-semibold text-white">Entrar</h2>
+              <h2 className="font-heading text-2xl font-semibold text-white">Entrar</h2>
               <p className="text-sm text-slate-200/80">
                 Acesse sua conta para continuar
               </p>
