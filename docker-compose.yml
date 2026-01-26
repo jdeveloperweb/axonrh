@@ -209,7 +209,7 @@ services:
     container_name: axonrh-vacation-service
     command: ./mvnw -pl vacation-service -am spring-boot:run
     ports:
-      - "8085:8085"
+      - "8185:8085"
     environment:
       <<: *backend-env
       SERVER_PORT: 8085
