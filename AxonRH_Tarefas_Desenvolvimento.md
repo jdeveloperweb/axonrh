@@ -65,7 +65,7 @@ TOTAL:                    [▓▓▓▓▓▓▓░░░] 228/313 tarefas (73%)
 
 ---
 
-## 1.2 API Gateway (Porta 8080)
+## 1.2 API Gateway (Porta 8180)
 
 ### 1.2.1 Estrutura do Serviço
 - [x] **T015** - Criar projeto Spring Boot para api-gateway
@@ -299,7 +299,7 @@ TOTAL:                    [▓▓▓▓▓▓▓░░░] 228/313 tarefas (73%)
 
 ---
 
-## 2.3 Vacation Service (Porta 8085)
+## 2.3 Vacation Service (Porta 8185)
 
 ### 2.3.1 Estrutura do Serviço
 - [x] **T153** - Criar projeto Spring Boot para vacation-service
