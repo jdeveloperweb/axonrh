@@ -17,6 +17,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.lang.reflect.Method;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -98,11 +99,7 @@ public class LlmService {
                     .provider("openai")
                     .model(completion.getModel())
                     .finishReason(choice.getFinishReason())
-                    .usage(ChatResponse.Usage.builder()
-                            .promptTokens(Math.toIntExact(completion.getUsage().getPromptTokens()))
-                            .completionTokens(Math.toIntExact(completion.getUsage().getCompletionTokens()))
-                            .totalTokens(Math.toIntExact(completion.getUsage().getTotalTokens()))
-                            .build())
+                    .usage(buildOpenAiUsage(completion.getUsage()))
                     .responseTimeMs(System.currentTimeMillis() - startTime)
                     .timestamp(Instant.now())
                     .build();
@@ -167,6 +164,46 @@ public class LlmService {
             log.error("Anthropic chat error: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to get response from Anthropic", e);
         }
+    }
+
+    private ChatResponse.Usage buildOpenAiUsage(Object usage) {
+        ChatResponse.Usage.UsageBuilder builder = ChatResponse.Usage.builder();
+        if (usage == null) {
+            return builder.build();
+        }
+
+        if (usage instanceof Number number) {
+            return builder.totalTokens(Math.toIntExact(number.longValue())).build();
+        }
+
+        Integer promptTokens = readUsageToken(usage, "getPromptTokens");
+        Integer completionTokens = readUsageToken(usage, "getCompletionTokens");
+        Integer totalTokens = readUsageToken(usage, "getTotalTokens");
+
+        if (promptTokens != null) {
+            builder.promptTokens(promptTokens);
+        }
+        if (completionTokens != null) {
+            builder.completionTokens(completionTokens);
+        }
+        if (totalTokens != null) {
+            builder.totalTokens(totalTokens);
+        }
+
+        return builder.build();
+    }
+
+    private Integer readUsageToken(Object usage, String methodName) {
+        try {
+            Method method = usage.getClass().getMethod(methodName);
+            Object value = method.invoke(usage);
+            if (value instanceof Number number) {
+                return Math.toIntExact(number.longValue());
+            }
+        } catch (ReflectiveOperationException e) {
+            log.debug("OpenAI usage token lookup failed for {}: {}", methodName, e.getMessage());
+        }
+        return null;
     }
 
     private Flux<StreamChunk> streamOpenAi(ChatRequest request) {
