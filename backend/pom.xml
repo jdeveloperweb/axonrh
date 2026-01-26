@@ -20,6 +20,7 @@
     </parent>
 
     <modules>
+        <module>common/kafka</module>
         <module>api-gateway</module>
         <module>auth-service</module>
         <module>config-service</module>
@@ -34,7 +35,7 @@
     </modules>
 
     <properties>
-        <java.version>21</java.version>
+        <java.version>17</java.version>
         <spring-cloud.version>2024.0.0</spring-cloud.version>
         <springdoc.version>2.5.0</springdoc.version>
         <mapstruct.version>1.5.5.Final</mapstruct.version>
