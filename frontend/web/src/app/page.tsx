@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
 import { setupApi } from '@/lib/api/setup';
@@ -8,16 +8,29 @@ import { setupApi } from '@/lib/api/setup';
 export default function HomePage() {
   const router = useRouter();
   const { isAuthenticated, isLoading } = useAuthStore();
+  const [loadingTimedOut, setLoadingTimedOut] = useState(false);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setLoadingTimedOut(true);
+    }, 2000);
+
+    return () => window.clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     const handleRedirect = async () => {
-      if (isLoading) {
+      if (isLoading && !loadingTimedOut) {
         return;
       }
 
       try {
         const summaryResponse = await setupApi.getSummary();
-        const isSetupCompleted = summaryResponse.status === 2;
+        const status = summaryResponse.status as unknown;
+        const isSetupCompleted =
+          (typeof status === 'string' && status === 'COMPLETED') ||
+          (typeof status === 'number' && status === 2) ||
+          summaryResponse.progressPercentage === 100;
 
         if (!isSetupCompleted) {
           router.replace('/setup');
@@ -25,6 +38,8 @@ export default function HomePage() {
         }
       } catch (error) {
         console.error('Error loading setup summary:', error);
+        router.replace('/setup');
+        return;
       }
 
       if (isAuthenticated) {
@@ -35,7 +50,7 @@ export default function HomePage() {
     };
 
     void handleRedirect();
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, loadingTimedOut, router]);
 
   // Loading state
   return (
