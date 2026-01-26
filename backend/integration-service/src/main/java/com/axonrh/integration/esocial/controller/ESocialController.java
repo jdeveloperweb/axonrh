@@ -1,7 +1,6 @@
 package com.axonrh.integration.esocial.controller;
 
 import com.axonrh.integration.esocial.entity.ESocialEvent;
-import com.axonrh.integration.esocial.entity.enums.ESocialEventStatus;
 import com.axonrh.integration.esocial.entity.enums.ESocialEventType;
 import com.axonrh.integration.esocial.service.ESocialService;
 import com.axonrh.integration.esocial.service.ESocialTransmitter;
@@ -127,7 +126,7 @@ public class ESocialController {
     }
 
     @GetMapping("/statistics")
-    public ResponseEntity<ESocialStatistics> getStatistics(
+    public ResponseEntity<ESocialService.ESocialStatistics> getStatistics(
             @RequestHeader("X-Tenant-ID") UUID tenantId) {
 
         return ResponseEntity.ok(esocialService.getStatistics(tenantId));
@@ -151,12 +150,4 @@ public class ESocialController {
 
     public record CancelEventRequest(String reason) {}
 
-    public record ESocialStatistics(
-            long total,
-            long pending,
-            long transmitted,
-            long processed,
-            long error,
-            Map<String, Long> byEventType
-    ) {}
 }
