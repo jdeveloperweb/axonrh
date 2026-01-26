@@ -7,7 +7,7 @@ spring:
 
   # Datasource PostgreSQL
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:axonrh_dev}?currentSchema=shared
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5433}/${POSTGRES_DB:axonrh_dev}?currentSchema=shared
     username: ${POSTGRES_USER:axonrh}
     password: ${POSTGRES_PASSWORD:axonrh_dev_2026}
     driver-class-name: org.postgresql.Driver
