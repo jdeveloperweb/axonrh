@@ -29,7 +29,7 @@ public class EmployeeTerminatedEvent extends EmployeeEvent {
         return EVENT_TYPE;
     }
 
-    public static EmployeeTerminatedEventBuilder<?> create() {
+    public static EmployeeTerminatedEventBuilder<?, ?> create() {
         return EmployeeTerminatedEvent.builder()
                 .eventType(EVENT_TYPE)
                 .schemaVersion(1);

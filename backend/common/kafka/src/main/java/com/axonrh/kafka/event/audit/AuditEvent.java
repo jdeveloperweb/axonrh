@@ -83,7 +83,7 @@ public class AuditEvent extends DomainEvent {
         return EVENT_TYPE;
     }
 
-    public static AuditEventBuilder<?> create() {
+    public static AuditEventBuilder<?, ?> create() {
         return AuditEvent.builder()
                 .eventType(EVENT_TYPE)
                 .schemaVersion(1);

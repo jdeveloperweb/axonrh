@@ -36,7 +36,7 @@ public class ClockOutEvent extends TimesheetEvent {
         return EVENT_TYPE;
     }
 
-    public static ClockOutEventBuilder<?> create() {
+    public static ClockOutEventBuilder<?, ?> create() {
         return ClockOutEvent.builder()
                 .eventType(EVENT_TYPE)
                 .schemaVersion(1);
