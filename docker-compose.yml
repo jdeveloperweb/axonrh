@@ -54,7 +54,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     healthcheck:
-      test: ["CMD-SHELL", "curl --fail --silent --show-error telnet://localhost:5432"]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -74,7 +74,7 @@ services:
     volumes:
       - mongodb_data:/data/db
     healthcheck:
-      test: ["CMD-SHELL", "curl --fail --silent --show-error http://localhost:27017"]
+      test: ["CMD-SHELL", "mongosh --quiet --eval \"db.adminCommand('ping').ok\" | grep 1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -91,7 +91,7 @@ services:
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD-SHELL", "curl --fail --silent --show-error telnet://localhost:6379"]
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -111,7 +111,7 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     healthcheck:
-      test: ["CMD-SHELL", "curl --fail --silent --show-error http://localhost:15672"]
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"]
       interval: 10s
       timeout: 5s
       retries: 5
