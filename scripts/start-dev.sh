@@ -158,7 +158,7 @@ start_backend() {
     echo -e "  - Config Service: http://localhost:8888"
     echo -e "  - Auth Service: http://localhost:8081"
     echo -e "  - Core Service: http://localhost:8082"
-    echo -e "  - API Gateway: http://localhost:8080"
+    echo -e "  - API Gateway: http://localhost:8180"
 }
 
 # Start frontend

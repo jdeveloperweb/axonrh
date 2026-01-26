@@ -63,7 +63,7 @@ check_http "Kafka UI" "http://localhost:8090" || ((FAILED++))
 
 echo ""
 echo "Microservicos (se estiverem rodando):"
-check_http "API Gateway" "http://localhost:8080/actuator/health" 2 || echo -e "${YELLOW}[SKIP]${NC} API Gateway nao iniciado"
+check_http "API Gateway" "http://localhost:8180/actuator/health" 2 || echo -e "${YELLOW}[SKIP]${NC} API Gateway nao iniciado"
 check_http "Auth Service" "http://localhost:8081/actuator/health" 2 || echo -e "${YELLOW}[SKIP]${NC} Auth Service nao iniciado"
 check_http "Config Service" "http://localhost:8082/actuator/health" 2 || echo -e "${YELLOW}[SKIP]${NC} Config Service nao iniciado"
 
