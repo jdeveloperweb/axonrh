@@ -119,11 +119,27 @@ export const useAuthStore = create<AuthState>()(
         refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
       }),
-      onRehydrateStorage: () => (state) => {
-        // Marca como carregado após hidratar do localStorage
-        if (state) {
-          state.setLoading(false);
-        }
+      onRehydrateStorage: (state) => {
+        // Garante que o carregamento finalize mesmo se a hidratacao travar.
+        const safetyTimer = state
+          ? window.setTimeout(() => {
+              state.setLoading(false);
+            }, 2000)
+          : null;
+
+        return (rehydratedState, error) => {
+          if (safetyTimer !== null) {
+            window.clearTimeout(safetyTimer);
+          }
+
+          if (error) {
+            state?.setLoading(false);
+            return;
+          }
+
+          // Marca como carregado após hidratar do localStorage
+          rehydratedState?.setLoading(false);
+        };
       },
     }
   )
