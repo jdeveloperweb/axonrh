@@ -58,7 +58,7 @@ O AxonRH é composto por 12 microserviços independentes, cada um responsável p
 
 | Serviço | Porta | Responsabilidade | Complex. |
 | :---- | :---- | :---- | :---- |
-| api-gateway | 8080 | Roteamento, Rate Limit, Auth | Média |
+| api-gateway | 8180 | Roteamento, Rate Limit, Auth | Média |
 | auth-service | 8081 | Autenticação, JWT, SSO, 2FA | Alta |
 | employee-service | 8083 | CRUD Colaboradores, Documentos | Média |
 | timesheet-service | 8084 | Ponto Multimodal, Facial, Banco Horas | Alta |
