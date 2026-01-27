@@ -173,6 +173,7 @@ services:
       - "8081:8081"
     environment:
       <<: *backend-env
+      SPRING_FLYWAY_ENABLED: "true"
       SERVER_PORT: 8081
 
   core-service:
@@ -183,6 +184,7 @@ services:
       - "8082:8082"
     environment:
       <<: *backend-env
+      SPRING_FLYWAY_ENABLED: "true"
       SERVER_PORT: 8082
 
   employee-service:
@@ -193,6 +195,7 @@ services:
       - "8083:8083"
     environment:
       <<: *backend-env
+      SPRING_FLYWAY_ENABLED: "true"
       SERVER_PORT: 8083
 
   timesheet-service:
@@ -203,6 +206,7 @@ services:
       - "8084:8084"
     environment:
       <<: *backend-env
+      SPRING_FLYWAY_ENABLED: "true"
       SERVER_PORT: 8084
 
   vacation-service:
@@ -213,6 +217,7 @@ services:
       - "8185:8085"
     environment:
       <<: *backend-env
+      SPRING_FLYWAY_ENABLED: "true"
       SERVER_PORT: 8085
 
   performance-service:
@@ -223,6 +228,7 @@ services:
       - "8086:8086"
     environment:
       <<: *backend-env
+      SPRING_FLYWAY_ENABLED: "true"
       SERVER_PORT: 8086
 
   learning-service:
@@ -233,6 +239,7 @@ services:
       - "8187:8087"
     environment:
       <<: *backend-env
+      SPRING_FLYWAY_ENABLED: "true"
       SERVER_PORT: 8087
 
   ai-assistant-service:
@@ -243,6 +250,7 @@ services:
       - "8088:8088"
     environment:
       <<: *backend-env
+      SPRING_FLYWAY_ENABLED: "true"
       SERVER_PORT: 8088
 
   notification-service:
@@ -253,6 +261,7 @@ services:
       - "8089:8089"
     environment:
       <<: *backend-env
+      SPRING_FLYWAY_ENABLED: "true"
       SERVER_PORT: 8089
 
   integration-service:
@@ -263,6 +272,7 @@ services:
       - "8090:8090"
     environment:
       <<: *backend-env
+      SPRING_FLYWAY_ENABLED: "true"
       SERVER_PORT: 8090
 
   api-gateway:
@@ -273,6 +283,7 @@ services:
       - "8180:8080"
     environment:
       <<: *backend-env
+      SPRING_FLYWAY_ENABLED: "true"
       SERVER_PORT: 8080
 
   frontend:
