@@ -36,6 +36,11 @@ public class FirebaseConfig {
             }
         }
         
+        if (FirebaseApp.getApps().isEmpty()) {
+            log.warn("Firebase App could not be initialized. Push notifications will be disabled.");
+            return null;
+        }
+        
         try {
             return FirebaseMessaging.getInstance();
         } catch (Exception e) {
