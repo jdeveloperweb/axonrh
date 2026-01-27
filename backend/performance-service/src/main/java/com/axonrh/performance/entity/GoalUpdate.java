@@ -28,13 +28,16 @@ public class GoalUpdate {
     @Column(name = "new_value", precision = 15, scale = 2)
     private BigDecimal newValue;
 
-    @Column(name = "progress_percentage", precision = 5, scale = 2)
-    private BigDecimal progressPercentage;
+    @Column(name = "previous_progress", precision = 5, scale = 2)
+    private BigDecimal previousProgress;
+
+    @Column(name = "new_progress", precision = 5, scale = 2)
+    private BigDecimal newProgress;
 
     @Column(columnDefinition = "TEXT")
     private String notes;
 
-    @Column(name = "updated_by")
+    @Column(name = "created_by")
     private UUID updatedBy;
 
     @CreationTimestamp
@@ -74,12 +77,20 @@ public class GoalUpdate {
         this.newValue = newValue;
     }
 
-    public BigDecimal getProgressPercentage() {
-        return progressPercentage;
+    public BigDecimal getPreviousProgress() {
+        return previousProgress;
     }
 
-    public void setProgressPercentage(BigDecimal progressPercentage) {
-        this.progressPercentage = progressPercentage;
+    public void setPreviousProgress(BigDecimal previousProgress) {
+        this.previousProgress = previousProgress;
+    }
+
+    public BigDecimal getNewProgress() {
+        return newProgress;
+    }
+
+    public void setNewProgress(BigDecimal newProgress) {
+        this.newProgress = newProgress;
     }
 
     public String getNotes() {

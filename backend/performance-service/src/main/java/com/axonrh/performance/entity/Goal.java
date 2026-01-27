@@ -100,15 +100,19 @@ public class Goal {
 
     // Business methods
     public void updateProgress(BigDecimal newValue, String notes, UUID updatedBy) {
+        BigDecimal previousValue = this.currentValue;
+        BigDecimal previousProgress = this.progressPercentage;
+
         this.currentValue = newValue;
         calculateProgressPercentage();
         updateStatus();
 
         GoalUpdate update = new GoalUpdate();
         update.setGoal(this);
-        update.setPreviousValue(this.currentValue);
+        update.setPreviousValue(previousValue);
         update.setNewValue(newValue);
-        update.setProgressPercentage(this.progressPercentage);
+        update.setPreviousProgress(previousProgress);
+        update.setNewProgress(this.progressPercentage);
         update.setNotes(notes);
         update.setUpdatedBy(updatedBy);
         this.updates.add(update);
