@@ -37,7 +37,7 @@ public class PushNotificationService {
     }
 
     /**
-     * Registra token de push para um usuario.
+     * Register push token for a user.
      */
     public PushToken registerToken(UUID tenantId, UUID userId, UUID employeeId,
                                    String token, DeviceType deviceType,
@@ -73,7 +73,7 @@ public class PushNotificationService {
     }
 
     /**
-     * Desativa token de push.
+     * Deactivate push token.
      */
     public void deactivateToken(UUID tenantId, String token) {
         tokenRepository.findByTenantIdAndToken(tenantId, token)
@@ -84,7 +84,7 @@ public class PushNotificationService {
     }
 
     /**
-     * Envia notificacao push para um usuario.
+     * Send push notification to a user.
      */
     @Async
     public void sendToUser(UUID tenantId, UUID userId, String title, String body,
@@ -103,7 +103,7 @@ public class PushNotificationService {
     }
 
     /**
-     * Envia notificacao push para multiplos usuarios.
+     * Send push notification to multiple users.
      */
     @Async
     public void sendToUsers(UUID tenantId, List<UUID> userIds, String title, String body,
@@ -122,7 +122,7 @@ public class PushNotificationService {
     }
 
     /**
-     * Envia notificacao push para um topico.
+     * Send push notification to a topic.
      */
     @Async
     public void sendToTopic(String topic, String title, String body,
@@ -165,7 +165,7 @@ public class PushNotificationService {
                     .build());
 
             if (firebaseMessaging == null) {
-                log.warn("Firebase não inicializado. Não é possível enviar para o tópico: {}", topic);
+                log.warn("Firebase not initialized. Cannot send to topic: {}", topic);
                 return;
             }
             String response = firebaseMessaging.send(messageBuilder.build());
@@ -177,7 +177,7 @@ public class PushNotificationService {
     }
 
     /**
-     * Inscreve tokens em um topico.
+     * Subscribe tokens to a topic.
      */
     public void subscribeToTopic(UUID tenantId, UUID userId, String topic) {
         List<PushToken> tokens = tokenRepository.findActiveByUser(tenantId, userId);
@@ -189,7 +189,7 @@ public class PushNotificationService {
 
         try {
             if (firebaseMessaging == null) {
-                log.warn("Firebase não inicializado. Não é possível se inscrever no tópico.");
+                log.warn("Firebase not initialized. Cannot subscribe to topic.");
                 return;
             }
             firebaseMessaging.subscribeToTopic(tokenStrings, topic);
@@ -200,7 +200,7 @@ public class PushNotificationService {
     }
 
     /**
-     * Remove inscricao de tokens em um topico.
+     * Unsubscribe tokens from a topic.
      */
     public void unsubscribeFromTopic(UUID tenantId, UUID userId, String topic) {
         List<PushToken> tokens = tokenRepository.findActiveByUser(tenantId, userId);
@@ -212,7 +212,7 @@ public class PushNotificationService {
 
         try {
             if (firebaseMessaging == null) {
-                log.warn("Firebase não inicializado. Não é possível se desinscrever do tópico.");
+                log.warn("Firebase not initialized. Cannot unsubscribe from topic.");
                 return;
             }
             firebaseMessaging.unsubscribeFromTopic(tokenStrings, topic);
@@ -252,7 +252,7 @@ public class PushNotificationService {
             }
 
             if (firebaseMessaging == null) {
-                log.warn("Firebase não inicializado. Não é possível enviar push.");
+                log.warn("Firebase not initialized. Cannot send push.");
                 return;
             }
             String response = firebaseMessaging.send(messageBuilder.build());
@@ -280,7 +280,7 @@ public class PushNotificationService {
             }
 
             if (firebaseMessaging == null) {
-                log.warn("Firebase não inicializado. Não é possível enviar push multicast.");
+                log.warn("Firebase not initialized. Cannot send push multicast.");
                 return;
             }
             BatchResponse response = firebaseMessaging.sendEachForMulticast(messageBuilder.build());

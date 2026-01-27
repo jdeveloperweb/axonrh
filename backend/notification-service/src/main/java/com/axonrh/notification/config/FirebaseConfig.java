@@ -24,18 +24,14 @@ public class FirebaseConfig {
                         .setCredentials(GoogleCredentials.getApplicationDefault())
                         .build();
                 FirebaseApp.initializeApp(options);
-                log.info("Firebase App inicializado com sucesso usando Application Default Credentials.");
+                log.info("Firebase App initialized successfully using Application Default Credentials.");
             } catch (IOException e) {
-                log.warn("Falha ao inicializar Firebase App: {}. O serviço de Push Notification pode não funcionar corretamente.", e.getMessage());
-                // Em desenvolvimento, podemos querer apenas inicializar com credenciais mock ou deixar falhar se for obrigatorio
-                // Para evitar que a aplicação quebre no startup, podemos retornar o bean mesmo se falhar a inicialização do App
-                // No entanto, FirebaseMessaging.getInstance() precisa de um app.
+                log.warn("Failed to initialize Firebase App: {}. Push Notification service might not work correctly.", e.getMessage());
                 
                 try {
-                    // Tenta inicializar sem credenciais explicitas para ver se funciona (alguns ambientes ja tem configurado)
                     FirebaseApp.initializeApp();
                 } catch (Exception ex) {
-                    log.error("Não foi possível inicializar o Firebase. Verifique as credenciais.");
+                    log.error("Could not initialize Firebase. Check credentials.");
                 }
             }
         }
@@ -43,8 +39,8 @@ public class FirebaseConfig {
         try {
             return FirebaseMessaging.getInstance();
         } catch (Exception e) {
-            log.error("Erro ao obter instância do FirebaseMessaging: {}", e.getMessage());
-            return null; // Retornar null pode causar NullPointerException no PushNotificationService se não for tratado
+            log.error("Error getting FirebaseMessaging instance: {}", e.getMessage());
+            return null;
         }
     }
 }
