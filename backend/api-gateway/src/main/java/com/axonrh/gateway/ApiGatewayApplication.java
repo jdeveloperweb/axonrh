@@ -15,7 +15,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * - Logging de requests/responses
  * - Circuit breaker
  */
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "com.axonrh")
 public class ApiGatewayApplication {
 
     public static void main(String[] args) {

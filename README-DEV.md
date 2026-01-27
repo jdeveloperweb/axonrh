@@ -96,7 +96,7 @@ npm run dev
 | Serviço | Porta | URL |
 |---------|-------|-----|
 | Frontend | 3000 | http://localhost:3000 |
-| API Gateway | 8080 | http://localhost:8080 |
+| API Gateway | 8180 | http://localhost:8180 |
 | Auth Service | 8081 | http://localhost:8081 |
 | Core Service | 8082 | http://localhost:8082 |
 | Config Service | 8888 | http://localhost:8888 |
@@ -112,7 +112,7 @@ npm run dev
 ## Credenciais de Desenvolvimento
 
 ### PostgreSQL
-- **Host:** localhost:5433
+- **Host:** localhost:5433 (Docker expõe 5433 → 5432 no container)
 - **User:** axonrh
 - **Password:** axonrh123
 - **Database:** axonrh

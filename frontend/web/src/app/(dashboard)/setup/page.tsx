@@ -42,15 +42,17 @@ export default function SetupWizardPage() {
   const goToStep = async (stepNumber: number) => {
     try {
       await setupApi.goToStep(stepNumber);
-      router.push(`/setup/step/${stepNumber}`);
     } catch (error) {
       console.error('Error navigating to step:', error);
+    } finally {
+      router.push(`/setup/step/${stepNumber}`);
     }
   };
 
   const continueSetup = () => {
     if (summary) {
-      router.push(`/setup/step/${summary.currentStep}`);
+      const targetStep = Math.max(summary.currentStep || 1, 1);
+      router.push(`/setup/step/${targetStep}`);
     }
   };
 
@@ -95,8 +97,9 @@ export default function SetupWizardPage() {
             {SETUP_STEPS.map((step) => {
               const stepInfo = summary?.steps.find(s => s.number === step.number);
               const isCompleted = stepInfo?.completed || false;
-              const isCurrent = summary?.currentStep === step.number;
-              const isAccessible = step.number <= (summary?.currentStep || 1) || isCompleted;
+              const safeCurrentStep = Math.max(summary?.currentStep || 1, 1);
+              const isCurrent = safeCurrentStep === step.number;
+              const isAccessible = step.number <= safeCurrentStep || isCompleted;
 
               return (
                 <li

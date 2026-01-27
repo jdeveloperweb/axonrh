@@ -3,7 +3,7 @@ import { useAuthStore } from '@/stores/auth-store';
 
 // ==================== Configuracao ====================
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8180/api/v1';
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -20,10 +20,19 @@ export const apiClient = api;
 
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const { accessToken } = useAuthStore.getState();
+    const { accessToken, user } = useAuthStore.getState();
 
     if (accessToken && config.headers) {
       config.headers.Authorization = `Bearer ${accessToken}`;
+    }
+
+    if (config.headers) {
+      if (user?.tenantId) {
+        config.headers['X-Tenant-ID'] = user.tenantId;
+      }
+      if (user?.id) {
+        config.headers['X-User-ID'] = user.id;
+      }
     }
 
     return config;

@@ -15,7 +15,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.3.0</version>
+        <version>3.4.1</version>
         <relativePath/>
     </parent>
 
@@ -24,6 +24,7 @@
         <module>api-gateway</module>
         <module>auth-service</module>
         <module>config-service</module>
+        <module>core-service</module>
         <module>employee-service</module>
         <module>timesheet-service</module>
         <module>vacation-service</module>
@@ -42,6 +43,7 @@
         <lombok.version>1.18.32</lombok.version>
         <testcontainers.version>1.19.8</testcontainers.version>
         <jjwt.version>0.12.5</jjwt.version>
+        <commons-csv.version>1.14.1</commons-csv.version>
     </properties>
 
     <dependencyManagement>
@@ -67,11 +69,15 @@
                 <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
                 <version>${springdoc.version}</version>
             </dependency>
-
             <dependency>
                 <groupId>org.mapstruct</groupId>
                 <artifactId>mapstruct</artifactId>
                 <version>${mapstruct.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-csv</artifactId>
+                <version>${commons-csv.version}</version>
             </dependency>
 
             <dependency>
@@ -112,6 +118,16 @@
     </dependencies>
 
     <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <inherited>false</inherited>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+        </plugins>
         <pluginManagement>
             <plugins>
                 <plugin>

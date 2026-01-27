@@ -15,6 +15,18 @@
     <name>AxonRH Kafka Common</name>
     <description>Biblioteca comum para Kafka - Producers, Consumers, DTOs</description>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
     <dependencies>
         <!-- Spring Kafka -->
         <dependency>

@@ -7,9 +7,9 @@ spring:
 
   # Datasource PostgreSQL
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5433}/${POSTGRES_DB:axonrh_dev}?currentSchema=shared
-    username: ${POSTGRES_USER:axonrh}
-    password: ${POSTGRES_PASSWORD:axonrh_dev_2026}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:axonrh_dev}?currentSchema=shared
+    username: ${DB_USER:axonrh}
+    password: ${DB_PASSWORD:axonrh_dev_2026}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
@@ -27,6 +27,15 @@ spring:
         format_sql: true
         default_schema: shared
         dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    table: auth_service_schema_history
+    schemas: shared
+    default-schema: shared
+    create-schemas: true
 
   # Redis
   data:

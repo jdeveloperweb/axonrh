@@ -3,6 +3,8 @@ package com.axonrh.core.setup.entity;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "import_jobs")
@@ -44,16 +46,19 @@ public class ImportJob {
     @Column(name = "error_rows")
     private int errorRows = 0;
 
-    @Column(name = "validation_errors", columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "validation_errors", columnDefinition = "jsonb")
     private String validationErrors;
 
-    @Column(name = "processing_errors", columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "processing_errors", columnDefinition = "jsonb")
     private String processingErrors;
 
     @Column(name = "rollback_available")
     private boolean rollbackAvailable = false;
 
-    @Column(name = "rollback_data", columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "rollback_data", columnDefinition = "jsonb")
     private String rollbackData;
 
     @Column(name = "rolled_back_at")

@@ -2,6 +2,9 @@
 -- Learning Service - Schema de Banco de Dados
 -- =====================================================
 
+CREATE SCHEMA IF NOT EXISTS shared;
+SET search_path TO shared;
+
 -- Categorias de treinamento
 CREATE TABLE training_categories (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

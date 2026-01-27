@@ -185,16 +185,23 @@
 
   /* Inputs */
   .input {
-    @apply w-full px-4 py-2.5 rounded-[var(--radius-md)]
-           bg-[var(--color-surface)] border border-[var(--color-border)]
+    @apply w-full h-12 px-4 rounded-[var(--radius-lg)]
+           bg-[var(--color-background)] border border-[var(--color-border)]
            text-[var(--color-text-primary)] placeholder:text-[var(--color-text-disabled)]
-           focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent
+           shadow-[var(--shadow-sm)]
+           focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)]
            transition-all duration-[var(--transition-fast)]
-           disabled:opacity-50 disabled:cursor-not-allowed;
+           disabled:bg-[var(--color-surface-variant)] disabled:opacity-60 disabled:cursor-not-allowed;
   }
 
   .input-error {
-    @apply input border-[var(--color-error)] focus:ring-[var(--color-error)];
+    @apply input border-[var(--color-error)] text-[var(--color-error)]
+           placeholder:text-[var(--color-error)] focus:ring-[var(--color-error)];
+  }
+
+  .input-success {
+    @apply input border-[var(--color-success)] text-[var(--color-success)]
+           placeholder:text-[var(--color-success)] focus:ring-[var(--color-success)];
   }
 
   /* Labels */

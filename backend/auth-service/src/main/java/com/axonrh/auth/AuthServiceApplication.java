@@ -15,7 +15,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * - Gestao de usuarios, roles e permissoes
  * - Bloqueio de conta apos tentativas falhas
  */
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "com.axonrh")
 public class AuthServiceApplication {
 
     public static void main(String[] args) {

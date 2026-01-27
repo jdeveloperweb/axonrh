@@ -5,7 +5,6 @@ import com.axonrh.core.setup.entity.SetupProgress;
 import com.axonrh.core.setup.entity.SetupProgress.SetupStatus;
 import com.axonrh.core.setup.repository.CompanyProfileRepository;
 import com.axonrh.core.setup.repository.SetupProgressRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -22,14 +21,11 @@ public class SetupWizardService {
 
     private final SetupProgressRepository progressRepository;
     private final CompanyProfileRepository companyProfileRepository;
-    private final ObjectMapper objectMapper;
 
     public SetupWizardService(SetupProgressRepository progressRepository,
-                              CompanyProfileRepository companyProfileRepository,
-                              ObjectMapper objectMapper) {
+                              CompanyProfileRepository companyProfileRepository) {
         this.progressRepository = progressRepository;
         this.companyProfileRepository = companyProfileRepository;
-        this.objectMapper = objectMapper;
     }
 
     /**
@@ -53,12 +49,13 @@ public class SetupWizardService {
                 .orElseThrow(() -> new IllegalStateException("Setup não iniciado"));
 
         try {
-            String jsonData = objectMapper.writeValueAsString(data);
-            progress.setStepData(step, jsonData);
+            log.info("Salvando dados da etapa {} do setup para tenant {}", step, tenantId);
+            progress.setStepData(step, data);
             progress.setLastActivityAt(LocalDateTime.now());
 
             return progressRepository.save(progress);
         } catch (Exception e) {
+            log.error("Falha ao salvar dados da etapa {} do setup para tenant {}", step, tenantId, e);
             throw new RuntimeException("Erro ao salvar dados da etapa: " + e.getMessage(), e);
         }
     }
@@ -76,9 +73,9 @@ public class SetupWizardService {
         }
 
         try {
+            log.info("Completando etapa {} do setup para tenant {}", step, tenantId);
             if (data != null && !data.isEmpty()) {
-                String jsonData = objectMapper.writeValueAsString(data);
-                progress.setStepData(step, jsonData);
+                progress.setStepData(step, data);
             }
 
             progress.setStepCompleted(step, true);
@@ -95,6 +92,7 @@ public class SetupWizardService {
 
             return progressRepository.save(progress);
         } catch (Exception e) {
+            log.error("Falha ao completar etapa {} do setup para tenant {}", step, tenantId, e);
             throw new RuntimeException("Erro ao completar etapa: " + e.getMessage(), e);
         }
     }
@@ -179,22 +177,19 @@ public class SetupWizardService {
         SetupProgress progress = progressRepository.findByTenantId(tenantId)
                 .orElseThrow(() -> new IllegalStateException("Setup não iniciado"));
 
-        String jsonData = progress.getStepData(step);
-        if (jsonData == null || jsonData.isEmpty()) {
-            return new HashMap<>();
-        }
-
-        try {
-            return objectMapper.readValue(jsonData, Map.class);
-        } catch (Exception e) {
-            return new HashMap<>();
-        }
+        return progress.getStepData(step);
     }
 
     // Step 1: Save company data
     public CompanyProfile saveCompanyProfile(UUID tenantId, CompanyProfile profile) {
-        profile.setTenantId(tenantId);
-        return companyProfileRepository.save(profile);
+        try {
+            log.info("Salvando perfil da empresa do setup para tenant {}", tenantId);
+            profile.setTenantId(tenantId);
+            return companyProfileRepository.save(profile);
+        } catch (Exception e) {
+            log.error("Falha ao salvar perfil da empresa do setup para tenant {}", tenantId, e);
+            throw e;
+        }
     }
 
     public Optional<CompanyProfile> getCompanyProfile(UUID tenantId) {

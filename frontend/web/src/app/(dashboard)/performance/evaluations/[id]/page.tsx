@@ -31,6 +31,8 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { evaluationsApi, Evaluation, EvaluationAnswer } from '@/lib/api/performance';
+import { getErrorMessage } from '@/lib/api/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface FormQuestion {
   id: string;
@@ -113,6 +115,7 @@ const mockQuestions: FormQuestion[] = [
 export default function EvaluationPage() {
   const params = useParams();
   const router = useRouter();
+  const { toast } = useToast();
   const evaluationId = params.id as string;
 
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
@@ -154,6 +157,11 @@ export default function EvaluationPage() {
       }
     } catch (error) {
       console.error('Erro ao carregar avaliacao:', error);
+      toast({
+        title: 'Erro ao carregar avaliacao',
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
@@ -197,9 +205,17 @@ export default function EvaluationPage() {
     try {
       setSaving(true);
       await evaluationsApi.saveAnswers(evaluationId, Object.values(answers));
-      // Toast de sucesso
+      toast({
+        title: 'Respostas salvas',
+        description: 'A avaliacao foi salva com sucesso.',
+      });
     } catch (error) {
       console.error('Erro ao salvar:', error);
+      toast({
+        title: 'Erro ao salvar',
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     } finally {
       setSaving(false);
     }
@@ -214,9 +230,18 @@ export default function EvaluationPage() {
         strengths,
         improvements,
       });
+      toast({
+        title: 'Avaliacao enviada',
+        description: 'Sua avaliacao foi submetida com sucesso.',
+      });
       router.push('/performance');
     } catch (error) {
       console.error('Erro ao submeter:', error);
+      toast({
+        title: 'Erro ao submeter',
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     } finally {
       setSubmitting(false);
     }
