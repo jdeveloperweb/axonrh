@@ -83,18 +83,27 @@ CREATE TABLE IF NOT EXISTS shared.tenant_configs (
 );
 
 -- Indices
-CREATE INDEX idx_tenant_configs_tenant_id ON shared.tenant_configs(tenant_id);
-CREATE INDEX idx_tenant_configs_active ON shared.tenant_configs(tenant_id, is_active) WHERE is_active = true;
-CREATE INDEX idx_tenant_configs_version ON shared.tenant_configs(tenant_id, version);
+CREATE INDEX IF NOT EXISTS idx_tenant_configs_tenant_id ON shared.tenant_configs(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_tenant_configs_active ON shared.tenant_configs(tenant_id, is_active) WHERE is_active = true;
+CREATE INDEX IF NOT EXISTS idx_tenant_configs_version ON shared.tenant_configs(tenant_id, version);
 
 -- Trigger para updated_at
-CREATE TRIGGER trg_tenant_configs_updated_at
-    BEFORE UPDATE ON shared.tenant_configs
-    FOR EACH ROW
-    EXECUTE FUNCTION shared.update_updated_at_column();
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_trigger
+        WHERE tgname = 'trg_tenant_configs_updated_at'
+    ) THEN
+        CREATE TRIGGER trg_tenant_configs_updated_at
+            BEFORE UPDATE ON shared.tenant_configs
+            FOR EACH ROW
+            EXECUTE FUNCTION shared.update_updated_at_column();
+    END IF;
+END $$;
 
 -- Constraint: apenas uma config ativa por tenant
-CREATE UNIQUE INDEX idx_tenant_configs_unique_active
+CREATE UNIQUE INDEX IF NOT EXISTS idx_tenant_configs_unique_active
     ON shared.tenant_configs(tenant_id)
     WHERE is_active = true;
 
