@@ -50,11 +50,7 @@ export default function SetupWizardPage() {
   };
 
   const continueSetup = async () => {
-    if (!summary) {
-      return;
-    }
-
-    const targetStep = Math.max(summary.currentStep || 1, 1);
+    const targetStep = Math.max(summary?.currentStep || 1, 1);
     await goToStep(targetStep);
   };
 
