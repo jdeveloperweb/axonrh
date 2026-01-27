@@ -6,7 +6,12 @@
 -- Habilitar extensoes necessarias
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pg_trgm";
-CREATE EXTENSION IF NOT EXISTS "postgis";
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_available_extensions WHERE name = 'postgis') THEN
+        CREATE EXTENSION IF NOT EXISTS "postgis";
+    END IF;
+END $$;
 
 -- =====================================================
 -- SCHEMA SHARED: Metadados globais do sistema

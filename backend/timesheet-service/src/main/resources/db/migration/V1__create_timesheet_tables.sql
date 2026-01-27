@@ -3,8 +3,13 @@
 -- Sistema de registro de ponto, escalas e banco de horas
 -- =====================================================
 
--- Extensao PostGIS para operacoes geograficas
-CREATE EXTENSION IF NOT EXISTS postgis;
+-- Extensao PostGIS para operacoes geograficas (apenas se disponivel no servidor)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_available_extensions WHERE name = 'postgis') THEN
+        CREATE EXTENSION IF NOT EXISTS postgis;
+    END IF;
+END $$;
 
 -- =====================================================
 -- T128: Escalas de trabalho
