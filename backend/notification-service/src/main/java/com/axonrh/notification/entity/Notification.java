@@ -3,6 +3,8 @@ package com.axonrh.notification.entity;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "notifications")
@@ -47,7 +49,8 @@ public class Notification {
     @Column(name = "action_url", length = 500)
     private String actionUrl;
 
-    @Column(name = "action_data", columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "action_data", columnDefinition = "jsonb")
     private String actionData;
 
     @Enumerated(EnumType.STRING)
