@@ -1,6 +1,8 @@
 -- AI Assistant Service Database Schema
 -- PostgreSQL for structured AI-related data
 
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 -- AI Prompts and Templates
 CREATE TABLE ai_prompts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
