@@ -202,14 +202,16 @@ CREATE TABLE evaluation_answers (
     evaluation_id UUID NOT NULL REFERENCES evaluations(id) ON DELETE CASCADE,
     question_id UUID NOT NULL REFERENCES form_questions(id),
 
-    -- Resposta
-    rating_value INTEGER,
-    text_value VARCHAR(2000),
-    selected_options TEXT, -- JSON array
-
-    -- Peso e nota calculada
+    -- Campos mapeados na Entidade JPA
+    question_text VARCHAR(1000),
+    section_name VARCHAR(200),
+    score DECIMAL(5, 2),
+    text_answer TEXT,
+    comments TEXT,
     weight DECIMAL(5, 2),
-    weighted_score DECIMAL(5, 2),
+    
+    -- Campos extras
+    selected_options TEXT, -- JSON array
 
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP
