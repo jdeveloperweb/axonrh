@@ -16,6 +16,12 @@ export function StatusIndicator() {
             const apiBase = apiClient.defaults.baseURL || "http://localhost:8180/api/v1";
             const healthUrl = apiBase.replace('/api/v1', '') + '/actuator/health';
 
+            console.log("Health Check Debug:", {
+                configuredBase: apiClient.defaults.baseURL,
+                fallbackBase: "http://localhost:8180/api/v1",
+                finalHealthUrl: healthUrl
+            });
+
             await axios.get(healthUrl);
             setStatus("connected");
             setErrorMessage(null);
