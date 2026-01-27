@@ -7,7 +7,7 @@ SET search_path TO shared, public;
 
 CREATE TABLE IF NOT EXISTS shared.course_modules (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    course_id UUID NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+    course_id UUID NOT NULL REFERENCES shared.courses(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
     description TEXT,
     sequence_order INTEGER NOT NULL,
