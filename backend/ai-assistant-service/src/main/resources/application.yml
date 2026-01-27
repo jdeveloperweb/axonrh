@@ -122,3 +122,7 @@ logging:
   level:
     com.axonrh.ai: DEBUG
     org.springframework.data.mongodb: INFO
+
+axonrh:
+  flyway:
+    repair-on-startup: true
