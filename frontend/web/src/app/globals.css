@@ -244,6 +244,18 @@
 }
 
 @layer utilities {
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-18px);
+    }
+  }
+}
+
+@layer utilities {
   /* Animações */
   .animate-fade-in {
     animation: fadeIn var(--transition-normal) ease-out;

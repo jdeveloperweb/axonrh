@@ -49,11 +49,13 @@ export default function SetupWizardPage() {
     }
   };
 
-  const continueSetup = () => {
-    if (summary) {
-      const targetStep = Math.max(summary.currentStep || 1, 1);
-      router.push(`/setup/step/${targetStep}`);
+  const continueSetup = async () => {
+    if (!summary) {
+      return;
     }
+
+    const targetStep = Math.max(summary.currentStep || 1, 1);
+    await goToStep(targetStep);
   };
 
   if (loading) {
@@ -68,27 +70,31 @@ export default function SetupWizardPage() {
 
   if (isFreshSetup) {
     return (
-      <div className="min-h-screen relative flex items-center justify-center px-6 py-16 font-sans text-white">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-[#0b2147] to-[#101b3c]" />
-        <div className="absolute inset-0 opacity-40 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.35),_transparent_55%)] animate-pulse" />
-        <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_20%_80%,_rgba(16,185,129,0.35),_transparent_55%)] animate-pulse" />
-        <div className="absolute inset-0 opacity-20 bg-[linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:40px_40px]" />
-        <div className="absolute -top-32 right-0 h-72 w-72 rounded-full bg-sky-500/20 blur-[120px] animate-pulse" />
-        <div className="absolute bottom-0 left-0 h-72 w-72 rounded-full bg-emerald-500/20 blur-[120px] animate-pulse" />
+      <div className="min-h-screen relative flex items-center justify-center px-6 py-16 font-sans text-slate-900">
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-[#eef6ff] to-[#dfe9ff] pointer-events-none" />
+        <div className="absolute inset-0 opacity-60 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.25),_transparent_55%)] pointer-events-none" />
+        <div className="absolute inset-0 opacity-50 bg-[radial-gradient(circle_at_20%_80%,_rgba(16,185,129,0.22),_transparent_55%)] pointer-events-none" />
+        <div className="absolute inset-0 opacity-20 bg-[linear-gradient(rgba(15,23,42,0.12)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.12)_1px,transparent_1px)] bg-[size:48px_48px] pointer-events-none" />
+        <div className="absolute -top-32 right-0 h-80 w-80 rounded-full bg-sky-300/40 blur-[140px] animate-[float_12s_ease-in-out_infinite] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 h-96 w-96 rounded-full bg-emerald-300/40 blur-[160px] animate-[float_14s_ease-in-out_infinite] pointer-events-none" />
+        <div className="absolute top-1/3 left-1/4 h-64 w-64 rounded-full bg-indigo-300/30 blur-[120px] animate-[float_16s_ease-in-out_infinite] pointer-events-none" />
 
         <div className="relative z-10 w-full max-w-6xl grid gap-12 lg:grid-cols-[1.15fr,0.85fr] items-center">
           <div className="flex flex-col gap-6 text-center lg:text-left">
-            <div className="flex items-center justify-center lg:justify-start gap-3">
+            <div className="flex items-center justify-center lg:justify-start gap-4">
+              <span className="inline-flex items-center gap-2 rounded-full border border-sky-200/70 bg-white/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700 shadow-sm">
+                Setup inteligente
+              </span>
               <h1 className="font-heading text-4xl sm:text-5xl font-extrabold tracking-tight">
-                <span className="text-white">Axon</span>
-                <span className="text-sky-400">RH</span>
+                <span className="text-slate-900">Axon</span>
+                <span className="text-sky-600">RH</span>
               </h1>
             </div>
 
-            <h2 className="font-heading text-3xl sm:text-4xl font-semibold text-white/95">
+            <h2 className="font-heading text-3xl sm:text-4xl font-semibold text-slate-900">
               Boas-vindas ao setup inteligente do seu ecossistema de RH
             </h2>
-            <p className="text-base sm:text-lg text-slate-200/80 max-w-xl mx-auto lg:mx-0">
+            <p className="text-base sm:text-lg text-slate-600 max-w-xl mx-auto lg:mx-0">
               Vamos guiar você pela configuração inicial para que o AxonRH fique pronto para
               operar com segurança, conformidade e personalização desde o primeiro acesso.
             </p>
@@ -114,10 +120,10 @@ export default function SetupWizardPage() {
               ].map((item) => (
                 <div
                   key={item.title}
-                  className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur shadow-lg shadow-slate-900/40"
+                  className="rounded-2xl border border-white/60 bg-white/80 p-4 backdrop-blur shadow-lg shadow-slate-200/60"
                 >
-                  <p className="text-sm font-semibold text-white">{item.title}</p>
-                  <p className="text-xs text-slate-300 mt-1">{item.description}</p>
+                  <p className="text-sm font-semibold text-slate-900">{item.title}</p>
+                  <p className="text-xs text-slate-600 mt-1">{item.description}</p>
                 </div>
               ))}
             </div>
@@ -125,26 +131,26 @@ export default function SetupWizardPage() {
 
           <div className="w-full">
             <div className="relative">
-              <div className="absolute -inset-[1px] rounded-3xl bg-gradient-to-r from-sky-500/60 via-emerald-400/40 to-indigo-500/60 blur-lg opacity-60" />
-              <div className="relative rounded-3xl border border-white/20 bg-slate-950/60 shadow-2xl shadow-slate-900/40 backdrop-blur-xl p-8 sm:p-10 text-left">
-                <h3 className="text-xl font-semibold text-white">
+              <div className="absolute -inset-[1px] rounded-3xl bg-gradient-to-r from-sky-400/60 via-emerald-300/50 to-indigo-400/60 blur-lg opacity-70" />
+              <div className="relative rounded-3xl border border-white/70 bg-white/85 shadow-2xl shadow-slate-200/70 backdrop-blur-xl p-8 sm:p-10 text-left">
+                <h3 className="text-xl font-semibold text-slate-900">
                   Antes de começar
                 </h3>
-                <p className="mt-3 text-sm text-slate-200/80">
+                <p className="mt-3 text-sm text-slate-600">
                   Este cadastro garante que o AxonRH aplique as regras corretas, configure
                   a identidade visual e habilite os módulos certos para o seu time.
                 </p>
-                <div className="mt-6 space-y-3 text-sm text-slate-200/80">
+                <div className="mt-6 space-y-3 text-sm text-slate-600">
                   <div className="flex items-start gap-3">
-                    <span className="mt-1 h-2 w-2 rounded-full bg-emerald-300" />
+                    <span className="mt-1 h-2 w-2 rounded-full bg-emerald-500" />
                     <span>Tempo médio: 10 a 15 minutos.</span>
                   </div>
                   <div className="flex items-start gap-3">
-                    <span className="mt-1 h-2 w-2 rounded-full bg-sky-300" />
+                    <span className="mt-1 h-2 w-2 rounded-full bg-sky-500" />
                     <span>Você pode pausar e retomar quando quiser.</span>
                   </div>
                   <div className="flex items-start gap-3">
-                    <span className="mt-1 h-2 w-2 rounded-full bg-indigo-300" />
+                    <span className="mt-1 h-2 w-2 rounded-full bg-indigo-500" />
                     <span>Precisando de ajuda? Consulte o manual do sistema.</span>
                   </div>
                 </div>
@@ -152,7 +158,7 @@ export default function SetupWizardPage() {
                 <div className="mt-6">
                   <a
                     href="/manual"
-                    className="text-sm text-sky-300 hover:text-sky-200 hover:underline"
+                    className="text-sm text-sky-600 hover:text-sky-500 hover:underline"
                   >
                     Acessar manual do sistema →
                   </a>
@@ -161,7 +167,7 @@ export default function SetupWizardPage() {
                 <div className="mt-8">
                   <button
                     onClick={continueSetup}
-                    className="w-full px-6 py-3 bg-sky-500 text-white font-semibold rounded-xl hover:bg-sky-400 transition-colors shadow-lg shadow-sky-500/30"
+                    className="w-full px-6 py-3 bg-slate-900 text-white font-semibold rounded-xl hover:bg-slate-800 transition-colors shadow-lg shadow-slate-400/40"
                   >
                     Iniciar configuração
                   </button>
