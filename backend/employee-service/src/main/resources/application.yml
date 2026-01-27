@@ -35,6 +35,8 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
     schemas: shared
+    default-schema: shared
+    create-schemas: true
 
   # Redis Cache
   data:
