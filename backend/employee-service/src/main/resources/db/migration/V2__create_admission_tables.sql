@@ -2,6 +2,9 @@
 -- T109-T114: Tabelas para Workflow de Admissao Digital
 -- ============================================================
 
+CREATE SCHEMA IF NOT EXISTS shared;
+SET search_path TO shared;
+
 -- ============================================================
 -- Tabela de Processos de Admissao
 -- ============================================================
