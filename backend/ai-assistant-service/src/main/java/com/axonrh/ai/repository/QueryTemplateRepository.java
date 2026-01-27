@@ -13,6 +13,8 @@ import java.util.UUID;
 @Repository
 public interface QueryTemplateRepository extends JpaRepository<QueryTemplate, UUID> {
 
+    UUID SYSTEM_TENANT_ID = UUID.fromString("00000000-0000-0000-0000-000000000000");
+
     List<QueryTemplate> findByTenantIdAndIsActiveTrue(UUID tenantId);
 
     List<QueryTemplate> findByIntentAndIsActiveTrue(String intent);
@@ -22,12 +24,20 @@ public interface QueryTemplateRepository extends JpaRepository<QueryTemplate, UU
     Optional<QueryTemplate> findByTenantIdAndNameAndIsActiveTrue(UUID tenantId, String name);
 
     @Query("SELECT qt FROM QueryTemplate qt WHERE (qt.tenantId = :tenantId " +
-           "OR qt.tenantId = '00000000-0000-0000-0000-000000000000') " +
+           "OR qt.tenantId = :defaultId) " +
            "AND qt.intent = :intent AND qt.isActive = true ORDER BY qt.usageCount DESC")
-    List<QueryTemplate> findByIntentWithDefaults(@Param("tenantId") UUID tenantId, @Param("intent") String intent);
+    List<QueryTemplate> findByIntentWithDefaultsInternal(@Param("tenantId") UUID tenantId, @Param("intent") String intent, @Param("defaultId") UUID defaultId);
+
+    default List<QueryTemplate> findByIntentWithDefaults(UUID tenantId, String intent) {
+        return findByIntentWithDefaultsInternal(tenantId, intent, SYSTEM_TENANT_ID);
+    }
 
     @Query("SELECT qt FROM QueryTemplate qt WHERE (qt.tenantId = :tenantId " +
-           "OR qt.tenantId = '00000000-0000-0000-0000-000000000000') " +
+           "OR qt.tenantId = :defaultId) " +
            "AND qt.isActive = true ORDER BY qt.usageCount DESC")
-    List<QueryTemplate> findAllWithDefaults(@Param("tenantId") UUID tenantId);
+    List<QueryTemplate> findAllWithDefaultsInternal(@Param("tenantId") UUID tenantId, @Param("defaultId") UUID defaultId);
+
+    default List<QueryTemplate> findAllWithDefaults(UUID tenantId) {
+        return findAllWithDefaultsInternal(tenantId, SYSTEM_TENANT_ID);
+    }
 }
