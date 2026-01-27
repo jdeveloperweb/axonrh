@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   setupApi,
   SetupSummary,
@@ -10,12 +10,17 @@ import {
 
 export default function SetupWizardPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [summary, setSummary] = useState<SetupSummary | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const tenantId = searchParams.get('tenantId');
+    if (tenantId) {
+      localStorage.setItem('setup_tenant_id', tenantId);
+    }
     loadSummary();
-  }, []);
+  }, [searchParams]);
 
   const loadSummary = async () => {
     try {
@@ -216,20 +221,18 @@ export default function SetupWizardPage() {
               return (
                 <li
                   key={step.number}
-                  className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
-                    isCurrent ? 'bg-blue-50' : ''
-                  } ${!isAccessible ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${isCurrent ? 'bg-blue-50' : ''
+                    } ${!isAccessible ? 'opacity-50 cursor-not-allowed' : ''}`}
                   onClick={() => isAccessible && goToStep(step.number)}
                 >
                   <div className="flex items-center">
                     {/* Step Number/Status */}
-                    <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
-                      isCompleted
+                    <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${isCompleted
                         ? 'bg-green-100 text-green-600'
                         : isCurrent
-                        ? 'bg-blue-100 text-blue-600'
-                        : 'bg-gray-100 text-gray-400'
-                    }`}>
+                          ? 'bg-blue-100 text-blue-600'
+                          : 'bg-gray-100 text-gray-400'
+                      }`}>
                       {isCompleted ? (
                         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -242,9 +245,8 @@ export default function SetupWizardPage() {
                     {/* Step Info */}
                     <div className="ml-4 flex-1">
                       <div className="flex items-center">
-                        <h3 className={`text-lg font-medium ${
-                          isCompleted ? 'text-green-700' : isCurrent ? 'text-blue-700' : 'text-gray-700'
-                        }`}>
+                        <h3 className={`text-lg font-medium ${isCompleted ? 'text-green-700' : isCurrent ? 'text-blue-700' : 'text-gray-700'
+                          }`}>
                           {step.name}
                         </h3>
                         {step.required && (

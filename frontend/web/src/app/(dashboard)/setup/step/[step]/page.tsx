@@ -4,8 +4,11 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import {
   setupApi,
+  importApi,
   SetupProgress,
   CompanyProfile,
+  Department,
+  Position,
   SETUP_STEPS,
   BRAZIL_STATES,
   INDUSTRIES,
@@ -388,16 +391,366 @@ function Step1CompanyData({
   );
 }
 
-// Step 2 - Org Structure (simplified)
+// Step 2 - Org Structure
 function Step2OrgStructure() {
+  const [activeTab, setActiveTab] = useState<'manual' | 'import'>('manual');
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [positions, setPositions] = useState<Position[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0); // To trigger re-fetch
+
+  // Manual Forms
+  const [deptForm, setDeptForm] = useState({ code: '', name: '' });
+  const [posForm, setPosForm] = useState({ code: '', title: '', departmentId: '' });
+
+  // Import State
+  const [importType, setImportType] = useState<'DEPARTMENTS' | 'POSITIONS'>('DEPARTMENTS');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [importStatus, setImportStatus] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadData();
+  }, [refreshKey]);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [depts, pos] = await Promise.all([
+        setupApi.getDepartments(),
+        setupApi.getPositions(),
+      ]);
+      setDepartments(depts || []);
+      setPositions(pos || []);
+    } catch (err) {
+      console.error('Failed to load org data', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddDepartment = async () => {
+    if (!deptForm.code || !deptForm.name) return;
+    try {
+      setLoading(true);
+      await setupApi.saveDepartment(deptForm);
+      setDeptForm({ code: '', name: '' });
+      setRefreshKey((k) => k + 1);
+    } catch (err) {
+      alert('Erro ao salvar departamento');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteDepartment = async (id: string) => {
+    if (!confirm('Tem certeza?')) return;
+    try {
+      setLoading(true);
+      await setupApi.deleteDepartment(id);
+      setRefreshKey((k) => k + 1);
+    } catch (err) {
+      alert('Erro ao excluir departamento');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddPosition = async () => {
+    if (!posForm.code || !posForm.title || !posForm.departmentId) return;
+    try {
+      setLoading(true);
+      await setupApi.savePosition(posForm);
+      setPosForm({ code: '', title: '', departmentId: '' });
+      setRefreshKey((k) => k + 1);
+    } catch (err) {
+      alert('Erro ao salvar cargo');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeletePosition = async (id: string) => {
+    if (!confirm('Tem certeza?')) return;
+    try {
+      setLoading(true);
+      await setupApi.deletePosition(id);
+      setRefreshKey((k) => k + 1);
+    } catch (err) {
+      alert('Erro ao excluir cargo');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDownloadTemplate = async () => {
+    try {
+      const template = await importApi.getTemplate(importType);
+      // Create CSV content
+      const headers = template.columns.map((c) => c.name).join(',');
+      const sample = template.sampleData
+        .map((row) => template.columns.map((c) => row[c.name] || '').join(','))
+        .join('\n');
+      const csvContent = `${headers}\n${sample}`;
+
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `template_${importType.toLowerCase()}.csv`;
+      a.click();
+    } catch (err) {
+      alert('Erro ao baixar template');
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!selectedFile) return;
+    try {
+      setImportStatus('Enviando...');
+      const job = await importApi.upload(importType, selectedFile);
+      setImportStatus('Processando...');
+      // Trigger process
+      await importApi.process(job.id);
+
+      // Wait a bit and refresh (naively)
+      setTimeout(() => {
+        setImportStatus('Concluído! Recarregando dados...');
+        setRefreshKey((k) => k + 1);
+        setSelectedFile(null);
+        setTimeout(() => setImportStatus(null), 2000);
+      }, 2000);
+    } catch (err) {
+      setImportStatus('Erro na importação');
+      console.error(err);
+    }
+  };
+
   return (
-    <div className="text-center py-8">
-      <p className="text-gray-500">
-        Configure a estrutura organizacional (departamentos e cargos) nesta etapa.
-      </p>
-      <p className="text-sm text-gray-400 mt-2">
-        Você poderá importar dados ou criar manualmente.
-      </p>
+    <div className="space-y-6">
+      {/* Tabs */}
+      <div className="flex space-x-4 border-b border-slate-200">
+        <button
+          onClick={() => setActiveTab('manual')}
+          className={`pb-2 text-sm font-medium transition ${activeTab === 'manual'
+              ? 'border-b-2 border-blue-600 text-blue-600'
+              : 'text-slate-500 hover:text-slate-700'
+            }`}
+        >
+          Entrada Manual
+        </button>
+        <button
+          onClick={() => setActiveTab('import')}
+          className={`pb-2 text-sm font-medium transition ${activeTab === 'import'
+              ? 'border-b-2 border-blue-600 text-blue-600'
+              : 'text-slate-500 hover:text-slate-700'
+            }`}
+        >
+          Importar CSV
+        </button>
+      </div>
+
+      {activeTab === 'manual' ? (
+        <div className="space-y-8">
+          {/* Departments */}
+          <div>
+            <h3 className="text-lg font-semibold text-slate-900 mb-4">Departamentos</h3>
+            <div className="flex gap-3 mb-4">
+              <input
+                type="text"
+                placeholder="Código (ex: TI)"
+                value={deptForm.code}
+                onChange={(e) => setDeptForm({ ...deptForm, code: e.target.value })}
+                className="w-32 rounded-lg border border-slate-200 px-3 py-2 text-sm"
+              />
+              <input
+                type="text"
+                placeholder="Nome (ex: Tecnologia)"
+                value={deptForm.name}
+                onChange={(e) => setDeptForm({ ...deptForm, name: e.target.value })}
+                className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm"
+              />
+              <button
+                onClick={handleAddDepartment}
+                disabled={loading || !deptForm.code || !deptForm.name}
+                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+              >
+                Adicionar
+              </button>
+            </div>
+            {departments.length > 0 ? (
+              <div className="overflow-hidden rounded-lg border border-slate-200">
+                <table className="min-w-full divide-y divide-slate-200">
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-xs font-semibold text-slate-500">Código</th>
+                      <th className="px-4 py-2 text-left text-xs font-semibold text-slate-500">Nome</th>
+                      <th className="px-4 py-2 text-right text-xs font-semibold text-slate-500">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 bg-white">
+                    {departments.map((d) => (
+                      <tr key={d.id}>
+                        <td className="px-4 py-2 text-sm text-slate-900">{d.code}</td>
+                        <td className="px-4 py-2 text-sm text-slate-600">{d.name}</td>
+                        <td className="px-4 py-2 text-right">
+                          <button
+                            onClick={() => d.id && handleDeleteDepartment(d.id)}
+                            className="text-red-600 hover:underline text-xs"
+                          >
+                            Excluir
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500 italic">Nenhum departamento cadastrado.</p>
+            )}
+          </div>
+
+          <hr />
+
+          {/* Positions */}
+          <div>
+            <h3 className="text-lg font-semibold text-slate-900 mb-4">Cargos</h3>
+            <div className="flex gap-3 mb-4">
+              <input
+                type="text"
+                placeholder="Código"
+                value={posForm.code}
+                onChange={(e) => setPosForm({ ...posForm, code: e.target.value })}
+                className="w-32 rounded-lg border border-slate-200 px-3 py-2 text-sm"
+              />
+              <input
+                type="text"
+                placeholder="Título do Cargo"
+                value={posForm.title}
+                onChange={(e) => setPosForm({ ...posForm, title: e.target.value })}
+                className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm"
+              />
+              <select
+                value={posForm.departmentId}
+                onChange={(e) => setPosForm({ ...posForm, departmentId: e.target.value })}
+                className="w-48 rounded-lg border border-slate-200 px-3 py-2 text-sm"
+              >
+                <option value="">Selecione Depto</option>
+                {departments.map(d => (
+                  <option key={d.id} value={d.id}>{d.name}</option>
+                ))}
+              </select>
+              <button
+                onClick={handleAddPosition}
+                disabled={loading || !posForm.code || !posForm.title || !posForm.departmentId}
+                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+              >
+                Adicionar
+              </button>
+            </div>
+            {positions.length > 0 ? (
+              <div className="overflow-hidden rounded-lg border border-slate-200 max-h-64 overflow-y-auto">
+                <table className="min-w-full divide-y divide-slate-200">
+                  <thead className="bg-slate-50 sticky top-0">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-xs font-semibold text-slate-500">Código</th>
+                      <th className="px-4 py-2 text-left text-xs font-semibold text-slate-500">Título</th>
+                      <th className="px-4 py-2 text-left text-xs font-semibold text-slate-500">Depto</th>
+                      <th className="px-4 py-2 text-right text-xs font-semibold text-slate-500">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 bg-white">
+                    {positions.map((p) => {
+                      const dept = departments.find(d => d.id === p.departmentId);
+                      return (
+                        <tr key={p.id}>
+                          <td className="px-4 py-2 text-sm text-slate-900">{p.code}</td>
+                          <td className="px-4 py-2 text-sm text-slate-600">{p.title}</td>
+                          <td className="px-4 py-2 text-sm text-slate-500">{dept?.name || '-'}</td>
+                          <td className="px-4 py-2 text-right">
+                            <button
+                              onClick={() => p.id && handleDeletePosition(p.id)}
+                              className="text-red-600 hover:underline text-xs"
+                            >
+                              Excluir
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500 italic">Nenhum cargo cadastrado.</p>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {/* Import Mode */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="rounded-xl border border-slate-200 p-6">
+              <h4 className="font-semibold text-slate-900">1. Baixar Modelo</h4>
+              <p className="text-sm text-slate-500 mt-1 mb-4">Escolha o tipo de dado e baixe o modelo CSV.</p>
+              <div className="flex flex-col gap-3">
+                <div className="flex gap-4">
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="importType"
+                      checked={importType === 'DEPARTMENTS'}
+                      onChange={() => setImportType('DEPARTMENTS')}
+                      className="mr-2"
+                    />
+                    Departamentos
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="importType"
+                      checked={importType === 'POSITIONS'}
+                      onChange={() => setImportType('POSITIONS')}
+                      className="mr-2"
+                    />
+                    Cargos
+                  </label>
+                </div>
+                <button
+                  onClick={handleDownloadTemplate}
+                  className="w-full rounded-lg border border-blue-200 bg-blue-50 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100"
+                >
+                  Baixar Template CSV
+                </button>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 p-6">
+              <h4 className="font-semibold text-slate-900">2. Enviar Arquivo</h4>
+              <p className="text-sm text-slate-500 mt-1 mb-4">Envie o arquivo preenchido para processamento.</p>
+              <div className="space-y-4">
+                <input
+                  type="file"
+                  accept=".csv"
+                  onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                  className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+                <button
+                  onClick={handleUpload}
+                  disabled={!selectedFile || !!importStatus}
+                  className="w-full rounded-lg bg-slate-900 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+                >
+                  {importStatus || 'Enviar e Processar'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-lg bg-yellow-50 p-4 border border-yellow-200 text-sm text-yellow-800">
+            <strong>Nota:</strong> A importação é processada em segundo plano. Aguarde a confirmação.
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -505,11 +858,10 @@ function Step5Modules({
       {moduleList.map((mod) => (
         <div
           key={mod.key}
-          className={`rounded-2xl border p-4 transition-all ${
-            modules[mod.key]
+          className={`rounded-2xl border p-4 transition-all ${modules[mod.key]
               ? 'border-blue-500 bg-blue-50 shadow-sm shadow-blue-100'
               : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm'
-          } ${mod.core ? 'opacity-75' : ''}`}
+            } ${mod.core ? 'opacity-75' : ''}`}
           onClick={() => !mod.core && onChange({ ...modules, [mod.key]: !modules[mod.key] })}
         >
           <div className="flex items-center justify-between">
@@ -526,7 +878,7 @@ function Step5Modules({
                 <input
                   type="checkbox"
                   checked={modules[mod.key]}
-                  onChange={() => {}}
+                  onChange={() => { }}
                   className="h-5 w-5 rounded border-slate-300 text-blue-600"
                 />
               )}

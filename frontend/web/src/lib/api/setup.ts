@@ -46,6 +46,17 @@ export interface StepInfo {
   required: boolean;
 }
 
+export interface SetupInitRequest {
+  corporateName: string;
+  cnpj: string;
+  email: string;
+}
+
+export interface SetupInitResponse {
+  tenantId: string;
+  setupUrl: string;
+}
+
 export interface CompanyProfile {
   id?: string;
   tenantId?: string;
@@ -182,6 +193,81 @@ export interface ModuleConfig {
   moduleKiosk: boolean;
 }
 
+export interface Department {
+  id?: string;
+  tenantId?: string;
+  code: string;
+  name: string;
+  description?: string;
+  parentId?: string;
+  managerId?: string;
+  isActive?: boolean;
+}
+
+export interface Position {
+  id?: string;
+  tenantId?: string;
+  code: string;
+  title: string;
+  description?: string;
+  cboCode?: string;
+  level?: string;
+  departmentId?: string;
+  salaryRangeMin?: number;
+  salaryRangeMax?: number;
+  isActive?: boolean;
+}
+
+export interface Department {
+  id?: string;
+  tenantId?: string;
+  code: string;
+  name: string;
+  description?: string;
+  parentId?: string;
+  managerId?: string;
+  isActive?: boolean;
+}
+
+export interface Position {
+  id?: string;
+  tenantId?: string;
+  code: string;
+  title: string;
+  description?: string;
+  cboCode?: string;
+  level?: string;
+  departmentId?: string;
+  salaryRangeMin?: number;
+  salaryRangeMax?: number;
+  isActive?: boolean;
+}
+
+export interface Department {
+  id?: string;
+  tenantId?: string;
+  code: string;
+  name: string;
+  description?: string;
+  parentId?: string;
+  managerId?: string;
+  isActive?: boolean;
+}
+
+export interface Position {
+  id?: string;
+  tenantId?: string;
+  code: string;
+  title: string;
+  description?: string;
+  cboCode?: string;
+  level?: string;
+  departmentId?: string;
+  salaryRangeMin?: number;
+  salaryRangeMax?: number;
+  isActive?: boolean;
+}
+
 // ==================== Setup Wizard API ====================
 
 export const setupApi = {
@@ -212,6 +298,28 @@ export const setupApi = {
 
   saveCompanyProfile: (profile: CompanyProfile) =>
     api.post<CompanyProfile, CompanyProfile>('/setup/company', profile),
+
+  // Org Structure
+  getDepartments: () =>
+    api.get<Department[], Department[]>('/setup/org/departments'),
+
+  saveDepartment: (department: Department) =>
+    api.post<Department, Department>('/setup/org/departments', department),
+
+  deleteDepartment: (id: string) =>
+    api.delete<void, void>(`/setup/org/departments/${id}`),
+
+  getPositions: () =>
+    api.get<Position[], Position[]>('/setup/org/positions'),
+
+  savePosition: (position: Position) =>
+    api.post<Position, Position>('/setup/org/positions', position),
+
+  deletePosition: (id: string) =>
+    api.delete<void, void>(`/setup/org/positions/${id}`),
+
+  initSetup: (data: SetupInitRequest) =>
+    api.post<SetupInitResponse, SetupInitResponse>('/setup/init', data),
 };
 
 // ==================== Import API ====================

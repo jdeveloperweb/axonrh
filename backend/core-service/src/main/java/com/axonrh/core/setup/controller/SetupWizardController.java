@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 import java.util.UUID;
 
+import com.axonrh.core.setup.dto.SetupInitRequest;
+
 @RestController
 @RequestMapping("/api/v1/setup")
 public class SetupWizardController {
@@ -119,5 +121,12 @@ public class SetupWizardController {
         log.info("Recebido save do perfil da empresa. TenantID: {}", tenantId != null ? tenantId : "A SER GERADO");
         CompanyProfile saved = setupService.saveCompanyProfile(tenantId, profile);
         return ResponseEntity.ok(saved);
+    }
+    @PostMapping("/init")
+    public ResponseEntity<Map<String, String>> initSetup(@RequestBody SetupInitRequest request) {
+        log.info("Recebido pedido de inicialização de setup: {}", request.getCorporateName());
+        UUID tenantId = setupService.initCompanySetup(request);
+        String setupUrl = "/setup?tenantId=" + tenantId;
+        return ResponseEntity.ok(Map.of("tenantId", tenantId.toString(), "setupUrl", setupUrl));
     }
 }
