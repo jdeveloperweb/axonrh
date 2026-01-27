@@ -139,6 +139,7 @@ spring:
             allowedOriginPatterns:
               - "https://*.axonrh.com.br"
               - "http://localhost:*"
+              - "http://92.112.176.177:*"
             allowedMethods:
               - GET
               - POST
