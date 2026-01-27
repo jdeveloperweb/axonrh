@@ -1,7 +1,7 @@
 package com.axonrh.performance.entity;
 
 import com.axonrh.performance.entity.enums.EvaluationStatus;
-import com.axonrh.performance.entity.enums.EvaluationType;
+import com.axonrh.performance.entity.enums.EvaluatorType;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -34,10 +34,10 @@ public class Evaluation {
     @Column(name = "form_id", nullable = false)
     private UUID formId;
 
-    @Column(name = "employee_id", nullable = false)
+    @Column(name = "evaluatee_id", nullable = false)
     private UUID employeeId;
 
-    @Column(name = "employee_name")
+    @Column(name = "evaluatee_name")
     private String employeeName;
 
     @Column(name = "evaluator_id", nullable = false)
@@ -47,8 +47,8 @@ public class Evaluation {
     private String evaluatorName;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "evaluation_type", nullable = false)
-    private EvaluationType evaluationType;
+    @Column(name = "evaluator_type", nullable = false)
+    private EvaluatorType evaluatorType;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -256,12 +256,12 @@ public class Evaluation {
         this.evaluatorName = evaluatorName;
     }
 
-    public EvaluationType getEvaluationType() {
-        return evaluationType;
+    public EvaluatorType getEvaluatorType() {
+        return evaluatorType;
     }
 
-    public void setEvaluationType(EvaluationType evaluationType) {
-        this.evaluationType = evaluationType;
+    public void setEvaluatorType(EvaluatorType evaluatorType) {
+        this.evaluatorType = evaluatorType;
     }
 
     public EvaluationStatus getStatus() {
