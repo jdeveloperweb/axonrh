@@ -47,7 +47,7 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-flyway</artifactId>
-            <version>10.20.1</version>
+            <version>3.4.1</version>
         </dependency>
 
         <!-- PostgreSQL for structured data -->
