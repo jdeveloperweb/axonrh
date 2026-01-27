@@ -15,7 +15,7 @@ import org.springframework.cache.annotation.EnableCaching;
  * - Versionamento de configuracoes
  * - Cache de configuracoes com Redis
  */
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "com.axonrh")
 @EnableCaching
 public class ConfigServiceApplication {
 
