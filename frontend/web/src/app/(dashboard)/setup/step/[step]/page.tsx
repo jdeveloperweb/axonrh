@@ -160,19 +160,24 @@ export default function SetupStepPage() {
   const currentStep = SETUP_STEPS.find(s => s.number === stepNumber);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100 py-10 px-4 sm:px-6 lg:px-10">
+      <div className="max-w-4xl mx-auto space-y-6">
         {/* Step Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
+        <div className="rounded-2xl border border-slate-200 bg-white/80 p-6 shadow-sm backdrop-blur">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm text-gray-500">Etapa {stepNumber} de 9</p>
-              <h1 className="text-2xl font-bold text-gray-900">{currentStep?.name}</h1>
+              <p className="text-xs font-semibold uppercase tracking-widest text-blue-600">
+                Etapa {stepNumber} de 9
+              </p>
+              <h1 className="text-3xl font-semibold text-slate-900">{currentStep?.name}</h1>
+              <p className="mt-1 text-sm text-slate-500">
+                Complete as informações para avançar no setup.
+              </p>
             </div>
             {!currentStep?.required && (
               <button
                 onClick={skipStep}
-                className="text-sm text-gray-500 hover:text-gray-700"
+                className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-slate-300 hover:text-slate-800"
               >
                 Pular etapa
               </button>
@@ -180,23 +185,33 @@ export default function SetupStepPage() {
           </div>
 
           {/* Progress */}
-          <div className="mt-4 w-full bg-gray-200 rounded-full h-2">
-            <div
-              className="bg-blue-600 h-2 rounded-full transition-all"
-              style={{ width: `${(stepNumber / 9) * 100}%` }}
-            ></div>
+          <div className="mt-6 space-y-2">
+            <div className="flex items-center justify-between text-xs font-medium text-slate-500">
+              <span>Progresso</span>
+              <span>{Math.round((stepNumber / 9) * 100)}%</span>
+            </div>
+            <div className="h-2 w-full rounded-full bg-slate-200">
+              <div
+                className="h-2 rounded-full bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-500 transition-all"
+                style={{ width: `${(stepNumber / 9) * 100}%` }}
+              ></div>
+            </div>
           </div>
         </div>
 
         {/* Error Message */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
-            {error}
+          <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 shadow-sm">
+            <span className="mt-0.5 text-base">⚠️</span>
+            <div>
+              <p className="font-semibold">Não foi possível salvar.</p>
+              <p className="text-red-600">{error}</p>
+            </div>
           </div>
         )}
 
         {/* Step Content */}
-        <div className="bg-white rounded-lg shadow-lg p-6">
+        <div className="rounded-2xl border border-slate-200 bg-white/95 p-6 shadow-lg shadow-slate-200/60 sm:p-8">
           {stepNumber === 1 && (
             <Step1CompanyData
               profile={companyProfile}
@@ -224,17 +239,17 @@ export default function SetupStepPage() {
         </div>
 
         {/* Navigation */}
-        <div className="mt-6 flex justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <button
             onClick={goBack}
-            className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+            className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-600 transition hover:border-slate-300 hover:bg-white"
           >
             Voltar
           </button>
           <button
             onClick={saveAndContinue}
             disabled={saving}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-200/50 transition hover:from-blue-700 hover:to-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {saving ? 'Salvando...' : stepNumber === 9 ? 'Finalizar' : 'Continuar'}
           </button>
@@ -253,32 +268,32 @@ function Step1CompanyData({
   onChange: (profile: CompanyProfile) => void;
 }) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-semibold text-slate-700">
             Razão Social *
           </label>
           <input
             type="text"
             value={profile.legalName}
             onChange={(e) => onChange({ ...profile, legalName: e.target.value })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="mt-2 block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-semibold text-slate-700">
             Nome Fantasia
           </label>
           <input
             type="text"
             value={profile.tradeName || ''}
             onChange={(e) => onChange({ ...profile, tradeName: e.target.value })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="mt-2 block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-semibold text-slate-700">
             CNPJ *
           </label>
           <input
@@ -286,17 +301,17 @@ function Step1CompanyData({
             value={profile.cnpj}
             onChange={(e) => onChange({ ...profile, cnpj: e.target.value.replace(/\D/g, '') })}
             placeholder="00.000.000/0000-00"
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="mt-2 block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-semibold text-slate-700">
             Regime Tributário
           </label>
           <select
             value={profile.taxRegime || ''}
             onChange={(e) => onChange({ ...profile, taxRegime: e.target.value as any })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="mt-2 block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200"
           >
             <option value="">Selecione</option>
             <option value="SIMPLES">Simples Nacional</option>
@@ -306,52 +321,57 @@ function Step1CompanyData({
         </div>
       </div>
 
-      <hr className="my-6" />
+      <hr className="border-slate-200" />
 
-      <h3 className="text-lg font-medium text-gray-900">Endereço</h3>
+      <div>
+        <h3 className="text-lg font-semibold text-slate-900">Endereço</h3>
+        <p className="text-sm text-slate-500">
+          Informe o endereço fiscal principal da empresa.
+        </p>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700">Logradouro</label>
+          <label className="block text-sm font-semibold text-slate-700">Logradouro</label>
           <input
             type="text"
             value={profile.addressStreet || ''}
             onChange={(e) => onChange({ ...profile, addressStreet: e.target.value })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="mt-2 block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">Número</label>
+          <label className="block text-sm font-semibold text-slate-700">Número</label>
           <input
             type="text"
             value={profile.addressNumber || ''}
             onChange={(e) => onChange({ ...profile, addressNumber: e.target.value })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="mt-2 block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">Bairro</label>
+          <label className="block text-sm font-semibold text-slate-700">Bairro</label>
           <input
             type="text"
             value={profile.addressNeighborhood || ''}
             onChange={(e) => onChange({ ...profile, addressNeighborhood: e.target.value })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="mt-2 block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">Cidade</label>
+          <label className="block text-sm font-semibold text-slate-700">Cidade</label>
           <input
             type="text"
             value={profile.addressCity || ''}
             onChange={(e) => onChange({ ...profile, addressCity: e.target.value })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="mt-2 block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">Estado</label>
+          <label className="block text-sm font-semibold text-slate-700">Estado</label>
           <select
             value={profile.addressState || ''}
             onChange={(e) => onChange({ ...profile, addressState: e.target.value })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="mt-2 block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200"
           >
             <option value="">Selecione</option>
             {BRAZIL_STATES.map((state) => (
@@ -390,56 +410,56 @@ function Step3LaborRules({
 }) {
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-medium text-gray-900">Jornada de Trabalho</h3>
+      <h3 className="text-lg font-semibold text-slate-900">Jornada de Trabalho</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-semibold text-slate-700">
             Carga Horária Semanal
           </label>
           <input
             type="number"
             value={rules.defaultWeeklyHours}
             onChange={(e) => onChange({ ...rules, defaultWeeklyHours: parseInt(e.target.value) })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="mt-2 block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-semibold text-slate-700">
             Tolerância (minutos)
           </label>
           <input
             type="number"
             value={rules.toleranceMinutes}
             onChange={(e) => onChange({ ...rules, toleranceMinutes: parseInt(e.target.value) })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="mt-2 block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200"
           />
         </div>
       </div>
 
-      <div className="flex items-center">
+      <div className="flex items-center rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
         <input
           type="checkbox"
           checked={rules.overtimeRequiresApproval}
           onChange={(e) => onChange({ ...rules, overtimeRequiresApproval: e.target.checked })}
-          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
         />
-        <label className="ml-2 block text-sm text-gray-700">
+        <label className="ml-3 block text-sm font-medium text-slate-700">
           Horas extras requerem aprovação
         </label>
       </div>
 
-      <hr className="my-6" />
+      <hr className="border-slate-200" />
 
-      <h3 className="text-lg font-medium text-gray-900">Férias</h3>
+      <h3 className="text-lg font-semibold text-slate-900">Férias</h3>
       <div>
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-semibold text-slate-700">
           Dias de Férias Anuais
         </label>
         <input
           type="number"
           value={rules.vacationAnnualDays}
           onChange={(e) => onChange({ ...rules, vacationAnnualDays: parseInt(e.target.value) })}
-          className="mt-1 block w-48 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          className="mt-2 block w-48 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200"
         />
       </div>
     </div>
@@ -483,25 +503,29 @@ function Step5Modules({
       {moduleList.map((mod) => (
         <div
           key={mod.key}
-          className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-            modules[mod.key] ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+          className={`rounded-2xl border p-4 transition-all ${
+            modules[mod.key]
+              ? 'border-blue-500 bg-blue-50 shadow-sm shadow-blue-100'
+              : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm'
           } ${mod.core ? 'opacity-75' : ''}`}
           onClick={() => !mod.core && onChange({ ...modules, [mod.key]: !modules[mod.key] })}
         >
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="font-medium text-gray-900">{mod.name}</h4>
-              <p className="text-sm text-gray-500">{mod.desc}</p>
+              <h4 className="font-semibold text-slate-900">{mod.name}</h4>
+              <p className="text-sm text-slate-500">{mod.desc}</p>
             </div>
             <div>
               {mod.core ? (
-                <span className="text-xs text-gray-500">Incluído</span>
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+                  Incluído
+                </span>
               ) : (
                 <input
                   type="checkbox"
                   checked={modules[mod.key]}
                   onChange={() => {}}
-                  className="h-5 w-5 text-blue-600 rounded"
+                  className="h-5 w-5 rounded border-slate-300 text-blue-600"
                 />
               )}
             </div>
