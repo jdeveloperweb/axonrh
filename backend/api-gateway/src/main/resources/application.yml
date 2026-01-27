@@ -28,24 +28,24 @@ spring:
       routes:
         # Auth Service
         - id: auth-service
-          uri: lb://auth-service
+          uri: http://auth-service:8081
           predicates:
             - Path=/api/v1/auth/**
           filters:
-            - StripPrefix=2
+            # - StripPrefix=2 # Removed as controller expects full path
 
         # Config Service
         - id: config-service
-          uri: lb://config-service
+          uri: http://config-service:8888
           predicates:
             - Path=/api/v1/config/**
           filters:
-            - StripPrefix=2
+            # - StripPrefix=2
             - name: JwtAuthFilter
 
         # Core Service - Setup & Import
         - id: core-service
-          uri: lb://core-service
+          uri: http://core-service:8082
           predicates:
             - Path=/api/v1/setup/**
           filters:
@@ -53,83 +53,83 @@ spring:
 
         # Employee Service
         - id: employee-service
-          uri: lb://employee-service
+          uri: http://employee-service:8083
           predicates:
             - Path=/api/v1/employees/**, /api/v1/departments/**, /api/v1/positions/**
           filters:
-            - StripPrefix=2
+            # - StripPrefix=2
             - name: JwtAuthFilter
 
         # Timesheet Service
         - id: timesheet-service
-          uri: lb://timesheet-service
+          uri: http://timesheet-service:8084
           predicates:
             - Path=/api/v1/timesheet/**, /api/v1/time-records/**
           filters:
-            - StripPrefix=2
+            # - StripPrefix=2
             - name: JwtAuthFilter
 
         # Vacation Service
         - id: vacation-service
-          uri: lb://vacation-service
+          uri: http://vacation-service:8085
           predicates:
             - Path=/api/v1/vacations/**
           filters:
-            - StripPrefix=2
+            # - StripPrefix=2
             - name: JwtAuthFilter
 
         # Performance Service
         - id: performance-service
-          uri: lb://performance-service
+          uri: http://performance-service:8086
           predicates:
             - Path=/api/v1/performance/**, /api/v1/evaluations/**
           filters:
-            - StripPrefix=2
+            # - StripPrefix=2
             - name: JwtAuthFilter
 
         # Learning Service
         - id: learning-service
-          uri: lb://learning-service
+          uri: http://learning-service:8087
           predicates:
             - Path=/api/v1/learning/**, /api/v1/courses/**
           filters:
-            - StripPrefix=2
+            # - StripPrefix=2
             - name: JwtAuthFilter
 
         # AI Assistant Service
         - id: ai-assistant-service
-          uri: lb://ai-assistant-service
+          uri: http://ai-assistant-service:8088
           predicates:
             - Path=/api/v1/ai/**, /api/v1/chat/**
           filters:
-            - StripPrefix=2
+            # - StripPrefix=2
             - name: JwtAuthFilter
 
         # Notification Service
         - id: notification-service
-          uri: lb://notification-service
+          uri: http://notification-service:8089
           predicates:
             - Path=/api/v1/notifications/**
           filters:
-            - StripPrefix=2
+            # - StripPrefix=2
             - name: JwtAuthFilter
 
         # Analytics Service
         - id: analytics-service
-          uri: lb://analytics-service
+          uri: http://analytics-service:8091
           predicates:
             - Path=/api/v1/analytics/**, /api/v1/reports/**
           filters:
-            - StripPrefix=2
+            # - StripPrefix=2
             - name: JwtAuthFilter
 
         # Integration Service
         - id: integration-service
-          uri: lb://integration-service
+          uri: http://integration-service:8090
           predicates:
             - Path=/api/v1/integrations/**, /api/v1/esocial/**
           filters:
-            - StripPrefix=2
+            # - StripPrefix=2
             - name: JwtAuthFilter
 
       # CORS Global
