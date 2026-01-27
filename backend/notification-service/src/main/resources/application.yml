@@ -74,3 +74,7 @@ logging:
 axonrh:
   flyway:
     repair-on-startup: ${AXONRH_FLYWAY_REPAIR_ON_STARTUP:true}
+
+aws:
+  ses:
+    region: ${AWS_SES_REGION:us-east-1}
