@@ -23,7 +23,9 @@ public class CorsConfig {
         corsConfig.setAllowedOriginPatterns(Arrays.asList(
                 "https://*.axonrh.com.br",
                 "http://localhost:*",
-                "http://127.0.0.1:*"
+                "http://127.0.0.1:*",
+                "http://[::1]:*",
+                "*" // Temporario para debug/acesso remoto sem dominio
         ));
 
         // Metodos permitidos

@@ -10,17 +10,13 @@ export function StatusIndicator() {
 
     const checkStatus = async () => {
         try {
-            // Trying to hit the health endpoint of the API Gateway
-            // Assuming existing client base URL is correct (http://localhost:8080/api/v1)
-            // Actuator usually lives at /actuator/health, often not under /api/v1
-            // So we might need to adjust the URL.
-            // Checking application.yml: server.port: 8080.
-            // Management endpoints often on same port unless management.server.port is set.
-            // management.endpoints.web.exposure.include includes 'health'.
-            // So http://localhost:8080/actuator/health should work.
+            // Determine the base URL from the apiClient or environment
+            // This ensures we hit the correct server/port (e.g., remote IP vs localhost)
+            // Remove '/api/v1' suffix to get the root, then append '/actuator/health'
+            const apiBase = apiClient.defaults.baseURL || "http://localhost:8180/api/v1";
+            const healthUrl = apiBase.replace('/api/v1', '') + '/actuator/health';
 
-            // Since apiClient has baseURL /api/v1, we need to bypass it or use absolute URL.
-            await axios.get("http://localhost:8180/actuator/health");
+            await axios.get(healthUrl);
             setStatus("connected");
             setErrorMessage(null);
         } catch (error) {

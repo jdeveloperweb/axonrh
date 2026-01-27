@@ -162,7 +162,7 @@ management:
         include: health,info,metrics,prometheus,gateway
   endpoint:
     health:
-      show-details: when_authorized
+      show-details: always
     gateway:
       enabled: true
   metrics:
