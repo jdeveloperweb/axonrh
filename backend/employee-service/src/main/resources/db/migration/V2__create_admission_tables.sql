@@ -97,7 +97,7 @@ CREATE TABLE IF NOT EXISTS admission_documents (
 
     -- OCR
     ocr_data JSONB,
-    ocr_confidence DECIMAL(5,4),
+    ocr_confidence DOUBLE PRECISION,
     ocr_processed_at TIMESTAMP,
 
     manually_verified BOOLEAN DEFAULT FALSE,
