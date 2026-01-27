@@ -114,7 +114,7 @@ public class JwtAuthFilter extends AbstractGatewayFilterFactory<JwtAuthFilter.Co
     private Mono<Void> onError(ServerWebExchange exchange, String message, HttpStatus status) {
         log.debug("Authentication error: {} - Status: {}", message, status);
         exchange.getResponse().setStatusCode(status);
-        exchange.getResponse().getHeaders().add("X-Auth-Error", message);
+        // Evita adicionar headers em resposta de erro para prevenir UnsupportedOperationException em headers read-only
         return exchange.getResponse().setComplete();
     }
 

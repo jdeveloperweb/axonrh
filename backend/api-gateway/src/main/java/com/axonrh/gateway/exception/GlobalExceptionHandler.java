@@ -23,10 +23,9 @@ import java.time.Instant;
 @Order(-2) // Alta prioridade para capturar erros antes do handler padrao
 public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
 
-    @Override
     public Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {
         if (exchange.getResponse().isCommitted()) {
-            return Mono.error(ex);
+            return Mono.empty();
         }
 
         HttpStatus status = determineHttpStatus(ex);
