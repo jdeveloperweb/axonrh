@@ -6,7 +6,7 @@ import com.axonrh.performance.entity.Evaluation;
 import com.axonrh.performance.entity.EvaluationAnswer;
 import com.axonrh.performance.entity.EvaluationCycle;
 import com.axonrh.performance.entity.enums.EvaluationStatus;
-import com.axonrh.performance.entity.enums.EvaluationType;
+import com.axonrh.performance.entity.enums.EvaluatorType;
 import com.axonrh.performance.repository.EvaluationCycleRepository;
 import com.axonrh.performance.repository.EvaluationRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -69,9 +69,9 @@ public class EvaluationService {
 
     public Evaluation createEvaluation(UUID tenantId, Evaluation evaluation) {
         // Verificar se ja existe avaliacao
-        boolean exists = evaluationRepository.existsByTenantIdAndCycleIdAndEmployeeIdAndEvaluatorIdAndEvaluationType(
+        boolean exists = evaluationRepository.existsByTenantIdAndCycleIdAndEmployeeIdAndEvaluatorIdAndEvaluatorType(
                 tenantId, evaluation.getCycle().getId(), evaluation.getEmployeeId(),
-                evaluation.getEvaluatorId(), evaluation.getEvaluationType());
+                evaluation.getEvaluatorId(), evaluation.getEvaluatorType());
 
         if (exists) {
             throw new IllegalStateException("Ja existe uma avaliacao para este colaborador neste ciclo");
@@ -151,7 +151,7 @@ public class EvaluationService {
         EvaluationCycle cycle = getCycle(tenantId, cycleId);
 
         List<Evaluation> evaluations = evaluationRepository.findCompletedForNineBox(
-                tenantId, cycleId, EvaluationType.MANAGER);
+                tenantId, cycleId, EvaluatorType.MANAGER);
 
         List<NineBoxEmployee> employees = evaluations.stream()
                 .map(this::mapToNineBoxEmployee)
