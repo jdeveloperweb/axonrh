@@ -100,10 +100,16 @@ public class SetupWizardController {
 
     @PostMapping("/company")
     public ResponseEntity<CompanyProfile> saveCompanyProfile(
-            @RequestHeader("X-Tenant-ID") UUID tenantId,
+            @RequestHeader(value = "X-Tenant-ID", required = false) UUID headerTenantId,
             @RequestBody CompanyProfile profile) {
 
-        log.info("Recebido save do perfil da empresa para tenant {}", tenantId);
+        UUID tenantId = headerTenantId;
+        if (tenantId == null) {
+            tenantId = profile.getTenantId();
+        }
+
+        // Se tenantId for nulo, o servico ira gerar um novo (inicio do setup)
+        log.info("Recebido save do perfil da empresa. TenantID: {}", tenantId != null ? tenantId : "A SER GERADO");
         CompanyProfile saved = setupService.saveCompanyProfile(tenantId, profile);
         return ResponseEntity.ok(saved);
     }

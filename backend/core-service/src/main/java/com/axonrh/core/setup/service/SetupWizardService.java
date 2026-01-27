@@ -183,8 +183,18 @@ public class SetupWizardService {
     // Step 1: Save company data
     public CompanyProfile saveCompanyProfile(UUID tenantId, CompanyProfile profile) {
         try {
+            if (tenantId == null) {
+                // Primeira etapa do setup: gerar novo Tenant ID
+                if (profile.getTenantId() == null) {
+                    profile.setTenantId(UUID.randomUUID());
+                }
+                tenantId = profile.getTenantId();
+                log.info("Gerado novo Tenant ID: {}", tenantId);
+            } else {
+                profile.setTenantId(tenantId);
+            }
+            
             log.info("Salvando perfil da empresa do setup para tenant {}", tenantId);
-            profile.setTenantId(tenantId);
             return companyProfileRepository.save(profile);
         } catch (Exception e) {
             log.error("Falha ao salvar perfil da empresa do setup para tenant {}", tenantId, e);
