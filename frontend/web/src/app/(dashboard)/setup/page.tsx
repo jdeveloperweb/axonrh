@@ -64,6 +64,116 @@ export default function SetupWizardPage() {
     );
   }
 
+  const isFreshSetup = (summary?.completedSteps || 0) === 0;
+
+  if (isFreshSetup) {
+    return (
+      <div className="min-h-screen relative flex items-center justify-center px-6 py-16 font-sans text-white">
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-[#0b2147] to-[#101b3c]" />
+        <div className="absolute inset-0 opacity-40 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.35),_transparent_55%)] animate-pulse" />
+        <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_20%_80%,_rgba(16,185,129,0.35),_transparent_55%)] animate-pulse" />
+        <div className="absolute inset-0 opacity-20 bg-[linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:40px_40px]" />
+        <div className="absolute -top-32 right-0 h-72 w-72 rounded-full bg-sky-500/20 blur-[120px] animate-pulse" />
+        <div className="absolute bottom-0 left-0 h-72 w-72 rounded-full bg-emerald-500/20 blur-[120px] animate-pulse" />
+
+        <div className="relative z-10 w-full max-w-6xl grid gap-12 lg:grid-cols-[1.15fr,0.85fr] items-center">
+          <div className="flex flex-col gap-6 text-center lg:text-left">
+            <div className="flex items-center justify-center lg:justify-start gap-3">
+              <h1 className="font-heading text-4xl sm:text-5xl font-extrabold tracking-tight">
+                <span className="text-white">Axon</span>
+                <span className="text-sky-400">RH</span>
+              </h1>
+            </div>
+
+            <h2 className="font-heading text-3xl sm:text-4xl font-semibold text-white/95">
+              Boas-vindas ao setup inteligente do seu ecossistema de RH
+            </h2>
+            <p className="text-base sm:text-lg text-slate-200/80 max-w-xl mx-auto lg:mx-0">
+              Vamos guiar você pela configuração inicial para que o AxonRH fique pronto para
+              operar com segurança, conformidade e personalização desde o primeiro acesso.
+            </p>
+
+            <div className="grid gap-4 sm:grid-cols-2 text-left">
+              {[
+                {
+                  title: 'Dados corporativos',
+                  description: 'Cadastro fiscal, endereço e responsáveis oficiais.',
+                },
+                {
+                  title: 'Regras e jornadas',
+                  description: 'Parâmetros de trabalho, benefícios e políticas.',
+                },
+                {
+                  title: 'Módulos e integrações',
+                  description: 'Escolha das funcionalidades e conexões externas.',
+                },
+                {
+                  title: 'Time inicial',
+                  description: 'Usuários, permissões e perfis de acesso.',
+                },
+              ].map((item) => (
+                <div
+                  key={item.title}
+                  className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur shadow-lg shadow-slate-900/40"
+                >
+                  <p className="text-sm font-semibold text-white">{item.title}</p>
+                  <p className="text-xs text-slate-300 mt-1">{item.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="w-full">
+            <div className="relative">
+              <div className="absolute -inset-[1px] rounded-3xl bg-gradient-to-r from-sky-500/60 via-emerald-400/40 to-indigo-500/60 blur-lg opacity-60" />
+              <div className="relative rounded-3xl border border-white/20 bg-slate-950/60 shadow-2xl shadow-slate-900/40 backdrop-blur-xl p-8 sm:p-10 text-left">
+                <h3 className="text-xl font-semibold text-white">
+                  Antes de começar
+                </h3>
+                <p className="mt-3 text-sm text-slate-200/80">
+                  Este cadastro garante que o AxonRH aplique as regras corretas, configure
+                  a identidade visual e habilite os módulos certos para o seu time.
+                </p>
+                <div className="mt-6 space-y-3 text-sm text-slate-200/80">
+                  <div className="flex items-start gap-3">
+                    <span className="mt-1 h-2 w-2 rounded-full bg-emerald-300" />
+                    <span>Tempo médio: 10 a 15 minutos.</span>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <span className="mt-1 h-2 w-2 rounded-full bg-sky-300" />
+                    <span>Você pode pausar e retomar quando quiser.</span>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <span className="mt-1 h-2 w-2 rounded-full bg-indigo-300" />
+                    <span>Precisando de ajuda? Consulte o manual do sistema.</span>
+                  </div>
+                </div>
+
+                <div className="mt-6">
+                  <a
+                    href="/manual"
+                    className="text-sm text-sky-300 hover:text-sky-200 hover:underline"
+                  >
+                    Acessar manual do sistema →
+                  </a>
+                </div>
+
+                <div className="mt-8">
+                  <button
+                    onClick={continueSetup}
+                    className="w-full px-6 py-3 bg-sky-500 text-white font-semibold rounded-xl hover:bg-sky-400 transition-colors shadow-lg shadow-sky-500/30"
+                  >
+                    Iniciar configuração
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-4xl mx-auto">
