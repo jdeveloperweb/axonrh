@@ -15,9 +15,9 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: 'AxonRH - Gest„o de RH e DP',
-  description: 'Sistema Integrado de Gest„o de RH e Departamento Pessoal com IA Conversacional',
-  keywords: ['RH', 'Departamento Pessoal', 'Gest„o de Pessoas', 'IA', 'HRIS'],
+  title: 'AxonRH - Gest√£o de RH e DP',
+  description: 'Sistema Integrado de Gest√£o de RH e Departamento Pessoal com IA Conversacional',
+  keywords: ['RH', 'Departamento Pessoal', 'Gest√£o de Pessoas', 'IA', 'HRIS'],
 };
 
 import { StatusIndicator } from "@/components/StatusIndicator";
