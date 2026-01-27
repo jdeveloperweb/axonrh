@@ -5,3 +5,15 @@ dist/
 .env.local
 .env.production
 coverage/
+
+# Java / Maven
+target/
+*.class
+*.jar
+*.war
+*.ear
+.settings/
+.classpath
+.project
+.idea/
+*.iml

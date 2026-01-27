@@ -62,10 +62,10 @@ public class Goal {
     @Column(name = "unit_of_measure")
     private String unitOfMeasure;
 
-    @Column(name = "start_date")
+    @Column(name = "start_date", nullable = false)
     private LocalDate startDate;
 
-    @Column(name = "due_date")
+    @Column(name = "end_date", nullable = false)
     private LocalDate dueDate;
 
     @Column(name = "completed_at")
