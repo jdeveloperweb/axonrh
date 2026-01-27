@@ -30,7 +30,7 @@ public interface WebhookDeliveryRepository extends JpaRepository<WebhookDelivery
                                                Pageable pageable);
 
     @Query("SELECT d FROM WebhookDelivery d WHERE d.tenantId = :tenantId " +
-           "AND d.status = 'FAILED' AND d.retryCount < :maxRetries " +
+           "AND d.status = com.axonrh.integration.webhook.entity.WebhookDelivery.DeliveryStatus.FAILED AND d.retryCount < :maxRetries " +
            "ORDER BY d.createdAt ASC")
     List<WebhookDelivery> findRetryable(@Param("tenantId") UUID tenantId,
                                         @Param("maxRetries") int maxRetries);
@@ -48,6 +48,6 @@ public interface WebhookDeliveryRepository extends JpaRepository<WebhookDelivery
     long countByTenantIdAndStatus(UUID tenantId, DeliveryStatus status);
 
     @Query("SELECT AVG(d.durationMs) FROM WebhookDelivery d " +
-           "WHERE d.webhook.id = :webhookId AND d.status = 'SUCCESS'")
+           "WHERE d.webhook.id = :webhookId AND d.status = com.axonrh.integration.webhook.entity.WebhookDelivery.DeliveryStatus.SUCCESS")
     Double calculateAverageDuration(@Param("webhookId") UUID webhookId);
 }

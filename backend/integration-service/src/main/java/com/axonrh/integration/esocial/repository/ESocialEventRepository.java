@@ -29,15 +29,15 @@ public interface ESocialEventRepository extends JpaRepository<ESocialEvent, UUID
     List<ESocialEvent> findByTenantIdAndEventType(UUID tenantId, ESocialEventType eventType);
 
     @Query("SELECT e FROM ESocialEvent e WHERE e.tenantId = :tenantId " +
-           "AND e.status = 'PENDING' ORDER BY e.createdAt ASC")
+           "AND e.status = com.axonrh.integration.esocial.entity.enums.ESocialEventStatus.PENDING ORDER BY e.createdAt ASC")
     List<ESocialEvent> findPendingEvents(@Param("tenantId") UUID tenantId);
 
     @Query("SELECT e FROM ESocialEvent e WHERE e.tenantId = :tenantId " +
-           "AND e.status = 'TRANSMITTED' AND e.protocolNumber IS NOT NULL")
+           "AND e.status = com.axonrh.integration.esocial.entity.enums.ESocialEventStatus.SENT AND e.protocolNumber IS NOT NULL")
     List<ESocialEvent> findAwaitingResponse(@Param("tenantId") UUID tenantId);
 
     @Query("SELECT e FROM ESocialEvent e WHERE e.tenantId = :tenantId " +
-           "AND e.status = 'ERROR' AND e.retryCount < :maxRetries")
+           "AND e.status = com.axonrh.integration.esocial.entity.enums.ESocialEventStatus.ERROR AND e.retryCount < :maxRetries")
     List<ESocialEvent> findRetryableErrors(@Param("tenantId") UUID tenantId,
                                            @Param("maxRetries") int maxRetries);
 
