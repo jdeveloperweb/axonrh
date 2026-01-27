@@ -15,7 +15,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * - Gestao de usuarios, roles e permissoes
  * - Bloqueio de conta apos tentativas falhas
  */
+import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+
 @SpringBootApplication(scanBasePackages = "com.axonrh")
+@EnableJpaRepositories(basePackages = {"com.axonrh.auth.repository", "com.axonrh.kafka.dlq"})
+@EntityScan(basePackages = {"com.axonrh.auth.entity", "com.axonrh.kafka.dlq"})
 public class AuthServiceApplication {
 
     public static void main(String[] args) {

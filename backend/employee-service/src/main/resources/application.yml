@@ -40,6 +40,7 @@ spring:
     default-schema: shared
     create-schemas: true
     validate-on-migrate: false
+    encoding: UTF-8
 
   # Redis Cache
   data:

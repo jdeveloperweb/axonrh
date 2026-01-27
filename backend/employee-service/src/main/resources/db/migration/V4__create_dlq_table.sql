@@ -1,5 +1,5 @@
 -- V4__create_dlq_table.sql
--- T092 - Criação da tabela de Dead Letter Queue para armazenamento de falhas no processamento de eventos Kafka
+-- T092 - Criacao da tabela de Dead Letter Queue para armazenamento de falhas no processamento de eventos Kafka
 
 CREATE TABLE IF NOT EXISTS shared.dead_letter_queue (
     id UUID PRIMARY KEY,
