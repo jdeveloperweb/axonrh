@@ -29,7 +29,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <body>
+      <body className={`${plusJakarta.variable} ${outfit.variable} font-sans`}>
         {children}
         <StatusIndicator />
       </body>
