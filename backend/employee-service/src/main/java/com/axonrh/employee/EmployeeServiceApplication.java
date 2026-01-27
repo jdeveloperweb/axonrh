@@ -11,7 +11,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
  * Aplicacao principal do Employee Service.
  * Responsavel por gestao de colaboradores, departamentos e cargos.
  */
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "com.axonrh")
 @EnableCaching
 @EnableJpaAuditing
 @EnableKafka
