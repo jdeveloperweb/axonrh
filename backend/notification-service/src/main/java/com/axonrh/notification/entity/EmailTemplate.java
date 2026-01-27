@@ -3,6 +3,8 @@ package com.axonrh.notification.entity;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "email_templates")
@@ -36,7 +38,8 @@ public class EmailTemplate {
     @Column(length = 50)
     private String category;
 
-    @Column(columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "jsonb")
     private String variables; // JSON array of variable names
 
     @Column(name = "is_active", nullable = false)
