@@ -14,7 +14,11 @@ public class FlywayRepairConfiguration {
     public FlywayMigrationStrategy flywayRepairStrategy() {
         return (Flyway flyway) -> {
             flyway.repair();
-            flyway.migrate();
+            Flyway.configure()
+                    .configuration(flyway.getConfiguration())
+                    .validateOnMigrate(false)
+                    .load()
+                    .migrate();
         };
     }
 }
