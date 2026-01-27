@@ -1,12 +1,30 @@
 spring:
   datasource:
-    url: "${PERFORMANCE_DB_URL:jdbc:h2:mem:performance;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;INIT=CREATE ALIAS IF NOT EXISTS gen_random_uuid FOR \"org.h2.util.UUIDUtils.randomUUID\"}"
-    driver-class-name: ${PERFORMANCE_DB_DRIVER:org.h2.Driver}
-    username: ${PERFORMANCE_DB_USERNAME:sa}
-    password: ${PERFORMANCE_DB_PASSWORD:}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:axonrh}
+    username: ${DB_USER:axonrh}
+    password: ${DB_PASSWORD:axonrh123}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 10
+      idle-timeout: 300000
+      connection-timeout: 20000
   flyway:
-    enabled: ${PERFORMANCE_FLYWAY_ENABLED:false}
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 0
+    table: performance_service_schema_history
+    schemas: shared
+    default-schema: shared
+    create-schemas: true
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        default_schema: shared
     open-in-view: false
+    show-sql: ${SHOW_SQL:false}
