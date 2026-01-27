@@ -25,6 +25,10 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
 
     @Override
     public Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {
+        if (exchange.getResponse().isCommitted()) {
+            return Mono.error(ex);
+        }
+
         HttpStatus status = determineHttpStatus(ex);
         String message = determineMessage(ex);
         String path = exchange.getRequest().getPath().value();
