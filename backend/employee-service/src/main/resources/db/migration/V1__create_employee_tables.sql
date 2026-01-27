@@ -3,6 +3,9 @@
 -- Schema: shared (metadados) e tenant_* (dados por tenant)
 -- ============================================================
 
+CREATE SCHEMA IF NOT EXISTS shared;
+SET search_path TO shared;
+
 -- ============================================================
 -- T100: Tabela de Departamentos
 -- ============================================================
