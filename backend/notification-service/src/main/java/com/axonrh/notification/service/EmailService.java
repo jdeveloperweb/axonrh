@@ -27,6 +27,7 @@ public class EmailService {
 
     private static final Logger log = LoggerFactory.getLogger(EmailService.class);
     private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\{\\{(\\w+)}}");
+    private static final UUID SYSTEM_TENANT_ID = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
     @Value("${email.from-address:noreply@axonrh.com}")
     private String fromAddress;
@@ -56,7 +57,7 @@ public class EmailService {
     public void sendTemplateEmail(UUID tenantId, String templateCode, String recipientEmail,
                                   String recipientName, Map<String, String> variables) {
         EmailTemplate template = templateRepository.findByTenantIdAndCode(tenantId, templateCode)
-                .or(() -> templateRepository.findSystemTemplate(templateCode))
+                .or(() -> templateRepository.findSystemTemplate(SYSTEM_TENANT_ID, templateCode))
                 .orElseThrow(() -> new IllegalArgumentException("Template não encontrado: " + templateCode));
 
         String subject = replaceVariables(template.getSubject(), variables);
@@ -186,7 +187,7 @@ public class EmailService {
      * Lista templates disponíveis.
      */
     public List<EmailTemplate> listTemplates(UUID tenantId) {
-        return templateRepository.findByTenantIdOrSystem(tenantId);
+        return templateRepository.findByTenantIdOrSystem(tenantId, SYSTEM_TENANT_ID);
     }
 
     /**
