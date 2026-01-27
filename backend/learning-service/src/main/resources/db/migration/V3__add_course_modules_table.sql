@@ -5,10 +5,10 @@
 CREATE SCHEMA IF NOT EXISTS shared;
 SET search_path TO shared;
 
-CREATE TABLE IF NOT EXISTS courses (
+CREATE TABLE IF NOT EXISTS shared.courses (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL,
-    category_id UUID REFERENCES training_categories(id),
+    category_id UUID REFERENCES shared.training_categories(id),
     title VARCHAR(255) NOT NULL,
     description TEXT,
     objectives TEXT,
@@ -41,14 +41,14 @@ CREATE TABLE IF NOT EXISTS courses (
     updated_at TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_courses_tenant ON courses(tenant_id);
-CREATE INDEX IF NOT EXISTS idx_courses_category ON courses(category_id);
-CREATE INDEX IF NOT EXISTS idx_courses_status ON courses(status);
-CREATE INDEX IF NOT EXISTS idx_courses_type ON courses(course_type);
+CREATE INDEX IF NOT EXISTS idx_courses_tenant ON shared.courses(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_courses_category ON shared.courses(category_id);
+CREATE INDEX IF NOT EXISTS idx_courses_status ON shared.courses(status);
+CREATE INDEX IF NOT EXISTS idx_courses_type ON shared.courses(course_type);
 
-CREATE TABLE IF NOT EXISTS course_modules (
+CREATE TABLE IF NOT EXISTS shared.course_modules (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    course_id UUID NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+    course_id UUID NOT NULL REFERENCES shared.courses(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
     description TEXT,
     sequence_order INTEGER NOT NULL,
@@ -58,4 +58,4 @@ CREATE TABLE IF NOT EXISTS course_modules (
     updated_at TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_course_modules_course ON course_modules(course_id);
+CREATE INDEX IF NOT EXISTS idx_course_modules_course ON shared.course_modules(course_id);
