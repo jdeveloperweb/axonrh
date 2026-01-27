@@ -49,7 +49,15 @@ public class MultiTenantConfig {
         return new MultiTenantConnectionProvider<>() {
             @Override
             public Connection getAnyConnection() throws SQLException {
-                return dataSource.getConnection();
+                Connection connection = dataSource.getConnection();
+                try {
+                    connection.setSchema(defaultSchema);
+                    log.trace("Schema default definido para: {}", defaultSchema);
+                } catch (SQLException e) {
+                    log.error("Erro ao definir schema default {}: {}", defaultSchema, e.getMessage());
+                    throw e;
+                }
+                return connection;
             }
 
             @Override
