@@ -6,6 +6,30 @@
 -- =====================================================
 -- SEED: Tenant de Demonstracao
 -- =====================================================
+ALTER TABLE shared.tenant_configs
+    ADD COLUMN IF NOT EXISTS cor_primaria VARCHAR(7) DEFAULT '#1a56db',
+    ADD COLUMN IF NOT EXISTS cor_secundaria VARCHAR(7) DEFAULT '#6b7280',
+    ADD COLUMN IF NOT EXISTS cor_destaque VARCHAR(7) DEFAULT '#10b981',
+    ADD COLUMN IF NOT EXISTS cor_fundo VARCHAR(7) DEFAULT '#ffffff',
+    ADD COLUMN IF NOT EXISTS cor_texto VARCHAR(7) DEFAULT '#1f2937',
+    ADD COLUMN IF NOT EXISTS fonte_principal VARCHAR(100) DEFAULT 'Inter',
+    ADD COLUMN IF NOT EXISTS estilo_botoes VARCHAR(20) DEFAULT 'rounded'
+        CHECK (estilo_botoes IN ('rounded', 'square', 'pill')),
+    ADD COLUMN IF NOT EXISTS tema_escuro JSONB DEFAULT '{
+        "cor_fundo": "#111827",
+        "cor_texto": "#f3f4f6",
+        "cor_card": "#1f2937",
+        "cor_borda": "#374151"
+    }',
+    ADD COLUMN IF NOT EXISTS login_config JSONB DEFAULT '{
+        "background_type": "color",
+        "background_value": "#f3f4f6",
+        "form_position": "center",
+        "welcome_text": "Bem-vindo ao Sistema",
+        "show_logo": true,
+        "show_remember_me": true
+    }';
+
 INSERT INTO shared.tenants (
     id,
     name,
