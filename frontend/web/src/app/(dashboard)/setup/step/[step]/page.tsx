@@ -160,7 +160,7 @@ export default function SetupStepPage() {
   const currentStep = SETUP_STEPS.find(s => s.number === stepNumber);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100 py-10 px-4 sm:px-6 lg:px-10">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100 py-10 px-4 sm:px-6 lg:px-10 font-sans">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Step Header */}
         <div className="rounded-2xl border border-slate-200 bg-white/80 p-6 shadow-sm backdrop-blur">
@@ -169,7 +169,9 @@ export default function SetupStepPage() {
               <p className="text-xs font-semibold uppercase tracking-widest text-blue-600">
                 Etapa {stepNumber} de 9
               </p>
-              <h1 className="text-3xl font-semibold text-slate-900">{currentStep?.name}</h1>
+              <h1 className="text-3xl font-semibold text-slate-900 font-heading">
+                {currentStep?.name}
+              </h1>
               <p className="mt-1 text-sm text-slate-500">
                 Complete as informações para avançar no setup.
               </p>
