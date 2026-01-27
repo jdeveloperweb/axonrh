@@ -3,6 +3,8 @@ package com.axonrh.notification.entity;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "email_logs")
@@ -74,7 +76,8 @@ public class EmailLog {
     @Column(name = "bounced_at")
     private LocalDateTime bouncedAt;
 
-    @Column(columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "jsonb")
     private String metadata;
 
     @Column(name = "created_at", nullable = false)
