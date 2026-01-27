@@ -2,6 +2,16 @@
 -- Integration Service - Schema de Banco de Dados
 -- =====================================================
 
+-- Limpeza preventiva para garantir schema correto
+DROP TABLE IF EXISTS accounting_entries CASCADE;
+DROP TABLE IF EXISTS accounting_exports CASCADE;
+DROP TABLE IF EXISTS cnab_records CASCADE;
+DROP TABLE IF EXISTS cnab_files CASCADE;
+DROP TABLE IF EXISTS esocial_events CASCADE;
+DROP TABLE IF EXISTS webhook_deliveries CASCADE;
+DROP TABLE IF EXISTS webhooks CASCADE;
+DROP TABLE IF EXISTS digital_certificates CASCADE;
+
 -- Configuracao de certificados digitais
 CREATE TABLE digital_certificates (
     id UUID PRIMARY KEY,
@@ -20,7 +30,7 @@ CREATE TABLE digital_certificates (
     updated_at TIMESTAMP
 );
 
-CREATE INDEX idx_certificates_tenant ON digital_certificates(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_certificates_tenant ON digital_certificates(tenant_id);
 
 -- Webhooks configurados
 CREATE TABLE webhooks (
@@ -45,8 +55,8 @@ CREATE TABLE webhooks (
     updated_at TIMESTAMP
 );
 
-CREATE INDEX idx_webhooks_tenant ON webhooks(tenant_id);
-CREATE INDEX idx_webhooks_active ON webhooks(tenant_id, is_active);
+CREATE INDEX IF NOT EXISTS idx_webhooks_tenant ON webhooks(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_webhooks_active ON webhooks(tenant_id, is_active);
 
 -- Historico de chamadas de webhook
 CREATE TABLE webhook_deliveries (
@@ -67,8 +77,8 @@ CREATE TABLE webhook_deliveries (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_webhook_deliveries_webhook ON webhook_deliveries(webhook_id);
-CREATE INDEX idx_webhook_deliveries_tenant ON webhook_deliveries(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_webhook ON webhook_deliveries(webhook_id);
+CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_tenant ON webhook_deliveries(tenant_id);
 
 -- Eventos eSocial
 CREATE TABLE esocial_events (
@@ -93,8 +103,8 @@ CREATE TABLE esocial_events (
     updated_at TIMESTAMP
 );
 
-CREATE INDEX idx_esocial_events_tenant ON esocial_events(tenant_id);
-CREATE INDEX idx_esocial_events_status ON esocial_events(status);
+CREATE INDEX IF NOT EXISTS idx_esocial_events_tenant ON esocial_events(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_esocial_events_status ON esocial_events(status);
 
 -- Arquivos CNAB (remessa/retorno bancario)
 CREATE TABLE cnab_files (
@@ -122,7 +132,7 @@ CREATE TABLE cnab_files (
     updated_at TIMESTAMP
 );
 
-CREATE INDEX idx_cnab_files_tenant ON cnab_files(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_cnab_files_tenant ON cnab_files(tenant_id);
 
 -- Registros individuais do CNAB
 CREATE TABLE cnab_records (
@@ -153,7 +163,7 @@ CREATE TABLE cnab_records (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_cnab_records_file ON cnab_records(cnab_file_id);
+CREATE INDEX IF NOT EXISTS idx_cnab_records_file ON cnab_records(cnab_file_id);
 
 -- Exportacoes Contabeis
 CREATE TABLE accounting_exports (
@@ -176,7 +186,7 @@ CREATE TABLE accounting_exports (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_accounting_exports_tenant ON accounting_exports(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_accounting_exports_tenant ON accounting_exports(tenant_id);
 
 -- Lancamentos contabeis
 CREATE TABLE accounting_entries (
@@ -203,4 +213,4 @@ CREATE TABLE accounting_entries (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_accounting_entries_export ON accounting_entries(accounting_export_id);
+CREATE INDEX IF NOT EXISTS idx_accounting_entries_export ON accounting_entries(accounting_export_id);
