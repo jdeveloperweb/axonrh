@@ -1,0 +1,12 @@
+spring:
+  datasource:
+    url: ${PERFORMANCE_DB_URL:jdbc:h2:mem:performance;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
+    driver-class-name: ${PERFORMANCE_DB_DRIVER:org.h2.Driver}
+    username: ${PERFORMANCE_DB_USERNAME:sa}
+    password: ${PERFORMANCE_DB_PASSWORD:}
+  flyway:
+    enabled: ${PERFORMANCE_FLYWAY_ENABLED:false}
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
