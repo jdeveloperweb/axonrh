@@ -195,13 +195,16 @@ CREATE TRIGGER update_esocial_events_updated_at BEFORE UPDATE ON esocial_events
 -- ============================================================
 -- Dados iniciais - Template de contrato CLT padrao
 -- ============================================================
-INSERT INTO contract_templates (tenant_id, name, description, contract_type, template_content, available_variables, is_default)
-SELECT
-    t.id,
-    'Contrato CLT Padrao',
-    'Contrato de trabalho por prazo indeterminado - CLT',
-    'CLT',
-    '<html>
+DO $$
+BEGIN
+    IF to_regclass('shared.tenants') IS NOT NULL THEN
+        INSERT INTO contract_templates (tenant_id, name, description, contract_type, template_content, available_variables, is_default)
+        SELECT
+            t.id,
+            'Contrato CLT Padrao',
+            'Contrato de trabalho por prazo indeterminado - CLT',
+            'CLT',
+            '<html>
 <head><title>Contrato de Trabalho</title></head>
 <body>
 <h1>CONTRATO DE TRABALHO POR PRAZO INDETERMINADO</h1>
@@ -255,8 +258,10 @@ EMPREGADO(A)</p>
 <p>2. _______________________ CPF: _______________</p>
 </body>
 </html>',
-    'EMPRESA_RAZAO_SOCIAL,EMPRESA_CNPJ,EMPRESA_ENDERECO,COLABORADOR_NOME,COLABORADOR_ESTADO_CIVIL,COLABORADOR_RG,COLABORADOR_CPF,COLABORADOR_ENDERECO,CARGO,DEPARTAMENTO,SALARIO,SALARIO_EXTENSO,CARGA_HORARIA,HORARIO_ENTRADA,HORARIO_SAIDA,INTERVALO,DATA_ADMISSAO,CIDADE,DATA_CONTRATO',
-    TRUE
-FROM shared.tenants t
-WHERE EXISTS (SELECT 1 FROM shared.tenants)
-ON CONFLICT DO NOTHING;
+            'EMPRESA_RAZAO_SOCIAL,EMPRESA_CNPJ,EMPRESA_ENDERECO,COLABORADOR_NOME,COLABORADOR_ESTADO_CIVIL,COLABORADOR_RG,COLABORADOR_CPF,COLABORADOR_ENDERECO,CARGO,DEPARTAMENTO,SALARIO,SALARIO_EXTENSO,CARGA_HORARIA,HORARIO_ENTRADA,HORARIO_SAIDA,INTERVALO,DATA_ADMISSAO,CIDADE,DATA_CONTRATO',
+            TRUE
+        FROM shared.tenants t
+        WHERE EXISTS (SELECT 1 FROM shared.tenants)
+        ON CONFLICT DO NOTHING;
+    END IF;
+END $$;
