@@ -11,6 +11,8 @@ import com.axonrh.performance.repository.EvaluationCycleRepository;
 import com.axonrh.performance.repository.EvaluationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,10 +24,11 @@ import java.util.stream.Collectors;
 /**
  * T185-T187 - Servico de Matriz 9Box e identificacao de talentos.
  */
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class NineBoxService {
+
+    private static final Logger log = LoggerFactory.getLogger(NineBoxService.class);
 
     private final EvaluationRepository evaluationRepository;
     private final EvaluationCycleRepository cycleRepository;

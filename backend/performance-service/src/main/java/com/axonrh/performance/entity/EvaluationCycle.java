@@ -141,6 +141,30 @@ public class EvaluationCycle {
     @Column(name = "created_by")
     private UUID createdBy;
 
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public UUID getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(UUID tenantId) {
+        this.tenantId = tenantId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public double getCompletionPercentage() {
         if (totalEvaluations == null || totalEvaluations == 0) return 0;
         return (completedEvaluations * 100.0) / totalEvaluations;
