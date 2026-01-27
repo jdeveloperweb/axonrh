@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: ${PERFORMANCE_DB_URL:jdbc:h2:mem:performance;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
+    url: "${PERFORMANCE_DB_URL:jdbc:h2:mem:performance;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;INIT=CREATE ALIAS IF NOT EXISTS gen_random_uuid FOR \"org.h2.util.UUIDUtils.randomUUID\"}"
     driver-class-name: ${PERFORMANCE_DB_DRIVER:org.h2.Driver}
     username: ${PERFORMANCE_DB_USERNAME:sa}
     password: ${PERFORMANCE_DB_PASSWORD:}
