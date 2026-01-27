@@ -3,7 +3,7 @@
 -- =====================================================
 -- Setup Progress Tracking
 -- =====================================================
-CREATE TABLE setup_progress (
+CREATE TABLE IF NOT EXISTS setup_progress (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL UNIQUE,
     current_step INTEGER DEFAULT 1,
@@ -42,13 +42,13 @@ CREATE TABLE setup_progress (
     updated_at TIMESTAMP
 );
 
-CREATE INDEX idx_setup_progress_tenant ON setup_progress(tenant_id);
-CREATE INDEX idx_setup_progress_status ON setup_progress(status);
+CREATE INDEX IF NOT EXISTS idx_setup_progress_tenant ON setup_progress(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_setup_progress_status ON setup_progress(status);
 
 -- =====================================================
 -- Company Profile (Step 1)
 -- =====================================================
-CREATE TABLE company_profiles (
+CREATE TABLE IF NOT EXISTS company_profiles (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL UNIQUE,
 
@@ -99,13 +99,13 @@ CREATE TABLE company_profiles (
     updated_at TIMESTAMP
 );
 
-CREATE INDEX idx_company_profiles_tenant ON company_profiles(tenant_id);
-CREATE INDEX idx_company_profiles_cnpj ON company_profiles(cnpj);
+CREATE INDEX IF NOT EXISTS idx_company_profiles_tenant ON company_profiles(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_company_profiles_cnpj ON company_profiles(cnpj);
 
 -- =====================================================
 -- Labor Rules Configuration (Step 3)
 -- =====================================================
-CREATE TABLE labor_rules_config (
+CREATE TABLE IF NOT EXISTS labor_rules_config (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL UNIQUE,
 
@@ -164,12 +164,12 @@ CREATE TABLE labor_rules_config (
     updated_at TIMESTAMP
 );
 
-CREATE INDEX idx_labor_rules_config_tenant ON labor_rules_config(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_labor_rules_config_tenant ON labor_rules_config(tenant_id);
 
 -- =====================================================
 -- Branding Configuration (Step 4)
 -- =====================================================
-CREATE TABLE branding_config (
+CREATE TABLE IF NOT EXISTS branding_config (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL UNIQUE,
 
@@ -210,12 +210,12 @@ CREATE TABLE branding_config (
     updated_at TIMESTAMP
 );
 
-CREATE INDEX idx_branding_config_tenant ON branding_config(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_branding_config_tenant ON branding_config(tenant_id);
 
 -- =====================================================
 -- Module Configuration (Step 5)
 -- =====================================================
-CREATE TABLE module_config (
+CREATE TABLE IF NOT EXISTS module_config (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL UNIQUE,
 
@@ -251,12 +251,12 @@ CREATE TABLE module_config (
     updated_at TIMESTAMP
 );
 
-CREATE INDEX idx_module_config_tenant ON module_config(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_module_config_tenant ON module_config(tenant_id);
 
 -- =====================================================
 -- Integration Configuration (Step 7)
 -- =====================================================
-CREATE TABLE integration_config (
+CREATE TABLE IF NOT EXISTS integration_config (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL UNIQUE,
 
@@ -301,12 +301,12 @@ CREATE TABLE integration_config (
     updated_at TIMESTAMP
 );
 
-CREATE INDEX idx_integration_config_tenant ON integration_config(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_integration_config_tenant ON integration_config(tenant_id);
 
 -- =====================================================
 -- Data Import Jobs (Step 8)
 -- =====================================================
-CREATE TABLE import_jobs (
+CREATE TABLE IF NOT EXISTS import_jobs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL,
 
@@ -336,14 +336,14 @@ CREATE TABLE import_jobs (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_import_jobs_tenant ON import_jobs(tenant_id);
-CREATE INDEX idx_import_jobs_status ON import_jobs(tenant_id, status);
-CREATE INDEX idx_import_jobs_type ON import_jobs(tenant_id, import_type);
+CREATE INDEX IF NOT EXISTS idx_import_jobs_tenant ON import_jobs(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_import_jobs_status ON import_jobs(tenant_id, status);
+CREATE INDEX IF NOT EXISTS idx_import_jobs_type ON import_jobs(tenant_id, import_type);
 
 -- =====================================================
 -- Import Templates
 -- =====================================================
-CREATE TABLE import_templates (
+CREATE TABLE IF NOT EXISTS import_templates (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID,
 
@@ -360,12 +360,12 @@ CREATE TABLE import_templates (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_import_templates_type ON import_templates(import_type);
+CREATE INDEX IF NOT EXISTS idx_import_templates_type ON import_templates(import_type);
 
 -- =====================================================
 -- Activation Checklist (Step 9)
 -- =====================================================
-CREATE TABLE activation_checklist (
+CREATE TABLE IF NOT EXISTS activation_checklist (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL,
 
@@ -388,48 +388,56 @@ CREATE TABLE activation_checklist (
     UNIQUE(tenant_id, check_code)
 );
 
-CREATE INDEX idx_activation_checklist_tenant ON activation_checklist(tenant_id);
-CREATE INDEX idx_activation_checklist_status ON activation_checklist(tenant_id, is_completed);
+CREATE INDEX IF NOT EXISTS idx_activation_checklist_tenant ON activation_checklist(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_activation_checklist_status ON activation_checklist(tenant_id, is_completed);
 
 -- =====================================================
 -- Insert Default Import Templates
 -- =====================================================
-INSERT INTO import_templates (import_type, name, description, columns, is_system) VALUES
-('EMPLOYEES', 'Colaboradores - Padrão', 'Template padrão para importação de colaboradores',
-'[
-  {"name": "nome", "label": "Nome Completo", "type": "text", "required": true, "maxLength": 200},
-  {"name": "cpf", "label": "CPF", "type": "cpf", "required": true},
-  {"name": "email", "label": "E-mail", "type": "email", "required": false},
-  {"name": "data_nascimento", "label": "Data de Nascimento", "type": "date", "required": true},
-  {"name": "data_admissao", "label": "Data de Admissão", "type": "date", "required": true},
-  {"name": "cargo", "label": "Cargo", "type": "text", "required": true},
-  {"name": "departamento", "label": "Departamento", "type": "text", "required": true},
-  {"name": "salario", "label": "Salário", "type": "currency", "required": true},
-  {"name": "tipo_contrato", "label": "Tipo de Contrato", "type": "enum", "options": ["CLT", "PJ", "ESTAGIO", "TEMPORARIO"], "required": true},
-  {"name": "jornada", "label": "Jornada Semanal (horas)", "type": "number", "required": false, "default": 44},
-  {"name": "pis", "label": "PIS", "type": "text", "required": false},
-  {"name": "ctps", "label": "CTPS", "type": "text", "required": false}
-]', true),
-
-('DEPARTMENTS', 'Departamentos - Padrão', 'Template padrão para importação de departamentos',
-'[
-  {"name": "codigo", "label": "Código", "type": "text", "required": true, "maxLength": 20},
-  {"name": "nome", "label": "Nome", "type": "text", "required": true, "maxLength": 100},
-  {"name": "departamento_pai", "label": "Departamento Pai (código)", "type": "text", "required": false},
-  {"name": "gestor_cpf", "label": "CPF do Gestor", "type": "cpf", "required": false},
-  {"name": "centro_custo", "label": "Centro de Custo", "type": "text", "required": false}
-]', true),
-
-('POSITIONS', 'Cargos - Padrão', 'Template padrão para importação de cargos',
-'[
-  {"name": "codigo", "label": "Código", "type": "text", "required": true, "maxLength": 20},
-  {"name": "nome", "label": "Nome do Cargo", "type": "text", "required": true, "maxLength": 100},
-  {"name": "cbo", "label": "CBO", "type": "text", "required": false, "maxLength": 10},
-  {"name": "nivel", "label": "Nível", "type": "enum", "options": ["JUNIOR", "PLENO", "SENIOR", "ESPECIALISTA", "GERENTE", "DIRETOR"], "required": false},
-  {"name": "salario_min", "label": "Salário Mínimo", "type": "currency", "required": false},
-  {"name": "salario_max", "label": "Salário Máximo", "type": "currency", "required": false},
-  {"name": "descricao", "label": "Descrição", "type": "text", "required": false}
-]', true);
+INSERT INTO import_templates (import_type, name, description, columns, is_system)
+SELECT v.import_type, v.name, v.description, v.columns, v.is_system
+FROM (
+  VALUES
+  ('EMPLOYEES', 'Colaboradores - Padrão', 'Template padrão para importação de colaboradores',
+  '[
+    {"name": "nome", "label": "Nome Completo", "type": "text", "required": true, "maxLength": 200},
+    {"name": "cpf", "label": "CPF", "type": "cpf", "required": true},
+    {"name": "email", "label": "E-mail", "type": "email", "required": false},
+    {"name": "data_nascimento", "label": "Data de Nascimento", "type": "date", "required": true},
+    {"name": "data_admissao", "label": "Data de Admissão", "type": "date", "required": true},
+    {"name": "cargo", "label": "Cargo", "type": "text", "required": true},
+    {"name": "departamento", "label": "Departamento", "type": "text", "required": true},
+    {"name": "salario", "label": "Salário", "type": "currency", "required": true},
+    {"name": "tipo_contrato", "label": "Tipo de Contrato", "type": "enum", "options": ["CLT", "PJ", "ESTAGIO", "TEMPORARIO"], "required": true},
+    {"name": "jornada", "label": "Jornada Semanal (horas)", "type": "number", "required": false, "default": 44},
+    {"name": "pis", "label": "PIS", "type": "text", "required": false},
+    {"name": "ctps", "label": "CTPS", "type": "text", "required": false}
+  ]', true),
+  ('DEPARTMENTS', 'Departamentos - Padrão', 'Template padrão para importação de departamentos',
+  '[
+    {"name": "codigo", "label": "Código", "type": "text", "required": true, "maxLength": 20},
+    {"name": "nome", "label": "Nome", "type": "text", "required": true, "maxLength": 100},
+    {"name": "departamento_pai", "label": "Departamento Pai (código)", "type": "text", "required": false},
+    {"name": "gestor_cpf", "label": "CPF do Gestor", "type": "cpf", "required": false},
+    {"name": "centro_custo", "label": "Centro de Custo", "type": "text", "required": false}
+  ]', true),
+  ('POSITIONS', 'Cargos - Padrão', 'Template padrão para importação de cargos',
+  '[
+    {"name": "codigo", "label": "Código", "type": "text", "required": true, "maxLength": 20},
+    {"name": "nome", "label": "Nome do Cargo", "type": "text", "required": true, "maxLength": 100},
+    {"name": "cbo", "label": "CBO", "type": "text", "required": false, "maxLength": 10},
+    {"name": "nivel", "label": "Nível", "type": "enum", "options": ["JUNIOR", "PLENO", "SENIOR", "ESPECIALISTA", "GERENTE", "DIRETOR"], "required": false},
+    {"name": "salario_min", "label": "Salário Mínimo", "type": "currency", "required": false},
+    {"name": "salario_max", "label": "Salário Máximo", "type": "currency", "required": false},
+    {"name": "descricao", "label": "Descrição", "type": "text", "required": false}
+  ]', true)
+) AS v(import_type, name, description, columns, is_system)
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM import_templates t
+  WHERE t.import_type = v.import_type
+    AND t.name = v.name
+);
 
 -- =====================================================
 -- Insert Default Activation Checks
@@ -444,4 +452,5 @@ INSERT INTO activation_checklist (tenant_id, check_code, check_name, check_descr
 ('00000000-0000-0000-0000-000000000000', 'LABOR_RULES', 'Regras Trabalhistas', 'Regras trabalhistas configuradas', 'SETUP', true, 7),
 ('00000000-0000-0000-0000-000000000000', 'BRANDING', 'Identidade Visual', 'Logo e cores configurados', 'SETUP', false, 8),
 ('00000000-0000-0000-0000-000000000000', 'MODULES', 'Módulos', 'Módulos selecionados', 'SETUP', true, 9),
-('00000000-0000-0000-0000-000000000000', 'ESOCIAL_CERT', 'Certificado eSocial', 'Certificado digital configurado para eSocial', 'INTEGRATION', false, 10);
+('00000000-0000-0000-0000-000000000000', 'ESOCIAL_CERT', 'Certificado eSocial', 'Certificado digital configurado para eSocial', 'INTEGRATION', false, 10)
+ON CONFLICT (tenant_id, check_code) DO NOTHING;
