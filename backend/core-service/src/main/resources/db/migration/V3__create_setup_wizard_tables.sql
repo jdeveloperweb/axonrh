@@ -10,27 +10,16 @@ CREATE TABLE IF NOT EXISTS setup_progress (
     total_steps INTEGER DEFAULT 9,
     status VARCHAR(20) DEFAULT 'IN_PROGRESS', -- IN_PROGRESS, COMPLETED, PAUSED
 
-    -- Step completion flags
-    step1_company_data BOOLEAN DEFAULT false,
-    step2_org_structure BOOLEAN DEFAULT false,
-    step3_labor_rules BOOLEAN DEFAULT false,
-    step4_branding BOOLEAN DEFAULT false,
-    step5_modules BOOLEAN DEFAULT false,
-    step6_users BOOLEAN DEFAULT false,
-    step7_integrations BOOLEAN DEFAULT false,
-    step8_data_import BOOLEAN DEFAULT false,
-    step9_review BOOLEAN DEFAULT false,
-
-    -- Progress data (JSON)
-    step1_data JSONB,
-    step2_data JSONB,
-    step3_data JSONB,
-    step4_data JSONB,
-    step5_data JSONB,
-    step6_data JSONB,
-    step7_data JSONB,
-    step8_data JSONB,
-    step9_data JSONB,
+    -- Step data (JSONB for completion + payload)
+    step1_company_data JSONB DEFAULT '{"completed": false}',
+    step2_org_structure JSONB DEFAULT '{"completed": false}',
+    step3_labor_rules JSONB DEFAULT '{"completed": false}',
+    step4_branding JSONB DEFAULT '{"completed": false}',
+    step5_modules JSONB DEFAULT '{"completed": false}',
+    step6_users JSONB DEFAULT '{"completed": false}',
+    step7_integrations JSONB DEFAULT '{"completed": false}',
+    step8_data_import JSONB DEFAULT '{"completed": false}',
+    step9_review JSONB DEFAULT '{"completed": false}',
 
     -- Timestamps
     started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
