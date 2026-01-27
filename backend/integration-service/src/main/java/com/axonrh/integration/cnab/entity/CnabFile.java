@@ -58,14 +58,12 @@ public class CnabFile {
     @Column(nullable = false)
     private CnabFileStatus status = CnabFileStatus.GENERATED;
 
-    @Lob
     @Column(name = "file_content")
     private byte[] fileContent;
 
     @Column(name = "return_file_name")
     private String returnFileName;
 
-    @Lob
     @Column(name = "return_file_content")
     private byte[] returnFileContent;
 

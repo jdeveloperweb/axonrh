@@ -23,7 +23,6 @@ public class DigitalCertificate {
     @Column(nullable = false)
     private CertificateType type;
 
-    @Lob
     @Column(name = "certificate_data", nullable = false)
     private byte[] certificateData;
 

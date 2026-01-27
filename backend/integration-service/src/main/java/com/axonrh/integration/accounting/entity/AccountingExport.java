@@ -43,7 +43,6 @@ public class AccountingExport {
     @Column(name = "file_name")
     private String fileName;
 
-    @Lob
     @Column(name = "file_content")
     private byte[] fileContent;
 
