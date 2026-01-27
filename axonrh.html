@@ -1,0 +1,1812 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AxonRH - Sistema Integrado de Gestão de RH com IA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0066FF;
+            --primary-dark: #0052CC;
+            --primary-light: #3385FF;
+            --secondary: #00D4AA;
+            --secondary-dark: #00B894;
+            --accent: #FF6B35;
+            --purple: #8B5CF6;
+            --pink: #EC4899;
+            --dark: #0A1628;
+            --dark-light: #1A2942;
+            --light: #F8FAFC;
+            --gray: #64748B;
+            --gradient-1: linear-gradient(135deg, #0066FF 0%, #00D4AA 100%);
+            --gradient-2: linear-gradient(135deg, #0A1628 0%, #1A2942 100%);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Particles */
+        .particles {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .particle {
+            position: absolute;
+            width: 4px; height: 4px;
+            background: var(--primary);
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: float-particle 20s infinite linear;
+        }
+        .particle:nth-child(1) { left: 10%; animation-delay: 0s; }
+        .particle:nth-child(2) { left: 25%; animation-delay: 2s; }
+        .particle:nth-child(3) { left: 40%; animation-delay: 4s; }
+        .particle:nth-child(4) { left: 55%; animation-delay: 1s; }
+        .particle:nth-child(5) { left: 70%; animation-delay: 3s; }
+        .particle:nth-child(6) { left: 85%; animation-delay: 5s; }
+
+        @keyframes float-particle {
+            0% { transform: translateY(100vh); opacity: 0; }
+            10% { opacity: 0.3; }
+            90% { opacity: 0.3; }
+            100% { transform: translateY(-100vh); opacity: 0; }
+        }
+
+        /* Hero */
+        .hero {
+            min-height: 100vh;
+            background: var(--gradient-2);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 40px;
+            overflow: hidden;
+        }
+        .hero-bg-grid {
+            position: absolute;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(0, 102, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 102, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: grid-move 20s linear infinite;
+        }
+        @keyframes grid-move {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+        .hero-glow {
+            position: absolute;
+            width: 800px; height: 800px;
+            border-radius: 50%;
+            filter: blur(100px);
+            animation: glow-pulse 8s ease-in-out infinite;
+        }
+        .hero-glow-1 { top: -20%; right: -10%; background: rgba(0, 102, 255, 0.2); }
+        .hero-glow-2 { bottom: -30%; left: -10%; background: rgba(0, 212, 170, 0.15); animation-delay: 2s; }
+        .hero-glow-3 { top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(139, 92, 246, 0.1); animation-delay: 4s; }
+
+        @keyframes glow-pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+        }
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            max-width: 1000px;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0, 212, 170, 0.15);
+            border: 1px solid rgba(0, 212, 170, 0.3);
+            padding: 12px 24px;
+            border-radius: 50px;
+            color: var(--secondary);
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 30px;
+            animation: badge-float 3s ease-in-out infinite, fadeInDown 0.8s ease-out;
+        }
+        @keyframes badge-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        .badge-pulse {
+            width: 8px; height: 8px;
+            background: var(--secondary);
+            border-radius: 50%;
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.5; }
+        }
+        .hero h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(4rem, 12vw, 8rem);
+            font-weight: 900;
+            color: white;
+            margin-bottom: 20px;
+            letter-spacing: -4px;
+            animation: fadeInUp 1s ease-out 0.2s both;
+            text-shadow: 0 0 80px rgba(0, 102, 255, 0.5);
+        }
+        .hero h1 span {
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero-tagline {
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(1.2rem, 3vw, 1.8rem);
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+            margin-bottom: 16px;
+            animation: fadeInUp 1s ease-out 0.3s both;
+        }
+        .hero-tagline .highlight { color: var(--secondary); font-weight: 700; }
+        .hero-subtitle {
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            color: rgba(255, 255, 255, 0.6);
+            max-width: 700px;
+            margin: 0 auto 40px;
+            animation: fadeInUp 1s ease-out 0.4s both;
+        }
+        .hero-cta {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp 1s ease-out 0.6s both;
+            margin-bottom: 60px;
+        }
+        .btn {
+            padding: 18px 36px;
+            border-radius: 14px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            border: none;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+        .btn:hover::before { left: 100%; }
+        .btn-primary {
+            background: var(--gradient-1);
+            color: white;
+            box-shadow: 0 8px 30px rgba(0, 102, 255, 0.4);
+        }
+        .btn-primary:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(0, 102, 255, 0.5);
+        }
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-4px);
+        }
+        .hero-features {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            animation: fadeInUp 1s ease-out 0.8s both;
+        }
+        .hero-feature {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.95rem;
+        }
+        .hero-feature-icon {
+            width: 40px; height: 40px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .scroll-indicator {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.85rem;
+            animation: bounce 2s ease-in-out infinite;
+        }
+        .scroll-indicator .mouse {
+            width: 26px; height: 40px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            position: relative;
+        }
+        .scroll-indicator .mouse::before {
+            content: '';
+            position: absolute;
+            top: 8px; left: 50%;
+            transform: translateX(-50%);
+            width: 4px; height: 8px;
+            background: var(--secondary);
+            border-radius: 2px;
+            animation: scroll-wheel 2s ease-in-out infinite;
+        }
+        @keyframes scroll-wheel {
+            0%, 100% { transform: translateX(-50%) translateY(0); opacity: 1; }
+            50% { transform: translateX(-50%) translateY(10px); opacity: 0.3; }
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(10px); }
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            background: white;
+            padding: 50px 60px;
+            display: flex;
+            justify-content: center;
+            gap: 60px;
+            flex-wrap: wrap;
+            box-shadow: 0 10px 60px rgba(0, 0, 0, 0.08);
+            position: relative;
+            z-index: 10;
+        }
+        .stat-item { text-align: center; }
+        .stat-icon { font-size: 2rem; margin-bottom: 10px; display: block; }
+        .stat-number {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3rem;
+            font-weight: 800;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+        }
+        .stat-label {
+            font-size: 0.95rem;
+            color: var(--gray);
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        /* Section Styles */
+        .section {
+            padding: 120px 40px;
+            position: relative;
+        }
+        .section-header {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto 80px;
+        }
+        .section-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--primary);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            padding: 8px 20px;
+            background: rgba(0, 102, 255, 0.08);
+            border-radius: 30px;
+        }
+        .section-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(2.5rem, 6vw, 3.5rem);
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 20px;
+            letter-spacing: -1.5px;
+            line-height: 1.1;
+        }
+        .section-title .gradient-text {
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .section-subtitle {
+            font-size: 1.2rem;
+            color: var(--gray);
+            line-height: 1.7;
+        }
+
+        /* AI Section */
+        .ai-section {
+            background: var(--gradient-2);
+            position: relative;
+            overflow: hidden;
+            padding: 140px 40px;
+        }
+        .ai-section::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Cg fill='%230066FF' fill-opacity='0.03'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        .ai-floating-icons {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+        .ai-float-icon {
+            position: absolute;
+            font-size: 2rem;
+            opacity: 0.1;
+            animation: float-icon 15s ease-in-out infinite;
+        }
+        .ai-float-icon:nth-child(1) { top: 10%; left: 5%; }
+        .ai-float-icon:nth-child(2) { top: 20%; right: 8%; animation-delay: 2s; }
+        .ai-float-icon:nth-child(3) { top: 60%; left: 3%; animation-delay: 4s; }
+        .ai-float-icon:nth-child(4) { top: 80%; right: 5%; animation-delay: 1s; }
+
+        @keyframes float-icon {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(10deg); }
+        }
+        .ai-section .section-label,
+        .ai-section .section-title,
+        .ai-section .section-subtitle { color: white; }
+        .ai-section .section-label {
+            background: rgba(0, 212, 170, 0.2);
+            color: var(--secondary);
+        }
+        .ai-section .section-subtitle { opacity: 0.7; }
+        .ai-section .section-title .gradient-text {
+            background: linear-gradient(135deg, var(--secondary) 0%, #00F5C4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* AI Main Grid */
+        .ai-main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            max-width: 1400px;
+            margin: 0 auto 100px;
+            position: relative;
+            z-index: 2;
+            align-items: start;
+        }
+        @media (max-width: 1000px) {
+            .ai-main-grid { grid-template-columns: 1fr; gap: 40px; }
+        }
+
+        /* AI Chat Demo */
+        .ai-chat-demo {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(30px);
+            border-radius: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            overflow: hidden;
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.3);
+            height: fit-content;
+            align-self: start;
+        }
+        .chat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 24px 30px;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .chat-header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .chat-avatar {
+            width: 52px; height: 52px;
+            border-radius: 16px;
+            background: var(--gradient-1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            position: relative;
+            box-shadow: 0 8px 20px rgba(0, 102, 255, 0.4);
+        }
+        .chat-avatar::after {
+            content: '';
+            position: absolute;
+            bottom: -2px; right: -2px;
+            width: 14px; height: 14px;
+            background: var(--secondary);
+            border-radius: 50%;
+            border: 3px solid var(--dark);
+        }
+        .chat-info h4 { color: white; font-weight: 700; font-size: 1.1rem; }
+        .chat-info span {
+            color: var(--secondary);
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .chat-info span::before {
+            content: '';
+            width: 6px; height: 6px;
+            background: var(--secondary);
+            border-radius: 50%;
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+        .chat-messages {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding: 24px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.2) transparent;
+        }
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+        .chat-messages::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 3px;
+        }
+        .message {
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 0.88rem;
+            line-height: 1.5;
+            animation: messageSlide 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+        }
+        .message:nth-child(1) { animation-delay: 0.3s; }
+        .message:nth-child(2) { animation-delay: 0.8s; }
+        .message:nth-child(3) { animation-delay: 1.3s; }
+        .message:nth-child(4) { animation-delay: 1.8s; }
+        .message:nth-child(5) { animation-delay: 2.3s; }
+        .message:nth-child(6) { animation-delay: 2.8s; }
+
+        @keyframes messageSlide {
+            from { opacity: 0; transform: translateY(20px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .message.user {
+            background: var(--gradient-1);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 6px;
+            box-shadow: 0 8px 20px rgba(0, 102, 255, 0.3);
+        }
+        .message.assistant {
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+            align-self: flex-start;
+            border-bottom-left-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .message .highlight-data {
+            background: rgba(0, 212, 170, 0.2);
+            padding: 2px 8px;
+            border-radius: 6px;
+            color: var(--secondary);
+            font-weight: 600;
+        }
+        .message .action-done {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0, 212, 170, 0.2);
+            padding: 4px 10px;
+            border-radius: 8px;
+            color: var(--secondary);
+            font-weight: 600;
+            margin-top: 8px;
+        }
+        .chat-input {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .chat-input-field {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: white;
+            font-size: 0.9rem;
+            outline: none;
+        }
+        .chat-input-field::placeholder { color: rgba(255, 255, 255, 0.3); }
+        .chat-send-btn {
+            width: 44px; height: 44px;
+            border-radius: 12px;
+            background: var(--gradient-1);
+            border: none;
+            color: white;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 16px rgba(0, 102, 255, 0.3);
+            flex-shrink: 0;
+        }
+        .chat-send-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 30px rgba(0, 102, 255, 0.4);
+        }
+
+        /* AI Capabilities */
+        .ai-capabilities {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        .ai-capability-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: all 0.4s ease;
+        }
+        .ai-capability-card:hover {
+            background: rgba(255, 255, 255, 0.06);
+            transform: translateX(10px);
+            border-color: rgba(0, 212, 170, 0.3);
+        }
+        .ai-capability-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .ai-capability-icon {
+            width: 56px; height: 56px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+        .ai-capability-icon.query { background: linear-gradient(135deg, rgba(0, 102, 255, 0.2) 0%, rgba(0, 102, 255, 0.1) 100%); }
+        .ai-capability-icon.action { background: linear-gradient(135deg, rgba(0, 212, 170, 0.2) 0%, rgba(0, 212, 170, 0.1) 100%); }
+        .ai-capability-icon.insight { background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(139, 92, 246, 0.1) 100%); }
+        .ai-capability-icon.report { background: linear-gradient(135deg, rgba(255, 107, 53, 0.2) 0%, rgba(255, 107, 53, 0.1) 100%); }
+
+        .ai-capability-title {
+            color: white;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+        .ai-capability-desc {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.95rem;
+            margin-bottom: 16px;
+        }
+        .ai-examples { display: flex; flex-wrap: wrap; gap: 8px; }
+        .ai-example {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s ease;
+        }
+        .ai-example:hover {
+            background: rgba(0, 212, 170, 0.15);
+            border-color: rgba(0, 212, 170, 0.3);
+            color: var(--secondary);
+        }
+
+        /* AI Use Cases */
+        .ai-use-cases {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+        .ai-use-cases-title {
+            text-align: center;
+            color: white;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 50px;
+        }
+        .ai-use-cases-title span { color: var(--secondary); }
+        .use-cases-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+        }
+        @media (max-width: 1200px) { .use-cases-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px) { .use-cases-grid { grid-template-columns: 1fr; } }
+
+        .use-case-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            text-align: center;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .use-case-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(0, 102, 255, 0.1) 0%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        .use-case-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(0, 212, 170, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        .use-case-card:hover::before { opacity: 1; }
+        .use-case-icon {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+            display: block;
+            position: relative;
+            z-index: 2;
+        }
+        .use-case-card h4 {
+            color: white;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 2;
+        }
+        .use-case-card p {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            position: relative;
+            z-index: 2;
+        }
+        .use-case-example {
+            margin-top: 14px;
+            padding: 10px 14px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            font-size: 0.8rem;
+            color: var(--secondary);
+            font-style: italic;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Features Section */
+        .features-section {
+            background: linear-gradient(180deg, var(--light) 0%, white 50%, var(--light) 100%);
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        @media (max-width: 1100px) { .features-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 700px) { .features-grid { grid-template-columns: 1fr; } }
+
+        .feature-card {
+            background: white;
+            border-radius: 28px;
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.04);
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(0, 0, 0, 0.04);
+        }
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 5px;
+            background: var(--gradient-1);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.5s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-12px) scale(1.02);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.12);
+        }
+        .feature-card:hover::before { transform: scaleX(1); }
+        .feature-icon {
+            width: 80px; height: 80px;
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            margin-bottom: 28px;
+            transition: transform 0.5s ease;
+        }
+        .feature-card:hover .feature-icon { transform: scale(1.1) rotate(5deg); }
+        .feature-icon.blue { background: linear-gradient(135deg, rgba(0, 102, 255, 0.15) 0%, rgba(0, 102, 255, 0.05) 100%); }
+        .feature-icon.green { background: linear-gradient(135deg, rgba(0, 212, 170, 0.15) 0%, rgba(0, 212, 170, 0.05) 100%); }
+        .feature-icon.orange { background: linear-gradient(135deg, rgba(255, 107, 53, 0.15) 0%, rgba(255, 107, 53, 0.05) 100%); }
+        .feature-icon.purple { background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(139, 92, 246, 0.05) 100%); }
+        .feature-icon.pink { background: linear-gradient(135deg, rgba(236, 72, 153, 0.15) 0%, rgba(236, 72, 153, 0.05) 100%); }
+        .feature-icon.teal { background: linear-gradient(135deg, rgba(20, 184, 166, 0.15) 0%, rgba(20, 184, 166, 0.05) 100%); }
+
+        .feature-card h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 14px;
+        }
+        .feature-card > p {
+            color: var(--gray);
+            font-size: 1rem;
+            line-height: 1.7;
+            margin-bottom: 24px;
+        }
+        .feature-list { list-style: none; }
+        .feature-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+            font-size: 0.95rem;
+            color: var(--dark-light);
+            transition: transform 0.3s ease;
+        }
+        .feature-list li:hover { transform: translateX(5px); }
+        .feature-list li .check {
+            width: 22px; height: 22px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-dark) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        /* Modules Section */
+        .modules-section { background: white; }
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+        @media (max-width: 900px) { .modules-grid { grid-template-columns: 1fr; } }
+
+        .module-card {
+            background: linear-gradient(145deg, var(--dark) 0%, var(--dark-light) 100%);
+            border-radius: 32px;
+            padding: 50px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s ease;
+        }
+        .module-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
+        }
+        .module-card-glow {
+            position: absolute;
+            top: -50%; right: -50%;
+            width: 100%; height: 100%;
+            background: radial-gradient(circle, rgba(0, 102, 255, 0.15) 0%, transparent 60%);
+            transition: all 0.5s ease;
+        }
+        .module-card:hover .module-card-glow { transform: scale(1.5); }
+        .module-card.highlight {
+            grid-column: span 2;
+            background: var(--gradient-1);
+        }
+        @media (max-width: 900px) { .module-card.highlight { grid-column: span 1; } }
+
+        .module-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.12);
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 2;
+        }
+        .module-card h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 14px;
+            position: relative;
+            z-index: 2;
+        }
+        .module-card > p {
+            opacity: 0.8;
+            margin-bottom: 28px;
+            line-height: 1.7;
+            font-size: 1.05rem;
+            position: relative;
+            z-index: 2;
+        }
+        .module-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px;
+            position: relative;
+            z-index: 2;
+        }
+        .module-feature {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+            opacity: 0.9;
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+        .module-feature:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        .module-feature::before {
+            content: '✦';
+            font-size: 0.8rem;
+            color: var(--secondary);
+        }
+        .module-card.highlight .module-feature::before { color: white; }
+
+        /* Benefits Section */
+        .benefits-section {
+            background: linear-gradient(180deg, var(--light) 0%, white 100%);
+        }
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        @media (max-width: 1000px) { .benefits-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px) { .benefits-grid { grid-template-columns: 1fr; } }
+
+        .benefit-card {
+            text-align: center;
+            padding: 50px 35px;
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(0, 0, 0, 0.04);
+        }
+        .benefit-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
+        }
+        .benefit-icon {
+            width: 90px; height: 90px;
+            margin: 0 auto 24px;
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            transition: all 0.4s ease;
+        }
+        .benefit-card:hover .benefit-icon { transform: scale(1.1) rotate(5deg); }
+        .benefit-icon.gradient-1 { background: linear-gradient(135deg, rgba(0, 102, 255, 0.12) 0%, rgba(0, 212, 170, 0.12) 100%); }
+        .benefit-icon.gradient-2 { background: linear-gradient(135deg, rgba(139, 92, 246, 0.12) 0%, rgba(0, 102, 255, 0.12) 100%); }
+        .benefit-icon.gradient-3 { background: linear-gradient(135deg, rgba(255, 107, 53, 0.12) 0%, rgba(255, 193, 7, 0.12) 100%); }
+        .benefit-icon.gradient-4 { background: linear-gradient(135deg, rgba(0, 212, 170, 0.12) 0%, rgba(16, 185, 129, 0.12) 100%); }
+
+        .benefit-card h4 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 10px;
+        }
+        .benefit-card p {
+            color: var(--gray);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* Tech Section */
+        .tech-section {
+            background: var(--dark);
+            padding: 80px 40px;
+        }
+        .tech-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        .tech-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 40px;
+        }
+        .tech-grid {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 40px;
+        }
+        .tech-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            opacity: 0.6;
+            transition: all 0.3s ease;
+        }
+        .tech-item:hover {
+            opacity: 1;
+            transform: translateY(-5px);
+        }
+        .tech-icon {
+            width: 60px; height: 60px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        .tech-name {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: var(--gradient-2);
+            padding: 140px 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200%; height: 200%;
+            background: radial-gradient(ellipse, rgba(0, 102, 255, 0.2) 0%, transparent 40%);
+            animation: cta-glow 8s ease-in-out infinite;
+        }
+        @keyframes cta-glow {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.2); }
+        }
+        .cta-content {
+            position: relative;
+            z-index: 2;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .cta-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 212, 170, 0.15);
+            border: 1px solid rgba(0, 212, 170, 0.3);
+            padding: 10px 20px;
+            border-radius: 50px;
+            color: var(--secondary);
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 30px;
+        }
+        .cta-content h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 800;
+            color: white;
+            margin-bottom: 20px;
+            letter-spacing: -1px;
+        }
+        .cta-content h2 span {
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .cta-content p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.25rem;
+            margin-bottom: 50px;
+            line-height: 1.7;
+        }
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .cta-buttons .btn {
+            padding: 20px 40px;
+            font-size: 1.1rem;
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--dark);
+            padding: 60px 40px;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .footer-logo {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: white;
+            margin-bottom: 16px;
+            letter-spacing: -2px;
+        }
+        .footer-logo span {
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .footer-tagline {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 1rem;
+            margin-bottom: 30px;
+        }
+        .footer-info {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+        .footer-info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.9rem;
+        }
+        .footer-divider {
+            width: 100px;
+            height: 2px;
+            background: var(--gradient-1);
+            margin: 30px auto;
+            border-radius: 1px;
+        }
+        .footer p {
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 768px) {
+            .hero { padding: 40px 20px; }
+            .section { padding: 80px 20px; }
+            .stats-bar { gap: 30px; padding: 40px 20px; }
+            .hero-features { gap: 20px; }
+            .hero-feature { flex-direction: column; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating Particles -->
+    <div class="particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-bg-grid"></div>
+        <div class="hero-glow hero-glow-1"></div>
+        <div class="hero-glow hero-glow-2"></div>
+        <div class="hero-glow hero-glow-3"></div>
+        
+        <div class="hero-content">
+            <div class="badge">
+                <span class="badge-pulse"></span>
+                Nova Geração de Sistemas de RH com IA
+            </div>
+            <h1>Axon<span>RH</span></h1>
+            <p class="hero-tagline">
+                Gerencie sua equipe <span class="highlight">conversando naturalmente</span> com a IA
+            </p>
+            <p class="hero-subtitle">
+                A plataforma inteligente que unifica Departamento Pessoal e Recursos Humanos 
+                com um assistente de IA conversacional. Pergunte, comande, analise — tudo por chat.
+            </p>
+            <div class="hero-cta">
+                <a href="#funcionalidades" class="btn btn-primary">Explorar Funcionalidades</a>
+                <a href="#ia" class="btn btn-secondary">Ver a IA em Ação</a>
+            </div>
+
+            <div class="hero-features">
+                <div class="hero-feature">
+                    <div class="hero-feature-icon">🤖</div>
+                    <span>IA Conversacional</span>
+                </div>
+                <div class="hero-feature">
+                    <div class="hero-feature-icon">📱</div>
+                    <span>App Mobile Offline</span>
+                </div>
+                <div class="hero-feature">
+                    <div class="hero-feature-icon">🎨</div>
+                    <span>100% Personalizável</span>
+                </div>
+                <div class="hero-feature">
+                    <div class="hero-feature-icon">🔒</div>
+                    <span>LGPD Compliant</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="scroll-indicator">
+            <div class="mouse"></div>
+            <span>Role para explorar</span>
+        </div>
+    </section>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+        <div class="stat-item">
+            <span class="stat-icon">📋</span>
+            <div class="stat-number">100%</div>
+            <div class="stat-label">Admissão Digital</div>
+        </div>
+        <div class="stat-item">
+            <span class="stat-icon">👤</span>
+            <div class="stat-number">99,5%</div>
+            <div class="stat-label">Precisão Facial</div>
+        </div>
+        <div class="stat-item">
+            <span class="stat-icon">🤖</span>
+            <div class="stat-number">24/7</div>
+            <div class="stat-label">Assistente IA Online</div>
+        </div>
+        <div class="stat-item">
+            <span class="stat-icon">🎨</span>
+            <div class="stat-number">White Label</div>
+            <div class="stat-label">Sua Marca, Seu Sistema</div>
+        </div>
+        <div class="stat-item">
+            <span class="stat-icon">🏆</span>
+            <div class="stat-number">99,9%</div>
+            <div class="stat-label">Uptime Garantido</div>
+        </div>
+    </div>
+
+    <!-- AI Section -->
+    <section id="ia" class="section ai-section">
+        <div class="ai-floating-icons">
+            <span class="ai-float-icon">💬</span>
+            <span class="ai-float-icon">🧠</span>
+            <span class="ai-float-icon">⚡</span>
+            <span class="ai-float-icon">📊</span>
+        </div>
+
+        <div class="section-header">
+            <div class="section-label">✨ O Grande Diferencial</div>
+            <h2 class="section-title">Assistente de IA <span class="gradient-text">Conversacional</span></h2>
+            <p class="section-subtitle">
+                Esqueça menus complicados e telas infinitas. Converse com o AxonRH como se fosse um colega de trabalho. 
+                Pergunte o que quiser, peça relatórios, aprove solicitações — tudo em linguagem natural.
+            </p>
+        </div>
+
+        <div class="ai-main-grid">
+            <!-- Chat Demo -->
+            <div class="ai-chat-demo">
+                <div class="chat-header">
+                    <div class="chat-header-left">
+                        <div class="chat-avatar">🤖</div>
+                        <div class="chat-info">
+                            <h4>Assistente AxonRH</h4>
+                            <span>Pronto para ajudar</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-messages">
+                    <div class="message user">
+                        Quantos colaboradores têm férias vencidas e quem são os gestores responsáveis?
+                    </div>
+                    <div class="message assistant">
+                        Encontrei <span class="highlight-data">12 colaboradores</span> com férias vencidas! 
+                        A maior concentração está no <span class="highlight-data">Comercial (5)</span> com gestora Ana Paula, 
+                        e no <span class="highlight-data">TI (3)</span> com gestor Carlos. Quer que eu envie um alerta automático aos gestores?
+                    </div>
+                    <div class="message user">
+                        Sim, envia. E me mostra o resumo de horas extras do mês com gráfico por departamento.
+                    </div>
+                    <div class="message assistant">
+                        <span class="action-done">✓ Alertas enviados para 4 gestores</span><br><br>
+                        Este mês tiveram <span class="highlight-data">847 horas extras</span>, um aumento de 23% vs. mês anterior. 
+                        Os maiores volumes são: Produção (312h), Comercial (198h) e TI (156h). 
+                        Estou gerando o relatório com gráficos... Posso também projetar o impacto no orçamento?
+                    </div>
+                    <div class="message user">
+                        Perfeito! Aprova as férias da Maria Silva e registra feedback positivo pro João sobre o projeto do cliente X.
+                    </div>
+                    <div class="message assistant">
+                        <span class="action-done">✓ Férias da Maria aprovadas (15/02 a 01/03)</span><br>
+                        <span class="action-done">✓ Feedback registrado para João</span><br><br>
+                        Maria já foi notificada por e-mail e o DP recebeu a solicitação. 
+                        O feedback do João foi vinculado à avaliação de desempenho em andamento. Mais alguma coisa?
+                    </div>
+                </div>
+                <div class="chat-input">
+                    <input type="text" class="chat-input-field" placeholder="Digite sua pergunta ou comando...">
+                    <button class="chat-send-btn">➤</button>
+                </div>
+            </div>
+
+            <!-- Capabilities -->
+            <div class="ai-capabilities">
+                <div class="ai-capability-card">
+                    <div class="ai-capability-header">
+                        <div class="ai-capability-icon query">🔍</div>
+                        <div class="ai-capability-title">Consultas Inteligentes</div>
+                    </div>
+                    <p class="ai-capability-desc">Pergunte sobre qualquer dado do sistema em português natural. A IA entende contexto e variações.</p>
+                    <div class="ai-examples">
+                        <span class="ai-example">"Qual o salário do João?"</span>
+                        <span class="ai-example">"Quantos admitimos em 2024?"</span>
+                        <span class="ai-example">"Turnover do comercial?"</span>
+                        <span class="ai-example">"Quem faz aniversário hoje?"</span>
+                    </div>
+                </div>
+
+                <div class="ai-capability-card">
+                    <div class="ai-capability-header">
+                        <div class="ai-capability-icon action">⚡</div>
+                        <div class="ai-capability-title">Ações por Comando</div>
+                    </div>
+                    <p class="ai-capability-desc">Execute tarefas complexas com comandos simples. Sempre com confirmação de segurança antes de efetivar.</p>
+                    <div class="ai-examples">
+                        <span class="ai-example">"Aprova férias da Maria"</span>
+                        <span class="ai-example">"Registra feedback positivo"</span>
+                        <span class="ai-example">"Envia alerta aos gestores"</span>
+                        <span class="ai-example">"Abre vaga de analista"</span>
+                    </div>
+                </div>
+
+                <div class="ai-capability-card">
+                    <div class="ai-capability-header">
+                        <div class="ai-capability-icon report">📊</div>
+                        <div class="ai-capability-title">Relatórios Instantâneos</div>
+                    </div>
+                    <p class="ai-capability-desc">Gere relatórios complexos pedindo em linguagem natural. A IA monta, formata e disponibiliza para download.</p>
+                    <div class="ai-examples">
+                        <span class="ai-example">"Relatório de horas extras"</span>
+                        <span class="ai-example">"Análise de turnover anual"</span>
+                        <span class="ai-example">"Custo da folha por depto"</span>
+                        <span class="ai-example">"Performance do time de vendas"</span>
+                    </div>
+                </div>
+
+                <div class="ai-capability-card">
+                    <div class="ai-capability-header">
+                        <div class="ai-capability-icon insight">🔔</div>
+                        <div class="ai-capability-title">Insights Proativos</div>
+                    </div>
+                    <p class="ai-capability-desc">A IA não espera você perguntar. Ela detecta anomalias, riscos e oportunidades e avisa você automaticamente.</p>
+                    <div class="ai-examples">
+                        <span class="ai-example">Risco de turnover detectado</span>
+                        <span class="ai-example">Aumento atípico de extras</span>
+                        <span class="ai-example">Vencimentos próximos</span>
+                        <span class="ai-example">Resumo diário do que importa</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Use Cases -->
+        <div class="ai-use-cases">
+            <h3 class="ai-use-cases-title">O que a <span>Gestora de RH</span> pode fazer com a IA</h3>
+            <div class="use-cases-grid">
+                <div class="use-case-card">
+                    <span class="use-case-icon">👥</span>
+                    <h4>Gestão de Equipe</h4>
+                    <p>Visão completa do time, férias, faltas e performance</p>
+                    <div class="use-case-example">"Como está minha equipe essa semana?"</div>
+                </div>
+                <div class="use-case-card">
+                    <span class="use-case-icon">📈</span>
+                    <h4>Análise de Indicadores</h4>
+                    <p>KPIs de RH em tempo real sem precisar montar dashboards</p>
+                    <div class="use-case-example">"Qual nosso índice de turnover vs mercado?"</div>
+                </div>
+                <div class="use-case-card">
+                    <span class="use-case-icon">✅</span>
+                    <h4>Aprovações Rápidas</h4>
+                    <p>Aprove solicitações em segundos direto pelo chat</p>
+                    <div class="use-case-example">"Aprova todas as férias pendentes do comercial"</div>
+                </div>
+                <div class="use-case-card">
+                    <span class="use-case-icon">🎯</span>
+                    <h4>Gestão de Talentos</h4>
+                    <p>Identifique HiPos, gaps de competência e planos de sucessão</p>
+                    <div class="use-case-example">"Quem são os top performers prontos para promoção?"</div>
+                </div>
+                <div class="use-case-card">
+                    <span class="use-case-icon">📅</span>
+                    <h4>Planejamento</h4>
+                    <p>Projeções de headcount, custos e necessidades futuras</p>
+                    <div class="use-case-example">"Projeta o custo se eu contratar 5 devs"</div>
+                </div>
+                <div class="use-case-card">
+                    <span class="use-case-icon">⚖️</span>
+                    <h4>Compliance</h4>
+                    <p>Verifique pendências legais e trabalhistas rapidamente</p>
+                    <div class="use-case-example">"Tem algum documento vencendo essa semana?"</div>
+                </div>
+                <div class="use-case-card">
+                    <span class="use-case-icon">🧮</span>
+                    <h4>Simulações</h4>
+                    <p>Calcule impactos de decisões antes de tomar</p>
+                    <div class="use-case-example">"Quanto custa dar 10% de aumento geral?"</div>
+                </div>
+                <div class="use-case-card">
+                    <span class="use-case-icon">📬</span>
+                    <h4>Comunicações</h4>
+                    <p>Redija e envie comunicados para grupos específicos</p>
+                    <div class="use-case-example">"Avisa o TI sobre a parada de sexta"</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="funcionalidades" class="section features-section">
+        <div class="section-header">
+            <div class="section-label">📦 Funcionalidades</div>
+            <h2 class="section-title">Tudo que você precisa, <span class="gradient-text">integrado</span></h2>
+            <p class="section-subtitle">
+                Do ponto eletrônico à avaliação 360°, todas as ferramentas de DP e RH trabalhando juntas.
+            </p>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon blue">📋</div>
+                <h3>Admissão 100% Digital</h3>
+                <p>Elimine papelada e agilize contratações com processo totalmente online.</p>
+                <ul class="feature-list">
+                    <li><span class="check">✓</span>Link para candidato preencher documentos</li>
+                    <li><span class="check">✓</span>Validação automática via IA/OCR</li>
+                    <li><span class="check">✓</span>Extração automática de dados</li>
+                    <li><span class="check">✓</span>Contrato com assinatura ICP-Brasil</li>
+                    <li><span class="check">✓</span>Envio automático ao eSocial</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon green">⏱️</div>
+                <h3>Ponto Multimodal</h3>
+                <p>Múltiplas formas de registro com segurança e conformidade legal.</p>
+                <ul class="feature-list">
+                    <li><span class="check">✓</span>Reconhecimento facial 99,5%</li>
+                    <li><span class="check">✓</span>Geolocalização com cerca virtual</li>
+                    <li><span class="check">✓</span>App mobile com modo offline</li>
+                    <li><span class="check">✓</span>Integração REPs Portaria 671</li>
+                    <li><span class="check">✓</span>Cálculo automático de extras</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon orange">🏖️</div>
+                <h3>Gestão de Férias</h3>
+                <p>Controle completo com alertas e simulador de valores.</p>
+                <ul class="feature-list">
+                    <li><span class="check">✓</span>Cálculo automático de períodos</li>
+                    <li><span class="check">✓</span>Alertas de férias vencendo</li>
+                    <li><span class="check">✓</span>Fracionamento em até 3 períodos</li>
+                    <li><span class="check">✓</span>Simulador de valores</li>
+                    <li><span class="check">✓</span>Workflow de aprovação</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon purple">📊</div>
+                <h3>Avaliação de Desempenho</h3>
+                <p>Ciclos configuráveis com visão 360° e PDI automático.</p>
+                <ul class="feature-list">
+                    <li><span class="check">✓</span>Auto, gestor, 180° e 360°</li>
+                    <li><span class="check">✓</span>Formulários customizáveis</li>
+                    <li><span class="check">✓</span>Calibração entre gestores</li>
+                    <li><span class="check">✓</span>Matriz 9Box automática</li>
+                    <li><span class="check">✓</span>PDI gerado automaticamente</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon pink">🎓</div>
+                <h3>Treinamento e LMS</h3>
+                <p>Plataforma de aprendizagem com gamificação.</p>
+                <ul class="feature-list">
+                    <li><span class="check">✓</span>Trilhas personalizadas</li>
+                    <li><span class="check">✓</span>Vídeos, SCORM, PDFs e quizzes</li>
+                    <li><span class="check">✓</span>Pontos, badges e ranking</li>
+                    <li><span class="check">✓</span>Certificação automática</li>
+                    <li><span class="check">✓</span>Relatórios de evolução</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon teal">🧠</div>
+                <h3>Perfil Comportamental</h3>
+                <p>Mapeamento DISC para gestão e formação de equipes.</p>
+                <ul class="feature-list">
+                    <li><span class="check">✓</span>Perfil dominante identificado</li>
+                    <li><span class="check">✓</span>Comparação com perfil do cargo</li>
+                    <li><span class="check">✓</span>Indicadores de fit cultural</li>
+                    <li><span class="check">✓</span>Sugestões de desenvolvimento</li>
+                    <li><span class="check">✓</span>Insights para formação de times</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modules Section -->
+    <section class="section modules-section">
+        <div class="section-header">
+            <div class="section-label">🔗 Módulos Integrados</div>
+            <h2 class="section-title">DP + RH finalmente <span class="gradient-text">juntos</span></h2>
+            <p class="section-subtitle">
+                Dois mundos que sempre precisaram conversar, agora em uma única plataforma.
+            </p>
+        </div>
+
+        <div class="modules-grid">
+            <div class="module-card">
+                <div class="module-card-glow"></div>
+                <div class="module-badge">📁 Departamento Pessoal</div>
+                <h3>Rotinas Operacionais Automatizadas</h3>
+                <p>Elimine trabalho manual repetitivo e ganhe tempo para o estratégico.</p>
+                <div class="module-features">
+                    <div class="module-feature">Admissão digital completa</div>
+                    <div class="module-feature">Ponto com anti-fraude</div>
+                    <div class="module-feature">Gestão de férias automática</div>
+                    <div class="module-feature">Repositório de documentos</div>
+                    <div class="module-feature">Portal do Contador</div>
+                    <div class="module-feature">Integração eSocial nativa</div>
+                </div>
+            </div>
+
+            <div class="module-card">
+                <div class="module-card-glow"></div>
+                <div class="module-badge">🎯 Recursos Humanos</div>
+                <h3>Gestão Estratégica de Pessoas</h3>
+                <p>Desenvolva talentos e tome decisões baseadas em dados reais.</p>
+                <div class="module-features">
+                    <div class="module-feature">Ficha 360° do colaborador</div>
+                    <div class="module-feature">Avaliação de desempenho</div>
+                    <div class="module-feature">Perfil comportamental DISC</div>
+                    <div class="module-feature">LMS com gamificação</div>
+                    <div class="module-feature">Matriz 9Box automática</div>
+                    <div class="module-feature">Planejamento de sucessão</div>
+                </div>
+            </div>
+
+            <div class="module-card highlight">
+                <div class="module-badge">✨ Exclusivo AxonRH</div>
+                <h3>White Label + Implantação Guiada</h3>
+                <p>O sistema com a cara da sua empresa, configurado passo a passo por um wizard inteligente.</p>
+                <div class="module-features">
+                    <div class="module-feature">Logo e cores da empresa</div>
+                    <div class="module-feature">Tela de login personalizada</div>
+                    <div class="module-feature">Tema claro/escuro</div>
+                    <div class="module-feature">E-mails com sua marca</div>
+                    <div class="module-feature">Wizard de 9 etapas</div>
+                    <div class="module-feature">Importação de dados</div>
+                    <div class="module-feature">Regras trabalhistas configuráveis</div>
+                    <div class="module-feature">Ambiente de testes</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Benefits Section -->
+    <section class="section benefits-section">
+        <div class="section-header">
+            <div class="section-label">💎 Benefícios</div>
+            <h2 class="section-title">Resultados <span class="gradient-text">reais</span> para sua gestão</h2>
+            <p class="section-subtitle">
+                Impactos concretos que você vai sentir no dia a dia do RH e de toda a empresa.
+            </p>
+        </div>
+
+        <div class="benefits-grid">
+            <div class="benefit-card">
+                <div class="benefit-icon gradient-1">⏰</div>
+                <h4>Economia de Tempo</h4>
+                <p>Automatize tarefas repetitivas e foque no estratégico</p>
+            </div>
+            <div class="benefit-card">
+                <div class="benefit-icon gradient-2">📈</div>
+                <h4>Decisões com Dados</h4>
+                <p>Dashboards e relatórios em tempo real sempre disponíveis</p>
+            </div>
+            <div class="benefit-card">
+                <div class="benefit-icon gradient-3">✅</div>
+                <h4>Conformidade Legal</h4>
+                <p>eSocial, LGPD e Portaria 671 integrados nativamente</p>
+            </div>
+            <div class="benefit-card">
+                <div class="benefit-icon gradient-4">😊</div>
+                <h4>Experiência Superior</h4>
+                <p>App de autoatendimento que reduz demandas ao RH</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tech Stack -->
+    <section class="tech-section">
+        <div class="tech-content">
+            <h3 class="tech-title">Construído com tecnologia de ponta</h3>
+            <div class="tech-grid">
+                <div class="tech-item">
+                    <div class="tech-icon">☕</div>
+                    <span class="tech-name">Java 21</span>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-icon">🍃</div>
+                    <span class="tech-name">Spring Boot 4</span>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-icon">⚛️</div>
+                    <span class="tech-name">Next.js 15</span>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-icon">🐘</div>
+                    <span class="tech-name">PostgreSQL</span>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-icon">🐳</div>
+                    <span class="tech-name">Kubernetes</span>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-icon">🧠</div>
+                    <span class="tech-name">LLM/IA</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="cta-content">
+            <div class="cta-badge">🚀 Comece agora</div>
+            <h2>Pronto para transformar<br>sua <span>Gestão de RH</span>?</h2>
+            <p>
+                Agende uma demonstração personalizada e veja o AxonRH funcionando 
+                com dados reais. Descubra como a IA conversacional pode revolucionar seu dia a dia.
+            </p>
+            <div class="cta-buttons">
+                <a href="#" class="btn btn-primary">Agendar Demonstração</a>
+                <a href="#" class="btn btn-secondary">Falar com Consultor</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-logo">Axon<span>RH</span></div>
+        <p class="footer-tagline">Sistema Integrado de Gestão de RH e DP com IA Conversacional</p>
+        
+        <div class="footer-info">
+            <div class="footer-info-item">
+                <span>📋</span> Versão 1.0
+            </div>
+            <div class="footer-info-item">
+                <span>📅</span> Janeiro 2026
+            </div>
+            <div class="footer-info-item">
+                <span>🔒</span> LGPD Compliant
+            </div>
+            <div class="footer-info-item">
+                <span>☁️</span> SaaS Multi-tenant
+            </div>
+        </div>
+
+        <div class="footer-divider"></div>
+        
+        <p>Documento de apresentação funcional para validação de requisitos</p>
+    </footer>
+
+    <script>
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        });
+
+        // Scroll reveal animation
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry, index) => {
+                if (entry.isIntersecting) {
+                    entry.target.style.transitionDelay = `${(index % 6) * 0.1}s`;
+                    entry.target.classList.add('revealed');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.feature-card, .module-card, .benefit-card, .use-case-card, .ai-capability-card, .stat-item').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(40px)';
+            el.style.transition = 'all 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            observer.observe(el);
+        });
+
+        // Add revealed class styles
+        const style = document.createElement('style');
+        style.textContent = '.revealed { opacity: 1 !important; transform: translateY(0) !important; }';
+        document.head.appendChild(style);
+
+        // Parallax for orbs on mouse move
+        document.addEventListener('mousemove', (e) => {
+            const orbs = document.querySelectorAll('.orb');
+            const x = (e.clientX / window.innerWidth - 0.5) * 50;
+            const y = (e.clientY / window.innerHeight - 0.5) * 50;
+            
+            orbs.forEach((orb, index) => {
+                const speed = (index + 1) * 0.3;
+                orb.style.transform = `translate(${x * speed}px, ${y * speed}px)`;
+            });
+        });
+
+        // Typing indicator animation for chat
+        const chatMessages = document.querySelector('.chat-messages');
+        if (chatMessages) {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    </script>
+</body>
+</html>
+
+        <div class="footer-divider"></div>
+        
+        <p>Documento de apresentação funcional para validação de requisitos</p>
+    </footer>
+
+    <script>
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        });
+
+        // Scroll reveal
+        const revealElements = document.querySelectorAll('.feature-card, .module-card, .benefit-card, .use-case-card, .ai-capability-card');
+        
+        revealElements.forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(40px)';
+            el.style.transition = 'all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+        });
+
+        const revealOnScroll = () => {
+            revealElements.forEach((el, i) => {
+                const elementTop = el.getBoundingClientRect().top;
+                if (elementTop < window.innerHeight - 100) {
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                    el.style.transitionDelay = `${(i % 6) * 0.1}s`;
+                }
+            });
+        };
+
+        window.addEventListener('scroll', revealOnScroll);
+        window.addEventListener('load', revealOnScroll);
+
+        // Parallax effect for hero glows
+        document.addEventListener('mousemove', (e) => {
+            const glows = document.querySelectorAll('.hero-glow');
+            const x = (e.clientX / window.innerWidth - 0.5) * 30;
+            const y = (e.clientY / window.innerHeight - 0.5) * 30;
+            
+            glows.forEach((glow, index) => {
+                const speed = (index + 1) * 0.5;
+                glow.style.transform = `translate(${x * speed}px, ${y * speed}px)`;
+            });
+        });
+    </script>
+</body>
+</html>
