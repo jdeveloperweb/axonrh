@@ -28,6 +28,15 @@ spring:
         default_schema: shared
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    table: auth_service_schema_history
+    schemas: shared
+    default-schema: shared
+    create-schemas: true
+
   # Redis
   data:
     redis:
