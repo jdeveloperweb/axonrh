@@ -26,7 +26,7 @@ public class SetupWizardController {
     @GetMapping("/progress")
     public ResponseEntity<SetupProgress> getProgress(
             @RequestHeader(value = "X-Tenant-ID", required = false) UUID tenantId,
-            @RequestHeader("X-User-ID") UUID userId) {
+            @RequestHeader(value = "X-User-ID", required = false) UUID userId) {
 
         SetupProgress progress = setupService.getOrCreateProgress(tenantId, userId);
         return ResponseEntity.ok(progress);
@@ -35,7 +35,7 @@ public class SetupWizardController {
     @GetMapping("/summary")
     public ResponseEntity<SetupSummary> getSummary(
             @RequestHeader(value = "X-Tenant-ID", required = false) UUID tenantId,
-            @RequestHeader("X-User-ID") UUID userId) {
+            @RequestHeader(value = "X-User-ID", required = false) UUID userId) {
 
         SetupSummary summary = setupService.getSummary(tenantId, userId);
         return ResponseEntity.ok(summary);
@@ -44,7 +44,7 @@ public class SetupWizardController {
     @GetMapping("/steps/{step}")
     public ResponseEntity<Map<String, Object>> getStepData(
             @RequestHeader(value = "X-Tenant-ID", required = false) UUID tenantId,
-            @RequestHeader("X-User-ID") UUID userId,
+            @RequestHeader(value = "X-User-ID", required = false) UUID userId,
             @PathVariable int step) {
 
         Map<String, Object> data = setupService.getStepData(tenantId, userId, step);
@@ -54,7 +54,7 @@ public class SetupWizardController {
     @PostMapping("/steps/{step}/save")
     public ResponseEntity<SetupProgress> saveStepData(
             @RequestHeader(value = "X-Tenant-ID", required = false) UUID tenantId,
-            @RequestHeader("X-User-ID") UUID userId,
+            @RequestHeader(value = "X-User-ID", required = false) UUID userId,
             @PathVariable int step,
             @RequestBody Map<String, Object> data) {
 
@@ -66,7 +66,7 @@ public class SetupWizardController {
     @PostMapping("/steps/{step}/complete")
     public ResponseEntity<SetupProgress> completeStep(
             @RequestHeader(value = "X-Tenant-ID", required = false) UUID tenantId,
-            @RequestHeader("X-User-ID") UUID userId,
+            @RequestHeader(value = "X-User-ID", required = false) UUID userId,
             @PathVariable int step,
             @RequestBody(required = false) Map<String, Object> data) {
 
@@ -78,7 +78,7 @@ public class SetupWizardController {
     @PostMapping("/steps/{step}/goto")
     public ResponseEntity<SetupProgress> goToStep(
             @RequestHeader(value = "X-Tenant-ID", required = false) UUID tenantId,
-            @RequestHeader("X-User-ID") UUID userId,
+            @RequestHeader(value = "X-User-ID", required = false) UUID userId,
             @PathVariable int step) {
 
         SetupProgress progress = setupService.goToStep(tenantId, userId, step);
@@ -88,7 +88,7 @@ public class SetupWizardController {
     @PostMapping("/finish")
     public ResponseEntity<SetupProgress> finishSetup(
             @RequestHeader(value = "X-Tenant-ID", required = false) UUID tenantId,
-            @RequestHeader("X-User-ID") UUID userId) {
+            @RequestHeader(value = "X-User-ID", required = false) UUID userId) {
 
         SetupProgress progress = setupService.finishSetup(tenantId, userId);
         return ResponseEntity.ok(progress);
@@ -98,7 +98,7 @@ public class SetupWizardController {
     @GetMapping("/company")
     public ResponseEntity<CompanyProfile> getCompanyProfile(
             @RequestHeader(value = "X-Tenant-ID", required = false) UUID tenantId,
-            @RequestHeader("X-User-ID") UUID userId) {
+            @RequestHeader(value = "X-User-ID", required = false) UUID userId) {
 
         return setupService.getCompanyProfile(tenantId, userId)
                 .map(ResponseEntity::ok)
