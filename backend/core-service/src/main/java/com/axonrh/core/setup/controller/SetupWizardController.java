@@ -25,7 +25,7 @@ public class SetupWizardController {
 
     @GetMapping("/progress")
     public ResponseEntity<SetupProgress> getProgress(
-            @RequestHeader("X-Tenant-ID") UUID tenantId,
+            @RequestHeader(value = "X-Tenant-ID", required = false) UUID tenantId,
             @RequestHeader("X-User-ID") UUID userId) {
 
         SetupProgress progress = setupService.getOrCreateProgress(tenantId, userId);
@@ -34,66 +34,73 @@ public class SetupWizardController {
 
     @GetMapping("/summary")
     public ResponseEntity<SetupSummary> getSummary(
-            @RequestHeader("X-Tenant-ID") UUID tenantId) {
+            @RequestHeader(value = "X-Tenant-ID", required = false) UUID tenantId,
+            @RequestHeader("X-User-ID") UUID userId) {
 
-        SetupSummary summary = setupService.getSummary(tenantId);
+        SetupSummary summary = setupService.getSummary(tenantId, userId);
         return ResponseEntity.ok(summary);
     }
 
     @GetMapping("/steps/{step}")
     public ResponseEntity<Map<String, Object>> getStepData(
-            @RequestHeader("X-Tenant-ID") UUID tenantId,
+            @RequestHeader(value = "X-Tenant-ID", required = false) UUID tenantId,
+            @RequestHeader("X-User-ID") UUID userId,
             @PathVariable int step) {
 
-        Map<String, Object> data = setupService.getStepData(tenantId, step);
+        Map<String, Object> data = setupService.getStepData(tenantId, userId, step);
         return ResponseEntity.ok(data);
     }
 
     @PostMapping("/steps/{step}/save")
     public ResponseEntity<SetupProgress> saveStepData(
-            @RequestHeader("X-Tenant-ID") UUID tenantId,
+            @RequestHeader(value = "X-Tenant-ID", required = false) UUID tenantId,
+            @RequestHeader("X-User-ID") UUID userId,
             @PathVariable int step,
             @RequestBody Map<String, Object> data) {
 
         log.info("Recebido save da etapa {} do setup para tenant {}", step, tenantId);
-        SetupProgress progress = setupService.saveStepData(tenantId, step, data);
+        SetupProgress progress = setupService.saveStepData(tenantId, userId, step, data);
         return ResponseEntity.ok(progress);
     }
 
     @PostMapping("/steps/{step}/complete")
     public ResponseEntity<SetupProgress> completeStep(
-            @RequestHeader("X-Tenant-ID") UUID tenantId,
+            @RequestHeader(value = "X-Tenant-ID", required = false) UUID tenantId,
+            @RequestHeader("X-User-ID") UUID userId,
             @PathVariable int step,
             @RequestBody(required = false) Map<String, Object> data) {
 
         log.info("Recebido complete da etapa {} do setup para tenant {}", step, tenantId);
-        SetupProgress progress = setupService.completeStep(tenantId, step, data);
+        SetupProgress progress = setupService.completeStep(tenantId, userId, step, data);
         return ResponseEntity.ok(progress);
     }
 
     @PostMapping("/steps/{step}/goto")
     public ResponseEntity<SetupProgress> goToStep(
-            @RequestHeader("X-Tenant-ID") UUID tenantId,
+            @RequestHeader(value = "X-Tenant-ID", required = false) UUID tenantId,
+            @RequestHeader("X-User-ID") UUID userId,
             @PathVariable int step) {
 
-        SetupProgress progress = setupService.goToStep(tenantId, step);
+        SetupProgress progress = setupService.goToStep(tenantId, userId, step);
         return ResponseEntity.ok(progress);
     }
 
     @PostMapping("/finish")
     public ResponseEntity<SetupProgress> finishSetup(
-            @RequestHeader("X-Tenant-ID") UUID tenantId) {
+            @RequestHeader(value = "X-Tenant-ID", required = false) UUID tenantId,
+            @RequestHeader("X-User-ID") UUID userId) {
 
-        SetupProgress progress = setupService.finishSetup(tenantId);
+        SetupProgress progress = setupService.finishSetup(tenantId, userId);
         return ResponseEntity.ok(progress);
     }
 
     // Company Profile endpoints
     @GetMapping("/company")
     public ResponseEntity<CompanyProfile> getCompanyProfile(
-            @RequestHeader("X-Tenant-ID") UUID tenantId) {
+            @RequestHeader(value = "X-Tenant-ID", required = false) UUID tenantId,
+            @RequestHeader("X-User-ID") UUID userId) {
 
-        return setupService.getCompanyProfile(tenantId)
+        return setupService.getCompanyProfile(tenantId, userId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }

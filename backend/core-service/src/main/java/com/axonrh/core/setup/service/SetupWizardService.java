@@ -32,30 +32,41 @@ public class SetupWizardService {
      * Inicia ou retorna progresso do wizard.
      */
     public SetupProgress getOrCreateProgress(UUID tenantId, UUID userId) {
-        return progressRepository.findByTenantId(tenantId)
-                .orElseGet(() -> {
-                    SetupProgress progress = new SetupProgress();
-                    progress.setTenantId(tenantId);
-                    progress.setCreatedBy(userId);
-                    return progressRepository.save(progress);
-                });
+        if (tenantId != null) {
+            return progressRepository.findByTenantId(tenantId)
+                    .orElseGet(() -> createNewProgress(tenantId, userId));
+        }
+
+        return progressRepository.findByCreatedBy(userId)
+                .orElseGet(() -> createNewProgress(UUID.randomUUID(), userId));
+    }
+
+    private SetupProgress createNewProgress(UUID tenantId, UUID userId) {
+        SetupProgress progress = new SetupProgress();
+        progress.setTenantId(tenantId);
+        progress.setCreatedBy(userId);
+        return progressRepository.save(progress);
     }
 
     /**
      * Salva dados de uma etapa.
      */
-    public SetupProgress saveStepData(UUID tenantId, int step, Map<String, Object> data) {
-        SetupProgress progress = progressRepository.findByTenantId(tenantId)
+    /**
+     * Salva dados de uma etapa.
+     */
+    public SetupProgress saveStepData(UUID tenantId, UUID userId, int step, Map<String, Object> data) {
+        UUID effectiveTenantId = resolveTenantId(tenantId, userId);
+        SetupProgress progress = progressRepository.findByTenantId(effectiveTenantId)
                 .orElseThrow(() -> new IllegalStateException("Setup não iniciado"));
 
         try {
-            log.info("Salvando dados da etapa {} do setup para tenant {}", step, tenantId);
+            log.info("Salvando dados da etapa {} do setup para tenant {}", step, effectiveTenantId);
             progress.setStepData(step, data);
             progress.setLastActivityAt(LocalDateTime.now());
 
             return progressRepository.save(progress);
         } catch (Exception e) {
-            log.error("Falha ao salvar dados da etapa {} do setup para tenant {}", step, tenantId, e);
+            log.error("Falha ao salvar dados da etapa {} do setup para tenant {}", step, effectiveTenantId, e);
             throw new RuntimeException("Erro ao salvar dados da etapa: " + e.getMessage(), e);
         }
     }
@@ -63,8 +74,12 @@ public class SetupWizardService {
     /**
      * Completa uma etapa.
      */
-    public SetupProgress completeStep(UUID tenantId, int step, Map<String, Object> data) {
-        SetupProgress progress = progressRepository.findByTenantId(tenantId)
+    /**
+     * Completa uma etapa.
+     */
+    public SetupProgress completeStep(UUID tenantId, UUID userId, int step, Map<String, Object> data) {
+        UUID effectiveTenantId = resolveTenantId(tenantId, userId);
+        SetupProgress progress = progressRepository.findByTenantId(effectiveTenantId)
                 .orElseThrow(() -> new IllegalStateException("Setup não iniciado"));
 
         // Validate required steps before completing
@@ -73,7 +88,7 @@ public class SetupWizardService {
         }
 
         try {
-            log.info("Completando etapa {} do setup para tenant {}", step, tenantId);
+            log.info("Completando etapa {} do setup para tenant {}", step, effectiveTenantId);
             if (data != null && !data.isEmpty()) {
                 progress.setStepData(step, data);
             }
@@ -86,13 +101,13 @@ public class SetupWizardService {
             }
 
             // Process step-specific logic
-            processStepCompletion(tenantId, step, data);
+            processStepCompletion(effectiveTenantId, step, data);
 
             progress.setLastActivityAt(LocalDateTime.now());
 
             return progressRepository.save(progress);
         } catch (Exception e) {
-            log.error("Falha ao completar etapa {} do setup para tenant {}", step, tenantId, e);
+            log.error("Falha ao completar etapa {} do setup para tenant {}", step, effectiveTenantId, e);
             throw new RuntimeException("Erro ao completar etapa: " + e.getMessage(), e);
         }
     }
@@ -100,8 +115,12 @@ public class SetupWizardService {
     /**
      * Navega para uma etapa especifica.
      */
-    public SetupProgress goToStep(UUID tenantId, int step) {
-        SetupProgress progress = progressRepository.findByTenantId(tenantId)
+    /**
+     * Navega para uma etapa especifica.
+     */
+    public SetupProgress goToStep(UUID tenantId, UUID userId, int step) {
+        UUID effectiveTenantId = resolveTenantId(tenantId, userId);
+        SetupProgress progress = progressRepository.findByTenantId(effectiveTenantId)
                 .orElseThrow(() -> new IllegalStateException("Setup não iniciado"));
 
         if (step < 1 || step > progress.getTotalSteps()) {
@@ -123,8 +142,12 @@ public class SetupWizardService {
     /**
      * Finaliza o wizard.
      */
-    public SetupProgress finishSetup(UUID tenantId) {
-        SetupProgress progress = progressRepository.findByTenantId(tenantId)
+    /**
+     * Finaliza o wizard.
+     */
+    public SetupProgress finishSetup(UUID tenantId, UUID userId) {
+        UUID effectiveTenantId = resolveTenantId(tenantId, userId);
+        SetupProgress progress = progressRepository.findByTenantId(effectiveTenantId)
                 .orElseThrow(() -> new IllegalStateException("Setup não iniciado"));
 
         // Validate all required steps
@@ -143,9 +166,15 @@ public class SetupWizardService {
     /**
      * Obtem resumo do progresso.
      */
-    public SetupSummary getSummary(UUID tenantId) {
-        SetupProgress progress = progressRepository.findByTenantId(tenantId)
-                .orElseThrow(() -> new IllegalStateException("Setup não iniciado"));
+    public SetupSummary getSummary(UUID tenantId, UUID userId) {
+        SetupProgress progress;
+        if (tenantId != null) {
+            progress = progressRepository.findByTenantId(tenantId)
+                    .orElseThrow(() -> new IllegalStateException("Setup não iniciado"));
+        } else {
+            progress = progressRepository.findByCreatedBy(userId)
+                    .orElseThrow(() -> new IllegalStateException("Setup não iniciado"));
+        }
 
         List<StepInfo> steps = new ArrayList<>();
         steps.add(new StepInfo(1, "Dados da Empresa", progress.isStep1CompanyData(), isStepRequired(1)));
@@ -173,11 +202,24 @@ public class SetupWizardService {
     /**
      * Recupera dados de uma etapa.
      */
-    public Map<String, Object> getStepData(UUID tenantId, int step) {
-        SetupProgress progress = progressRepository.findByTenantId(tenantId)
+    /**
+     * Recupera dados de uma etapa.
+     */
+    public Map<String, Object> getStepData(UUID tenantId, UUID userId, int step) {
+        UUID effectiveTenantId = resolveTenantId(tenantId, userId);
+        SetupProgress progress = progressRepository.findByTenantId(effectiveTenantId)
                 .orElseThrow(() -> new IllegalStateException("Setup não iniciado"));
 
         return progress.getStepData(step);
+    }
+
+    private UUID resolveTenantId(UUID tenantId, UUID userId) {
+        if (tenantId != null) {
+            return tenantId;
+        }
+        return progressRepository.findByCreatedBy(userId)
+                .map(SetupProgress::getTenantId)
+                .orElseThrow(() -> new IllegalStateException("Setup não iniciado e tenant não encontrado"));
     }
 
     // Step 1: Save company data
@@ -202,8 +244,12 @@ public class SetupWizardService {
         }
     }
 
-    public Optional<CompanyProfile> getCompanyProfile(UUID tenantId) {
-        return companyProfileRepository.findByTenantId(tenantId);
+    public Optional<CompanyProfile> getCompanyProfile(UUID tenantId, UUID userId) {
+        if (tenantId != null) {
+            return companyProfileRepository.findByTenantId(tenantId);
+        }
+        return progressRepository.findByCreatedBy(userId)
+                .flatMap(progress -> companyProfileRepository.findByTenantId(progress.getTenantId()));
     }
 
     // Private helper methods

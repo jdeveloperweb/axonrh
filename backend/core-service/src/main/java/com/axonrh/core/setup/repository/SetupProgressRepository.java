@@ -16,6 +16,8 @@ public interface SetupProgressRepository extends JpaRepository<SetupProgress, UU
 
     Optional<SetupProgress> findByTenantId(UUID tenantId);
 
+    Optional<SetupProgress> findByCreatedBy(UUID userId);
+
     List<SetupProgress> findByStatus(SetupStatus status);
 
     @Query("SELECT s FROM SetupProgress s WHERE s.status = 'IN_PROGRESS' " +
