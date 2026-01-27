@@ -162,6 +162,7 @@ services:
       - "8888:8888"
     environment:
       <<: *backend-env
+      SPRING_FLYWAY_ENABLED: "true"
       SERVER_PORT: 8888
 
   auth-service:
