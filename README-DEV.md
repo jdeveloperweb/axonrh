@@ -112,7 +112,7 @@ npm run dev
 ## Credenciais de Desenvolvimento
 
 ### PostgreSQL
-- **Host:** localhost:5433
+- **Host:** localhost:5433 (Docker expõe 5433 → 5432 no container)
 - **User:** axonrh
 - **Password:** axonrh123
 - **Database:** axonrh
