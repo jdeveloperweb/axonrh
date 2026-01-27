@@ -412,7 +412,7 @@ FROM (
     {"name": "jornada", "label": "Jornada Semanal (horas)", "type": "number", "required": false, "default": 44},
     {"name": "pis", "label": "PIS", "type": "text", "required": false},
     {"name": "ctps", "label": "CTPS", "type": "text", "required": false}
-  ]', true),
+  ]'::jsonb, true),
   ('DEPARTMENTS', 'Departamentos - Padrão', 'Template padrão para importação de departamentos',
   '[
     {"name": "codigo", "label": "Código", "type": "text", "required": true, "maxLength": 20},
@@ -420,7 +420,7 @@ FROM (
     {"name": "departamento_pai", "label": "Departamento Pai (código)", "type": "text", "required": false},
     {"name": "gestor_cpf", "label": "CPF do Gestor", "type": "cpf", "required": false},
     {"name": "centro_custo", "label": "Centro de Custo", "type": "text", "required": false}
-  ]', true),
+  ]'::jsonb, true),
   ('POSITIONS', 'Cargos - Padrão', 'Template padrão para importação de cargos',
   '[
     {"name": "codigo", "label": "Código", "type": "text", "required": true, "maxLength": 20},
@@ -430,7 +430,7 @@ FROM (
     {"name": "salario_min", "label": "Salário Mínimo", "type": "currency", "required": false},
     {"name": "salario_max", "label": "Salário Máximo", "type": "currency", "required": false},
     {"name": "descricao", "label": "Descrição", "type": "text", "required": false}
-  ]', true)
+  ]'::jsonb, true)
 ) AS v(import_type, name, description, columns, is_system)
 WHERE NOT EXISTS (
   SELECT 1
