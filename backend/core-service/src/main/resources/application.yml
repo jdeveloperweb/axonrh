@@ -41,6 +41,10 @@ logging:
   level:
     com.axonrh.core: ${LOG_LEVEL:INFO}
 
+axonrh:
+  flyway:
+    repair-on-startup: ${AXONRH_FLYWAY_REPAIR_ON_STARTUP:true}
+
 management:
   endpoints:
     web:
