@@ -39,6 +39,7 @@ spring:
     schemas: shared
     default-schema: shared
     create-schemas: true
+    validate-on-migrate: false
 
   # Redis Cache
   data:
