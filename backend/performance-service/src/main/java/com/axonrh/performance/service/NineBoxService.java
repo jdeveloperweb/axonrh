@@ -6,7 +6,7 @@ import com.axonrh.performance.dto.NineBoxMatrix;
 import com.axonrh.performance.dto.NineBoxPosition;
 import com.axonrh.performance.entity.Evaluation;
 import com.axonrh.performance.entity.EvaluationCycle;
-import com.axonrh.performance.entity.enums.EvaluationType;
+import com.axonrh.performance.entity.enums.EvaluatorType;
 import com.axonrh.performance.repository.EvaluationCycleRepository;
 import com.axonrh.performance.repository.EvaluationRepository;
 import lombok.RequiredArgsConstructor;
@@ -41,7 +41,7 @@ public class NineBoxService {
         UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
 
         List<Evaluation> evaluations = evaluationRepository
-                .findCompletedForNineBox(tenantId, cycleId, EvaluationType.MANAGER);
+                .findCompletedForNineBox(tenantId, cycleId, EvaluatorType.MANAGER);
 
         // Agrupar por colaborador (pode ter multiplas avaliacoes)
         Map<UUID, List<Evaluation>> byEmployee = evaluations.stream()
