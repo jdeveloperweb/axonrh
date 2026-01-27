@@ -37,7 +37,7 @@ docker-compose up -d
 ```
 
 Isso irá iniciar:
-- PostgreSQL (porta 5432)
+- PostgreSQL (porta 5433)
 - MongoDB (porta 27017)
 - Redis (porta 6379)
 - RabbitMQ (porta 5672,管理: http://localhost:15672)
@@ -100,7 +100,7 @@ npm run dev
 | Auth Service | 8081 | http://localhost:8081 |
 | Core Service | 8082 | http://localhost:8082 |
 | Config Service | 8888 | http://localhost:8888 |
-| PostgreSQL | 5432 | - |
+| PostgreSQL | 5433 | - |
 | MongoDB | 27017 | - |
 | Redis | 6379 | - |
 | RabbitMQ | 5672/15672 | http://localhost:15672 |
@@ -112,7 +112,7 @@ npm run dev
 ## Credenciais de Desenvolvimento
 
 ### PostgreSQL
-- **Host:** localhost:5432
+- **Host:** localhost:5433
 - **User:** axonrh
 - **Password:** axonrh123
 - **Database:** axonrh

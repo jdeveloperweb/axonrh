@@ -131,7 +131,7 @@ start_infrastructure() {
     docker compose up -d
 
     echo -e "${GREEN}✓ Infrastructure services started${NC}"
-    echo -e "  - PostgreSQL: localhost:5432"
+    echo -e "  - PostgreSQL: localhost:5433"
     echo -e "  - MongoDB: localhost:27017"
     echo -e "  - Redis: localhost:6379"
     echo -e "  - RabbitMQ: localhost:5672 (Management: http://localhost:15672)"

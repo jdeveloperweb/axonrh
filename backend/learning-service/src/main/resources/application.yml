@@ -6,7 +6,7 @@ spring:
     name: learning-service
 
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:axonrh}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:axonrh}
     username: ${DB_USER:axonrh}
     password: ${DB_PASSWORD:axonrh123}
     hikari:
