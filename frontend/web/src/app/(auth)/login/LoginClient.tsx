@@ -166,18 +166,13 @@ export default function LoginClient() {
       <div className="absolute -top-32 right-0 h-72 w-72 rounded-full bg-sky-500/20 blur-[120px]" />
       <div className="absolute bottom-0 left-0 h-72 w-72 rounded-full bg-emerald-500/20 blur-[120px]" />
 
-      <div className="relative z-10 w-full max-w-6xl grid gap-12 lg:grid-cols-[1.15fr,0.85fr] items-center">
+      <div className="relative z-10 w-full max-w-6xl grid gap-12 lg:grid-cols-[1.15fr,0.85fr] items-start">
         <div className="flex flex-col gap-6 text-center lg:text-left">
-          <span className="mx-auto lg:mx-0 inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/20 bg-white/10 text-white text-sm font-medium shadow-lg shadow-emerald-400/20">
-            <Sparkles className="w-4 h-4 text-emerald-300" />
-            Nova Geração de Sistemas de RH com IA
-          </span>
-
           <div className="flex items-center justify-center lg:justify-start gap-3">
             {loginConfig.logoUrl ? (
-              <img src={loginConfig.logoUrl} alt="Logo" className="h-12" />
+              <img src={loginConfig.logoUrl} alt="Logo" className="h-14" />
             ) : (
-              <h1 className="font-heading text-4xl sm:text-5xl font-extrabold tracking-tight">
+              <h1 className="font-heading text-5xl sm:text-6xl font-extrabold tracking-tight">
                 <span className="text-white">Axon</span>
                 <span className="text-sky-400">RH</span>
               </h1>
@@ -188,9 +183,9 @@ export default function LoginClient() {
             Um RH mais <span className="text-emerald-300">humano</span>, conectado
             com uma IA que impressiona.
           </h2>
-          <p className="text-base sm:text-lg text-slate-200/80 max-w-xl mx-auto lg:mx-0">
+          <p className="text-base sm:text-lg text-slate-200/80 max-w-sm mx-auto lg:mx-0">
             {loginConfig.welcomeMessage ||
-              "A plataforma inteligente que unifica Departamento Pessoal e Recursos Humanos com uma assistente de IA conversacional. Pergunte, comande e acompanhe tudo pelo chat."}
+              "A plataforma inteligente que unifica Departamento Pessoal e Recursos Humanos com IA conversacional."}
           </p>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2 text-left">
