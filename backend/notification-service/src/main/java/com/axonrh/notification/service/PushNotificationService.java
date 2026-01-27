@@ -30,7 +30,7 @@ public class PushNotificationService {
 
     public PushNotificationService(PushTokenRepository tokenRepository,
                                    PushLogRepository logRepository,
-                                   FirebaseMessaging firebaseMessaging) {
+                                   @org.springframework.beans.factory.annotation.Autowired(required = false) FirebaseMessaging firebaseMessaging) {
         this.tokenRepository = tokenRepository;
         this.logRepository = logRepository;
         this.firebaseMessaging = firebaseMessaging;
@@ -164,6 +164,10 @@ public class PushNotificationService {
                             .build())
                     .build());
 
+            if (firebaseMessaging == null) {
+                log.warn("Firebase não inicializado. Não é possível enviar para o tópico: {}", topic);
+                return;
+            }
             String response = firebaseMessaging.send(messageBuilder.build());
             log.info("Push sent to topic {} - Response: {}", topic, response);
 
@@ -184,6 +188,10 @@ public class PushNotificationService {
                 .collect(Collectors.toList());
 
         try {
+            if (firebaseMessaging == null) {
+                log.warn("Firebase não inicializado. Não é possível se inscrever no tópico.");
+                return;
+            }
             firebaseMessaging.subscribeToTopic(tokenStrings, topic);
             log.info("Subscribed {} tokens to topic: {}", tokenStrings.size(), topic);
         } catch (Exception e) {
@@ -203,6 +211,10 @@ public class PushNotificationService {
                 .collect(Collectors.toList());
 
         try {
+            if (firebaseMessaging == null) {
+                log.warn("Firebase não inicializado. Não é possível se desinscrever do tópico.");
+                return;
+            }
             firebaseMessaging.unsubscribeFromTopic(tokenStrings, topic);
             log.info("Unsubscribed {} tokens from topic: {}", tokenStrings.size(), topic);
         } catch (Exception e) {
@@ -239,6 +251,10 @@ public class PushNotificationService {
                 messageBuilder.putAllData(data);
             }
 
+            if (firebaseMessaging == null) {
+                log.warn("Firebase não inicializado. Não é possível enviar push.");
+                return;
+            }
             String response = firebaseMessaging.send(messageBuilder.build());
             log.info("Push sent successfully - Response: {}", response);
 
@@ -263,6 +279,10 @@ public class PushNotificationService {
                 messageBuilder.putAllData(data);
             }
 
+            if (firebaseMessaging == null) {
+                log.warn("Firebase não inicializado. Não é possível enviar push multicast.");
+                return;
+            }
             BatchResponse response = firebaseMessaging.sendEachForMulticast(messageBuilder.build());
             log.info("Push multicast sent - Success: {}, Failure: {}",
                     response.getSuccessCount(), response.getFailureCount());
