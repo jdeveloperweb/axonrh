@@ -82,6 +82,24 @@ CREATE TABLE IF NOT EXISTS shared.tenant_configs (
     updated_by UUID
 );
 
+ALTER TABLE shared.tenant_configs
+    ADD COLUMN IF NOT EXISTS tema_escuro JSONB DEFAULT '{
+        "cor_fundo": "#111827",
+        "cor_texto": "#f3f4f6",
+        "cor_card": "#1f2937",
+        "cor_borda": "#374151"
+    }';
+
+ALTER TABLE shared.tenant_configs
+    ADD COLUMN IF NOT EXISTS login_config JSONB DEFAULT '{
+        "background_type": "color",
+        "background_value": "#f3f4f6",
+        "form_position": "center",
+        "welcome_text": "Bem-vindo ao Sistema",
+        "show_logo": true,
+        "show_remember_me": true
+    }';
+
 -- Indices
 CREATE INDEX IF NOT EXISTS idx_tenant_configs_tenant_id ON shared.tenant_configs(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_tenant_configs_active ON shared.tenant_configs(tenant_id, is_active) WHERE is_active = true;
