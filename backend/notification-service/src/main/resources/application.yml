@@ -70,3 +70,7 @@ management:
 logging:
   level:
     com.axonrh: DEBUG
+
+axonrh:
+  flyway:
+    repair-on-startup: ${AXONRH_FLYWAY_REPAIR_ON_STARTUP:true}
