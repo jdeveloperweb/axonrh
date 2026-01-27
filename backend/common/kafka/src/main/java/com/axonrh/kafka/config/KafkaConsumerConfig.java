@@ -51,16 +51,9 @@ public class KafkaConsumerConfig {
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
 
-        // Deserializadores com error handling
-        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
-        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
-        props.put(ErrorHandlingDeserializer.KEY_DESERIALIZER_CLASS, StringDeserializer.class);
-        props.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class);
-
-        // Configuracoes do JsonDeserializer
-        props.put(JsonDeserializer.TRUSTED_PACKAGES, "com.axonrh.kafka.event.*");
-        props.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, true);
-        props.put(JsonDeserializer.VALUE_DEFAULT_TYPE, DomainEvent.class.getName());
+        // Deserializadores (serao passados no construtor)
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
 
         // Offset
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
