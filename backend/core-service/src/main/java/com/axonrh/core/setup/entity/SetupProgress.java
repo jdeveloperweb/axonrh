@@ -97,7 +97,8 @@ public class SetupProgress {
     public enum SetupStatus {
         IN_PROGRESS,
         COMPLETED,
-        PAUSED
+        PAUSED,
+        ACTIVATED
     }
 
     @PrePersist
