@@ -24,6 +24,7 @@
         <module>api-gateway</module>
         <module>auth-service</module>
         <module>config-service</module>
+        <module>core-service</module>
         <module>employee-service</module>
         <module>timesheet-service</module>
         <module>vacation-service</module>
