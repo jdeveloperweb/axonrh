@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { apiClient } from "@/lib/api/client";
+import axios from "axios";
 
 export function StatusIndicator() {
     const [status, setStatus] = useState<"connected" | "disconnected" | "checking">("checking");
@@ -19,7 +20,7 @@ export function StatusIndicator() {
             // So http://localhost:8080/actuator/health should work.
 
             // Since apiClient has baseURL /api/v1, we need to bypass it or use absolute URL.
-            await apiClient.get("http://localhost:8080/actuator/health");
+            await axios.get("http://localhost:8180/actuator/health");
             setStatus("connected");
             setErrorMessage(null);
         } catch (error) {
@@ -40,8 +41,8 @@ export function StatusIndicator() {
     return (
         <div
             className={`fixed bottom-4 right-4 p-2 rounded-full shadow-lg flex items-center gap-2 text-xs font-medium transition-colors cursor-help group z-50 ${status === "connected"
-                    ? "bg-green-100 text-green-800 border border-green-200"
-                    : "bg-red-100 text-red-800 border border-red-200"
+                ? "bg-green-100 text-green-800 border border-green-200"
+                : "bg-red-100 text-red-800 border border-red-200"
                 }`}
             title={status === "connected" ? "Backend Connected" : `Error: ${errorMessage}`}
         >

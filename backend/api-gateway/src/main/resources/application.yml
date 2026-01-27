@@ -43,6 +43,14 @@ spring:
             - StripPrefix=2
             - name: JwtAuthFilter
 
+        # Core Service - Setup & Import
+        - id: core-service
+          uri: lb://core-service
+          predicates:
+            - Path=/api/v1/setup/**
+          filters:
+            - name: JwtAuthFilter
+
         # Employee Service
         - id: employee-service
           uri: lb://employee-service
