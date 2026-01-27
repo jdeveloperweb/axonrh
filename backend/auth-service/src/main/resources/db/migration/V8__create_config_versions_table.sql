@@ -23,9 +23,9 @@ CREATE TABLE IF NOT EXISTS shared.config_versions (
     CONSTRAINT uk_config_versions_tenant_version UNIQUE (tenant_id, version)
 );
 
-CREATE INDEX idx_config_versions_tenant ON shared.config_versions(tenant_id);
-CREATE INDEX idx_config_versions_version ON shared.config_versions(version DESC);
-CREATE INDEX idx_config_versions_created ON shared.config_versions(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_config_versions_tenant ON shared.config_versions(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_config_versions_version ON shared.config_versions(version DESC);
+CREATE INDEX IF NOT EXISTS idx_config_versions_created ON shared.config_versions(created_at DESC);
 
 COMMENT ON TABLE shared.config_versions IS 'Historico de versoes de configuracoes de tenant para rollback';
 COMMENT ON COLUMN shared.config_versions.config_snapshot IS 'Snapshot completo da configuracao em JSON';
