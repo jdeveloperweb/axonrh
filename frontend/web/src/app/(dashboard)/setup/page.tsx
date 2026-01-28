@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   setupApi,
@@ -8,7 +8,7 @@ import {
   SETUP_STEPS,
 } from '@/lib/api/setup';
 
-export default function SetupWizardPage() {
+function SetupContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [summary, setSummary] = useState<SetupSummary | null>(null);
@@ -314,4 +314,16 @@ function getStepDescription(step: number): string {
     9: 'Verificação final e ativação do sistema',
   };
   return descriptions[step] || '';
+}
+
+export default function SetupWizardPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    }>
+      <SetupContent />
+    </Suspense>
+  );
 }

@@ -268,7 +268,7 @@ public class SetupWizardService {
         // 1. Criar perfil inicial
         CompanyProfile profile = new CompanyProfile();
         profile.setTenantId(tenantId);
-        profile.setCorporateName(request.getCorporateName());
+        profile.setLegalName(request.getCorporateName());
         profile.setCnpj(request.getCnpj());
         profile.setEmail(request.getEmail()); 
         // Note: CompanyProfile entity might need an email field if not present, otherwise we store it elsewhere or assume it's part of contact info.
