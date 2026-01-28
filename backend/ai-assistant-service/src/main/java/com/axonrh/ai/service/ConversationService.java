@@ -213,7 +213,10 @@ public class ConversationService {
                                 streamResponseType = Message.MessageType.CALCULATION;
                             }
 
-                            log.debug("Emitting chunks for action result. Type: {}", streamResponseType);
+                            log.debug("Emitting chunks for action result. Type: {} Content length: {}", streamResponseType, responseStr != null ? responseStr.length() : "null");
+                            if (responseStr != null && responseStr.length() < 100) {
+                                log.debug("Content preview: {}", responseStr);
+                            }
                             return Flux.just(
                                     StreamChunk.builder()
                                             .content(responseStr)

@@ -98,6 +98,7 @@ export default function ChatWidget({
       let fullContent = '';
 
       for await (const chunk of chatApi.streamChat(userMessage.content, conversationId)) {
+        console.debug('[ChatWidget] Received chunk:', chunk);
         if (chunk.content) {
           fullContent += chunk.content;
         }
