@@ -478,7 +478,7 @@ export default function EmployeesPage() {
                         {employee.department?.name || '-'}
                       </td>
                       <td className="px-6 py-4 text-[var(--color-text)]">
-                        {employee.position?.name || '-'}
+                        {employee.position?.title || employee.position?.name || '-'}
                       </td>
                       <td className="px-6 py-4 text-[var(--color-text)]">
                         {formatDate(employee.admissionDate)}

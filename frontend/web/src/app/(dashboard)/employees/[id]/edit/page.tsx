@@ -46,6 +46,7 @@ export default function EditEmployeePage() {
                     addressCity: data.address?.city,
                     addressState: data.address?.state,
                     addressZipCode: data.address?.zipCode,
+                    mobile: data.personalPhone,
                     addressCountry: data.address?.country,
                 };
 

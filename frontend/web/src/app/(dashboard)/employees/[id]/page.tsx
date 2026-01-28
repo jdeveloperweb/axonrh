@@ -175,7 +175,7 @@ export default function EmployeeDetailPage() {
               {employee.socialName || employee.fullName}
             </h1>
             <p className="text-[var(--color-text-secondary)]">
-              {employee.position?.name || 'Sem cargo'} • {employee.department?.name || 'Sem departamento'}
+              {employee.position?.title || employee.position?.name || 'Sem cargo'} • {employee.department?.name || 'Sem departamento'}
             </p>
           </div>
         </div>
@@ -413,7 +413,7 @@ export default function EmployeeDetailPage() {
                 </div>
                 <div>
                   <p className="text-sm text-[var(--color-text-secondary)]">Cargo</p>
-                  <p className="font-medium text-[var(--color-text)]">{employee.position?.name || '-'}</p>
+                  <p className="font-medium text-[var(--color-text)]">{employee.position?.title || employee.position?.name || '-'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-[var(--color-text-secondary)]">Centro de Custo</p>

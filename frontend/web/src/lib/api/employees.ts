@@ -31,7 +31,8 @@ export interface Employee {
   };
   position?: {
     id: string;
-    name: string;
+    name?: string;
+    title?: string;
     code?: string;
   };
   costCenter?: {
