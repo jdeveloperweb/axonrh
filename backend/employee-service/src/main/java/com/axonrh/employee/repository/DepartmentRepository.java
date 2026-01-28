@@ -29,4 +29,8 @@ public interface DepartmentRepository extends JpaRepository<Department, UUID> {
     List<Department> findAllWithParent(@Param("tenantId") UUID tenantId);
 
     long countByTenantIdAndIsActiveTrue(UUID tenantId);
+    
+    long countByTenantIdAndParentId(UUID tenantId, UUID parentId);
+    
+    List<Department> findByTenantIdAndManagerId(UUID tenantId, UUID managerId);
 }
