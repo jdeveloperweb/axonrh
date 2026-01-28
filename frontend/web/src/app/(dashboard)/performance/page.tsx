@@ -60,13 +60,13 @@ export default function PerformanceDashboard() {
         pdisApi.getManagerStatistics(currentUserId),
       ]);
 
-      setActiveCycles(cycles.data);
-      setPendingEvaluations(evaluations.data);
-      setMyGoals(goals.data);
-      setMyPDIs(pdis.data);
-      setGoalStats(gStats.data);
-      setPDIStats(pStats.data);
-    } catch (error) {
+      setActiveCycles(cycles);
+      setPendingEvaluations(evaluations);
+      setMyGoals(goals);
+      setMyPDIs(pdis);
+      setGoalStats(gStats);
+      setPDIStats(pStats);
+    } catch (error: unknown) {
       console.error('Erro ao carregar dashboard:', error);
     } finally {
       setLoading(false);
@@ -265,9 +265,9 @@ export default function PerformanceDashboard() {
                           <h4 className="font-medium">{evaluation.employeeName}</h4>
                           <p className="text-sm text-muted-foreground">
                             {evaluation.evaluationType === 'SELF' ? 'Autoavaliacao' :
-                             evaluation.evaluationType === 'MANAGER' ? 'Avaliacao de Gestor' :
-                             evaluation.evaluationType === 'PEER' ? 'Avaliacao de Pares' :
-                             'Avaliacao 360'}
+                              evaluation.evaluationType === 'MANAGER' ? 'Avaliacao de Gestor' :
+                                evaluation.evaluationType === 'PEER' ? 'Avaliacao de Pares' :
+                                  'Avaliacao 360'}
                           </p>
                         </div>
                       </div>

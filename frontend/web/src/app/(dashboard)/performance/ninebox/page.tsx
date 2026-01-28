@@ -65,12 +65,12 @@ export default function NineBoxPage() {
     const loadCycles = async () => {
       try {
         const response = await cyclesApi.list();
-        const data = response.data;
-        setCycles(data.filter((c: { status: string; }) => c.status === 'COMPLETED' || c.status === 'CALIBRATION'));
+        const data = response;
+        setCycles(data.filter((c: EvaluationCycle) => c.status === 'COMPLETED' || c.status === 'CALIBRATION'));
         if (data.length > 0) {
           setSelectedCycleId(data[0].id);
         }
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Erro ao carregar ciclos:', error);
       } finally {
         setLoading(false);
@@ -85,8 +85,8 @@ export default function NineBoxPage() {
       try {
         setLoading(true);
         const response = await cyclesApi.getNineBox(selectedCycleId);
-        setMatrix(response.data);
-      } catch (error) {
+        setMatrix(response);
+      } catch (error: unknown) {
         console.error('Erro ao carregar matriz:', error);
       } finally {
         setLoading(false);
@@ -372,7 +372,6 @@ export default function NineBoxPage() {
 
 // Componente de Celula do 9Box
 function NineBoxCell({
-  position,
   config,
   label,
   employees,

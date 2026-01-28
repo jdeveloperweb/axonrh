@@ -120,9 +120,10 @@ export default function AdjustmentsPage() {
         justification: '',
       });
       await loadMyAdjustments();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao criar ajuste:', error);
-      alert(error.response?.data?.message || 'Erro ao criar solicitação');
+      const err = error as { response?: { data?: { message?: string } } };
+      alert(err.response?.data?.message || 'Erro ao criar solicitação');
     } finally {
       setSubmitting(false);
     }
@@ -136,9 +137,10 @@ export default function AdjustmentsPage() {
       setSelectedAdjustment(null);
       setApprovalNotes('');
       await loadPendingAdjustments();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao aprovar:', error);
-      alert(error.response?.data?.message || 'Erro ao aprovar');
+      const err = error as { response?: { data?: { message?: string } } };
+      alert(err.response?.data?.message || 'Erro ao aprovar');
     } finally {
       setApproving(false);
     }
@@ -157,9 +159,10 @@ export default function AdjustmentsPage() {
       setSelectedAdjustment(null);
       setRejectReason('');
       await loadPendingAdjustments();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao rejeitar:', error);
-      alert(error.response?.data?.message || 'Erro ao rejeitar');
+      const err = error as { response?: { data?: { message?: string } } };
+      alert(err.response?.data?.message || 'Erro ao rejeitar');
     } finally {
       setApproving(false);
     }
@@ -171,9 +174,10 @@ export default function AdjustmentsPage() {
     try {
       await timesheetApi.cancelAdjustment(adjustmentId);
       await loadMyAdjustments();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao cancelar:', error);
-      alert(error.response?.data?.message || 'Erro ao cancelar');
+      const err = error as { response?: { data?: { message?: string } } };
+      alert(err.response?.data?.message || 'Erro ao cancelar');
     }
   };
 
@@ -243,7 +247,7 @@ export default function AdjustmentsPage() {
                   <Select
                     value={newAdjustment.adjustmentType}
                     onValueChange={(value) =>
-                      setNewAdjustment({ ...newAdjustment, adjustmentType: value as any })
+                      setNewAdjustment({ ...newAdjustment, adjustmentType: value as TimeAdjustmentRequest['adjustmentType'] })
                     }
                   >
                     <SelectTrigger>
@@ -262,7 +266,7 @@ export default function AdjustmentsPage() {
                   <Select
                     value={newAdjustment.recordType}
                     onValueChange={(value) =>
-                      setNewAdjustment({ ...newAdjustment, recordType: value as any })
+                      setNewAdjustment({ ...newAdjustment, recordType: value as TimeAdjustmentRequest['recordType'] })
                     }
                   >
                     <SelectTrigger>

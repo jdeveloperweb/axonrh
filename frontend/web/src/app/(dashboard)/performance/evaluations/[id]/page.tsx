@@ -151,7 +151,7 @@ export default function EvaluationPage() {
         if (data.status === 'PENDING') {
           await evaluationsApi.start(evaluationId);
         }
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Erro ao carregar avaliacao:', error);
         toast({
           title: 'Erro ao carregar avaliacao',
@@ -208,7 +208,7 @@ export default function EvaluationPage() {
         title: 'Respostas salvas',
         description: 'A avaliacao foi salva com sucesso.',
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao salvar:', error);
       toast({
         title: 'Erro ao salvar',
@@ -234,7 +234,7 @@ export default function EvaluationPage() {
         description: 'Sua avaliacao foi submetida com sucesso.',
       });
       router.push('/performance');
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao submeter:', error);
       toast({
         title: 'Erro ao submeter',

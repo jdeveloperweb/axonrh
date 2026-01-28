@@ -15,7 +15,7 @@ import {
   FileText,
   Users,
   CalendarDays,
-  TrendingUp,
+
   ChevronRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';

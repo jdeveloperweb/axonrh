@@ -6,8 +6,6 @@ import {
     Palette,
     Settings as SettingsIcon,
     ShieldCheck,
-    Bell,
-    Globe,
     Database,
     ArrowRight,
     Building2,

@@ -12,7 +12,7 @@ import {
     Loader2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { employeesApi, EmployeeCreateRequest, Department, Position, CostCenter, EmployeeAddress } from '@/lib/api/employees';
+import { employeesApi, EmployeeCreateRequest, Department, Position, CostCenter } from '@/lib/api/employees';
 import { useToast } from '@/hooks/use-toast';
 import { isValidCpf, isValidEmail } from '@/lib/utils';
 import { DocumentsTab } from './DocumentsTab';
@@ -125,7 +125,7 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                 ]);
                 setDepartments(depts);
                 setCostCenters(centers);
-            } catch (error) {
+            } catch (error: unknown) {
                 console.error('Failed to load reference data:', error);
             }
         };
@@ -178,7 +178,7 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                 try {
                     const pos = await employeesApi.getPositions(formData.departmentId);
                     setPositions(pos);
-                } catch (error) {
+                } catch (error: unknown) {
                     console.error('Failed to load positions:', error);
                 }
             } else {
@@ -232,7 +232,7 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                     state: address.state || prev.address?.state || '',
                 },
             }));
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('Failed to lookup CEP:', error);
         } finally {
             setLoadingCep(false);
@@ -256,7 +256,7 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                 if (!result.valid) {
                     setErrors(prev => ({ ...prev, cpf: result.message || 'CPF já cadastrado' }));
                 }
-            } catch (error) {
+            } catch (error: unknown) {
                 console.error('Failed to validate CPF:', error);
             }
         }
@@ -370,7 +370,7 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                 });
             }
 
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('Erro ao salvar:', error);  // Debug
             let errorMessage = 'Falha ao salvar dados';
 

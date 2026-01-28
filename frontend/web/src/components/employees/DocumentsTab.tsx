@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Trash2, FileText, Upload, Loader2, Download } from 'lucide-react';
+import { FileText, Upload, Loader2, Download } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { employeesApi, EmployeeDocument } from '@/lib/api/employees';
 import { useToast } from '@/hooks/use-toast';

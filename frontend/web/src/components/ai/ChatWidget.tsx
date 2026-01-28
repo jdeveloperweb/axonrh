@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { chatApi, ChatMessage, StreamChunk } from '@/lib/api/ai';
+import { chatApi, ChatMessage } from '@/lib/api/ai';
 import { ChatIcons } from './ChatIcons';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -20,7 +20,6 @@ interface ChatWidgetProps {
 
 export default function ChatWidget({
   conversationId: initialConversationId,
-  onConversationCreated,
   className = '',
   initialMessage,
   onClose,
@@ -28,45 +27,29 @@ export default function ChatWidget({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [conversationId, setConversationId] = useState(initialConversationId);
+  const [conversationId] = useState(initialConversationId);
   const [isStreaming, setIsStreaming] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const initializedRef = useRef(false);
 
-  useEffect(() => {
-    if (conversationId) {
-      loadConversation();
-    }
-  }, [conversationId, loadConversation]);
+  const loadConversation = useCallback(async () => {
+    try {
+      if (!conversationId) return;
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, scrollToBottom]);
-
-  // Handle initial message
-  useEffect(() => {
-    if (initialMessage && !initializedRef.current && !isLoading) {
-      initializedRef.current = true;
-      setInput(initialMessage);
-      // We need to wait a bit for state to settle or call submit directly with the string
-      submitMessage(initialMessage);
+      const response = await chatApi.getConversation(conversationId);
+      // Access messages from the conversation object directly
+      if (response && response.data && response.data.messages) {
+        setMessages(response.data.messages.filter((m: ChatMessage) => m.role !== 'system'));
+      }
+    } catch (error) {
+      console.error('Failed to load conversation:', error);
     }
-  }, [initialMessage, submitMessage, isLoading]);
+  }, [conversationId]);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
-
-  const loadConversation = useCallback(async () => {
-    if (!conversationId) return;
-    try {
-      const response = await chatApi.getConversation(conversationId);
-      setMessages(response.data.messages.filter(m => m.role !== 'system'));
-    } catch (error) {
-      console.error('Error loading conversation:', error);
-    }
-  }, [conversationId]);
 
   const submitMessage = useCallback(async (msgContent: string) => {
     if (!msgContent.trim() || isLoading) return;
@@ -129,6 +112,26 @@ export default function ChatWidget({
       setIsStreaming(false);
     }
   }, [conversationId, isLoading]);
+
+  useEffect(() => {
+    if (conversationId) {
+      loadConversation();
+    }
+  }, [conversationId, loadConversation]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
+
+  // Handle initial message
+  useEffect(() => {
+    if (initialMessage && !initializedRef.current && !isLoading) {
+      initializedRef.current = true;
+      setInput(initialMessage);
+      // We need to wait a bit for state to settle or call submit directly with the string
+      submitMessage(initialMessage);
+    }
+  }, [initialMessage, submitMessage, isLoading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

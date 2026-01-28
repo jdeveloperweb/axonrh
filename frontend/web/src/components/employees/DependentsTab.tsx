@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Trash2, Users, Loader2, Edit2, X, Check } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Plus, Trash2, Users, Loader2, Edit2 } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { employeesApi, EmployeeDependent } from '@/lib/api/employees';
 import { useToast } from '@/hooks/use-toast';
-import { isValidCpf } from '@/lib/utils'; // Make sure this exists or duplicate logic
+
 
 interface DependentsTabProps {
     employeeId: string;

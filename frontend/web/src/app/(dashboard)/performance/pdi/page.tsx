@@ -67,11 +67,11 @@ export default function PDIListPage() {
         pdisApi.getManagerStatistics(currentUserId),
       ]);
 
-      setMyPDIs(my.data);
-      setTeamPDIs(Array.isArray(team) ? team : team.data);
-      setPendingApproval(Array.isArray(pending) ? pending : pending.data);
-      setStats(statistics.data);
-    } catch (error) {
+      setMyPDIs(my);
+      setTeamPDIs(Array.isArray(team) ? team : team);
+      setPendingApproval(Array.isArray(pending) ? pending : pending);
+      setStats(statistics);
+    } catch (error: unknown) {
       console.error('Erro ao carregar PDIs:', error);
     } finally {
       setLoading(false);
@@ -350,7 +350,7 @@ function PDIApprovalList({
       setApproving(pdiId);
       await pdisApi.approve(pdiId, 'current-user-id');
       onApprove();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao aprovar:', error);
     } finally {
       setApproving(null);
@@ -451,7 +451,7 @@ function NewPDIDialog({
       setObjectives('');
       setFocusAreas('');
       setEndDate('');
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao criar PDI:', error);
     } finally {
       setSaving(false);

@@ -42,7 +42,7 @@ export default function DepartmentsPage() {
             ]);
             setDepartments(deptData);
             setManagers(empResponse.content);
-        } catch (error) {
+        } catch (error: unknown) {
             console.error(error);
             toast({
                 title: 'Erro',
@@ -108,7 +108,7 @@ export default function DepartmentsPage() {
             }
             handleCloseModal();
             fetchData();
-        } catch (error) {
+        } catch (error: unknown) {
             console.error(error);
             toast({
                 title: 'Erro',
@@ -128,7 +128,7 @@ export default function DepartmentsPage() {
                 description: 'Departamento excluído com sucesso',
             });
             fetchData();
-        } catch (error) {
+        } catch (error: unknown) {
             console.error(error);
             toast({
                 title: 'Erro',

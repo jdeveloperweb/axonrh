@@ -17,7 +17,7 @@ import {
   LogOut,
   Calculator,
   Database,
-  Bot,
+
   Building2,
   UserCog,
   Briefcase,

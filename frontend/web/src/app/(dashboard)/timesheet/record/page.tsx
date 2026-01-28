@@ -214,9 +214,10 @@ export default function TimeRecordPage() {
       setPhotoBase64(null);
 
       await loadTodayRecords();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao registrar ponto:', error);
-      alert(error.response?.data?.message || 'Erro ao registrar ponto');
+      const err = error as { response?: { data?: { message?: string } } };
+      alert(err.response?.data?.message || 'Erro ao registrar ponto');
     } finally {
       setSubmitting(false);
     }
@@ -316,9 +317,8 @@ export default function TimeRecordPage() {
               return (
                 <Button
                   key={type}
-                  className={`h-24 flex-col gap-2 ${config.color} ${
-                    isExpected ? 'ring-2 ring-offset-2 ring-primary' : ''
-                  }`}
+                  className={`h-24 flex-col gap-2 ${config.color} ${isExpected ? 'ring-2 ring-offset-2 ring-primary' : ''
+                    }`}
                   onClick={() => handleTypeSelect(type)}
                   disabled={submitting}
                 >

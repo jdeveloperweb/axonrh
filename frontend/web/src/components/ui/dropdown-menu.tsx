@@ -52,7 +52,7 @@ const DropdownMenuTrigger = React.forwardRef<
   }
 
   if (asChild && React.isValidElement(children)) {
-    const child = children as React.ReactElement<any>
+    const child = children as React.ReactElement<React.HTMLAttributes<HTMLElement>>
     return React.cloneElement(child, {
       ...props,
       onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -62,14 +62,14 @@ const DropdownMenuTrigger = React.forwardRef<
       },
       ref: (node: HTMLElement) => {
         handleRef(node)
-        const { ref: childRef } = child as any
+        const { ref: childRef } = child as unknown as { ref: React.Ref<HTMLElement> }
         if (typeof childRef === "function") {
           childRef(node)
         } else if (childRef) {
           childRef.current = node
         }
       }
-    })
+    } as any)
   }
 
   return (

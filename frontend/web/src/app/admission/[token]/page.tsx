@@ -13,9 +13,9 @@ import {
   ChevronRight,
   ChevronLeft,
   Loader2,
-  Check,
-  X
+  Check
 } from 'lucide-react';
+import { AdmissionDocument } from '@/lib/api/admissions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { admissionsApi, AdmissionProcess, AdmissionStatus } from '@/lib/api/admissions';
 import { useToast } from '@/hooks/use-toast';
@@ -111,16 +111,17 @@ export default function AdmissionWizardPage() {
       // Load existing documents
       const docs = await admissionsApi.public.getDocuments(token);
       const docsMap: Record<string, any> = {};
-      docs.forEach((doc: any) => {
+      (docs as unknown as AdmissionDocument[]).forEach((doc) => {
         docsMap[doc.documentType] = {
           status: doc.status,
-          message: doc.message,
+          message: doc.validationMessage,
         };
       });
       setDocuments(docsMap);
 
-    } catch (error: any) {
-      if (error.response?.status === 410 || error.message?.includes('expirado')) {
+    } catch (error: unknown) {
+      const err = error as { response?: { status: number }; message?: string };
+      if (err.response?.status === 410 || err.message?.includes('expirado')) {
         toast({
           title: 'Link Expirado',
           description: 'Este link de admissão expirou. Entre em contato com o RH.',
@@ -167,11 +168,11 @@ export default function AdmissionWizardPage() {
       // Validate documents
       try {
         setSubmitting(true);
-        const result = await admissionsApi.public.validateDocuments(token);
+        const result = await admissionsApi.public.validateDocuments(token) as { allValid: boolean };
         if (result.allValid) {
           setCurrentStep(4);
           // Load contract
-          const contract = await admissionsApi.public.getContract(token);
+          const contract = await admissionsApi.public.getContract(token) as { contractHtml: string };
           setContractHtml(contract.contractHtml);
         } else {
           toast({
@@ -239,7 +240,7 @@ export default function AdmissionWizardPage() {
         [type]: { file, status: 'UPLOADING' },
       }));
 
-      const result = await admissionsApi.public.uploadDocument(token, file, type);
+      const result = await admissionsApi.public.uploadDocument(token, file, type) as { validationStatus: string; ocrData?: { message?: string } };
 
       setDocuments(prev => ({
         ...prev,
@@ -349,26 +350,23 @@ export default function AdmissionWizardPage() {
               <div key={step.id} className="flex items-center">
                 <div className="flex flex-col items-center">
                   <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                      step.status === 'completed'
-                        ? 'bg-green-500 text-white'
-                        : step.status === 'current'
+                    className={`w-10 h-10 rounded-full flex items-center justify-center ${step.status === 'completed'
+                      ? 'bg-green-500 text-white'
+                      : step.status === 'current'
                         ? 'bg-blue-600 text-white'
                         : 'bg-gray-200 text-gray-500'
-                    }`}
+                      }`}
                   >
                     {step.status === 'completed' ? <Check className="w-5 h-5" /> : step.icon}
                   </div>
-                  <span className={`text-xs mt-2 ${
-                    step.status === 'current' ? 'text-blue-600 font-medium' : 'text-gray-500'
-                  }`}>
+                  <span className={`text-xs mt-2 ${step.status === 'current' ? 'text-blue-600 font-medium' : 'text-gray-500'
+                    }`}>
                     {step.title}
                   </span>
                 </div>
                 {index < steps.length - 1 && (
-                  <div className={`flex-1 h-0.5 mx-2 ${
-                    step.status === 'completed' ? 'bg-green-500' : 'bg-gray-200'
-                  }`} />
+                  <div className={`flex-1 h-0.5 mx-2 ${step.status === 'completed' ? 'bg-green-500' : 'bg-gray-200'
+                    }`} />
                 )}
               </div>
             ))}
@@ -635,19 +633,17 @@ export default function AdmissionWizardPage() {
                   return (
                     <div
                       key={doc.type}
-                      className={`border rounded-lg p-4 ${
-                        isValid ? 'border-green-300 bg-green-50' :
+                      className={`border rounded-lg p-4 ${isValid ? 'border-green-300 bg-green-50' :
                         isUploaded ? 'border-yellow-300 bg-yellow-50' :
-                        'border-gray-200'
-                      }`}
+                          'border-gray-200'
+                        }`}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-lg ${
-                            isValid ? 'bg-green-100' :
+                          <div className={`p-2 rounded-lg ${isValid ? 'bg-green-100' :
                             isUploaded ? 'bg-yellow-100' :
-                            'bg-gray-100'
-                          }`}>
+                              'bg-gray-100'
+                            }`}>
                             {isValid ? (
                               <Check className="w-5 h-5 text-green-600" />
                             ) : isPending ? (
@@ -676,11 +672,10 @@ export default function AdmissionWizardPage() {
                               if (file) handleDocumentUpload(doc.type, file);
                             }}
                           />
-                          <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                            isUploaded
-                              ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                              : 'bg-blue-600 text-white hover:bg-blue-700'
-                          }`}>
+                          <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${isUploaded
+                            ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            : 'bg-blue-600 text-white hover:bg-blue-700'
+                            }`}>
                             <Upload className="w-4 h-4" />
                             {isUploaded ? 'Substituir' : 'Enviar'}
                           </span>

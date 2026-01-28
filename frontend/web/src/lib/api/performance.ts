@@ -227,185 +227,185 @@ export const cyclesApi = {
     api.post<EvaluationCycle>('/performance/cycles', data),
 
   list: () =>
-    api.get<EvaluationCycle[]>('/performance/cycles'),
+    api.get<EvaluationCycle[], EvaluationCycle[]>('/performance/cycles'),
 
   get: (id: string) =>
-    api.get<EvaluationCycle>(`/performance/cycles/${id}`),
+    api.get<EvaluationCycle, EvaluationCycle>(`/performance/cycles/${id}`),
 
   getActive: () =>
-    api.get<EvaluationCycle[]>('/performance/cycles/active'),
+    api.get<EvaluationCycle[], EvaluationCycle[]>('/performance/cycles/active'),
 
   activate: (id: string) =>
-    api.post<EvaluationCycle>(`/performance/cycles/${id}/activate`),
+    api.post<unknown, EvaluationCycle>(`/performance/cycles/${id}/activate`),
 
   complete: (id: string) =>
-    api.post<EvaluationCycle>(`/performance/cycles/${id}/complete`),
+    api.post<unknown, EvaluationCycle>(`/performance/cycles/${id}/complete`),
 
   getStatistics: (id: string) =>
-    api.get<EvaluationStatistics>(`/performance/cycles/${id}/statistics`),
+    api.get<EvaluationStatistics, EvaluationStatistics>(`/performance/cycles/${id}/statistics`),
 
   getNineBox: (id: string) =>
-    api.get<NineBoxMatrix>(`/performance/cycles/${id}/ninebox`),
+    api.get<NineBoxMatrix, NineBoxMatrix>(`/performance/cycles/${id}/ninebox`),
 };
 
 // ==================== Evaluations API ====================
 
 export const evaluationsApi = {
   create: (data: Partial<Evaluation>) =>
-    api.post<Evaluation>('/performance/evaluations', data),
+    api.post<Evaluation, Evaluation>('/performance/evaluations', data),
 
   get: (id: string): Promise<Evaluation> =>
-    api.get<Evaluation>(`/performance/evaluations/${id}`) as unknown as Promise<Evaluation>,
-  
+    api.get<Evaluation, Evaluation>(`/performance/evaluations/${id}`),
+
 
   getPending: (evaluatorId: string) =>
-    api.get<Evaluation[]>(`/performance/evaluations/pending?evaluatorId=${evaluatorId}`),
+    api.get<Evaluation[], Evaluation[]>(`/performance/evaluations/pending?evaluatorId=${evaluatorId}`),
 
   getByEmployee: (employeeId: string) =>
-    api.get<Evaluation[]>(`/performance/evaluations/employee/${employeeId}`),
+    api.get<Evaluation[], Evaluation[]>(`/performance/evaluations/employee/${employeeId}`),
 
   getByCycle: (cycleId: string, page = 0, size = 20) =>
-    api.get<{ content: Evaluation[]; totalElements: number }>(`/performance/cycles/${cycleId}/evaluations?page=${page}&size=${size}`),
+    api.get<{ content: Evaluation[]; totalElements: number }, { content: Evaluation[]; totalElements: number }>(`/performance/cycles/${cycleId}/evaluations?page=${page}&size=${size}`),
 
   start: (id: string) =>
-    api.post<Evaluation>(`/performance/evaluations/${id}/start`),
+    api.post<unknown, Evaluation>(`/performance/evaluations/${id}/start`),
 
   saveAnswers: (id: string, answers: EvaluationAnswer[]) =>
-    api.put<Evaluation>(`/performance/evaluations/${id}/answers`, answers),
+    api.put<EvaluationAnswer[], Evaluation>(`/performance/evaluations/${id}/answers`, answers),
 
   submit: (id: string, data: { feedback: string; strengths: string; improvements: string }) =>
-    api.post<Evaluation>(`/performance/evaluations/${id}/submit`, data),
+    api.post<{ feedback: string; strengths: string; improvements: string }, Evaluation>(`/performance/evaluations/${id}/submit`, data),
 
   calibrate: (id: string, data: { newScore: number; notes: string }) =>
-    api.post<Evaluation>(`/performance/evaluations/${id}/calibrate`, data),
+    api.post<{ newScore: number; notes: string }, Evaluation>(`/performance/evaluations/${id}/calibrate`, data),
 
   complete: (id: string) =>
-    api.post<Evaluation>(`/performance/evaluations/${id}/complete`),
+    api.post<unknown, Evaluation>(`/performance/evaluations/${id}/complete`),
 
   acknowledge: (id: string, comments: string) =>
-    api.post<Evaluation>(`/performance/evaluations/${id}/acknowledge`, { comments }),
+    api.post<{ comments: string }, Evaluation>(`/performance/evaluations/${id}/acknowledge`, { comments }),
 
   getOverdue: () =>
-    api.get<Evaluation[]>('/performance/evaluations/overdue'),
+    api.get<Evaluation[], Evaluation[]>('/performance/evaluations/overdue'),
 };
 
 // ==================== Goals API ====================
 
 export const goalsApi = {
   create: (data: Partial<Goal>) =>
-    api.post<Goal>('/goals', data),
+    api.post<Goal, Goal>('/goals', data),
 
   get: (id: string) =>
-    api.get<Goal>(`/goals/${id}`),
+    api.get<Goal, Goal>(`/goals/${id}`),
 
   update: (id: string, data: Partial<Goal>) =>
-    api.put<Goal>(`/goals/${id}`, data),
+    api.put<Goal, Goal>(`/goals/${id}`, data),
 
   delete: (id: string) =>
     api.delete(`/goals/${id}`),
 
   getByEmployee: (employeeId: string) =>
-    api.get<Goal[]>(`/goals/employee/${employeeId}`),
+    api.get<Goal[], Goal[]>(`/goals/employee/${employeeId}`),
 
   getByDepartment: (departmentId: string) =>
-    api.get<Goal[]>(`/goals/department/${departmentId}`),
+    api.get<Goal[], Goal[]>(`/goals/department/${departmentId}`),
 
   getByCycle: (cycleId: string, page = 0, size = 20) =>
-    api.get<{ content: Goal[]; totalElements: number }>(`/goals/cycle/${cycleId}?page=${page}&size=${size}`),
+    api.get<{ content: Goal[]; totalElements: number }, { content: Goal[]; totalElements: number }>(`/goals/cycle/${cycleId}?page=${page}&size=${size}`),
 
   getByStatus: (employeeId: string, status: GoalStatus) =>
-    api.get<Goal[]>(`/goals/employee/${employeeId}/status/${status}`),
+    api.get<Goal[], Goal[]>(`/goals/employee/${employeeId}/status/${status}`),
 
   getOverdue: () =>
-    api.get<Goal[]>('/goals/overdue'),
+    api.get<Goal[], Goal[]>('/goals/overdue'),
 
   getAtRisk: () =>
-    api.get<Goal[]>('/goals/at-risk'),
+    api.get<Goal[], Goal[]>('/goals/at-risk'),
 
   getKeyResults: (goalId: string) =>
-    api.get<Goal[]>(`/goals/${goalId}/key-results`),
+    api.get<Goal[], Goal[]>(`/goals/${goalId}/key-results`),
 
   createKeyResult: (goalId: string, data: Partial<Goal>) =>
-    api.post<Goal>(`/goals/${goalId}/key-results`, data),
+    api.post<Goal, Goal>(`/goals/${goalId}/key-results`, data),
 
   getCompanyOKRs: (cycleId: string) =>
-    api.get<Goal[]>(`/goals/company-okrs/${cycleId}`),
+    api.get<Goal[], Goal[]>(`/goals/company-okrs/${cycleId}`),
 
   updateProgress: (id: string, data: { newValue: number; notes?: string; updatedBy: string }) =>
-    api.post<Goal>(`/goals/${id}/progress`, data),
+    api.post<{ newValue: number; notes?: string; updatedBy: string }, Goal>(`/goals/${id}/progress`, data),
 
   complete: (id: string) =>
-    api.post<Goal>(`/goals/${id}/complete`),
+    api.post<unknown, Goal>(`/goals/${id}/complete`),
 
   cancel: (id: string) =>
-    api.post<Goal>(`/goals/${id}/cancel`),
+    api.post<unknown, Goal>(`/goals/${id}/cancel`),
 
   markAtRisk: (id: string) =>
-    api.post<Goal>(`/goals/${id}/at-risk`),
+    api.post<unknown, Goal>(`/goals/${id}/at-risk`),
 
   getStatistics: (employeeId: string) =>
-    api.get<GoalStatistics>(`/goals/employee/${employeeId}/statistics`),
+    api.get<GoalStatistics, GoalStatistics>(`/goals/employee/${employeeId}/statistics`),
 };
 
 // ==================== PDI API ====================
 
 export const pdisApi = {
   create: (data: Partial<PDI>) =>
-    api.post<PDI>('/pdis', data),
+    api.post<PDI, PDI>('/pdis', data),
 
   get: (id: string) =>
-    api.get<PDI>(`/pdis/${id}`),
+    api.get<PDI, PDI>(`/pdis/${id}`),
 
   update: (id: string, data: Partial<PDI>) =>
-    api.put<PDI>(`/pdis/${id}`, data),
+    api.put<PDI, PDI>(`/pdis/${id}`, data),
 
   delete: (id: string) =>
     api.delete(`/pdis/${id}`),
 
   list: (page = 0, size = 20) =>
-    api.get<{ content: PDI[]; totalElements: number }>(`/pdis?page=${page}&size=${size}`),
+    api.get<{ content: PDI[]; totalElements: number }, { content: PDI[]; totalElements: number }>(`/pdis?page=${page}&size=${size}`),
 
   getByEmployee: (employeeId: string) =>
-    api.get<PDI[]>(`/pdis/employee/${employeeId}`),
+    api.get<PDI[], PDI[]>(`/pdis/employee/${employeeId}`),
 
   getActive: (employeeId: string) =>
-    api.get<PDI[]>(`/pdis/employee/${employeeId}/active`),
+    api.get<PDI[], PDI[]>(`/pdis/employee/${employeeId}/active`),
 
   getByTeam: (managerId: string) =>
-    api.get<PDI[]>(`/pdis/team/${managerId}`),
+    api.get<PDI[], PDI[]>(`/pdis/team/${managerId}`),
 
   getPendingApproval: (managerId: string) =>
-    api.get<PDI[]>(`/pdis/pending-approval/${managerId}`),
+    api.get<PDI[], PDI[]>(`/pdis/pending-approval/${managerId}`),
 
   getOverdue: () =>
-    api.get<PDI[]>('/pdis/overdue'),
+    api.get<PDI[], PDI[]>('/pdis/overdue'),
 
   submitForApproval: (id: string) =>
-    api.post<PDI>(`/pdis/${id}/submit`),
+    api.post<unknown, PDI>(`/pdis/${id}/submit`),
 
   approve: (id: string, approverId: string) =>
-    api.post<PDI>(`/pdis/${id}/approve?approverId=${approverId}`),
+    api.post<unknown, PDI>(`/pdis/${id}/approve?approverId=${approverId}`),
 
   activate: (id: string) =>
-    api.post<PDI>(`/pdis/${id}/activate`),
+    api.post<unknown, PDI>(`/pdis/${id}/activate`),
 
   complete: (id: string) =>
-    api.post<PDI>(`/pdis/${id}/complete`),
+    api.post<unknown, PDI>(`/pdis/${id}/complete`),
 
   cancel: (id: string) =>
-    api.post<PDI>(`/pdis/${id}/cancel`),
+    api.post<unknown, PDI>(`/pdis/${id}/cancel`),
 
   addAction: (id: string, action: Partial<PDIAction>) =>
-    api.post<PDI>(`/pdis/${id}/actions`, action),
+    api.post<PDIAction, PDI>(`/pdis/${id}/actions`, action),
 
   removeAction: (pdiId: string, actionId: string) =>
     api.delete<PDI>(`/pdis/${pdiId}/actions/${actionId}`),
 
   startAction: (pdiId: string, actionId: string) =>
-    api.post<PDI>(`/pdis/${pdiId}/actions/${actionId}/start`),
+    api.post<unknown, PDI>(`/pdis/${pdiId}/actions/${actionId}/start`),
 
   completeAction: (pdiId: string, actionId: string, data: { notes?: string; hoursSpent?: number }) =>
-    api.post<PDI>(`/pdis/${pdiId}/actions/${actionId}/complete`, data),
+    api.post<{ notes?: string; hoursSpent?: number }, PDI>(`/pdis/${pdiId}/actions/${actionId}/complete`, data),
 
   createFromEvaluation: (data: {
     evaluationId: string;
@@ -415,8 +415,8 @@ export const pdisApi = {
     managerName: string;
     focusAreas?: string;
   }) =>
-    api.post<PDI>('/pdis/from-evaluation', data),
+    api.post<unknown, PDI>('/pdis/from-evaluation', data),
 
   getManagerStatistics: (managerId: string) =>
-    api.get<PDIStatistics>(`/pdis/manager/${managerId}/statistics`),
+    api.get<PDIStatistics, PDIStatistics>(`/pdis/manager/${managerId}/statistics`),
 };

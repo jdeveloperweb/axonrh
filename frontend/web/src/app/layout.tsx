@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Outfit, Plus_Jakarta_Sans, Inter, Roboto, Open_Sans, Montserrat } from 'next/font/google';
 import './globals.css';
-import { Providers } from '@/components/providers';
+
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],

@@ -49,7 +49,13 @@ export default function EmployeeDetailPage() {
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
   const [documents, setDocuments] = useState<EmployeeDocument[]>([]);
   const [dependents, setDependents] = useState<EmployeeDependent[]>([]);
-  const [history, setHistory] = useState<any[]>([]);
+  interface HistoryEntry {
+    action: string;
+    description: string;
+    createdAt: string;
+    createdBy: string;
+  }
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
 
   // Fetch employee
   const fetchEmployee = useCallback(async () => {
@@ -65,7 +71,6 @@ export default function EmployeeDetailPage() {
         variant: 'destructive',
       });
       router.push('/employees');
-    } finally {
       setLoading(false);
     }
   }, [employeeId, router, toast]);
@@ -94,7 +99,7 @@ export default function EmployeeDetailPage() {
   const fetchHistory = useCallback(async () => {
     try {
       const data = await employeesApi.getHistory(employeeId);
-      setHistory(data);
+      setHistory(data as unknown as HistoryEntry[]);
     } catch (error) {
       console.error('Failed to load history:', error);
     }

@@ -26,7 +26,19 @@ export default function PositionsPage() {
     const [search, setSearch] = useState('');
     const [showModal, setShowModal] = useState(false);
     const [editingPosition, setEditingPosition] = useState<Position | null>(null);
-    const [formData, setFormData] = useState<any>({
+    interface PositionFormData {
+        code: string;
+        title: string;
+        description: string;
+        responsibilities: string;
+        cboCode: string;
+        salaryRangeMin: string;
+        salaryRangeMax: string;
+        level: string;
+        departmentId: string;
+    }
+
+    const [formData, setFormData] = useState<PositionFormData>({
         code: '',
         title: '',
         description: '',
@@ -46,7 +58,7 @@ export default function PositionsPage() {
                 positionsApi.getActivePositions(), // Or getPositions for paginated, currently using active list for simplicity
                 employeesApi.getDepartments()
             ]);
-            setPositions(positionsData as any); // Type assertion if needed or fix API return type
+            setPositions(positionsData);
             setDepartments(departmentsData);
         } catch (error) {
             toast({
@@ -77,10 +89,10 @@ export default function PositionsPage() {
                 description: position.description || '',
                 responsibilities: position.responsibilities || '',
                 cboCode: position.cboCode || '',
-                salaryRangeMin: position.salaryRangeMin || '',
-                salaryRangeMax: position.salaryRangeMax || '',
+                salaryRangeMin: position.salaryRangeMin?.toString() || '',
+                salaryRangeMax: position.salaryRangeMax?.toString() || '',
                 level: position.level || '',
-                departmentId: position.departmentId
+                departmentId: position.departmentId || ''
             });
         } else {
             setEditingPosition(null);
@@ -133,10 +145,12 @@ export default function PositionsPage() {
             }
             handleCloseModal();
             fetchData();
-        } catch (error: any) {
+            fetchData();
+        } catch (error: unknown) {
+            const err = error as { response?: { data?: { message?: string } } };
             toast({
                 title: 'Erro',
-                description: error.response?.data?.message || 'Falha ao salvar cargo',
+                description: err.response?.data?.message || 'Falha ao salvar cargo',
                 variant: 'destructive',
             });
         }

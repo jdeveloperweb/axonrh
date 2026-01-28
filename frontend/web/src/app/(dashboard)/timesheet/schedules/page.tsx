@@ -203,9 +203,10 @@ export default function SchedulesPage() {
     try {
       await timesheetApi.deleteSchedule(scheduleId);
       await loadSchedules();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao excluir:', error);
-      alert(error.response?.data?.message || 'Erro ao excluir escala');
+      const err = error as { response?: { data?: { message?: string } } };
+      alert(err.response?.data?.message || 'Erro ao excluir escala');
     }
   };
 
@@ -226,15 +227,16 @@ export default function SchedulesPage() {
 
       setShowDialog(false);
       await loadSchedules();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao salvar:', error);
-      alert(error.response?.data?.message || 'Erro ao salvar escala');
+      const err = error as { response?: { data?: { message?: string } } };
+      alert(err.response?.data?.message || 'Erro ao salvar escala');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const updateDayConfig = (dayOfWeek: string, field: string, value: any) => {
+  const updateDayConfig = (dayOfWeek: string, field: string, value: string | boolean) => {
     setFormData({
       ...formData,
       days: formData.days.map((d) =>
@@ -351,14 +353,12 @@ export default function SchedulesPage() {
                     return (
                       <div
                         key={day.dayOfWeek}
-                        className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium ${
-                          day.isWorkDay
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium ${day.isWorkDay
                             ? 'bg-primary text-primary-foreground'
                             : 'bg-muted text-muted-foreground'
-                        }`}
-                        title={`${dayConfig?.label}: ${
-                          day.isWorkDay ? `${day.entryTime} - ${day.exitTime}` : 'Folga'
-                        }`}
+                          }`}
+                        title={`${dayConfig?.label}: ${day.isWorkDay ? `${day.entryTime} - ${day.exitTime}` : 'Folga'
+                          }`}
                       >
                         {dayConfig?.short.charAt(0)}
                       </div>

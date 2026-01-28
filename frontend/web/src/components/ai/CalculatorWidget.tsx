@@ -94,7 +94,7 @@ ${withAbono ? `3. Abono Pecuniário (10 dias): ${formatCurrency(abonoValue)}\n4.
     },
 
     termination: (data: TerminationCalculation): CalculationResult => {
-      const { salary, hireDate, terminationDate, terminationType, workedNotice, fgtsBalance = 0 } = data;
+      const { salary, hireDate, terminationDate, terminationType, fgtsBalance = 0 } = data;
 
       // Basic simulation
       const start = new Date(hireDate);
@@ -215,8 +215,8 @@ function TabButton({ active, onClick, children }: {
     <button
       onClick={onClick}
       className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${active
-          ? 'bg-blue-600 text-white'
-          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+        ? 'bg-blue-600 text-white'
+        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
         }`}
     >
       {children}
