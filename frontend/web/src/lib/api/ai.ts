@@ -218,6 +218,8 @@ export const chatApi = {
     let buffer = '';
 
     try {
+      let pendingData: string | null = null;
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) {
@@ -226,6 +228,7 @@ export const chatApi = {
         }
 
         buffer += decoder.decode(value, { stream: true });
+        console.debug('[ChatAPI] Raw buffer received:', buffer.substring(0, 200));
 
         // SSE lines can be separated by \n or \r\n
         const lines = buffer.split(/\r?\n/);
@@ -233,25 +236,54 @@ export const chatApi = {
 
         for (const line of lines) {
           const trimmedLine = line.trim();
-          if (!trimmedLine) continue;
+          if (!trimmedLine) {
+            // Empty line means end of event, process pending data
+            if (pendingData !== null) {
+              try {
+                const chunk = JSON.parse(pendingData) as StreamChunk;
+                console.debug('[ChatAPI] Yielding chunk:', { done: chunk.done, contentLength: chunk.content?.length });
+                yield chunk;
+                if (chunk.done) {
+                  console.debug('[ChatAPI] Chunk marked as done, returning');
+                  return;
+                }
+              } catch (err) {
+                console.warn('[ChatAPI] Failed to parse SSE data:', pendingData, err);
+              }
+              pendingData = null;
+            }
+            continue;
+          }
 
-          if (trimmedLine.startsWith('data: ')) {
-            const data = trimmedLine.slice(6).trim();
+          // Skip event type lines
+          if (trimmedLine.startsWith('event:')) {
+            console.debug('[ChatAPI] Received event type:', trimmedLine);
+            continue;
+          }
+
+          // Skip id lines
+          if (trimmedLine.startsWith('id:')) {
+            continue;
+          }
+
+          if (trimmedLine.startsWith('data:')) {
+            const data = trimmedLine.slice(5).trim();
             if (data === '[DONE]') {
               console.debug('[ChatAPI] Received [DONE] marker');
               return;
             }
-
-            try {
-              const chunk = JSON.parse(data) as StreamChunk;
-              yield chunk;
-              if (chunk.done) {
-                console.debug('[ChatAPI] Chunk marked as done');
-              }
-            } catch (err) {
-              console.warn('[ChatAPI] Failed to parse SSE data:', data, err);
-            }
+            pendingData = data;
           }
+        }
+      }
+
+      // Process any remaining pending data
+      if (pendingData !== null) {
+        try {
+          const chunk = JSON.parse(pendingData) as StreamChunk;
+          yield chunk;
+        } catch (err) {
+          console.warn('[ChatAPI] Failed to parse final SSE data:', pendingData, err);
         }
       }
     } catch (error) {

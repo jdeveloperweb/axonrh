@@ -28,7 +28,7 @@ public class ManagerService {
 
     @Transactional(readOnly = true)
     public List<ManagerDTO> findAllManagers() {
-        UUID tenantId = TenantContext.getCurrentTenant();
+        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
         
         // Buscar todos os departamentos ativos
         List<Department> departments = departmentRepository.findByTenantIdAndIsActiveTrueOrderByName(tenantId);
@@ -56,7 +56,7 @@ public class ManagerService {
 
     @Transactional(readOnly = true)
     public ManagerDTO getManagerDetails(UUID managerId) {
-        UUID tenantId = TenantContext.getCurrentTenant();
+        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
         
         Employee employee = employeeRepository.findByTenantIdAndId(tenantId, managerId)
                 .orElseThrow(() -> new RuntimeException("Gestor não encontrado"));
@@ -66,7 +66,7 @@ public class ManagerService {
 
     @Transactional(readOnly = true)
     public List<ManagerDTO.ManagedDepartmentDTO> getDepartmentsByManager(UUID managerId) {
-        UUID tenantId = TenantContext.getCurrentTenant();
+        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
         
         List<Department> departments = departmentRepository.findByTenantIdAndManagerId(tenantId, managerId);
         
@@ -87,12 +87,12 @@ public class ManagerService {
 
     @Transactional(readOnly = true)
     public List<Employee> getSubordinates(UUID managerId) {
-        UUID tenantId = TenantContext.getCurrentTenant();
+        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
         return employeeRepository.findByTenantIdAndManagerIdAndIsActiveTrue(tenantId, managerId);
     }
 
     private ManagerDTO convertToDTO(Employee employee) {
-        UUID tenantId = TenantContext.getCurrentTenant();
+        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
         
         // Buscar departamentos gerenciados
         List<ManagerDTO.ManagedDepartmentDTO> managedDepartments = getDepartmentsByManager(employee.getId());
@@ -107,7 +107,7 @@ public class ManagerService {
                 .registrationNumber(employee.getRegistrationNumber())
                 .fullName(employee.getFullName())
                 .email(employee.getEmail())
-                .positionName(employee.getPosition() != null ? employee.getPosition().getName() : null)
+                .positionName(employee.getPosition() != null ? employee.getPosition().getTitle() : null)
                 .departmentName(employee.getDepartment() != null ? employee.getDepartment().getName() : null)
                 .managedDepartments(managedDepartments)
                 .totalSubordinates(totalSubordinates)

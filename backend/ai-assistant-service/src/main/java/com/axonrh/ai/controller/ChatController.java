@@ -55,10 +55,16 @@ public class ChatController {
                 request.getMessage(),
                 tenantId,
                 userId
-        ).map(chunk -> ServerSentEvent.<StreamChunk>builder()
+        )
+        .doOnNext(chunk -> log.debug("Sending SSE chunk to client: done={}, contentLength={}", 
+                chunk.isDone(), chunk.getContent() != null ? chunk.getContent().length() : 0))
+        .map(chunk -> ServerSentEvent.<StreamChunk>builder()
+                .event("message")
                 .data(chunk)
                 .build())
-        .doOnTerminate(() -> log.info("Stream chat request completed for conversation: {}", request.getConversationId()));
+        .doOnComplete(() -> log.info("Stream chat request completed successfully for conversation: {}", request.getConversationId()))
+        .doOnError(e -> log.error("Stream chat error for conversation {}: {}", request.getConversationId(), e.getMessage(), e))
+        .doOnCancel(() -> log.warn("Stream chat cancelled by client for conversation: {}", request.getConversationId()));
     }
 
     @PostMapping("/conversations")

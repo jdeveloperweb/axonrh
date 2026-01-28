@@ -28,7 +28,7 @@ public class DepartmentService {
 
     @Transactional(readOnly = true)
     public List<DepartmentDTO> findAll() {
-        UUID tenantId = TenantContext.getCurrentTenant();
+        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
         List<Department> departments = departmentRepository.findByTenantIdAndIsActiveTrueOrderByName(tenantId);
         return departments.stream()
                 .map(this::convertToDTO)
@@ -37,7 +37,7 @@ public class DepartmentService {
 
     @Transactional(readOnly = true)
     public DepartmentDTO findById(UUID id) {
-        UUID tenantId = TenantContext.getCurrentTenant();
+        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
         Department department = departmentRepository.findByTenantIdAndId(tenantId, id)
                 .orElseThrow(() -> new RuntimeException("Departamento não encontrado"));
         return convertToDTO(department);
@@ -45,7 +45,7 @@ public class DepartmentService {
 
     @Transactional
     public DepartmentDTO create(CreateDepartmentDTO dto) {
-        UUID tenantId = TenantContext.getCurrentTenant();
+        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
         
         // Validar código único
         if (departmentRepository.existsByTenantIdAndCode(tenantId, dto.getCode())) {
@@ -88,7 +88,7 @@ public class DepartmentService {
 
     @Transactional
     public DepartmentDTO update(UUID id, UpdateDepartmentDTO dto) {
-        UUID tenantId = TenantContext.getCurrentTenant();
+        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
         
         Department department = departmentRepository.findByTenantIdAndId(tenantId, id)
                 .orElseThrow(() -> new RuntimeException("Departamento não encontrado"));
@@ -140,7 +140,7 @@ public class DepartmentService {
 
     @Transactional
     public void delete(UUID id) {
-        UUID tenantId = TenantContext.getCurrentTenant();
+        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
         
         Department department = departmentRepository.findByTenantIdAndId(tenantId, id)
                 .orElseThrow(() -> new RuntimeException("Departamento não encontrado"));
@@ -154,7 +154,7 @@ public class DepartmentService {
 
     @Transactional
     public DepartmentDTO assignManager(UUID departmentId, UUID managerId) {
-        UUID tenantId = TenantContext.getCurrentTenant();
+        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
         
         Department department = departmentRepository.findByTenantIdAndId(tenantId, departmentId)
                 .orElseThrow(() -> new RuntimeException("Departamento não encontrado"));
@@ -178,7 +178,7 @@ public class DepartmentService {
 
     @Transactional(readOnly = true)
     public List<DepartmentDTO> findByManagerId(UUID managerId) {
-        UUID tenantId = TenantContext.getCurrentTenant();
+        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
         List<Department> departments = departmentRepository.findByTenantIdAndManagerId(tenantId, managerId);
         return departments.stream()
                 .map(this::convertToDTO)
@@ -213,7 +213,7 @@ public class DepartmentService {
         
         // Gestor
         if (department.getManagerId() != null) {
-            UUID tenantId = TenantContext.getCurrentTenant();
+            UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
             employeeRepository.findByTenantIdAndId(tenantId, department.getManagerId())
                     .ifPresent(manager -> {
                         builder.manager(DepartmentDTO.ManagerBasicDTO.builder()
@@ -221,7 +221,7 @@ public class DepartmentService {
                                 .registrationNumber(manager.getRegistrationNumber())
                                 .fullName(manager.getFullName())
                                 .email(manager.getEmail())
-                                .positionName(manager.getPosition() != null ? manager.getPosition().getName() : null)
+                                .positionName(manager.getPosition() != null ? manager.getPosition().getTitle() : null)
                                 .build());
                     });
         }
@@ -236,7 +236,7 @@ public class DepartmentService {
         }
         
         // Contadores
-        UUID tenantId = TenantContext.getCurrentTenant();
+        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
         Long employeeCount = employeeRepository.countByTenantIdAndDepartmentIdAndIsActiveTrue(tenantId, department.getId());
         Long subdepartmentCount = departmentRepository.countByTenantIdAndParentId(tenantId, department.getId());
         
