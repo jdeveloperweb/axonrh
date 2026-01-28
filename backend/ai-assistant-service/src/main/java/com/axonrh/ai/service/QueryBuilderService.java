@@ -80,7 +80,94 @@ public class QueryBuilderService {
                      break_end, total_hours, overtime_hours, status)
         """;
 
-    // ... (rest of the file until extractJson)
+    public QueryResult buildAndExecuteQuery(String question, Map<String, Object> entities, UUID tenantId, List<Object> permissions) {
+        try {
+            // Get available templates
+            List<QueryTemplate> templates = queryTemplateRepository.findAllWithDefaults(tenantId);
+            String templatesStr = formatTemplates(templates);
+
+            // Build prompt
+            String prompt = QUERY_BUILDER_PROMPT
+                    .replace("{schema}", DATABASE_SCHEMA)
+                    .replace("{templates}", templatesStr)
+                    .replace("{question}", question)
+                    .replace("{entities}", entities != null ? entities.toString() : "{}");
+
+            // Call LLM
+            ChatRequest request = ChatRequest.builder()
+                    .messages(List.of(
+                            ChatMessage.builder().role(ChatMessage.Role.SYSTEM).content(prompt).build()
+                    ))
+                    .temperature(0.1) // Low temperature for stability
+                    .build();
+
+            ChatResponse response = llmService.chat(request);
+            String jsonContent = extractJson(response.getContent());
+
+            // Parse response
+            JsonNode root = objectMapper.readTree(jsonContent);
+            String sql = root.path("sql").asText();
+            
+            // Basic validation
+            if (sql == null || sql.isBlank()) {
+                return QueryResult.builder()
+                        .success(false)
+                        .error("LLM não gerou SQL válido")
+                        .build();
+            }
+
+            String explanation = root.path("explanation").asText();
+            String templateUsed = root.path("template_used").asText();
+            
+            Map<String, Object> params = new HashMap<>();
+            if (root.has("parameters")) {
+                JsonNode paramsNode = root.get("parameters");
+                paramsNode.fields().forEachRemaining(entry -> {
+                    JsonNode value = entry.getValue();
+                    if (value.isTextual()) {
+                        params.put(entry.getKey(), value.asText());
+                    } else if (value.isNumber()) {
+                        params.put(entry.getKey(), value.numberValue());
+                    } else if (value.isBoolean()) {
+                        params.put(entry.getKey(), value.booleanValue());
+                    } else {
+                        params.put(entry.getKey(), value.asText());
+                    }
+                });
+            }
+            
+            // Enforce tenant isolation
+            params.put("tenant_id", tenantId);
+
+            // Execute query
+            List<Map<String, Object>> data = jdbcTemplate.queryForList(sql, params);
+
+            return QueryResult.builder()
+                    .success(true)
+                    .data(data)
+                    .rowCount(data.size())
+                    .sql(sql)
+                    .explanation(explanation)
+                    .templateUsed(templateUsed)
+                    .build();
+
+        } catch (Exception e) {
+            log.error("Error executing query builder", e);
+            return QueryResult.builder()
+                    .success(false)
+                    .error(e.getMessage())
+                    .build();
+        }
+    }
+
+    private String formatTemplates(List<QueryTemplate> templates) {
+        if (templates.isEmpty()) return "Nenhum template disponível.";
+        StringBuilder sb = new StringBuilder();
+        for (QueryTemplate t : templates) {
+            sb.append(String.format("- %s: %s\n", t.getName(), t.getDescription()));
+        }
+        return sb.toString();
+    }
 
     private String extractJson(String content) {
         if (content == null) return "{}";
