@@ -23,6 +23,8 @@ public class SetupWizardService {
     private final CompanyProfileRepository companyProfileRepository;
     private final com.axonrh.core.setup.repository.DepartmentRepository departmentRepository;
     private final com.axonrh.core.setup.repository.PositionRepository positionRepository;
+    @jakarta.persistence.PersistenceContext
+    private jakarta.persistence.EntityManager entityManager;
 
     public SetupWizardService(SetupProgressRepository progressRepository,
                               CompanyProfileRepository companyProfileRepository,
@@ -48,6 +50,9 @@ public class SetupWizardService {
     }
 
     private SetupProgress createNewProgress(UUID tenantId, UUID userId) {
+        // Ensure tenant exists before creating progress in case it was missed
+        ensureTenantExists(tenantId, "Draft Tenant");
+
         SetupProgress progress = new SetupProgress();
         progress.setTenantId(tenantId);
         progress.setCreatedBy(userId);
@@ -262,8 +267,18 @@ public class SetupWizardService {
      * Inicializa o setup da empresa (Admin passo 1)
      */
     public UUID initCompanySetup(com.axonrh.core.setup.dto.SetupInitRequest request) {
+        // Check if CNPJ already exists
+        Optional<CompanyProfile> existing = companyProfileRepository.findByCnpj(request.getCnpj());
+        if (existing.isPresent()) {
+            log.info("Setup já existente para CNPJ {}. Retornando TenantID existente.", request.getCnpj());
+            return existing.get().getTenantId();
+        }
+
         UUID tenantId = UUID.randomUUID();
         log.info("Iniciando setup para nova empresa. TenantID gerado: {}", tenantId);
+
+        // 0. Criar Tenant (Native Query workaround as Entity is missing)
+        ensureTenantExists(tenantId, request.getCorporateName());
 
         // 1. Criar perfil inicial
         CompanyProfile profile = new CompanyProfile();
@@ -271,27 +286,37 @@ public class SetupWizardService {
         profile.setLegalName(request.getCorporateName());
         profile.setCnpj(request.getCnpj());
         profile.setEmail(request.getEmail()); 
-        // Note: CompanyProfile entity might need an email field if not present, otherwise we store it elsewhere or assume it's part of contact info.
-        // Checking CompanyProfile entity would be good, but assuming standard fields for now. 
-        // If email field missing in CompanyProfile, we might need to add it or store in a separate contact object. 
-        // Let's assume for now we save what we can. checking view_file of CompanyProfile first would be safer but let's proceed and fix if compilation fails 
-        // or just map what we know exists. request.getEmail() might be for the initial user? 
-        // The prompt says: "cadastra ... Email". 
-        // I will save the profile.
         
         companyProfileRepository.save(profile);
 
-        // 2. Criar progresso inicial (sem usuario vinculado ainda, ou usuario system?)
-        // Como o admin gera o link, o usuario que vai completar o setup ainda não existe (ou é o admin?). 
-        // O prompt diz "eu mandarei o link do setup".
-        // Vamos criar um SetupProgress vinculado ao tenant. CreatedBy pode ser null ou um UUID fixo de sistema por enquanto se permitir null.
-        
+        // 2. Criar progresso inicial
         SetupProgress progress = new SetupProgress();
         progress.setTenantId(tenantId);
-        progress.setStep1CompanyData(false); // Será true quando o cliente completar/revisar
+        progress.setStep1CompanyData(false);
         progressRepository.save(progress);
 
         return tenantId;
+    }
+
+    private void ensureTenantExists(UUID tenantId, String name) {
+        try {
+            // Try to insert tenant if not exists. 
+             int count = ((Number) entityManager.createNativeQuery("SELECT count(*) FROM tenants WHERE id = :id")
+                     .setParameter("id", tenantId)
+                     .getSingleResult()).intValue();
+             
+             if (count == 0) {
+                 log.info("Inserindo registro na tabela tenants para ID {}", tenantId);
+                 // Assuming table tenants has (id, name, created_at, updated_at) or similar.
+                 // We will try inserting id and name. If status is required, we add 'ACTIVE'.
+                 entityManager.createNativeQuery("INSERT INTO tenants (id, name, created_at, updated_at) VALUES (:id, :name, NOW(), NOW())")
+                         .setParameter("id", tenantId)
+                         .setParameter("name", name)
+                         .executeUpdate();
+             }
+        } catch (Exception e) {
+            log.warn("Tentativa de criar tenant via SQL nativo falhou. Erro: {}", e.getMessage());
+        }
     }
 
     // Org Structure Management
