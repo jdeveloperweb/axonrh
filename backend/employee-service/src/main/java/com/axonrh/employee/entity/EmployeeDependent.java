@@ -18,7 +18,7 @@ import java.util.UUID;
  * Entidade de dependente do colaborador.
  */
 @Entity
-@Table(name = "employee_dependents")
+@Table(name = "employee_dependents", schema = "shared")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter

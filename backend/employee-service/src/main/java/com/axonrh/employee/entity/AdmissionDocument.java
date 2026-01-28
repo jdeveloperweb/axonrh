@@ -16,7 +16,7 @@ import java.util.UUID;
  * T110 - Documento enviado no processo de admissao.
  */
 @Entity
-@Table(name = "admission_documents")
+@Table(name = "admission_documents", schema = "shared")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter

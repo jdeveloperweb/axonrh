@@ -17,11 +17,13 @@ import {
   LogOut,
   Calculator,
   Database,
+  Bot,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
 import { useThemeStore } from '@/stores/theme-store';
 import { useLayoutStore } from '@/stores/layout-store';
+import { StatusIndicator } from '@/components/StatusIndicator';
 
 // ==================== Types ====================
 
@@ -171,6 +173,16 @@ export function Sidebar() {
               </div>
             );
           })}
+          <div className="mt-4 px-2">
+            {!isSidebarCollapsed && (
+              <StatusIndicator variant="sidebar" />
+            )}
+            {isSidebarCollapsed && (
+              <div className="flex justify-center py-2">
+                <StatusIndicator variant="sidebar" className="px-0 py-0 justify-center w-8 h-8 rounded-full" />
+              </div>
+            )}
+          </div>
         </div>
       </nav>
 

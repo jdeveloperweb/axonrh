@@ -189,10 +189,18 @@ public class QueryBuilderService {
             String content = extractJson(response.getContent());
             JsonNode json = objectMapper.readTree(content);
 
+            if (!json.has("sql")) {
+                log.warn("LLM response did not contain SQL. Content: {}", content);
+                return QueryResult.builder()
+                        .success(false)
+                        .error("Falha ao interpretar a resposta da IA.")
+                        .build();
+            }
+
             String sql = json.get("sql").asText();
-            String explanation = json.get("explanation").asText();
-            Map<String, Object> parameters = objectMapper.convertValue(
-                    json.get("parameters"), Map.class);
+            String explanation = json.has("explanation") ? json.get("explanation").asText() : "";
+            Map<String, Object> parameters = json.has("parameters") ? 
+                    objectMapper.convertValue(json.get("parameters"), Map.class) : new HashMap<>();
 
             // Security validation
             if (!isQuerySafe(sql)) {
@@ -279,14 +287,21 @@ public class QueryBuilderService {
     }
 
     private String extractJson(String content) {
-        if (content == null) return "";
-        content = content.trim();
-        int startIndex = content.indexOf("{");
-        int endIndex = content.lastIndexOf("}");
+        if (content == null) return "{}";
+        
+        // Clean markdown code blocks if present
+        String cleaned = content.replaceAll("```json", "")
+                               .replaceAll("```", "")
+                               .trim();
+        
+        int startIndex = cleaned.indexOf("{");
+        int endIndex = cleaned.lastIndexOf("}");
         if (startIndex >= 0 && endIndex > startIndex) {
-            return content.substring(startIndex, endIndex + 1);
+            return cleaned.substring(startIndex, endIndex + 1);
         }
-        return content;
+        
+        log.warn("Failed to extract JSON from: {}", content);
+        return "{}";
     }
 
     @lombok.Data

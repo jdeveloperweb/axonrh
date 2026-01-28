@@ -16,7 +16,7 @@ import java.util.UUID;
  * Entidade de centro de custo.
  */
 @Entity
-@Table(name = "cost_centers")
+@Table(name = "cost_centers", schema = "shared")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter

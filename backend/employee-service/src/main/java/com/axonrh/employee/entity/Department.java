@@ -17,7 +17,7 @@ import java.util.UUID;
  * Entidade de departamento/area.
  */
 @Entity
-@Table(name = "departments")
+@Table(name = "departments", schema = "shared")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter

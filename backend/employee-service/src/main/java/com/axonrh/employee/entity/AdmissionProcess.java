@@ -22,7 +22,7 @@ import java.util.UUID;
  * Controla todo o fluxo desde a geracao do link ate a conclusao.
  */
 @Entity
-@Table(name = "admission_processes")
+@Table(name = "admission_processes", schema = "shared")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter

@@ -16,7 +16,7 @@ import java.util.UUID;
  * Entidade de cargo.
  */
 @Entity
-@Table(name = "positions")
+@Table(name = "positions", schema = "shared")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter

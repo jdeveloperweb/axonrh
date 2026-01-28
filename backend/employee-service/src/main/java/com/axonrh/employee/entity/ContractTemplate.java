@@ -14,7 +14,7 @@ import java.util.UUID;
  * T112 - Template de contrato de trabalho.
  */
 @Entity
-@Table(name = "contract_templates")
+@Table(name = "contract_templates", schema = "shared")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter

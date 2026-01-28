@@ -21,7 +21,7 @@ import java.util.UUID;
  * Contem todos os dados pessoais, profissionais e bancarios.
  */
 @Entity
-@Table(name = "employees")
+@Table(name = "employees", schema = "shared")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter

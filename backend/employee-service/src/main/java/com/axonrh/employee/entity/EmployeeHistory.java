@@ -14,7 +14,7 @@ import java.util.UUID;
  * Entidade de historico de alteracoes do colaborador.
  */
 @Entity
-@Table(name = "employee_history")
+@Table(name = "employee_history", schema = "shared")
 @Getter
 @Setter
 @NoArgsConstructor

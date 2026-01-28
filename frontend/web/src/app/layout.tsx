@@ -41,7 +41,7 @@ export const metadata: Metadata = {
   keywords: ['RH', 'Departamento Pessoal', 'Gestão de Pessoas', 'IA', 'HRIS'],
 };
 
-import { StatusIndicator } from "@/components/StatusIndicator";
+
 
 export default function RootLayout({
   children,
@@ -52,7 +52,6 @@ export default function RootLayout({
     <html lang="pt-BR">
       <body className={`${plusJakarta.variable} ${outfit.variable} ${inter.variable} ${roboto.variable} ${openSans.variable} ${montserrat.variable} font-sans`}>
         {children}
-        <StatusIndicator />
       </body>
     </html>
   );
