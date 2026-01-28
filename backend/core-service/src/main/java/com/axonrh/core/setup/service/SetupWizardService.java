@@ -404,6 +404,11 @@ public class SetupWizardService {
     public com.axonrh.core.setup.entity.Position savePosition(UUID tenantId, com.axonrh.core.setup.entity.Position position) {
         position.setTenantId(tenantId);
         
+        // Vincular departamento se departmentId estiver presente e department for null
+        if (position.getDepartmentId() != null && position.getDepartment() == null) {
+            departmentRepository.findById(position.getDepartmentId()).ifPresent(position::setDepartment);
+        }
+        
         // Lógica de Upsert por Code
         Optional<com.axonrh.core.setup.entity.Position> existing = 
                 positionRepository.findByTenantIdAndCode(tenantId, position.getCode());

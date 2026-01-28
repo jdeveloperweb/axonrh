@@ -1,5 +1,7 @@
 package com.axonrh.core.setup.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.axonrh.core.setup.entity.Department;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
@@ -43,9 +45,14 @@ public class Position {
     @JoinColumn(name = "department_id")
     private Department department;
 
+    @Transient
+    @JsonProperty("departmentId")
+    private UUID departmentId;
+
     @Column(name = "is_active")
     private Boolean isActive = true;
 
+    // ... (rest of fields)
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
@@ -98,7 +105,23 @@ public class Position {
     public void setLevel(String level) { this.level = level; }
 
     public Department getDepartment() { return department; }
-    public void setDepartment(Department department) { this.department = department; }
+    public void setDepartment(Department department) { 
+        this.department = department;
+        if (department != null) {
+            this.departmentId = department.getId();
+        }
+    }
+
+    @JsonProperty("departmentId")
+    public UUID getDepartmentId() { 
+        if (departmentId != null) return departmentId;
+        return department != null ? department.getId() : null; 
+    }
+
+    @JsonProperty("departmentId")
+    public void setDepartmentId(UUID departmentId) { 
+        this.departmentId = departmentId; 
+    }
 
     public Boolean getIsActive() { return isActive; }
     public void setIsActive(Boolean isActive) { this.isActive = isActive; }
