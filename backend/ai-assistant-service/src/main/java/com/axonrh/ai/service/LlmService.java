@@ -101,8 +101,8 @@ public class LlmService {
                     .timestamp(Instant.now())
                     .build();
         } catch (Exception e) {
-            log.error("Erro no chat OpenAI: {}", e.getMessage(), e);
-            throw new RuntimeException("Falha ao obter resposta da OpenAI. Por favor, verifique as configurações ou tente novamente mais tarde.", e);
+            log.error("Erro crítico na comunicação com OpenAI Chat ({}): {}", openAiModel, e.getMessage(), e);
+            throw new RuntimeException("Falha ao obter resposta da OpenAI. Por favor, verifique se a API Key está configurada corretamente ou se há saldo na conta.", e);
         }
     }
 

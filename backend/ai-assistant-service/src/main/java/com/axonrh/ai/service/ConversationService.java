@@ -155,7 +155,56 @@ public class ConversationService {
         conversation.addMessage(userMsg);
         conversationRepository.save(conversation);
 
-        // Build chat request with conversation history
+        // Analyze intent
+        NluService.NluResult nluResult = nluService.analyze(userMessage, tenantId);
+        log.debug("Stream NLU Result: intent={}, actionType={}", nluResult.getIntent(), nluResult.getActionType());
+
+        // For non-INFORMATION actions, handle synchronously but return as Flux
+        if (nluResult.getActionType() != AiIntent.ActionType.INFORMATION) {
+            String response;
+            Message.MessageType responseType = Message.MessageType.TEXT;
+
+            try {
+                response = switch (nluResult.getActionType()) {
+                    case DATABASE_QUERY -> handleDatabaseQuery(userMessage, nluResult, tenantId, userId);
+                    case CALCULATION -> handleCalculation(nluResult);
+                    case KNOWLEDGE_SEARCH -> handleKnowledgeSearch(userMessage, nluResult, tenantId);
+                    default -> null;
+                };
+
+                if (response != null) {
+                    if (nluResult.getActionType() == AiIntent.ActionType.DATABASE_QUERY) {
+                        responseType = Message.MessageType.QUERY_RESULT;
+                    } else if (nluResult.getActionType() == AiIntent.ActionType.CALCULATION) {
+                        responseType = Message.MessageType.CALCULATION;
+                    }
+
+                    // Save assistant response
+                    Message assistantMsg = Message.builder()
+                            .id(UUID.randomUUID().toString())
+                            .role(Message.MessageRole.ASSISTANT)
+                            .content(response)
+                            .type(responseType)
+                            .timestamp(Instant.now())
+                            .build();
+                    conversation.addMessage(assistantMsg);
+                    conversationRepository.save(conversation);
+
+                    return Flux.just(StreamChunk.builder()
+                            .content(response)
+                            .done(true)
+                            .build());
+                }
+            } catch (Exception e) {
+                log.error("Error processing stream action: {}", e.getMessage(), e);
+                return Flux.just(StreamChunk.builder()
+                        .content("Desculpe, ocorreu um erro ao processar sua solicitação.")
+                        .done(true)
+                        .build());
+            }
+        }
+
+        // Fallback to regular chat streaming
         List<ChatMessage> messages = buildChatMessages(conversation);
 
         ChatRequest request = ChatRequest.builder()
