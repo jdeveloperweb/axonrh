@@ -190,10 +190,16 @@ public class ConversationService {
                     conversation.addMessage(assistantMsg);
                     conversationRepository.save(conversation);
 
-                    return Flux.just(StreamChunk.builder()
-                            .content(response)
-                            .done(true)
-                            .build());
+                    return Flux.just(
+                            StreamChunk.builder()
+                                    .content(response)
+                                    .type(responseType)
+                                    .done(false)
+                                    .build(),
+                            StreamChunk.builder()
+                                    .done(true)
+                                    .build()
+                    );
                 }
             } catch (Exception e) {
                 log.error("Error processing stream action: {}", e.getMessage(), e);

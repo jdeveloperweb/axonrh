@@ -65,6 +65,7 @@ export interface StreamChunk {
   content: string;
   done: boolean;
   finishReason?: string;
+  type?: string;
 }
 
 export interface KnowledgeDocument {

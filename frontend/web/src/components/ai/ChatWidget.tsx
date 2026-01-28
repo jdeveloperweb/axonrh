@@ -98,14 +98,21 @@ export default function ChatWidget({
       let fullContent = '';
 
       for await (const chunk of chatApi.streamChat(userMessage.content, conversationId)) {
-        if (!chunk.done) {
+        if (chunk.content) {
           fullContent += chunk.content;
-          setMessages(prev =>
-            prev.map(m =>
-              m.id === assistantId ? { ...m, content: fullContent } : m
-            )
-          );
         }
+
+        setMessages(prev =>
+          prev.map(m =>
+            m.id === assistantId
+              ? {
+                ...m,
+                content: fullContent,
+                type: (chunk.type || m.type) as ChatMessage['type']
+              }
+              : m
+          )
+        );
       }
     } catch (error) {
       console.error('Error sending message:', error);
