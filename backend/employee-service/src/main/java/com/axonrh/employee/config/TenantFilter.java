@@ -21,7 +21,7 @@ import java.io.IOException;
 @Slf4j
 public class TenantFilter extends OncePerRequestFilter {
 
-    private static final String TENANT_HEADER = "X-Tenant-ID";
+    private static final String TENANT_HEADER = "X-Tenant-Id";
     private static final String CORRELATION_HEADER = "X-Correlation-ID";
 
     @Override
@@ -34,8 +34,11 @@ public class TenantFilter extends OncePerRequestFilter {
             String tenantId = request.getHeader(TENANT_HEADER);
 
             if (tenantId != null && !tenantId.isBlank()) {
+                log.debug("Tenant ID encontrado no header {}: {}", TENANT_HEADER, tenantId);
                 TenantContext.setCurrentTenant(tenantId);
                 MDC.put("tenantId", tenantId);
+            } else {
+                log.warn("Aviso: Header {} nao encontrado no request para {}", TENANT_HEADER, request.getRequestURI());
             }
 
             // Extrai correlation ID para tracing

@@ -83,8 +83,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${JWT_ISSUER:http://localhost:8081}
-          jwk-set-uri: ${JWT_JWK_URI:http://localhost:8081/.well-known/jwks.json}
+          issuer-uri: ${JWT_ISSUER:http://axonrh-auth-service:8081}
+          jwk-set-uri: ${JWT_JWK_URI:http://axonrh-auth-service:8081/.well-known/jwks.json}
 
 # MinIO Configuration
 minio:
@@ -116,7 +116,7 @@ multitenancy:
 # Logging
 logging:
   level:
-    com.axonrh.employee: ${LOG_LEVEL:INFO}
+    com.axonrh.employee: ${LOG_LEVEL:DEBUG}
     org.hibernate.SQL: ${SQL_LOG_LEVEL:WARN}
     org.springframework.kafka: INFO
   pattern:

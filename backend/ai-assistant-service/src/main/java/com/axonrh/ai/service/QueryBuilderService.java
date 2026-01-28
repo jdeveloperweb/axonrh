@@ -50,7 +50,7 @@ public class QueryBuilderService {
         {
             "sql": "SELECT ... FROM ... WHERE tenant_id = :tenant_id ...",
             "parameters": {"param1": "value1"},
-            "explanation": "Explicação breve da consulta, para uma pessoa comum,não se falar de SQL ou campo,explica para uma pessoa comum que irá interpretar a informação",
+            "explanation": "Explicação breve da consulta, para uma pessoa comum com cordialidade, com um nivel de intimidade pessoal,não se falar de SQL, explique para uma pessoa comum, que irá interpretar a informação. como se você estivesse entregando algo pra ela.",
             "template_used": "nome_do_template ou null se customizada"
         }
 

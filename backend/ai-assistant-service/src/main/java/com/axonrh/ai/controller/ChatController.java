@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
@@ -38,7 +39,7 @@ public class ChatController {
     }
 
     @PostMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<StreamChunk> streamChat(
+    public Flux<ServerSentEvent<StreamChunk>> streamChat(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @RequestHeader("X-User-ID") UUID userId,
             @RequestBody ChatRequest request) {
@@ -48,7 +49,9 @@ public class ChatController {
                 request.getMessage(),
                 tenantId,
                 userId
-        );
+        ).map(chunk -> ServerSentEvent.<StreamChunk>builder()
+                .data(chunk)
+                .build());
     }
 
     @PostMapping("/conversations")

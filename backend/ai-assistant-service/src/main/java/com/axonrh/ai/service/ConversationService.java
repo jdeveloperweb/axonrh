@@ -19,8 +19,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -162,54 +162,61 @@ public class ConversationService {
                 .flatMapMany(nluResult -> {
                     log.debug("Stream NLU Result: intent={}, actionType={}", nluResult.getIntent(), nluResult.getActionType());
 
-                    // For non-INFORMATION actions, handle synchronously but return as Flux
+                    // For non-INFORMATION actions, handle synchronouly but return as Flux
                     if (nluResult.getActionType() != AiIntent.ActionType.INFORMATION) {
                         return Mono.fromCallable(() -> {
-                            String response;
-                            Message.MessageType responseType = Message.MessageType.TEXT;
+                            log.debug("Processing specialized action: {}", nluResult.getActionType());
+                            String syncResponse;
+                            Message.MessageType syncResponseType = Message.MessageType.TEXT;
 
-                            response = switch (nluResult.getActionType()) {
+                            syncResponse = switch (nluResult.getActionType()) {
                                 case DATABASE_QUERY -> handleDatabaseQuery(userMessage, nluResult, tenantId, userId);
                                 case CALCULATION -> handleCalculation(nluResult);
                                 case KNOWLEDGE_SEARCH -> handleKnowledgeSearch(userMessage, nluResult, tenantId);
                                 default -> null;
                             };
 
-                            if (response != null) {
+                            if (syncResponse != null) {
                                 if (nluResult.getActionType() == AiIntent.ActionType.DATABASE_QUERY) {
-                                    responseType = Message.MessageType.QUERY_RESULT;
+                                    syncResponseType = Message.MessageType.QUERY_RESULT;
                                 } else if (nluResult.getActionType() == AiIntent.ActionType.CALCULATION) {
-                                    responseType = Message.MessageType.CALCULATION;
+                                    syncResponseType = Message.MessageType.CALCULATION;
                                 }
 
                                 // Save assistant response
                                 Message assistantMsg = Message.builder()
                                         .id(UUID.randomUUID().toString())
                                         .role(Message.MessageRole.ASSISTANT)
-                                        .content(response)
-                                        .type(responseType)
+                                        .content(syncResponse)
+                                        .type(syncResponseType)
                                         .timestamp(Instant.now())
                                         .build();
                                 conversation.addMessage(assistantMsg);
                                 conversationRepository.save(conversation);
 
-                                return response;
+                                return syncResponse;
                             }
                             return null;
-                        }).flatMapMany(response -> {
-                            if (response == null) return Flux.empty();
+                        })
+                        .subscribeOn(Schedulers.boundedElastic())
+                        .flatMapMany(responseStr -> {
+                            if (responseStr == null) {
+                                log.warn("Finished processing action with null response");
+                                return Flux.empty();
+                            }
                             
-                            Message.MessageType responseType = Message.MessageType.TEXT;
+                            Message.MessageType streamResponseType = Message.MessageType.TEXT;
                             if (nluResult.getActionType() == AiIntent.ActionType.DATABASE_QUERY) {
-                                responseType = Message.MessageType.QUERY_RESULT;
+                                streamResponseType = Message.MessageType.QUERY_RESULT;
                             } else if (nluResult.getActionType() == AiIntent.ActionType.CALCULATION) {
-                                responseType = Message.MessageType.CALCULATION;
+                                streamResponseType = Message.MessageType.CALCULATION;
                             }
 
+                            log.debug("Emitting chunks for action result. Type: {}", streamResponseType);
                             return Flux.just(
                                     StreamChunk.builder()
-                                            .content(response)
-                                            .type(responseType)
+                                            .content(responseStr)
+                                            .type(streamResponseType)
                                             .done(false)
                                             .build(),
                                     StreamChunk.builder()
