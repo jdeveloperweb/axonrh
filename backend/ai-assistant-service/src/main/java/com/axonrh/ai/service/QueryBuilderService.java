@@ -186,7 +186,8 @@ public class QueryBuilderService {
                     .build();
 
             var response = llmService.chat(request);
-            JsonNode json = objectMapper.readTree(response.getContent());
+            String content = extractJson(response.getContent());
+            JsonNode json = objectMapper.readTree(content);
 
             String sql = json.get("sql").asText();
             String explanation = json.get("explanation").asText();
@@ -275,6 +276,17 @@ public class QueryBuilderService {
                     .sql(sql)
                     .build();
         }
+    }
+
+    private String extractJson(String content) {
+        if (content == null) return "";
+        content = content.trim();
+        int startIndex = content.indexOf("{");
+        int endIndex = content.lastIndexOf("}");
+        if (startIndex >= 0 && endIndex > startIndex) {
+            return content.substring(startIndex, endIndex + 1);
+        }
+        return content;
     }
 
     @lombok.Data
