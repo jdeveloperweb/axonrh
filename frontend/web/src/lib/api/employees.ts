@@ -13,10 +13,12 @@ export interface Employee {
   personalPhone?: string;
   birthDate?: string;
   gender?: string;
+  ethnicity?: string;
   maritalStatus?: string;
   nationality?: string;
   photoUrl?: string;
   admissionDate: string;
+
   terminationDate?: string;
   employmentType: string;
   status: EmployeeStatus;
@@ -112,6 +114,7 @@ export interface EmployeeCreateRequest {
   mobile?: string;  // Renomeado de personalPhone
   birthDate: string;  // Obrigatório no backend
   gender?: string;
+  ethnicity?: string;
   maritalStatus?: string;
   nationality?: string;
   hireDate: string;  // Renomeado de admissionDate
@@ -135,6 +138,7 @@ export interface EmployeeCreateRequest {
 
 export interface EmployeeUpdateRequest extends Partial<EmployeeCreateRequest> {
   status?: EmployeeStatus;
+  ethnicity?: string;
 }
 
 export interface Department {

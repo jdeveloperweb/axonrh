@@ -35,6 +35,7 @@ interface FormData {
     personalPhone: string;  // Será mapeado para mobile
     birthDate: string;
     gender: string;
+    ethnicity: string;
     maritalStatus: string;
     nationality: string;
     admissionDate: string;  // Será mapeado para hireDate
@@ -82,6 +83,7 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
         personalPhone: '',
         birthDate: '',
         gender: '',
+        ethnicity: '',
         maritalStatus: '',
         nationality: 'Brasileira',
         admissionDate: '',
@@ -144,6 +146,7 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                 personalPhone: initialData.mobile || prev.personalPhone, // mobile -> personalPhone
                 birthDate: initialData.birthDate || prev.birthDate,
                 gender: initialData.gender || prev.gender,
+                ethnicity: initialData.ethnicity || prev.ethnicity,
                 maritalStatus: initialData.maritalStatus || prev.maritalStatus,
                 nationality: initialData.nationality || prev.nationality,
                 admissionDate: initialData.hireDate || prev.admissionDate, // hireDate -> admissionDate
@@ -306,6 +309,7 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
             mobile: data.personalPhone ? data.personalPhone.replace(/\D/g, '') : undefined,  // personalPhone → mobile
             birthDate: data.birthDate,
             gender: data.gender || undefined,
+            ethnicity: data.ethnicity || undefined,
             maritalStatus: data.maritalStatus || undefined,
             nationality: data.nationality || undefined,
             hireDate: data.admissionDate,  // admissionDate → hireDate
@@ -541,6 +545,25 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                                     <option value="MALE">Masculino</option>
                                     <option value="FEMALE">Feminino</option>
                                     <option value="OTHER">Outro</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
+                                    Cor/Raça
+                                </label>
+                                <select
+                                    name="ethnicity"
+                                    value={formData.ethnicity}
+                                    onChange={handleChange}
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                                >
+                                    <option value="">Selecione</option>
+                                    <option value="BRANCO">Branca</option>
+                                    <option value="PARDO">Parda</option>
+                                    <option value="PRETO">Preta</option>
+                                    <option value="AMARELO">Amarela</option>
+                                    <option value="INDIGENA">Indígena</option>
                                 </select>
                             </div>
 

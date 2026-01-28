@@ -46,7 +46,7 @@ public class SecurityConfig {
                         // Todos os outros requerem autenticacao (token JWT valido)
                         .anyRequest().authenticated()
                 )
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(org.springframework.security.config.Customizer.withDefaults()));
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
 
         return http.build();
     }
@@ -57,5 +57,54 @@ public class SecurityConfig {
         return NimbusJwtDecoder.withSecretKey(secretKeySpec)
                 .macAlgorithm(MacAlgorithm.HS256)
                 .build();
+    }
+
+    @Bean
+    public org.springframework.core.convert.converter.Converter<org.springframework.security.oauth2.jwt.Jwt, org.springframework.security.authentication.AbstractAuthenticationToken> jwtAuthenticationConverter() {
+        org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter converter = new org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter();
+        converter.setJwtGrantedAuthoritiesConverter(new JwtGrantedAuthoritiesConverter());
+        return converter;
+    }
+
+    private static class JwtGrantedAuthoritiesConverter implements org.springframework.core.convert.converter.Converter<org.springframework.security.oauth2.jwt.Jwt, java.util.Collection<org.springframework.security.core.GrantedAuthority>> {
+        @Override
+        public java.util.Collection<org.springframework.security.core.GrantedAuthority> convert(org.springframework.security.oauth2.jwt.Jwt jwt) {
+            java.util.Collection<org.springframework.security.core.GrantedAuthority> authorities = new java.util.ArrayList<>();
+            
+            // Tenta extrair authorities padrao (scope/scp)
+            org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter defaultConverter = 
+                new org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter();
+            authorities.addAll(defaultConverter.convert(jwt));
+
+            // Tenta extrair roles do realm_access (Padrao Keycloak)
+            java.util.Map<String, Object> realmAccess = jwt.getClaim("realm_access");
+            if (realmAccess != null && realmAccess.containsKey("roles")) {
+                @SuppressWarnings("unchecked")
+                java.util.List<String> roles = (java.util.List<String>) realmAccess.get("roles");
+                if (roles != null) {
+                    roles.forEach(role -> authorities.add(new org.springframework.security.core.authority.SimpleGrantedAuthority(role)));
+                }
+            }
+
+            // Tenta extrair roles do campo 'roles' direto
+            if (jwt.hasClaim("roles")) {
+                @SuppressWarnings("unchecked")
+                java.util.List<String> roles = jwt.getClaimAsStringList("roles");
+                if (roles != null) {
+                    roles.forEach(role -> authorities.add(new org.springframework.security.core.authority.SimpleGrantedAuthority(role)));
+                }
+            }
+            
+             // Tenta extrair authorites do campo 'authorities' direto
+            if (jwt.hasClaim("authorities")) {
+                @SuppressWarnings("unchecked")
+                java.util.List<String> auths = jwt.getClaimAsStringList("authorities");
+                if (auths != null) {
+                    auths.forEach(auth -> authorities.add(new org.springframework.security.core.authority.SimpleGrantedAuthority(auth)));
+                }
+            }
+
+            return authorities;
+        }
     }
 }

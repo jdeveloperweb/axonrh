@@ -37,6 +37,7 @@ public class EmployeeRequest {
     private LocalDate birthDate;
 
     private Gender gender;
+    private Ethnicity ethnicity;
     private MaritalStatus maritalStatus;
     private String nationality;
     private String birthCity;
