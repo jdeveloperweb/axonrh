@@ -5,6 +5,8 @@ import com.axonrh.ai.dto.StreamChunk;
 import com.axonrh.ai.entity.Conversation;
 import com.axonrh.ai.service.ConversationService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
@@ -18,6 +20,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/ai/chat")
 @RequiredArgsConstructor
+@Slf4j
 public class ChatController {
 
     private final ConversationService conversationService;

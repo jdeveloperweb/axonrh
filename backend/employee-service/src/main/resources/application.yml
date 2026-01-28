@@ -119,6 +119,7 @@ logging:
     com.axonrh.employee: ${LOG_LEVEL:DEBUG}
     org.hibernate.SQL: ${SQL_LOG_LEVEL:WARN}
     org.springframework.kafka: INFO
+    org.springframework.security: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] [%X{tenantId}] [%X{correlationId}] %-5level %logger{36} - %msg%n"
 

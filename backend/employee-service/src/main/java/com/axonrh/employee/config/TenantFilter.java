@@ -48,7 +48,14 @@ public class TenantFilter extends OncePerRequestFilter {
                 MDC.put("correlationId", correlationId);
             }
 
-            filterChain.doFilter(request, response);
+            try {
+                filterChain.doFilter(request, response);
+                log.debug("<<< [DEBUG-TRACE] Request finished: {} {} -> Status {}", 
+                    request.getMethod(), request.getRequestURI(), response.getStatus());
+            } catch (Exception e) {
+                log.error("!!! [DEBUG-TRACE] Error in TenantFilter: {}", e.getMessage(), e);
+                throw e;
+            }
 
         } finally {
             TenantContext.clear();
