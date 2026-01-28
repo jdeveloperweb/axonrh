@@ -36,6 +36,7 @@ public class QueryBuilderService {
         - Use aliases claros para as tabelas
         - Limite resultados a 100 registros por padrão
         - Proteja contra SQL injection usando parâmetros nomeados (:param)
+        - Use aliases em português e amigáveis para as colunas no SELECT (ex: SELECT count(*) AS total, name AS "Nome")
         - Para buscas em campos de texto (como nomes de departamentos, cargos ou funcionários), prefira usar ILIKE com wildcards (ex: field ILIKE :param AND :param := '%valor%') para ser mais tolerante a variações.
 
         Esquema do banco de dados:
@@ -49,7 +50,7 @@ public class QueryBuilderService {
 
         Responda com um JSON contendo:
         {
-            "sql": "SELECT ... FROM ... WHERE tenant_id = :tenant_id ...",
+            "sql": "SELECT ... AS \"Nome Coluna\" FROM ... WHERE tenant_id = :tenant_id ...",
             "parameters": {"param1": "value1"},
             "explanation": "Explicação breve da consulta, para uma pessoa comum com cordialidade, com um nivel de intimidade pessoal,não se falar de SQL, explique para uma pessoa comum, que irá interpretar a informação. como se você estivesse entregando algo pra ela.",
             "template_used": "nome_do_template ou null se customizada"

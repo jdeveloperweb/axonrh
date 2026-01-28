@@ -331,15 +331,37 @@ public class ConversationService {
         }
 
         if (result.getData().isEmpty()) {
-            return "Realizei a busca, mas não encontrei nenhum registro que corresponda à sua solicitação. Se desejar, tente refazer a pergunta com outros termos.";
+            // Check if it was likely a list request
+            if (question.toLowerCase().contains("listar") || question.toLowerCase().contains("quem") || question.toLowerCase().contains("quais")) {
+                return "Realizei a busca, mas não encontrei nenhum registro que corresponda à sua solicitação no momento. Caso precise de algo mais específico, estou à disposição!";
+            }
+            return "Busquei pelas informações solicitadas, mas no momento não encontrei registros no sistema para esse filtro. Posso ajudar com outra consulta?";
+        }
+
+        // Special handling for single value results (like COUNT, SUM)
+        if (result.getRowCount() == 1 && result.getData().get(0).size() == 1) {
+            Map<String, Object> row = result.getData().get(0);
+            Object value = row.values().iterator().next();
+            String colName = row.keySet().iterator().next().toLowerCase();
+            
+            if (colName.contains("count")) {
+                long count = ((Number) value).longValue();
+                if (count == 0) {
+                    return "No momento, não identifiquei nenhum registro para essa solicitação no sistema.";
+                }
+                return String.format("Atualmente, temos %d registro(s) que atendem à sua busca.", count);
+            }
+            
+            return String.format("%s: %s", formatColumnName(colName), formatValue(value));
         }
 
         // Format results
         StringBuilder response = new StringBuilder();
-        response.append(String.format("Encontrei %d registro(s):\n\n", result.getRowCount()));
-
-        if (result.getExplanation() != null) {
+        
+        if (result.getExplanation() != null && !result.getExplanation().isBlank()) {
             response.append(result.getExplanation()).append("\n\n");
+        } else {
+            response.append(String.format("Encontrei %d registro(s):\n\n", result.getRowCount()));
         }
 
         // Format as table for small result sets

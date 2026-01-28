@@ -330,33 +330,78 @@ function MarkdownContent({ content }: { content: string }) {
   </div>;
 
   const lines = content.split('\n');
+  const elements: React.ReactNode[] = [];
+  let currentTable: string[][] = [];
 
-  return (
-    <div className="space-y-3">
-      {lines.map((line, index) => {
-        if (line.startsWith('## ')) {
-          return <h3 key={index} className="font-bold text-lg text-blue-900 mt-2">{line.slice(3)}</h3>;
-        }
-        if (line.startsWith('### ')) {
-          return <h4 key={index} className="font-semibold text-blue-800">{line.slice(4)}</h4>;
-        }
-        if (line.startsWith('**') && line.endsWith('**')) {
-          return <p key={index} className="font-bold text-gray-900">{line.slice(2, -2)}</p>;
-        }
-        if (line.startsWith('|')) {
-          return <div key={index} className="overflow-x-auto my-2 border rounded-lg">
-            <code className="block bg-gray-50 px-3 py-2 text-xs font-mono text-blue-700 whitespace-pre">{line}</code>
-          </div>;
-        }
-        if (line.startsWith('*')) {
-          return <div key={index} className="flex items-start space-x-2 ml-2">
-            <span className="text-blue-500 mt-1.5 w-1.5 h-1.5 bg-blue-500 rounded-full flex-shrink-0"></span>
-            <span className="text-sm text-gray-700">{line.slice(1).trim()}</span>
-          </div>;
-        }
-        if (line.trim() === '') return <div key={index} className="h-1"></div>;
-        return <p key={index} className="text-sm text-gray-700 leading-relaxed">{line}</p>;
-      })}
-    </div>
-  );
+  const flushTable = (index: number) => {
+    if (currentTable.length > 0) {
+      elements.push(
+        <div key={`table-${index}`} className="my-4 overflow-hidden border border-gray-200 rounded-xl shadow-sm">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50/80">
+              <tr>
+                {currentTable[0].map((cell, i) => (
+                  <th key={i} className="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    {cell.trim()}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-100">
+              {currentTable.slice(1).map((row, i) => (
+                <tr key={i} className="hover:bg-blue-50/50 transition-colors">
+                  {row.map((cell, j) => (
+                    <td key={j} className="px-4 py-3 text-sm text-gray-700">
+                      {cell.trim()}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+      currentTable = [];
+    }
+  };
+
+  lines.forEach((line, index) => {
+    const trimmed = line.trim();
+
+    // Table detection
+    if (trimmed.startsWith('|')) {
+      const cells = line.split('|').filter((_, i, arr) => i > 0 && i < arr.length - 1);
+      // Skip separator line (---|---|---)
+      if (cells.some(c => c.includes('---'))) {
+        return;
+      }
+      currentTable.push(cells);
+      return;
+    } else {
+      flushTable(index);
+    }
+
+    if (line.startsWith('## ')) {
+      elements.push(<h3 key={index} className="font-bold text-lg text-blue-900 mt-4 mb-2">{line.slice(3)}</h3>);
+    } else if (line.startsWith('### ')) {
+      elements.push(<h4 key={index} className="font-semibold text-blue-800 mt-3 mb-1">{line.slice(4)}</h4>);
+    } else if (line.startsWith('**') && line.endsWith('**')) {
+      elements.push(<p key={index} className="font-bold text-gray-900 my-1">{line.slice(2, -2)}</p>);
+    } else if (line.startsWith('* ') || line.startsWith('- ')) {
+      elements.push(
+        <div key={index} className="flex items-start space-x-2 ml-2 my-1">
+          <span className="text-blue-500 mt-1.5 w-1.5 h-1.5 bg-blue-500 rounded-full flex-shrink-0"></span>
+          <span className="text-sm text-gray-700">{line.slice(2).trim()}</span>
+        </div>
+      );
+    } else if (trimmed === '') {
+      elements.push(<div key={index} className="h-2"></div>);
+    } else {
+      elements.push(<p key={index} className="text-sm text-gray-700 leading-relaxed my-1">{line}</p>);
+    }
+  });
+
+  flushTable(lines.length);
+
+  return <div className="space-y-1">{elements}</div>;
 }

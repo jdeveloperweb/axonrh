@@ -66,8 +66,10 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${JWT_ISSUER_URI:http://localhost:8081}
-          jwk-set-uri: ${JWT_JWK_SET_URI:http://localhost:8081/.well-known/jwks.json}
+          # issuer-uri: ${JWT_ISSUER_URI:http://localhost:8081}
+          # jwk-set-uri: ${JWT_JWK_SET_URI:http://localhost:8081/.well-known/jwks.json}
+          secret-key: ${JWT_SECRET:axonrh-jwt-secret-key-change-in-production-2026}
+          jws-algorithms: HS256
 
   cache:
     type: redis

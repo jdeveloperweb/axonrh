@@ -83,7 +83,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${JWT_ISSUER:http://axonrh-auth-service:8081}
+          # issuer-uri: ${JWT_ISSUER:http://axonrh-auth-service:8081}
           # Para HS256 (chave simetrica) usamos secret-key
           # A chave deve ter pelo menos 256 bits (32 caracteres)
           secret-key: ${JWT_SECRET:axonrh-jwt-secret-key-change-in-production-2026}
