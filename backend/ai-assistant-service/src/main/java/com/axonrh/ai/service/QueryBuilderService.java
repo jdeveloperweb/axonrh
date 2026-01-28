@@ -2,6 +2,7 @@ package com.axonrh.ai.service;
 
 import com.axonrh.ai.dto.ChatMessage;
 import com.axonrh.ai.dto.ChatRequest;
+import com.axonrh.ai.dto.ChatResponse;
 import com.axonrh.ai.entity.QueryTemplate;
 import com.axonrh.ai.repository.QueryTemplateRepository;
 import com.fasterxml.jackson.databind.JsonNode;
