@@ -112,7 +112,7 @@ export default function ChatWidget({
       setMessages(prev =>
         prev.map(m =>
           m.id === assistantId
-            ? { ...m, content: 'Desculpe, ocorreu um erro na comunicação com a OpenAI. Verifique se a API Key está configurada corretamente.', type: 'ERROR' }
+            ? { ...m, content: `Desculpe, ocorreu um erro. Detalhes: ${(error instanceof Error ? error.message : String(error))}`, type: 'ERROR' }
             : m
         )
       );

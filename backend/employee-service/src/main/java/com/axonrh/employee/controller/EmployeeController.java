@@ -93,7 +93,8 @@ public class EmployeeController {
             @Valid @RequestBody EmployeeRequest request,
             @RequestHeader("X-User-Id") UUID userId) {
 
-        log.info("Criando colaborador: {}", request.getFullName());
+        System.out.println(">>> [DEBUG-TRACE] EmployeeController.create CALLED with name: " + request.getFullName());
+        log.info(">>> [LOG-TRACE] Criando colaborador: {}", request.getFullName());
         EmployeeResponse created = employeeService.create(request, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }

@@ -13,7 +13,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+import java.io.IOException;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -79,6 +83,8 @@ public class LlmService {
                     .bodyValue(body)
                     .retrieve()
                     .bodyToMono(JsonNode.class)
+                    .retryWhen(Retry.backoff(3, Duration.ofSeconds(2))
+                            .filter(this::isRetryable))
                     .block();
 
             JsonNode choice = response.get("choices").get(0);
@@ -117,6 +123,8 @@ public class LlmService {
                     .bodyValue(body)
                     .retrieve()
                     .bodyToMono(JsonNode.class)
+                    .retryWhen(Retry.backoff(3, Duration.ofSeconds(2))
+                            .filter(this::isRetryable))
                     .block();
 
             String content = response.get("content").get(0).get("text").asText();
@@ -151,6 +159,8 @@ public class LlmService {
                 .bodyValue(body)
                 .retrieve()
                 .bodyToFlux(String.class)
+                .retryWhen(Retry.backoff(3, Duration.ofSeconds(2))
+                        .filter(this::isRetryable))
                 .filter(line -> !line.isBlank() && !line.equals("[DONE]")) // Filter empty lines and DONE marker
                 .flatMap(responseLine -> {
                     try {
@@ -218,6 +228,8 @@ public class LlmService {
                 .bodyValue(body)
                 .retrieve()
                 .bodyToFlux(String.class)
+                .retryWhen(Retry.backoff(3, Duration.ofSeconds(2))
+                        .filter(this::isRetryable))
                 .filter(line -> line.startsWith("data: "))
                 .map(line -> line.substring(6))
                 .filter(data -> !data.equals("[DONE]"))
@@ -262,6 +274,8 @@ public class LlmService {
                     .bodyValue(body)
                     .retrieve()
                     .bodyToMono(JsonNode.class)
+                    .retryWhen(Retry.backoff(3, Duration.ofSeconds(2))
+                            .filter(this::isRetryable))
                     .block();
 
             List<List<Float>> embeddings = new ArrayList<>();
@@ -324,5 +338,11 @@ public class LlmService {
             body.put("system", systemPrompt);
         }
         return body;
+    }
+
+    private boolean isRetryable(Throwable ex) {
+        return (ex instanceof WebClientResponseException && ((WebClientResponseException) ex).getStatusCode().is5xxServerError()) ||
+               ex instanceof IOException ||
+               ex instanceof java.util.concurrent.TimeoutException;
     }
 }

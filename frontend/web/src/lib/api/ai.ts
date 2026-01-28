@@ -200,7 +200,8 @@ export const chatApi = {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to stream chat');
+      const errorText = await response.text().catch(() => 'Unknown error');
+      throw new Error(`Erro na comunicação (${response.status}): ${errorText.substring(0, 200)}`);
     }
 
     const reader = response.body?.getReader();
