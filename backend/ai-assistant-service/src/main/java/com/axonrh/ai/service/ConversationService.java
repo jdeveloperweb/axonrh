@@ -220,7 +220,7 @@ public class ConversationService {
                             return Flux.just(
                                     StreamChunk.builder()
                                             .content(responseStr)
-                                            .type(streamResponseType)
+                                            .type(streamResponseType.name())
                                             .done(false)
                                             .build(),
                                     StreamChunk.builder()
@@ -250,7 +250,7 @@ public class ConversationService {
                     return llmService.streamChat(request)
                             .map(chunk -> {
                                 if (chunk.getType() == null) {
-                                    chunk.setType(Message.MessageType.TEXT);
+                                    chunk.setType(Message.MessageType.TEXT.name());
                                 }
                                 return chunk;
                             })
