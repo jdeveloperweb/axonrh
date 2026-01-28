@@ -186,7 +186,12 @@ public class QueryBuilderService {
                     .build();
 
             var response = llmService.chat(request);
-            String content = extractJson(response.getContent());
+            String rawContent = response.getContent();
+            log.info("Raw LLM Content: {}", rawContent);
+            
+            String content = extractJson(rawContent);
+            log.info("Cleaned JSON Content: {}", content);
+            
             JsonNode json = objectMapper.readTree(content);
 
             if (!json.has("sql")) {
@@ -289,11 +294,19 @@ public class QueryBuilderService {
     private String extractJson(String content) {
         if (content == null) return "{}";
         
-        // Clean markdown code blocks if present
+        // Try to find a JSON object using regex
+        Pattern pattern = Pattern.compile("\\{.*\\}", Pattern.DOTALL);
+        Matcher matcher = pattern.matcher(content);
+        
+        if (matcher.find()) {
+            return matcher.group();
+        }
+        
+        // Fallback: simple cleanup
         String cleaned = content.replaceAll("```json", "")
                                .replaceAll("```", "")
                                .trim();
-        
+                               
         int startIndex = cleaned.indexOf("{");
         int endIndex = cleaned.lastIndexOf("}");
         if (startIndex >= 0 && endIndex > startIndex) {

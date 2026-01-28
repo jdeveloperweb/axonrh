@@ -77,6 +77,12 @@ public class LlmService {
 
         try {
             Map<String, Object> body = buildOpenAiBody(request, false);
+            
+            try {
+                log.info("Sending OpenAI request: {}", objectMapper.writeValueAsString(body));
+            } catch (Exception e) {
+                log.warn("Failed to log OpenAI request body", e);
+            }
 
             JsonNode response = openAiWebClient.post()
                     .uri("/chat/completions")
@@ -86,6 +92,12 @@ public class LlmService {
                     .retryWhen(Retry.backoff(3, Duration.ofSeconds(2))
                             .filter(this::isRetryable))
                     .block();
+            
+            try {
+                log.info("Received OpenAI response: {}", objectMapper.writeValueAsString(response));
+            } catch (Exception e) {
+                log.warn("Failed to log OpenAI response body", e);
+            }
 
             JsonNode choice = response.get("choices").get(0);
             JsonNode message = choice.get("message");
@@ -127,6 +139,12 @@ public class LlmService {
 
         try {
             Map<String, Object> body = buildAnthropicBody(request, false);
+            
+            try {
+                log.info("Sending Anthropic request: {}", objectMapper.writeValueAsString(body));
+            } catch (Exception e) {
+                log.warn("Failed to log Anthropic request body", e);
+            }
 
             JsonNode response = anthropicWebClient.post()
                     .uri("/messages")
@@ -136,6 +154,12 @@ public class LlmService {
                     .retryWhen(Retry.backoff(3, Duration.ofSeconds(2))
                             .filter(this::isRetryable))
                     .block();
+            
+            try {
+                log.info("Received Anthropic response: {}", objectMapper.writeValueAsString(response));
+            } catch (Exception e) {
+                log.warn("Failed to log Anthropic response body", e);
+            }
 
             String content = response.get("content").get(0).get("text").asText();
             JsonNode usage = response.get("usage");
