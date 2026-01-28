@@ -31,12 +31,22 @@ export default function EditEmployeePage() {
                 const formattedData: Partial<EmployeeCreateRequest> = {
                     ...data,
                     birthDate: data.birthDate?.split('T')[0],
-                    admissionDate: data.admissionDate?.split('T')[0],
+                    hireDate: data.admissionDate?.split('T')[0],
+                    baseSalary: data.salary,
+                    weeklyHours: data.workHoursPerWeek,
                     departmentId: data.department?.id,
                     positionId: data.position?.id,
                     costCenterId: data.costCenter?.id,
                     managerId: data.manager?.id,
-                    // Address and other nested objects usually match if the API follows consistent naming
+                    // Mapeia endereço para campos planos
+                    addressStreet: data.address?.street,
+                    addressNumber: data.address?.number,
+                    addressComplement: data.address?.complement,
+                    addressNeighborhood: data.address?.neighborhood,
+                    addressCity: data.address?.city,
+                    addressState: data.address?.state,
+                    addressZipCode: data.address?.zipCode,
+                    addressCountry: data.address?.country,
                 };
 
                 setInitialData(formattedData);

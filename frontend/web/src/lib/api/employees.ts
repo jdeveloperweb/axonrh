@@ -106,23 +106,31 @@ export interface EmployeeCreateRequest {
   cpf: string;
   fullName: string;
   socialName?: string;
-  email?: string;
+  email: string;  // Obrigatório no backend
   personalEmail?: string;
   phone?: string;
-  personalPhone?: string;
-  birthDate?: string;
+  mobile?: string;  // Renomeado de personalPhone
+  birthDate: string;  // Obrigatório no backend
   gender?: string;
   maritalStatus?: string;
   nationality?: string;
-  admissionDate: string;
+  hireDate: string;  // Renomeado de admissionDate
   employmentType: string;
-  salary?: number;
-  workHoursPerWeek?: number;
+  baseSalary?: number;  // Renomeado de salary
+  weeklyHours?: number;  // Renomeado de workHoursPerWeek
   departmentId?: string;
   positionId?: string;
   costCenterId?: string;
   managerId?: string;
-  address?: EmployeeAddress;
+  // Campos de endereço planos (não objeto aninhado)
+  addressStreet?: string;
+  addressNumber?: string;
+  addressComplement?: string;
+  addressNeighborhood?: string;
+  addressCity?: string;
+  addressState?: string;
+  addressZipCode?: string;
+  addressCountry?: string;
 }
 
 export interface EmployeeUpdateRequest extends Partial<EmployeeCreateRequest> {

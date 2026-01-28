@@ -24,6 +24,39 @@ interface FormErrors {
     [key: string]: string;
 }
 
+// Interface interna do formulário (mantém nomes amigáveis)
+interface FormData {
+    cpf: string;
+    fullName: string;
+    socialName: string;
+    email: string;
+    personalEmail: string;
+    phone: string;
+    personalPhone: string;  // Será mapeado para mobile
+    birthDate: string;
+    gender: string;
+    maritalStatus: string;
+    nationality: string;
+    admissionDate: string;  // Será mapeado para hireDate
+    employmentType: string;
+    salary?: number;  // Será mapeado para baseSalary
+    workHoursPerWeek?: number;  // Será mapeado para weeklyHours
+    departmentId: string;
+    positionId: string;
+    costCenterId: string;
+    managerId: string;
+    address: {
+        street: string;
+        number: string;
+        complement: string;
+        neighborhood: string;
+        city: string;
+        state: string;
+        zipCode: string;
+        country: string;
+    };
+}
+
 interface EmployeeFormProps {
     initialData?: Partial<EmployeeCreateRequest>;
     employeeId?: string;
@@ -38,8 +71,8 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
     const [activeTab, setActiveTab] = useState<TabKey>('personal');
     const [employeeId, setEmployeeId] = useState<string | undefined>(initialId);
 
-    // Form state
-    const [formData, setFormData] = useState<EmployeeCreateRequest>({
+    // Form state (usando interface interna)
+    const [formData, setFormData] = useState<FormData>({
         cpf: '',
         fullName: '',
         socialName: '',
@@ -69,7 +102,6 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
             zipCode: '',
             country: 'Brasil',
         },
-        ...initialData
     });
 
     const [errors, setErrors] = useState<FormErrors>({});
@@ -97,6 +129,44 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
         };
         loadData();
     }, []);
+
+    // Load initial data when editing
+    useEffect(() => {
+        if (initialData) {
+            setFormData(prev => ({
+                ...prev,
+                cpf: initialData.cpf || prev.cpf,
+                fullName: initialData.fullName || prev.fullName,
+                socialName: initialData.socialName || prev.socialName,
+                email: initialData.email || prev.email,
+                personalEmail: initialData.personalEmail || prev.personalEmail,
+                phone: initialData.phone || prev.phone,
+                personalPhone: initialData.mobile || prev.personalPhone, // mobile -> personalPhone
+                birthDate: initialData.birthDate || prev.birthDate,
+                gender: initialData.gender || prev.gender,
+                maritalStatus: initialData.maritalStatus || prev.maritalStatus,
+                nationality: initialData.nationality || prev.nationality,
+                admissionDate: initialData.hireDate || prev.admissionDate, // hireDate -> admissionDate
+                employmentType: initialData.employmentType || prev.employmentType,
+                salary: initialData.baseSalary || prev.salary, // baseSalary -> salary
+                workHoursPerWeek: initialData.weeklyHours || prev.workHoursPerWeek, // weeklyHours -> workHoursPerWeek
+                departmentId: initialData.departmentId || prev.departmentId,
+                positionId: initialData.positionId || prev.positionId,
+                costCenterId: initialData.costCenterId || prev.costCenterId,
+                managerId: initialData.managerId || prev.managerId,
+                address: {
+                    street: initialData.addressStreet || prev.address.street,
+                    number: initialData.addressNumber || prev.address.number,
+                    complement: initialData.addressComplement || prev.address.complement,
+                    neighborhood: initialData.addressNeighborhood || prev.address.neighborhood,
+                    city: initialData.addressCity || prev.address.city,
+                    state: initialData.addressState || prev.address.state,
+                    zipCode: initialData.addressZipCode || prev.address.zipCode,
+                    country: initialData.addressCountry || prev.address.country,
+                }
+            }));
+        }
+    }, [initialData]);
 
     // Load positions when department changes
     useEffect(() => {
@@ -199,7 +269,10 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
 
             if (!formData.fullName) newErrors.fullName = 'Nome completo é obrigatório';
 
-            // Moved to Personal because backend requires it for creation
+            // Data de nascimento é obrigatória no backend
+            if (!formData.birthDate) newErrors.birthDate = 'Data de nascimento é obrigatória';
+
+            // Data de admissão é obrigatória no backend
             if (!formData.admissionDate) newErrors.admissionDate = 'Data de admissão é obrigatória';
 
             if (formData.email && !isValidEmail(formData.email)) {
@@ -221,6 +294,40 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
         return Object.keys(newErrors).length === 0;
     };
 
+    // Mapeia dados do formulário para o formato do backend
+    const mapFormDataToRequest = (data: FormData): EmployeeCreateRequest => {
+        return {
+            cpf: data.cpf.replace(/\D/g, ''),  // Remove formatação
+            fullName: data.fullName,
+            socialName: data.socialName || undefined,
+            email: data.email,
+            personalEmail: data.personalEmail || undefined,
+            phone: data.phone || undefined,
+            mobile: data.personalPhone || undefined,  // personalPhone → mobile
+            birthDate: data.birthDate,
+            gender: data.gender || undefined,
+            maritalStatus: data.maritalStatus || undefined,
+            nationality: data.nationality || undefined,
+            hireDate: data.admissionDate,  // admissionDate → hireDate
+            employmentType: data.employmentType,
+            baseSalary: data.salary ? Number(data.salary) : undefined,  // salary → baseSalary
+            weeklyHours: data.workHoursPerWeek ? Number(data.workHoursPerWeek) : undefined,  // workHoursPerWeek → weeklyHours
+            departmentId: data.departmentId || undefined,
+            positionId: data.positionId || undefined,
+            costCenterId: data.costCenterId || undefined,
+            managerId: data.managerId || undefined,
+            // Mapeia objeto address para campos planos
+            addressStreet: data.address?.street || undefined,
+            addressNumber: data.address?.number || undefined,
+            addressComplement: data.address?.complement || undefined,
+            addressNeighborhood: data.address?.neighborhood || undefined,
+            addressCity: data.address?.city || undefined,
+            addressState: data.address?.state || undefined,
+            addressZipCode: data.address?.zipCode?.replace(/\D/g, '') || undefined,
+            addressCountry: data.address?.country || undefined,
+        };
+    };
+
     // Handle submit
     const handleSubmit = async () => {
 
@@ -236,17 +343,10 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
         try {
             setLoading(true);
 
-            // Clean up data
-            const submitData: EmployeeCreateRequest = {
-                ...formData,
-                cpf: formData.cpf.replace(/\D/g, ''),
-                salary: formData.salary ? Number(formData.salary) : undefined,
-                workHoursPerWeek: formData.workHoursPerWeek ? Number(formData.workHoursPerWeek) : undefined,
-                departmentId: formData.departmentId || undefined,
-                positionId: formData.positionId || undefined,
-                costCenterId: formData.costCenterId || undefined,
-                managerId: formData.managerId || undefined,
-            };
+            // Mapeia dados do formulário para o formato do backend
+            const submitData = mapFormDataToRequest(formData);
+
+            console.log('Enviando dados:', submitData);  // Debug
 
             if (!employeeId) {
                 // CREATE
@@ -256,12 +356,10 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                     title: 'Sucesso',
                     description: 'Dados pessoais salvos. Agora você pode preencher as outras abas.',
                 });
-                // Switch to Edit Mode URL without refresh if possible, or just stay here with state updated
-                // Updating URL is better for bookmarking/refreshing
                 router.push(`/employees/${employee.id}/edit`);
             } else {
                 // UPDATE
-                await employeesApi.update(employeeId, submitData); // Assuming update takes ID and Partial<Data>
+                await employeesApi.update(employeeId, submitData);
                 toast({
                     title: 'Sucesso',
                     description: 'Dados atualizados com sucesso',
@@ -269,9 +367,11 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
             }
 
         } catch (error: any) {
+            console.error('Erro ao salvar:', error);  // Debug
+            const errorMessage = error?.message || error?.response?.data?.message || 'Falha ao salvar dados';
             toast({
                 title: 'Erro',
-                description: error.response?.data?.message || 'Falha ao salvar dados',
+                description: errorMessage,
                 variant: 'destructive',
             });
         } finally {
@@ -353,15 +453,17 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
 
                             <div>
                                 <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
-                                    Data de Nascimento
+                                    Data de Nascimento <span className="text-red-500">*</span>
                                 </label>
                                 <input
                                     type="date"
                                     name="birthDate"
                                     value={formData.birthDate}
                                     onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] ${errors.birthDate ? 'border-red-500' : 'border-gray-200'
+                                        }`}
                                 />
+                                {errors.birthDate && <p className="text-red-500 text-sm mt-1">{errors.birthDate}</p>}
                             </div>
 
                             <div className="md:col-span-2">

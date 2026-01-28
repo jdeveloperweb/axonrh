@@ -46,7 +46,7 @@ public class KafkaConfig {
     }
 
     @Bean
-    public ProducerFactory<String, Object> vacationProducerFactory(ObjectMapper vacationKafkaObjectMapper) {
+    public ProducerFactory<String, Object> vacationKafkaProducerFactory(ObjectMapper vacationKafkaObjectMapper) {
         Map<String, Object> props = new HashMap<>();
 
         // Conexão
@@ -81,9 +81,9 @@ public class KafkaConfig {
     }
 
     @Bean
-    public KafkaTemplate<String, Object> kafkaTemplate(
-            ProducerFactory<String, Object> vacationProducerFactory) {
-        KafkaTemplate<String, Object> template = new KafkaTemplate<>(vacationProducerFactory);
+    public KafkaTemplate<String, Object> vacationKafkaTemplate(
+            ProducerFactory<String, Object> vacationKafkaProducerFactory) {
+        KafkaTemplate<String, Object> template = new KafkaTemplate<>(vacationKafkaProducerFactory);
         template.setObservationEnabled(true);
         return template;
     }

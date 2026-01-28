@@ -13,6 +13,7 @@ import com.axonrh.vacation.repository.VacationPeriodRepository;
 import com.axonrh.vacation.repository.VacationRequestRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -33,7 +34,6 @@ import java.util.*;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class VacationService {
 
     private final VacationPeriodRepository periodRepository;
@@ -41,6 +41,19 @@ public class VacationService {
     private final VacationCalculationService calculationService;
     private final VacationDocumentService documentService;
     private final KafkaTemplate<String, Object> kafkaTemplate;
+
+    public VacationService(
+            VacationPeriodRepository periodRepository,
+            VacationRequestRepository requestRepository,
+            VacationCalculationService calculationService,
+            VacationDocumentService documentService,
+            @Qualifier("vacationKafkaTemplate") KafkaTemplate<String, Object> kafkaTemplate) {
+        this.periodRepository = periodRepository;
+        this.requestRepository = requestRepository;
+        this.calculationService = calculationService;
+        this.documentService = documentService;
+        this.kafkaTemplate = kafkaTemplate;
+    }
 
     @Value("${vacation.min-advance-days:30}")
     private int minAdvanceDays;
