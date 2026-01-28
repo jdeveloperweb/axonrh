@@ -14,12 +14,14 @@ interface ChatWidgetProps {
   conversationId?: string;
   onConversationCreated?: (id: string) => void;
   className?: string;
+  initialMessage?: string;
 }
 
 export default function ChatWidget({
   conversationId: initialConversationId,
   onConversationCreated,
   className = '',
+  initialMessage,
 }: ChatWidgetProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -28,6 +30,7 @@ export default function ChatWidget({
   const [isStreaming, setIsStreaming] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const initializedRef = useRef(false);
 
   useEffect(() => {
     if (conversationId) {
@@ -38,6 +41,16 @@ export default function ChatWidget({
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Handle initial message
+  useEffect(() => {
+    if (initialMessage && !initializedRef.current && !isLoading) {
+      initializedRef.current = true;
+      setInput(initialMessage);
+      // We need to wait a bit for state to settle or call submit directly with the string
+      submitMessage(initialMessage);
+    }
+  }, [initialMessage]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -53,14 +66,13 @@ export default function ChatWidget({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading) return;
+  const submitMessage = async (msgContent: string) => {
+    if (!msgContent.trim() || isLoading) return;
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       role: 'user',
-      content: input.trim(),
+      content: msgContent.trim(),
       timestamp: new Date().toISOString(),
     };
 
@@ -108,10 +120,15 @@ export default function ChatWidget({
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    submitMessage(input);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSubmit(e);
+      submitMessage(input);
     }
   };
 

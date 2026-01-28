@@ -4,10 +4,14 @@ import { useState } from 'react';
 import ChatWidget from '@/components/ai/ChatWidget';
 import CalculatorWidget from '@/components/ai/CalculatorWidget';
 
+import { useSearchParams } from 'next/navigation';
+
 type Tab = 'chat' | 'calculator' | 'knowledge';
 
 export default function AssistantPage() {
   const [activeTab, setActiveTab] = useState<Tab>('chat');
+  const searchParams = useSearchParams();
+  const initialQuery = searchParams.get('q');
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -72,7 +76,7 @@ export default function AssistantPage() {
         {activeTab === 'chat' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">
-              <ChatWidget className="h-[calc(100vh-200px)]" />
+              <ChatWidget className="h-[calc(100vh-200px)]" initialMessage={initialQuery || undefined} />
             </div>
             <div className="space-y-6">
               <QuickActions />
@@ -104,11 +108,10 @@ function TabButton({ active, onClick, icon, children }: {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-        active
-          ? 'bg-white text-blue-600 shadow-sm'
-          : 'text-gray-600 hover:text-gray-900'
-      }`}
+      className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${active
+        ? 'bg-white text-blue-600 shadow-sm'
+        : 'text-gray-600 hover:text-gray-900'
+        }`}
     >
       {icon}
       <span className="font-medium">{children}</span>

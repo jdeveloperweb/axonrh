@@ -11,7 +11,10 @@ import {
   ArrowRight,
   UserCheck,
   UserMinus,
-  Briefcase
+  Briefcase,
+  BarChart3,
+  Brain,
+  GraduationCap
 } from 'lucide-react';
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
@@ -298,24 +301,28 @@ export default function DashboardPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 bg-white p-1 rounded-lg w-fit shadow-sm border border-gray-100">
+      <div className="flex items-center gap-2 p-1 bg-gray-100/80 rounded-lg w-fit">
         {[
-          { id: 'geral', label: 'Geral' },
-          { id: 'hiring', label: 'Contratação & Retenção' },
-          { id: 'diversity', label: 'Diversidade' },
-          { id: 'learning', label: 'Aprendizagem' }
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === tab.id
-                ? 'bg-white shadow text-blue-600'
-                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-              }`}
-          >
-            {tab.label}
-          </button>
-        ))}
+          { id: 'geral', label: 'Geral', icon: BarChart3 },
+          { id: 'hiring', label: 'Contratação & Retenção', icon: Users },
+          { id: 'diversity', label: 'Diversidade', icon: Brain },
+          { id: 'learning', label: 'Aprendizagem', icon: GraduationCap }
+        ].map((tab) => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${activeTab === tab.id
+                  ? 'bg-white shadow-sm text-gray-900'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
+                }`}
+            >
+              <Icon className="w-4 h-4" />
+              {tab.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Tab Content */}

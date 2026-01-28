@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
-import { Bell, Search, Sun, Moon, Monitor, Menu } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Bell, Search, Sun, Moon, Monitor, Sparkles, Bot } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useThemeStore, type Theme } from '@/stores/theme-store';
+import { useRouter } from 'next/navigation';
 
 // ==================== Component ====================
 
@@ -11,6 +12,9 @@ export function Header() {
   const { theme, setTheme } = useThemeStore();
   const [showThemeMenu, setShowThemeMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [isAiMode, setIsAiMode] = useState(false);
+  const router = useRouter();
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const themeOptions: { value: Theme; label: string; icon: React.ElementType }[] = [
     { value: 'light', label: 'Claro', icon: Sun },
@@ -21,22 +25,84 @@ export function Header() {
   const currentThemeIcon = themeOptions.find((t) => t.value === theme)?.icon || Monitor;
   const ThemeIcon = currentThemeIcon;
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const query = searchInputRef.current?.value;
+    if (!query) return;
+
+    if (isAiMode) {
+      router.push(`/assistant?q=${encodeURIComponent(query)}`);
+    } else {
+      // Todo: Implement standard search
+      console.log('Searching for:', query);
+    }
+  };
+
+  const toggleAiMode = () => {
+    setIsAiMode(!isAiMode);
+    // Focus input when switching
+    setTimeout(() => searchInputRef.current?.focus(), 100);
+  };
+
   return (
     <header className="header">
-      {/* Search */}
-      <div className="flex items-center gap-4 flex-1 max-w-xl">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-text-secondary)]" />
+      {/* Search Bar Container */}
+      <div className={cn(
+        "flex items-center gap-4 flex-1 max-w-xl transition-all duration-500",
+        isAiMode ? "scale-105" : ""
+      )}>
+        <form onSubmit={handleSearch} className="relative flex-1 group">
+          <div className={cn(
+            "absolute inset-y-0 left-0 flex items-center pl-3 transition-colors duration-300",
+            isAiMode ? "text-purple-600" : "text-[var(--color-text-secondary)]"
+          )}>
+            {isAiMode ? (
+              <Sparkles className="w-5 h-5 animate-pulse" />
+            ) : (
+              <Search className="w-5 h-5" />
+            )}
+          </div>
+
           <input
+            ref={searchInputRef}
             type="search"
-            placeholder="Buscar colaboradores, documentos..."
-            className="input pl-10 py-2"
+            placeholder={isAiMode ? "Pergunte algo à IA do Axon..." : "Buscar colaboradores, documentos..."}
+            className={cn(
+              "input pl-10 pr-12 py-2.5 w-full transition-all duration-300 border-2",
+              isAiMode
+                ? "border-purple-400 focus:border-purple-600 focus:ring-purple-200 placeholder:text-purple-400/70"
+                : "border-transparent focus:border-[var(--color-primary)] placeholder:text-gray-400"
+            )}
           />
-        </div>
+
+          {/* AI Toggle Button */}
+          <button
+            type="button"
+            onClick={toggleAiMode}
+            className={cn(
+              "absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md transition-all duration-300 flex items-center justify-center",
+              isAiMode
+                ? "bg-purple-100 text-purple-600 hover:bg-purple-200"
+                : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-[var(--color-primary)]"
+            )}
+            title={isAiMode ? "Desativar modo IA" : "Ativar assistente IA"}
+          >
+            <Bot className={cn("w-4 h-4", isAiMode && "animate-bounce")} />
+          </button>
+        </form>
       </div>
 
       {/* Actions */}
       <div className="flex items-center gap-2">
+        {/* Quick Access AI Icon */}
+        <button
+          onClick={() => router.push('/assistant')}
+          className="p-2 rounded-[var(--radius-md)] hover:bg-[var(--color-surface-variant)] text-[var(--color-text-secondary)] hover:text-purple-600 transition-colors hidden sm:block"
+          title="Ir para Assistente IA"
+        >
+          <Sparkles className="w-5 h-5" />
+        </button>
+
         {/* Theme Toggle */}
         <div className="relative">
           <button

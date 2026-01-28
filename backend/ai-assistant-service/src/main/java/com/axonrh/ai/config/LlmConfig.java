@@ -23,6 +23,18 @@ public class LlmConfig {
 
 
 
+    @javax.annotation.PostConstruct
+    public void init() {
+        if (openAiApiKey == null || openAiApiKey.isBlank()) {
+            log.warn("OpenAI API Key NÃO encontrada! As funcionalidades de IA falharão.");
+        } else {
+            String maskedKey = openAiApiKey.length() > 8
+                    ? openAiApiKey.substring(0, 7) + "..." + openAiApiKey.substring(openAiApiKey.length() - 4)
+                    : "***";
+            log.info("OpenAI API Key carregada: {}", maskedKey);
+        }
+    }
+
     @Bean
     public WebClient anthropicWebClient() {
         return WebClient.builder()
@@ -35,6 +47,9 @@ public class LlmConfig {
 
     @Bean
     public WebClient openAiWebClient() {
+        if (openAiApiKey == null || openAiApiKey.isBlank()) {
+             log.error("Tentando criar OpenAI WebClient com chave vazia!");
+        }
         return WebClient.builder()
                 .baseUrl("https://api.openai.com/v1")
                 .defaultHeader("Authorization", "Bearer " + openAiApiKey)
