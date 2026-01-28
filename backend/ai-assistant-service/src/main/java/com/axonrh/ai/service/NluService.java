@@ -85,8 +85,8 @@ public class NluService {
                     .build();
         }
 
-        // Employee queries
-        if (containsAny(normalizedMessage, "funcionários", "colaboradores", "empregados", "quem trabalha")) {
+        // Employee and Department queries
+        if (containsAny(normalizedMessage, "funcionários", "colaboradores", "empregados", "quem trabalha", "departamento", "setor", "setores", "área")) {
             Map<String, Object> entities = extractEmployeeQueryEntities(message);
             return NluResult.builder()
                     .intent("query_employee")

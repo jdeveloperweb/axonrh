@@ -84,7 +84,10 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: ${JWT_ISSUER:http://axonrh-auth-service:8081}
-          jwk-set-uri: ${JWT_JWK_URI:http://axonrh-auth-service:8081/.well-known/jwks.json}
+          # Para HS256 (chave simetrica) usamos secret-key
+          # A chave deve ter pelo menos 256 bits (32 caracteres)
+          secret-key: ${JWT_SECRET:axonrh-jwt-secret-key-change-in-production-2026}
+          jws-algorithms: HS256
 
 # MinIO Configuration
 minio:

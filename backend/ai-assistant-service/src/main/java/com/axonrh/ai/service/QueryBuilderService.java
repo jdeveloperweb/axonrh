@@ -36,6 +36,7 @@ public class QueryBuilderService {
         - Use aliases claros para as tabelas
         - Limite resultados a 100 registros por padrão
         - Proteja contra SQL injection usando parâmetros nomeados (:param)
+        - Para buscas em campos de texto (como nomes de departamentos, cargos ou funcionários), prefira usar ILIKE com wildcards (ex: field ILIKE :param AND :param := '%valor%') para ser mais tolerante a variações.
 
         Esquema do banco de dados:
         {schema}

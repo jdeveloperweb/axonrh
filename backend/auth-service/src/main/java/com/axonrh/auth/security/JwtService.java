@@ -61,6 +61,7 @@ public class JwtService {
                 .claim("name", user.getName())
                 .claim("roles", roles)
                 .claim("permissions", permissions)
+                .issuer("http://axonrh-auth-service:8081")
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiration))
                 .signWith(getSigningKey())

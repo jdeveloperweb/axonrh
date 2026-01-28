@@ -30,13 +30,14 @@ public class SecurityConfig {
                                 "/actuator/**",
                                 "/api-docs/**",
                                 "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/api/v1/employees/**"
+                                "/swagger-ui.html"
                         ).permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/employees").permitAll()
+                        .requestMatchers("/api/v1/employees/**").permitAll()
                         // Todos os outros requerem autenticacao (token JWT valido)
                         .anyRequest().authenticated()
                 )
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {}));
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(org.springframework.security.config.Customizer.withDefaults()));
 
         return http.build();
     }
