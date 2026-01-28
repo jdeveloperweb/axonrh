@@ -41,7 +41,6 @@ public class Position {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id")
-    @JsonIgnore
     private Department department;
 
     @Column(name = "is_active")

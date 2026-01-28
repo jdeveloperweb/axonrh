@@ -398,7 +398,7 @@ public class SetupWizardService {
     }
 
     public List<com.axonrh.core.setup.entity.Position> getPositions(UUID tenantId) {
-        return positionRepository.findAllByTenantId(tenantId);
+        return positionRepository.findAllByTenantIdWithDepartment(tenantId);
     }
 
     public com.axonrh.core.setup.entity.Position savePosition(UUID tenantId, com.axonrh.core.setup.entity.Position position) {
