@@ -1,4 +1,5 @@
 import { api, API_BASE_URL } from './client';
+import { useAuthStore } from '@/stores/auth-store';
 
 // ==================== Types ====================
 
@@ -186,10 +187,12 @@ export const chatApi = {
     message: string,
     conversationId?: string
   ): AsyncGenerator<StreamChunk> {
+    const { accessToken } = useAuthStore.getState();
     const response = await fetch(`${API_BASE_URL}/ai/chat/stream`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
         'X-Tenant-ID': localStorage.getItem('tenantId') || '',
         'X-User-ID': localStorage.getItem('userId') || '',
       },

@@ -195,7 +195,7 @@ services:
   config-service:
     <<: *backend-service
     container_name: axonrh-config-service
-    command: ./mvnw -pl config-service -am spring-boot:run
+    command: mvn -pl config-service -am spring-boot:run
     ports:
       - "8888:8888"
     environment:
@@ -206,7 +206,7 @@ services:
   auth-service:
     <<: *backend-service
     container_name: axonrh-auth-service
-    command: ./mvnw -pl auth-service -am spring-boot:run
+    command: mvn -pl auth-service -am spring-boot:run
     ports:
       - "8081:8081"
     environment:
@@ -217,7 +217,7 @@ services:
   core-service:
     <<: *backend-service
     container_name: axonrh-core-service
-    command: ./mvnw -pl core-service -am spring-boot:run
+    command: mvn -pl core-service -am spring-boot:run
     ports:
       - "8082:8082"
     environment:
@@ -228,7 +228,7 @@ services:
   employee-service:
     <<: *backend-service
     container_name: axonrh-employee-service
-    command: ./mvnw -pl employee-service -am spring-boot:run
+    command: mvn -pl employee-service -am spring-boot:run
     ports:
       - "8083:8083"
     environment:
@@ -239,7 +239,7 @@ services:
   timesheet-service:
     <<: *backend-service
     container_name: axonrh-timesheet-service
-    command: ./mvnw -pl timesheet-service -am spring-boot:run
+    command: mvn -pl timesheet-service -am spring-boot:run
     ports:
       - "8084:8084"
     environment:
@@ -250,7 +250,7 @@ services:
   vacation-service:
     <<: *backend-service
     container_name: axonrh-vacation-service
-    command: ./mvnw -pl vacation-service -am spring-boot:run
+    command: mvn -pl vacation-service -am spring-boot:run
     ports:
       - "8185:8085"
     environment:
@@ -261,7 +261,7 @@ services:
   performance-service:
     <<: *backend-service
     container_name: axonrh-performance-service
-    command: ./mvnw -pl performance-service -am spring-boot:run
+    command: mvn -pl performance-service -am spring-boot:run
     ports:
       - "8086:8086"
     environment:
@@ -272,7 +272,7 @@ services:
   learning-service:
     <<: *backend-service
     container_name: axonrh-learning-service
-    command: ./mvnw -pl learning-service -am spring-boot:run
+    command: mvn -pl learning-service -am spring-boot:run
     ports:
       - "8187:8087"
     environment:
@@ -283,7 +283,7 @@ services:
   ai-assistant-service:
     <<: *backend-service
     container_name: axonrh-ai-assistant-service
-    command: ./mvnw -pl ai-assistant-service -am spring-boot:run
+    command: mvn -pl ai-assistant-service -am spring-boot:run
     ports:
       - "8088:8088"
     environment:
@@ -295,7 +295,7 @@ services:
   notification-service:
     <<: *backend-service
     container_name: axonrh-notification-service
-    command: ./mvnw -pl notification-service -am spring-boot:run
+    command: mvn -pl notification-service -am spring-boot:run
     ports:
       - "8089:8089"
     environment:
@@ -306,7 +306,7 @@ services:
   integration-service:
     <<: *backend-service
     container_name: axonrh-integration-service
-    command: ./mvnw -pl integration-service -am spring-boot:run
+    command: mvn -pl integration-service -am spring-boot:run
     ports:
       - "8090:8090"
     environment:
@@ -317,7 +317,7 @@ services:
   api-gateway:
     <<: *backend-service
     container_name: axonrh-api-gateway
-    command: ./mvnw -pl api-gateway -am spring-boot:run
+    command: mvn -pl api-gateway -am spring-boot:run
     ports:
       - "8180:8080"
     environment:
