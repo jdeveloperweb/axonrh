@@ -368,12 +368,12 @@ export default function LoginClient() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full py-3 rounded-[var(--radius-md)] font-semibold text-white bg-slate-900 shadow-lg shadow-slate-300/60 hover:bg-slate-800 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full py-3 rounded-[var(--radius-md)] font-semibold text-white bg-slate-900 shadow-lg shadow-slate-300/60 hover:bg-slate-800 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isLoading ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      Entrando...
+                      <span>Entrando...</span>
                     </>
                   ) : (
                     "Entrar"

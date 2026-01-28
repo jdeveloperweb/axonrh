@@ -110,8 +110,7 @@ export interface RequiredDocumentsResponse {
 export const admissionsApi = {
   // Create admission process
   create: async (data: AdmissionCreateRequest): Promise<AdmissionProcess> => {
-    const response = await api.post('/admissions', data);
-    return response.data;
+    return api.post<AdmissionCreateRequest, AdmissionProcess>('/admissions', data);
   },
 
   // List admission processes
@@ -122,20 +121,17 @@ export const admissionsApi = {
     if (params.status) searchParams.set('status', params.status);
     if (params.search) searchParams.set('search', params.search);
 
-    const response = await api.get(`/admissions?${searchParams.toString()}`);
-    return response.data;
+    return api.get<AdmissionListResponse, AdmissionListResponse>(`/admissions?${searchParams.toString()}`);
   },
 
   // Get admission by ID
   getById: async (id: string): Promise<AdmissionProcess> => {
-    const response = await api.get(`/admissions/${id}`);
-    return response.data;
+    return api.get<AdmissionProcess, AdmissionProcess>(`/admissions/${id}`);
   },
 
   // Resend admission link
   resendLink: async (id: string): Promise<{ message: string; link: string }> => {
-    const response = await api.post(`/admissions/${id}/resend-link`);
-    return response.data;
+    return api.post<any, { message: string; link: string }>(`/admissions/${id}/resend-link`);
   },
 
   // Cancel admission
@@ -145,20 +141,17 @@ export const admissionsApi = {
 
   // Get process documents
   getDocuments: async (id: string): Promise<AdmissionDocument[]> => {
-    const response = await api.get(`/admissions/${id}/documents`);
-    return response.data;
+    return api.get<AdmissionDocument[], AdmissionDocument[]>(`/admissions/${id}/documents`);
   },
 
   // Get contract preview
   getContractPreview: async (id: string): Promise<string> => {
-    const response = await api.get(`/admissions/${id}/contract-preview`);
-    return response.data;
+    return api.get<string, string>(`/admissions/${id}/contract-preview`);
   },
 
   // Complete admission
   complete: async (id: string): Promise<AdmissionProcess> => {
-    const response = await api.post(`/admissions/${id}/complete`);
-    return response.data;
+    return api.post<any, AdmissionProcess>(`/admissions/${id}/complete`);
   },
 
   // Get statistics
@@ -166,28 +159,24 @@ export const admissionsApi = {
     const params = new URLSearchParams();
     if (startDate) params.set('startDate', startDate);
     if (endDate) params.set('endDate', endDate);
-    const response = await api.get(`/admissions/statistics?${params.toString()}`);
-    return response.data;
+    return api.get<any, any>(`/admissions/statistics?${params.toString()}`);
   },
 
   // Get count by status
   getCountByStatus: async (): Promise<Record<AdmissionStatus, number>> => {
-    const response = await api.get('/admissions/statistics/by-status');
-    return response.data;
+    return api.get<Record<AdmissionStatus, number>, Record<AdmissionStatus, number>>('/admissions/statistics/by-status');
   },
 
   // Public API (for candidates)
   public: {
     // Access by token
     access: async (token: string): Promise<AdmissionProcess> => {
-      const response = await api.get(`/admissions/public/${token}`);
-      return response.data;
+      return api.get<AdmissionProcess, AdmissionProcess>(`/admissions/public/${token}`);
     },
 
     // Save candidate data
     saveData: async (token: string, data: Record<string, any>): Promise<AdmissionProcess> => {
-      const response = await api.post(`/admissions/public/${token}/data`, data);
-      return response.data;
+      return api.post<Record<string, any>, AdmissionProcess>(`/admissions/public/${token}/data`, data);
     },
 
     // Upload document
@@ -195,40 +184,34 @@ export const admissionsApi = {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('documentType', documentType);
-      const response = await api.post(`/admissions/public/${token}/documents`, formData, {
+      return api.post<FormData, any>(`/admissions/public/${token}/documents`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      return response.data;
     },
 
     // Get documents
     getDocuments: async (token: string): Promise<any[]> => {
-      const response = await api.get(`/admissions/public/${token}/documents`);
-      return response.data;
+      return api.get<any[], any[]>(`/admissions/public/${token}/documents`);
     },
 
     // Get required documents status
     getRequiredDocuments: async (token: string): Promise<RequiredDocumentsResponse> => {
-      const response = await api.get(`/admissions/public/${token}/required-documents`);
-      return response.data;
+      return api.get<RequiredDocumentsResponse, RequiredDocumentsResponse>(`/admissions/public/${token}/required-documents`);
     },
 
     // Validate all documents
     validateDocuments: async (token: string): Promise<any> => {
-      const response = await api.post(`/admissions/public/${token}/validate-documents`);
-      return response.data;
+      return api.post<any, any>(`/admissions/public/${token}/validate-documents`);
     },
 
     // Get contract
     getContract: async (token: string): Promise<any> => {
-      const response = await api.get(`/admissions/public/${token}/contract`);
-      return response.data;
+      return api.get<any, any>(`/admissions/public/${token}/contract`);
     },
 
     // Sign contract
     signContract: async (token: string, signatureData: Record<string, any>): Promise<AdmissionProcess> => {
-      const response = await api.post(`/admissions/public/${token}/sign-contract`, signatureData);
-      return response.data;
+      return api.post<Record<string, any>, AdmissionProcess>(`/admissions/public/${token}/sign-contract`, signatureData);
     },
   },
 };

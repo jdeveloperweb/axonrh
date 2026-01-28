@@ -40,18 +40,16 @@ export const authApi = {
    * Realiza login com email e senha.
    */
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
-    const response = await apiClient.post<LoginResponse>('/auth/login', credentials);
-    return response.data;
+    return apiClient.post<LoginResponse, LoginResponse>('/auth/login', credentials);
   },
 
   /**
    * Renova o access token usando o refresh token.
    */
   refresh: async (refreshToken: string): Promise<RefreshResponse> => {
-    const response = await apiClient.post<RefreshResponse>('/auth/refresh', {
+    return apiClient.post<RefreshResponse, RefreshResponse>('/auth/refresh', {
       refreshToken,
     });
-    return response.data;
   },
 
   /**
@@ -65,24 +63,21 @@ export const authApi = {
    * Busca informacoes do usuario autenticado.
    */
   me: async (): Promise<User> => {
-    const response = await apiClient.get<User>('/auth/me');
-    return response.data;
+    return apiClient.get<User, User>('/auth/me');
   },
 
   /**
    * Inicia setup de 2FA.
    */
   setup2FA: async (): Promise<{ secret: string; qrCodeUrl: string }> => {
-    const response = await apiClient.post('/auth/2fa/setup');
-    return response.data;
+    return apiClient.post<any, { secret: string; qrCodeUrl: string }>('/auth/2fa/setup');
   },
 
   /**
    * Confirma ativacao de 2FA.
    */
   confirm2FA: async (code: string): Promise<{ backupCodes: string[] }> => {
-    const response = await apiClient.post('/auth/2fa/confirm', { code });
-    return response.data;
+    return apiClient.post<any, { backupCodes: string[] }>('/auth/2fa/confirm', { code });
   },
 
   /**

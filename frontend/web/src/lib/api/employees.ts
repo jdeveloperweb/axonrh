@@ -169,26 +169,22 @@ export const employeesApi = {
     if (params.departmentId) searchParams.set('departmentId', params.departmentId);
     if (params.positionId) searchParams.set('positionId', params.positionId);
 
-    const response = await api.get(`/employees?${searchParams.toString()}`);
-    return response.data;
+    return api.get<EmployeeListResponse, EmployeeListResponse>(`/employees?${searchParams.toString()}`);
   },
 
   // Get single employee
   getById: async (id: string): Promise<Employee> => {
-    const response = await api.get(`/employees/${id}`);
-    return response.data;
+    return api.get<Employee, Employee>(`/employees/${id}`);
   },
 
   // Create employee
   create: async (data: EmployeeCreateRequest): Promise<Employee> => {
-    const response = await api.post('/employees', data);
-    return response.data;
+    return api.post<EmployeeCreateRequest, Employee>('/employees', data);
   },
 
   // Update employee
   update: async (id: string, data: EmployeeUpdateRequest): Promise<Employee> => {
-    const response = await api.put(`/employees/${id}`, data);
-    return response.data;
+    return api.put<EmployeeUpdateRequest, Employee>(`/employees/${id}`, data);
   },
 
   // Delete employee (soft delete)
@@ -198,24 +194,21 @@ export const employeesApi = {
 
   // Get employee history
   getHistory: async (id: string): Promise<any[]> => {
-    const response = await api.get(`/employees/${id}/history`);
-    return response.data;
+    return api.get<any[], any[]>(`/employees/${id}/history`);
   },
 
   // Upload employee photo
   uploadPhoto: async (id: string, file: File): Promise<{ photoUrl: string }> => {
     const formData = new FormData();
     formData.append('file', file);
-    const response = await api.post(`/employees/${id}/photo`, formData, {
+    return api.post<FormData, { photoUrl: string }>(`/employees/${id}/photo`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
-    return response.data;
   },
 
   // Get employee documents
   getDocuments: async (id: string): Promise<EmployeeDocument[]> => {
-    const response = await api.get(`/employees/${id}/documents`);
-    return response.data;
+    return api.get<EmployeeDocument[], EmployeeDocument[]>(`/employees/${id}/documents`);
   },
 
   // Upload employee document
@@ -223,28 +216,24 @@ export const employeesApi = {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('type', type);
-    const response = await api.post(`/employees/${id}/documents`, formData, {
+    return api.post<FormData, EmployeeDocument>(`/employees/${id}/documents`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
-    return response.data;
   },
 
   // Get employee dependents
   getDependents: async (id: string): Promise<EmployeeDependent[]> => {
-    const response = await api.get(`/employees/${id}/dependents`);
-    return response.data;
+    return api.get<EmployeeDependent[], EmployeeDependent[]>(`/employees/${id}/dependents`);
   },
 
   // Add dependent
   addDependent: async (id: string, dependent: Omit<EmployeeDependent, 'id'>): Promise<EmployeeDependent> => {
-    const response = await api.post(`/employees/${id}/dependents`, dependent);
-    return response.data;
+    return api.post<any, EmployeeDependent>(`/employees/${id}/dependents`, dependent);
   },
 
   // Update dependent
   updateDependent: async (employeeId: string, dependentId: string, data: Partial<EmployeeDependent>): Promise<EmployeeDependent> => {
-    const response = await api.put(`/employees/${employeeId}/dependents/${dependentId}`, data);
-    return response.data;
+    return api.put<any, EmployeeDependent>(`/employees/${employeeId}/dependents/${dependentId}`, data);
   },
 
   // Remove dependent
@@ -254,27 +243,23 @@ export const employeesApi = {
 
   // Get departments
   getDepartments: async (): Promise<Department[]> => {
-    const response = await api.get('/departments');
-    return response.data;
+    return api.get<Department[], Department[]>('/departments');
   },
 
   // Get positions
   getPositions: async (departmentId?: string): Promise<Position[]> => {
     const url = departmentId ? `/positions?departmentId=${departmentId}` : '/positions';
-    const response = await api.get(url);
-    return response.data;
+    return api.get<Position[], Position[]>(url);
   },
 
   // Get cost centers
   getCostCenters: async (): Promise<CostCenter[]> => {
-    const response = await api.get('/cost-centers');
-    return response.data;
+    return api.get<CostCenter[], CostCenter[]>('/cost-centers');
   },
 
   // Get org chart data
   getOrgChart: async (): Promise<any> => {
-    const response = await api.get('/employees/org-chart');
-    return response.data;
+    return api.get<any, any>('/employees/org-chart');
   },
 
   // Export employees
@@ -285,21 +270,18 @@ export const employeesApi = {
     if (params?.status) searchParams.set('status', params.status);
     if (params?.departmentId) searchParams.set('departmentId', params.departmentId);
 
-    const response = await api.get(`/employees/export?${searchParams.toString()}`, {
+    return api.get<any, Blob>(`/employees/export?${searchParams.toString()}`, {
       responseType: 'blob',
     });
-    return response.data;
   },
 
   // Validate CPF
   validateCpf: async (cpf: string): Promise<{ valid: boolean; message?: string }> => {
-    const response = await api.get(`/employees/validate-cpf/${cpf}`);
-    return response.data;
+    return api.get<any, { valid: boolean; message?: string }>(`/employees/validate-cpf/${cpf}`);
   },
 
   // Search address by CEP
   searchCep: async (cep: string): Promise<EmployeeAddress> => {
-    const response = await api.get(`/address/cep/${cep}`);
-    return response.data;
+    return api.get<any, EmployeeAddress>(`/address/cep/${cep}`);
   },
 };

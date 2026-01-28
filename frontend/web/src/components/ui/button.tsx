@@ -52,7 +52,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         disabled={disabled || isLoading}
-        className={cn(variants[variant], sizes[size], className)}
+        className={cn(variants[variant], sizes[size], 'flex items-center justify-center gap-2', className)}
         {...props}
       >
         {isLoading ? (

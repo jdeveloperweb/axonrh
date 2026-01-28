@@ -264,56 +264,50 @@ export const timesheetApi = {
    * Register a time punch
    */
   registerTimeRecord: async (data: TimeRecordRequest): Promise<TimeRecord> => {
-    const response = await api.post('/api/v1/timesheet/records', data);
-    return response.data;
+    return api.post<TimeRecordRequest, TimeRecord>('/api/v1/timesheet/records', data);
   },
 
   /**
    * Get today's records for current employee
    */
   getTodayRecords: async (): Promise<TimeRecord[]> => {
-    const response = await api.get('/api/v1/timesheet/records/today');
-    return response.data;
+    return api.get<TimeRecord[], TimeRecord[]>('/api/v1/timesheet/records/today');
   },
 
   /**
    * Get records for a specific date
    */
   getRecordsByDate: async (employeeId: string, date: string): Promise<TimeRecord[]> => {
-    const response = await api.get(`/api/v1/timesheet/records/employee/${employeeId}`, {
+    return api.get<TimeRecord[], TimeRecord[]>(`/api/v1/timesheet/records/employee/${employeeId}`, {
       params: { date }
     });
-    return response.data;
   },
 
   /**
    * Get pending records for approval
    */
   getPendingRecords: async (page = 0, size = 20): Promise<{ content: TimeRecord[]; totalElements: number }> => {
-    const response = await api.get('/api/v1/timesheet/records/pending', {
+    return api.get<any, { content: TimeRecord[]; totalElements: number }>('/api/v1/timesheet/records/pending', {
       params: { page, size }
     });
-    return response.data;
   },
 
   /**
    * Approve a pending record
    */
   approveRecord: async (recordId: string, notes?: string): Promise<TimeRecord> => {
-    const response = await api.post(`/api/v1/timesheet/records/${recordId}/approve`, null, {
+    return api.post<any, TimeRecord>(`/api/v1/timesheet/records/${recordId}/approve`, null, {
       params: { notes }
     });
-    return response.data;
   },
 
   /**
    * Reject a pending record
    */
   rejectRecord: async (recordId: string, reason: string): Promise<TimeRecord> => {
-    const response = await api.post(`/api/v1/timesheet/records/${recordId}/reject`, null, {
+    return api.post<any, TimeRecord>(`/api/v1/timesheet/records/${recordId}/reject`, null, {
       params: { reason }
     });
-    return response.data;
   },
 
   // ==================== Timesheet / Daily Summary ====================
@@ -326,10 +320,9 @@ export const timesheetApi = {
     startDate: string,
     endDate: string
   ): Promise<DailySummary[]> => {
-    const response = await api.get(`/api/v1/timesheet/timesheet/employee/${employeeId}`, {
+    return api.get<DailySummary[], DailySummary[]>(`/api/v1/timesheet/timesheet/employee/${employeeId}`, {
       params: { startDate, endDate }
     });
-    return response.data;
   },
 
   /**
@@ -340,10 +333,9 @@ export const timesheetApi = {
     startDate: string,
     endDate: string
   ): Promise<PeriodTotals> => {
-    const response = await api.get(`/api/v1/timesheet/timesheet/employee/${employeeId}/totals`, {
+    return api.get<PeriodTotals, PeriodTotals>(`/api/v1/timesheet/timesheet/employee/${employeeId}/totals`, {
       params: { startDate, endDate }
     });
-    return response.data;
   },
 
   /**
@@ -365,8 +357,7 @@ export const timesheetApi = {
    * Create adjustment request
    */
   createAdjustment: async (data: TimeAdjustmentRequest): Promise<TimeAdjustment> => {
-    const response = await api.post('/api/v1/timesheet/adjustments', data);
-    return response.data;
+    return api.post<TimeAdjustmentRequest, TimeAdjustment>('/api/v1/timesheet/adjustments', data);
   },
 
   /**
@@ -399,10 +390,9 @@ export const timesheetApi = {
    * Approve adjustment
    */
   approveAdjustment: async (adjustmentId: string, notes?: string): Promise<TimeAdjustment> => {
-    const response = await api.post(`/api/v1/timesheet/adjustments/${adjustmentId}/approve`, null, {
+    return api.post<any, TimeAdjustment>(`/api/v1/timesheet/adjustments/${adjustmentId}/approve`, null, {
       params: { notes }
     });
-    return response.data;
   },
 
   /**
@@ -429,8 +419,7 @@ export const timesheetApi = {
    * List work schedules
    */
   listSchedules: async (): Promise<WorkSchedule[]> => {
-    const response = await api.get('/api/v1/timesheet/schedules');
-    return response.data;
+    return api.get<WorkSchedule[], WorkSchedule[]>('/api/v1/timesheet/schedules');
   },
 
   /**
@@ -484,8 +473,7 @@ export const timesheetApi = {
    * List geofences
    */
   listGeofences: async (): Promise<Geofence[]> => {
-    const response = await api.get('/api/v1/timesheet/geofences');
-    return response.data;
+    return api.get<Geofence[], Geofence[]>('/api/v1/timesheet/geofences');
   },
 
   /**
@@ -517,8 +505,7 @@ export const timesheetApi = {
    * Get current balance
    */
   getOvertimeBalance: async (employeeId: string): Promise<{ balanceMinutes: number; balanceFormatted: string; isPositive: boolean }> => {
-    const response = await api.get(`/api/v1/timesheet/overtime-bank/employee/${employeeId}/balance`);
-    return response.data;
+    return api.get<any, { balanceMinutes: number; balanceFormatted: string; isPositive: boolean }>(`/api/v1/timesheet/overtime-bank/employee/${employeeId}/balance`);
   },
 
   /**
@@ -575,8 +562,12 @@ export const timesheetApi = {
     employeesWithIssues: number;
     todayRecords: number;
   }> => {
-    const response = await api.get('/api/v1/timesheet/statistics');
-    return response.data;
+    return api.get<any, {
+      pendingRecords: number;
+      pendingAdjustments: number;
+      employeesWithIssues: number;
+      todayRecords: number;
+    }>('/api/v1/timesheet/statistics');
   },
 };
 

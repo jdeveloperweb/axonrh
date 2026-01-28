@@ -74,52 +74,47 @@ export const configApi = {
    * Busca configuracao de tema do tenant.
    */
   getThemeConfig: async (tenantId: string): Promise<ThemeConfig> => {
-    const response = await apiClient.get<ThemeConfig>(`/config/theme/${tenantId}`);
-    return response.data;
+    return apiClient.get<ThemeConfig, ThemeConfig>(`/config/theme/${tenantId}`);
   },
 
   /**
    * Atualiza configuracao de tema.
    */
   updateThemeConfig: async (tenantId: string, config: ThemeConfigRequest): Promise<ThemeConfig> => {
-    const response = await apiClient.put<ThemeConfig>(`/config/theme/${tenantId}`, config);
-    return response.data;
+    return apiClient.put<ThemeConfigRequest, ThemeConfig>(`/config/theme/${tenantId}`, config);
   },
 
   /**
    * Busca CSS gerado.
    */
   getCss: async (tenantId: string): Promise<string> => {
-    const response = await apiClient.get<string>(`/config/theme/${tenantId}/css`, {
+    return apiClient.get<string, string>(`/config/theme/${tenantId}/css`, {
       headers: { Accept: 'text/css' },
     });
-    return response.data;
   },
 
   /**
    * Busca variaveis CSS como JSON.
    */
   getCssVariables: async (tenantId: string): Promise<CssVariables> => {
-    const response = await apiClient.get<CssVariables>(`/config/theme/${tenantId}/variables`);
-    return response.data;
+    return apiClient.get<CssVariables, CssVariables>(`/config/theme/${tenantId}/variables`);
   },
 
   /**
    * Valida contraste entre cores.
    */
   validateContrast: async (foreground: string, background: string): Promise<boolean> => {
-    const response = await apiClient.get<{ valid: boolean }>('/config/theme/validate-contrast', {
+    const response = await apiClient.get<any, { valid: boolean }>('/config/theme/validate-contrast', {
       params: { foreground, background },
     });
-    return response.data.valid;
+    return response.valid;
   },
 
   /**
    * Rollback para versao anterior.
    */
   rollbackTheme: async (tenantId: string, version: number): Promise<ThemeConfig> => {
-    const response = await apiClient.post<ThemeConfig>(`/config/theme/${tenantId}/rollback/${version}`);
-    return response.data;
+    return apiClient.post<any, ThemeConfig>(`/config/theme/${tenantId}/rollback/${version}`);
   },
 
   /**
@@ -129,10 +124,9 @@ export const configApi = {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await apiClient.post<LogoUploadResponse>(`/config/logo/${tenantId}`, formData, {
+    return apiClient.post<FormData, LogoUploadResponse>(`/config/logo/${tenantId}`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
-    return response.data;
   },
 
   /**
@@ -142,10 +136,9 @@ export const configApi = {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await apiClient.post<LogoUploadResponse>(`/config/logo/${tenantId}/dark`, formData, {
+    return apiClient.post<FormData, LogoUploadResponse>(`/config/logo/${tenantId}/dark`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
-    return response.data;
   },
 
   /**
@@ -155,10 +148,9 @@ export const configApi = {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await apiClient.post<LogoUploadResponse>(`/config/favicon/${tenantId}`, formData, {
+    return apiClient.post<FormData, LogoUploadResponse>(`/config/favicon/${tenantId}`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
-    return response.data;
   },
 
   /**
@@ -168,10 +160,9 @@ export const configApi = {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await apiClient.post<LogoUploadResponse>(`/config/login-background/${tenantId}`, formData, {
+    return apiClient.post<FormData, LogoUploadResponse>(`/config/login-background/${tenantId}`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
-    return response.data;
   },
 
   /**

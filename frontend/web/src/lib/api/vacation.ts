@@ -107,8 +107,7 @@ export const vacationApi = {
    * List periods for an employee
    */
   getEmployeePeriods: async (employeeId: string): Promise<VacationPeriod[]> => {
-    const response = await api.get(`/api/v1/vacation/periods/employee/${employeeId}`);
-    return response.data;
+    return api.get<VacationPeriod[], VacationPeriod[]>(`/api/v1/vacation/periods/employee/${employeeId}`);
   },
 
   /**
@@ -135,8 +134,7 @@ export const vacationApi = {
    * Create vacation request
    */
   createRequest: async (data: VacationRequestCreateDTO): Promise<VacationRequest> => {
-    const response = await api.post('/api/v1/vacation/requests', data);
-    return response.data;
+    return api.post<VacationRequestCreateDTO, VacationRequest>('/api/v1/vacation/requests', data);
   },
 
   /**
@@ -161,10 +159,9 @@ export const vacationApi = {
    * Approve request
    */
   approveRequest: async (requestId: string, notes?: string): Promise<VacationRequest> => {
-    const response = await api.post(`/api/v1/vacation/requests/${requestId}/approve`, null, {
+    return api.post<any, VacationRequest>(`/api/v1/vacation/requests/${requestId}/approve`, null, {
       params: { notes }
     });
-    return response.data;
   },
 
   /**
@@ -248,8 +245,12 @@ export const vacationApi = {
     employeesOnVacation: number;
     upcomingVacations: number;
   }> => {
-    const response = await api.get('/api/v1/vacation/statistics');
-    return response.data;
+    return api.get<any, {
+      pendingRequests: number;
+      expiringPeriods: number;
+      employeesOnVacation: number;
+      upcomingVacations: number;
+    }>('/api/v1/vacation/statistics');
   },
 };
 
