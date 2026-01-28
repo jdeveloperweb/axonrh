@@ -22,6 +22,7 @@ import java.io.IOException;
 public class TenantFilter extends OncePerRequestFilter {
 
     private static final String TENANT_HEADER = "X-Tenant-Id";
+    private static final String TENANT_HEADER_ALT = "X-Tenant-ID";
     private static final String CORRELATION_HEADER = "X-Correlation-ID";
 
     @Override
@@ -31,8 +32,11 @@ public class TenantFilter extends OncePerRequestFilter {
 
         try {
             log.debug(">>> [DEBUG-TRACE] Request arriving: {} {}", request.getMethod(), request.getRequestURI());
-            // Extrai tenant do header
+            // Extrai tenant do header (tenta ambos os formatos)
             String tenantId = request.getHeader(TENANT_HEADER);
+            if (tenantId == null || tenantId.isBlank()) {
+                tenantId = request.getHeader(TENANT_HEADER_ALT);
+            }
 
             if (tenantId != null && !tenantId.isBlank()) {
                 log.debug("Tenant ID encontrado no header {}: {}", TENANT_HEADER, tenantId);
