@@ -25,6 +25,20 @@ export interface DashboardStats {
     tenureDistribution: Record<string, number>;
 }
 
+export interface LearningStats {
+    totalActiveEnrollments: number;
+    completionsThisMonth: number;
+    averageProgress: number;
+    totalTrainingHours: number;
+    statusDistribution: Record<string, number>;
+    monthlyActivity: Array<{
+        month: string;
+        completions: number;
+        enrollments: number;
+    }>;
+}
+
 export const dashboardApi = {
     getStats: () => api.get<DashboardStats, DashboardStats>('/dashboard/stats'),
+    getLearningStats: () => api.get<LearningStats, LearningStats>('/learning/dashboard/stats'),
 };

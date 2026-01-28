@@ -65,8 +65,8 @@ const navGroups: NavGroup[] = [
   {
     title: 'FERRAMENTAS',
     items: [
-      { label: 'Calculadora', href: '/assistant?tab=calculator', icon: Calculator },
-      { label: 'Base de Conhecimento', href: '/assistant?tab=knowledge', icon: Database },
+      { label: 'Calculadora', href: '/calculator', icon: Calculator },
+      { label: 'Base de Conhecimento', href: '/knowledge', icon: Database },
     ]
   },
   {

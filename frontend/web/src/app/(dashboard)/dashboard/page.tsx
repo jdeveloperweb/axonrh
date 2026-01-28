@@ -14,7 +14,10 @@ import {
   Briefcase,
   BarChart3,
   Brain,
-  GraduationCap
+  GraduationCap,
+  CheckCircle,
+  BookOpen,
+  Clock as ClockIcon
 } from 'lucide-react';
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
@@ -24,7 +27,7 @@ import {
 
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { useAuthStore } from '@/stores/auth-store';
-import { dashboardApi, DashboardStats } from '@/lib/api/dashboard';
+import { dashboardApi, DashboardStats, LearningStats } from '@/lib/api/dashboard';
 
 // ==================== Types ====================
 
@@ -43,14 +46,19 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'
 export default function DashboardPage() {
   const { user } = useAuthStore();
   const [statsData, setStatsData] = useState<DashboardStats | null>(null);
+  const [learningStats, setLearningStats] = useState<LearningStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('geral');
 
   useEffect(() => {
     async function loadStats() {
       try {
-        const data = await dashboardApi.getStats();
-        setStatsData(data);
+        const [dashboardData, learningData] = await Promise.all([
+          dashboardApi.getStats(),
+          dashboardApi.getLearningStats().catch(() => null)
+        ]);
+        setStatsData(dashboardData);
+        setLearningStats(learningData);
       } catch (error) {
         console.error('Error loading dashboard stats:', error);
       } finally {
@@ -381,6 +389,125 @@ export default function DashboardPage() {
     );
   };
 
+  const renderLearningTab = () => {
+    // Learning Data Transformation
+    const statusData = learningStats?.statusDistribution
+      ? Object.entries(learningStats.statusDistribution).map(([name, value]) => ({ name, value }))
+      : [];
+
+    const monthlyActivity = learningStats?.monthlyActivity || [];
+
+    const stats: StatCard[] = [
+      {
+        title: 'Treinamentos Ativos',
+        value: learningStats?.totalActiveEnrollments || 0,
+        subtext: 'Em andamento',
+        icon: BookOpen,
+        color: '#2563EB',
+      },
+      {
+        title: 'Concluídos (Mês)',
+        value: learningStats?.completionsThisMonth || 0,
+        subtext: 'Certificados emitidos',
+        icon: CheckCircle,
+        color: '#16A34A',
+      },
+      {
+        title: 'Progresso Médio',
+        value: `${Math.round(learningStats?.averageProgress || 0)}%`,
+        subtext: 'Em cursos ativos',
+        icon: TrendingUp,
+        color: '#8B5CF6',
+      },
+      {
+        title: 'Horas de Treinamento',
+        value: Math.round(learningStats?.totalTrainingHours || 0),
+        subtext: 'Total acumulado',
+        icon: ClockIcon,
+        color: '#F59E0B',
+      },
+    ];
+
+    return (
+      <div className="space-y-6 animate-in fade-in duration-500">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {stats.map((stat) => {
+            const Icon = stat.icon;
+            return (
+              <Card key={stat.title} className="hover:shadow-md transition-all border-none shadow-sm bg-white">
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-500 mb-1">{stat.title}</p>
+                      <h3 className="text-3xl font-bold text-gray-900">{stat.value}</h3>
+                      <p className="text-xs text-gray-400 mt-1">{stat.subtext}</p>
+                    </div>
+                    <div className="p-3 rounded-xl bg-opacity-10" style={{ backgroundColor: `${stat.color}15` }}>
+                      <Icon className="w-6 h-6" style={{ color: stat.color }} />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+
+        {/* Charts Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="border-none shadow-sm h-[400px]">
+            <CardHeader>
+              <CardTitle>Evolução de Aprendizado</CardTitle>
+              <p className="text-sm text-gray-500">Conclusões vs Novas Matrículas (Últimos 6 meses)</p>
+            </CardHeader>
+            <CardContent className="h-[320px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={monthlyActivity}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="enrollments" name="Matrículas" fill="#93C5FD" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="completions" name="Conclusões" fill="#2563EB" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          <Card className="border-none shadow-sm h-[400px]">
+            <CardHeader>
+              <CardTitle>Status dos Treinamentos</CardTitle>
+            </CardHeader>
+            <CardContent className="h-[320px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={statusData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={80}
+                    outerRadius={110}
+                    fill="#8884d8"
+                    paddingAngle={5}
+                    dataKey="value"
+                    label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                  >
+                    {statusData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend verticalAlign="bottom" height={36} />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return <div className="flex h-96 items-center justify-center">Carregando dashboard...</div>;
   }
@@ -429,11 +556,7 @@ export default function DashboardPage() {
         {activeTab === 'geral' && renderGeralTab()}
         {activeTab === 'hiring' && renderHiringTab()}
         {activeTab === 'diversity' && renderDiversityTab()}
-        {activeTab === 'learning' && (
-          <div className="flex items-center justify-center h-60 bg-white rounded-lg border border-dashed border-gray-300">
-            <p className="text-gray-500">Módulo em desenvolvimento</p>
-          </div>
-        )}
+        {activeTab === 'learning' && renderLearningTab()}
       </div>
     </div>
   );

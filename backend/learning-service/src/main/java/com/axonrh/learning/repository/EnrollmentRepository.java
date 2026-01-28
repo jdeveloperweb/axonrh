@@ -49,4 +49,34 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, UUID> {
            "AND e.status IN ('ENROLLED', 'IN_PROGRESS')")
     Double calculateAverageProgress(@Param("tenantId") UUID tenantId,
                                     @Param("employeeId") UUID employeeId);
+
+    // Dashboard Queries
+
+    @Query("SELECT COUNT(e) FROM Enrollment e WHERE e.tenantId = :tenantId AND e.status IN ('ENROLLED', 'IN_PROGRESS')")
+    long countActiveByTenant(@Param("tenantId") UUID tenantId);
+
+    @Query("SELECT COUNT(e) FROM Enrollment e WHERE e.tenantId = :tenantId " +
+           "AND e.status = 'COMPLETED' " +
+           "AND e.completedAt BETWEEN :start AND :end")
+    long countCompletedByTenantAndDateRange(@Param("tenantId") UUID tenantId,
+                                            @Param("start") LocalDateTime start,
+                                            @Param("end") LocalDateTime end);
+
+    @Query("SELECT COUNT(e) FROM Enrollment e WHERE e.tenantId = :tenantId " +
+            "AND e.enrolledAt BETWEEN :start AND :end")
+    long countEnrolledByTenantAndDateRange(@Param("tenantId") UUID tenantId,
+                                            @Param("start") LocalDateTime start,
+                                            @Param("end") LocalDateTime end);
+
+
+    @Query("SELECT AVG(e.progressPercentage) FROM Enrollment e WHERE e.tenantId = :tenantId " +
+           "AND e.status IN ('ENROLLED', 'IN_PROGRESS')")
+    Double calculateTenantAverageProgress(@Param("tenantId") UUID tenantId);
+
+    @Query("SELECT SUM(c.durationMinutes) FROM Enrollment e JOIN e.course c WHERE e.tenantId = :tenantId " +
+           "AND e.status = 'COMPLETED'")
+    Long sumCompletedDurationMinutes(@Param("tenantId") UUID tenantId);
+
+    @Query("SELECT e.status, COUNT(e) FROM Enrollment e WHERE e.tenantId = :tenantId GROUP BY e.status")
+    List<Object[]> countByStatusGrouped(@Param("tenantId") UUID tenantId);
 }
