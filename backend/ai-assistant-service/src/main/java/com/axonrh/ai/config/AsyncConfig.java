@@ -33,6 +33,8 @@ public class AsyncConfig implements WebMvcConfigurer {
         executor.setThreadNamePrefix("embedding-");
         executor.initialize();
         return executor;
+    }
+
     @Override
     public void configureAsyncSupport(AsyncSupportConfigurer configurer) {
         configurer.setTaskExecutor((ThreadPoolTaskExecutor) aiTaskExecutor());

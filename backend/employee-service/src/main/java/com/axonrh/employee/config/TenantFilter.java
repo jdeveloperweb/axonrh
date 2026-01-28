@@ -30,6 +30,7 @@ public class TenantFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
 
         try {
+            log.debug(">>> [DEBUG-TRACE] Request arriving: {} {}", request.getMethod(), request.getRequestURI());
             // Extrai tenant do header
             String tenantId = request.getHeader(TENANT_HEADER);
 

@@ -34,6 +34,12 @@ public class EmployeeController {
 
     private final EmployeeService employeeService;
 
+    @GetMapping("/test")
+    public ResponseEntity<String> test() {
+        log.info(">>> [DEBUG-TRACE] EmployeeController.test CALLED");
+        return ResponseEntity.ok("Employee service is reachable");
+    }
+
     @GetMapping
     @PreAuthorize("hasAuthority('EMPLOYEE:READ')")
     @Operation(summary = "Lista colaboradores", description = "Retorna lista paginada de colaboradores ativos")

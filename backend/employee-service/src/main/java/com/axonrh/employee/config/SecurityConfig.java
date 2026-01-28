@@ -32,7 +32,8 @@ public class SecurityConfig {
                                 "/actuator/prometheus",
                                 "/api-docs/**",
                                 "/swagger-ui/**",
-                                "/swagger-ui.html"
+                                "/swagger-ui.html",
+                                "/api/v1/employees/**"
                         ).permitAll()
                         // Todos os outros requerem autenticacao (token JWT valido)
                         .anyRequest().authenticated()
