@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   setupApi,
@@ -14,15 +14,7 @@ function SetupContent() {
   const [summary, setSummary] = useState<SetupSummary | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const tenantId = searchParams.get('tenantId');
-    if (tenantId) {
-      localStorage.setItem('setup_tenant_id', tenantId);
-    }
-    loadSummary();
-  }, [searchParams]);
-
-  const loadSummary = async () => {
+  const loadSummary = useCallback(async () => {
     try {
       const data = await setupApi.getSummary();
       setSummary(data);
@@ -42,7 +34,15 @@ function SetupContent() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    const tenantId = searchParams.get('tenantId');
+    if (tenantId) {
+      localStorage.setItem('setup_tenant_id', tenantId);
+    }
+    loadSummary();
+  }, [searchParams, loadSummary]);
 
   const goToStep = async (stepNumber: number) => {
     try {
@@ -228,10 +228,10 @@ function SetupContent() {
                   <div className="flex items-center">
                     {/* Step Number/Status */}
                     <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${isCompleted
-                        ? 'bg-green-100 text-green-600'
-                        : isCurrent
-                          ? 'bg-blue-100 text-blue-600'
-                          : 'bg-gray-100 text-gray-400'
+                      ? 'bg-green-100 text-green-600'
+                      : isCurrent
+                        ? 'bg-blue-100 text-blue-600'
+                        : 'bg-gray-100 text-gray-400'
                       }`}>
                       {isCompleted ? (
                         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

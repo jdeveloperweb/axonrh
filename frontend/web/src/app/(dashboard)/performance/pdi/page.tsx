@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -17,7 +17,6 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   ArrowLeft,
   Plus,
@@ -26,19 +25,14 @@ import {
   Clock,
   CheckCircle2,
   User,
-  Calendar,
-  BookOpen,
-  GraduationCap,
   Users,
-  Briefcase,
+  Calendar,
   Target,
 } from 'lucide-react';
 import Link from 'next/link';
 import {
   pdisApi,
   PDI,
-  PDIAction,
-  PDIActionType,
   PDIStatistics,
 } from '@/lib/api/performance';
 
@@ -82,18 +76,7 @@ export default function PDIListPage() {
     loadData();
   }, [loadData]);
 
-  const getStatusBadge = (status: string) => {
-    const config: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
-      DRAFT: { label: 'Rascunho', variant: 'secondary' },
-      PENDING_APPROVAL: { label: 'Aguardando Aprovacao', variant: 'default' },
-      ACTIVE: { label: 'Ativo', variant: 'outline' },
-      ON_HOLD: { label: 'Pausado', variant: 'secondary' },
-      COMPLETED: { label: 'Concluido', variant: 'outline' },
-      CANCELLED: { label: 'Cancelado', variant: 'destructive' },
-    };
-    const c = config[status] || { label: status, variant: 'secondary' };
-    return <Badge variant={c.variant}>{c.label}</Badge>;
-  };
+
 
   const filteredMyPDIs = myPDIs.filter((p) =>
     p.title.toLowerCase().includes(searchTerm.toLowerCase())

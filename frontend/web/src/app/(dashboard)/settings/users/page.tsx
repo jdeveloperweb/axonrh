@@ -5,15 +5,13 @@ import {
     Plus,
     Search,
     UserPlus,
-    MoreVertical,
     Shield,
-    Mail,
     Trash2,
     Edit2,
     CheckCircle2,
     XCircle
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { userApi, UserDTO } from '@/lib/api/users';
 import { useToast } from '@/hooks/use-toast';
 
@@ -24,25 +22,25 @@ export default function UsersPage() {
     const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
-        loadUsers();
-    }, []);
+        const loadUsers = async () => {
+            try {
+                setLoading(true);
+                const data = await userApi.list();
+                setUsers(data);
+            } catch (error) {
+                console.error('Error loading users:', error);
+                toast({
+                    title: 'Erro',
+                    description: 'Erro ao carregar usuários',
+                    variant: 'destructive',
+                });
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    const loadUsers = async () => {
-        try {
-            setLoading(true);
-            const data = await userApi.list();
-            setUsers(data);
-        } catch (error) {
-            console.error('Error loading users:', error);
-            toast({
-                title: 'Erro',
-                description: 'Erro ao carregar usuários',
-                variant: 'destructive',
-            });
-        } finally {
-            setLoading(false);
-        }
-    };
+        loadUsers();
+    }, [toast]);
 
     const filteredUsers = users.filter(user =>
         user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

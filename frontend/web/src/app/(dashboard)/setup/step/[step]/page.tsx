@@ -15,6 +15,7 @@ import {
 } from '@/lib/api/setup';
 import { useThemeStore } from '@/stores/theme-store';
 import { Switch } from '@/components/ui/switch';
+import Image from 'next/image';
 
 
 export default function SetupStepPage() {
@@ -22,7 +23,7 @@ export default function SetupStepPage() {
   const params = useParams();
   const stepNumber = parseInt(params.step as string);
 
-  const [progress, setProgress] = useState<SetupProgress | null>(null);
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const { fetchBranding } = useThemeStore();
@@ -55,7 +56,7 @@ export default function SetupStepPage() {
   });
 
   // Step 6 - Users
-  const [users, setUsers] = useState<any[]>([
+  const [users, setUsers] = useState<UserImportData[]>([
     { name: '', email: '', password: '', confirmPassword: '' }
   ]);
 
@@ -89,8 +90,8 @@ export default function SetupStepPage() {
     const loadStepData = async () => {
       try {
         setLoading(true);
-        const progressResponse = await setupApi.getProgress();
-        setProgress(progressResponse);
+        // const progressResponse = await setupApi.getProgress();
+        // setProgress(progressResponse);
 
         // Load step-specific data
         if (stepNumber === 1) {
@@ -177,7 +178,8 @@ export default function SetupStepPage() {
       } else {
         router.push('/setup');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { message?: string };
       const payload =
         stepNumber === 1
           ? companyProfile
@@ -195,7 +197,7 @@ export default function SetupStepPage() {
         payload,
         error,
       });
-      setError(error.message || 'Erro ao salvar');
+      setError(err.message || 'Erro ao salvar');
     } finally {
       setSaving(false);
     }
@@ -886,7 +888,7 @@ interface IntegrationConfig {
   erpAuthToken: string;
   benefitsProvider: string;
   benefitsApiKey: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 // Step 3 - Labor Rules
@@ -1112,7 +1114,9 @@ function Step4Branding({
           {/* Mock Header */}
           <div className="h-14 px-4 flex items-center justify-between border-b" style={{ backgroundColor: '#ffffff' }}>
             {config.logoUrl ? (
-              <img src={config.logoUrl} alt="Logo" style={{ width: config.logoWidth / 2 }} className="h-auto" />
+              <div className="relative w-auto h-auto">
+                <Image src={config.logoUrl} alt="Logo" width={config.logoWidth / 2} height={50} className="h-auto" unoptimized />
+              </div>
             ) : (
               <div className="h-6 w-24 bg-slate-200 rounded animate-pulse" />
             )}
@@ -1565,7 +1569,7 @@ function Step7Integrations({
           <span className="text-lg">💡</span>
           <p>
             <strong>Dica:</strong> Você poderá configurar mais detalhes e testar as conexões após o setup inicial, na área de
-            "Configurações {'>'} Integrações" do sistema administrativo.
+            &quot;Configurações {'>'} Integrações&quot; do sistema administrativo.
           </p>
         </div>
       </div>

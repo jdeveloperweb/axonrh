@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
   Calendar,
-  Clock,
   Download,
   ChevronLeft,
   ChevronRight,
@@ -14,7 +13,6 @@ import {
   Loader2,
   Sun,
   Moon,
-  Coffee,
   TrendingUp,
   TrendingDown,
   Minus,
@@ -415,13 +413,12 @@ export default function TimesheetMirrorPage() {
                             <div className="flex items-center justify-center gap-1">
                               {getBalanceIcon(balance)}
                               <span
-                                className={`font-mono ${
-                                  balance > 0
-                                    ? 'text-green-600'
-                                    : balance < 0
+                                className={`font-mono ${balance > 0
+                                  ? 'text-green-600'
+                                  : balance < 0
                                     ? 'text-red-600'
                                     : ''
-                                }`}
+                                  }`}
                               >
                                 {day.balanceFormatted}
                               </span>

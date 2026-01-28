@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,7 +10,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
 import {
   Dialog,
   DialogContent,
@@ -65,7 +64,7 @@ const ACTION_TYPES: { value: PDIActionType; label: string; icon: React.ReactNode
 
 export default function PDIDetailPage() {
   const params = useParams();
-  const router = useRouter();
+
   const pdiId = params.id as string;
 
   const [pdi, setPDI] = useState<PDI | null>(null);
@@ -78,7 +77,7 @@ export default function PDIDetailPage() {
     try {
       setLoading(true);
       const data = await pdisApi.get(pdiId);
-      setPDI(data.data);
+      setPDI(data);
     } catch (error) {
       console.error('Erro ao carregar PDI:', error);
     } finally {
@@ -684,7 +683,7 @@ function CompleteActionDialog({
         <DialogHeader>
           <DialogTitle>Concluir Acao</DialogTitle>
           <DialogDescription>
-            Registre a conclusao da acao "{action?.title}"
+            Registre a conclusao da acao &quot;{action?.title}&quot;
           </DialogDescription>
         </DialogHeader>
 

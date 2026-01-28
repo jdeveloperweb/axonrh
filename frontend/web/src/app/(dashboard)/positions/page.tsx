@@ -5,11 +5,9 @@ import {
     Search,
     Plus,
     Briefcase,
-    MoreHorizontal,
     Edit,
     Trash2,
-    CheckCircle2,
-    XCircle
+    MoreHorizontal
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
