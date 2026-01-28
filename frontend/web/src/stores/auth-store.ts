@@ -42,6 +42,10 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: null,
           });
+
+          // Carrega o branding do tenant após login
+          const { useThemeStore } = await import('./theme-store');
+          await useThemeStore.getState().fetchBranding();
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Erro ao fazer login';
           set({
@@ -123,8 +127,8 @@ export const useAuthStore = create<AuthState>()(
         // Garante que o carregamento finalize mesmo se a hidratacao travar.
         const safetyTimer = state
           ? window.setTimeout(() => {
-              state.setLoading(false);
-            }, 2000)
+            state.setLoading(false);
+          }, 2000)
           : null;
 
         return (rehydratedState, error) => {

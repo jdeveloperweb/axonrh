@@ -22,6 +22,15 @@ export default function DashboardLayout({
     }
   }, [isAuthenticated, isLoading, isSetupRoute, router]);
 
+  // Carrega o branding se estiver autenticado
+  useEffect(() => {
+    if (isAuthenticated) {
+      import('@/stores/theme-store').then(({ useThemeStore }) => {
+        useThemeStore.getState().fetchBranding();
+      });
+    }
+  }, [isAuthenticated]);
+
   // Loading state
   if (isLoading && !isSetupRoute) {
     return (

@@ -193,10 +193,26 @@ public class SetupWizardService {
         }
 
         progress.setStep9Review(true);
-        progress.setStatus(SetupStatus.COMPLETED);
+        progress.setStatus(SetupStatus.ACTIVATED);
         progress.setCompletedAt(LocalDateTime.now());
 
+        // Ativação final: Transfere dados de rascunho para tabelas operacionais
+        processActivation(progress);
+
         return progressRepository.save(progress);
+    }
+
+    private void processActivation(SetupProgress progress) {
+        log.info("Iniciando ativação final para tenant: {}", progress.getTenantId());
+        
+        // Ativar Branding
+        processBranding(progress.getTenantId(), progress.getStepData(4));
+        
+        // Ativar Usuários
+        processUsers(progress.getTenantId(), progress.getStepData(6));
+        
+        // Ativar Importação de Colaboradores
+        processDataImport(progress.getTenantId(), progress.getStepData(8));
     }
 
     /**
@@ -717,8 +733,37 @@ public class SetupWizardService {
     }
 
     private void processDataImport(UUID tenantId, Map<String, Object> data) {
-        // Process data imports
-        log.info("Processing data import for tenant: {}", tenantId);
+        log.info("Processando importação de dados para o tenant: {}", tenantId);
+        if (data == null || !data.containsKey("employees")) return;
+
+        Object employeesObj = data.get("employees");
+        if (!(employeesObj instanceof List<?> employeesList)) return;
+
+        log.info("Migrando {} colaboradores do setup para o tenant {}", employeesList.size(), tenantId);
+
+        for (Object item : employeesList) {
+            if (item instanceof Map<?, ?> empMap) {
+                try {
+                    String fullName = (String) empMap.get("nome");
+                    String cpf = ((String) empMap.get("cpf")).replaceAll("[^0-9]", "");
+                    String email = (String) empMap.get("email");
+                    
+                    // Native insert use JPA EntityManager for simplicity since they share DB
+                    entityManager.createNativeQuery(
+                        "INSERT INTO employees (id, tenant_id, full_name, cpf, email, status, is_active, birth_date, hire_date, employment_type, created_at) " +
+                        "VALUES (?, ?, ?, ?, ?, 'ACTIVE', true, '1990-01-01', CURRENT_DATE, 'CLT', CURRENT_TIMESTAMP) " +
+                        "ON CONFLICT (tenant_id, cpf) DO NOTHING")
+                        .setParameter(1, UUID.randomUUID())
+                        .setParameter(2, tenantId)
+                        .setParameter(3, fullName)
+                        .setParameter(4, cpf)
+                        .setParameter(5, email != null ? email : "import@axonrh.com")
+                        .executeUpdate();
+                } catch (Exception e) {
+                    log.error("Erro ao migrar colaborador individual: {}", e.getMessage());
+                }
+            }
+        }
     }
 
     // DTOs

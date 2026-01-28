@@ -31,6 +31,7 @@ interface ThemeState {
   // Actions
   setTheme: (theme: Theme) => void;
   loadTheme: () => void;
+  fetchBranding: () => Promise<void>;
   setTenantTheme: (theme: TenantTheme) => void;
   applyTenantColors: (colors: ThemeColors) => void;
   resetToDefault: () => void;
@@ -64,6 +65,41 @@ export const useThemeStore = create<ThemeState>()(
 
         if (tenantTheme) {
           applyColorsToDocument(tenantTheme.colors);
+        }
+      },
+
+      fetchBranding: async () => {
+        try {
+          const { settingsApi } = await import('@/lib/api/settings');
+          const branding = await settingsApi.getBranding();
+
+          if (branding) {
+            const colors: ThemeColors = {
+              primary: branding.primaryColor || defaultColors.primary,
+              secondary: branding.secondaryColor || defaultColors.secondary,
+              accent: branding.accentColor || defaultColors.accent,
+              background: defaultColors.background,
+              surface: defaultColors.surface,
+              textPrimary: defaultColors.textPrimary,
+              textSecondary: defaultColors.textSecondary,
+            };
+
+            set({
+              tenantTheme: {
+                tenantId: localStorage.getItem('setup_tenant_id') || '',
+                logoUrl: branding.logoUrl,
+                colors: colors
+              }
+            });
+
+            applyColorsToDocument(colors);
+
+            if (branding.fontFamily) {
+              document.documentElement.style.setProperty('--font-family', branding.fontFamily);
+            }
+          }
+        } catch (error) {
+          console.error('Failed to fetch branding:', error);
         }
       },
 

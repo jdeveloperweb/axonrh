@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import {
   Users,
   Clock,
@@ -11,6 +12,7 @@ import {
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { useAuthStore } from '@/stores/auth-store';
+import { dashboardApi, DashboardStats } from '@/lib/api/dashboard';
 
 // ==================== Types ====================
 
@@ -26,33 +28,48 @@ interface StatCard {
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
+  const [statsData, setStatsData] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Dados mockados - em producao viriam da API
+  useEffect(() => {
+    async function loadStats() {
+      try {
+        const data = await dashboardApi.getStats();
+        setStatsData(data);
+      } catch (error) {
+        console.error('Error loading dashboard stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadStats();
+  }, []);
+
   const stats: StatCard[] = [
     {
       title: 'Total de Colaboradores',
-      value: 248,
-      change: 3.2,
+      value: statsData?.totalEmployees || 0,
+      change: statsData?.employeeChange,
       icon: Users,
       color: 'var(--color-primary)',
     },
     {
       title: 'Presentes Hoje',
-      value: 231,
-      change: -1.5,
+      value: statsData?.presentToday || 0,
+      change: statsData?.presenceChange,
       icon: Clock,
       color: 'var(--color-success)',
     },
     {
       title: 'Ferias este Mes',
-      value: 12,
+      value: statsData?.vacationsThisMonth || 0,
       icon: Calendar,
       color: 'var(--color-warning)',
     },
     {
       title: 'Pendencias',
-      value: 8,
-      change: -25,
+      value: statsData?.pendingIssues || 0,
+      change: statsData?.pendingChange,
       icon: AlertCircle,
       color: 'var(--color-error)',
     },
@@ -98,11 +115,10 @@ export default function DashboardPage() {
                     <p className="text-3xl font-bold">{stat.value}</p>
                     {stat.change !== undefined && (
                       <div
-                        className={`flex items-center gap-1 mt-2 text-sm ${
-                          stat.change >= 0
-                            ? 'text-[var(--color-success)]'
-                            : 'text-[var(--color-error)]'
-                        }`}
+                        className={`flex items-center gap-1 mt-2 text-sm ${stat.change >= 0
+                          ? 'text-[var(--color-success)]'
+                          : 'text-[var(--color-error)]'
+                          }`}
                       >
                         {stat.change >= 0 ? (
                           <TrendingUp className="w-4 h-4" />
