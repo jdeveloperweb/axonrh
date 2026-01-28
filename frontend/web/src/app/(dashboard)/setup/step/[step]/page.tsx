@@ -70,6 +70,21 @@ export default function SetupStepPage() {
     baseFontSize: 16,
   });
 
+  // Step 7 - Integrations
+  const [integrations, setIntegrations] = useState({
+    esocialEnabled: false,
+    esocialEnvironment: 'PRE_PRODUCTION',
+    esocialCertificateId: '',
+    accountingSoftware: '',
+    accountingApiKey: '',
+    accountingApiUrl: '',
+    erpSystem: '',
+    erpApiUrl: '',
+    erpAuthToken: '',
+    benefitsProvider: '',
+    benefitsApiKey: '',
+  });
+
   useEffect(() => {
     loadStepData();
   }, [stepNumber]);
@@ -100,6 +115,8 @@ export default function SetupStepPage() {
           if (stepData.users && Array.isArray(stepData.users)) {
             setUsers(stepData.users);
           }
+        } else if (stepNumber === 7 && stepData) {
+          setIntegrations({ ...integrations, ...stepData });
         }
       }
     } catch (error) {
@@ -144,6 +161,8 @@ export default function SetupStepPage() {
           return;
         }
         await setupApi.saveStepData(stepNumber, { users });
+      } else if (stepNumber === 7) {
+        await setupApi.saveStepData(stepNumber, integrations);
       }
 
       // Complete step
@@ -165,7 +184,9 @@ export default function SetupStepPage() {
               ? modules
               : stepNumber === 6
                 ? { users }
-                : null;
+                : stepNumber === 7
+                  ? integrations
+                  : null;
       console.error('Erro ao salvar etapa do setup', {
         stepNumber,
         payload,
@@ -289,7 +310,12 @@ export default function SetupStepPage() {
               onChange={setUsers}
             />
           )}
-          {stepNumber === 7 && <Step7Integrations />}
+          {stepNumber === 7 && (
+            <Step7Integrations
+              data={integrations}
+              onChange={setIntegrations}
+            />
+          )}
           {stepNumber === 8 && <Step8DataImport />}
           {stepNumber === 9 && <Step9Review />}
         </div>
@@ -1250,13 +1276,214 @@ function Step6Users({
   );
 }
 
-// Step 7 - Integrations (simplified)
-function Step7Integrations() {
+// Step 7 - Integrations
+function Step7Integrations({
+  data,
+  onChange,
+}: {
+  data: any;
+  onChange: (data: any) => void;
+}) {
+  const updateField = (field: string, value: any) => {
+    onChange({ ...data, [field]: value });
+  };
+
+  const integrationGroups = [
+    {
+      id: 'esocial',
+      title: 'eSocial',
+      description: 'Envio de eventos trabalhistas ao governo.',
+      icon: '🏢',
+      bgClass: 'bg-blue-50',
+      textClass: 'text-blue-600',
+      fields: (
+        <div className="mt-4 space-y-4">
+          <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
+            <span className="text-sm font-medium text-slate-700">Habilitar eSocial</span>
+            <Switch
+              checked={data.esocialEnabled}
+              onCheckedChange={(checked) => updateField('esocialEnabled', checked)}
+            />
+          </div>
+
+          {data.esocialEnabled && (
+            <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Ambiente</label>
+                <select
+                  value={data.esocialEnvironment}
+                  onChange={(e) => updateField('esocialEnvironment', e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                >
+                  <option value="PRE_PRODUCTION">Produção Restrita (Testes)</option>
+                  <option value="PRODUCTION">Produção</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">ID do Certificado Digital</label>
+                <input
+                  type="text"
+                  placeholder="ID enviado pelo serviço de certificados"
+                  value={data.esocialCertificateId}
+                  onChange={(e) => updateField('esocialCertificateId', e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      )
+    },
+    {
+      id: 'accounting',
+      title: 'Contabilidade',
+      description: 'Exportação de dados para folha e contábil.',
+      icon: '📊',
+      bgClass: 'bg-green-50',
+      textClass: 'text-green-600',
+      fields: (
+        <div className="mt-4 space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Software Contábil</label>
+            <select
+              value={data.accountingSoftware}
+              onChange={(e) => updateField('accountingSoftware', e.target.value)}
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+            >
+              <option value="">Selecione o Sistema</option>
+              <option value="DOMINIO">Domínio Sistemas</option>
+              <option value="ALTERDATA">Alterdata</option>
+              <option value="CONTMATIC">Contmatic</option>
+              <option value="QUESTOR">Questor</option>
+              <option value="OTHERS">Outros (via API)</option>
+            </select>
+          </div>
+
+          {data.accountingSoftware && (
+            <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">API Key / Token</label>
+                <input
+                  type="password"
+                  value={data.accountingApiKey}
+                  onChange={(e) => updateField('accountingApiKey', e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      )
+    },
+    {
+      id: 'erp',
+      title: 'ERP / Core',
+      description: 'Sincronização de RH com o sistema central.',
+      icon: '⚙️',
+      bgClass: 'bg-indigo-50',
+      textClass: 'text-indigo-600',
+      fields: (
+        <div className="mt-4 space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Sistema ERP</label>
+            <select
+              value={data.erpSystem}
+              onChange={(e) => updateField('erpSystem', e.target.value)}
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+            >
+              <option value="">Selecione o ERP</option>
+              <option value="SAP">SAP S/4HANA / Business One</option>
+              <option value="TOTVS">TOTVS (Protheus/RM)</option>
+              <option value="ORACLE">Oracle NetSuite</option>
+              <option value="SENIOR">Senior Sistemas</option>
+              <option value="CUSTOM">API Customizada</option>
+            </select>
+          </div>
+
+          {data.erpSystem && (
+            <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">URL da API do ERP</label>
+                <input
+                  type="text"
+                  placeholder="https://api.empresa.com.br/v1"
+                  value={data.erpApiUrl}
+                  onChange={(e) => updateField('erpApiUrl', e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      )
+    },
+    {
+      id: 'benefits',
+      title: 'Benefícios',
+      description: 'Gestão de cartões e convênios.',
+      icon: '💳',
+      bgClass: 'bg-purple-50',
+      textClass: 'text-purple-600',
+      fields: (
+        <div className="mt-4 space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Operadora Principal</label>
+            <select
+              value={data.benefitsProvider}
+              onChange={(e) => updateField('benefitsProvider', e.target.value)}
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+            >
+              <option value="">Selecione a Operadora</option>
+              <option value="FLASH">Flash Benefícios</option>
+              <option value="ALELO">Alelo</option>
+              <option value="SODEXO">Sodexo / Pluxee</option>
+              <option value="TICKET">Ticket</option>
+              <option value="CAJU">Caju</option>
+            </select>
+          </div>
+        </div>
+      )
+    }
+  ];
+
   return (
-    <div className="text-center py-8">
-      <p className="text-gray-500">
-        Configure integrações com eSocial, contabilidade e outros sistemas.
-      </p>
+    <div className="space-y-8">
+      <div>
+        <h3 className="text-xl font-bold text-slate-900">Configurações de Integração</h3>
+        <p className="text-sm text-slate-500 mt-1">
+          Conecte o AxonRH com as ferramentas que sua empresa já utiliza.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {integrationGroups.map((group) => (
+          <div
+            key={group.id}
+            className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md"
+          >
+            <div className="flex items-start gap-4">
+              <div className={`h-12 w-12 rounded-2xl flex items-center justify-center text-2xl ${group.bgClass} ${group.textClass}`}>
+                {group.icon}
+              </div>
+              <div className="flex-1">
+                <h4 className="font-bold text-slate-900">{group.title}</h4>
+                <p className="text-xs text-slate-500">{group.description}</p>
+                {group.fields}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="rounded-xl border border-amber-100 bg-amber-50 p-4 text-xs text-amber-800">
+        <div className="flex gap-3">
+          <span className="text-lg">💡</span>
+          <p>
+            <strong>Dica:</strong> Você poderá configurar mais detalhes e testar as conexões após o setup inicial, na área de
+            "Configurações {'>'} Integrações" do sistema administrativo.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

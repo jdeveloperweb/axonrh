@@ -30,6 +30,7 @@ public class SetupWizardService {
     private final com.axonrh.core.setup.repository.PositionRepository positionRepository;
     private final com.axonrh.core.setup.repository.TenantRepository tenantRepository;
     private final com.axonrh.core.setup.repository.TenantBrandingRepository brandingRepository;
+    private final com.axonrh.core.setup.repository.TenantIntegrationRepository integrationRepository;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
@@ -42,6 +43,7 @@ public class SetupWizardService {
                               com.axonrh.core.setup.repository.PositionRepository positionRepository,
                               com.axonrh.core.setup.repository.TenantRepository tenantRepository,
                               com.axonrh.core.setup.repository.TenantBrandingRepository brandingRepository,
+                              com.axonrh.core.setup.repository.TenantIntegrationRepository integrationRepository,
                               UserRepository userRepository,
                               RoleRepository roleRepository,
                               PasswordEncoder passwordEncoder) {
@@ -51,6 +53,7 @@ public class SetupWizardService {
         this.positionRepository = positionRepository;
         this.tenantRepository = tenantRepository;
         this.brandingRepository = brandingRepository;
+        this.integrationRepository = integrationRepository;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
@@ -246,6 +249,28 @@ public class SetupWizardService {
                         map.put("accentColor", b.getAccentColor());
                         map.put("fontFamily", b.getFontFamily());
                         map.put("baseFontSize", b.getBaseFontSize());
+                        return map;
+                    })
+                    .orElse(data);
+        }
+
+        // Fallback para Integrações (Step 7)
+        if (step == 7 && data.isEmpty()) {
+            UUID effectiveTenantId = progress.getTenantId();
+            return integrationRepository.findByTenantId(effectiveTenantId)
+                    .map(i -> {
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("esocialEnabled", i.getEsocialEnabled());
+                        map.put("esocialEnvironment", i.getEsocialEnvironment());
+                        map.put("esocialCertificateId", i.getEsocialCertificateId());
+                        map.put("accountingSoftware", i.getAccountingSoftware());
+                        map.put("accountingApiKey", i.getAccountingApiKey());
+                        map.put("accountingApiUrl", i.getAccountingApiUrl());
+                        map.put("erpSystem", i.getErpSystem());
+                        map.put("erpApiUrl", i.getErpApiUrl());
+                        map.put("erpAuthToken", i.getErpAuthToken());
+                        map.put("benefitsProvider", i.getBenefitsProvider());
+                        map.put("benefitsApiKey", i.getBenefitsApiKey());
                         return map;
                     })
                     .orElse(data);
@@ -633,8 +658,48 @@ public class SetupWizardService {
     }
 
     private void processIntegrations(UUID tenantId, Map<String, Object> data) {
-        // Configure integrations
-        log.info("Processing integrations for tenant: {}", tenantId);
+        log.info("Processando integrações para o tenant: {}", tenantId);
+        if (data == null || data.isEmpty()) return;
+
+        com.axonrh.core.setup.entity.TenantIntegration integration = integrationRepository.findByTenantId(tenantId)
+                .orElse(new com.axonrh.core.setup.entity.TenantIntegration());
+
+        integration.setTenantId(tenantId);
+
+        if (data.containsKey("esocialEnabled")) 
+            integration.setEsocialEnabled((Boolean) data.get("esocialEnabled"));
+        
+        if (data.containsKey("esocialEnvironment")) 
+            integration.setEsocialEnvironment((String) data.get("esocialEnvironment"));
+            
+        if (data.containsKey("esocialCertificateId")) 
+            integration.setEsocialCertificateId((String) data.get("esocialCertificateId"));
+
+        if (data.containsKey("accountingSoftware")) 
+            integration.setAccountingSoftware((String) data.get("accountingSoftware"));
+
+        if (data.containsKey("accountingApiKey")) 
+            integration.setAccountingApiKey((String) data.get("accountingApiKey"));
+
+        if (data.containsKey("accountingApiUrl")) 
+            integration.setAccountingApiUrl((String) data.get("accountingApiUrl"));
+
+        if (data.containsKey("erpSystem")) 
+            integration.setErpSystem((String) data.get("erpSystem"));
+
+        if (data.containsKey("erpApiUrl")) 
+            integration.setErpApiUrl((String) data.get("erpApiUrl"));
+
+        if (data.containsKey("erpAuthToken")) 
+            integration.setErpAuthToken((String) data.get("erpAuthToken"));
+
+        if (data.containsKey("benefitsProvider")) 
+            integration.setBenefitsProvider((String) data.get("benefitsProvider"));
+
+        if (data.containsKey("benefitsApiKey")) 
+            integration.setBenefitsApiKey((String) data.get("benefitsApiKey"));
+
+        integrationRepository.save(integration);
     }
 
     private void processDataImport(UUID tenantId, Map<String, Object> data) {
