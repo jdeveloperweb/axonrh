@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,7 +38,6 @@ import java.util.UUID;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class TimeAdjustmentService {
 
     private final TimeAdjustmentRepository adjustmentRepository;
@@ -45,6 +45,19 @@ public class TimeAdjustmentService {
     private final DailySummaryService dailySummaryService;
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final ObjectMapper objectMapper;
+
+    public TimeAdjustmentService(
+            TimeAdjustmentRepository adjustmentRepository,
+            TimeRecordRepository timeRecordRepository,
+            DailySummaryService dailySummaryService,
+            @Qualifier("timesheetKafkaTemplate") KafkaTemplate<String, Object> kafkaTemplate,
+            ObjectMapper objectMapper) {
+        this.adjustmentRepository = adjustmentRepository;
+        this.timeRecordRepository = timeRecordRepository;
+        this.dailySummaryService = dailySummaryService;
+        this.kafkaTemplate = kafkaTemplate;
+        this.objectMapper = objectMapper;
+    }
 
     /**
      * Cria solicitacao de ajuste de ponto.

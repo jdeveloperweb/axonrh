@@ -81,7 +81,7 @@ public class KafkaConfig {
     }
 
     @Bean
-    public KafkaTemplate<String, Object> kafkaTemplate(
+    public KafkaTemplate<String, Object> timesheetKafkaTemplate(
             ProducerFactory<String, Object> timesheetProducerFactory) {
         KafkaTemplate<String, Object> template = new KafkaTemplate<>(timesheetProducerFactory);
         template.setObservationEnabled(true);
