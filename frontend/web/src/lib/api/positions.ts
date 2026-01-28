@@ -29,7 +29,7 @@ export interface CreatePositionData {
     departmentId: string;
 }
 
-export interface UpdatePositionData extends Partial<CreatePositionData> { }
+export type UpdatePositionData = Partial<CreatePositionData>;
 
 export const positionsApi = {
     getPositions: async (page = 0, size = 20) => {

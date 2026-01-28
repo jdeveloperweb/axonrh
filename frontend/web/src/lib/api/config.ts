@@ -104,7 +104,7 @@ export const configApi = {
    * Valida contraste entre cores.
    */
   validateContrast: async (foreground: string, background: string): Promise<boolean> => {
-    const response = await apiClient.get<any, { valid: boolean }>('/config/theme/validate-contrast', {
+    const response = await apiClient.get<unknown, { valid: boolean }>('/config/theme/validate-contrast', {
       params: { foreground, background },
     });
     return response.valid;
@@ -114,7 +114,7 @@ export const configApi = {
    * Rollback para versao anterior.
    */
   rollbackTheme: async (tenantId: string, version: number): Promise<ThemeConfig> => {
-    return apiClient.post<any, ThemeConfig>(`/config/theme/${tenantId}/rollback/${version}`);
+    return apiClient.post<unknown, ThemeConfig>(`/config/theme/${tenantId}/rollback/${version}`);
   },
 
   /**

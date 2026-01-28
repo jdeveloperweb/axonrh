@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { departmentsApi, DepartmentDTO, CreateDepartmentDTO, UpdateDepartmentDTO } from '@/lib/api/departments';
-import { employeesApi } from '@/lib/api/employees';
+import { employeesApi, Employee, CostCenter } from '@/lib/api/employees';
 import { Button } from '@/components/ui/button';
 
 interface DepartmentFormProps {
@@ -14,8 +14,8 @@ interface DepartmentFormProps {
 export function DepartmentForm({ department, onSuccess, onCancel }: DepartmentFormProps) {
     const [loading, setLoading] = useState(false);
     const [departments, setDepartments] = useState<DepartmentDTO[]>([]);
-    const [employees, setEmployees] = useState<any[]>([]);
-    const [costCenters, setCostCenters] = useState<any[]>([]);
+    const [employees, setEmployees] = useState<Employee[]>([]);
+    const [costCenters, setCostCenters] = useState<CostCenter[]>([]);
 
     const [formData, setFormData] = useState({
         code: department?.code || '',
@@ -27,24 +27,24 @@ export function DepartmentForm({ department, onSuccess, onCancel }: DepartmentFo
     });
 
     useEffect(() => {
+        const loadData = async () => {
+            try {
+                const [depts, emps, costs] = await Promise.all([
+                    departmentsApi.list(),
+                    employeesApi.list({ size: 1000 }),
+                    employeesApi.getCostCenters(),
+                ]);
+
+                setDepartments(depts.filter(d => d.id !== department?.id));
+                setEmployees(emps.content || []);
+                setCostCenters(costs);
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+            }
+        };
+
         loadData();
-    }, []);
-
-    const loadData = async () => {
-        try {
-            const [depts, emps, costs] = await Promise.all([
-                departmentsApi.list(),
-                employeesApi.list({ size: 1000 }),
-                employeesApi.getCostCenters(),
-            ]);
-
-            setDepartments(depts.filter(d => d.id !== department?.id));
-            setEmployees(emps.content || []);
-            setCostCenters(costs);
-        } catch (error) {
-            console.error('Erro ao carregar dados:', error);
-        }
-    };
+    }, [department?.id]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

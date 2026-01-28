@@ -370,9 +370,19 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                 });
             }
 
-        } catch (error: any) {
+        } catch (error) {
             console.error('Erro ao salvar:', error);  // Debug
-            const errorMessage = error?.message || error?.response?.data?.message || 'Falha ao salvar dados';
+            let errorMessage = 'Falha ao salvar dados';
+
+            if (error instanceof Error) {
+                errorMessage = error.message;
+                // @ts-expect-error - Handling axios error response structure safely
+                if ('response' in error && error.response?.data?.message) {
+                    // @ts-expect-error - Handling axios error response structure safely
+                    errorMessage = error.response.data.message;
+                }
+            }
+
             toast({
                 title: 'Erro',
                 description: errorMessage,

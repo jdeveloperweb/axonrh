@@ -70,14 +70,14 @@ export const authApi = {
    * Inicia setup de 2FA.
    */
   setup2FA: async (): Promise<{ secret: string; qrCodeUrl: string }> => {
-    return apiClient.post<any, { secret: string; qrCodeUrl: string }>('/auth/2fa/setup');
+    return apiClient.post<unknown, { secret: string; qrCodeUrl: string }>('/auth/2fa/setup');
   },
 
   /**
    * Confirma ativacao de 2FA.
    */
   confirm2FA: async (code: string): Promise<{ backupCodes: string[] }> => {
-    return apiClient.post<any, { backupCodes: string[] }>('/auth/2fa/confirm', { code });
+    return apiClient.post<unknown, { backupCodes: string[] }>('/auth/2fa/confirm', { code });
   },
 
   /**

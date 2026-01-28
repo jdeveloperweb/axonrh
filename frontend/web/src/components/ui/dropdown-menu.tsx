@@ -55,7 +55,7 @@ const DropdownMenuTrigger = React.forwardRef<
     const child = children as React.ReactElement<any>
     return React.cloneElement(child, {
       ...props,
-      onClick: (e: React.MouseEvent) => {
+      onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
         child.props.onClick?.(e)
         props.onClick?.(e)
         setOpen(!open)
@@ -74,7 +74,6 @@ const DropdownMenuTrigger = React.forwardRef<
 
   return (
     <button
-      // @ts-ignore
       ref={handleRef}
       onClick={() => setOpen(!open)}
       {...props}
@@ -205,7 +204,7 @@ const DropdownMenuContent = React.forwardRef<
   }, [open, align, sideOffset, triggerRef])
 
   React.useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = () => {
       setOpen(false)
     }
 

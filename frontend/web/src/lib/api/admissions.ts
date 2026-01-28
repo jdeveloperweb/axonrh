@@ -131,7 +131,7 @@ export const admissionsApi = {
 
   // Resend admission link
   resendLink: async (id: string): Promise<{ message: string; link: string }> => {
-    return api.post<any, { message: string; link: string }>(`/admissions/${id}/resend-link`);
+    return api.post<unknown, { message: string; link: string }>(`/admissions/${id}/resend-link`);
   },
 
   // Cancel admission
@@ -151,15 +151,15 @@ export const admissionsApi = {
 
   // Complete admission
   complete: async (id: string): Promise<AdmissionProcess> => {
-    return api.post<any, AdmissionProcess>(`/admissions/${id}/complete`);
+    return api.post<unknown, AdmissionProcess>(`/admissions/${id}/complete`);
   },
 
   // Get statistics
-  getStatistics: async (startDate?: string, endDate?: string): Promise<any> => {
+  getStatistics: async (startDate?: string, endDate?: string): Promise<Record<string, unknown>> => {
     const params = new URLSearchParams();
     if (startDate) params.set('startDate', startDate);
     if (endDate) params.set('endDate', endDate);
-    return api.get<any, any>(`/admissions/statistics?${params.toString()}`);
+    return api.get<Record<string, unknown>, Record<string, unknown>>(`/admissions/statistics?${params.toString()}`);
   },
 
   // Get count by status
@@ -175,23 +175,23 @@ export const admissionsApi = {
     },
 
     // Save candidate data
-    saveData: async (token: string, data: Record<string, any>): Promise<AdmissionProcess> => {
-      return api.post<Record<string, any>, AdmissionProcess>(`/admissions/public/${token}/data`, data);
+    saveData: async (token: string, data: Record<string, unknown>): Promise<AdmissionProcess> => {
+      return api.post<Record<string, unknown>, AdmissionProcess>(`/admissions/public/${token}/data`, data);
     },
 
     // Upload document
-    uploadDocument: async (token: string, file: File, documentType: string): Promise<any> => {
+    uploadDocument: async (token: string, file: File, documentType: string): Promise<unknown> => {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('documentType', documentType);
-      return api.post<FormData, any>(`/admissions/public/${token}/documents`, formData, {
+      return api.post<FormData, unknown>(`/admissions/public/${token}/documents`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
     },
 
     // Get documents
-    getDocuments: async (token: string): Promise<any[]> => {
-      return api.get<any[], any[]>(`/admissions/public/${token}/documents`);
+    getDocuments: async (token: string): Promise<unknown[]> => {
+      return api.get<unknown[], unknown[]>(`/admissions/public/${token}/documents`);
     },
 
     // Get required documents status
@@ -200,18 +200,18 @@ export const admissionsApi = {
     },
 
     // Validate all documents
-    validateDocuments: async (token: string): Promise<any> => {
-      return api.post<any, any>(`/admissions/public/${token}/validate-documents`);
+    validateDocuments: async (token: string): Promise<unknown> => {
+      return api.post<unknown, unknown>(`/admissions/public/${token}/validate-documents`);
     },
 
     // Get contract
-    getContract: async (token: string): Promise<any> => {
-      return api.get<any, any>(`/admissions/public/${token}/contract`);
+    getContract: async (token: string): Promise<unknown> => {
+      return api.get<unknown, unknown>(`/admissions/public/${token}/contract`);
     },
 
     // Sign contract
-    signContract: async (token: string, signatureData: Record<string, any>): Promise<AdmissionProcess> => {
-      return api.post<Record<string, any>, AdmissionProcess>(`/admissions/public/${token}/sign-contract`, signatureData);
+    signContract: async (token: string, signatureData: Record<string, unknown>): Promise<AdmissionProcess> => {
+      return api.post<Record<string, unknown>, AdmissionProcess>(`/admissions/public/${token}/sign-contract`, signatureData);
     },
   },
 };

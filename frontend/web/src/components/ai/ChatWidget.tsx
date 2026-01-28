@@ -38,11 +38,11 @@ export default function ChatWidget({
     if (conversationId) {
       loadConversation();
     }
-  }, [conversationId]);
+  }, [conversationId, loadConversation]);
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, scrollToBottom]);
 
   // Handle initial message
   useEffect(() => {
@@ -52,13 +52,13 @@ export default function ChatWidget({
       // We need to wait a bit for state to settle or call submit directly with the string
       submitMessage(initialMessage);
     }
-  }, [initialMessage]);
+  }, [initialMessage, submitMessage, isLoading]);
 
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  }, []);
 
-  const loadConversation = async () => {
+  const loadConversation = useCallback(async () => {
     if (!conversationId) return;
     try {
       const response = await chatApi.getConversation(conversationId);
@@ -66,9 +66,9 @@ export default function ChatWidget({
     } catch (error) {
       console.error('Error loading conversation:', error);
     }
-  };
+  }, [conversationId]);
 
-  const submitMessage = async (msgContent: string) => {
+  const submitMessage = useCallback(async (msgContent: string) => {
     if (!msgContent.trim() || isLoading) return;
 
     const userMessage: ChatMessage = {
@@ -128,7 +128,7 @@ export default function ChatWidget({
       setIsLoading(false);
       setIsStreaming(false);
     }
-  };
+  }, [conversationId, isLoading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

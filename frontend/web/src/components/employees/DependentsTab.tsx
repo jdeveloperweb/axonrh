@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Plus, Trash2, Users, Loader2, Edit2, X, Check } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { employeesApi, EmployeeDependent } from '@/lib/api/employees';
@@ -27,11 +27,7 @@ export function DependentsTab({ employeeId }: DependentsTabProps) {
         isHealthPlanDependent: false,
     });
 
-    useEffect(() => {
-        loadDependents();
-    }, [employeeId]);
-
-    const loadDependents = async () => {
+    const loadDependents = useCallback(async () => {
         try {
             setLoading(true);
             const data = await employeesApi.getDependents(employeeId);
@@ -42,7 +38,11 @@ export function DependentsTab({ employeeId }: DependentsTabProps) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [employeeId, toast]);
+
+    useEffect(() => {
+        loadDependents();
+    }, [loadDependents]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;

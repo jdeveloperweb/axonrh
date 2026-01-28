@@ -242,7 +242,7 @@ export interface UseNotificationSocketOptions {
   onUpdate?: (update: { type: string; data: unknown }) => void;
 }
 
-export function createNotificationSocket(userId: string, options: UseNotificationSocketOptions = {}) {
+export function createNotificationSocket(userId: string, _options: UseNotificationSocketOptions = {}) {
   // In production, this would connect to WebSocket
   // For now, return a mock implementation
   const socket = {

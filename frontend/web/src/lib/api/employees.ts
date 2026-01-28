@@ -208,8 +208,8 @@ export const employeesApi = {
   },
 
   // Get employee history
-  getHistory: async (id: string): Promise<any[]> => {
-    return api.get<any[], any[]>(`/employees/${id}/history`);
+  getHistory: async (id: string): Promise<Record<string, unknown>[]> => {
+    return api.get<Record<string, unknown>[], Record<string, unknown>[]>(`/employees/${id}/history`);
   },
 
   // Upload employee photo
@@ -243,12 +243,12 @@ export const employeesApi = {
 
   // Add dependent
   addDependent: async (id: string, dependent: Omit<EmployeeDependent, 'id'>): Promise<EmployeeDependent> => {
-    return api.post<any, EmployeeDependent>(`/employees/${id}/dependents`, dependent);
+    return api.post<unknown, EmployeeDependent>(`/employees/${id}/dependents`, dependent);
   },
 
   // Update dependent
   updateDependent: async (employeeId: string, dependentId: string, data: Partial<EmployeeDependent>): Promise<EmployeeDependent> => {
-    return api.put<any, EmployeeDependent>(`/employees/${employeeId}/dependents/${dependentId}`, data);
+    return api.put<unknown, EmployeeDependent>(`/employees/${employeeId}/dependents/${dependentId}`, data);
   },
 
   // Remove dependent
@@ -273,8 +273,8 @@ export const employeesApi = {
   },
 
   // Get org chart data
-  getOrgChart: async (): Promise<any> => {
-    return api.get<any, any>('/employees/org-chart');
+  getOrgChart: async (): Promise<Record<string, unknown>> => {
+    return api.get<unknown, Record<string, unknown>>('/employees/org-chart');
   },
 
   // Export employees
@@ -285,18 +285,18 @@ export const employeesApi = {
     if (params?.status) searchParams.set('status', params.status);
     if (params?.departmentId) searchParams.set('departmentId', params.departmentId);
 
-    return api.get<any, Blob>(`/employees/export?${searchParams.toString()}`, {
+    return api.get<unknown, Blob>(`/employees/export?${searchParams.toString()}`, {
       responseType: 'blob',
     });
   },
 
   // Validate CPF
   validateCpf: async (cpf: string): Promise<{ valid: boolean; message?: string }> => {
-    return api.get<any, { valid: boolean; message?: string }>(`/employees/validate-cpf/${cpf}`);
+    return api.get<unknown, { valid: boolean; message?: string }>(`/employees/validate-cpf/${cpf}`);
   },
 
   // Search address by CEP
   searchCep: async (cep: string): Promise<EmployeeAddress> => {
-    return api.get<any, EmployeeAddress>(`/address/cep/${cep}`);
+    return api.get<unknown, EmployeeAddress>(`/address/cep/${cep}`);
   },
 };

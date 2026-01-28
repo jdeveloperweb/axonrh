@@ -159,7 +159,7 @@ export const vacationApi = {
    * Approve request
    */
   approveRequest: async (requestId: string, notes?: string): Promise<VacationRequest> => {
-    return api.post<any, VacationRequest>(`/api/v1/vacation/requests/${requestId}/approve`, null, {
+    return api.post<unknown, VacationRequest>(`/api/v1/vacation/requests/${requestId}/approve`, null, {
       params: { notes }
     });
   },
@@ -245,7 +245,7 @@ export const vacationApi = {
     employeesOnVacation: number;
     upcomingVacations: number;
   }> => {
-    return api.get<any, {
+    return api.get<unknown, {
       pendingRequests: number;
       expiringPeriods: number;
       employeesOnVacation: number;

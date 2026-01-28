@@ -287,7 +287,7 @@ export const timesheetApi = {
    * Get pending records for approval
    */
   getPendingRecords: async (page = 0, size = 20): Promise<{ content: TimeRecord[]; totalElements: number }> => {
-    return api.get<any, { content: TimeRecord[]; totalElements: number }>('/api/v1/timesheet/records/pending', {
+    return api.get<unknown, { content: TimeRecord[]; totalElements: number }>('/api/v1/timesheet/records/pending', {
       params: { page, size }
     });
   },
@@ -296,7 +296,7 @@ export const timesheetApi = {
    * Approve a pending record
    */
   approveRecord: async (recordId: string, notes?: string): Promise<TimeRecord> => {
-    return api.post<any, TimeRecord>(`/api/v1/timesheet/records/${recordId}/approve`, null, {
+    return api.post<unknown, TimeRecord>(`/api/v1/timesheet/records/${recordId}/approve`, null, {
       params: { notes }
     });
   },
@@ -305,7 +305,7 @@ export const timesheetApi = {
    * Reject a pending record
    */
   rejectRecord: async (recordId: string, reason: string): Promise<TimeRecord> => {
-    return api.post<any, TimeRecord>(`/api/v1/timesheet/records/${recordId}/reject`, null, {
+    return api.post<unknown, TimeRecord>(`/api/v1/timesheet/records/${recordId}/reject`, null, {
       params: { reason }
     });
   },
@@ -390,7 +390,7 @@ export const timesheetApi = {
    * Approve adjustment
    */
   approveAdjustment: async (adjustmentId: string, notes?: string): Promise<TimeAdjustment> => {
-    return api.post<any, TimeAdjustment>(`/api/v1/timesheet/adjustments/${adjustmentId}/approve`, null, {
+    return api.post<unknown, TimeAdjustment>(`/api/v1/timesheet/adjustments/${adjustmentId}/approve`, null, {
       params: { notes }
     });
   },
@@ -505,7 +505,7 @@ export const timesheetApi = {
    * Get current balance
    */
   getOvertimeBalance: async (employeeId: string): Promise<{ balanceMinutes: number; balanceFormatted: string; isPositive: boolean }> => {
-    return api.get<any, { balanceMinutes: number; balanceFormatted: string; isPositive: boolean }>(`/api/v1/timesheet/overtime-bank/employee/${employeeId}/balance`);
+    return api.get<unknown, { balanceMinutes: number; balanceFormatted: string; isPositive: boolean }>(`/api/v1/timesheet/overtime-bank/employee/${employeeId}/balance`);
   },
 
   /**
@@ -562,7 +562,7 @@ export const timesheetApi = {
     employeesWithIssues: number;
     todayRecords: number;
   }> => {
-    return api.get<any, {
+    return api.get<unknown, {
       pendingRecords: number;
       pendingAdjustments: number;
       employeesWithIssues: number;

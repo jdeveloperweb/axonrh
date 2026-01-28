@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Plus, Trash2, FileText, Upload, Loader2, Download } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { employeesApi, EmployeeDocument } from '@/lib/api/employees';
@@ -18,11 +18,7 @@ export function DocumentsTab({ employeeId }: DocumentsTabProps) {
     const [newDocType, setNewDocType] = useState('');
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-    useEffect(() => {
-        loadDocuments();
-    }, [employeeId]);
-
-    const loadDocuments = async () => {
+    const loadDocuments = useCallback(async () => {
         try {
             setLoading(true);
             const docs = await employeesApi.getDocuments(employeeId);
@@ -37,7 +33,11 @@ export function DocumentsTab({ employeeId }: DocumentsTabProps) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [employeeId, toast]);
+
+    useEffect(() => {
+        loadDocuments();
+    }, [loadDocuments]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
