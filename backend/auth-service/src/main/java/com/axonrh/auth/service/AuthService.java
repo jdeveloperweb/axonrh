@@ -53,7 +53,14 @@ public class AuthService {
         log.info("Login attempt for email: {}", request.getEmail());
 
         // Busca usuario com roles e permissoes
-        log.debug("Total users in database: {}", userRepository.count());
+        long count = userRepository.count();
+        log.debug("Total users in database: {}", count);
+        if (count > 0) {
+            userRepository.findAll().forEach(u -> 
+                log.debug("Found user in DB: email=[{}], tenantId=[{}]", u.getEmail(), u.getTenantId())
+            );
+        }
+
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> {
                     log.error("User with email {} not found in database", request.getEmail());

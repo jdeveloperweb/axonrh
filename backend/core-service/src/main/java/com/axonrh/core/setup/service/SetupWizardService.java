@@ -135,7 +135,8 @@ public class SetupWizardService {
             }
 
             // Process step-specific logic
-            processStepCompletion(effectiveTenantId, step, data);
+        Map<String, Object> finalData = (data != null && !data.isEmpty()) ? data : progress.getStepData(step);
+        processStepCompletion(effectiveTenantId, step, finalData);
 
             progress.setLastActivityAt(LocalDateTime.now());
 
