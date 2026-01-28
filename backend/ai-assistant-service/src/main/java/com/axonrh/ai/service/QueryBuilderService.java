@@ -82,10 +82,12 @@ public class QueryBuilderService {
         """;
 
     public QueryResult buildAndExecuteQuery(String question, Map<String, Object> entities, UUID tenantId, List<Object> permissions) {
+        log.info("Building SQL query for question: '{}' (tenantId: {})", question, tenantId);
         try {
             // Get available templates
             List<QueryTemplate> templates = queryTemplateRepository.findAllWithDefaults(tenantId);
             String templatesStr = formatTemplates(templates);
+            log.debug("Found {} query templates", templates.size());
 
             // Build prompt
             String prompt = QUERY_BUILDER_PROMPT
@@ -102,8 +104,13 @@ public class QueryBuilderService {
                     .temperature(0.1) // Low temperature for stability
                     .build();
 
+            log.debug("Calling LLM for SQL generation...");
             ChatResponse response = llmService.chat(request);
-            String jsonContent = extractJson(response.getContent());
+            String rawContent = response.getContent();
+            log.info("Raw LLM Response: {}", rawContent);
+            
+            String jsonContent = extractJson(rawContent);
+            log.debug("Extracted JSON: {}", jsonContent);
 
             // Parse response
             JsonNode root = objectMapper.readTree(jsonContent);
@@ -111,6 +118,7 @@ public class QueryBuilderService {
             
             // Basic validation
             if (sql == null || sql.isBlank()) {
+                log.warn("LLM did not generate any SQL: {}", jsonContent);
                 return QueryResult.builder()
                         .success(false)
                         .error("LLM não gerou SQL válido")
@@ -139,9 +147,11 @@ public class QueryBuilderService {
             
             // Enforce tenant isolation
             params.put("tenant_id", tenantId);
+            log.info("Executing SQL: {} with params: {}", sql, params);
 
             // Execute query
             List<Map<String, Object>> data = jdbcTemplate.queryForList(sql, params);
+            log.info("Query executed successfully. Result rows: {}", data.size());
 
             return QueryResult.builder()
                     .success(true)
@@ -153,7 +163,7 @@ public class QueryBuilderService {
                     .build();
 
         } catch (Exception e) {
-            log.error("Error executing query builder", e);
+            log.error("Error in QueryBuilderService: {}", e.getMessage(), e);
             return QueryResult.builder()
                     .success(false)
                     .error(e.getMessage())

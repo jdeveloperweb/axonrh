@@ -142,102 +142,118 @@ public class ConversationService {
     }
 
     public Flux<StreamChunk> streamChat(String conversationId, String userMessage, UUID tenantId, UUID userId) {
-        Conversation conversation = getOrCreateConversation(conversationId, tenantId, userId);
+        return Mono.fromCallable(() -> {
+            Conversation conversation = getOrCreateConversation(conversationId, tenantId, userId);
 
-        // Add user message
-        Message userMsg = Message.builder()
-                .id(UUID.randomUUID().toString())
-                .role(Message.MessageRole.USER)
-                .content(userMessage)
-                .type(Message.MessageType.TEXT)
-                .timestamp(Instant.now())
-                .build();
-        conversation.addMessage(userMsg);
-        conversationRepository.save(conversation);
+            // Add user message
+            Message userMsg = Message.builder()
+                    .id(UUID.randomUUID().toString())
+                    .role(Message.MessageRole.USER)
+                    .content(userMessage)
+                    .type(Message.MessageType.TEXT)
+                    .timestamp(Instant.now())
+                    .build();
+            conversation.addMessage(userMsg);
+            return conversationRepository.save(conversation);
+        }).flatMapMany(conversation -> {
+            // Analyze intent reativelly
+            return Mono.fromCallable(() -> nluService.analyze(userMessage, tenantId))
+                .flatMapMany(nluResult -> {
+                    log.debug("Stream NLU Result: intent={}, actionType={}", nluResult.getIntent(), nluResult.getActionType());
 
-        // Analyze intent
-        NluService.NluResult nluResult = nluService.analyze(userMessage, tenantId);
-        log.debug("Stream NLU Result: intent={}, actionType={}", nluResult.getIntent(), nluResult.getActionType());
+                    // For non-INFORMATION actions, handle synchronously but return as Flux
+                    if (nluResult.getActionType() != AiIntent.ActionType.INFORMATION) {
+                        return Mono.fromCallable(() -> {
+                            String response;
+                            Message.MessageType responseType = Message.MessageType.TEXT;
 
-        // For non-INFORMATION actions, handle synchronously but return as Flux
-        if (nluResult.getActionType() != AiIntent.ActionType.INFORMATION) {
-            String response;
-            Message.MessageType responseType = Message.MessageType.TEXT;
+                            response = switch (nluResult.getActionType()) {
+                                case DATABASE_QUERY -> handleDatabaseQuery(userMessage, nluResult, tenantId, userId);
+                                case CALCULATION -> handleCalculation(nluResult);
+                                case KNOWLEDGE_SEARCH -> handleKnowledgeSearch(userMessage, nluResult, tenantId);
+                                default -> null;
+                            };
 
-            try {
-                response = switch (nluResult.getActionType()) {
-                    case DATABASE_QUERY -> handleDatabaseQuery(userMessage, nluResult, tenantId, userId);
-                    case CALCULATION -> handleCalculation(nluResult);
-                    case KNOWLEDGE_SEARCH -> handleKnowledgeSearch(userMessage, nluResult, tenantId);
-                    default -> null;
-                };
+                            if (response != null) {
+                                if (nluResult.getActionType() == AiIntent.ActionType.DATABASE_QUERY) {
+                                    responseType = Message.MessageType.QUERY_RESULT;
+                                } else if (nluResult.getActionType() == AiIntent.ActionType.CALCULATION) {
+                                    responseType = Message.MessageType.CALCULATION;
+                                }
 
-                if (response != null) {
-                    if (nluResult.getActionType() == AiIntent.ActionType.DATABASE_QUERY) {
-                        responseType = Message.MessageType.QUERY_RESULT;
-                    } else if (nluResult.getActionType() == AiIntent.ActionType.CALCULATION) {
-                        responseType = Message.MessageType.CALCULATION;
-                    }
+                                // Save assistant response
+                                Message assistantMsg = Message.builder()
+                                        .id(UUID.randomUUID().toString())
+                                        .role(Message.MessageRole.ASSISTANT)
+                                        .content(response)
+                                        .type(responseType)
+                                        .timestamp(Instant.now())
+                                        .build();
+                                conversation.addMessage(assistantMsg);
+                                conversationRepository.save(conversation);
 
-                    // Save assistant response
-                    Message assistantMsg = Message.builder()
-                            .id(UUID.randomUUID().toString())
-                            .role(Message.MessageRole.ASSISTANT)
-                            .content(response)
-                            .type(responseType)
-                            .timestamp(Instant.now())
-                            .build();
-                    conversation.addMessage(assistantMsg);
-                    conversationRepository.save(conversation);
+                                return response;
+                            }
+                            return null;
+                        }).flatMapMany(response -> {
+                            if (response == null) return Flux.empty();
+                            
+                            Message.MessageType responseType = Message.MessageType.TEXT;
+                            if (nluResult.getActionType() == AiIntent.ActionType.DATABASE_QUERY) {
+                                responseType = Message.MessageType.QUERY_RESULT;
+                            } else if (nluResult.getActionType() == AiIntent.ActionType.CALCULATION) {
+                                responseType = Message.MessageType.CALCULATION;
+                            }
 
-                    return Flux.just(
-                            StreamChunk.builder()
-                                    .content(response)
-                                    .type(responseType)
-                                    .done(false)
-                                    .build(),
-                            StreamChunk.builder()
+                            return Flux.just(
+                                    StreamChunk.builder()
+                                            .content(response)
+                                            .type(responseType)
+                                            .done(false)
+                                            .build(),
+                                    StreamChunk.builder()
+                                            .done(true)
+                                            .build()
+                            );
+                        }).onErrorResume(e -> {
+                            log.error("Error processing stream action: {}", e.getMessage(), e);
+                            return Flux.just(StreamChunk.builder()
+                                    .content("Desculpe, ocorreu um erro ao processar sua solicitação.")
                                     .done(true)
-                                    .build()
-                    );
-                }
-            } catch (Exception e) {
-                log.error("Error processing stream action: {}", e.getMessage(), e);
-                return Flux.just(StreamChunk.builder()
-                        .content("Desculpe, ocorreu um erro ao processar sua solicitação.")
-                        .done(true)
-                        .build());
-            }
-        }
-
-        // Fallback to regular chat streaming
-        List<ChatMessage> messages = buildChatMessages(conversation);
-
-        ChatRequest request = ChatRequest.builder()
-                .messages(messages)
-                .stream(true)
-                .build();
-
-        StringBuilder fullResponse = new StringBuilder();
-
-        return llmService.streamChat(request)
-                .doOnNext(chunk -> {
-                    if (!chunk.isDone()) {
-                        fullResponse.append(chunk.getContent());
+                                    .build());
+                        });
                     }
-                })
-                .doOnComplete(() -> {
-                    // Save assistant response
-                    Message assistantMsg = Message.builder()
-                            .id(UUID.randomUUID().toString())
-                            .role(Message.MessageRole.ASSISTANT)
-                            .content(fullResponse.toString())
-                            .type(Message.MessageType.TEXT)
-                            .timestamp(Instant.now())
+
+                    // Fallback to regular chat streaming
+                    List<ChatMessage> messages = buildChatMessages(conversation);
+
+                    ChatRequest request = ChatRequest.builder()
+                            .messages(messages)
+                            .stream(true)
                             .build();
-                    conversation.addMessage(assistantMsg);
-                    conversationRepository.save(conversation);
+
+                    StringBuilder fullResponse = new StringBuilder();
+
+                    return llmService.streamChat(request)
+                            .doOnNext(chunk -> {
+                                if (!chunk.isDone()) {
+                                    fullResponse.append(chunk.getContent());
+                                }
+                            })
+                            .doOnComplete(() -> {
+                                // Save assistant response
+                                Message assistantMsg = Message.builder()
+                                        .id(UUID.randomUUID().toString())
+                                        .role(Message.MessageRole.ASSISTANT)
+                                        .content(fullResponse.toString())
+                                        .type(Message.MessageType.TEXT)
+                                        .timestamp(Instant.now())
+                                        .build();
+                                conversation.addMessage(assistantMsg);
+                                conversationRepository.save(conversation);
+                            });
                 });
+        });
     }
 
     private Conversation getOrCreateConversation(String conversationId, UUID tenantId, UUID userId) {
