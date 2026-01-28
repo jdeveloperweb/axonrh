@@ -70,7 +70,7 @@ export default function PDIListPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isManager]);
 
   useEffect(() => {
     loadData();

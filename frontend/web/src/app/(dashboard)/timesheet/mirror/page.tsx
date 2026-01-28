@@ -21,7 +21,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Select,
@@ -74,8 +73,7 @@ export default function TimesheetMirrorPage() {
         console.error('Erro ao carregar colaboradores:', error);
       }
     };
-    loadEmployees();
-  }, []);
+  }, [selectedEmployee]);
 
   // Calculate date range for selected month
   const getDateRange = useCallback(() => {
@@ -166,13 +164,7 @@ export default function TimesheetMirrorPage() {
     return new Date(2000, month, 1).toLocaleDateString('pt-BR', { month: 'long' });
   };
 
-  const formatMinutes = (minutes: number | undefined) => {
-    if (!minutes) return '-';
-    const hours = Math.floor(Math.abs(minutes) / 60);
-    const mins = Math.abs(minutes) % 60;
-    const sign = minutes < 0 ? '-' : '';
-    return `${sign}${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
-  };
+
 
   const getBalanceIcon = (balance: number) => {
     if (balance > 0) return <TrendingUp className="h-4 w-4 text-green-500" />;

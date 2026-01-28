@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import {
-    Plus,
     Search,
     UserPlus,
     Shield,

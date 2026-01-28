@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import {
   Clock,
   MapPin,
-  Camera,
   CheckCircle,
   XCircle,
   AlertTriangle,
@@ -356,7 +355,7 @@ export default function TimeRecordPage() {
             <Alert>
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                Nenhum registro de ponto realizado hoje. Clique em "Entrada" para começar.
+                Nenhum registro de ponto realizado hoje. Clique em &quot;Entrada&quot; para começar.
               </AlertDescription>
             </Alert>
           ) : (

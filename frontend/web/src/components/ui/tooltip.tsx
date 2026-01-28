@@ -71,7 +71,7 @@ TooltipTrigger.displayName = "TooltipTrigger"
 const TooltipContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & { side?: "top" | "bottom" | "left" | "right"; sideOffset?: number }
->(({ className, side = "top", sideOffset = 4, ...props }, ref) => {
+>(({ className, side = "top", ...props }, ref) => {
   const { open } = useTooltip()
 
   if (!open) return null

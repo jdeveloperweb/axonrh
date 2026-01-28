@@ -23,8 +23,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+
 import {
   Select,
   SelectContent,
@@ -111,14 +110,7 @@ export default function OvertimeBankPage() {
     loadData();
   }, [loadData]);
 
-  const formatMinutes = (minutes: number) => {
-    if (!minutes) return '00:00';
-    const sign = minutes < 0 ? '-' : '';
-    const abs = Math.abs(minutes);
-    const hours = Math.floor(abs / 60);
-    const mins = abs % 60;
-    return `${sign}${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
-  };
+
 
   const getTypeConfig = (type: OvertimeBankMovement['type']) => {
     const configs = {
@@ -283,9 +275,8 @@ export default function OvertimeBankPage() {
                   <p className="text-sm text-muted-foreground mb-1">Saldo Atual</p>
                   <div className="flex items-center gap-3">
                     <div
-                      className={`text-5xl font-bold font-mono ${
-                        summary.isPositive ? 'text-green-600' : 'text-red-600'
-                      }`}
+                      className={`text-5xl font-bold font-mono ${summary.isPositive ? 'text-green-600' : 'text-red-600'
+                        }`}
                     >
                       {summary.currentBalanceFormatted}
                     </div>

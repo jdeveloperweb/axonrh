@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import {
-  calculationApi,
   CalculationResult,
   VacationCalculation,
   TerminationCalculation,

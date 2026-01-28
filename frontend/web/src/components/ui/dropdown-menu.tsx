@@ -69,7 +69,7 @@ const DropdownMenuTrigger = React.forwardRef<
           childRef.current = node
         }
       }
-    } as any)
+    } as React.HTMLAttributes<HTMLElement>)
   }
 
   return (

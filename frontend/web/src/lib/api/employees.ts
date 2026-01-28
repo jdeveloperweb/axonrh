@@ -171,6 +171,18 @@ export interface CostCenter {
   active: boolean;
 }
 
+export interface OrgNode {
+  id: string;
+  name: string;
+  position: string;
+  department: string;
+  photoUrl?: string;
+  email?: string;
+  children: OrgNode[];
+  expanded?: boolean;
+  level?: number;
+}
+
 // API Functions
 export const employeesApi = {
   // List employees with pagination and filters
@@ -273,8 +285,8 @@ export const employeesApi = {
   },
 
   // Get org chart data
-  getOrgChart: async (): Promise<Record<string, unknown>> => {
-    return api.get<unknown, Record<string, unknown>>('/employees/org-chart');
+  getOrgChart: async (): Promise<OrgNode> => {
+    return api.get<unknown, OrgNode>('/employees/org-chart');
   },
 
   // Export employees

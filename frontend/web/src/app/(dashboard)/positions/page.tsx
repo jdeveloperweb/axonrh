@@ -58,7 +58,7 @@ export default function PositionsPage() {
             ]);
             setPositions(positionsData);
             setDepartments(departmentsData);
-        } catch (error) {
+        } catch {
             toast({
                 title: 'Erro',
                 description: 'Falha ao carregar dados',
@@ -161,7 +161,7 @@ export default function PositionsPage() {
             await positionsApi.deletePosition(id);
             toast({ title: 'Sucesso', description: 'Cargo excluído com sucesso' });
             fetchData();
-        } catch (error) {
+        } catch {
             toast({
                 title: 'Erro',
                 description: 'Falha ao excluir cargo',

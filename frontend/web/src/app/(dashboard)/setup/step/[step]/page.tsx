@@ -5,7 +5,6 @@ import { useRouter, useParams } from 'next/navigation';
 import {
   setupApi,
   importApi,
-  SetupProgress,
   CompanyProfile,
   Department,
   Position,
@@ -397,7 +396,7 @@ function Step1CompanyData({
           </label>
           <select
             value={profile.taxRegime || ''}
-            onChange={(e) => onChange({ ...profile, taxRegime: e.target.value as any })}
+            onChange={(e) => onChange({ ...profile, taxRegime: e.target.value as 'SIMPLES' | 'LUCRO_PRESUMIDO' | 'LUCRO_REAL' })}
             className="mt-2 block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200"
           >
             <option value="">Selecione</option>
@@ -517,7 +516,7 @@ function Step2OrgStructure() {
       await setupApi.saveDepartment(deptForm);
       setDeptForm({ code: '', name: '' });
       setRefreshKey((k) => k + 1);
-    } catch (err) {
+    } catch {
       alert('Erro ao salvar departamento');
     } finally {
       setLoading(false);
@@ -530,7 +529,7 @@ function Step2OrgStructure() {
       setLoading(true);
       await setupApi.deleteDepartment(id);
       setRefreshKey((k) => k + 1);
-    } catch (err) {
+    } catch {
       alert('Erro ao excluir departamento');
     } finally {
       setLoading(false);
@@ -544,7 +543,7 @@ function Step2OrgStructure() {
       await setupApi.savePosition(posForm);
       setPosForm({ code: '', title: '', departmentId: '' });
       setRefreshKey((k) => k + 1);
-    } catch (err) {
+    } catch {
       alert('Erro ao salvar cargo');
     } finally {
       setLoading(false);
@@ -557,7 +556,7 @@ function Step2OrgStructure() {
       setLoading(true);
       await setupApi.deletePosition(id);
       setRefreshKey((k) => k + 1);
-    } catch (err) {
+    } catch {
       alert('Erro ao excluir cargo');
     } finally {
       setLoading(false);
@@ -580,7 +579,7 @@ function Step2OrgStructure() {
       a.href = url;
       a.download = `template_${importType.toLowerCase()}.csv`;
       a.click();
-    } catch (err) {
+    } catch {
       alert('Erro ao baixar template');
     }
   };
@@ -1373,7 +1372,7 @@ function Step7Integrations({
   data: IntegrationConfig;
   onChange: (data: IntegrationConfig) => void;
 }) {
-  const updateField = (field: string, value: any) => {
+  const updateField = (field: string, value: string | boolean) => {
     onChange({ ...data, [field]: value });
   };
 

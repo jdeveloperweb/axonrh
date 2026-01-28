@@ -16,20 +16,10 @@ import {
   Building2
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { employeesApi } from '@/lib/api/employees';
+import { employeesApi, OrgNode } from '@/lib/api/employees';
 import { useToast } from '@/hooks/use-toast';
 
-interface OrgNode {
-  id: string;
-  name: string;
-  position: string;
-  department: string;
-  photoUrl?: string;
-  email?: string;
-  children: OrgNode[];
-  expanded?: boolean;
-  level?: number;
-}
+
 
 export default function OrgChartPage() {
   const router = useRouter();
@@ -137,8 +127,8 @@ export default function OrgChartPage() {
         <div
           onClick={() => setSelectedNode(isSelected ? null : node)}
           className={`relative bg-white border-2 rounded-lg p-4 min-w-[200px] max-w-[250px] cursor-pointer transition-all ${isSelected
-              ? 'border-blue-500 shadow-lg ring-2 ring-blue-200'
-              : 'border-gray-200 hover:border-blue-300 hover:shadow-md'
+            ? 'border-blue-500 shadow-lg ring-2 ring-blue-200'
+            : 'border-gray-200 hover:border-blue-300 hover:shadow-md'
             } ${!matches ? 'opacity-50' : ''}`}
         >
           {/* Avatar */}

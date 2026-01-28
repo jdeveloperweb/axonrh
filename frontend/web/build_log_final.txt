@@ -1,0 +1,28 @@
+
+> axonrh-web@1.0.0 build
+> next build
+
+   ▲ Next.js 15.5.9
+   - Environments: .env.local
+   - Experiments (use with caution):
+     · serverActions
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 7.3s
+   Linting and checking validity of types ...
+
+Failed to compile.
+
+./src/app/(dashboard)/timesheet/mirror/page.tsx
+64:11  Error: 'loadEmployees' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/(dashboard)/timesheet/overtime/page.tsx
+159:28  Error: 'index' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/components/ui/select.tsx
+74:7  Warning: Elements with the ARIA role "combobox" must have the following attributes defined: aria-controls,aria-expanded  jsx-a11y/role-has-required-aria-props
+
+./src/lib/api/notification.ts
+245:58  Error: '_options' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules

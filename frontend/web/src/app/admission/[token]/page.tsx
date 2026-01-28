@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import {
   User,
   FileText,
-  FileCheck,
+
   PenTool,
   CheckCircle,
   AlertCircle,
@@ -17,9 +17,8 @@ import {
 } from 'lucide-react';
 import { AdmissionDocument } from '@/lib/api/admissions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { admissionsApi, AdmissionProcess, AdmissionStatus } from '@/lib/api/admissions';
+import { admissionsApi, AdmissionProcess } from '@/lib/api/admissions';
 import { useToast } from '@/hooks/use-toast';
-import { isValidCpf, isValidEmail, formatCpf } from '@/lib/utils';
 
 interface Step {
   id: number;
@@ -42,7 +41,7 @@ const documentTypes = [
 
 export default function AdmissionWizardPage() {
   const params = useParams();
-  const router = useRouter();
+
   const { toast } = useToast();
   const token = params.token as string;
 
@@ -110,7 +109,7 @@ export default function AdmissionWizardPage() {
 
       // Load existing documents
       const docs = await admissionsApi.public.getDocuments(token);
-      const docsMap: Record<string, any> = {};
+      const docsMap: Record<string, { status: string; message?: string }> = {};
       (docs as unknown as AdmissionDocument[]).forEach((doc) => {
         docsMap[doc.documentType] = {
           status: doc.status,
@@ -155,7 +154,7 @@ export default function AdmissionWizardPage() {
         };
         await admissionsApi.public.saveData(token, data);
         setCurrentStep(3);
-      } catch (error) {
+      } catch {
         toast({
           title: 'Erro',
           description: 'Falha ao salvar dados',
@@ -181,7 +180,7 @@ export default function AdmissionWizardPage() {
             variant: 'destructive',
           });
         }
-      } catch (error) {
+      } catch {
         toast({
           title: 'Erro',
           description: 'Falha ao validar documentos',
@@ -214,7 +213,7 @@ export default function AdmissionWizardPage() {
           title: 'Sucesso!',
           description: 'Contrato assinado com sucesso. Sua admissão foi concluída!',
         });
-      } catch (error) {
+      } catch {
         toast({
           title: 'Erro',
           description: 'Falha ao assinar contrato',
@@ -255,7 +254,7 @@ export default function AdmissionWizardPage() {
         title: 'Documento enviado',
         description: `${type} enviado com sucesso`,
       });
-    } catch (error) {
+    } catch {
       setDocuments(prev => ({
         ...prev,
         [type]: { status: 'ERROR', message: 'Falha no upload' },

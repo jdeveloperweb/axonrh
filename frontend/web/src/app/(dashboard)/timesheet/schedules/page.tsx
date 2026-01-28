@@ -8,13 +8,8 @@ import {
   Trash2,
   Copy,
   MoreHorizontal,
-  Calendar,
-  Users,
   AlertTriangle,
-  CheckCircle,
   Loader2,
-  Settings,
-  Sun,
   Moon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -38,7 +33,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import {
   DropdownMenu,
@@ -354,8 +348,8 @@ export default function SchedulesPage() {
                       <div
                         key={day.dayOfWeek}
                         className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium ${day.isWorkDay
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted text-muted-foreground'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted text-muted-foreground'
                           }`}
                         title={`${dayConfig?.label}: ${day.isWorkDay ? `${day.entryTime} - ${day.exitTime}` : 'Folga'
                           }`}
