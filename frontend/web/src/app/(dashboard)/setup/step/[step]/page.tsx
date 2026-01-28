@@ -870,6 +870,34 @@ function Step3LaborRules({
   );
 }
 
+function ColorInput({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <div className="space-y-1.5">
+      <label className="block text-sm font-semibold text-slate-700">{label}</label>
+      <div className="flex items-center gap-3">
+        <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border border-slate-200 shadow-sm transition-transform hover:scale-105 active:scale-95">
+          <input
+            type="color"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            className="absolute -inset-2 h-16 w-16 cursor-pointer border-none bg-transparent p-0"
+          />
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{ backgroundColor: value }}
+          />
+        </div>
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-mono uppercase text-slate-700 shadow-sm transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
+        />
+      </div>
+    </div>
+  );
+}
+
 function Step4Branding({
   config,
   onChange,
@@ -924,58 +952,22 @@ function Step4Branding({
 
         <div>
           <h3 className="text-lg font-semibold text-slate-900 mb-4">Cores da Marca</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Primária</label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={config.primaryColor}
-                  onChange={(e) => onChange({ ...config, primaryColor: e.target.value })}
-                  className="h-10 w-10 cursor-pointer rounded-lg border-none p-0"
-                />
-                <input
-                  type="text"
-                  value={config.primaryColor}
-                  onChange={(e) => onChange({ ...config, primaryColor: e.target.value })}
-                  className="flex-1 text-xs font-mono uppercase rounded-lg border border-slate-200 px-2 py-2"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Secundária</label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={config.secondaryColor}
-                  onChange={(e) => onChange({ ...config, secondaryColor: e.target.value })}
-                  className="h-10 w-10 cursor-pointer rounded-lg border-none p-0"
-                />
-                <input
-                  type="text"
-                  value={config.secondaryColor}
-                  onChange={(e) => onChange({ ...config, secondaryColor: e.target.value })}
-                  className="flex-1 text-xs font-mono uppercase rounded-lg border border-slate-200 px-2 py-2"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Destaque</label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={config.accentColor}
-                  onChange={(e) => onChange({ ...config, accentColor: e.target.value })}
-                  className="h-10 w-10 cursor-pointer rounded-lg border-none p-0"
-                />
-                <input
-                  type="text"
-                  value={config.accentColor}
-                  onChange={(e) => onChange({ ...config, accentColor: e.target.value })}
-                  className="flex-1 text-xs font-mono uppercase rounded-lg border border-slate-200 px-2 py-2"
-                />
-              </div>
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <ColorInput
+              label="Primária"
+              value={config.primaryColor}
+              onChange={(color: string) => onChange({ ...config, primaryColor: color })}
+            />
+            <ColorInput
+              label="Secundária"
+              value={config.secondaryColor}
+              onChange={(color: string) => onChange({ ...config, secondaryColor: color })}
+            />
+            <ColorInput
+              label="Destaque"
+              value={config.accentColor}
+              onChange={(color: string) => onChange({ ...config, accentColor: color })}
+            />
           </div>
         </div>
 
