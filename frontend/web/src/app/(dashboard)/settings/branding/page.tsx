@@ -129,7 +129,7 @@ export default function BrandingPage() {
                         <CardContent className="space-y-6">
                             <div className="flex flex-col items-center justify-center border-2 border-dashed border-[var(--color-border)] rounded-[var(--radius-lg)] p-8 bg-[var(--color-surface-variant)]/30 hover:bg-[var(--color-surface-variant)]/50 transition-colors cursor-pointer group">
                                 {data.logoUrl ? (
-                                    <img src={data.logoUrl} alt="Preview" style={{ maxWidth: data.logoWidth }} className="mb-4 h-auto" />
+                                    <img src={data.logoUrl} alt="Preview" style={{ maxWidth: data.logoWidth || 150 }} className="mb-4 h-auto" />
                                 ) : (
                                     <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-4 shadow-sm group-hover:scale-110 transition-transform">
                                         <Upload className="w-8 h-8 text-[var(--color-primary)]" />
@@ -287,7 +287,7 @@ export default function BrandingPage() {
                         >
                             <div className="h-12 border-b flex items-center px-4 justify-between" style={{ backgroundColor: '#ffffff' }}>
                                 {data.logoUrl ? (
-                                    <img src={data.logoUrl} alt="Logo" style={{ maxWidth: data.logoWidth / 2 }} className="h-auto" />
+                                    <img src={data.logoUrl} alt="Logo" style={{ maxWidth: (data.logoWidth || 150) / 2 }} className="h-auto" />
                                 ) : (
                                     <div className="flex items-center gap-2">
                                         <div className="w-6 h-6 rounded-full" style={{ backgroundColor: data.primaryColor }} />
