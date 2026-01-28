@@ -20,6 +20,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "b2carelink.com.br",
       },
+      {
+        protocol: "https",
+        hostname: "prognum.com.br",
+      },
     ],
   },
   async headers() {
