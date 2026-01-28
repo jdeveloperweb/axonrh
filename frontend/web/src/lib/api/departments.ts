@@ -93,7 +93,7 @@ export const departmentsApi = {
 
     // Remove manager from department
     removeManager: async (departmentId: string): Promise<DepartmentDTO> => {
-        return api.delete<DepartmentDTO>(`/departments/${departmentId}/manager`);
+        return api.delete<DepartmentDTO, DepartmentDTO>(`/departments/${departmentId}/manager`);
     },
 
     // Get departments by manager
