@@ -53,8 +53,10 @@ public class AuthService {
         log.info("Login attempt for email: {}", request.getEmail());
 
         // Busca usuario com roles e permissoes
-        User user = userRepository.findByEmailWithRolesAndPermissions(request.getEmail())
+        log.debug("Total users in database: {}", userRepository.count());
+        User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> {
+                    log.error("User with email {} not found in database", request.getEmail());
                     recordLoginAttempt(request.getEmail(), null, null, false,
                             LoginAttempt.REASON_USER_NOT_FOUND, ipAddress, userAgent);
                     return new AuthenticationException("Credenciais invalidas");

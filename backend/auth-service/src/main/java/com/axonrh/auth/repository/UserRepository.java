@@ -23,7 +23,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     boolean existsByEmailAndTenantId(String email, UUID tenantId);
 
-    @Query("SELECT u FROM User u LEFT JOIN FETCH u.roles r LEFT JOIN FETCH r.permissions WHERE u.email = :email")
+    @Query("SELECT u FROM User u WHERE u.email = :email")
     Optional<User> findByEmailWithRolesAndPermissions(@Param("email") String email);
 
     @Query("SELECT u FROM User u LEFT JOIN FETCH u.roles r LEFT JOIN FETCH r.permissions WHERE u.id = :id")
