@@ -59,11 +59,11 @@ public class QueryBuilderService {
 
     private static final String DATABASE_SCHEMA = """
         -- Funcionários
-        shared.employees (id, tenant_id, employee_code, full_name, email, cpf, hire_date, termination_date,
-                   birth_date, department_id, position_id, manager_id, status, salary, work_schedule_id)
+        shared.employees (id, tenant_id, registration_number, full_name, email, cpf, hire_date, termination_date,
+                   birth_date, department_id, position_id, manager_id, status, base_salary, work_schedule_id)
 
         -- Departamentos
-        shared.departments (id, tenant_id, name, code, parent_id, manager_id, cost_center)
+        shared.departments (id, tenant_id, name, code, parent_id, manager_id, cost_center_id)
 
         -- Cargos
         shared.positions (id, tenant_id, title, level, department_id, min_salary, max_salary)
