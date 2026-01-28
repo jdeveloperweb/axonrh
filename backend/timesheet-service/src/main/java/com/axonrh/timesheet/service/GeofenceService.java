@@ -11,8 +11,8 @@ import com.axonrh.timesheet.service.TimeRecordService.GeofenceValidationResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -29,11 +29,17 @@ import java.util.UUID;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class GeofenceService {
 
     private final GeofenceRepository geofenceRepository;
     private final ObjectMapper objectMapper;
+
+    public GeofenceService(
+            GeofenceRepository geofenceRepository,
+            @Qualifier("timesheetKafkaObjectMapper") ObjectMapper objectMapper) {
+        this.geofenceRepository = geofenceRepository;
+        this.objectMapper = objectMapper;
+    }
 
     /**
      * Cria uma nova geofence.

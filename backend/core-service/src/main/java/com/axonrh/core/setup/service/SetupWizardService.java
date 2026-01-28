@@ -758,7 +758,7 @@ public class SetupWizardService {
                     
                     // Native insert use JPA EntityManager for simplicity since they share DB
                     entityManager.createNativeQuery(
-                        "INSERT INTO employees (id, tenant_id, full_name, cpf, email, status, is_active, birth_date, hire_date, employment_type, created_at) " +
+                        "INSERT INTO shared.employees (id, tenant_id, full_name, cpf, email, status, is_active, birth_date, hire_date, employment_type, created_at) " +
                         "VALUES (?, ?, ?, ?, ?, 'ACTIVE', true, '1990-01-01', CURRENT_DATE, 'CLT', CURRENT_TIMESTAMP) " +
                         "ON CONFLICT (tenant_id, cpf) DO NOTHING")
                         .setParameter(1, UUID.randomUUID())

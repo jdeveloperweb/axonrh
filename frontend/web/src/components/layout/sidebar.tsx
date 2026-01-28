@@ -21,6 +21,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
 import { useThemeStore } from '@/stores/theme-store';
+import { useLayoutStore } from '@/stores/layout-store';
 
 // ==================== Types ====================
 
@@ -81,7 +82,7 @@ const navGroups: NavGroup[] = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { isSidebarCollapsed, toggleSidebar } = useLayoutStore();
   const { user, logout } = useAuthStore();
   const { tenantTheme } = useThemeStore();
 
@@ -90,18 +91,16 @@ export function Sidebar() {
     return user?.permissions?.includes(permission) ?? false;
   };
 
-
-
   return (
     <aside
       className={cn(
         'sidebar flex flex-col',
-        isCollapsed && 'sidebar-collapsed'
+        isSidebarCollapsed && 'sidebar-collapsed'
       )}
     >
       {/* Logo */}
       <div className="flex items-center justify-between h-[var(--header-height)] px-4 border-b border-[var(--color-border)]">
-        {!isCollapsed && (
+        {!isSidebarCollapsed && (
           <div className="flex items-center gap-2">
             {tenantTheme?.logoUrl ? (
               <img
@@ -116,11 +115,11 @@ export function Sidebar() {
           </div>
         )}
         <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
+          onClick={toggleSidebar}
           className="p-2 rounded-[var(--radius-md)] hover:bg-[var(--color-surface-variant)] transition-colors"
-          title={isCollapsed ? 'Expandir menu' : 'Recolher menu'}
+          title={isSidebarCollapsed ? 'Expandir menu' : 'Recolher menu'}
         >
-          {isCollapsed ? (
+          {isSidebarCollapsed ? (
             <ChevronRight className="w-5 h-5" />
           ) : (
             <ChevronLeft className="w-5 h-5" />
@@ -137,7 +136,7 @@ export function Sidebar() {
 
             return (
               <div key={groupIndex}>
-                {!isCollapsed && group.title && (
+                {!isSidebarCollapsed && group.title && (
                   <h3 className="px-3 mb-2 text-xs font-semibold text-[var(--color-text-tertiary)] tracking-wider">
                     {group.title}
                   </h3>
@@ -156,12 +155,12 @@ export function Sidebar() {
                             'transition-colors duration-[var(--transition-fast)]',
                             'hover:bg-[var(--color-surface-variant)]',
                             isActive && 'bg-[var(--color-primary)] text-[var(--color-text-on-primary)]',
-                            isCollapsed && 'justify-center'
+                            isSidebarCollapsed && 'justify-center'
                           )}
-                          title={isCollapsed ? item.label : undefined}
+                          title={isSidebarCollapsed ? item.label : undefined}
                         >
                           <Icon className="w-5 h-5 flex-shrink-0" />
-                          {!isCollapsed && (
+                          {!isSidebarCollapsed && (
                             <span className="font-medium">{item.label}</span>
                           )}
                         </Link>
@@ -177,7 +176,7 @@ export function Sidebar() {
 
       {/* User Section */}
       <div className="border-t border-[var(--color-border)] p-4">
-        {!isCollapsed && user && (
+        {!isSidebarCollapsed && user && (
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-full bg-[var(--color-primary)] flex items-center justify-center text-[var(--color-text-on-primary)] font-medium">
               {user.name.charAt(0).toUpperCase()}
@@ -197,12 +196,12 @@ export function Sidebar() {
             'flex items-center gap-3 w-full px-3 py-2.5 rounded-[var(--radius-md)]',
             'text-[var(--color-error)] hover:bg-[var(--color-error)]/10',
             'transition-colors',
-            isCollapsed && 'justify-center'
+            isSidebarCollapsed && 'justify-center'
           )}
-          title={isCollapsed ? 'Sair' : undefined}
+          title={isSidebarCollapsed ? 'Sair' : undefined}
         >
           <LogOut className="w-5 h-5" />
-          {!isCollapsed && <span>Sair</span>}
+          {!isSidebarCollapsed && <span>Sair</span>}
         </button>
       </div>
     </aside>

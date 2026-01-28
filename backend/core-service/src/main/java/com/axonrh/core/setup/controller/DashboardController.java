@@ -36,7 +36,7 @@ public class DashboardController {
         Long activeEmployees = 0L;
         try {
             activeEmployees = ((Number) entityManager.createNativeQuery(
-                "SELECT COUNT(*) FROM employees WHERE tenant_id = ? AND is_active = true")
+                "SELECT COUNT(*) FROM shared.employees WHERE tenant_id = ? AND is_active = true")
                 .setParameter(1, tId)
                 .getSingleResult()).longValue();
         } catch (Exception e) {
@@ -50,24 +50,26 @@ public class DashboardController {
         Long vacationsCount = 0L;
         try {
             vacationsCount = ((Number) entityManager.createNativeQuery(
-                "SELECT COUNT(*) FROM vacations " +
+                "SELECT COUNT(*) FROM shared.vacation_requests " +
                 "WHERE tenant_id = ? AND status = 'APPROVED' " +
                 "AND (start_date <= CURRENT_DATE AND end_date >= CURRENT_DATE)")
                 .setParameter(1, tId)
                 .getSingleResult()).longValue();
         } catch (Exception e) {
-            // Table might not exist
+            log.warn("Error counting vacations or table missing: {}", e.getMessage());
         }
 
         // 4. Pending Issues
         Long pendingIssues = 0L;
         try {
              Long pendingVacations = ((Number) entityManager.createNativeQuery(
-                "SELECT COUNT(*) FROM vacations WHERE tenant_id = ? AND status = 'PENDING'")
+                "SELECT COUNT(*) FROM shared.vacation_requests WHERE tenant_id = ? AND status = 'PENDING'")
                 .setParameter(1, tId)
                 .getSingleResult()).longValue();
              pendingIssues = pendingVacations; // Add other pending types if available
-        } catch (Exception e) { }
+        } catch (Exception e) {
+            log.warn("Error counting pending vacations: {}", e.getMessage());
+        }
 
         // ================= Diversity Metrics =================
 
@@ -76,7 +78,7 @@ public class DashboardController {
         double femalePct = 0.0;
         try {
             java.util.List<Object[]> results = entityManager.createNativeQuery(
-                "SELECT gender, COUNT(*) FROM employees WHERE tenant_id = ? AND is_active = true GROUP BY gender")
+                "SELECT gender, COUNT(*) FROM shared.employees WHERE tenant_id = ? AND is_active = true GROUP BY gender")
                 .setParameter(1, tId)
                 .getResultList();
             
@@ -102,7 +104,7 @@ public class DashboardController {
         java.util.Map<String, Long> raceDist = new java.util.HashMap<>();
         try {
             java.util.List<Object[]> results = entityManager.createNativeQuery(
-                "SELECT race, COUNT(*) FROM employees WHERE tenant_id = ? AND is_active = true GROUP BY race")
+                "SELECT race, COUNT(*) FROM shared.employees WHERE tenant_id = ? AND is_active = true GROUP BY race")
                 .setParameter(1, tId)
                 .getResultList();
              
@@ -119,7 +121,7 @@ public class DashboardController {
         double avgAge = 0.0;
         try {
             java.math.BigDecimal val = (java.math.BigDecimal) entityManager.createNativeQuery(
-                 "SELECT AVG(EXTRACT(YEAR FROM AGE(birth_date))) FROM employees WHERE tenant_id = ? AND is_active = true")
+                 "SELECT AVG(EXTRACT(YEAR FROM AGE(birth_date))) FROM shared.employees WHERE tenant_id = ? AND is_active = true")
                  .setParameter(1, tId)
                  .getSingleResult();
             if (val != null) avgAge = val.doubleValue();
@@ -157,7 +159,7 @@ public class DashboardController {
             // Hires by month
              java.util.List<Object[]> hires = entityManager.createNativeQuery(
                 "SELECT CAST(EXTRACT(YEAR FROM hire_date) AS INTEGER), CAST(EXTRACT(MONTH FROM hire_date) AS INTEGER), COUNT(*) " +
-                "FROM employees WHERE tenant_id = ? AND hire_date >= CURRENT_DATE - INTERVAL '1 year' GROUP BY 1, 2")
+                "FROM shared.employees WHERE tenant_id = ? AND hire_date >= CURRENT_DATE - INTERVAL '1 year' GROUP BY 1, 2")
                 .setParameter(1, tId)
                 .getResultList();
 
@@ -176,7 +178,7 @@ public class DashboardController {
              // Terminations by month
              java.util.List<Object[]> terms = entityManager.createNativeQuery(
                 "SELECT CAST(EXTRACT(YEAR FROM termination_date) AS INTEGER), CAST(EXTRACT(MONTH FROM termination_date) AS INTEGER), COUNT(*) " +
-                "FROM employees WHERE tenant_id = ? AND termination_date >= CURRENT_DATE - INTERVAL '1 year' GROUP BY 1, 2")
+                "FROM shared.employees WHERE tenant_id = ? AND termination_date >= CURRENT_DATE - INTERVAL '1 year' GROUP BY 1, 2")
                 .setParameter(1, tId)
                 .getResultList();
             
@@ -228,7 +230,7 @@ public class DashboardController {
                 "  WHEN AGE(CURRENT_DATE, hire_date) < INTERVAL '5 years' THEN '3-5 anos' " +
                 "  ELSE '5+ anos' " +
                 "END as range, COUNT(*) " +
-                "FROM employees WHERE tenant_id = ? AND is_active = true GROUP BY 1")
+                "FROM shared.employees WHERE tenant_id = ? AND is_active = true GROUP BY 1")
                 .setParameter(1, tId)
                 .getResultList();
 

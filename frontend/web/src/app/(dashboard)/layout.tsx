@@ -5,6 +5,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
+import { useLayoutStore } from '@/stores/layout-store';
+import { cn } from '@/lib/utils';
 
 export default function DashboardLayout({
   children,
@@ -14,6 +16,7 @@ export default function DashboardLayout({
   const router = useRouter();
   const pathname = usePathname();
   const { isAuthenticated, isLoading } = useAuthStore();
+  const { isSidebarCollapsed } = useLayoutStore();
   const isSetupRoute = pathname?.startsWith('/setup');
 
   useEffect(() => {
@@ -50,7 +53,10 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-[var(--color-background)]">
+    <div className={cn(
+      "min-h-screen bg-[var(--color-background)]",
+      isSidebarCollapsed && "layout-collapsed"
+    )}>
       <Sidebar />
       <Header />
       <main className="main-content animate-fade-in">

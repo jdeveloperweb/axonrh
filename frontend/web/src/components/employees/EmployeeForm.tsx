@@ -302,8 +302,8 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
             socialName: data.socialName || undefined,
             email: data.email,
             personalEmail: data.personalEmail || undefined,
-            phone: data.phone || undefined,
-            mobile: data.personalPhone || undefined,  // personalPhone → mobile
+            phone: data.phone ? data.phone.replace(/\D/g, '') : undefined,
+            mobile: data.personalPhone ? data.personalPhone.replace(/\D/g, '') : undefined,  // personalPhone → mobile
             birthDate: data.birthDate,
             gender: data.gender || undefined,
             maritalStatus: data.maritalStatus || undefined,

@@ -80,7 +80,7 @@ public class KafkaConfig {
         return factory;
     }
 
-    @Bean
+    @Bean(name = "vacationKafkaTemplate")
     public KafkaTemplate<String, Object> vacationKafkaTemplate(
             ProducerFactory<String, Object> vacationKafkaProducerFactory) {
         KafkaTemplate<String, Object> template = new KafkaTemplate<>(vacationKafkaProducerFactory);
