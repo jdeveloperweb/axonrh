@@ -56,7 +56,7 @@ public class UserController {
         User user = User.builder()
                 .name(dto.getName())
                 .avatarUrl(dto.getAvatarUrl())
-                .status(dto.getStatus())
+                .status(dto.getStatus() != null ? User.UserStatus.valueOf(dto.getStatus()) : null)
                 .passwordHash(dto.getPassword())
                 .build();
         
@@ -81,7 +81,7 @@ public class UserController {
                 .id(user.getId())
                 .name(user.getName())
                 .email(user.getEmail())
-                .status(user.getStatus())
+                .status(user.getStatus() != null ? user.getStatus().name() : null)
                 .avatarUrl(user.getAvatarUrl())
                 .tenantId(user.getTenantId())
                 .roles(user.getRoles().stream().map(r -> r.getName()).collect(Collectors.toList()))

@@ -38,7 +38,7 @@ public class UserService {
         }
 
         user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
-        user.setStatus("ACTIVE");
+        user.setStatus(User.UserStatus.ACTIVE);
 
         Set<Role> roles = roleNames.stream()
                 .map(name -> roleRepository.findByName(name)
