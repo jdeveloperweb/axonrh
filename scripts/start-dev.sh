@@ -78,6 +78,8 @@ logs_menu() {
         "axonrh-rabbitmq"
         "axonrh-mailhog"
         "axonrh-minio"
+        "axonrh-zookeeper"
+        "axonrh-kafka"
     )
 
     echo -e "\n${BLUE}========================================${NC}"
@@ -135,6 +137,7 @@ start_infrastructure() {
     echo -e "  - MongoDB: localhost:27017"
     echo -e "  - Redis: localhost:6379"
     echo -e "  - RabbitMQ: localhost:5672 (Management: http://localhost:15672)"
+    echo -e "  - Kafka: localhost:9092"
     echo -e "  - MailHog: http://localhost:8025"
 }
 
