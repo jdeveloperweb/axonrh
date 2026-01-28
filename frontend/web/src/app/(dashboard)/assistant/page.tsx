@@ -1,17 +1,34 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import ChatWidget from '@/components/ai/ChatWidget';
 import CalculatorWidget from '@/components/ai/CalculatorWidget';
 
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 type Tab = 'chat' | 'calculator' | 'knowledge';
 
 export default function AssistantPage() {
-  const [activeTab, setActiveTab] = useState<Tab>('chat');
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const initialTab = (searchParams.get('tab') as Tab) || 'chat';
   const initialQuery = searchParams.get('q');
+
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab);
+
+  useEffect(() => {
+    const tab = searchParams.get('tab') as Tab;
+    if (tab && ['chat', 'calculator', 'knowledge'].includes(tab)) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (tab: Tab) => {
+    setActiveTab(tab);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tab', tab);
+    router.push(`/assistant?${params.toString()}`);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -31,7 +48,7 @@ export default function AssistantPage() {
               <div className="flex bg-gray-100 rounded-lg p-1">
                 <TabButton
                   active={activeTab === 'chat'}
-                  onClick={() => setActiveTab('chat')}
+                  onClick={() => handleTabChange('chat')}
                   icon={
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -43,7 +60,7 @@ export default function AssistantPage() {
                 </TabButton>
                 <TabButton
                   active={activeTab === 'calculator'}
-                  onClick={() => setActiveTab('calculator')}
+                  onClick={() => handleTabChange('calculator')}
                   icon={
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -55,7 +72,7 @@ export default function AssistantPage() {
                 </TabButton>
                 <TabButton
                   active={activeTab === 'knowledge'}
-                  onClick={() => setActiveTab('knowledge')}
+                  onClick={() => handleTabChange('knowledge')}
                   icon={
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -79,7 +96,7 @@ export default function AssistantPage() {
               <ChatWidget className="h-[calc(100vh-200px)]" initialMessage={initialQuery || undefined} />
             </div>
             <div className="space-y-6">
-              <QuickActions />
+              <QuickActions onNavigate={handleTabChange} />
               <RecentConversations />
             </div>
           </div>
@@ -119,12 +136,12 @@ function TabButton({ active, onClick, icon, children }: {
   );
 }
 
-function QuickActions() {
+function QuickActions({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
   const actions = [
-    { label: 'Calcular Férias', icon: '🏖️', href: '#calculator' },
-    { label: 'Simular Rescisão', icon: '📋', href: '#calculator' },
-    { label: 'Consultar CLT', icon: '📚', href: '#knowledge' },
-    { label: 'Ver Políticas', icon: '📄', href: '#knowledge' },
+    { label: 'Calcular Férias', icon: '🏖️', tab: 'calculator' as Tab },
+    { label: 'Simular Rescisão', icon: '📋', tab: 'calculator' as Tab },
+    { label: 'Consultar CLT', icon: '📚', tab: 'knowledge' as Tab },
+    { label: 'Ver Políticas', icon: '📄', tab: 'knowledge' as Tab },
   ];
 
   return (
@@ -134,6 +151,7 @@ function QuickActions() {
         {actions.map((action, index) => (
           <button
             key={index}
+            onClick={() => onNavigate(action.tab)}
             className="flex items-center space-x-2 p-3 text-sm bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors text-left"
           >
             <span>{action.icon}</span>
@@ -176,6 +194,8 @@ function RecentConversations() {
 
 function KnowledgeBase() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const categories = [
     {
@@ -215,6 +235,23 @@ function KnowledgeBase() {
       color: 'bg-indigo-100 text-indigo-800',
     },
   ];
+
+  const handleFileClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setIsUploading(true);
+      // Simulate upload
+      setTimeout(() => {
+        setIsUploading(false);
+        alert(`Arquivo "${file.name}" enviado com sucesso!\n\n(Simulação: Em produção, o arquivo seria processado pela IA)`);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }, 1500);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -273,22 +310,44 @@ function KnowledgeBase() {
         <h3 className="text-lg font-semibold text-gray-900 mb-4">
           Adicionar Documento
         </h3>
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors cursor-pointer">
-          <svg
-            className="mx-auto h-12 w-12 text-gray-400"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-          </svg>
-          <p className="mt-2 text-sm text-gray-600">
-            <span className="font-medium text-blue-600">Clique para enviar</span> ou arraste e solte
-          </p>
-          <p className="mt-1 text-xs text-gray-500">
-            PDF, DOC, TXT até 10MB
-          </p>
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          className="hidden"
+          accept=".pdf,.doc,.docx,.txt"
+        />
+        <div
+          onClick={handleFileClick}
+          className={`border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors cursor-pointer ${isUploading ? 'bg-gray-50' : ''}`}
+        >
+          {isUploading ? (
+            <div className="flex flex-col items-center">
+              <svg className="animate-spin h-8 w-8 text-blue-600 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <p className="text-sm text-gray-600">Enviando documento...</p>
+            </div>
+          ) : (
+            <>
+              <svg
+                className="mx-auto h-12 w-12 text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+              <p className="mt-2 text-sm text-gray-600">
+                <span className="font-medium text-blue-600">Clique para enviar</span> ou arraste e solte
+              </p>
+              <p className="mt-1 text-xs text-gray-500">
+                PDF, DOC, TXT até 10MB
+              </p>
+            </>
+          )}
         </div>
       </div>
     </div>

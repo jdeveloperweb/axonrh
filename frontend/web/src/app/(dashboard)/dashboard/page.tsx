@@ -18,7 +18,8 @@ import {
 } from 'lucide-react';
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend,
+  ComposedChart, Line
 } from 'recharts';
 
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -69,6 +70,25 @@ export default function DashboardPage() {
   // Race Data for Bar Chart
   const raceData = statsData?.raceDistribution
     ? Object.entries(statsData.raceDistribution).map(([name, value]) => ({ name, value }))
+    : [];
+
+  // History Data for Stability & Turnover
+  const historyData = statsData?.activeHistory
+    ? Object.keys(statsData.activeHistory).map((month) => ({
+      name: month,
+      active: statsData.activeHistory[month],
+      turnover: statsData.turnoverHistory?.[month] || 0,
+      hired: statsData.hiringHistory?.[month] || 0,
+      terminated: statsData.terminationHistory?.[month] || 0,
+    }))
+    : [];
+
+  // Tenure Data
+  const tenureData = statsData?.tenureDistribution
+    ? Object.entries(statsData.tenureDistribution).map(([name, value]) => ({ name, value }))
+    // Sort logic if needed, but backend sends ordered keys (LinkedHashMap) if done right.
+    // However, JS object iteration order is complex. Better to rely on array from backend or keys array.
+    // For now, assuming keys are mapped chronologically/logically.
     : [];
 
   const renderGeralTab = () => {
@@ -163,8 +183,16 @@ export default function DashboardPage() {
             <CardHeader>
               <CardTitle>Variação Mensal</CardTitle>
             </CardHeader>
-            <CardContent className="h-[320px] flex items-center justify-center text-gray-400">
-              <p>Gráfico de histórico em desenvolvimento</p>
+            <CardContent className="h-[320px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart data={historyData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                  <YAxis yAxisId="left" />
+                  <Tooltip />
+                  <Bar yAxisId="left" dataKey="active" fill="#2563EB" radius={[4, 4, 0, 0]} name="Ativos" />
+                </ComposedChart>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
         </div>
@@ -282,6 +310,77 @@ export default function DashboardPage() {
     );
   };
 
+  const renderHiringTab = () => {
+    return (
+      <div className="space-y-6 animate-in fade-in duration-500">
+        {/* Top: Stability Chart */}
+        <Card className="border-none shadow-sm">
+          <CardHeader>
+            <CardTitle>Estabilidade e Crescimento do Quadro</CardTitle>
+            <p className="text-sm text-gray-500">
+              Relação entre número total de colaboradores ativos e taxa de turnover mensal.
+            </p>
+          </CardHeader>
+          <CardContent className="h-[400px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart data={historyData} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                <YAxis yAxisId="left" />
+                <YAxis yAxisId="right" orientation="right" unit="%" />
+                <Tooltip />
+                <Legend />
+                <Bar yAxisId="left" dataKey="active" name="Colaboradores Ativos" fill="#2563EB" radius={[4, 4, 0, 0]} barSize={40} />
+                <Line yAxisId="right" type="monotone" dataKey="turnover" name="Turnover" stroke="#DC2626" strokeWidth={2} dot={{ r: 4 }} />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Bottom Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Hiring vs Termination */}
+          <Card className="border-none shadow-sm h-[400px]">
+            <CardHeader>
+              <CardTitle>Contratações vs Desligamentos</CardTitle>
+            </CardHeader>
+            <CardContent className="h-[320px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={historyData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="hired" name="Contratações" fill="#16A34A" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="terminated" name="Desligamentos" fill="#DC2626" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Tenure */}
+          <Card className="border-none shadow-sm h-[400px]">
+            <CardHeader>
+              <CardTitle>Tempo de Casa</CardTitle>
+            </CardHeader>
+            <CardContent className="h-[320px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart layout="vertical" data={tenureData} margin={{ left: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                  <XAxis type="number" />
+                  <YAxis type="category" dataKey="name" width={80} tick={{ fontSize: 12 }} />
+                  <Tooltip cursor={{ fill: 'transparent' }} />
+                  <Bar dataKey="value" name="Colaboradores" fill="#60A5FA" radius={[0, 4, 4, 0]} barSize={32} />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return <div className="flex h-96 items-center justify-center">Carregando dashboard...</div>;
   }
@@ -314,8 +413,8 @@ export default function DashboardPage() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${activeTab === tab.id
-                  ? 'bg-white shadow-sm text-gray-900'
-                  : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
+                ? 'bg-white shadow-sm text-gray-900'
+                : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
                 }`}
             >
               <Icon className="w-4 h-4" />
@@ -328,9 +427,9 @@ export default function DashboardPage() {
       {/* Tab Content */}
       <div className="min-h-[500px]">
         {activeTab === 'geral' && renderGeralTab()}
+        {activeTab === 'hiring' && renderHiringTab()}
         {activeTab === 'diversity' && renderDiversityTab()}
-        {/* Placeholders for other tabs */}
-        {(activeTab === 'hiring' || activeTab === 'learning') && (
+        {activeTab === 'learning' && (
           <div className="flex items-center justify-center h-60 bg-white rounded-lg border border-dashed border-gray-300">
             <p className="text-gray-500">Módulo em desenvolvimento</p>
           </div>

@@ -325,4 +325,13 @@ public class Enrollment {
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
+
+    // JSON Helper methods
+    public String getCourseName() {
+        return course != null ? course.getTitle() : null;
+    }
+
+    public String getCourseThumbnail() {
+        return course != null ? course.getThumbnailUrl() : null;
+    }
 }

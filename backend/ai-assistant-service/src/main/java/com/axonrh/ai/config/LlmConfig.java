@@ -23,7 +23,7 @@ public class LlmConfig {
 
 
 
-    @javax.annotation.PostConstruct
+    @jakarta.annotation.PostConstruct
     public void init() {
         if (openAiApiKey == null || openAiApiKey.isBlank()) {
             log.warn("OpenAI API Key NÃO encontrada! As funcionalidades de IA falharão.");

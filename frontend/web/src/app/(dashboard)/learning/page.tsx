@@ -32,8 +32,10 @@ import {
   Certificate,
   EnrollmentStatistics,
 } from '@/lib/api/learning';
+import { useAuthStore } from '@/stores/auth-store';
 
 export default function LearningDashboard() {
+  const { user } = useAuthStore();
   const [publishedCourses, setPublishedCourses] = useState<Course[]>([]);
   const [myEnrollments, setMyEnrollments] = useState<Enrollment[]>([]);
   const [myCertificates, setMyCertificates] = useState<Certificate[]>([]);
@@ -41,25 +43,27 @@ export default function LearningDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
 
-  const currentUserId = 'current-user-id';
-
   useEffect(() => {
-    loadData();
-  }, []);
+    if (user?.id) {
+      loadData();
+    }
+  }, [user?.id]);
 
   const loadData = async () => {
+    if (!user?.id) return;
+
     try {
       setLoading(true);
       const [coursesRes, enrollmentsRes, certificatesRes, statisticsRes] = await Promise.all([
         coursesApi.listPublished(),
-        enrollmentsApi.getActiveByEmployee(currentUserId),
-        certificatesApi.getByEmployee(currentUserId),
-        enrollmentsApi.getStatistics(currentUserId),
+        enrollmentsApi.getActiveByEmployee(user.id),
+        certificatesApi.getByEmployee(user.id),
+        enrollmentsApi.getStatistics(user.id),
       ]);
 
-      setPublishedCourses(coursesRes.data);
-      setMyEnrollments(enrollmentsRes.data);
-      setMyCertificates(certificatesRes.data);
+      setPublishedCourses(coursesRes.data || []);
+      setMyEnrollments(enrollmentsRes.data || []);
+      setMyCertificates(certificatesRes.data || []);
       setStats(statisticsRes.data);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
@@ -436,7 +440,7 @@ function CourseCard({ course }: { course: Course }) {
             {course.difficultyLevel && (
               <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getDifficultyColor(course.difficultyLevel)}`}>
                 {course.difficultyLevel === 'INICIANTE' ? 'Iniciante' :
-                 course.difficultyLevel === 'INTERMEDIARIO' ? 'Intermediario' : 'Avancado'}
+                  course.difficultyLevel === 'INTERMEDIARIO' ? 'Intermediario' : 'Avancado'}
               </span>
             )}
             <span className="flex items-center gap-1 text-xs text-muted-foreground">

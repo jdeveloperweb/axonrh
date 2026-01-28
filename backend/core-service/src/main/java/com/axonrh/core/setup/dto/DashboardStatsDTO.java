@@ -35,4 +35,11 @@ public class DashboardStatsDTO {
     
     // Gender by Dept: Key=DeptName, Value=Map<Gender, Count>
     private java.util.Map<String, java.util.Map<String, Long>> genderByDepartment;
+
+    // Hiring & Retention
+    private java.util.Map<String, Double> turnoverHistory; // "Jan/25" -> 1.5
+    private java.util.Map<String, Long> activeHistory; // "Jan/25" -> 150
+    private java.util.Map<String, Long> hiringHistory; // "Jan/25" -> 5
+    private java.util.Map<String, Long> terminationHistory; // "Jan/25" -> 2
+    private java.util.Map<String, Long> tenureDistribution; // "< 1 ano" -> 10, ...
 }

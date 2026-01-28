@@ -15,6 +15,8 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
+  Calculator,
+  Database,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
@@ -58,6 +60,13 @@ const navGroups: NavGroup[] = [
     title: 'GERAL',
     items: [
       // { label: 'Inventário', href: '/inventory', icon: Package }, // Future
+    ]
+  },
+  {
+    title: 'FERRAMENTAS',
+    items: [
+      { label: 'Calculadora', href: '/assistant?tab=calculator', icon: Calculator },
+      { label: 'Base de Conhecimento', href: '/assistant?tab=knowledge', icon: Database },
     ]
   },
   {

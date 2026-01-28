@@ -1,5 +1,6 @@
 package com.axonrh.learning.service;
 
+import com.axonrh.learning.entity.Certificate;
 import com.axonrh.learning.entity.Course;
 import com.axonrh.learning.entity.Enrollment;
 import com.axonrh.learning.entity.Lesson;
@@ -24,11 +25,14 @@ public class EnrollmentService {
 
     private final EnrollmentRepository enrollmentRepository;
     private final CourseRepository courseRepository;
+    private final CertificateService certificateService;
 
     public EnrollmentService(EnrollmentRepository enrollmentRepository,
-                            CourseRepository courseRepository) {
+                            CourseRepository courseRepository,
+                            CertificateService certificateService) {
         this.enrollmentRepository = enrollmentRepository;
         this.courseRepository = courseRepository;
+        this.certificateService = certificateService;
     }
 
     // ==================== Enrollment ====================
@@ -130,6 +134,12 @@ public class EnrollmentService {
     public Enrollment completeCourse(UUID tenantId, UUID enrollmentId, BigDecimal score) {
         Enrollment enrollment = get(tenantId, enrollmentId);
         enrollment.complete(score);
+        
+        if (enrollment.getStatus() == EnrollmentStatus.COMPLETED) {
+            Certificate certificate = certificateService.generate(tenantId, enrollment);
+            enrollment.issueCertificate(certificate.getId());
+        }
+        
         return enrollmentRepository.save(enrollment);
     }
 
@@ -173,3 +183,4 @@ public class EnrollmentService {
             double averageProgress
     ) {}
 }
+

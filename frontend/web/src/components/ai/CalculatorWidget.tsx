@@ -24,18 +24,21 @@ export default function CalculatorWidget() {
     setError(null);
     setResult(null);
 
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 800));
+
     try {
       let calcResult: CalculationResult;
 
       switch (activeTab) {
         case 'vacation':
-          calcResult = (await calculationApi.vacation(data as VacationCalculation)).data;
+          calcResult = localCalculation.vacation(data as VacationCalculation);
           break;
         case 'termination':
-          calcResult = (await calculationApi.termination(data as TerminationCalculation)).data;
+          calcResult = localCalculation.termination(data as TerminationCalculation);
           break;
         case 'overtime':
-          calcResult = (await calculationApi.overtime(data as OvertimeCalculation)).data;
+          calcResult = localCalculation.overtime(data as OvertimeCalculation);
           break;
       }
 
@@ -45,6 +48,113 @@ export default function CalculatorWidget() {
       console.error(err);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Local calculation logic (Fallback/Demo)
+  const localCalculation = {
+    vacation: (data: VacationCalculation): CalculationResult => {
+      const { salary, days = 30, withAbono, dependents = 0 } = data;
+
+      const vacationValue = (salary / 30) * days;
+      const oneThird = vacationValue / 3;
+      let gross = vacationValue + oneThird;
+
+      let abonoValue = 0;
+      let abonoOneThird = 0;
+
+      if (withAbono) {
+        abonoValue = (salary / 30) * 10;
+        abonoOneThird = abonoValue / 3;
+        gross += abonoValue + abonoOneThird;
+      }
+
+      // Simplified INSS/IRRF
+      const inss = gross * 0.11; // Approx
+      const irrf = (gross - inss - (dependents * 189.59)) * 0.15; // Approx
+      const net = gross - inss - (irrf > 0 ? irrf : 0);
+
+      const steps = `
+1. Valor das Férias (${days} dias): ${formatCurrency(vacationValue)}
+2. Adicional 1/3 Constitucional: ${formatCurrency(oneThird)}
+${withAbono ? `3. Abono Pecuniário (10 dias): ${formatCurrency(abonoValue)}\n4. 1/3 do Abono: ${formatCurrency(abonoOneThird)}` : ''}
+5. Total Bruto: ${formatCurrency(gross)}
+6. Desconto INSS (Est.): ${formatCurrency(inss)}
+7. Desconto IRRF (Est.): ${formatCurrency(irrf > 0 ? irrf : 0)}
+      `.trim();
+
+      return {
+        type: 'VACATION',
+        grossValue: gross,
+        netValue: net,
+        details: {},
+        steps,
+        legalBasis: 'CLT Arts. 129 a 153',
+      };
+    },
+
+    termination: (data: TerminationCalculation): CalculationResult => {
+      const { salary, hireDate, terminationDate, terminationType, workedNotice, fgtsBalance = 0 } = data;
+
+      // Basic simulation
+      const start = new Date(hireDate);
+      const end = new Date(terminationDate);
+      const monthsWorked = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+
+      const balanceSalary = (salary / 30) * end.getDate(); // Proportional salary
+      const propVacation = (salary / 12) * (monthsWorked % 12); // Simplified
+      const prop13th = (salary / 12) * (end.getMonth() + 1); // Simplified
+
+      let total = balanceSalary + propVacation + (propVacation / 3) + prop13th;
+
+      if (terminationType === 'SEM_JUSTA_CAUSA') {
+        total += salary; // Notice (simplified)
+        total += fgtsBalance * 0.4; // Fine
+      }
+
+      const steps = `
+1. Saldo de Salário (${end.getDate()} dias): ${formatCurrency(balanceSalary)}
+2. Férias Proporcionais: ${formatCurrency(propVacation)}
+3. 1/3 Férias: ${formatCurrency(propVacation / 3)}
+4. 13º Salário Proporcional: ${formatCurrency(prop13th)}
+${terminationType === 'SEM_JUSTA_CAUSA' ? `5. Aviso Prévio: ${formatCurrency(salary)}\n6. Multa FGTS 40%: ${formatCurrency(fgtsBalance * 0.4)}` : ''}
+      `.trim();
+
+      return {
+        type: 'TERMINATION',
+        grossValue: total,
+        netValue: total * 0.9, // Simplified taxes
+        details: {},
+        steps,
+        legalBasis: 'CLT Arts. 477 a 486',
+      };
+    },
+
+    overtime: (data: OvertimeCalculation): CalculationResult => {
+      const { hourlyRate, regularHours, overtime50Hours = 0, overtime100Hours = 0, nightHours = 0 } = data;
+
+      const regularTotal = hourlyRate * regularHours;
+      const val50 = hourlyRate * 1.5 * overtime50Hours;
+      const val100 = hourlyRate * 2.0 * overtime100Hours;
+      const valNight = hourlyRate * 0.2 * nightHours; // Adicional noturno 20%
+
+      const total = regularTotal + val50 + val100 + valNight;
+
+      const steps = `
+1. Horas Normais: ${formatCurrency(regularTotal)}
+2. Horas Extras 50% (${overtime50Hours}h): ${formatCurrency(val50)}
+3. Horas Extras 100% (${overtime100Hours}h): ${formatCurrency(val100)}
+4. Adicional Noturno (${nightHours}h): ${formatCurrency(valNight)}
+      `.trim();
+
+      return {
+        type: 'OVERTIME',
+        grossValue: total,
+        netValue: total * 0.9, // Simplified taxes
+        details: {},
+        steps,
+        legalBasis: 'CLT Arts. 58 a 61',
+      };
     }
   };
 
@@ -104,11 +214,10 @@ function TabButton({ active, onClick, children }: {
   return (
     <button
       onClick={onClick}
-      className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
-        active
+      className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${active
           ? 'bg-blue-600 text-white'
           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-      }`}
+        }`}
     >
       {children}
     </button>
