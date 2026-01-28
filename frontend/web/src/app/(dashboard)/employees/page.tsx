@@ -269,9 +269,8 @@ export default function EmployeesPage() {
             {/* Filter Toggle */}
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors ${
-                showFilters ? 'bg-[var(--color-primary)] text-white border-[var(--color-primary)]' : 'border-gray-200 hover:bg-gray-50'
-              }`}
+              className={`flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors ${showFilters ? 'bg-[var(--color-primary)] text-white border-[var(--color-primary)]' : 'border-gray-200 hover:bg-gray-50'
+                }`}
             >
               <Filter className="w-4 h-4" />
               Filtros
@@ -360,9 +359,9 @@ export default function EmployeesPage() {
 
       {/* Employees Table */}
       <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full">
+        <CardContent className="p-0 overflow-visible">
+          <div className="overflow-x-auto overflow-y-visible">
+            <table className="w-full min-w-[800px]">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">
                   <th className="px-6 py-3 text-left text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">
@@ -477,12 +476,12 @@ export default function EmployeesPage() {
                           {statusColors[employee.status].label}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
+                      <td className="px-6 py-4 text-right sticky right-0 bg-white" onClick={(e) => e.stopPropagation()}>
                         <div className="relative group inline-block">
                           <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
                             <MoreHorizontal className="w-4 h-4 text-[var(--color-text-secondary)]" />
                           </button>
-                          <div className="absolute right-0 mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+                          <div className="absolute right-0 bottom-full mb-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                             <button
                               onClick={() => router.push(`/employees/${employee.id}`)}
                               className="w-full flex items-center gap-2 px-4 py-2 text-left hover:bg-gray-50 first:rounded-t-lg"
@@ -536,11 +535,10 @@ export default function EmployeesPage() {
                     <button
                       key={page}
                       onClick={() => setCurrentPage(page)}
-                      className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
-                        page === currentPage
-                          ? 'bg-[var(--color-primary)] text-white'
-                          : 'hover:bg-gray-50'
-                      }`}
+                      className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${page === currentPage
+                        ? 'bg-[var(--color-primary)] text-white'
+                        : 'hover:bg-gray-50'
+                        }`}
                     >
                       {page + 1}
                     </button>

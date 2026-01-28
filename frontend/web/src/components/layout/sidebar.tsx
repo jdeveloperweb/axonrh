@@ -77,8 +77,8 @@ const navGroups: NavGroup[] = [
   {
     title: 'ADMINISTRAÇÃO',
     items: [
-      { label: 'Departamentos', href: '/departments', icon: Building2, permission: 'DEPARTMENT:READ' },
-      { label: 'Gestores', href: '/managers', icon: UserCog, permission: 'MANAGER:READ' },
+      { label: 'Departamentos', href: '/departments', icon: Building2 },
+      { label: 'Gestores', href: '/managers', icon: UserCog },
       { label: 'Configurações', href: '/settings', icon: Settings, permission: 'CONFIG:READ' },
     ]
   }

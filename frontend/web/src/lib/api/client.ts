@@ -36,7 +36,7 @@ api.interceptors.request.use(
         }
       }
       if (user?.id) {
-        config.headers['X-User-ID'] = user.id;
+        config.headers['X-User-Id'] = user.id;
       }
     }
 

@@ -97,6 +97,16 @@ public class EmployeeService {
     }
 
     /**
+     * Verifica se um CPF ja esta cadastrado.
+     */
+    @Transactional(readOnly = true)
+    public boolean existsByCpf(String cpf) {
+        UUID tenantId = getTenantId();
+        String cleanCpf = cpfValidator.unformat(cpf);
+        return employeeRepository.existsByTenantIdAndCpf(tenantId, cleanCpf);
+    }
+
+    /**
      * Pesquisa colaboradores por nome.
      */
     @Transactional(readOnly = true)

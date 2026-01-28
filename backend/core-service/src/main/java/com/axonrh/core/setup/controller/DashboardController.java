@@ -85,23 +85,20 @@ public class DashboardController {
             for (Object[] row : results) {
                 String g = (String) row[0];
                 Long count = ((Number) row[1]).longValue();
-                genderDist.put(g != null ? g : "MASCULINO", count); // Default fallback
+                genderDist.put(g != null ? g : "NOT_INFORMED", count);
             }
             
             if (activeEmployees > 0) {
-                Long femaleCount = genderDist.getOrDefault("FEMININO", 0L);
+                Long femaleCount = genderDist.getOrDefault("FEMALE", 0L);
                 femalePct = (double) femaleCount / activeEmployees * 100.0;
             }
         } catch (Exception e) {
              log.warn("Error counting gender: {}", e.getMessage());
-             // Mock data if table empty/error
-             genderDist.put("MASCULINO", (long)(activeEmployees * 0.6));
-             genderDist.put("FEMININO", (long)(activeEmployees * 0.4));
-             femalePct = 40.0;
         }
 
-        // Race Distribution
+        // Race Distribution & Diversity Index
         java.util.Map<String, Long> raceDist = new java.util.HashMap<>();
+        double diversityIdx = 0.0;
         try {
             java.util.List<Object[]> results = entityManager.createNativeQuery(
                 "SELECT race, COUNT(*) FROM shared.employees WHERE tenant_id = ? AND is_active = true GROUP BY race")
@@ -112,6 +109,20 @@ public class DashboardController {
                 String r = (String) row[0];
                 Long count = ((Number) row[1]).longValue();
                 raceDist.put(r != null ? r : "NAO_INFORMADO", count);
+            }
+            
+            // Calculate Simpson's Diversity Index: 1 - sum(n_i * (n_i - 1)) / (N * (N - 1))
+            // This gives a value between 0 (no diversity) and 1 (maximum diversity)
+            if (activeEmployees > 1) {
+                long sumNiNi1 = 0;
+                for (Long count : raceDist.values()) {
+                    sumNiNi1 += count * (count - 1);
+                }
+                double simpson = 1.0 - ((double) sumNiNi1 / (activeEmployees * (activeEmployees - 1)));
+                diversityIdx = Math.round(simpson * 1000.0) / 10.0; // Convert to percentage with 1 decimal
+            } else if (activeEmployees == 1) {
+                // Only one employee, diversity is 0 if only one group, or 100 if multiple groups exist
+                diversityIdx = 0.0;
             }
         } catch (Exception e) {
              log.warn("Error counting race: {}", e.getMessage());
@@ -258,7 +269,7 @@ public class DashboardController {
                 .presenceChange(0.5)
                 .pendingChange(-1.2)
                 .femaleRepresentation(Math.round(femalePct * 10.0) / 10.0)
-                .diversityIndex(100.0) // Placeholder
+                .diversityIndex(diversityIdx)
                 .averageAge(Math.round(avgAge))
                 .genderDistribution(genderDist)
                 .raceDistribution(raceDist)
