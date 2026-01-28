@@ -7,6 +7,7 @@ import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
 import { useLayoutStore } from '@/stores/layout-store';
 import { cn } from '@/lib/utils';
+import FloatingAssistant from '@/components/ai/FloatingAssistant';
 
 export default function DashboardLayout({
   children,
@@ -62,6 +63,7 @@ export default function DashboardLayout({
       <main className="main-content animate-fade-in">
         {children}
       </main>
+      <FloatingAssistant />
     </div>
   );
 }

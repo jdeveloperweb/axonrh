@@ -15,6 +15,7 @@ interface ChatWidgetProps {
   onConversationCreated?: (id: string) => void;
   className?: string;
   initialMessage?: string;
+  onClose?: () => void;
 }
 
 export default function ChatWidget({
@@ -22,6 +23,7 @@ export default function ChatWidget({
   onConversationCreated,
   className = '',
   initialMessage,
+  onClose,
 }: ChatWidgetProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -156,23 +158,33 @@ export default function ChatWidget({
               <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-400 border-2 border-white rounded-full animate-pulse shadow-sm"></div>
             </div>
             <div>
-              <h3 className="text-white font-bold tracking-tight text-lg">Axon AI Assistant</h3>
+              <h3 className="text-white font-bold tracking-tight text-lg">AxonIA</h3>
               <div className="flex items-center space-x-1.5">
                 <span className="w-1.5 h-1.5 bg-blue-200 rounded-full"></span>
                 <p className="text-blue-100 text-xs font-medium uppercase tracking-widest">Inteligência Artificial RH</p>
               </div>
             </div>
           </div>
-          {isStreaming && (
-            <div className="flex items-center space-x-2 px-3 py-1.5 bg-white/10 backdrop-blur-md rounded-full border border-white/20 animate-in fade-in slide-in-from-right-4 transition-all">
-              <div className="flex space-x-0.5">
-                <div className="w-1 h-1 bg-white rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                <div className="w-1 h-1 bg-white rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                <div className="w-1 h-1 bg-white rounded-full animate-bounce"></div>
+          <div className="flex items-center space-x-3">
+            {isStreaming && (
+              <div className="flex items-center space-x-2 px-3 py-1.5 bg-white/10 backdrop-blur-md rounded-full border border-white/20 animate-in fade-in slide-in-from-right-4 transition-all">
+                <div className="flex space-x-0.5">
+                  <div className="w-1 h-1 bg-white rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                  <div className="w-1 h-1 bg-white rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                  <div className="w-1 h-1 bg-white rounded-full animate-bounce"></div>
+                </div>
+                <span className="text-white text-[10px] font-bold uppercase tracking-wider">Processando</span>
               </div>
-              <span className="text-white text-[10px] font-bold uppercase tracking-wider">Processando</span>
-            </div>
-          )}
+            )}
+            {onClose && (
+              <button
+                onClick={onClose}
+                className="p-2 hover:bg-white/10 rounded-xl transition-colors text-white/80 hover:text-white"
+              >
+                <ChatIcons.X className="w-5 h-5" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
