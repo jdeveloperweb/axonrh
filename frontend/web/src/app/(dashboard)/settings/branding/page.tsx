@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     Palette,
     Upload,
@@ -10,6 +10,7 @@ import {
     Layout,
     Check
 } from 'lucide-react';
+import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { settingsApi, BrandingData } from '@/lib/api/settings';
 import { useThemeStore } from '@/stores/theme-store';
@@ -31,9 +32,26 @@ export default function BrandingPage() {
     const [saving, setSaving] = useState(false);
     const fetchBranding = useThemeStore(state => state.fetchBranding);
 
+    const loadBranding = useCallback(async () => {
+        try {
+            setLoading(true);
+            const branding = await settingsApi.getBranding();
+            if (branding && (branding.primaryColor || branding.logoUrl)) {
+                setData(prev => ({
+                    ...prev,
+                    ...branding
+                }));
+            }
+        } catch (error) {
+            console.error('Error loading branding:', error);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
     useEffect(() => {
         loadBranding();
-    }, []);
+    }, [loadBranding]);
 
     const fonts = [
         'Inter',
@@ -43,23 +61,6 @@ export default function BrandingPage() {
         'Open Sans',
         'Montserrat'
     ];
-
-    const loadBranding = async () => {
-        try {
-            setLoading(true);
-            const branding = await settingsApi.getBranding();
-            if (branding && (branding.primaryColor || branding.logoUrl)) {
-                setData({
-                    ...data,
-                    ...branding
-                });
-            }
-        } catch (error) {
-            console.error('Error loading branding:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleSave = async () => {
         try {
@@ -129,7 +130,7 @@ export default function BrandingPage() {
                         <CardContent className="space-y-6">
                             <div className="flex flex-col items-center justify-center border-2 border-dashed border-[var(--color-border)] rounded-[var(--radius-lg)] p-8 bg-[var(--color-surface-variant)]/30 hover:bg-[var(--color-surface-variant)]/50 transition-colors cursor-pointer group">
                                 {data.logoUrl ? (
-                                    <img src={data.logoUrl} alt="Preview" style={{ maxWidth: data.logoWidth || 150 }} className="mb-4 h-auto" />
+                                    <Image src={data.logoUrl} alt="Preview" width={data.logoWidth || 150} height={150} style={{ maxWidth: data.logoWidth || 150 }} className="mb-4 h-auto" />
                                 ) : (
                                     <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-4 shadow-sm group-hover:scale-110 transition-transform">
                                         <Upload className="w-8 h-8 text-[var(--color-primary)]" />
@@ -287,7 +288,7 @@ export default function BrandingPage() {
                         >
                             <div className="h-12 border-b flex items-center px-4 justify-between" style={{ backgroundColor: '#ffffff' }}>
                                 {data.logoUrl ? (
-                                    <img src={data.logoUrl} alt="Logo" style={{ maxWidth: (data.logoWidth || 150) / 2 }} className="h-auto" />
+                                    <Image src={data.logoUrl} alt="Logo" width={(data.logoWidth || 150) / 2} height={40} style={{ maxWidth: (data.logoWidth || 150) / 2 }} className="h-auto" />
                                 ) : (
                                     <div className="flex items-center gap-2">
                                         <div className="w-6 h-6 rounded-full" style={{ backgroundColor: data.primaryColor }} />

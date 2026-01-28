@@ -3,15 +3,10 @@
 import { useState, useEffect } from 'react';
 import {
   Users,
-  Clock,
   Calendar,
   AlertCircle,
   TrendingUp,
-  TrendingDown,
-  ArrowRight,
   UserCheck,
-  UserMinus,
-  Briefcase,
   BarChart3,
   Brain,
   GraduationCap,

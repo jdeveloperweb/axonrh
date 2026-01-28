@@ -2,12 +2,12 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from "next/image";
 import {
   ArrowLeft,
   ZoomIn,
   ZoomOut,
   Maximize2,
-  Download,
   Search,
   ChevronDown,
   ChevronRight,
@@ -63,6 +63,7 @@ export default function OrgChartPage() {
       setExpandedNodes(initialExpanded);
 
     } catch (error) {
+      console.error(error);
       toast({
         title: 'Erro',
         description: 'Falha ao carregar organograma',
@@ -135,18 +136,19 @@ export default function OrgChartPage() {
         {/* Node Card */}
         <div
           onClick={() => setSelectedNode(isSelected ? null : node)}
-          className={`relative bg-white border-2 rounded-lg p-4 min-w-[200px] max-w-[250px] cursor-pointer transition-all ${
-            isSelected
+          className={`relative bg-white border-2 rounded-lg p-4 min-w-[200px] max-w-[250px] cursor-pointer transition-all ${isSelected
               ? 'border-blue-500 shadow-lg ring-2 ring-blue-200'
               : 'border-gray-200 hover:border-blue-300 hover:shadow-md'
-          } ${!matches ? 'opacity-50' : ''}`}
+            } ${!matches ? 'opacity-50' : ''}`}
         >
           {/* Avatar */}
           <div className="flex items-center gap-3 mb-2">
             {node.photoUrl ? (
-              <img
+              <Image
                 src={node.photoUrl}
                 alt={node.name}
+                width={48}
+                height={48}
                 className="w-12 h-12 rounded-full object-cover"
               />
             ) : (
@@ -338,9 +340,11 @@ export default function OrgChartPage() {
             <CardContent className="p-4">
               <div className="flex items-start gap-4">
                 {selectedNode.photoUrl ? (
-                  <img
+                  <Image
                     src={selectedNode.photoUrl}
                     alt={selectedNode.name}
+                    width={64}
+                    height={64}
                     className="w-16 h-16 rounded-full object-cover"
                   />
                 ) : (

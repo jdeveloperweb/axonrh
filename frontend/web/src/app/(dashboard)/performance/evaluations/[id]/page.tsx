@@ -27,7 +27,6 @@ import {
   User,
   Calendar,
   CheckCircle2,
-  AlertTriangle,
 } from 'lucide-react';
 import Link from 'next/link';
 import { evaluationsApi, Evaluation, EvaluationAnswer } from '@/lib/api/performance';
@@ -128,44 +127,44 @@ export default function EvaluationPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    loadEvaluation();
-  }, [evaluationId]);
+    const loadEvaluation = async () => {
+      try {
+        setLoading(true);
+        const data = await evaluationsApi.get(evaluationId);
+        setEvaluation(data);
 
-  const loadEvaluation = async () => {
-    try {
-      setLoading(true);
-      const data = await evaluationsApi.get(evaluationId);
-      setEvaluation(data);
+        // Inicializar respostas existentes
+        if (data.answers) {
+          const existingAnswers: Record<string, EvaluationAnswer> = {};
+          data.answers.forEach((answer) => {
+            existingAnswers[answer.questionId] = answer;
+          });
+          setAnswers(existingAnswers);
+        }
 
-      // Inicializar respostas existentes
-      if (data.answers) {
-        const existingAnswers: Record<string, EvaluationAnswer> = {};
-        data.answers.forEach((answer) => {
-          existingAnswers[answer.questionId] = answer;
+        // Inicializar feedback
+        setFeedback(data.overallFeedback || '');
+        setStrengths(data.strengths || '');
+        setImprovements(data.areasForImprovement || '');
+
+        // Iniciar avaliacao se pendente
+        if (data.status === 'PENDING') {
+          await evaluationsApi.start(evaluationId);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar avaliacao:', error);
+        toast({
+          title: 'Erro ao carregar avaliacao',
+          description: getErrorMessage(error),
+          variant: 'destructive',
         });
-        setAnswers(existingAnswers);
+      } finally {
+        setLoading(false);
       }
+    };
 
-      // Inicializar feedback
-      setFeedback(data.overallFeedback || '');
-      setStrengths(data.strengths || '');
-      setImprovements(data.areasForImprovement || '');
-
-      // Iniciar avaliacao se pendente
-      if (data.status === 'PENDING') {
-        await evaluationsApi.start(evaluationId);
-      }
-    } catch (error) {
-      console.error('Erro ao carregar avaliacao:', error);
-      toast({
-        title: 'Erro ao carregar avaliacao',
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+    loadEvaluation();
+  }, [evaluationId, toast]);
 
   const handleScoreChange = (questionId: string, score: number) => {
     const question = mockQuestions.find((q) => q.id === questionId);
@@ -313,15 +312,15 @@ export default function EvaluationPage() {
           <h1 className="text-2xl font-bold">Avaliacao de Desempenho</h1>
           <p className="text-muted-foreground">
             {evaluation.evaluationType === 'SELF' ? 'Autoavaliacao' :
-            evaluation.evaluationType === 'MANAGER' ? 'Avaliacao de Gestor' :
-            'Avaliacao de Pares'}
+              evaluation.evaluationType === 'MANAGER' ? 'Avaliacao de Gestor' :
+                'Avaliacao de Pares'}
           </p>
         </div>
         <Badge variant={evaluation.status === 'COMPLETED' ? 'outline' : 'default'}>
           {evaluation.status === 'PENDING' ? 'Pendente' :
-          evaluation.status === 'IN_PROGRESS' ? 'Em Andamento' :
-          evaluation.status === 'SUBMITTED' ? 'Submetida' :
-          evaluation.status === 'COMPLETED' ? 'Concluida' : evaluation.status}
+            evaluation.status === 'IN_PROGRESS' ? 'Em Andamento' :
+              evaluation.status === 'SUBMITTED' ? 'Submetida' :
+                evaluation.status === 'COMPLETED' ? 'Concluida' : evaluation.status}
         </Badge>
       </div>
 

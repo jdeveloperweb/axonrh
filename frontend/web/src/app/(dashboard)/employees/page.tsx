@@ -18,7 +18,8 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
+import Image from "next/image";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -27,7 +28,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { employeesApi, Employee, EmployeeStatus, EmployeeListParams, Department } from '@/lib/api/employees';
 import { useToast } from '@/hooks/use-toast';
-import { formatDate, formatCpf, formatCurrency } from '@/lib/utils';
+import { formatDate, formatCpf } from '@/lib/utils';
 
 const statusColors: Record<EmployeeStatus, { bg: string; text: string; label: string }> = {
   ACTIVE: { bg: 'bg-green-100', text: 'text-green-800', label: 'Ativo' },
@@ -95,6 +96,7 @@ export default function EmployeesPage() {
         });
       }
     } catch (error) {
+      console.error(error);
       toast({
         title: 'Erro',
         description: 'Falha ao carregar colaboradores',
@@ -150,6 +152,7 @@ export default function EmployeesPage() {
         description: 'Arquivo exportado com sucesso',
       });
     } catch (error) {
+      console.error(error);
       toast({
         title: 'Erro',
         description: 'Falha ao exportar arquivo',
@@ -169,6 +172,7 @@ export default function EmployeesPage() {
       });
       fetchEmployees();
     } catch (error) {
+      console.error(error);
       toast({
         title: 'Erro',
         description: 'Falha ao excluir colaborador',
@@ -445,9 +449,11 @@ export default function EmployeesPage() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           {employee.photoUrl ? (
-                            <img
+                            <Image
                               src={employee.photoUrl}
                               alt={employee.fullName}
+                              width={40}
+                              height={40}
                               className="w-10 h-10 rounded-full object-cover"
                             />
                           ) : (

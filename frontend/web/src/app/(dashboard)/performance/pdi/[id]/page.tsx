@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -45,7 +45,6 @@ import {
   Briefcase,
   TrendingUp,
   ExternalLink,
-  MoreVertical,
   Trash2,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -75,11 +74,7 @@ export default function PDIDetailPage() {
   const [completeActionOpen, setCompleteActionOpen] = useState(false);
   const [selectedAction, setSelectedAction] = useState<PDIAction | null>(null);
 
-  useEffect(() => {
-    loadPDI();
-  }, [pdiId]);
-
-  const loadPDI = async () => {
+  const loadPDI = useCallback(async () => {
     try {
       setLoading(true);
       const data = await pdisApi.get(pdiId);
@@ -89,7 +84,11 @@ export default function PDIDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [pdiId]);
+
+  useEffect(() => {
+    loadPDI();
+  }, [pdiId, loadPDI]);
 
   const handleStartAction = async (actionId: string) => {
     try {

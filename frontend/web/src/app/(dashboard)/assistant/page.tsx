@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import ChatWidget from '@/components/ai/ChatWidget';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { chatApi, Conversation } from '@/lib/api/ai';
 
 export default function AssistantPage() {
   const searchParams = useSearchParams();
-  const router = useRouter();
+
   const initialQuery = searchParams.get('q');
   const [activeConversationId, setActiveConversationId] = useState<string | undefined>();
 

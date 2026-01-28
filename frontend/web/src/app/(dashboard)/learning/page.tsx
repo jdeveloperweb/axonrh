@@ -17,11 +17,11 @@ import {
   Search,
   Filter,
   Star,
-  Users,
-  ArrowRight,
   Video,
   FileText,
+  ArrowRight,
 } from 'lucide-react';
+import Image from "next/image";
 import Link from 'next/link';
 import {
   coursesApi,
@@ -44,62 +44,35 @@ export default function LearningDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const loadData = async () => {
+      if (!user?.id) return;
+
+      try {
+        setLoading(true);
+        const [coursesRes, enrollmentsRes, certificatesRes, statisticsRes] = await Promise.all([
+          coursesApi.listPublished(),
+          enrollmentsApi.getActiveByEmployee(user.id),
+          certificatesApi.getByEmployee(user.id),
+          enrollmentsApi.getStatistics(user.id),
+        ]);
+
+        setPublishedCourses(coursesRes.data || []);
+        setMyEnrollments(enrollmentsRes.data || []);
+        setMyCertificates(certificatesRes.data || []);
+        setStats(statisticsRes.data);
+      } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     if (user?.id) {
       loadData();
     }
   }, [user?.id]);
 
-  const loadData = async () => {
-    if (!user?.id) return;
 
-    try {
-      setLoading(true);
-      const [coursesRes, enrollmentsRes, certificatesRes, statisticsRes] = await Promise.all([
-        coursesApi.listPublished(),
-        enrollmentsApi.getActiveByEmployee(user.id),
-        certificatesApi.getByEmployee(user.id),
-        enrollmentsApi.getStatistics(user.id),
-      ]);
-
-      setPublishedCourses(coursesRes.data || []);
-      setMyEnrollments(enrollmentsRes.data || []);
-      setMyCertificates(certificatesRes.data || []);
-      setStats(statisticsRes.data);
-    } catch (error) {
-      console.error('Erro ao carregar dados:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    const config: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
-      ENROLLED: { label: 'Inscrito', variant: 'secondary' },
-      IN_PROGRESS: { label: 'Em Andamento', variant: 'default' },
-      COMPLETED: { label: 'Concluido', variant: 'outline' },
-      FAILED: { label: 'Reprovado', variant: 'destructive' },
-    };
-    const c = config[status] || { label: status, variant: 'secondary' };
-    return <Badge variant={c.variant}>{c.label}</Badge>;
-  };
-
-  const getDifficultyBadge = (level?: string) => {
-    const config: Record<string, { label: string; color: string }> = {
-      INICIANTE: { label: 'Iniciante', color: 'bg-green-100 text-green-800' },
-      INTERMEDIARIO: { label: 'Intermediario', color: 'bg-yellow-100 text-yellow-800' },
-      AVANCADO: { label: 'Avancado', color: 'bg-red-100 text-red-800' },
-    };
-    const c = config[level || ''] || { label: level, color: 'bg-gray-100 text-gray-800' };
-    return <span className={`px-2 py-1 rounded-full text-xs font-medium ${c.color}`}>{c.label}</span>;
-  };
-
-  const formatDuration = (minutes?: number) => {
-    if (!minutes) return '-';
-    if (minutes < 60) return `${minutes}min`;
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
-  };
 
   const filteredCourses = publishedCourses.filter((course) =>
     course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -413,10 +386,11 @@ function CourseCard({ course }: { course: Course }) {
       <div className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer h-full flex flex-col">
         <div className="h-36 bg-gradient-to-br from-primary/20 to-primary/5 relative">
           {course.thumbnailUrl ? (
-            <img
+            <Image
               src={course.thumbnailUrl}
               alt={course.title}
-              className="w-full h-full object-cover"
+              fill
+              className="object-cover"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">

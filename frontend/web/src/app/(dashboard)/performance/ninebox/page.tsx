@@ -19,7 +19,6 @@ import {
   TrendingUp,
   AlertTriangle,
   Download,
-  Filter,
 } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -27,7 +26,6 @@ import {
   EvaluationCycle,
   NineBoxMatrix,
   NineBoxEmployee,
-  NineBoxPosition,
 } from '@/lib/api/performance';
 
 // Configuracao das posicoes do 9Box
@@ -64,41 +62,41 @@ export default function NineBoxPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
+    const loadCycles = async () => {
+      try {
+        const response = await cyclesApi.list();
+        const data = response.data;
+        setCycles(data.filter((c: { status: string; }) => c.status === 'COMPLETED' || c.status === 'CALIBRATION'));
+        if (data.length > 0) {
+          setSelectedCycleId(data[0].id);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar ciclos:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadCycles();
   }, []);
 
   useEffect(() => {
+    const loadMatrix = async () => {
+      try {
+        setLoading(true);
+        const response = await cyclesApi.getNineBox(selectedCycleId);
+        setMatrix(response.data);
+      } catch (error) {
+        console.error('Erro ao carregar matriz:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     if (selectedCycleId) {
       loadMatrix();
     }
   }, [selectedCycleId]);
-
-  const loadCycles = async () => {
-    try {
-      const response = await cyclesApi.list();
-      const data = response.data;
-      setCycles(data.filter((c: { status: string; }) => c.status === 'COMPLETED' || c.status === 'CALIBRATION'));
-      if (data.length > 0) {
-        setSelectedCycleId(data[0].id);
-      }
-    } catch (error) {
-      console.error('Erro ao carregar ciclos:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadMatrix = async () => {
-    try {
-      setLoading(true);
-      const response = await cyclesApi.getNineBox(selectedCycleId);
-      setMatrix(response.data);
-    } catch (error) {
-      console.error('Erro ao carregar matriz:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const getEmployeesInPosition = (position: string) => {
     if (!matrix) return [];

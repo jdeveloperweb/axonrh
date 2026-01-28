@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
+import Image from "next/image";
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
@@ -111,9 +111,11 @@ export function Sidebar() {
         {!isSidebarCollapsed && (
           <div className="flex items-center gap-2">
             {tenantTheme?.logoUrl ? (
-              <img
+              <Image
                 src={tenantTheme.logoUrl}
                 alt="Logo"
+                width={tenantTheme.logoWidth || 150}
+                height={40}
                 style={{ width: tenantTheme.logoWidth ? `${tenantTheme.logoWidth}px` : 'auto', maxHeight: '40px' }}
                 className="object-contain"
               />

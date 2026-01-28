@@ -11,12 +11,10 @@ import {
   Position,
   SETUP_STEPS,
   BRAZIL_STATES,
-  INDUSTRIES,
   validateCNPJ,
-  formatCNPJ,
 } from '@/lib/api/setup';
-import { Switch } from '@/components/ui/switch';
 import { useThemeStore } from '@/stores/theme-store';
+import { Switch } from '@/components/ui/switch';
 
 
 export default function SetupStepPage() {
@@ -88,45 +86,46 @@ export default function SetupStepPage() {
   });
 
   useEffect(() => {
-    loadStepData();
-  }, [stepNumber]);
+    const loadStepData = async () => {
+      try {
+        setLoading(true);
+        const progressResponse = await setupApi.getProgress();
+        setProgress(progressResponse);
 
-  const loadStepData = async () => {
-    try {
-      setLoading(true);
-      const progressResponse = await setupApi.getProgress();
-      setProgress(progressResponse);
-
-      // Load step-specific data
-      if (stepNumber === 1) {
-        try {
-          const company = await setupApi.getCompanyProfile();
-          setCompanyProfile(company);
-        } catch {
-          // No company profile yet
-        }
-      } else {
-        const stepData = await setupApi.getStepData(stepNumber);
-        if (stepNumber === 3 && stepData) {
-          setLaborRules({ ...laborRules, ...stepData });
-        } else if (stepNumber === 4 && stepData) {
-          setBranding({ ...branding, ...stepData });
-        } else if (stepNumber === 5 && stepData) {
-          setModules({ ...modules, ...stepData });
-        } else if (stepNumber === 6 && stepData) {
-          if (stepData.users && Array.isArray(stepData.users)) {
-            setUsers(stepData.users);
+        // Load step-specific data
+        if (stepNumber === 1) {
+          try {
+            const company = await setupApi.getCompanyProfile();
+            setCompanyProfile(company);
+          } catch {
+            // No company profile yet
           }
-        } else if (stepNumber === 7 && stepData) {
-          setIntegrations({ ...integrations, ...stepData });
+        } else {
+          const stepData = await setupApi.getStepData(stepNumber);
+          if (stepNumber === 3 && stepData) {
+            setLaborRules({ ...laborRules, ...stepData });
+          } else if (stepNumber === 4 && stepData) {
+            setBranding({ ...branding, ...stepData });
+          } else if (stepNumber === 5 && stepData) {
+            setModules({ ...modules, ...stepData });
+          } else if (stepNumber === 6 && stepData) {
+            if (stepData.users && Array.isArray(stepData.users)) {
+              setUsers(stepData.users);
+            }
+          } else if (stepNumber === 7 && stepData) {
+            setIntegrations({ ...integrations, ...stepData });
+          }
         }
+      } catch (error) {
+        console.error('Error loading step data:', error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Error loading step data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    loadStepData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stepNumber]);
 
   const saveAndContinue = async () => {
     try {
@@ -836,13 +835,67 @@ function Step2OrgStructure() {
   );
 }
 
+// Interfaces
+interface LaborRules {
+  defaultWeeklyHours: number;
+  defaultDailyHours: number;
+  toleranceMinutes: number;
+  overtimeRequiresApproval: boolean;
+  vacationAnnualDays: number;
+}
+
+interface BrandingConfig {
+  logoUrl: string;
+  logoWidth: number;
+  primaryColor: string;
+  secondaryColor: string;
+  accentColor: string;
+  fontFamily: string;
+  baseFontSize: number;
+}
+
+interface ModulesConfig {
+  moduleEmployees: boolean;
+  moduleTimesheet: boolean;
+  moduleVacation: boolean;
+  modulePayroll: boolean;
+  modulePerformance: boolean;
+  moduleLearning: boolean;
+  moduleAiAssistant: boolean;
+  [key: string]: boolean;
+}
+
+interface UserImportData {
+  name: string;
+  email: string;
+  password?: string;
+  confirmPassword?: string;
+  role?: string;
+  [key: string]: string | undefined;
+}
+
+interface IntegrationConfig {
+  esocialEnabled: boolean;
+  esocialEnvironment: string;
+  esocialCertificateId: string;
+  accountingSoftware: string;
+  accountingApiKey: string;
+  accountingApiUrl: string;
+  erpSystem: string;
+  erpApiUrl: string;
+  erpAuthToken: string;
+  benefitsProvider: string;
+  benefitsApiKey: string;
+  [key: string]: any;
+}
+
 // Step 3 - Labor Rules
 function Step3LaborRules({
   rules,
   onChange,
 }: {
-  rules: any;
-  onChange: (rules: any) => void;
+  rules: LaborRules;
+  onChange: (rules: LaborRules) => void;
 }) {
   return (
     <div className="space-y-6">
@@ -932,8 +985,8 @@ function Step4Branding({
   config,
   onChange,
 }: {
-  config: any;
-  onChange: (config: any) => void;
+  config: BrandingConfig;
+  onChange: (config: BrandingConfig) => void;
 }) {
   const fonts = [
     'Plus Jakarta Sans',
@@ -1134,8 +1187,8 @@ function Step5Modules({
   modules,
   onChange,
 }: {
-  modules: any;
-  onChange: (modules: any) => void;
+  modules: ModulesConfig;
+  onChange: (modules: ModulesConfig) => void;
 }) {
   const moduleList = [
     { key: 'moduleEmployees', name: 'Colaboradores', desc: 'Cadastro e gestão de colaboradores', core: true },
@@ -1190,8 +1243,8 @@ function Step6Users({
   users,
   onChange,
 }: {
-  users: any[];
-  onChange: (users: any[]) => void;
+  users: UserImportData[];
+  onChange: (users: UserImportData[]) => void;
 }) {
   const addUser = () => {
     onChange([...users, { name: '', email: '', password: '', confirmPassword: '' }]);
@@ -1313,8 +1366,8 @@ function Step7Integrations({
   data,
   onChange,
 }: {
-  data: any;
-  onChange: (data: any) => void;
+  data: IntegrationConfig;
+  onChange: (data: IntegrationConfig) => void;
 }) {
   const updateField = (field: string, value: any) => {
     onChange({ ...data, [field]: value });

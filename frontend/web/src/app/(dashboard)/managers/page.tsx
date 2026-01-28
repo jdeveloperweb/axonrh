@@ -6,12 +6,11 @@ import {
     Plus,
     UserCog,
     MoreHorizontal,
-    Edit,
-    Trash2,
-    Building2,
     Mail,
-    Phone,
+    Building2,
+    Trash2,
 } from 'lucide-react';
+import Image from "next/image";
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { employeesApi, Employee, Department } from '@/lib/api/employees';
@@ -68,6 +67,7 @@ export default function ManagersPage() {
 
             setManagers(managersData);
         } catch (error) {
+            console.error(error);
             toast({
                 title: 'Erro',
                 description: 'Falha ao carregar dados',
@@ -108,6 +108,7 @@ export default function ManagersPage() {
             handleCloseModal();
             fetchData();
         } catch (error) {
+            console.error(error);
             toast({
                 title: 'Erro',
                 description: 'Falha ao atribuir gestor',
@@ -127,6 +128,7 @@ export default function ManagersPage() {
             });
             fetchData();
         } catch (error) {
+            console.error(error);
             toast({
                 title: 'Erro',
                 description: 'Falha ao remover gestor',
@@ -218,9 +220,11 @@ export default function ManagersPage() {
                             <CardContent className="p-6">
                                 <div className="flex items-start gap-4">
                                     {manager.photoUrl ? (
-                                        <img
+                                        <Image
                                             src={manager.photoUrl}
                                             alt={manager.name}
+                                            width={48}
+                                            height={48}
                                             className="w-12 h-12 rounded-full object-cover"
                                         />
                                     ) : (

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,7 +25,6 @@ import {
   TrendingUp,
   Clock,
   CheckCircle2,
-  AlertTriangle,
   User,
   Calendar,
   BookOpen,
@@ -43,33 +42,7 @@ import {
   PDIStatistics,
 } from '@/lib/api/performance';
 
-const ACTION_TYPE_ICONS: Record<string, React.ReactNode> = {
-  TRAINING: <BookOpen className="h-4 w-4" />,
-  COURSE: <GraduationCap className="h-4 w-4" />,
-  CERTIFICATION: <Target className="h-4 w-4" />,
-  MENTORING: <Users className="h-4 w-4" />,
-  COACHING: <Users className="h-4 w-4" />,
-  PROJECT: <Briefcase className="h-4 w-4" />,
-  JOB_ROTATION: <TrendingUp className="h-4 w-4" />,
-  READING: <BookOpen className="h-4 w-4" />,
-  WORKSHOP: <GraduationCap className="h-4 w-4" />,
-};
 
-const ACTION_TYPE_LABELS: Record<string, string> = {
-  TRAINING: 'Treinamento',
-  COURSE: 'Curso',
-  CERTIFICATION: 'Certificacao',
-  MENTORING: 'Mentoria',
-  COACHING: 'Coaching',
-  PROJECT: 'Projeto',
-  JOB_ROTATION: 'Job Rotation',
-  SHADOWING: 'Shadowing',
-  READING: 'Leitura',
-  WORKSHOP: 'Workshop',
-  CONFERENCE: 'Conferencia',
-  FEEDBACK: 'Feedback',
-  OTHER: 'Outro',
-};
 
 export default function PDIListPage() {
   const [myPDIs, setMyPDIs] = useState<PDI[]>([]);
@@ -84,11 +57,7 @@ export default function PDIListPage() {
   const currentUserId = 'current-user-id';
   const isManager = true;
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       const [my, team, pending, statistics] = await Promise.all([
@@ -107,7 +76,11 @@ export default function PDIListPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const getStatusBadge = (status: string) => {
     const config: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {

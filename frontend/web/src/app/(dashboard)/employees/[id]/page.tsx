@@ -16,14 +16,12 @@ import {
   Phone,
   Calendar,
   Building2,
-  DollarSign,
-  Clock,
   Camera,
   Download,
-  Trash2,
-  Plus,
-  ChevronRight
+  DollarSign,
+  Plus
 } from 'lucide-react';
+import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { employeesApi, Employee, EmployeeDocument, EmployeeDependent } from '@/lib/api/employees';
 import { useToast } from '@/hooks/use-toast';
@@ -60,6 +58,7 @@ export default function EmployeeDetailPage() {
       const data = await employeesApi.getById(employeeId);
       setEmployee(data);
     } catch (error) {
+      console.error(error);
       toast({
         title: 'Erro',
         description: 'Falha ao carregar dados do colaborador',
@@ -124,6 +123,7 @@ export default function EmployeeDetailPage() {
         description: 'Foto atualizada com sucesso',
       });
     } catch (error) {
+      console.error(error);
       toast({
         title: 'Erro',
         description: 'Falha ao atualizar foto',
@@ -195,9 +195,11 @@ export default function EmployeeDetailPage() {
             {/* Photo */}
             <div className="relative">
               {employee.photoUrl ? (
-                <img
+                <Image
                   src={employee.photoUrl}
                   alt={employee.fullName}
+                  width={128}
+                  height={128}
                   className="w-32 h-32 rounded-full object-cover"
                 />
               ) : (
@@ -291,11 +293,10 @@ export default function EmployeeDetailPage() {
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                  activeTab === tab.key
-                    ? 'border-[var(--color-primary)] text-[var(--color-primary)]'
-                    : 'border-transparent text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
-                }`}
+                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === tab.key
+                  ? 'border-[var(--color-primary)] text-[var(--color-primary)]'
+                  : 'border-transparent text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
+                  }`}
               >
                 <Icon className="w-4 h-4" />
                 {tab.label}
