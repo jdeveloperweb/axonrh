@@ -38,10 +38,17 @@ public class PositionService {
     }
 
     @Transactional(readOnly = true)
-    public List<PositionResponse> findAllActive() {
+    public List<PositionResponse> findAllActive(UUID departmentId) {
         UUID tenantId = getTenantId();
-        return positionRepository.findByTenantIdAndIsActiveTrueOrderByTitle(tenantId)
-                .stream()
+        List<Position> positions;
+        
+        if (departmentId != null) {
+            positions = positionRepository.findByTenantIdAndDepartmentIdAndIsActiveTrue(tenantId, departmentId);
+        } else {
+            positions = positionRepository.findByTenantIdAndIsActiveTrueOrderByTitle(tenantId);
+        }
+
+        return positions.stream()
                 .map(positionMapper::toResponse)
                 .collect(Collectors.toList());
     }

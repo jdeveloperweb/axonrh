@@ -263,7 +263,7 @@ export const employeesApi = {
 
   // Get positions
   getPositions: async (departmentId?: string): Promise<Position[]> => {
-    const url = departmentId ? `/positions?departmentId=${departmentId}` : '/positions';
+    const url = departmentId ? `/positions/active?departmentId=${departmentId}` : '/positions/active';
     return api.get<Position[], Position[]>(url);
   },
 

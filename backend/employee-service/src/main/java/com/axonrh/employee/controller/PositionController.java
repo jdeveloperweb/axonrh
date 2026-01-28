@@ -39,8 +39,9 @@ public class PositionController {
     @GetMapping("/active")
     @PreAuthorize("hasAuthority('POSITION:READ')")
     @Operation(summary = "Listar todos cargos ativos (sem paginação)")
-    public ResponseEntity<List<PositionResponse>> findAllActive() {
-        return ResponseEntity.ok(positionService.findAllActive());
+    public ResponseEntity<List<PositionResponse>> findAllActive(
+            @RequestParam(required = false) UUID departmentId) {
+        return ResponseEntity.ok(positionService.findAllActive(departmentId));
     }
 
     @GetMapping("/{id}")

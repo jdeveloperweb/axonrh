@@ -838,7 +838,7 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                                     <option value="">Selecione</option>
                                     {positions.map((pos) => (
                                         <option key={pos.id} value={pos.id}>
-                                            {pos.name}
+                                            {pos.title}
                                         </option>
                                     ))}
                                 </select>
