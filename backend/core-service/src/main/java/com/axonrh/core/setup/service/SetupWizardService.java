@@ -9,6 +9,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import com.axonrh.core.setup.repository.UserRepository;
+import com.axonrh.core.setup.repository.RoleRepository;
+import com.axonrh.core.setup.entity.auth.User;
+import com.axonrh.core.setup.entity.auth.Role;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -24,6 +29,10 @@ public class SetupWizardService {
     private final com.axonrh.core.setup.repository.DepartmentRepository departmentRepository;
     private final com.axonrh.core.setup.repository.PositionRepository positionRepository;
     private final com.axonrh.core.setup.repository.TenantRepository tenantRepository;
+    private final com.axonrh.core.setup.repository.TenantBrandingRepository brandingRepository;
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
     @jakarta.persistence.PersistenceContext
     private jakarta.persistence.EntityManager entityManager;
 
@@ -31,12 +40,20 @@ public class SetupWizardService {
                               CompanyProfileRepository companyProfileRepository,
                               com.axonrh.core.setup.repository.DepartmentRepository departmentRepository,
                               com.axonrh.core.setup.repository.PositionRepository positionRepository,
-                              com.axonrh.core.setup.repository.TenantRepository tenantRepository) {
+                              com.axonrh.core.setup.repository.TenantRepository tenantRepository,
+                              com.axonrh.core.setup.repository.TenantBrandingRepository brandingRepository,
+                              UserRepository userRepository,
+                              RoleRepository roleRepository,
+                              PasswordEncoder passwordEncoder) {
         this.progressRepository = progressRepository;
         this.companyProfileRepository = companyProfileRepository;
         this.departmentRepository = departmentRepository;
         this.positionRepository = positionRepository;
         this.tenantRepository = tenantRepository;
+        this.brandingRepository = brandingRepository;
+        this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     /**
@@ -214,8 +231,27 @@ public class SetupWizardService {
      */
     public Map<String, Object> getStepData(UUID tenantId, UUID userId, int step) {
         SetupProgress progress = getOrCreateProgress(tenantId, userId);
+        Map<String, Object> data = progress.getStepData(step);
 
-        return progress.getStepData(step);
+        // Fallback especial para Branding se os dados estiverem vazios no progresso
+        if (step == 4 && data.isEmpty()) {
+            UUID effectiveTenantId = progress.getTenantId();
+            return brandingRepository.findByTenantId(effectiveTenantId)
+                    .map(b -> {
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("logoUrl", b.getLogoUrl());
+                        map.put("logoWidth", b.getLogoWidth());
+                        map.put("primaryColor", b.getPrimaryColor());
+                        map.put("secondaryColor", b.getSecondaryColor());
+                        map.put("accentColor", b.getAccentColor());
+                        map.put("fontFamily", b.getFontFamily());
+                        map.put("baseFontSize", b.getBaseFontSize());
+                        return map;
+                    })
+                    .orElse(data);
+        }
+
+        return data;
     }
 
     private UUID resolveTenantId(UUID tenantId, UUID userId) {
@@ -515,8 +551,29 @@ public class SetupWizardService {
     }
 
     private void processBranding(UUID tenantId, Map<String, Object> data) {
-        // Save branding configuration
-        log.info("Processing branding for tenant: {}", tenantId);
+        log.info("Processando branding para tenant: {}", tenantId);
+        if (data == null || data.isEmpty()) return;
+
+        com.axonrh.core.setup.entity.TenantBranding branding = brandingRepository.findByTenantId(tenantId)
+                .orElse(new com.axonrh.core.setup.entity.TenantBranding());
+        
+        branding.setTenantId(tenantId);
+        
+        if (data.containsKey("logoUrl")) branding.setLogoUrl((String) data.get("logoUrl"));
+        if (data.containsKey("logoWidth")) {
+            Object val = data.get("logoWidth");
+            branding.setLogoWidth(val instanceof Number n ? n.intValue() : Integer.parseInt(val.toString()));
+        }
+        if (data.containsKey("primaryColor")) branding.setPrimaryColor((String) data.get("primaryColor"));
+        if (data.containsKey("secondaryColor")) branding.setSecondaryColor((String) data.get("secondaryColor"));
+        if (data.containsKey("accentColor")) branding.setAccentColor((String) data.get("accentColor"));
+        if (data.containsKey("fontFamily")) branding.setFontFamily((String) data.get("fontFamily"));
+        if (data.containsKey("baseFontSize")) {
+            Object val = data.get("baseFontSize");
+            branding.setBaseFontSize(val instanceof Number n ? n.intValue() : Integer.parseInt(val.toString()));
+        }
+
+        brandingRepository.save(branding);
     }
 
     private void processModules(UUID tenantId, Map<String, Object> data) {
@@ -526,7 +583,53 @@ public class SetupWizardService {
 
     private void processUsers(UUID tenantId, Map<String, Object> data) {
         // Create initial users
-        log.info("Processing users for tenant: {}", tenantId);
+        log.info("Processando usuários para o tenant: {}", tenantId);
+        
+        if (data == null || !data.containsKey("users")) {
+            log.warn("Nenhum dado de usuário fornecido na etapa 6 para tenant {}", tenantId);
+            return;
+        }
+
+        Object usersObj = data.get("users");
+        if (!(usersObj instanceof List<?> usersList)) {
+            log.error("Formato inválido para lista de usuários na etapa 6 para tenant {}", tenantId);
+            return;
+        }
+
+        // Buscar Role ADMIN pre-definido (UUID fixo da migração V7)
+        UUID adminRoleId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+        Role adminRole = roleRepository.findById(adminRoleId)
+                .orElseThrow(() -> new RuntimeException("Role ADMIN não encontrado no sistema. Verifique as migrações."));
+
+        for (Object item : usersList) {
+            if (item instanceof Map<?, ?> userMap) {
+                String name = (String) userMap.get("name");
+                String email = (String) userMap.get("email");
+                String password = (String) userMap.get("password");
+
+                if (name == null || email == null || password == null) {
+                    log.warn("Usuário ignorado devido a dados incompletos: {}", userMap);
+                    continue;
+                }
+
+                if (userRepository.existsByEmail(email)) {
+                    log.info("Usuário já existe no sistema: {}. Atualizando ou ignorando.", email);
+                    continue;
+                }
+
+                User user = User.builder()
+                        .tenantId(tenantId)
+                        .name(name)
+                        .email(email)
+                        .passwordHash(passwordEncoder.encode(password))
+                        .status("ACTIVE")
+                        .roles(Set.of(adminRole))
+                        .build();
+
+                userRepository.save(user);
+                log.info("Usuário administrador criado com sucesso: {}", email);
+            }
+        }
     }
 
     private void processIntegrations(UUID tenantId, Map<String, Object> data) {

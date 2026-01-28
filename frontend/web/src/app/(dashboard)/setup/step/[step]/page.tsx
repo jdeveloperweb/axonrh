@@ -52,6 +52,22 @@ export default function SetupStepPage() {
     moduleAiAssistant: false,
   });
 
+  // Step 6 - Users
+  const [users, setUsers] = useState<any[]>([
+    { name: '', email: '', password: '', confirmPassword: '' }
+  ]);
+
+  // Step 4 - Branding
+  const [branding, setBranding] = useState({
+    logoUrl: '',
+    logoWidth: 150,
+    primaryColor: '#1976D2',
+    secondaryColor: '#424242',
+    accentColor: '#FF4081',
+    fontFamily: 'Plus Jakarta Sans',
+    baseFontSize: 16,
+  });
+
   useEffect(() => {
     loadStepData();
   }, [stepNumber]);
@@ -74,8 +90,14 @@ export default function SetupStepPage() {
         const stepData = await setupApi.getStepData(stepNumber);
         if (stepNumber === 3 && stepData) {
           setLaborRules({ ...laborRules, ...stepData });
+        } else if (stepNumber === 4 && stepData) {
+          setBranding({ ...branding, ...stepData });
         } else if (stepNumber === 5 && stepData) {
           setModules({ ...modules, ...stepData });
+        } else if (stepNumber === 6 && stepData) {
+          if (stepData.users && Array.isArray(stepData.users)) {
+            setUsers(stepData.users);
+          }
         }
       }
     } catch (error) {
@@ -103,8 +125,23 @@ export default function SetupStepPage() {
         await setupApi.saveCompanyProfile(companyProfile);
       } else if (stepNumber === 3) {
         await setupApi.saveStepData(stepNumber, laborRules);
+      } else if (stepNumber === 4) {
+        await setupApi.saveStepData(stepNumber, branding);
       } else if (stepNumber === 5) {
         await setupApi.saveStepData(stepNumber, modules);
+      } else if (stepNumber === 6) {
+        // Validate users
+        const invalidUser = users.find(u => !u.name || !u.email || !u.password);
+        if (invalidUser) {
+          setError('Todos os campos dos usuários são obrigatórios');
+          return;
+        }
+        const passwordMismatch = users.find(u => u.password !== u.confirmPassword);
+        if (passwordMismatch) {
+          setError('As senhas não coincidem para um ou mais usuários');
+          return;
+        }
+        await setupApi.saveStepData(stepNumber, { users });
       }
 
       // Complete step
@@ -124,7 +161,9 @@ export default function SetupStepPage() {
             ? laborRules
             : stepNumber === 5
               ? modules
-              : null;
+              : stepNumber === 6
+                ? { users }
+                : null;
       console.error('Erro ao salvar etapa do setup', {
         stepNumber,
         payload,
@@ -230,14 +269,24 @@ export default function SetupStepPage() {
               onChange={setLaborRules}
             />
           )}
-          {stepNumber === 4 && <Step4Branding />}
+          {stepNumber === 4 && (
+            <Step4Branding
+              config={branding}
+              onChange={setBranding}
+            />
+          )}
           {stepNumber === 5 && (
             <Step5Modules
               modules={modules}
               onChange={setModules}
             />
           )}
-          {stepNumber === 6 && <Step6Users />}
+          {stepNumber === 6 && (
+            <Step6Users
+              users={users}
+              onChange={setUsers}
+            />
+          )}
           {stepNumber === 7 && <Step7Integrations />}
           {stepNumber === 8 && <Step8DataImport />}
           {stepNumber === 9 && <Step9Review />}
@@ -532,8 +581,8 @@ function Step2OrgStructure() {
         <button
           onClick={() => setActiveTab('manual')}
           className={`pb-2 text-sm font-medium transition ${activeTab === 'manual'
-              ? 'border-b-2 border-blue-600 text-blue-600'
-              : 'text-slate-500 hover:text-slate-700'
+            ? 'border-b-2 border-blue-600 text-blue-600'
+            : 'text-slate-500 hover:text-slate-700'
             }`}
         >
           Entrada Manual
@@ -541,8 +590,8 @@ function Step2OrgStructure() {
         <button
           onClick={() => setActiveTab('import')}
           className={`pb-2 text-sm font-medium transition ${activeTab === 'import'
-              ? 'border-b-2 border-blue-600 text-blue-600'
-              : 'text-slate-500 hover:text-slate-700'
+            ? 'border-b-2 border-blue-600 text-blue-600'
+            : 'text-slate-500 hover:text-slate-700'
             }`}
         >
           Importar CSV
@@ -821,13 +870,211 @@ function Step3LaborRules({
   );
 }
 
-// Step 4 - Branding (simplified)
-function Step4Branding() {
+function Step4Branding({
+  config,
+  onChange,
+}: {
+  config: any;
+  onChange: (config: any) => void;
+}) {
+  const fonts = [
+    'Plus Jakarta Sans',
+    'Outfit',
+    'Inter',
+    'Roboto',
+    'Open Sans',
+    'Montserrat'
+  ];
+
   return (
-    <div className="text-center py-8">
-      <p className="text-gray-500">
-        Personalize a identidade visual do sistema com logo e cores.
-      </p>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+      <div className="space-y-8">
+        <div>
+          <h3 className="text-lg font-semibold text-slate-900 mb-4">Logo da Empresa</h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">URL do Logo</label>
+              <input
+                type="text"
+                value={config.logoUrl}
+                onChange={(e) => onChange({ ...config, logoUrl: e.target.value })}
+                placeholder="https://suaempresa.com/logo.png"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm"
+              />
+            </div>
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <label className="block text-sm font-medium text-slate-700">Largura do Logo</label>
+                <span className="text-xs font-mono text-blue-600">{config.logoWidth}px</span>
+              </div>
+              <input
+                type="range"
+                min="50"
+                max="300"
+                step="10"
+                value={config.logoWidth}
+                onChange={(e) => onChange({ ...config, logoWidth: parseInt(e.target.value) })}
+                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+              />
+            </div>
+          </div>
+        </div>
+
+        <hr className="border-slate-100" />
+
+        <div>
+          <h3 className="text-lg font-semibold text-slate-900 mb-4">Cores da Marca</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Primária</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={config.primaryColor}
+                  onChange={(e) => onChange({ ...config, primaryColor: e.target.value })}
+                  className="h-10 w-10 cursor-pointer rounded-lg border-none p-0"
+                />
+                <input
+                  type="text"
+                  value={config.primaryColor}
+                  onChange={(e) => onChange({ ...config, primaryColor: e.target.value })}
+                  className="flex-1 text-xs font-mono uppercase rounded-lg border border-slate-200 px-2 py-2"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Secundária</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={config.secondaryColor}
+                  onChange={(e) => onChange({ ...config, secondaryColor: e.target.value })}
+                  className="h-10 w-10 cursor-pointer rounded-lg border-none p-0"
+                />
+                <input
+                  type="text"
+                  value={config.secondaryColor}
+                  onChange={(e) => onChange({ ...config, secondaryColor: e.target.value })}
+                  className="flex-1 text-xs font-mono uppercase rounded-lg border border-slate-200 px-2 py-2"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Destaque</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={config.accentColor}
+                  onChange={(e) => onChange({ ...config, accentColor: e.target.value })}
+                  className="h-10 w-10 cursor-pointer rounded-lg border-none p-0"
+                />
+                <input
+                  type="text"
+                  value={config.accentColor}
+                  onChange={(e) => onChange({ ...config, accentColor: e.target.value })}
+                  className="flex-1 text-xs font-mono uppercase rounded-lg border border-slate-200 px-2 py-2"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <hr className="border-slate-100" />
+
+        <div>
+          <h3 className="text-lg font-semibold text-slate-900 mb-4">Tipografia</h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Fonte Principal</label>
+              <select
+                value={config.fontFamily}
+                onChange={(e) => onChange({ ...config, fontFamily: e.target.value })}
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm"
+              >
+                {fonts.map(font => (
+                  <option key={font} value={font}>{font}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <label className="block text-sm font-medium text-slate-700">Tamanho da Fonte Base</label>
+                <span className="text-xs font-mono text-blue-600">{config.baseFontSize}px</span>
+              </div>
+              <input
+                type="range"
+                min="12"
+                max="20"
+                step="1"
+                value={config.baseFontSize}
+                onChange={(e) => onChange({ ...config, baseFontSize: parseInt(e.target.value) })}
+                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-slate-50 rounded-3xl p-6 border border-slate-200 sticky top-10 self-start">
+        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-6">Visualização em Tempo Real</h4>
+
+        <div
+          className="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200"
+          style={{ fontFamily: config.fontFamily }}
+        >
+          {/* Mock Header */}
+          <div className="h-14 px-4 flex items-center justify-between border-b" style={{ backgroundColor: '#ffffff' }}>
+            {config.logoUrl ? (
+              <img src={config.logoUrl} alt="Logo" style={{ width: config.logoWidth / 2 }} className="h-auto" />
+            ) : (
+              <div className="h-6 w-24 bg-slate-200 rounded animate-pulse" />
+            )}
+            <div className="flex gap-2">
+              <div className="h-8 w-8 rounded-full bg-slate-100" />
+            </div>
+          </div>
+
+          {/* Mock Content */}
+          <div className="p-6 space-y-4" style={{ fontSize: config.baseFontSize }}>
+            <h5 className="font-bold text-xl" style={{ color: config.secondaryColor }}>Seja bem-vindo ao AxonRH</h5>
+            <p className="text-slate-500 leading-relaxed">
+              Esta é uma prévia de como o sistema será exibido para seus colaboradores.
+            </p>
+
+            <div className="space-y-3 pt-2">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl flex items-center justify-center text-white" style={{ backgroundColor: config.primaryColor }}>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                </div>
+                <div className="flex-1">
+                  <div className="h-2 w-24 bg-slate-200 rounded mb-2" />
+                  <div className="h-1.5 w-full bg-slate-100 rounded" />
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl flex items-center justify-center text-white" style={{ backgroundColor: config.accentColor }}>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                </div>
+                <div className="flex-1">
+                  <div className="h-2 w-32 bg-slate-200 rounded mb-2" />
+                  <div className="h-1.5 w-3/4 bg-slate-100 rounded" />
+                </div>
+              </div>
+            </div>
+
+            <button
+              className="w-full py-3 rounded-xl font-bold text-white shadow-lg transition-transform active:scale-95 mt-4"
+              style={{ backgroundColor: config.primaryColor }}
+            >
+              Botão de Exemplo
+            </button>
+          </div>
+        </div>
+
+        <p className="text-[10px] text-slate-400 mt-4 text-center">
+          * A visualização é aproximada e pode variar conforme a resolução da tela.
+        </p>
+      </div>
     </div>
   );
 }
@@ -859,8 +1106,8 @@ function Step5Modules({
         <div
           key={mod.key}
           className={`rounded-2xl border p-4 transition-all ${modules[mod.key]
-              ? 'border-blue-500 bg-blue-50 shadow-sm shadow-blue-100'
-              : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm'
+            ? 'border-blue-500 bg-blue-50 shadow-sm shadow-blue-100'
+            : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm'
             } ${mod.core ? 'opacity-75' : ''}`}
           onClick={() => !mod.core && onChange({ ...modules, [mod.key]: !modules[mod.key] })}
         >
@@ -890,13 +1137,125 @@ function Step5Modules({
   );
 }
 
-// Step 6 - Users (simplified)
-function Step6Users() {
+// Step 6 - Users
+function Step6Users({
+  users,
+  onChange,
+}: {
+  users: any[];
+  onChange: (users: any[]) => void;
+}) {
+  const addUser = () => {
+    onChange([...users, { name: '', email: '', password: '', confirmPassword: '' }]);
+  };
+
+  const removeUser = (index: number) => {
+    if (users.length === 1) {
+      alert('É necessário pelo menos um administrador.');
+      return;
+    }
+    const newUsers = [...users];
+    newUsers.splice(index, 1);
+    onChange(newUsers);
+  };
+
+  const updateUser = (index: number, field: string, value: string) => {
+    const newUsers = [...users];
+    newUsers[index] = { ...newUsers[index], [field]: value };
+    onChange(newUsers);
+  };
+
   return (
-    <div className="text-center py-8">
-      <p className="text-gray-500">
-        Configure os usuários administradores do sistema.
-      </p>
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold text-slate-900">Administradores do Sistema</h3>
+          <p className="text-sm text-slate-500">
+            Cadastre os usuários que terão acesso total ao AxonRH.
+          </p>
+        </div>
+        <button
+          onClick={addUser}
+          className="inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
+        >
+          <span>+</span> Adicionar Admin
+        </button>
+      </div>
+
+      <div className="space-y-6">
+        {users.map((user, index) => (
+          <div
+            key={index}
+            className="relative rounded-2xl border border-slate-200 bg-slate-50/50 p-6 transition-all hover:border-slate-300 hover:bg-white"
+          >
+            {users.length > 1 && (
+              <button
+                onClick={() => removeUser(index)}
+                className="absolute right-4 top-4 text-slate-400 hover:text-red-500"
+                title="Remover administrador"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="md:col-span-1">
+                <label className="block text-sm font-semibold text-slate-700">Nome Completo</label>
+                <input
+                  type="text"
+                  value={user.name}
+                  onChange={(e) => updateUser(index, 'name', e.target.value)}
+                  placeholder="Ex: João Silva"
+                  className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                />
+              </div>
+
+              <div className="md:col-span-1">
+                <label className="block text-sm font-semibold text-slate-700">Email Corporativo</label>
+                <input
+                  type="email"
+                  value={user.email}
+                  onChange={(e) => updateUser(index, 'email', e.target.value)}
+                  placeholder="admin@empresa.com"
+                  className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700">Senha</label>
+                <input
+                  type="password"
+                  value={user.password}
+                  onChange={(e) => updateUser(index, 'password', e.target.value)}
+                  className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700">Confirmar Senha</label>
+                <input
+                  type="password"
+                  value={user.confirmPassword}
+                  onChange={(e) => updateUser(index, 'confirmPassword', e.target.value)}
+                  className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-800">
+        <div className="flex gap-3">
+          <span className="text-lg">ℹ️</span>
+          <p>
+            <strong>Nota importante:</strong> Os usuários cadastrados aqui serão criados com o perfil de <strong>ADMIN</strong>.
+            Eles terão acesso total a todas as configurações e dados do sistema.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
