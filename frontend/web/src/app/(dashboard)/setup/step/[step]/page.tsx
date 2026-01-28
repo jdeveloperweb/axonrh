@@ -15,6 +15,8 @@ import {
   validateCNPJ,
   formatCNPJ,
 } from '@/lib/api/setup';
+import { Switch } from '@/components/ui/switch';
+
 
 export default function SetupStepPage() {
   const router = useRouter();
@@ -840,16 +842,14 @@ function Step3LaborRules({
         </div>
       </div>
 
-      <div className="flex items-center rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-        <input
-          type="checkbox"
-          checked={rules.overtimeRequiresApproval}
-          onChange={(e) => onChange({ ...rules, overtimeRequiresApproval: e.target.checked })}
-          className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-        />
-        <label className="ml-3 block text-sm font-medium text-slate-700">
+      <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+        <label className="text-sm font-medium text-slate-700">
           Horas extras requerem aprovação
         </label>
+        <Switch
+          checked={rules.overtimeRequiresApproval}
+          onCheckedChange={(checked) => onChange({ ...rules, overtimeRequiresApproval: checked })}
+        />
       </div>
 
       <hr className="border-slate-200" />
@@ -1114,11 +1114,9 @@ function Step5Modules({
                   Incluído
                 </span>
               ) : (
-                <input
-                  type="checkbox"
+                <Switch
                   checked={modules[mod.key]}
-                  onChange={() => { }}
-                  className="h-5 w-5 rounded border-slate-300 text-blue-600"
+                  onCheckedChange={(checked) => onChange({ ...modules, [mod.key]: checked })}
                 />
               )}
             </div>
