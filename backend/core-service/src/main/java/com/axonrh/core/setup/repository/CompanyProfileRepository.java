@@ -12,7 +12,7 @@ public interface CompanyProfileRepository extends JpaRepository<CompanyProfile, 
 
     Optional<CompanyProfile> findByTenantId(UUID tenantId);
 
-    Optional<CompanyProfile> findByCnpj(String cnpj);
+    java.util.List<CompanyProfile> findAllByCnpj(String cnpj);
 
     boolean existsByTenantId(UUID tenantId);
 

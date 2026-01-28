@@ -268,10 +268,10 @@ public class SetupWizardService {
      */
     public UUID initCompanySetup(com.axonrh.core.setup.dto.SetupInitRequest request) {
         // Check if CNPJ already exists
-        Optional<CompanyProfile> existing = companyProfileRepository.findByCnpj(request.getCnpj());
-        if (existing.isPresent()) {
+        List<CompanyProfile> existing = companyProfileRepository.findAllByCnpj(request.getCnpj());
+        if (!existing.isEmpty()) {
             log.info("Setup já existente para CNPJ {}. Retornando TenantID existente.", request.getCnpj());
-            return existing.get().getTenantId();
+            return existing.get(0).getTenantId();
         }
 
         UUID tenantId = UUID.randomUUID();
