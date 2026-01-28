@@ -73,6 +73,7 @@ export default function TimesheetMirrorPage() {
         console.error('Erro ao carregar colaboradores:', error);
       }
     };
+    loadEmployees();
   }, [selectedEmployee]);
 
   // Calculate date range for selected month

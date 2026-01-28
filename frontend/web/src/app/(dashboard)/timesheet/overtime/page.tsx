@@ -156,7 +156,7 @@ export default function OvertimeBankPage() {
       'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez',
     ];
 
-    months.forEach((month, index) => {
+    months.forEach((month) => {
       monthlyData[month] = { credit: 0, debit: 0, balance: 0 };
     });
 

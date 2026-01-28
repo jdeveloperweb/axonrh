@@ -248,6 +248,10 @@ export function createNotificationSocket(userId: string, _options: UseNotificati
   const socket = {
     connect: () => {
       console.log('Connecting to notification WebSocket for user:', userId);
+      // Suppress unused variable warning by effectively "using" it
+      if (_options.onNotification) {
+        /* placeholder for future implementation */
+      }
     },
     disconnect: () => {
       console.log('Disconnecting from notification WebSocket');

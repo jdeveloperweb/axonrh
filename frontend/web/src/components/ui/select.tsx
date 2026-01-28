@@ -10,6 +10,7 @@ interface SelectContextValue {
   onValueChange?: (value: string) => void
   open: boolean
   setOpen: (open: boolean) => void
+  id: string
 }
 
 const SelectContext = React.createContext<SelectContextValue | null>(null)
@@ -32,6 +33,7 @@ interface SelectProps {
 const Select = ({ children, value: controlledValue, defaultValue, onValueChange }: SelectProps) => {
   const [uncontrolledValue, setUncontrolledValue] = React.useState(defaultValue)
   const [open, setOpen] = React.useState(false)
+  const id = React.useId()
 
   const value = controlledValue ?? uncontrolledValue
   const handleValueChange = (newValue: string) => {
@@ -44,7 +46,7 @@ const Select = ({ children, value: controlledValue, defaultValue, onValueChange 
   }
 
   return (
-    <SelectContext.Provider value={{ value, onValueChange: handleValueChange, open, setOpen }}>
+    <SelectContext.Provider value={{ value, onValueChange: handleValueChange, open, setOpen, id }}>
       <div className="relative">
         {children}
       </div>
@@ -65,7 +67,7 @@ const SelectTrigger = React.forwardRef<
   HTMLButtonElement,
   React.ButtonHTMLAttributes<HTMLButtonElement>
 >(({ className, children, ...props }, ref) => {
-  const { open, setOpen } = useSelect()
+  const { open, setOpen, id } = useSelect()
 
   return (
     <button
@@ -73,6 +75,7 @@ const SelectTrigger = React.forwardRef<
       type="button"
       role="combobox"
       aria-expanded={open}
+      aria-controls={id}
       className={cn(
         "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
         className
@@ -91,7 +94,7 @@ const SelectContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, children, ...props }, ref) => {
-  const { open, setOpen } = useSelect()
+  const { open, setOpen, id } = useSelect()
 
   React.useEffect(() => {
     const handleClickOutside = () => setOpen(false)
@@ -106,6 +109,7 @@ const SelectContent = React.forwardRef<
   return (
     <div
       ref={ref}
+      id={id}
       className={cn(
         "absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md",
         className
