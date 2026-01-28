@@ -26,15 +26,5 @@ public class EmployeeServiceApplication {
         SpringApplication.run(EmployeeServiceApplication.class, args);
     }
 
-    @org.springframework.context.annotation.Bean
-    public org.springframework.boot.CommandLineRunner commandLineRunner(org.springframework.context.ApplicationContext ctx) {
-        return args -> {
-            System.out.println(">>> [DEBUG] EmployeeServiceApplication STARTUP COMPLETE");
-            System.out.println(">>> [DEBUG] Listing Request Mappings:");
-            var mapping = ctx.getBean(org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping.class);
-            mapping.getHandlerMethods().forEach((key, value) -> {
-                System.out.println(">>> [DEBUG] Mapped: " + key + " -> " + value);
-            });
-        };
-    }
+
 }
