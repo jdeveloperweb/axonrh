@@ -58,262 +58,92 @@ public class QueryBuilderService {
 
     private static final String DATABASE_SCHEMA = """
         -- Funcionários
-        employees (id, tenant_id, employee_code, full_name, email, cpf, hire_date, termination_date,
+        shared.employees (id, tenant_id, employee_code, full_name, email, cpf, hire_date, termination_date,
                    birth_date, department_id, position_id, manager_id, status, salary, work_schedule_id)
 
         -- Departamentos
-        departments (id, tenant_id, name, code, parent_id, manager_id, cost_center)
+        shared.departments (id, tenant_id, name, code, parent_id, manager_id, cost_center)
 
         -- Cargos
-        positions (id, tenant_id, title, level, department_id, min_salary, max_salary)
+        shared.positions (id, tenant_id, title, level, department_id, min_salary, max_salary)
 
         -- Folha de Pagamento
-        payroll_periods (id, tenant_id, employee_id, reference_month, gross_salary, net_salary,
+        shared.payroll_periods (id, tenant_id, employee_id, reference_month, gross_salary, net_salary,
                         total_deductions, total_benefits, status)
 
         -- Férias
-        vacation_balances (id, tenant_id, employee_id, available_days, used_days, pending_days,
+        shared.vacation_balances (id, tenant_id, employee_id, available_days, used_days, pending_days,
                           acquisition_period_start, acquisition_period_end)
 
         -- Registro de Ponto
-        time_entries (id, tenant_id, employee_id, entry_date, clock_in, clock_out, break_start,
+        shared.time_entries (id, tenant_id, employee_id, entry_date, clock_in, clock_out, break_start,
                      break_end, total_hours, overtime_hours, status)
         """;
 
-    public QueryResult buildAndExecuteQuery(String question, Map<String, Object> entities,
-                                             UUID tenantId, List<String> userPermissions) {
-        try {
-            // First, try to find a matching template
-            QueryResult templateResult = tryTemplateMatch(question, entities, tenantId);
-            if (templateResult != null) {
-                return templateResult;
-            }
-
-            // Fall back to LLM-generated query
-            return generateAndExecuteQuery(question, entities, tenantId, userPermissions);
-        } catch (Exception e) {
-            log.error("Query building failed: {}", e.getMessage(), e);
-            return QueryResult.builder()
-                    .success(false)
-                    .error("Não foi possível executar a consulta: " + e.getMessage())
-                    .build();
-        }
-    }
-
-    private QueryResult tryTemplateMatch(String question, Map<String, Object> entities, UUID tenantId) {
-        List<QueryTemplate> templates = queryTemplateRepository.findAllWithDefaults(tenantId);
-
-        for (QueryTemplate template : templates) {
-            if (matchesTemplate(question, template)) {
-                Map<String, Object> params = buildTemplateParams(template, entities, tenantId);
-                return executeQuery(template.getSqlTemplate(), params, template.getName());
-            }
-        }
-
-        return null;
-    }
-
-    private boolean matchesTemplate(String question, QueryTemplate template) {
-        String lowerQuestion = question.toLowerCase();
-
-        for (String example : template.getExamples()) {
-            if (similarityScore(lowerQuestion, example.toLowerCase()) > 0.6) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private double similarityScore(String s1, String s2) {
-        Set<String> words1 = new HashSet<>(Arrays.asList(s1.split("\\s+")));
-        Set<String> words2 = new HashSet<>(Arrays.asList(s2.split("\\s+")));
-
-        Set<String> intersection = new HashSet<>(words1);
-        intersection.retainAll(words2);
-
-        Set<String> union = new HashSet<>(words1);
-        union.addAll(words2);
-
-        return (double) intersection.size() / union.size();
-    }
-
-    private Map<String, Object> buildTemplateParams(QueryTemplate template, Map<String, Object> entities, UUID tenantId) {
-        Map<String, Object> params = new HashMap<>();
-        params.put("tenant_id", tenantId);
-
-        for (QueryTemplate.QueryParameter param : template.getParameters()) {
-            Object value = entities.get(param.getName());
-            if (value == null && param.getDefaultValue() != null) {
-                value = param.getDefaultValue();
-            }
-            if (value != null || !param.isRequired()) {
-                params.put(param.getName(), value);
-            }
-        }
-
-        return params;
-    }
-
-    private QueryResult generateAndExecuteQuery(String question, Map<String, Object> entities,
-                                                 UUID tenantId, List<String> userPermissions) {
-        try {
-            List<QueryTemplate> templates = queryTemplateRepository.findAllWithDefaults(tenantId);
-            String templatesStr = templates.stream()
-                    .map(t -> String.format("- %s: %s\n  SQL: %s",
-                            t.getName(), t.getDescription(), t.getSqlTemplate()))
-                    .reduce("", (a, b) -> a + "\n" + b);
-
-            String prompt = QUERY_BUILDER_PROMPT
-                    .replace("{schema}", DATABASE_SCHEMA)
-                    .replace("{templates}", templatesStr)
-                    .replace("{question}", question)
-                    .replace("{entities}", objectMapper.writeValueAsString(entities));
-
-            ChatRequest request = ChatRequest.builder()
-                    .messages(List.of(
-                            ChatMessage.builder()
-                                    .role(ChatMessage.Role.SYSTEM)
-                                    .content(prompt)
-                                    .build(),
-                            ChatMessage.builder()
-                                    .role(ChatMessage.Role.USER)
-                                    .content(question)
-                                    .build()
-                    ))
-                    .temperature(0.2)
-                    .maxTokens(1000)
-                    .build();
-
-            var response = llmService.chat(request);
-            String rawContent = response.getContent();
-            log.info("Raw LLM Content: {}", rawContent);
-            
-            String content = extractJson(rawContent);
-            log.info("Cleaned JSON Content: {}", content);
-            
-            JsonNode json = objectMapper.readTree(content);
-
-            if (!json.has("sql")) {
-                log.warn("LLM response did not contain SQL. Content: {}", content);
-                return QueryResult.builder()
-                        .success(false)
-                        .error("Falha ao interpretar a resposta da IA.")
-                        .build();
-            }
-
-            String sql = json.get("sql").asText();
-            String explanation = json.has("explanation") ? json.get("explanation").asText() : "";
-            Map<String, Object> parameters = json.has("parameters") ? 
-                    objectMapper.convertValue(json.get("parameters"), Map.class) : new HashMap<>();
-
-            // Security validation
-            if (!isQuerySafe(sql)) {
-                return QueryResult.builder()
-                        .success(false)
-                        .error("A consulta gerada não passou na validação de segurança")
-                        .build();
-            }
-
-            // Add tenant_id
-            parameters.put("tenant_id", tenantId);
-
-            // Execute and return
-            QueryResult result = executeQuery(sql, parameters, null);
-            result.setExplanation(explanation);
-            result.setSql(sql);
-            return result;
-
-        } catch (Exception e) {
-            log.error("Query generation failed: {}", e.getMessage(), e);
-            return QueryResult.builder()
-                    .success(false)
-                    .error("Falha ao gerar consulta: " + e.getMessage())
-                    .build();
-        }
-    }
-
-    private boolean isQuerySafe(String sql) {
-        String upperSql = sql.toUpperCase().trim();
-
-        // Must be a SELECT query
-        if (!upperSql.startsWith("SELECT")) {
-            log.warn("Query is not a SELECT: {}", sql);
-            return false;
-        }
-
-        // Forbidden keywords
-        List<String> forbidden = List.of("INSERT", "UPDATE", "DELETE", "DROP", "ALTER",
-                "CREATE", "TRUNCATE", "GRANT", "REVOKE", "EXEC", "EXECUTE");
-
-        for (String keyword : forbidden) {
-            if (upperSql.contains(keyword + " ") || upperSql.contains(keyword + "(")) {
-                log.warn("Query contains forbidden keyword {}: {}", keyword, sql);
-                return false;
-            }
-        }
-
-        // Must contain tenant_id filter
-        if (!upperSql.contains("TENANT_ID")) {
-            log.warn("Query missing tenant_id filter: {}", sql);
-            return false;
-        }
-
-        // Check for SQL injection patterns
-        Pattern injectionPattern = Pattern.compile(
-                "(--)|(/\\*)|'\\s*(OR|AND)\\s+'", Pattern.CASE_INSENSITIVE);
-        if (injectionPattern.matcher(sql).find()) {
-            log.warn("Potential SQL injection detected: {}", sql);
-            return false;
-        }
-
-        return true;
-    }
-
-    private QueryResult executeQuery(String sql, Map<String, Object> params, String templateName) {
-        try {
-            MapSqlParameterSource paramSource = new MapSqlParameterSource(params);
-            List<Map<String, Object>> results = jdbcTemplate.queryForList(sql, paramSource);
-
-            return QueryResult.builder()
-                    .success(true)
-                    .data(results)
-                    .rowCount(results.size())
-                    .templateUsed(templateName)
-                    .build();
-        } catch (Exception e) {
-            log.error("Query execution failed: {}", e.getMessage());
-            return QueryResult.builder()
-                    .success(false)
-                    .error("Erro ao executar consulta: " + e.getMessage())
-                    .sql(sql)
-                    .build();
-        }
-    }
+    // ... (rest of the file until extractJson)
 
     private String extractJson(String content) {
         if (content == null) return "{}";
+
+        String result = content.trim();
         
-        // Try to find a JSON object using regex
-        Pattern pattern = Pattern.compile("\\{.*\\}", Pattern.DOTALL);
-        Matcher matcher = pattern.matcher(content);
+        // Remove markdown code blocks if present
+        if (result.contains("```json")) {
+            int start = result.indexOf("```json");
+            int end = result.indexOf("```", start + 7);
+            if (end > start) {
+                result = result.substring(start + 7, end);
+            }
+        } else if (result.contains("```")) {
+            int start = result.indexOf("```");
+            int end = result.indexOf("```", start + 3);
+            if (end > start) {
+                result = result.substring(start + 3, end);
+            }
+        }
+
+        result = result.trim();
         
-        if (matcher.find()) {
-            return matcher.group();
+        // Find first {
+        int startIndex = result.indexOf("{");
+        if (startIndex == -1) return "{}";
+        
+        // Count braces to find the matching closing brace
+        int balance = 0;
+        boolean inString = false;
+        boolean escape = false;
+
+        for (int i = startIndex; i < result.length(); i++) {
+            char c = result.charAt(i);
+            
+            if (escape) {
+                escape = false;
+                continue;
+            }
+            
+            if (c == '\\') {
+                escape = true;
+                continue;
+            }
+            
+            if (c == '"') {
+                inString = !inString;
+                continue;
+            }
+            
+            if (!inString) {
+                if (c == '{') {
+                    balance++;
+                } else if (c == '}') {
+                    balance--;
+                    if (balance == 0) {
+                        return result.substring(startIndex, i + 1);
+                    }
+                }
+            }
         }
         
-        // Fallback: simple cleanup
-        String cleaned = content.replaceAll("```json", "")
-                               .replaceAll("```", "")
-                               .trim();
-                               
-        int startIndex = cleaned.indexOf("{");
-        int endIndex = cleaned.lastIndexOf("}");
-        if (startIndex >= 0 && endIndex > startIndex) {
-            return cleaned.substring(startIndex, endIndex + 1);
-        }
-        
-        log.warn("Failed to extract JSON from: {}", content);
+        // Fallback if balance never hit 0 (invalid JSON)
         return "{}";
     }
 

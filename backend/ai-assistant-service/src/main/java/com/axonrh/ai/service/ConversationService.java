@@ -290,7 +290,7 @@ public class ConversationService {
         }
 
         if (result.getData().isEmpty()) {
-            return "Não encontrei registros para a sua consulta.";
+            return "Realizei a busca, mas não encontrei nenhum registro que corresponda à sua solicitação. Se desejar, tente refazer a pergunta com outros termos.";
         }
 
         // Format results

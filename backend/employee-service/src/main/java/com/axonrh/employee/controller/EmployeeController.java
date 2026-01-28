@@ -93,10 +93,19 @@ public class EmployeeController {
             @Valid @RequestBody EmployeeRequest request,
             @RequestHeader("X-User-Id") UUID userId) {
 
-        System.out.println(">>> [DEBUG-TRACE] EmployeeController.create CALLED with name: " + request.getFullName());
+        System.err.println(">>> [DEBUG-CRITICAL] EmployeeController.create ENTERED");
+        System.err.println(">>> [DEBUG-CRITICAL] Payload Name: " + request.getFullName());
         log.info(">>> [LOG-TRACE] Criando colaborador: {}", request.getFullName());
-        EmployeeResponse created = employeeService.create(request, userId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        
+        try {
+            EmployeeResponse created = employeeService.create(request, userId);
+            System.err.println(">>> [DEBUG-CRITICAL] EmployeeService.create SUCCESS");
+            return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        } catch (Exception e) {
+            System.err.println(">>> [DEBUG-CRITICAL] EmployeeService.create FAILED: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     @PutMapping("/{id}")
