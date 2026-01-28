@@ -111,6 +111,7 @@ public class SetupWizardService {
     /**
      * Completa uma etapa.
      */
+    @Transactional
     public SetupProgress completeStep(UUID tenantId, UUID userId, int step, Map<String, Object> data) {
         UUID effectiveTenantId = resolveTenantId(tenantId, userId);
         SetupProgress progress = progressRepository.findByTenantId(effectiveTenantId)
@@ -604,12 +605,12 @@ public class SetupWizardService {
 
     private void processModules(UUID tenantId, Map<String, Object> data) {
         // Enable/disable modules
-        log.info("Processing modules for tenant: {}", tenantId);
+            log.info("Processing modules for tenant: {}", tenantId);
     }
 
     private void processUsers(UUID tenantId, Map<String, Object> data) {
         // Create initial users
-        log.info("Processando usuários para o tenant: {}", tenantId);
+        log.info("Processando usuários para o tenant: {}. Data keys: {}", tenantId, data != null ? data.keySet() : "null");
         
         if (data == null || !data.containsKey("users")) {
             log.warn("Nenhum dado de usuário fornecido na etapa 6 para tenant {}", tenantId);
@@ -618,14 +619,20 @@ public class SetupWizardService {
 
         Object usersObj = data.get("users");
         if (!(usersObj instanceof List<?> usersList)) {
-            log.error("Formato inválido para lista de usuários na etapa 6 para tenant {}", tenantId);
+            log.error("Formato inválido para lista de usuários na etapa 6 para tenant {}. Tipo: {}", 
+                tenantId, usersObj != null ? usersObj.getClass().getName() : "null");
             return;
         }
+
+        log.info("Encontrados {} usuários para processar no tenant {}", usersList.size(), tenantId);
 
         // Buscar Role ADMIN pre-definido (UUID fixo da migração V7)
         UUID adminRoleId = UUID.fromString("11111111-1111-1111-1111-111111111111");
         Role adminRole = roleRepository.findById(adminRoleId)
-                .orElseThrow(() -> new RuntimeException("Role ADMIN não encontrado no sistema. Verifique as migrações."));
+                .orElseThrow(() -> {
+                    log.error("Role ADMIN (ID: 11111111-1111-1111-1111-111111111111) não encontrado no banco!");
+                    return new RuntimeException("Role ADMIN não encontrado no sistema. Verifique as migrações.");
+                });
 
         for (Object item : usersList) {
             if (item instanceof Map<?, ?> userMap) {
@@ -633,16 +640,20 @@ public class SetupWizardService {
                 String email = (String) userMap.get("email");
                 String password = (String) userMap.get("password");
 
+                log.debug("Processando usuário da lista: email={}, name={}", email, name);
+
                 if (name == null || email == null || password == null) {
-                    log.warn("Usuário ignorado devido a dados incompletos: {}", userMap);
+                    log.warn("Usuário ignorado devido a dados incompletos: email={}, name={}, passPresent={}", 
+                        email, name, password != null);
                     continue;
                 }
 
                 if (userRepository.existsByEmail(email)) {
-                    log.info("Usuário já existe no sistema: {}. Atualizando ou ignorando.", email);
+                    log.info("Usuário já existe no sistema: {}. Pulando criação.", email);
                     continue;
                 }
 
+                log.info("Salvando novo usuário no tenant {}: {}", tenantId, email);
                 User user = User.builder()
                         .tenantId(tenantId)
                         .name(name)
@@ -653,7 +664,9 @@ public class SetupWizardService {
                         .build();
 
                 userRepository.save(user);
-                log.info("Usuário administrador criado com sucesso: {}", email);
+                log.info("Usuário administrador criado com sucesso no banco: {}", email);
+            } else {
+                log.warn("Item na lista de usuários não é um Map: {}", item != null ? item.getClass().getName() : "null");
             }
         }
     }
