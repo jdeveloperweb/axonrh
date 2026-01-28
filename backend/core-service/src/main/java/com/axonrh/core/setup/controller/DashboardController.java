@@ -30,37 +30,68 @@ public class DashboardController {
         
         UUID tId = UUID.fromString(tenantId);
         
-        Long count = 0L;
+        // 1. Total de Colaboradores Ativos
+        Long activeEmployees = 0L;
         try {
-            count = ((Number) entityManager.createNativeQuery(
+            activeEmployees = ((Number) entityManager.createNativeQuery(
                 "SELECT COUNT(*) FROM employees WHERE tenant_id = ? AND is_active = true")
                 .setParameter(1, tId)
                 .getSingleResult()).longValue();
         } catch (Exception e) {
-            // Se a tabela não existir ainda ou der erro, seguimos com o CompanyProfile
+            log.warn("Falha ao buscar contagem de colaboradores: {}", e.getMessage());
         }
 
-        int employeesCount = count.intValue();
-
-        if (employeesCount == 0) {
-            employeesCount = setupWizardService.getCompanyProfile(tId, UUID.fromString(userId))
-                .map(p -> p.getEmployeeCount() != null ? p.getEmployeeCount() : 0)
-                .orElse(0);
+        // 2. Presentes Hoje (Simulado baseando em batidas de ponto se o módulo existir)
+        Long presentsToday = (long)(activeEmployees * 0.95); // Default 95%
+        try {
+            presentsToday = ((Number) entityManager.createNativeQuery(
+                "SELECT COUNT(DISTINCT employee_id) FROM time_records " +
+                "WHERE tenant_id = ? AND punch_date = CURRENT_DATE")
+                .setParameter(1, tId)
+                .getSingleResult()).longValue();
+        } catch (Exception e) {
+            // Tabela pode não existir ainda
         }
 
-        // Fallback final para não ficar vazio no demo
-        if (employeesCount == 0) {
-            employeesCount = 248;
+        // 3. Férias este Mês
+        Long vacationsCount = 0L;
+        try {
+            vacationsCount = ((Number) entityManager.createNativeQuery(
+                "SELECT COUNT(*) FROM vacations " +
+                "WHERE tenant_id = ? AND status = 'APPROVED' " +
+                "AND (start_date <= CURRENT_DATE AND end_date >= CURRENT_DATE)")
+                .setParameter(1, tId)
+                .getSingleResult()).longValue();
+        } catch (Exception e) {
+            // Tabela pode não existir ainda
+        }
+
+        // 4. Pendências (Ajustes de ponto ou solicitações de férias pendentes)
+        Long pendingIssues = 0L;
+        try {
+            Long pendingAdjustments = ((Number) entityManager.createNativeQuery(
+                "SELECT COUNT(*) FROM time_adjustments WHERE tenant_id = ? AND status = 'PENDING'")
+                .setParameter(1, tId)
+                .getSingleResult()).longValue();
+            
+            Long pendingVacations = ((Number) entityManager.createNativeQuery(
+                "SELECT COUNT(*) FROM vacations WHERE tenant_id = ? AND status = 'PENDING'")
+                .setParameter(1, tId)
+                .getSingleResult()).longValue();
+                
+            pendingIssues = pendingAdjustments + pendingVacations;
+        } catch (Exception e) {
+            // Tabelas podem não existir ainda
         }
 
         DashboardStatsDTO stats = DashboardStatsDTO.builder()
-                .totalEmployees(employeesCount)
-                .presentToday((long)(employeesCount * 0.93)) // 93% de presença
-                .vacationsThisMonth(12)
-                .pendingIssues(8)
-                .employeeChange(3.2)
-                .presenceChange(-1.5)
-                .pendingChange(-25.0)
+                .totalEmployees(activeEmployees.intValue())
+                .presentToday(presentsToday)
+                .vacationsThisMonth(vacationsCount.intValue())
+                .pendingIssues(pendingIssues.intValue())
+                .employeeChange(0.0) // Poderia ser calculado comparando com mês anterior
+                .presenceChange(0.0)
+                .pendingChange(0.0)
                 .build();
 
         return ResponseEntity.ok(stats);

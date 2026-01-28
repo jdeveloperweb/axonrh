@@ -644,10 +644,14 @@ public class SetupWizardService {
 
         // Buscar Role ADMIN pre-definido (UUID fixo da migração V7)
         UUID adminRoleId = UUID.fromString("11111111-1111-1111-1111-111111111111");
-        Role adminRole = roleRepository.findById(adminRoleId)
-                .orElseThrow(() -> {
-                    log.error("Role ADMIN (ID: 11111111-1111-1111-1111-111111111111) não encontrado no banco!");
-                    return new RuntimeException("Role ADMIN não encontrado no sistema. Verifique as migrações.");
+        Role adminRole = roleRepository.findByName("ADMIN")
+                .orElseGet(() -> {
+                    log.info("Role ADMIN não encontrado por nome, buscando por ID fixo...");
+                    return roleRepository.findById(adminRoleId)
+                        .orElseThrow(() -> {
+                            log.error("Role ADMIN não encontrado nem por nome nem por ID fixo (11111111-1111-1111-1111-111111111111)!");
+                            return new RuntimeException("Role ADMIN não encontrado no sistema. Verifique as migrações.");
+                        });
                 });
 
         for (Object item : usersList) {
@@ -658,9 +662,13 @@ public class SetupWizardService {
 
                 log.debug("Processando usuário da lista: email={}, name={}", email, name);
 
-                if (name == null || email == null || password == null) {
-                    log.warn("Usuário ignorado devido a dados incompletos: email={}, name={}, passPresent={}", 
-                        email, name, password != null);
+                if (email == null || email.isBlank()) {
+                    log.warn("Usuário ignorado devido a email ausente ou em branco");
+                    continue;
+                }
+
+                if (password == null || password.isBlank()) {
+                    log.warn("Usuário {} ignorado devido a senha ausente ou em branco", email);
                     continue;
                 }
 

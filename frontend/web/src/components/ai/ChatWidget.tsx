@@ -2,6 +2,13 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { chatApi, ChatMessage, StreamChunk } from '@/lib/api/ai';
+import { ChatIcons } from './ChatIcons';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
 interface ChatWidgetProps {
   conversationId?: string;
@@ -62,7 +69,6 @@ export default function ChatWidget({
     setIsLoading(true);
     setIsStreaming(true);
 
-    // Add placeholder for assistant response
     const assistantId = (Date.now() + 1).toString();
     setMessages(prev => [
       ...prev,
@@ -92,7 +98,7 @@ export default function ChatWidget({
       setMessages(prev =>
         prev.map(m =>
           m.id === assistantId
-            ? { ...m, content: 'Desculpe, ocorreu um erro. Tente novamente.', type: 'ERROR' }
+            ? { ...m, content: 'Desculpe, ocorreu um erro na comunicação com a OpenAI. Verifique se a API Key está configurada corretamente.', type: 'ERROR' }
             : m
         )
       );
@@ -117,53 +123,64 @@ export default function ChatWidget({
   ];
 
   return (
-    <div className={`flex flex-col h-full bg-white rounded-lg shadow-lg ${className}`}>
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-blue-600 to-blue-700 rounded-t-lg">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
-            <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
+    <div className={cn(
+      "flex flex-col h-full bg-white/80 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden",
+      className
+    )}>
+      {/* Header with Glassmorphism */}
+      <div className="relative px-6 py-4 bg-gradient-to-r from-blue-600/90 to-indigo-700/90 backdrop-blur-md">
+        <div className="absolute inset-0 bg-white/5 pointer-events-none"></div>
+        <div className="flex items-center justify-between relative z-10">
+          <div className="flex items-center space-x-4">
+            <div className="relative">
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-xl rounded-2xl flex items-center justify-center border border-white/30 shadow-inner">
+                <ChatIcons.Bot className="w-7 h-7 text-white" />
+              </div>
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-400 border-2 border-white rounded-full animate-pulse shadow-sm"></div>
+            </div>
+            <div>
+              <h3 className="text-white font-bold tracking-tight text-lg">Axon AI Assistant</h3>
+              <div className="flex items-center space-x-1.5">
+                <span className="w-1.5 h-1.5 bg-blue-200 rounded-full"></span>
+                <p className="text-blue-100 text-xs font-medium uppercase tracking-widest">Inteligência Artificial RH</p>
+              </div>
+            </div>
           </div>
-          <div>
-            <h3 className="text-white font-semibold">Assistente AxonRH</h3>
-            <p className="text-blue-100 text-sm">Sempre disponível para ajudar</p>
-          </div>
+          {isStreaming && (
+            <div className="flex items-center space-x-2 px-3 py-1.5 bg-white/10 backdrop-blur-md rounded-full border border-white/20 animate-in fade-in slide-in-from-right-4 transition-all">
+              <div className="flex space-x-0.5">
+                <div className="w-1 h-1 bg-white rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                <div className="w-1 h-1 bg-white rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                <div className="w-1 h-1 bg-white rounded-full animate-bounce"></div>
+              </div>
+              <span className="text-white text-[10px] font-bold uppercase tracking-wider">Processando</span>
+            </div>
+          )}
         </div>
-        {isStreaming && (
-          <div className="flex items-center space-x-1">
-            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-            <span className="text-white text-sm">Respondendo...</span>
-          </div>
-        )}
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      {/* Messages Area */}
+      <div className="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth">
         {messages.length === 0 && (
-          <div className="text-center py-8">
-            <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
-              <svg className="w-8 h-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-              </svg>
+          <div className="h-full flex flex-col items-center justify-center text-center animate-in fade-in zoom-in-95 duration-500">
+            <div className="w-20 h-20 mb-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl flex items-center justify-center border border-blue-100 shadow-sm">
+              <ChatIcons.Sparkles className="w-10 h-10 text-blue-500 animate-pulse" />
             </div>
-            <h4 className="text-lg font-medium text-gray-900 mb-2">
-              Olá! Como posso ajudar?
+            <h4 className="text-2xl font-bold text-gray-900 mb-2">
+              Bem-vindo ao AxonRH
             </h4>
-            <p className="text-gray-500 mb-4">
-              Pergunte sobre cálculos trabalhistas, políticas de RH ou consulte dados.
+            <p className="text-gray-500 max-w-xs mx-auto mb-8">
+              Sua plataforma de RH potencializada por IA. Como posso facilitar seu dia hoje?
             </p>
-            <div className="flex flex-wrap justify-center gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-md">
               {suggestions.map((suggestion, index) => (
                 <button
                   key={index}
                   onClick={() => setInput(suggestion)}
-                  className="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full transition-colors"
+                  className="group flex items-center justify-between p-4 text-sm bg-white hover:bg-blue-50 text-gray-700 hover:text-blue-700 rounded-xl border border-gray-100 hover:border-blue-200 transition-all duration-200 shadow-sm hover:shadow-md"
                 >
-                  {suggestion}
+                  <span className="font-medium text-left">{suggestion}</span>
+                  <ChatIcons.ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0 transition-all" />
                 </button>
               ))}
             </div>
@@ -177,23 +194,23 @@ export default function ChatWidget({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <form onSubmit={handleSubmit} className="p-4 border-t">
-        <div className="flex space-x-2">
+      {/* Input Section */}
+      <div className="p-6 bg-gray-50/50 border-t border-gray-100">
+        <form onSubmit={handleSubmit} className="relative group">
           <textarea
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Digite sua mensagem..."
+            placeholder="Pergunte qualquer coisa sobre o RH..."
             disabled={isLoading}
             rows={1}
-            className="flex-1 resize-none rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+            className="w-full resize-none rounded-2xl border border-gray-200 bg-white px-5 py-4 pr-16 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm hover:shadow-md disabled:bg-gray-50 disabled:cursor-not-allowed"
           />
           <button
             type="submit"
             disabled={isLoading || !input.trim()}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:bg-gray-200 transition-all active:scale-95 shadow-lg shadow-blue-500/20"
           >
             {isLoading ? (
               <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -202,14 +219,14 @@ export default function ChatWidget({
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>
             ) : (
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-              </svg>
+              <ChatIcons.Send className="w-5 h-5" />
             )}
           </button>
+        </form>
+        <div className="mt-3 flex items-center justify-center space-x-2">
+          <span className="text-[10px] text-gray-400 font-medium tracking-wider uppercase">Powered by OpenAI</span>
         </div>
-      </form>
+      </div>
     </div>
   );
 }
@@ -219,32 +236,50 @@ function MessageBubble({ message }: { message: ChatMessage }) {
   const isError = message.type === 'ERROR';
 
   return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
-      <div
-        className={`max-w-[80%] rounded-lg px-4 py-2 ${
-          isUser
-            ? 'bg-blue-600 text-white'
-            : isError
-            ? 'bg-red-100 text-red-800 border border-red-200'
-            : 'bg-gray-100 text-gray-800'
-        }`}
-      >
-        {message.type === 'CALCULATION' || message.type === 'QUERY_RESULT' ? (
-          <div className="prose prose-sm max-w-none">
-            <MarkdownContent content={message.content} />
+    <div className={cn(
+      "flex w-full animate-in fade-in slide-in-from-bottom-2 duration-300",
+      isUser ? 'justify-end' : 'justify-start'
+    )}>
+      <div className={cn(
+        "flex max-w-[85%] space-x-3",
+        isUser ? 'flex-row-reverse space-x-reverse' : 'flex-row'
+      )}>
+        {/* Avatar */}
+        <div className={cn(
+          "flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-sm shadow-sm",
+          isUser ? 'bg-blue-600 text-white' : 'bg-white border border-gray-100 text-gray-600'
+        )}>
+          {isUser ? <ChatIcons.User className="w-4 h-4" /> : <ChatIcons.Bot className="w-4 h-4" />}
+        </div>
+
+        {/* Bubble */}
+        <div className="flex flex-col space-y-1">
+          <div className={cn(
+            "rounded-2xl px-5 py-3 shadow-sm",
+            isUser
+              ? 'bg-blue-600 text-white rounded-tr-none'
+              : isError
+                ? 'bg-red-50 text-red-800 border border-red-100 rounded-tl-none'
+                : 'bg-white border border-gray-100 text-gray-800 rounded-tl-none'
+          )}>
+            {message.type === 'CALCULATION' || message.type === 'QUERY_RESULT' || !isUser ? (
+              <div className="prose prose-sm max-w-none prose-slate">
+                <MarkdownContent content={message.content} />
+              </div>
+            ) : (
+              <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</p>
+            )}
           </div>
-        ) : (
-          <p className="whitespace-pre-wrap">{message.content}</p>
-        )}
-        <div
-          className={`text-xs mt-1 ${
-            isUser ? 'text-blue-200' : 'text-gray-500'
-          }`}
-        >
-          {new Date(message.timestamp).toLocaleTimeString('pt-BR', {
-            hour: '2-digit',
-            minute: '2-digit',
-          })}
+
+          <span className={cn(
+            "text-[10px] font-bold uppercase tracking-wider",
+            isUser ? 'text-gray-400 text-right' : 'text-gray-400'
+          )}>
+            {new Date(message.timestamp).toLocaleTimeString('pt-BR', {
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </span>
         </div>
       </div>
     </div>
@@ -252,31 +287,39 @@ function MessageBubble({ message }: { message: ChatMessage }) {
 }
 
 function MarkdownContent({ content }: { content: string }) {
-  // Simple markdown rendering
+  if (!content) return <div className="flex space-x-1 py-1">
+    <div className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce"></div>
+    <div className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+    <div className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+  </div>;
+
   const lines = content.split('\n');
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {lines.map((line, index) => {
         if (line.startsWith('## ')) {
-          return <h3 key={index} className="font-bold text-lg">{line.slice(3)}</h3>;
+          return <h3 key={index} className="font-bold text-lg text-blue-900 mt-2">{line.slice(3)}</h3>;
         }
         if (line.startsWith('### ')) {
-          return <h4 key={index} className="font-semibold">{line.slice(4)}</h4>;
+          return <h4 key={index} className="font-semibold text-blue-800">{line.slice(4)}</h4>;
         }
         if (line.startsWith('**') && line.endsWith('**')) {
-          return <p key={index} className="font-bold">{line.slice(2, -2)}</p>;
-        }
-        if (line.startsWith('```')) {
-          return null; // Skip code block markers
+          return <p key={index} className="font-bold text-gray-900">{line.slice(2, -2)}</p>;
         }
         if (line.startsWith('|')) {
-          return <code key={index} className="block bg-gray-200 px-2 py-1 text-sm">{line}</code>;
+          return <div key={index} className="overflow-x-auto my-2 border rounded-lg">
+            <code className="block bg-gray-50 px-3 py-2 text-xs font-mono text-blue-700 whitespace-pre">{line}</code>
+          </div>;
         }
-        if (line.startsWith('*') && line.endsWith('*')) {
-          return <p key={index} className="italic text-sm text-gray-600">{line.slice(1, -1)}</p>;
+        if (line.startsWith('*')) {
+          return <div key={index} className="flex items-start space-x-2 ml-2">
+            <span className="text-blue-500 mt-1.5 w-1.5 h-1.5 bg-blue-500 rounded-full flex-shrink-0"></span>
+            <span className="text-sm text-gray-700">{line.slice(1).trim()}</span>
+          </div>;
         }
-        return <p key={index}>{line}</p>;
+        if (line.trim() === '') return <div key={index} className="h-1"></div>;
+        return <p key={index} className="text-sm text-gray-700 leading-relaxed">{line}</p>;
       })}
     </div>
   );

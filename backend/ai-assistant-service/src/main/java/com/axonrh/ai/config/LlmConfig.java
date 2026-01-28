@@ -23,6 +23,7 @@ public class LlmConfig {
     @Bean
     public OpenAiService openAiService() {
         if (openAiApiKey == null || openAiApiKey.isBlank()) {
+            log.warn("OpenAI API key is missing. AI features relying on OpenAI will be unavailable.");
             return null;
         }
         return new OpenAiService(openAiApiKey, Duration.ofSeconds(timeoutSeconds));

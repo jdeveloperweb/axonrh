@@ -9,36 +9,90 @@ import {
     Bell,
     Globe,
     Database,
-    ArrowRight
+    ArrowRight,
+    Building2,
+    Network,
+    Gavel,
+    Lock
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { useAuthStore } from '@/stores/auth-store';
 
 const settingsItems = [
+    {
+        title: 'Dados da Empresa',
+        description: 'Gerencie o perfil jurídico, endereço e contatos da organização.',
+        icon: Building2,
+        href: '/settings/company',
+        color: 'bg-emerald-500',
+        adminOnly: true
+    },
+    {
+        title: 'Estrutura Organizacional',
+        description: 'Configure departamentos, cargos e hierarquias do sistema.',
+        icon: Network,
+        href: '/settings/org',
+        color: 'bg-indigo-500',
+        adminOnly: true
+    },
+    {
+        title: 'Regras Trabalhistas',
+        description: 'Defina jornadas, horas extras, banco de horas e feriados.',
+        icon: Gavel,
+        href: '/settings/labor',
+        color: 'bg-amber-500',
+        adminOnly: true
+    },
     {
         title: 'Usuários e Acessos',
         description: 'Gerencie administradores, papéis e permissões do sistema.',
         icon: Users,
         href: '/settings/users',
-        color: 'bg-blue-500'
+        color: 'bg-blue-500',
+        adminOnly: true
     },
     {
         title: 'Identidade Visual',
         description: 'Personalize logo, cores, tipografia e tema do seu portal.',
         icon: Palette,
         href: '/settings/branding',
-        color: 'bg-purple-500'
+        color: 'bg-purple-500',
+        adminOnly: true
     },
     {
         title: 'Recursos e Módulos',
         description: 'Ative ou desative funcionalidades conforme sua necessidade.',
         icon: SettingsIcon,
         href: '/setup',
-        color: 'bg-orange-500'
+        color: 'bg-orange-500',
+        adminOnly: true
     }
 ];
 
 export default function SettingsHubPage() {
     const router = useRouter();
+    const { user } = useAuthStore();
+    const isAdmin = user?.roles?.includes('ADMIN');
+
+    if (!isAdmin) {
+        return (
+            <div className="flex flex-col items-center justify-center p-12 text-center animate-in fade-in duration-500">
+                <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-6">
+                    <Lock className="w-8 h-8" />
+                </div>
+                <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Acesso Restrito</h1>
+                <p className="text-[var(--color-text-secondary)] mt-2 max-w-md">
+                    Você não tem permissão para acessar as configurações do sistema. Esta área é exclusiva para administradores.
+                </p>
+                <button
+                    className="mt-8 btn-primary"
+                    onClick={() => router.push('/dashboard')}
+                >
+                    Voltar para o Dashboard
+                </button>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">

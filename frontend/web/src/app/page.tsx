@@ -38,8 +38,19 @@ export default function HomePage() {
         }
       } catch (error) {
         console.error('Error loading setup summary:', error);
-        router.replace('/setup');
-        return;
+
+        // Se for erro de conexão ou serviço indisponível, não redireciona para setup
+        // pois pode ser apenas instabilidade momentânea do backend
+        const isConnectionError = error instanceof Error &&
+          (error.message.includes('conexão') ||
+            error.message.includes('timeout') ||
+            error.message.includes('unavailable'));
+
+        if (!isConnectionError) {
+          router.replace('/setup');
+          return;
+        }
+        // Se for erro de conexão, mantém na home (carregando) ou redireciona para login como fallback
       }
 
       if (isAuthenticated) {

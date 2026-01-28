@@ -53,13 +53,25 @@ public class LlmService {
     @Value("${ai.default-provider:openai}")
     private String defaultProvider;
 
+    private void validateOpenAi() {
+        if (openAiService == null) {
+            throw new IllegalStateException("Serviço OpenAI não configurado. Verifique a chave da API (OPENAI_API_KEY).");
+        }
+    }
+
     public ChatResponse chat(ChatRequest request) {
         String provider = request.getProvider() != null ? request.getProvider() : defaultProvider;
 
         return switch (provider.toLowerCase()) {
-            case "openai" -> chatWithOpenAi(request);
+            case "openai" -> {
+                validateOpenAi();
+                yield chatWithOpenAi(request);
+            }
             case "anthropic" -> chatWithAnthropic(request);
-            default -> chatWithOpenAi(request);
+            default -> {
+                validateOpenAi();
+                yield chatWithOpenAi(request);
+            }
         };
     }
 
@@ -67,9 +79,15 @@ public class LlmService {
         String provider = request.getProvider() != null ? request.getProvider() : defaultProvider;
 
         return switch (provider.toLowerCase()) {
-            case "openai" -> streamOpenAi(request);
+            case "openai" -> {
+                validateOpenAi();
+                yield streamOpenAi(request);
+            }
             case "anthropic" -> streamAnthropic(request);
-            default -> streamOpenAi(request);
+            default -> {
+                validateOpenAi();
+                yield streamOpenAi(request);
+            }
         };
     }
 
@@ -104,8 +122,8 @@ public class LlmService {
                     .timestamp(Instant.now())
                     .build();
         } catch (Exception e) {
-            log.error("OpenAI chat error: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to get response from OpenAI", e);
+            log.error("Erro no chat OpenAI: {}", e.getMessage(), e);
+            throw new RuntimeException("Falha ao obter resposta da OpenAI. Por favor, verifique as configurações ou tente novamente mais tarde.", e);
         }
     }
 
