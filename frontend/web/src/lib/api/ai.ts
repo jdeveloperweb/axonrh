@@ -1,4 +1,4 @@
-import { api } from './client';
+import { api, API_BASE_URL } from './client';
 
 // ==================== Types ====================
 
@@ -186,7 +186,7 @@ export const chatApi = {
     message: string,
     conversationId?: string
   ): AsyncGenerator<StreamChunk> {
-    const response = await fetch('/api/v1/ai/chat/stream', {
+    const response = await fetch(`${API_BASE_URL}/ai/chat/stream`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
