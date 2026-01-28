@@ -23,17 +23,20 @@ public class SetupWizardService {
     private final CompanyProfileRepository companyProfileRepository;
     private final com.axonrh.core.setup.repository.DepartmentRepository departmentRepository;
     private final com.axonrh.core.setup.repository.PositionRepository positionRepository;
+    private final com.axonrh.core.setup.repository.TenantRepository tenantRepository;
     @jakarta.persistence.PersistenceContext
     private jakarta.persistence.EntityManager entityManager;
 
     public SetupWizardService(SetupProgressRepository progressRepository,
                               CompanyProfileRepository companyProfileRepository,
                               com.axonrh.core.setup.repository.DepartmentRepository departmentRepository,
-                              com.axonrh.core.setup.repository.PositionRepository positionRepository) {
+                              com.axonrh.core.setup.repository.PositionRepository positionRepository,
+                              com.axonrh.core.setup.repository.TenantRepository tenantRepository) {
         this.progressRepository = progressRepository;
         this.companyProfileRepository = companyProfileRepository;
         this.departmentRepository = departmentRepository;
         this.positionRepository = positionRepository;
+        this.tenantRepository = tenantRepository;
     }
 
     /**
@@ -51,7 +54,7 @@ public class SetupWizardService {
 
     private SetupProgress createNewProgress(UUID tenantId, UUID userId) {
         // Ensure tenant exists before creating progress in case it was missed
-        ensureTenantExists(tenantId, "Draft Tenant");
+        ensureTenantExists(tenantId, "Draft Tenant", null);
 
         SetupProgress progress = new SetupProgress();
         progress.setTenantId(tenantId);
@@ -248,11 +251,50 @@ public class SetupWizardService {
             }
             
             log.info("Salvando perfil da empresa do setup para tenant {}", tenantId);
+            
+            // Lógica de Upsert para evitar erro de chave duplicada
+            Optional<CompanyProfile> existing = companyProfileRepository.findByTenantId(tenantId);
+            if (existing.isPresent()) {
+                CompanyProfile toUpdate = existing.get();
+                updateProfileFields(toUpdate, profile);
+                return companyProfileRepository.save(toUpdate);
+            }
+            
             return companyProfileRepository.save(profile);
         } catch (Exception e) {
             log.error("Falha ao salvar perfil da empresa do setup para tenant {}", tenantId, e);
             throw e;
         }
+    }
+
+    private void updateProfileFields(CompanyProfile target, CompanyProfile source) {
+        target.setLegalName(source.getLegalName());
+        target.setTradeName(source.getTradeName());
+        target.setCnpj(source.getCnpj());
+        target.setEmail(source.getEmail());
+        target.setPhone(source.getPhone());
+        target.setWebsite(source.getWebsite());
+        target.setAddressStreet(source.getAddressStreet());
+        target.setAddressNumber(source.getAddressNumber());
+        target.setAddressComplement(source.getAddressComplement());
+        target.setAddressNeighborhood(source.getAddressNeighborhood());
+        target.setAddressCity(source.getAddressCity());
+        target.setAddressState(source.getAddressState());
+        target.setAddressZipCode(source.getAddressZipCode());
+        target.setAddressCountry(source.getAddressCountry());
+        target.setCompanySize(source.getCompanySize());
+        target.setIndustry(source.getIndustry());
+        target.setCnaeCode(source.getCnaeCode());
+        target.setFoundingDate(source.getFoundingDate());
+        target.setEmployeeCount(source.getEmployeeCount());
+        target.setTaxRegime(source.getTaxRegime());
+        target.setLegalRepresentativeName(source.getLegalRepresentativeName());
+        target.setLegalRepresentativeCpf(source.getLegalRepresentativeCpf());
+        target.setLegalRepresentativeRole(source.getLegalRepresentativeRole());
+        target.setAccountantName(source.getAccountantName());
+        target.setAccountantCrc(source.getAccountantCrc());
+        target.setAccountantEmail(source.getAccountantEmail());
+        target.setAccountantPhone(source.getAccountantPhone());
     }
 
     public Optional<CompanyProfile> getCompanyProfile(UUID tenantId, UUID userId) {
@@ -270,15 +312,25 @@ public class SetupWizardService {
         // Check if CNPJ already exists
         List<CompanyProfile> existing = companyProfileRepository.findAllByCnpj(request.getCnpj());
         if (!existing.isEmpty()) {
-            log.info("Setup já existente para CNPJ {}. Retornando TenantID existente.", request.getCnpj());
-            return existing.get(0).getTenantId();
+            UUID existingTenantId = existing.get(0).getTenantId();
+            log.info("Setup já existente para CNPJ {}. Retornando TenantID existente: {}", request.getCnpj(), existingTenantId);
+            
+            // GARANTIR que o progresso existe, senão dá IllegalStateException: Setup não iniciado
+            if (progressRepository.findByTenantId(existingTenantId).isEmpty()) {
+                log.info("Criando progresso faltante para tenant existente {}", existingTenantId);
+                SetupProgress progress = new SetupProgress();
+                progress.setTenantId(existingTenantId);
+                progressRepository.save(progress);
+            }
+            
+            return existingTenantId;
         }
 
         UUID tenantId = UUID.randomUUID();
         log.info("Iniciando setup para nova empresa. TenantID gerado: {}", tenantId);
 
-        // 0. Criar Tenant (Native Query workaround as Entity is missing)
-        ensureTenantExists(tenantId, request.getCorporateName());
+        // 0. Criar Tenant
+        ensureTenantExists(tenantId, request.getCorporateName(), request.getCnpj());
 
         // 1. Criar perfil inicial
         CompanyProfile profile = new CompanyProfile();
@@ -298,24 +350,22 @@ public class SetupWizardService {
         return tenantId;
     }
 
-    private void ensureTenantExists(UUID tenantId, String name) {
-        try {
-            // Try to insert tenant if not exists. 
-             int count = ((Number) entityManager.createNativeQuery("SELECT count(*) FROM tenants WHERE id = :id")
-                     .setParameter("id", tenantId)
-                     .getSingleResult()).intValue();
-             
-             if (count == 0) {
-                 log.info("Inserindo registro na tabela tenants para ID {}", tenantId);
-                 // Assuming table tenants has (id, name, created_at, updated_at) or similar.
-                 // We will try inserting id and name. If status is required, we add 'ACTIVE'.
-                 entityManager.createNativeQuery("INSERT INTO tenants (id, name, created_at, updated_at) VALUES (:id, :name, NOW(), NOW())")
-                         .setParameter("id", tenantId)
-                         .setParameter("name", name)
-                         .executeUpdate();
-             }
-        } catch (Exception e) {
-            log.warn("Tentativa de criar tenant via SQL nativo falhou. Erro: {}", e.getMessage());
+    private void ensureTenantExists(UUID tenantId, String name, String cnpj) {
+        if (!tenantRepository.existsById(tenantId)) {
+            log.info("Criando registro na tabela tenants para ID {}", tenantId);
+            com.axonrh.core.setup.entity.Tenant tenant = new com.axonrh.core.setup.entity.Tenant();
+            tenant.setId(tenantId);
+            tenant.setName(name);
+            tenant.setCnpj(cnpj);
+            
+            // Gerar subdomain e schema_name obrigatórios
+            String base = name.toLowerCase().replaceAll("[^a-z0-9]", "");
+            if (base.isEmpty()) base = "tenant" + tenantId.toString().substring(0, 8);
+            tenant.setSubdomain(base + "-" + tenantId.toString().substring(0, 4));
+            tenant.setSchemaName("tenant_" + tenantId.toString().replace("-", "_"));
+            tenant.setStatus("ACTIVE");
+            
+            tenantRepository.save(tenant);
         }
     }
 
