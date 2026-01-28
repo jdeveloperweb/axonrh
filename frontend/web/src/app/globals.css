@@ -119,6 +119,10 @@
     @apply border-[var(--color-border)];
   }
 
+  html {
+    font-size: var(--font-size-base, 16px);
+  }
+
   body {
     @apply bg-[var(--color-background)] text-[var(--color-text-primary)];
   }

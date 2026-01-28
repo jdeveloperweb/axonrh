@@ -16,11 +16,13 @@ interface ThemeColors {
 interface TenantTheme {
   tenantId: string;
   logoUrl?: string;
+  logoWidth?: number;
   logoDarkUrl?: string;
   faviconUrl?: string;
   colors: ThemeColors;
   darkColors?: ThemeColors;
   customCss?: string;
+  baseFontSize?: number;
 }
 
 interface ThemeState {
@@ -65,6 +67,11 @@ export const useThemeStore = create<ThemeState>()(
 
         if (tenantTheme) {
           applyColorsToDocument(tenantTheme.colors);
+
+          // Apply font settings
+          if (tenantTheme.baseFontSize) {
+            applyFontSize(tenantTheme.baseFontSize);
+          }
         }
       },
 
@@ -84,18 +91,24 @@ export const useThemeStore = create<ThemeState>()(
               textSecondary: defaultColors.textSecondary,
             };
 
-            set({
-              tenantTheme: {
-                tenantId: localStorage.getItem('setup_tenant_id') || '',
-                logoUrl: branding.logoUrl,
-                colors: colors
-              }
-            });
+            const tenantTheme: TenantTheme = {
+              tenantId: localStorage.getItem('setup_tenant_id') || '',
+              logoUrl: branding.logoUrl,
+              logoWidth: branding.logoWidth, // Mapped
+              colors: colors,
+              baseFontSize: branding.baseFontSize // Mapped
+            };
+
+            set({ tenantTheme });
 
             applyColorsToDocument(colors);
 
             if (branding.fontFamily) {
               document.documentElement.style.setProperty('--font-family', branding.fontFamily);
+            }
+
+            if (branding.baseFontSize) {
+              applyFontSize(branding.baseFontSize);
             }
           }
         } catch (error) {
@@ -116,6 +129,11 @@ export const useThemeStore = create<ThemeState>()(
         if (tenantTheme.faviconUrl) {
           updateFavicon(tenantTheme.faviconUrl);
         }
+
+        // Aplica fonte
+        if (tenantTheme.baseFontSize) {
+          applyFontSize(tenantTheme.baseFontSize);
+        }
       },
 
       applyTenantColors: (colors: ThemeColors) => {
@@ -126,6 +144,7 @@ export const useThemeStore = create<ThemeState>()(
         set({ tenantTheme: null });
         applyColorsToDocument(defaultColors);
         removeCustomCss();
+        document.documentElement.style.removeProperty('--font-size-base');
       },
     }),
     {
@@ -152,6 +171,13 @@ function applyThemeToDocument(theme: Theme) {
   } else {
     root.classList.add(theme);
   }
+}
+
+function applyFontSize(size: number) {
+  if (typeof document === 'undefined') return;
+  document.documentElement.style.setProperty('--font-size-base', `${size}px`);
+  // Update root font size to affect rem units if desired, or keep as variable for specific use
+  document.documentElement.style.fontSize = `${size}px`;
 }
 
 function applyColorsToDocument(colors: ThemeColors) {

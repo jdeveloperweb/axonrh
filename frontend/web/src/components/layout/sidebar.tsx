@@ -69,7 +69,12 @@ export function Sidebar() {
         {!isCollapsed && (
           <div className="flex items-center gap-2">
             {tenantTheme?.logoUrl ? (
-              <img src={tenantTheme.logoUrl} alt="Logo" className="h-8" />
+              <img
+                src={tenantTheme.logoUrl}
+                alt="Logo"
+                style={{ width: tenantTheme.logoWidth ? `${tenantTheme.logoWidth}px` : 'auto', maxHeight: '40px' }}
+                className="object-contain"
+              />
             ) : (
               <span className="text-xl font-bold text-[var(--color-primary)]">AxonRH</span>
             )}
