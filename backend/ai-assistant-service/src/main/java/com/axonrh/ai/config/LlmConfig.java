@@ -1,6 +1,6 @@
 package com.axonrh.ai.config;
 
-import com.theokanning.openai.service.OpenAiService;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -16,20 +16,12 @@ public class LlmConfig {
     @Value("${ai.openai.api-key:}")
     private String openAiApiKey;
 
-    @Value("${ai.openai.timeout-seconds:60}")
-    private int timeoutSeconds;
+
 
     @Value("${ai.anthropic.api-key:}")
     private String anthropicApiKey;
 
-    @Bean
-    public OpenAiService openAiService() {
-        if (openAiApiKey == null || openAiApiKey.isBlank()) {
-            log.warn("OpenAI API key is missing. AI features relying on OpenAI will be unavailable.");
-            return null;
-        }
-        return new OpenAiService(openAiApiKey, Duration.ofSeconds(timeoutSeconds));
-    }
+
 
     @Bean
     public WebClient anthropicWebClient() {
