@@ -1,12 +1,14 @@
 package com.axonrh.core.setup.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "positions", schema = "shared")
+@Table(name = "positions", schema = "shared",
+       uniqueConstraints = @UniqueConstraint(name = "uk_positions_code_tenant", columnNames = {"tenant_id", "code"}))
 public class Position {
 
     @Id
@@ -39,6 +41,7 @@ public class Position {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id")
+    @JsonIgnore
     private Department department;
 
     @Column(name = "is_active")

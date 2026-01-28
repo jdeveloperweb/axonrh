@@ -181,14 +181,7 @@ public class SetupWizardService {
      * Obtem resumo do progresso.
      */
     public SetupSummary getSummary(UUID tenantId, UUID userId) {
-        SetupProgress progress;
-        if (tenantId != null) {
-            progress = progressRepository.findByTenantId(tenantId)
-                    .orElseThrow(() -> new IllegalStateException("Setup não iniciado"));
-        } else {
-            progress = progressRepository.findByCreatedBy(userId)
-                    .orElseThrow(() -> new IllegalStateException("Setup não iniciado"));
-        }
+        SetupProgress progress = getOrCreateProgress(tenantId, userId);
 
         List<StepInfo> steps = new ArrayList<>();
         steps.add(new StepInfo(1, "Dados da Empresa", progress.isStep1CompanyData(), isStepRequired(1)));
@@ -220,9 +213,7 @@ public class SetupWizardService {
      * Recupera dados de uma etapa.
      */
     public Map<String, Object> getStepData(UUID tenantId, UUID userId, int step) {
-        UUID effectiveTenantId = resolveTenantId(tenantId, userId);
-        SetupProgress progress = progressRepository.findByTenantId(effectiveTenantId)
-                .orElseThrow(() -> new IllegalStateException("Setup não iniciado"));
+        SetupProgress progress = getOrCreateProgress(tenantId, userId);
 
         return progress.getStepData(step);
     }
@@ -233,7 +224,11 @@ public class SetupWizardService {
         }
         return progressRepository.findByCreatedBy(userId)
                 .map(SetupProgress::getTenantId)
-                .orElseThrow(() -> new IllegalStateException("Setup não iniciado e tenant não encontrado"));
+                .orElseGet(() -> {
+                    // Fallback para getOrCreateProgress se não encontrar por userId
+                    log.info("TenantID não resolvido por userId, criando novo progresso...");
+                    return getOrCreateProgress(null, userId).getTenantId();
+                });
     }
 
     // Step 1: Save company data
@@ -371,24 +366,26 @@ public class SetupWizardService {
 
     // Org Structure Management
     public List<com.axonrh.core.setup.entity.Department> getDepartments(UUID tenantId) {
-        // Simple findAll for now, ideally filter by tenantId on repository
-        // But DepartmentRepository extends JpaRepository<Department, UUID>, we need to add findByTenantId there? 
-        // We added `findByTenantIdAndCode`.
-        // Let's assume we can use Example or add findByTenantId.
-        // For now, let's use findAll and filter in memory if needed or trust we will add findByTenantId.
-        // Wait, I didn't add findByTenantId to repo. I added findByTenantIdAndCode.
-        // I should have added findByTenantId. I'll rely on stream filter or add it properly.
-        // For speed, let's just findAll() and filter stream since tenant data is small during setup.
-        // Actually, shared DB means ALL tenants. Filtering is CRITICAL.
-        // I will trust that I can add the method to the repo or handle it.
-        // Let's use `findAll` and filter.
-        return departmentRepository.findAll().stream()
-                .filter(d -> d.getTenantId().equals(tenantId))
-                .toList();
+        return departmentRepository.findAllByTenantId(tenantId);
     }
 
     public com.axonrh.core.setup.entity.Department saveDepartment(UUID tenantId, com.axonrh.core.setup.entity.Department department) {
         department.setTenantId(tenantId);
+        
+        // Lógica de Upsert por Code
+        Optional<com.axonrh.core.setup.entity.Department> existing = 
+                departmentRepository.findByTenantIdAndCode(tenantId, department.getCode());
+        
+        if (existing.isPresent()) {
+            com.axonrh.core.setup.entity.Department toUpdate = existing.get();
+            toUpdate.setName(department.getName());
+            toUpdate.setDescription(department.getDescription());
+            toUpdate.setParent(department.getParent());
+            toUpdate.setManagerId(department.getManagerId());
+            toUpdate.setIsActive(department.getIsActive());
+            return departmentRepository.save(toUpdate);
+        }
+        
         return departmentRepository.save(department);
     }
 
@@ -401,13 +398,29 @@ public class SetupWizardService {
     }
 
     public List<com.axonrh.core.setup.entity.Position> getPositions(UUID tenantId) {
-        return positionRepository.findAll().stream()
-                .filter(p -> p.getTenantId().equals(tenantId))
-                .toList();
+        return positionRepository.findAllByTenantId(tenantId);
     }
 
     public com.axonrh.core.setup.entity.Position savePosition(UUID tenantId, com.axonrh.core.setup.entity.Position position) {
         position.setTenantId(tenantId);
+        
+        // Lógica de Upsert por Code
+        Optional<com.axonrh.core.setup.entity.Position> existing = 
+                positionRepository.findByTenantIdAndCode(tenantId, position.getCode());
+        
+        if (existing.isPresent()) {
+            com.axonrh.core.setup.entity.Position toUpdate = existing.get();
+            toUpdate.setTitle(position.getTitle());
+            toUpdate.setDescription(position.getDescription());
+            toUpdate.setCboCode(position.getCboCode());
+            toUpdate.setSalaryRangeMin(position.getSalaryRangeMin());
+            toUpdate.setSalaryRangeMax(position.getSalaryRangeMax());
+            toUpdate.setLevel(position.getLevel());
+            toUpdate.setDepartment(position.getDepartment());
+            toUpdate.setIsActive(position.getIsActive());
+            return positionRepository.save(toUpdate);
+        }
+        
         return positionRepository.save(position);
     }
 

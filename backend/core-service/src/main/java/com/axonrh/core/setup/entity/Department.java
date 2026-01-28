@@ -1,5 +1,6 @@
 package com.axonrh.core.setup.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -7,7 +8,8 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "departments", schema = "shared")
+@Table(name = "departments", schema = "shared",
+       uniqueConstraints = @UniqueConstraint(name = "uk_departments_code_tenant", columnNames = {"tenant_id", "code"}))
 public class Department {
 
     @Id
@@ -28,9 +30,11 @@ public class Department {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
+    @JsonIgnore
     private Department parent;
 
     @OneToMany(mappedBy = "parent")
+    @JsonIgnore
     private List<Department> children = new ArrayList<>();
 
     @Column(name = "manager_id")
