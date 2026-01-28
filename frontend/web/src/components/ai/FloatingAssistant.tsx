@@ -19,7 +19,7 @@ export default function FloatingAssistant() {
         <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
             {/* Chat Window */}
             {isOpen && (
-                <div className="mb-4 w-[400px] h-[600px] max-h-[calc(100vh-120px)] shadow-2xl animate-in slide-in-from-bottom-4 fade-in duration-300">
+                <div className="mb-4 w-[520px] h-[720px] max-h-[calc(100vh-120px)] shadow-2xl animate-in slide-in-from-bottom-4 fade-in duration-300">
                     <ChatWidget
                         onClose={() => setIsOpen(false)}
                         className="h-full border-2 border-blue-100/50"

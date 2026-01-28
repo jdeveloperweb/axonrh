@@ -352,6 +352,51 @@ function parseInlineFormatting(text: string): React.ReactNode[] {
   return parts.length > 0 ? parts : [text];
 }
 
+// Formata valores de célula: detecta datas ISO e converte para dd/MM/yyyy
+function formatCellValue(value: string): string {
+  const trimmed = value.trim();
+
+  // Detecta formato de data ISO: YYYY-MM-DD ou YYYY-MM-DDTHH:mm:ss
+  const isoDateRegex = /^(\d{4})-(\d{2})-(\d{2})(T.*)?$/;
+  const match = trimmed.match(isoDateRegex);
+
+  if (match) {
+    const [, year, month, day] = match;
+    return `${day}/${month}/${year}`;
+  }
+
+  return trimmed;
+}
+
+// Exporta tabela para XLSX
+function exportTableToXLSX(tableData: string[][]) {
+  if (tableData.length === 0) return;
+
+  // Usa tab-separated format que pode ser aberto no Excel
+  const csvContent = tableData.map(row =>
+    row.map(cell => {
+      const formatted = formatCellValue(cell);
+      // Escape quotes and wrap in quotes if contains comma/tab/newline
+      if (formatted.includes('\t') || formatted.includes('\n') || formatted.includes('"')) {
+        return '"' + formatted.replace(/"/g, '""') + '"';
+      }
+      return formatted;
+    }).join('\t')
+  ).join('\n');
+
+  // Create Blob with BOM for Excel to recognize UTF-8
+  const BOM = '\uFEFF';
+  const blob = new Blob([BOM + csvContent], { type: 'application/vnd.ms-excel;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `dados_${new Date().toISOString().split('T')[0]}.xls`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
 function MarkdownContent({ content }: { content: string }) {
   if (!content) return <div className="flex space-x-1 py-1">
     <div className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce"></div>
@@ -365,30 +410,45 @@ function MarkdownContent({ content }: { content: string }) {
 
   const flushTable = (index: number) => {
     if (currentTable.length > 0) {
+      const tableDataForExport = [...currentTable];
       elements.push(
-        <div key={`table-${index}`} className="my-4 overflow-hidden border border-gray-200 rounded-xl shadow-sm">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50/80">
-              <tr>
-                {currentTable[0].map((cell, i) => (
-                  <th key={i} className="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
-                    {parseInlineFormatting(cell.trim())}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-100">
-              {currentTable.slice(1).map((row, i) => (
-                <tr key={i} className="hover:bg-blue-50/50 transition-colors">
-                  {row.map((cell, j) => (
-                    <td key={j} className="px-4 py-3 text-sm text-gray-700">
+        <div key={`table-${index}`} className="my-4">
+          <div className="flex justify-end mb-2">
+            <button
+              onClick={() => exportTableToXLSX(tableDataForExport)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200"
+              title="Exportar para Excel"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Exportar XLSX
+            </button>
+          </div>
+          <div className="overflow-hidden border border-gray-200 rounded-xl shadow-sm">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50/80">
+                <tr>
+                  {currentTable[0].map((cell, i) => (
+                    <th key={i} className="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                       {parseInlineFormatting(cell.trim())}
-                    </td>
+                    </th>
                   ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-100">
+                {currentTable.slice(1).map((row, i) => (
+                  <tr key={i} className="hover:bg-blue-50/50 transition-colors">
+                    {row.map((cell, j) => (
+                      <td key={j} className="px-4 py-3 text-sm text-gray-700">
+                        {parseInlineFormatting(formatCellValue(cell))}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       );
       currentTable = [];

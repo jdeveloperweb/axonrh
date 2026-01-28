@@ -145,8 +145,11 @@ export interface Department {
   id: string;
   name: string;
   code?: string;
+  description?: string;
   parentId?: string;
   managerId?: string;
+  managerName?: string;
+  employeeCount?: number;
   active: boolean;
 }
 
