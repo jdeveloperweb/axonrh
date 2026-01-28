@@ -23,7 +23,7 @@ spring:
   # MongoDB for AI conversations
   data:
     mongodb:
-      uri: ${MONGODB_URI:mongodb://axonrh:axonrh123@localhost:27017/axonrh_conversations}
+      uri: ${MONGODB_URI:mongodb://axonrh:axonrh123@localhost:27017/axonrh_conversations?connectTimeoutMS=30000&socketTimeoutMS=30000}
 
 ai:
   openai:

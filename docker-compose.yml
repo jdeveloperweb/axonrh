@@ -11,7 +11,7 @@ x-backend-env: &backend-env
   MINIO_ENDPOINT: http://minio:9000
   MINIO_ACCESS_KEY: axonrh
   MINIO_SECRET_KEY: axonrh123
-  MONGODB_URI: mongodb://axonrh:axonrh123@mongodb:27017/axonrh_conversations?authSource=admin
+  MONGODB_URI: mongodb://axonrh:axonrh123@mongodb:27017/axonrh_conversations?authSource=admin&connectTimeoutMS=30000&socketTimeoutMS=30000
   SPRING_FLYWAY_ENABLED: "false"
   SPRING_LIQUIBASE_ENABLED: "false"
   SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092

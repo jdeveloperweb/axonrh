@@ -145,4 +145,21 @@ public class EmployeeController {
         long count = employeeService.countActive();
         return ResponseEntity.ok(count);
     }
+
+    // DEBUG: Exception Handler temporario
+    @ExceptionHandler(org.springframework.web.bind.MethodArgumentNotValidException.class)
+    public ResponseEntity<Object> handleValidationExceptions(org.springframework.web.bind.MethodArgumentNotValidException ex) {
+        System.err.println(">>> [DEBUG-TRACE] VALIDATION ERROR: " + ex.getMessage());
+        ex.getBindingResult().getAllErrors().forEach(error -> {
+            System.err.println(">>> [DEBUG-TRACE] FIELD ERROR: " + error.toString());
+        });
+        return ResponseEntity.badRequest().body(ex.getBindingResult().getAllErrors());
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Object> handleAllExceptions(Exception ex) {
+        System.err.println(">>> [DEBUG-TRACE] GENERIC ERROR: " + ex.getMessage());
+        ex.printStackTrace();
+        return ResponseEntity.internalServerError().body(ex.getMessage());
+    }
 }
