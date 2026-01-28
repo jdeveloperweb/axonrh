@@ -95,12 +95,12 @@ public class SecurityConfig {
                 }
             }
             
-             // Tenta extrair authorites do campo 'authorities' direto
-            if (jwt.hasClaim("authorities")) {
+             // Tenta extrair permissions do campo 'permissions' (padrao AxonRH)
+            if (jwt.hasClaim("permissions")) {
                 @SuppressWarnings("unchecked")
-                java.util.List<String> auths = jwt.getClaimAsStringList("authorities");
-                if (auths != null) {
-                    auths.forEach(auth -> authorities.add(new org.springframework.security.core.authority.SimpleGrantedAuthority(auth)));
+                java.util.List<String> perms = jwt.getClaimAsStringList("permissions");
+                if (perms != null) {
+                    perms.forEach(perm -> authorities.add(new org.springframework.security.core.authority.SimpleGrantedAuthority(perm)));
                 }
             }
 

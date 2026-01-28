@@ -18,6 +18,8 @@ import {
   Calculator,
   Database,
   Bot,
+  Building2,
+  UserCog,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
@@ -75,6 +77,8 @@ const navGroups: NavGroup[] = [
   {
     title: 'ADMINISTRAÇÃO',
     items: [
+      { label: 'Departamentos', href: '/departments', icon: Building2, permission: 'DEPARTMENT:READ' },
+      { label: 'Gestores', href: '/managers', icon: UserCog, permission: 'MANAGER:READ' },
       { label: 'Configurações', href: '/settings', icon: Settings, permission: 'CONFIG:READ' },
     ]
   }

@@ -323,6 +323,35 @@ function MessageBubble({ message }: { message: ChatMessage }) {
   );
 }
 
+// Processa texto inline com negrito **texto**
+function parseInlineFormatting(text: string): React.ReactNode[] {
+  const parts: React.ReactNode[] = [];
+  const regex = /\*\*(.+?)\*\*/g;
+  let lastIndex = 0;
+  let match;
+
+  while ((match = regex.exec(text)) !== null) {
+    // Texto antes do negrito
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+    // Texto em negrito
+    parts.push(
+      <strong key={match.index} className="font-semibold text-gray-900">
+        {match[1]}
+      </strong>
+    );
+    lastIndex = match.index + match[0].length;
+  }
+
+  // Texto restante após o último match
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+
+  return parts.length > 0 ? parts : [text];
+}
+
 function MarkdownContent({ content }: { content: string }) {
   if (!content) return <div className="flex space-x-1 py-1">
     <div className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce"></div>
@@ -343,7 +372,7 @@ function MarkdownContent({ content }: { content: string }) {
               <tr>
                 {currentTable[0].map((cell, i) => (
                   <th key={i} className="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
-                    {cell.trim()}
+                    {parseInlineFormatting(cell.trim())}
                   </th>
                 ))}
               </tr>
@@ -353,7 +382,7 @@ function MarkdownContent({ content }: { content: string }) {
                 <tr key={i} className="hover:bg-blue-50/50 transition-colors">
                   {row.map((cell, j) => (
                     <td key={j} className="px-4 py-3 text-sm text-gray-700">
-                      {cell.trim()}
+                      {parseInlineFormatting(cell.trim())}
                     </td>
                   ))}
                 </tr>
@@ -383,22 +412,23 @@ function MarkdownContent({ content }: { content: string }) {
     }
 
     if (line.startsWith('## ')) {
-      elements.push(<h3 key={index} className="font-bold text-lg text-blue-900 mt-4 mb-2">{line.slice(3)}</h3>);
+      elements.push(<h3 key={index} className="font-bold text-lg text-blue-900 mt-4 mb-2">{parseInlineFormatting(line.slice(3))}</h3>);
     } else if (line.startsWith('### ')) {
-      elements.push(<h4 key={index} className="font-semibold text-blue-800 mt-3 mb-1">{line.slice(4)}</h4>);
+      elements.push(<h4 key={index} className="font-semibold text-blue-800 mt-3 mb-1">{parseInlineFormatting(line.slice(4))}</h4>);
     } else if (line.startsWith('**') && line.endsWith('**')) {
       elements.push(<p key={index} className="font-bold text-gray-900 my-1">{line.slice(2, -2)}</p>);
     } else if (line.startsWith('* ') || line.startsWith('- ')) {
       elements.push(
         <div key={index} className="flex items-start space-x-2 ml-2 my-1">
           <span className="text-blue-500 mt-1.5 w-1.5 h-1.5 bg-blue-500 rounded-full flex-shrink-0"></span>
-          <span className="text-sm text-gray-700">{line.slice(2).trim()}</span>
+          <span className="text-sm text-gray-700">{parseInlineFormatting(line.slice(2).trim())}</span>
         </div>
       );
     } else if (trimmed === '') {
       elements.push(<div key={index} className="h-2"></div>);
     } else {
-      elements.push(<p key={index} className="text-sm text-gray-700 leading-relaxed my-1">{line}</p>);
+      // Processa negrito inline em linhas normais
+      elements.push(<p key={index} className="text-sm text-gray-700 leading-relaxed my-1">{parseInlineFormatting(line)}</p>);
     }
   });
 
