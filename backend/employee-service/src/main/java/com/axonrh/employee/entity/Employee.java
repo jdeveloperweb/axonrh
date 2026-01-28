@@ -59,6 +59,10 @@ public class Employee {
     private Gender gender;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "race", length = 20)
+    private Race race;
+
+    @Enumerated(EnumType.STRING)
     @Column(name = "marital_status", length = 20)
     private MaritalStatus maritalStatus;
 

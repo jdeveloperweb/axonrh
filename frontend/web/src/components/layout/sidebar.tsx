@@ -31,15 +31,41 @@ interface NavItem {
 
 // ==================== Navigation Items ====================
 
-const navItems: NavItem[] = [
-  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { label: 'Colaboradores', href: '/employees', icon: Users, permission: 'EMPLOYEE:READ' },
-  { label: 'Ponto', href: '/timesheet', icon: Clock, permission: 'TIMESHEET:READ' },
-  { label: 'Ferias', href: '/vacation', icon: Calendar, permission: 'VACATION:READ' },
-  { label: 'Desempenho', href: '/performance', icon: BarChart3, permission: 'PERFORMANCE:READ' },
-  { label: 'Treinamentos', href: '/learning', icon: BookOpen, permission: 'LEARNING:READ' },
-  { label: 'Assistente IA', href: '/assistant', icon: MessageSquare },
-  { label: 'Configuracoes', href: '/settings', icon: Settings, permission: 'CONFIG:READ' },
+// ==================== Navigation Groups ====================
+interface NavGroup {
+  title: string;
+  items: NavItem[];
+}
+
+const navGroups: NavGroup[] = [
+  {
+    title: 'PESSOAS',
+    items: [
+      { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+      { label: 'Colaboradores', href: '/employees', icon: Users, permission: 'EMPLOYEE:READ' },
+      // { label: 'Organograma', href: '/org-chart', icon: Network }, // Future
+      // { label: 'Departamentos', href: '/departments', icon: Building2 }, // Future
+      // { label: 'Cargos', href: '/positions', icon: Briefcase }, // Future
+      // { label: 'Vagas', href: '/vacancies', icon: Target }, // Future
+      { label: 'Ponto', href: '/timesheet', icon: Clock, permission: 'TIMESHEET:READ' },
+      { label: 'Férias', href: '/vacation', icon: Calendar, permission: 'VACATION:READ' },
+      { label: 'Desempenho', href: '/performance', icon: BarChart3, permission: 'PERFORMANCE:READ' },
+      { label: 'Treinamentos', href: '/learning', icon: BookOpen, permission: 'LEARNING:READ' },
+      { label: 'Assistente IA', href: '/assistant', icon: MessageSquare },
+    ]
+  },
+  {
+    title: 'GERAL',
+    items: [
+      // { label: 'Inventário', href: '/inventory', icon: Package }, // Future
+    ]
+  },
+  {
+    title: 'ADMINISTRAÇÃO',
+    items: [
+      { label: 'Configurações', href: '/settings', icon: Settings, permission: 'CONFIG:READ' },
+    ]
+  }
 ];
 
 // ==================== Component ====================
@@ -55,7 +81,7 @@ export function Sidebar() {
     return user?.permissions?.includes(permission) ?? false;
   };
 
-  const filteredItems = navItems.filter((item) => hasPermission(item.permission));
+
 
   return (
     <aside
@@ -95,33 +121,49 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 py-4 px-2 overflow-y-auto">
-        <ul className="space-y-1">
-          {filteredItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+        <div className="space-y-6">
+          {navGroups.map((group, groupIndex) => {
+            const groupFilteredItems = group.items.filter((item) => hasPermission(item.permission));
+            if (groupFilteredItems.length === 0) return null;
 
             return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className={cn(
-                    'flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-md)]',
-                    'transition-colors duration-[var(--transition-fast)]',
-                    'hover:bg-[var(--color-surface-variant)]',
-                    isActive && 'bg-[var(--color-primary)] text-[var(--color-text-on-primary)]',
-                    isCollapsed && 'justify-center'
-                  )}
-                  title={isCollapsed ? item.label : undefined}
-                >
-                  <Icon className="w-5 h-5 flex-shrink-0" />
-                  {!isCollapsed && (
-                    <span className="font-medium">{item.label}</span>
-                  )}
-                </Link>
-              </li>
+              <div key={groupIndex}>
+                {!isCollapsed && group.title && (
+                  <h3 className="px-3 mb-2 text-xs font-semibold text-[var(--color-text-tertiary)] tracking-wider">
+                    {group.title}
+                  </h3>
+                )}
+                <ul className="space-y-1">
+                  {groupFilteredItems.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+
+                    return (
+                      <li key={item.href}>
+                        <Link
+                          href={item.href}
+                          className={cn(
+                            'flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-md)]',
+                            'transition-colors duration-[var(--transition-fast)]',
+                            'hover:bg-[var(--color-surface-variant)]',
+                            isActive && 'bg-[var(--color-primary)] text-[var(--color-text-on-primary)]',
+                            isCollapsed && 'justify-center'
+                          )}
+                          title={isCollapsed ? item.label : undefined}
+                        >
+                          <Icon className="w-5 h-5 flex-shrink-0" />
+                          {!isCollapsed && (
+                            <span className="font-medium">{item.label}</span>
+                          )}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
             );
           })}
-        </ul>
+        </div>
       </nav>
 
       {/* User Section */}

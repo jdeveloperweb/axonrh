@@ -944,6 +944,18 @@ function Step4Branding({
     'Montserrat'
   ];
 
+  const getFontFamilyVar = (name: string) => {
+    switch (name) {
+      case 'Plus Jakarta Sans': return 'var(--font-primary)';
+      case 'Outfit': return 'var(--font-secondary)';
+      case 'Inter': return 'var(--font-inter)';
+      case 'Roboto': return 'var(--font-roboto)';
+      case 'Open Sans': return 'var(--font-opensans)';
+      case 'Montserrat': return 'var(--font-montserrat)';
+      default: return 'sans-serif';
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
       <div className="space-y-8">
@@ -1042,7 +1054,7 @@ function Step4Branding({
 
         <div
           className="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200"
-          style={{ fontFamily: config.fontFamily }}
+          style={{ fontFamily: getFontFamilyVar(config.fontFamily) }}
         >
           {/* Mock Header */}
           <div className="h-14 px-4 flex items-center justify-between border-b" style={{ backgroundColor: '#ffffff' }}>
@@ -1058,7 +1070,15 @@ function Step4Branding({
 
           {/* Mock Content */}
           <div className="p-6 space-y-4" style={{ fontSize: config.baseFontSize }}>
-            <h5 className="font-bold text-xl" style={{ color: config.secondaryColor }}>Seja bem-vindo ao AxonRH</h5>
+            <h5 className="font-bold text-xl flex items-center gap-2" style={{ color: config.secondaryColor }}>
+              Seja bem-vindo ao AxonRH
+              <span
+                className="text-[10px] px-2 py-0.5 rounded-full text-white uppercase tracking-wider"
+                style={{ backgroundColor: config.accentColor }}
+              >
+                Novo
+              </span>
+            </h5>
             <p className="text-slate-500 leading-relaxed">
               Esta é uma prévia de como o sistema será exibido para seus colaboradores.
             </p>
@@ -1092,12 +1112,8 @@ function Step4Branding({
                 Botão Primário
               </button>
               <button
-                className="flex-1 py-2.5 rounded-xl font-bold border-2 transition-transform active:scale-95 text-xs uppercase"
-                style={{
-                  color: config.secondaryColor,
-                  borderColor: config.secondaryColor,
-                  backgroundColor: 'transparent'
-                }}
+                className="flex-1 py-2.5 rounded-xl font-bold text-white shadow-lg transition-transform active:scale-95 text-xs uppercase"
+                style={{ backgroundColor: config.secondaryColor }}
               >
                 Secundário
               </button>

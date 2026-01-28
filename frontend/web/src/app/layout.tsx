@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Outfit, Plus_Jakarta_Sans } from 'next/font/google';
+import { Outfit, Plus_Jakarta_Sans, Inter, Roboto, Open_Sans, Montserrat } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/components/providers';
 
@@ -11,6 +11,27 @@ const plusJakarta = Plus_Jakarta_Sans({
 const outfit = Outfit({
   subsets: ['latin'],
   variable: '--font-secondary',
+  display: 'swap',
+});
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+});
+const roboto = Roboto({
+  weight: ['400', '500', '700'],
+  subsets: ['latin'],
+  variable: '--font-roboto',
+  display: 'swap',
+});
+const openSans = Open_Sans({
+  subsets: ['latin'],
+  variable: '--font-opensans',
+  display: 'swap',
+});
+const montserrat = Montserrat({
+  subsets: ['latin'],
+  variable: '--font-montserrat',
   display: 'swap',
 });
 
@@ -29,7 +50,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <body className={`${plusJakarta.variable} ${outfit.variable} font-sans`}>
+      <body className={`${plusJakarta.variable} ${outfit.variable} ${inter.variable} ${roboto.variable} ${openSans.variable} ${montserrat.variable} font-sans`}>
         {children}
         <StatusIndicator />
       </body>

@@ -8,6 +8,16 @@ export interface DashboardStats {
     employeeChange: number;
     presenceChange: number;
     pendingChange: number;
+
+    // Diversity
+    femaleRepresentation: number;
+    diversityIndex: number;
+    averageAge: number;
+
+    genderDistribution: Record<string, number>;
+    raceDistribution: Record<string, number>;
+    // Partial typing for now as we might not use all maps yet
+
 }
 
 export const dashboardApi = {

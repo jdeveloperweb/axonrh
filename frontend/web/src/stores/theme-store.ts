@@ -104,7 +104,8 @@ export const useThemeStore = create<ThemeState>()(
             applyColorsToDocument(colors);
 
             if (branding.fontFamily) {
-              document.documentElement.style.setProperty('--font-family', branding.fontFamily);
+              const fontVar = getFontVariable(branding.fontFamily);
+              document.body.style.fontFamily = `${fontVar}, sans-serif`;
             }
 
             if (branding.baseFontSize) {
@@ -134,6 +135,10 @@ export const useThemeStore = create<ThemeState>()(
         if (tenantTheme.baseFontSize) {
           applyFontSize(tenantTheme.baseFontSize);
         }
+
+        // Aplica família da fonte se existir nos customCss ou explicitamente (assumindo que o branding foi salvo)
+        // Nota: A lógica de fetchBranding já aplica. Se setTenantTheme for chamado manualmente, precisaria da info da fonte.
+        // O TenantTheme interface não tem fontFamily explícito, mas vamos assumir que isso é persistido no reload.
       },
 
       applyTenantColors: (colors: ThemeColors) => {
@@ -236,5 +241,17 @@ function updateFavicon(url: string) {
     newLink.rel = 'icon';
     newLink.href = url;
     document.head.appendChild(newLink);
+  }
+}
+
+function getFontVariable(name: string): string {
+  switch (name) {
+    case 'Plus Jakarta Sans': return 'var(--font-primary)';
+    case 'Outfit': return 'var(--font-secondary)';
+    case 'Inter': return 'var(--font-inter)';
+    case 'Roboto': return 'var(--font-roboto)';
+    case 'Open Sans': return 'var(--font-opensans)';
+    case 'Montserrat': return 'var(--font-montserrat)';
+    default: return 'var(--font-primary)';
   }
 }
