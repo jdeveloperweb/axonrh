@@ -106,9 +106,19 @@ public class LlmService {
                     .responseTimeMs(System.currentTimeMillis() - startTime)
                     .timestamp(Instant.now())
                     .build();
+        } catch (WebClientResponseException e) {
+            log.error("Erro na comunicação com OpenAI Chat ({}): {} - Body: {}", 
+                    openAiModel, 
+                    e.getMessage(), 
+                    e.getResponseBodyAsString());
+            
+            if (e.getStatusCode().value() == 401) {
+                throw new RuntimeException("Chave de API da OpenAI inválida ou expirada.", e);
+            }
+            throw new RuntimeException("Erro na API da OpenAI: " + e.getStatusText(), e);
         } catch (Exception e) {
             log.error("Erro crítico na comunicação com OpenAI Chat ({}): {}", openAiModel, e.getMessage(), e);
-            throw new RuntimeException("Falha ao obter resposta da OpenAI. Por favor, verifique se a API Key está configurada corretamente ou se há saldo na conta.", e);
+            throw new RuntimeException("Falha ao obter resposta da OpenAI.", e);
         }
     }
 
@@ -159,6 +169,8 @@ public class LlmService {
                 .bodyValue(body)
                 .retrieve()
                 .bodyToFlux(String.class)
+                .doOnError(WebClientResponseException.class, e -> 
+                    log.error("Erro no stream da OpenAI: {} - Body: {}", e.getMessage(), e.getResponseBodyAsString()))
                 .retryWhen(Retry.backoff(3, Duration.ofSeconds(2))
                         .filter(this::isRetryable))
                 .filter(line -> !line.isBlank() && !line.equals("[DONE]")) // Filter empty lines and DONE marker

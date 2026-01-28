@@ -42,7 +42,7 @@ export function StatusIndicator() {
 
     return (
         <div
-            className={`fixed bottom-4 right-4 p-2 rounded-full shadow-lg flex items-center gap-2 text-xs font-medium transition-colors cursor-help group z-50 ${status === "connected"
+            className={`fixed bottom-4 right-28 p-2 rounded-full shadow-lg flex items-center gap-2 text-xs font-medium transition-colors cursor-help group z-50 ${status === "connected"
                 ? "bg-green-100 text-green-800 border border-green-200"
                 : "bg-red-100 text-red-800 border border-red-200"
                 }`}
