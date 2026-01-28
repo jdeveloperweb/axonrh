@@ -290,7 +290,7 @@ services:
       <<: *backend-env
       SPRING_FLYWAY_ENABLED: "true"
       SERVER_PORT: 8088
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-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}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:}
 
   notification-service:
     <<: *backend-service
