@@ -9,6 +9,8 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -38,6 +40,7 @@ public class KafkaConfig {
     private Integer retries;
 
     @Bean
+    @Primary
     public ObjectMapper vacationKafkaObjectMapper() {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
@@ -46,7 +49,8 @@ public class KafkaConfig {
     }
 
     @Bean
-    public ProducerFactory<String, Object> vacationKafkaProducerFactory(ObjectMapper vacationKafkaObjectMapper) {
+    public ProducerFactory<String, Object> vacationKafkaProducerFactory(
+            @Qualifier("vacationKafkaObjectMapper") ObjectMapper vacationKafkaObjectMapper) {
         Map<String, Object> props = new HashMap<>();
 
         // Conexão
