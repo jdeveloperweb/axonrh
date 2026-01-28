@@ -355,7 +355,7 @@ public class ConversationService {
                 return String.format("Atualmente, temos %d registro(s) que atendem à sua busca.", count);
             }
             
-            return String.format("%s: %s", formatColumnName(colName), formatValue(value));
+            return String.format("%s: %s", formatColumnName(colName), formatValue(colName, value));
         }
 
         // Format results
@@ -500,7 +500,7 @@ public class ConversationService {
             sb.append("| ");
             for (String col : columns) {
                 Object value = row.get(col);
-                sb.append(formatValue(value)).append(" | ");
+                sb.append(formatValue(col, value)).append(" | ");
             }
             sb.append("\n");
         }
@@ -518,10 +518,28 @@ public class ConversationService {
                 .substring(0, 1).toUpperCase() + name.substring(1);
     }
 
-    private String formatValue(Object value) {
+    private String formatValue(String key, Object value) {
         if (value == null) return "-";
         if (value instanceof BigDecimal bd) {
-            return String.format("R$ %.2f", bd);
+            String lowerKey = key != null ? key.toLowerCase() : "";
+            // Heuristic for currency columns based on name
+            if (lowerKey.contains("salary") || lowerKey.contains("salario") || 
+                lowerKey.contains("valor") || lowerKey.contains("price") || 
+                lowerKey.contains("amount") || lowerKey.contains("total") ||
+                lowerKey.contains("custo") || lowerKey.contains("despesa") ||
+                lowerKey.contains("remuneracao") || lowerKey.contains("bonus") ||
+                lowerKey.contains("liquido") || lowerKey.contains("bruto")) {
+                return String.format("R$ %.2f", bd);
+            }
+            // For other numbers (like age, count, etc), check if integer
+            try {
+                if (bd.remainder(BigDecimal.ONE).compareTo(BigDecimal.ZERO) == 0) {
+                    return String.format("%.0f", bd);
+                }
+            } catch (Exception e) {
+                // ignore
+            }
+            return bd.toString();
         }
         return value.toString();
     }

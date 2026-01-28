@@ -20,6 +20,7 @@ import {
   Bot,
   Building2,
   UserCog,
+  Briefcase,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
@@ -78,6 +79,7 @@ const navGroups: NavGroup[] = [
     title: 'ADMINISTRAÇÃO',
     items: [
       { label: 'Departamentos', href: '/departments', icon: Building2 },
+      { label: 'Cargos', href: '/positions', icon: Briefcase },
       { label: 'Gestores', href: '/managers', icon: UserCog },
       { label: 'Configurações', href: '/settings', icon: Settings, permission: 'CONFIG:READ' },
     ]

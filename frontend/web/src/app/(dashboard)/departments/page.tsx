@@ -12,29 +12,41 @@ import {
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { employeesApi, Department } from '@/lib/api/employees';
+import { departmentsApi, DepartmentDTO, CreateDepartmentDTO, UpdateDepartmentDTO } from '@/lib/api/departments';
+import { employeesApi, Employee } from '@/lib/api/employees';
 
 export default function DepartmentsPage() {
     const { toast } = useToast();
 
     // State
-    const [departments, setDepartments] = useState<Department[]>([]);
+    const [departments, setDepartments] = useState<DepartmentDTO[]>([]);
+    const [managers, setManagers] = useState<Employee[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [showModal, setShowModal] = useState(false);
-    const [editingDepartment, setEditingDepartment] = useState<Department | null>(null);
-    const [formData, setFormData] = useState({ name: '', description: '', managerId: '' });
+    const [editingDepartment, setEditingDepartment] = useState<DepartmentDTO | null>(null);
+    const [formData, setFormData] = useState<CreateDepartmentDTO>({
+        code: '',
+        name: '',
+        description: '',
+        managerId: ''
+    });
 
-    // Fetch departments
-    const fetchDepartments = useCallback(async () => {
+    // Fetch data
+    const fetchData = useCallback(async () => {
         try {
             setLoading(true);
-            const data = await employeesApi.getDepartments();
-            setDepartments(data);
+            const [deptData, empResponse] = await Promise.all([
+                departmentsApi.list(),
+                employeesApi.list({ size: 100 }) // Fetch generic list of employees for manager selection
+            ]);
+            setDepartments(deptData);
+            setManagers(empResponse.content);
         } catch (error) {
+            console.error(error);
             toast({
                 title: 'Erro',
-                description: 'Falha ao carregar departamentos',
+                description: 'Falha ao carregar dados',
                 variant: 'destructive',
             });
         } finally {
@@ -43,24 +55,25 @@ export default function DepartmentsPage() {
     }, [toast]);
 
     useEffect(() => {
-        fetchDepartments();
-    }, [fetchDepartments]);
+        fetchData();
+    }, [fetchData]);
 
     const filteredDepartments = departments.filter(dept =>
         dept.name.toLowerCase().includes(search.toLowerCase())
     );
 
-    const handleOpenModal = (department?: Department) => {
+    const handleOpenModal = (department?: DepartmentDTO) => {
         if (department) {
             setEditingDepartment(department);
             setFormData({
+                code: department.code,
                 name: department.name,
                 description: department.description || '',
-                managerId: department.managerId || '',
+                managerId: department.manager?.id || '',
             });
         } else {
             setEditingDepartment(null);
-            setFormData({ name: '', description: '', managerId: '' });
+            setFormData({ code: '', name: '', description: '', managerId: '' });
         }
         setShowModal(true);
     };
@@ -68,22 +81,35 @@ export default function DepartmentsPage() {
     const handleCloseModal = () => {
         setShowModal(false);
         setEditingDepartment(null);
-        setFormData({ name: '', description: '', managerId: '' });
+        setFormData({ code: '', name: '', description: '', managerId: '' });
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            // TODO: Implementar API de criação/edição de departamento
-            toast({
-                title: 'Sucesso',
-                description: editingDepartment
-                    ? 'Departamento atualizado com sucesso'
-                    : 'Departamento criado com sucesso',
-            });
+            if (editingDepartment) {
+                const updateData: UpdateDepartmentDTO = {
+                    name: formData.name,
+                    description: formData.description,
+                    managerId: formData.managerId || undefined,
+                    // code is generally not updatable or handled separately depending on backend logic
+                };
+                await departmentsApi.update(editingDepartment.id, updateData);
+                toast({
+                    title: 'Sucesso',
+                    description: 'Departamento atualizado com sucesso',
+                });
+            } else {
+                await departmentsApi.create(formData);
+                toast({
+                    title: 'Sucesso',
+                    description: 'Departamento criado com sucesso',
+                });
+            }
             handleCloseModal();
-            fetchDepartments();
+            fetchData();
         } catch (error) {
+            console.error(error);
             toast({
                 title: 'Erro',
                 description: 'Falha ao salvar departamento',
@@ -96,13 +122,14 @@ export default function DepartmentsPage() {
         if (!confirm(`Tem certeza que deseja excluir o departamento ${name}?`)) return;
 
         try {
-            // TODO: Implementar API de exclusão
+            await departmentsApi.delete(id);
             toast({
                 title: 'Sucesso',
                 description: 'Departamento excluído com sucesso',
             });
-            fetchDepartments();
+            fetchData();
         } catch (error) {
+            console.error(error);
             toast({
                 title: 'Erro',
                 description: 'Falha ao excluir departamento',
@@ -167,6 +194,9 @@ export default function DepartmentsPage() {
                             <thead>
                                 <tr className="border-b border-gray-200 bg-gray-50">
                                     <th className="px-6 py-3 text-left text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">
+                                        Código
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">
                                         Departamento
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">
@@ -188,6 +218,9 @@ export default function DepartmentsPage() {
                                     Array.from({ length: 3 }).map((_, i) => (
                                         <tr key={i}>
                                             <td className="px-6 py-4">
+                                                <div className="w-16 h-4 bg-gray-200 rounded animate-pulse" />
+                                            </td>
+                                            <td className="px-6 py-4">
                                                 <div className="w-32 h-4 bg-gray-200 rounded animate-pulse" />
                                             </td>
                                             <td className="px-6 py-4">
@@ -206,7 +239,7 @@ export default function DepartmentsPage() {
                                     ))
                                 ) : filteredDepartments.length === 0 ? (
                                     <tr>
-                                        <td colSpan={5} className="px-6 py-12 text-center text-[var(--color-text-secondary)]">
+                                        <td colSpan={6} className="px-6 py-12 text-center text-[var(--color-text-secondary)]">
                                             <Building2 className="w-12 h-12 mx-auto mb-4 opacity-50" />
                                             <p className="text-lg font-medium">Nenhum departamento encontrado</p>
                                             <p className="text-sm">Crie um novo departamento para começar</p>
@@ -215,6 +248,9 @@ export default function DepartmentsPage() {
                                 ) : (
                                     filteredDepartments.map((dept) => (
                                         <tr key={dept.id} className="hover:bg-gray-50">
+                                            <td className="px-6 py-4 text-[var(--color-text-secondary)]">
+                                                {dept.code}
+                                            </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3">
                                                     <div className="p-2 bg-purple-100 rounded-lg">
@@ -227,7 +263,7 @@ export default function DepartmentsPage() {
                                                 {dept.description || '-'}
                                             </td>
                                             <td className="px-6 py-4 text-[var(--color-text)]">
-                                                {dept.managerName || '-'}
+                                                {dept.manager?.fullName || '-'}
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-1 text-[var(--color-text)]">
@@ -279,6 +315,19 @@ export default function DepartmentsPage() {
                         <form onSubmit={handleSubmit} className="p-6 space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
+                                    Código *
+                                </label>
+                                <input
+                                    type="text"
+                                    value={formData.code}
+                                    onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                                    required
+                                    disabled={!!editingDepartment}
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] disabled:bg-gray-100"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
                                     Nome *
                                 </label>
                                 <input
@@ -299,6 +348,23 @@ export default function DepartmentsPage() {
                                     rows={3}
                                     className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
                                 />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
+                                    Gestor
+                                </label>
+                                <select
+                                    value={formData.managerId}
+                                    onChange={(e) => setFormData({ ...formData, managerId: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                                >
+                                    <option value="">Selecione um gestor</option>
+                                    {managers.map((manager) => (
+                                        <option key={manager.id} value={manager.id}>
+                                            {manager.fullName}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
                             <div className="flex justify-end gap-3 pt-4">
                                 <button

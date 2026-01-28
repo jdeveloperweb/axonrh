@@ -22,4 +22,6 @@ public interface PositionRepository extends JpaRepository<Position, UUID> {
     List<Position> findByTenantIdAndDepartmentIdAndIsActiveTrue(UUID tenantId, UUID departmentId);
 
     long countByTenantIdAndIsActiveTrue(UUID tenantId);
+
+    Page<Position> findByTenantIdAndIsActiveTrue(UUID tenantId, Pageable pageable);
 }

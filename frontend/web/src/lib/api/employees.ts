@@ -155,11 +155,11 @@ export interface Department {
 
 export interface Position {
   id: string;
-  name: string;
+  title: string;
   code?: string;
   departmentId?: string;
-  baseSalary?: number;
-  workHoursPerWeek?: number;
+  salaryRangeMin?: number;
+  salaryRangeMax?: number;
   cboCode?: string;
   active: boolean;
 }

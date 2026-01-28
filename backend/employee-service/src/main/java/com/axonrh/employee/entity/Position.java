@@ -41,6 +41,9 @@ public class Position {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
+    @Column(name = "responsibilities", columnDefinition = "TEXT")
+    private String responsibilities;
+
     @Column(name = "cbo_code", length = 10)
     private String cboCode;
 

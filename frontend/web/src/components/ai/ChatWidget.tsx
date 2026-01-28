@@ -397,6 +397,57 @@ function exportTableToXLSX(tableData: string[][]) {
   URL.revokeObjectURL(url);
 }
 
+// Exporta tabela para CSV
+function exportTableToCSV(tableData: string[][]) {
+  if (tableData.length === 0) return;
+
+  const csvContent = tableData.map(row =>
+    row.map(cell => {
+      const formatted = formatCellValue(cell);
+      // Escape double quotes by doubling them
+      if (formatted.includes('"') || formatted.includes(',') || formatted.includes('\n')) {
+        return '"' + formatted.replace(/"/g, '""') + '"';
+      }
+      return formatted;
+    }).join(',')
+  ).join('\n');
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `dados_${new Date().toISOString().split('T')[0]}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+// Exporta tabela para JSON
+function exportTableToJSON(tableData: string[][]) {
+  if (tableData.length < 2) return;
+
+  const headers = tableData[0].map(h => h.trim());
+  const data = tableData.slice(1).map(row => {
+    const obj: Record<string, string> = {};
+    headers.forEach((header, i) => {
+      obj[header] = formatCellValue(row[i] || '');
+    });
+    return obj;
+  });
+
+  const jsonContent = JSON.stringify(data, null, 2);
+  const blob = new Blob([jsonContent], { type: 'application/json;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `dados_${new Date().toISOString().split('T')[0]}.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
 function MarkdownContent({ content }: { content: string }) {
   if (!content) return <div className="flex space-x-1 py-1">
     <div className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce"></div>
@@ -413,16 +464,37 @@ function MarkdownContent({ content }: { content: string }) {
       const tableDataForExport = [...currentTable];
       elements.push(
         <div key={`table-${index}`} className="my-4">
-          <div className="flex justify-end mb-2">
+          <div className="flex justify-end mb-2 gap-2">
+            <span className="text-xs font-medium text-gray-500 self-center mr-2">Exportar:</span>
             <button
               onClick={() => exportTableToXLSX(tableDataForExport)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 rounded-lg transition-colors border border-green-200"
               title="Exportar para Excel"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              Exportar XLSX
+              XLSX
+            </button>
+            <button
+              onClick={() => exportTableToCSV(tableDataForExport)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200"
+              title="Exportar para CSV"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              CSV
+            </button>
+            <button
+              onClick={() => exportTableToJSON(tableDataForExport)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors border border-amber-200"
+              title="Exportar para JSON"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+              </svg>
+              JSON
             </button>
           </div>
           <div className="overflow-hidden border border-gray-200 rounded-xl shadow-sm">

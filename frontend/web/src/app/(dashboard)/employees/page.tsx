@@ -19,6 +19,12 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem
+} from '@/components/ui/dropdown-menu';
 import { employeesApi, Employee, EmployeeStatus, EmployeeListParams, Department } from '@/lib/api/employees';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate, formatCpf, formatCurrency } from '@/lib/utils';
@@ -477,33 +483,37 @@ export default function EmployeesPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right sticky right-0 bg-white" onClick={(e) => e.stopPropagation()}>
-                        <div className="relative group inline-block">
-                          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                            <MoreHorizontal className="w-4 h-4 text-[var(--color-text-secondary)]" />
-                          </button>
-                          <div className="absolute right-0 bottom-full mb-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-                            <button
-                              onClick={() => router.push(`/employees/${employee.id}`)}
-                              className="w-full flex items-center gap-2 px-4 py-2 text-left hover:bg-gray-50 first:rounded-t-lg"
-                            >
-                              <Eye className="w-4 h-4" />
-                              Visualizar
-                            </button>
-                            <button
-                              onClick={() => router.push(`/employees/${employee.id}/edit`)}
-                              className="w-full flex items-center gap-2 px-4 py-2 text-left hover:bg-gray-50"
-                            >
-                              <Edit className="w-4 h-4" />
-                              Editar
-                            </button>
-                            <button
-                              onClick={() => handleDelete(employee.id, employee.fullName)}
-                              className="w-full flex items-center gap-2 px-4 py-2 text-left hover:bg-gray-50 text-red-600 last:rounded-b-lg"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                              Excluir
-                            </button>
-                          </div>
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors outline-none focus:ring-2 focus:ring-[var(--color-primary)]">
+                                <MoreHorizontal className="w-4 h-4 text-[var(--color-text-secondary)]" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                              <DropdownMenuItem
+                                onClick={() => router.push(`/employees/${employee.id}`)}
+                                className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 cursor-pointer"
+                              >
+                                <Eye className="w-4 h-4" />
+                                Visualizar
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => router.push(`/employees/${employee.id}/edit`)}
+                                className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 cursor-pointer"
+                              >
+                                <Edit className="w-4 h-4" />
+                                Editar
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleDelete(employee.id, employee.fullName)}
+                                className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 text-red-600 cursor-pointer"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                Excluir
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </td>
                     </tr>
