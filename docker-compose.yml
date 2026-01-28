@@ -284,6 +284,8 @@ services:
     <<: *backend-service
     container_name: axonrh-ai-assistant-service
     command: mvn -pl ai-assistant-service -am spring-boot:run
+    env_file:
+      - .env
     ports:
       - "8088:8088"
     environment:
