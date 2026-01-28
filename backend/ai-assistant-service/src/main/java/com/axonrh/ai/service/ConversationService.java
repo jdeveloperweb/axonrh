@@ -234,6 +234,7 @@ public class ConversationService {
                     }
 
                     // Fallback to regular chat streaming
+                    log.debug("Fallback to regular LLM chat streaming");
                     List<ChatMessage> messages = buildChatMessages(conversation);
 
                     ChatRequest request = ChatRequest.builder()
@@ -244,12 +245,21 @@ public class ConversationService {
                     StringBuilder fullResponse = new StringBuilder();
 
                     return llmService.streamChat(request)
+                            .map(chunk -> {
+                                if (chunk.getType() == null) {
+                                    chunk.setType(Message.MessageType.TEXT);
+                                }
+                                return chunk;
+                            })
                             .doOnNext(chunk -> {
                                 if (!chunk.isDone()) {
                                     fullResponse.append(chunk.getContent());
                                 }
+                                log.trace("Emitting LLM chunk: done={}, length={}", chunk.isDone(), 
+                                        chunk.getContent() != null ? chunk.getContent().length() : 0);
                             })
                             .doOnComplete(() -> {
+                                log.debug("LLM stream completed, saving response (length: {})", fullResponse.length());
                                 // Save assistant response
                                 Message assistantMsg = Message.builder()
                                         .id(UUID.randomUUID().toString())

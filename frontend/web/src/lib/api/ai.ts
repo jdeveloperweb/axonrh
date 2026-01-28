@@ -189,19 +189,25 @@ export const chatApi = {
     conversationId?: string
   ): AsyncGenerator<StreamChunk> {
     const { accessToken } = useAuthStore.getState();
+    const tenantId = localStorage.getItem('tenantId') || '';
+    const userId = localStorage.getItem('userId') || '';
+
+    console.debug('[ChatAPI] Starting stream chat:', { conversationId, tenantId, userId });
+
     const response = await fetch(`${API_BASE_URL}/ai/chat/stream`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${accessToken}`,
-        'X-Tenant-ID': localStorage.getItem('tenantId') || '',
-        'X-User-ID': localStorage.getItem('userId') || '',
+        'X-Tenant-ID': tenantId,
+        'X-User-ID': userId,
       },
       body: JSON.stringify({ message, conversationId }),
     });
 
     if (!response.ok) {
       const errorText = await response.text().catch(() => 'Unknown error');
+      console.error('[ChatAPI] Stream error response:', response.status, errorText);
       throw new Error(`Erro na comunicação (${response.status}): ${errorText.substring(0, 200)}`);
     }
 
@@ -211,25 +217,48 @@ export const chatApi = {
     const decoder = new TextDecoder();
     let buffer = '';
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          console.debug('[ChatAPI] Stream reader done');
+          break;
+        }
 
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
+        buffer += decoder.decode(value, { stream: true });
 
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const data = line.slice(6);
-          if (data === '[DONE]') return;
-          try {
-            yield JSON.parse(data) as StreamChunk;
-          } catch {
-            // Skip invalid JSON
+        // SSE lines can be separated by \n or \r\n
+        const lines = buffer.split(/\r?\n/);
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          const trimmedLine = line.trim();
+          if (!trimmedLine) continue;
+
+          if (trimmedLine.startsWith('data: ')) {
+            const data = trimmedLine.slice(6).trim();
+            if (data === '[DONE]') {
+              console.debug('[ChatAPI] Received [DONE] marker');
+              return;
+            }
+
+            try {
+              const chunk = JSON.parse(data) as StreamChunk;
+              yield chunk;
+              if (chunk.done) {
+                console.debug('[ChatAPI] Chunk marked as done');
+              }
+            } catch (err) {
+              console.warn('[ChatAPI] Failed to parse SSE data:', data, err);
+            }
           }
         }
       }
+    } catch (error) {
+      console.error('[ChatAPI] Error reading stream:', error);
+      throw error;
+    } finally {
+      reader.releaseLock();
     }
   },
 };

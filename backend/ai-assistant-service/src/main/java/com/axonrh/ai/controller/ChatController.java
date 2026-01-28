@@ -44,6 +44,9 @@ public class ChatController {
             @RequestHeader("X-User-ID") UUID userId,
             @RequestBody ChatRequest request) {
 
+        log.info("Received stream chat request for conversation: {} from user: {}", 
+                request.getConversationId(), userId);
+
         return conversationService.streamChat(
                 request.getConversationId(),
                 request.getMessage(),
@@ -51,7 +54,8 @@ public class ChatController {
                 userId
         ).map(chunk -> ServerSentEvent.<StreamChunk>builder()
                 .data(chunk)
-                .build());
+                .build())
+        .doOnTerminate(() -> log.info("Stream chat request completed for conversation: {}", request.getConversationId()));
     }
 
     @PostMapping("/conversations")

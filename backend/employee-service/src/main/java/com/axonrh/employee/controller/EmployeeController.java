@@ -97,7 +97,12 @@ public class EmployeeController {
     @Operation(summary = "Cria novo colaborador")
     public ResponseEntity<EmployeeResponse> create(
             @Valid @RequestBody EmployeeRequest request,
-            @RequestHeader("X-User-Id") UUID userId) {
+            @RequestHeader(value = "X-User-Id", required = false) UUID userId) {
+
+        if (userId == null) {
+            log.warn(">>> [DEBUG-TRACE] X-User-Id header missing, using system user ID");
+            userId = UUID.fromString("00000000-0000-0000-0000-000000000000"); // System user
+        }
 
         System.err.println(">>> [DEBUG-CRITICAL] EmployeeController.create ENTERED");
         System.err.println(">>> [DEBUG-CRITICAL] Payload Name: " + request.getFullName());

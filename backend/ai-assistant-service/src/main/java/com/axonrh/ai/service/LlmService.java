@@ -193,51 +193,52 @@ public class LlmService {
                 .bodyValue(body)
                 .retrieve()
                 .bodyToFlux(String.class)
+                .doOnSubscribe(s -> log.debug("Starting OpenAI stream request for model: {}", 
+                    request.getModel() != null ? request.getModel() : openAiModel))
                 .doOnError(WebClientResponseException.class, e -> 
                     log.error("Erro no stream da OpenAI: {} - Body: {}", e.getMessage(), e.getResponseBodyAsString()))
                 .retryWhen(Retry.backoff(3, Duration.ofSeconds(2))
                         .filter(this::isRetryable))
-                .filter(line -> !line.isBlank() && !line.equals("[DONE]")) // Filter empty lines and DONE marker
                 .flatMap(responseLine -> {
-                    try {
-                        // OpenAI sends raw JSON chunks if not using SSE wrapper properly in WebClient,
-                        // but usually follows "data: " prefix convention in streams.
-                        // Standard Spring WebClient might consume raw bytes.
-                        // Let's handle generic JSON line first.
-                        // BUT standard OpenAI stream format is "data: {...}"
-                        
-                        String jsonStr = responseLine;
-                        // Some clients strip "data: " automatically, but raw string body flux might not.
-                        // Usually webclient decoding to string will give the whole body? 
-                        // Actually bodyToFlux(String.class) with JSON stream usually gives objects.
-                        // Let's assume we get standard SSE lines here if use direct stream processing?
-                        // No, let's play safe and parse what we get.
-                        
-                        // Simplest: use proper jackson decoding if possible, but stream structure is tricky.
-                        // Let's rely on standard logic: 
-                        // If it's a JSON object string, parse it.
-                        
-                       JsonNode json = objectMapper.readTree(jsonStr);
-                       return Mono.just(json);
-                    } catch (Exception e) {
-                        // If it is "data: ..." format
-                         if (responseLine.startsWith("data: ")) {
-                             String data = responseLine.substring(6).trim();
-                             if ("[DONE]".equals(data)) return Mono.empty();
-                             try {
-                                 return Mono.just(objectMapper.readTree(data));
-                             } catch (Exception ex) {
-                                 return Mono.error(ex);
-                             }
-                         }
-                         return Mono.empty();
+                    if (responseLine == null || responseLine.isBlank()) {
+                        return Flux.empty();
                     }
+
+                    // OpenAI's text/event-stream can send multiple "data: " blocks in one line 
+                    // or fragmented lines depending on how WebClient handles it.
+                    // But bodyToFlux(String.class) usually gives us the fragments or lines.
+                    log.trace("Received from OpenAI: {}", responseLine);
+
+                    String[] lines = responseLine.split("\n");
+                    List<JsonNode> result = new ArrayList<>();
+
+                    for (String line : lines) {
+                        line = line.trim();
+                        if (line.isEmpty() || line.equals("data: [DONE]")) continue;
+
+                        if (line.startsWith("data: ")) {
+                            String data = line.substring(6).trim();
+                            try {
+                                result.add(objectMapper.readTree(data));
+                            } catch (Exception e) {
+                                log.warn("Failed to parse OpenAI stream data: {}", data);
+                            }
+                        } else if (line.startsWith("{")) {
+                            // Sometimes we get raw JSON if it's not following SSE exactly or fragmented
+                            try {
+                                result.add(objectMapper.readTree(line));
+                            } catch (Exception e) {
+                                // Maybe partial JSON, ignore or log trace
+                            }
+                        }
+                    }
+                    return Flux.fromIterable(result);
                 })
                 .map(chunk -> {
-                     // Check valid chunk structure
                      if (chunk.has("choices") && !chunk.get("choices").isEmpty()) {
                          JsonNode choice = chunk.get("choices").get(0);
                          JsonNode delta = choice.get("delta");
+                         
                          String finishReason = choice.has("finish_reason") && !choice.get("finish_reason").isNull() 
                                  ? choice.get("finish_reason").asText() : null;
 
@@ -247,11 +248,12 @@ public class LlmService {
                          if (content != null) {
                              return StreamChunk.builder().content(content).done(false).build();
                          }
-                         if (finishReason != null) {
+                         
+                         if (finishReason != null || (choice.has("delta") && choice.get("delta").isEmpty())) {
                              return StreamChunk.builder().content("").done(true).finishReason(finishReason).build();
                          }
                      }
-                     return StreamChunk.builder().content("").done(false).build(); // Keep-alive or empty
+                     return StreamChunk.builder().content("").done(false).build();
                 })
                 .filter(chunk -> (chunk.getContent() != null && !chunk.getContent().isEmpty()) || chunk.isDone());
     }
