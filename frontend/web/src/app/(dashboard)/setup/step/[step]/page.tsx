@@ -16,6 +16,7 @@ import {
   formatCNPJ,
 } from '@/lib/api/setup';
 import { Switch } from '@/components/ui/switch';
+import { useThemeStore } from '@/stores/theme-store';
 
 
 export default function SetupStepPage() {
@@ -26,6 +27,7 @@ export default function SetupStepPage() {
   const [progress, setProgress] = useState<SetupProgress | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const { fetchBranding } = useThemeStore();
   const [error, setError] = useState<string | null>(null);
 
   // Step 1 - Company Data
@@ -146,6 +148,8 @@ export default function SetupStepPage() {
         await setupApi.saveStepData(stepNumber, laborRules);
       } else if (stepNumber === 4) {
         await setupApi.saveStepData(stepNumber, branding);
+        // Atualiza o tema global imediatamente
+        fetchBranding();
       } else if (stepNumber === 5) {
         await setupApi.saveStepData(stepNumber, modules);
       } else if (stepNumber === 6) {
@@ -1080,12 +1084,24 @@ function Step4Branding({
               </div>
             </div>
 
-            <button
-              className="w-full py-3 rounded-xl font-bold text-white shadow-lg transition-transform active:scale-95 mt-4"
-              style={{ backgroundColor: config.primaryColor }}
-            >
-              Botão de Exemplo
-            </button>
+            <div className="flex gap-3 mt-4">
+              <button
+                className="flex-1 py-2.5 rounded-xl font-bold text-white shadow-lg transition-transform active:scale-95 text-xs uppercase"
+                style={{ backgroundColor: config.primaryColor }}
+              >
+                Botão Primário
+              </button>
+              <button
+                className="flex-1 py-2.5 rounded-xl font-bold border-2 transition-transform active:scale-95 text-xs uppercase"
+                style={{
+                  color: config.secondaryColor,
+                  borderColor: config.secondaryColor,
+                  backgroundColor: 'transparent'
+                }}
+              >
+                Secundário
+              </button>
+            </div>
           </div>
         </div>
 

@@ -21,12 +21,13 @@ const queryClientOptions = {
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient(queryClientOptions));
-  const { theme, loadTheme } = useThemeStore();
+  const { theme, loadTheme, fetchBranding } = useThemeStore();
 
-  // Carrega tema do localStorage
+  // Carrega tema do localStorage e branding da API
   useEffect(() => {
     loadTheme();
-  }, [loadTheme]);
+    fetchBranding();
+  }, [loadTheme, fetchBranding]);
 
   // Aplica classe do tema no document
   useEffect(() => {

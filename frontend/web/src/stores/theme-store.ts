@@ -158,9 +158,21 @@ function applyColorsToDocument(colors: ThemeColors) {
   if (typeof document === 'undefined') return;
 
   const root = document.documentElement;
+
+  // Cores principais
   root.style.setProperty('--color-primary', colors.primary);
   root.style.setProperty('--color-secondary', colors.secondary);
   root.style.setProperty('--color-accent', colors.accent);
+
+  // Variantes (opcionalmente calculadas, mas por enquanto replicando para garantir funcionamento dos componentes)
+  root.style.setProperty('--color-primary-light', `${colors.primary}CC`);
+  root.style.setProperty('--color-primary-dark', `${colors.primary}E6`);
+  root.style.setProperty('--color-secondary-light', `${colors.secondary}CC`);
+  root.style.setProperty('--color-secondary-dark', `${colors.secondary}E6`);
+  root.style.setProperty('--color-accent-light', `${colors.accent}CC`);
+  root.style.setProperty('--color-accent-dark', `${colors.accent}E6`);
+
+  // Superfícies e Textos
   root.style.setProperty('--color-background', colors.background);
   root.style.setProperty('--color-surface', colors.surface);
   root.style.setProperty('--color-text-primary', colors.textPrimary);
