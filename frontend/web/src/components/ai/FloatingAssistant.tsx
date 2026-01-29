@@ -4,16 +4,26 @@ import { useState } from 'react';
 import ChatWidget from './ChatWidget';
 import { ChatIcons } from './ChatIcons';
 import { usePathname } from 'next/navigation';
+import { useAuthStore } from '@/stores/auth-store';
 
 export default function FloatingAssistant() {
     const [isOpen, setIsOpen] = useState(false);
     const pathname = usePathname();
+    const { user } = useAuthStore();
 
     // Don't show the floating assistant on the dedicated assistant page
     // to avoid duplication or confusion
     if (pathname === '/assistant') {
         return null;
     }
+
+    const context = {
+        userName: user?.name,
+        userRole: (user as any)?.role || (user as any)?.roles?.[0],
+        currentPage: pathname,
+        companyName: 'AxonRH'
+    };
+
 
     return (
         <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
@@ -23,6 +33,7 @@ export default function FloatingAssistant() {
                     <ChatWidget
                         onClose={() => setIsOpen(false)}
                         className="h-full border-2 border-blue-100/50"
+                        context={context}
                     />
                 </div>
             )}

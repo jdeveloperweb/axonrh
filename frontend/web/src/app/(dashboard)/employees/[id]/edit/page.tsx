@@ -20,34 +20,33 @@ export default function EditEmployeePage() {
         const fetchEmployee = async () => {
             try {
                 setLoading(true);
-                const data = await employeesApi.getById(employeeId);
+                const response = await employeesApi.getById(employeeId);
+                const employee = (response as any).data || response;
 
-                // Map API response to Form Data structure if necessary
-                // EmployeeCreateRequest matches Employee interface mostly, but nested objects might need care?
-                // Actually Employee has address object, etc. It should map fine.
-                // One issue: Dates might be string in ISO format. Inputs expect YYYY-MM-DD.
-                // We might need to slice the date strings.
+                if (!employee) {
+                    throw new Error('Colaborador não encontrado');
+                }
 
                 const formattedData: Partial<EmployeeCreateRequest> = {
-                    ...data,
-                    birthDate: data.birthDate?.split('T')[0] || '',
-                    hireDate: data.admissionDate?.split('T')[0] || '',
-                    baseSalary: data.salary,
-                    weeklyHours: data.workHoursPerWeek,
-                    departmentId: data.department?.id,
-                    positionId: data.position?.id,
-                    costCenterId: data.costCenter?.id,
-                    managerId: data.manager?.id,
+                    ...employee,
+                    birthDate: employee.birthDate?.split('T')[0] || '',
+                    hireDate: employee.admissionDate?.split('T')[0] || '',
+                    baseSalary: employee.salary,
+                    weeklyHours: employee.workHoursPerWeek,
+                    departmentId: employee.department?.id,
+                    positionId: employee.position?.id,
+                    costCenterId: employee.costCenter?.id,
+                    managerId: employee.manager?.id,
                     // Mapeia endereço para campos planos
-                    addressStreet: data.address?.street,
-                    addressNumber: data.address?.number,
-                    addressComplement: data.address?.complement,
-                    addressNeighborhood: data.address?.neighborhood,
-                    addressCity: data.address?.city,
-                    addressState: data.address?.state,
-                    addressZipCode: data.address?.zipCode,
-                    mobile: data.personalPhone,
-                    addressCountry: data.address?.country,
+                    addressStreet: employee.address?.street,
+                    addressNumber: employee.address?.number,
+                    addressComplement: employee.address?.complement,
+                    addressNeighborhood: employee.address?.neighborhood,
+                    addressCity: employee.address?.city,
+                    addressState: employee.address?.state,
+                    addressZipCode: employee.address?.zipCode,
+                    mobile: employee.personalPhone,
+                    addressCountry: employee.address?.country,
                 };
 
                 setInitialData(formattedData);

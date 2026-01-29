@@ -202,7 +202,8 @@ export const employeesApi = {
 
   // Get single employee
   getById: async (id: string): Promise<Employee> => {
-    return api.get<Employee, Employee>(`/employees/${id}`);
+    const response = await api.get<any, any>(`/employees/${id}`);
+    return response.data || response;
   },
 
   // Create employee

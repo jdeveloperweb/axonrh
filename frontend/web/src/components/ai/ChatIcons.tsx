@@ -10,7 +10,11 @@ import {
     ChevronRight,
     Search,
     UploadCloud,
-    X
+    X,
+    History,
+    Plus,
+    Trash2,
+    Mic
 } from 'lucide-react';
 
 export const ChatIcons = {
@@ -25,5 +29,11 @@ export const ChatIcons = {
     ChevronRight,
     Search,
     UploadCloud,
-    X
+    X,
+    History,
+    Plus,
+    Trash: Trash2,
+    Mic
 };
+
+
