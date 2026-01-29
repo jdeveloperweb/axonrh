@@ -15,14 +15,16 @@ import {
   FileText,
   Users,
   CalendarDays,
-
   ChevronRight,
+  Briefcase,
+  TrendingUp,
+  History,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Table,
@@ -33,6 +35,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { vacationApi, VacationPeriod, VacationRequest } from '@/lib/api/vacation';
+import { cn } from '@/lib/utils';
 
 export default function VacationPage() {
   const router = useRouter();
@@ -70,18 +73,20 @@ export default function VacationPage() {
 
   const getStatusBadge = (status: VacationRequest['status']) => {
     const config = {
-      PENDING: { label: 'Pendente', variant: 'warning' as const, icon: Clock },
-      APPROVED: { label: 'Aprovada', variant: 'success' as const, icon: CheckCircle },
-      REJECTED: { label: 'Rejeitada', variant: 'destructive' as const, icon: XCircle },
-      CANCELLED: { label: 'Cancelada', variant: 'secondary' as const, icon: XCircle },
-      SCHEDULED: { label: 'Agendada', variant: 'default' as const, icon: Calendar },
-      IN_PROGRESS: { label: 'Em Andamento', variant: 'default' as const, icon: Sun },
-      COMPLETED: { label: 'Concluída', variant: 'secondary' as const, icon: CheckCircle },
+      PENDING: { label: 'Pendente', className: 'bg-yellow-100 text-yellow-700 border-yellow-200 hover:bg-yellow-100', icon: Clock },
+      APPROVED: { label: 'Aprovada', className: 'bg-green-100 text-green-700 border-green-200 hover:bg-green-100', icon: CheckCircle },
+      REJECTED: { label: 'Rejeitada', className: 'bg-red-100 text-red-700 border-red-200 hover:bg-red-100', icon: XCircle },
+      CANCELLED: { label: 'Cancelada', className: 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-100', icon: XCircle },
+      SCHEDULED: { label: 'Agendada', className: 'bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-100', icon: Calendar },
+      IN_PROGRESS: { label: 'Em Andamento', className: 'bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-100', icon: Sun },
+      COMPLETED: { label: 'Concluída', className: 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-100', icon: CheckCircle },
     };
-    const { label, variant, icon: Icon } = config[status];
+    // Fallback for unknown status
+    const { label, className, icon: Icon } = config[status] || { label: status, className: 'bg-gray-100', icon: Clock };
+
     return (
-      <Badge variant={variant} className="flex items-center gap-1 w-fit">
-        <Icon className="h-3 w-3" />
+      <Badge variant="outline" className={cn("flex items-center gap-1.5 px-2.5 py-0.5 w-fit border", className)}>
+        <Icon className="h-3.5 w-3.5" />
         {label}
       </Badge>
     );
@@ -89,23 +94,33 @@ export default function VacationPage() {
 
   const getPeriodStatusBadge = (period: VacationPeriod) => {
     if (period.isExpired) {
-      return <Badge variant="destructive">Expirado</Badge>;
+      return <Badge variant="destructive" className="bg-red-500 hover:bg-red-600">Expirado</Badge>;
     }
     if (period.isExpiringSoon) {
-      return <Badge variant="warning">Expirando em breve</Badge>;
+      return <Badge className="bg-amber-500 hover:bg-amber-600 text-white">Vencendo em Breve</Badge>;
     }
     if (period.status === 'COMPLETED') {
-      return <Badge variant="secondary">Concluído</Badge>;
+      return <Badge variant="secondary" className="bg-slate-200 text-slate-700">Concluído</Badge>;
     }
-    return <Badge variant="default">{period.statusLabel}</Badge>;
+    return <Badge className="bg-emerald-500 hover:bg-emerald-600">Disponível</Badge>;
   };
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr + 'T00:00:00').toLocaleDateString('pt-BR');
+    return new Date(dateStr + 'T00:00:00').toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
   };
 
   const formatDateTime = (dateTimeStr: string) => {
-    return new Date(dateTimeStr).toLocaleString('pt-BR');
+    return new Date(dateTimeStr).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   // Find active period (most recent open)
@@ -113,392 +128,419 @@ export default function VacationPage() {
     (p) => p.status === 'OPEN' || p.status === 'SCHEDULED' || p.status === 'PARTIALLY_USED'
   );
 
+  if (loading && periods.length === 0) {
+    return (
+      <div className="h-[80vh] flex flex-col items-center justify-center space-y-4">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <p className="text-muted-foreground animate-pulse">Carregando informações de férias...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="min-h-screen bg-muted/30 p-4 md:p-8 space-y-8 animate-in fade-in duration-500">
+
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Férias</h1>
-          <p className="text-muted-foreground">Gerencie suas férias e períodos aquisitivos</p>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Gestão de Férias</h1>
+          <p className="text-muted-foreground mt-1">
+            Planeje seu descanso, acompanhe prazos e gerencie solicitações.
+          </p>
         </div>
-        <Button onClick={() => router.push('/vacation/request')}>
-          <Plus className="mr-2 h-4 w-4" />
-          Solicitar Férias
+        <Button
+          onClick={() => router.push('/vacation/request')}
+          size="lg"
+          className="shadow-md hover:shadow-lg transition-all bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white border-0"
+        >
+          <Plus className="mr-2 h-5 w-5" />
+          Nova Solicitação
         </Button>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card
-          className="cursor-pointer hover:bg-accent transition-colors"
-          onClick={() => router.push('/vacation/approvals')}
-        >
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Pendentes Aprovação</p>
-                <p className="text-2xl font-bold">{statistics.pendingRequests}</p>
-              </div>
-              <Clock className="h-8 w-8 text-yellow-500" />
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Períodos Expirando</p>
-                <p className="text-2xl font-bold text-red-600">{statistics.expiringPeriods}</p>
-              </div>
-              <AlertTriangle className="h-8 w-8 text-red-500" />
-            </div>
-          </CardContent>
-        </Card>
+        {/* Main Column (Active Period & Stats) */}
+        <div className="lg:col-span-2 space-y-6">
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Em Férias Hoje</p>
-                <p className="text-2xl font-bold text-green-600">{statistics.employeesOnVacation}</p>
+          {/* Active Period Hero Card */}
+          {activePeriod ? (
+            <Card className="overflow-hidden border-none shadow-lg bg-white relative">
+              <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-emerald-400 to-teal-500" />
+              <div className="absolute top-[-20px] right-[-20px] opacity-[0.03] rotate-12 pointer-events-none">
+                <Sun className="h-64 w-64 text-emerald-900" />
               </div>
-              <Sun className="h-8 w-8 text-green-500" />
-            </div>
-          </CardContent>
-        </Card>
 
-        <Card
-          className="cursor-pointer hover:bg-accent transition-colors"
-          onClick={() => router.push('/vacation/calendar')}
-        >
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Próximas Férias</p>
-                <p className="text-2xl font-bold">{statistics.upcomingVacations}</p>
-              </div>
-              <CalendarDays className="h-8 w-8 text-blue-500" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <CardTitle className="text-xl flex items-center gap-2">
+                      <Briefcase className="h-5 w-5 text-emerald-600" />
+                      Período Aquisitivo Atual
+                    </CardTitle>
+                    <CardDescription className="text-base">
+                      Referência: <strong>{formatDate(activePeriod.acquisitionStartDate)}</strong> até <strong>{formatDate(activePeriod.acquisitionEndDate)}</strong>
+                    </CardDescription>
+                  </div>
+                  <div className="hidden sm:block">
+                    {getPeriodStatusBadge(activePeriod)}
+                  </div>
+                </div>
+              </CardHeader>
 
-      {/* Management Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="border-l-4 border-l-blue-500">
-          <CardHeader>
-            <CardTitle>Área do Gestor</CardTitle>
-            <CardDescription>Gerencie sua equipe</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Button
-              variant="outline"
-              className="w-full justify-start"
-              onClick={() => router.push('/vacation/approvals')}
+              <CardContent className="space-y-6 pt-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                  <div className="space-y-1">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Direito Total</span>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-3xl font-bold text-foreground">{activePeriod.totalDays}</span>
+                      <span className="text-sm text-muted-foreground">dias</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Utilizados</span>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-3xl font-bold text-slate-600">{activePeriod.usedDays}</span>
+                      <span className="text-sm text-muted-foreground">dias</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Vendidos</span>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-3xl font-bold text-amber-600">{activePeriod.soldDays}</span>
+                      <span className="text-sm text-muted-foreground">dias</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1 bg-emerald-50 p-2 rounded-lg border border-emerald-100 -m-2 pl-3">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-emerald-700">Disponíveis</span>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-3xl font-bold text-emerald-600">{activePeriod.remainingDays}</span>
+                      <span className="text-sm text-emerald-600 font-medium">dias</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm items-end">
+                    <span className="font-medium text-muted-foreground">Progresso de uso</span>
+                    <span className="font-bold text-foreground">
+                      {Math.round(((activePeriod.usedDays + activePeriod.soldDays) / activePeriod.totalDays) * 100)}%
+                    </span>
+                  </div>
+                  <Progress
+                    value={((activePeriod.usedDays + activePeriod.soldDays) / activePeriod.totalDays) * 100}
+                    className="h-3 bg-slate-100 [&>div]:bg-gradient-to-r [&>div]:from-emerald-400 [&>div]:to-teal-500"
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground pt-1">
+                    <span>Prazo para concessão: <strong>{formatDate(activePeriod.concessionEndDate)}</strong></span>
+                    <span>{activePeriod.statusLabel}</span>
+                  </div>
+                </div>
+
+                {activePeriod.isExpiringSoon && (
+                  <Alert variant="destructive" className="bg-red-50 border-red-200 text-red-800">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>Atenção ao Prazo</AlertTitle>
+                    <AlertDescription className="text-red-700">
+                      Este período expira em <strong>{activePeriod.daysUntilExpiration} dias</strong>. Agende suas férias o quanto antes.
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="bg-white border-dashed border-2 p-8 text-center text-muted-foreground">
+              <Briefcase className="h-12 w-12 mx-auto mb-4 opacity-20" />
+              <h3 className="text-lg font-medium">Nenhum período ativo encontrado</h3>
+              <p>Entre em contato com o RH para verificar seus períodos aquisitivos.</p>
+            </Card>
+          )}
+
+          {/* Quick Stats Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Card className="hover:shadow-md transition-shadow border-none shadow-sm bg-white">
+              <CardContent className="p-4 flex flex-col items-center justify-center text-center space-y-2">
+                <div className="p-2 bg-blue-50 text-blue-600 rounded-full">
+                  <Clock className="h-6 w-6" />
+                </div>
+                <div>
+                  <span className="text-2xl font-bold block">{statistics.pendingRequests}</span>
+                  <span className="text-xs text-muted-foreground font-medium">Pendentes Aprovação</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-md transition-shadow border-none shadow-sm bg-white">
+              <CardContent className="p-4 flex flex-col items-center justify-center text-center space-y-2">
+                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-full">
+                  <CalendarDays className="h-6 w-6" />
+                </div>
+                <div>
+                  <span className="text-2xl font-bold block">{statistics.upcomingVacations}</span>
+                  <span className="text-xs text-muted-foreground font-medium">Próximas Férias</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-md transition-shadow border-none shadow-sm bg-white">
+              <CardContent className="p-4 flex flex-col items-center justify-center text-center space-y-2">
+                <div className="p-2 bg-orange-50 text-orange-600 rounded-full">
+                  <AlertTriangle className="h-6 w-6" />
+                </div>
+                <div>
+                  <span className="text-2xl font-bold block text-orange-600">{statistics.expiringPeriods}</span>
+                  <span className="text-xs text-muted-foreground font-medium">Períodos Expirando</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-md transition-shadow border-none shadow-sm bg-white">
+              <CardContent className="p-4 flex flex-col items-center justify-center text-center space-y-2">
+                <div className="p-2 bg-emerald-50 text-emerald-600 rounded-full">
+                  <Sun className="h-6 w-6" />
+                </div>
+                <div>
+                  <span className="text-2xl font-bold block text-emerald-600">{statistics.employeesOnVacation}</span>
+                  <span className="text-xs text-muted-foreground font-medium">Em Férias Hoje</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Right Column (Actions & Tools) */}
+        <div className="space-y-6">
+
+          {/* Quick Actions Panel */}
+          <div className="grid gap-4">
+            <h3 className="font-semibold text-lg flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-primary" />
+              Acesso Rápido
+            </h3>
+
+            <button
+              onClick={() => router.push('/vacation/simulator')}
+              className="group flex items-center gap-4 p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-all border border-transparent hover:border-primary/20 text-left"
             >
-              <CheckCircle className="mr-2 h-4 w-4 text-blue-500" />
-              Aprovações Pendentes
-              {statistics.pendingRequests > 0 && (
-                <Badge className="ml-auto bg-blue-100 text-blue-700 hover:bg-blue-100">{statistics.pendingRequests}</Badge>
-              )}
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full justify-start"
-              onClick={() => router.push('/vacation/team')}
-            >
-              <Users className="mr-2 h-4 w-4 text-purple-500" />
-              Presença da Equipe (Calendário)
-            </Button>
-          </CardContent>
-        </Card>
+              <div className="bg-green-100 p-3 rounded-lg group-hover:bg-green-200 transition-colors">
+                <DollarSign className="h-6 w-6 text-green-700" />
+              </div>
+              <div>
+                <div className="font-semibold text-foreground">Simulador</div>
+                <div className="text-xs text-muted-foreground">Calcule valores de venda e férias</div>
+              </div>
+              <ChevronRight className="ml-auto h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+            </button>
 
-        <Card className="border-l-4 border-l-orange-500">
-          <CardHeader>
-            <CardTitle>Administração RH</CardTitle>
-            <CardDescription>Painel administrativo</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Button
-              variant="outline"
-              className="w-full justify-start"
-              onClick={() => router.push('/vacation/admin')}
+            <button
+              onClick={() => router.push('/vacation/calendar')}
+              className="group flex items-center gap-4 p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-all border border-transparent hover:border-primary/20 text-left"
             >
-              <AlertTriangle className="mr-2 h-4 w-4 text-orange-500" />
-              Monitoramento de Vencimentos
-              {statistics.expiringPeriods > 0 && (
-                <Badge className="ml-auto bg-orange-100 text-orange-700 hover:bg-orange-100">{statistics.expiringPeriods}</Badge>
-              )}
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full justify-start"
-              disabled
+              <div className="bg-blue-100 p-3 rounded-lg group-hover:bg-blue-200 transition-colors">
+                <Users className="h-6 w-6 text-blue-700" />
+              </div>
+              <div>
+                <div className="font-semibold text-foreground">Calendário da Equipe</div>
+                <div className="text-xs text-muted-foreground">Visualize quem está ausente</div>
+              </div>
+              <ChevronRight className="ml-auto h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+            </button>
+
+            <button
+              onClick={() => router.push('/vacation/documents')}
+              className="group flex items-center gap-4 p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-all border border-transparent hover:border-primary/20 text-left"
             >
-              <FileText className="mr-2 h-4 w-4 text-gray-500" />
-              Configurações (Em Breve)
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+              <div className="bg-purple-100 p-3 rounded-lg group-hover:bg-purple-200 transition-colors">
+                <FileText className="h-6 w-6 text-purple-700" />
+              </div>
+              <div>
+                <div className="font-semibold text-foreground">Documentos</div>
+                <div className="text-xs text-muted-foreground">Avisos e recibos assinados</div>
+              </div>
+              <ChevronRight className="ml-auto h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+            </button>
+          </div>
 
-      {/* Active Period Card */}
-      {activePeriod && (
-        <Card className="bg-gradient-to-br from-primary/10 to-primary/5">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Período Aquisitivo Atual
-            </CardTitle>
-            <CardDescription>
-              {formatDate(activePeriod.acquisitionStartDate)} a{' '}
-              {formatDate(activePeriod.acquisitionEndDate)}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Direito Total</p>
-                <p className="text-2xl font-bold">{activePeriod.totalDays} dias</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Utilizados</p>
-                <p className="text-2xl font-bold">{activePeriod.usedDays} dias</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Vendidos (Abono)</p>
-                <p className="text-2xl font-bold">{activePeriod.soldDays} dias</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Disponíveis</p>
-                <p className="text-2xl font-bold text-primary">{activePeriod.remainingDays} dias</p>
-              </div>
-            </div>
+          {/* Manager / Admin Section */}
+          <div className="space-y-4 pt-4 border-t">
+            <h3 className="font-semibold text-lg text-muted-foreground">Gestão</h3>
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span>Uso do Período</span>
-                <span>
-                  {Math.round(
-                    ((activePeriod.usedDays + activePeriod.soldDays) / activePeriod.totalDays) * 100
+            <Card className="border shadow-none bg-slate-50 overflow-hidden">
+              <div className="h-1 w-full bg-blue-500"></div>
+              <CardContent className="p-0">
+                <button
+                  onClick={() => router.push('/vacation/approvals')}
+                  className="w-full text-left p-4 hover:bg-slate-100 transition-colors flex items-center justify-between border-b"
+                >
+                  <span className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-blue-600" />
+                    <span className="font-medium text-sm">Aprovações Pendentes</span>
+                  </span>
+                  {statistics.pendingRequests > 0 && (
+                    <Badge variant="secondary" className="bg-blue-200 text-blue-800 hover:bg-blue-300">
+                      {statistics.pendingRequests}
+                    </Badge>
                   )}
-                  %
-                </span>
-              </div>
-              <Progress
-                value={
-                  ((activePeriod.usedDays + activePeriod.soldDays) / activePeriod.totalDays) * 100
-                }
-              />
+                </button>
+                <button
+                  onClick={() => router.push('/vacation/admin')}
+                  className="w-full text-left p-4 hover:bg-slate-100 transition-colors flex items-center justify-between"
+                >
+                  <span className="flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-orange-600" />
+                    <span className="font-medium text-sm">Monitoramento (RH)</span>
+                  </span>
+                  {statistics.expiringPeriods > 0 && (
+                    <Badge variant="secondary" className="bg-orange-200 text-orange-800 hover:bg-orange-300">
+                      {statistics.expiringPeriods}
+                    </Badge>
+                  )}
+                </button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+
+      {/* History Tabs */}
+      <div className="bg-white rounded-xl shadow-sm border p-6">
+        <Tabs defaultValue="requests" className="w-full">
+          <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4">
+            <div>
+              <h3 className="text-xl font-bold flex items-center gap-2">
+                <History className="h-5 w-5 text-muted-foreground" />
+                Histórico
+              </h3>
+              <p className="text-sm text-muted-foreground">Acompanhe seus registros anteriores</p>
             </div>
+            <TabsList className="grid w-full sm:w-[400px] grid-cols-2">
+              <TabsTrigger value="requests">Minhas Solicitações</TabsTrigger>
+              <TabsTrigger value="periods">Períodos Aquisitivos</TabsTrigger>
+            </TabsList>
+          </div>
 
-            <div className="flex items-center justify-between pt-2 border-t">
-              <div className="text-sm">
-                <span className="text-muted-foreground">Período Concessivo: </span>
-                <span className="font-medium">
-                  {formatDate(activePeriod.concessionStartDate)} a{' '}
-                  {formatDate(activePeriod.concessionEndDate)}
-                </span>
+          <TabsContent value="requests" className="mt-0">
+            {requests.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center border-2 border-dashed rounded-lg bg-slate-50">
+                <Calendar className="h-10 w-10 text-muted-foreground mb-3 opacity-50" />
+                <p className="text-lg font-medium text-muted-foreground">Você ainda não possui solicitações</p>
+                <Button variant="link" onClick={() => router.push('/vacation/request')} className="mt-2 text-primary">
+                  Criar a primeira solicitação agora
+                </Button>
               </div>
-              {getPeriodStatusBadge(activePeriod)}
-            </div>
-
-            {activePeriod.isExpiringSoon && (
-              <Alert variant="destructive">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription>
-                  Atenção! Este período expira em {activePeriod.daysUntilExpiration} dias. Agende
-                  suas férias para não perder o direito.
-                </AlertDescription>
-              </Alert>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Tabs */}
-      <Tabs defaultValue="requests">
-        <TabsList>
-          <TabsTrigger value="requests">Minhas Solicitações</TabsTrigger>
-          <TabsTrigger value="periods">Períodos Aquisitivos</TabsTrigger>
-        </TabsList>
-
-        {/* Requests Tab */}
-        <TabsContent value="requests">
-          <Card>
-            <CardHeader>
-              <CardTitle>Solicitações de Férias</CardTitle>
-              <CardDescription>Histórico das suas solicitações</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                </div>
-              ) : requests.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Você não possui solicitações de férias</p>
-                  <Button className="mt-4" onClick={() => router.push('/vacation/request')}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Solicitar Férias
-                  </Button>
-                </div>
-              ) : (
+            ) : (
+              <div className="rounded-md border overflow-hidden">
                 <Table>
-                  <TableHeader>
+                  <TableHeader className="bg-slate-50">
                     <TableRow>
-                      <TableHead>Período</TableHead>
-                      <TableHead>Dias</TableHead>
-                      <TableHead>Tipo</TableHead>
+                      <TableHead>Período Solicitado</TableHead>
+                      <TableHead>Qtd. Dias</TableHead>
+                      <TableHead>Abono (Venda)</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Solicitado em</TableHead>
+                      <TableHead>Criado em</TableHead>
                       <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {requests.map((request) => (
-                      <TableRow key={request.id}>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">
-                              {formatDate(request.startDate)} - {formatDate(request.endDate)}
-                            </div>
-                            {request.sellDays && request.soldDaysCount > 0 && (
-                              <div className="text-xs text-muted-foreground">
-                                + {request.soldDaysCount} dias de abono
-                              </div>
-                            )}
+                      <TableRow key={request.id} className="hover:bg-slate-50/50">
+                        <TableCell className="font-medium">
+                          <div className="flex flex-col">
+                            <span>{formatDate(request.startDate)} - {formatDate(request.endDate)}</span>
+                            <span className="text-xs text-muted-foreground">{request.requestTypeLabel}</span>
                           </div>
                         </TableCell>
                         <TableCell>{request.daysCount} dias</TableCell>
                         <TableCell>
-                          <Badge variant="outline">{request.requestTypeLabel}</Badge>
+                          {request.soldDaysCount > 0 ? (
+                            <Badge variant="secondary" className="bg-green-50 text-green-700">
+                              + {request.soldDaysCount} dias
+                            </Badge>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">-</span>
+                          )}
                         </TableCell>
                         <TableCell>{getStatusBadge(request.status)}</TableCell>
-                        <TableCell className="text-muted-foreground">
+                        <TableCell className="text-muted-foreground text-sm">
                           {formatDateTime(request.createdAt)}
                         </TableCell>
                         <TableCell className="text-right">
                           <Button
                             variant="ghost"
                             size="sm"
+                            className="h-8 w-8 p-0"
                             onClick={() => router.push(`/vacation/requests/${request.id}`)}
                           >
-                            Detalhes
-                            <ChevronRight className="ml-1 h-4 w-4" />
+                            <ChevronRight className="h-4 w-4" />
+                            <span className="sr-only">Ver detalhes</span>
                           </Button>
                         </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+              </div>
+            )}
+          </TabsContent>
 
-        {/* Periods Tab */}
-        <TabsContent value="periods">
-          <Card>
-            <CardHeader>
-              <CardTitle>Períodos Aquisitivos</CardTitle>
-              <CardDescription>Histórico dos seus períodos de direito a férias</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                </div>
-              ) : periods.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Nenhum período aquisitivo encontrado</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {periods.map((period) => (
-                    <div key={period.id} className="p-4 rounded-lg border">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <div className="font-medium">
-                            Período {formatDate(period.acquisitionStartDate)} a{' '}
-                            {formatDate(period.acquisitionEndDate)}
-                          </div>
-                          <div className="text-sm text-muted-foreground mt-1">
-                            Concessivo até {formatDate(period.concessionEndDate)}
-                          </div>
-                        </div>
+          <TabsContent value="periods" className="mt-0">
+            {periods.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-lg bg-slate-50">
+                Sua empresa ainda não cadastrou seus períodos.
+              </div>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2">
+                {periods.map((period) => (
+                  <Card key={period.id} className={cn(
+                    "transition-all hover:border-primary/50",
+                    period.isExpired ? "opacity-70 bg-slate-50" : "bg-white"
+                  )}>
+                    <CardHeader className="pb-2">
+                      <div className="flex justify-between items-start">
+                        <CardTitle className="text-base font-medium">
+                          {formatDate(period.acquisitionStartDate)} - {formatDate(period.acquisitionEndDate)}
+                        </CardTitle>
                         {getPeriodStatusBadge(period)}
                       </div>
-                      <div className="grid grid-cols-4 gap-4 mt-4 text-sm">
-                        <div>
-                          <span className="text-muted-foreground">Total:</span>{' '}
-                          <span className="font-medium">{period.totalDays} dias</span>
+                      <CardDescription>
+                        Concessivo até: {formatDate(period.concessionEndDate)}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex justify-between text-sm mb-2">
+                        <span className="text-muted-foreground">Progresso</span>
+                        <span className="font-medium">{Math.round(((period.usedDays + period.soldDays) / period.totalDays) * 100)}%</span>
+                      </div>
+                      <Progress value={((period.usedDays + period.soldDays) / period.totalDays) * 100} className="h-2 mb-4" />
+
+                      <div className="grid grid-cols-4 gap-2 text-center text-xs">
+                        <div className="bg-slate-50 p-2 rounded">
+                          <div className="text-muted-foreground">Total</div>
+                          <div className="font-bold">{period.totalDays}</div>
                         </div>
-                        <div>
-                          <span className="text-muted-foreground">Usados:</span>{' '}
-                          <span className="font-medium">{period.usedDays} dias</span>
+                        <div className="bg-slate-50 p-2 rounded">
+                          <div className="text-muted-foreground">Usados</div>
+                          <div className="font-bold">{period.usedDays}</div>
                         </div>
-                        <div>
-                          <span className="text-muted-foreground">Vendidos:</span>{' '}
-                          <span className="font-medium">{period.soldDays} dias</span>
+                        <div className="bg-slate-50 p-2 rounded">
+                          <div className="text-muted-foreground">Vendidos</div>
+                          <div className="font-bold">{period.soldDays}</div>
                         </div>
-                        <div>
-                          <span className="text-muted-foreground">Restantes:</span>{' '}
-                          <span className="font-medium text-primary">
-                            {period.remainingDays} dias
-                          </span>
+                        <div className={cn("p-2 rounded", period.remainingDays > 0 ? "bg-emerald-50 text-emerald-700" : "bg-slate-50 text-muted-foreground")}>
+                          <div className="opacity-80">Restantes</div>
+                          <div className="font-bold">{period.remainingDays}</div>
                         </div>
                       </div>
-                      <Progress
-                        value={((period.usedDays + period.soldDays) / period.totalDays) * 100}
-                        className="mt-3"
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card
-          className="cursor-pointer hover:bg-accent transition-colors"
-          onClick={() => router.push('/vacation/simulator')}
-        >
-          <CardContent className="pt-6 text-center">
-            <DollarSign className="h-8 w-8 mx-auto mb-2 text-green-500" />
-            <h3 className="font-medium">Simulador de Valores</h3>
-            <p className="text-sm text-muted-foreground">Calcule quanto vai receber</p>
-          </CardContent>
-        </Card>
-
-        <Card
-          className="cursor-pointer hover:bg-accent transition-colors"
-          onClick={() => router.push('/vacation/calendar')}
-        >
-          <CardContent className="pt-6 text-center">
-            <Users className="h-8 w-8 mx-auto mb-2 text-blue-500" />
-            <h3 className="font-medium">Calendário da Equipe</h3>
-            <p className="text-sm text-muted-foreground">Veja férias do time</p>
-          </CardContent>
-        </Card>
-
-        <Card
-          className="cursor-pointer hover:bg-accent transition-colors"
-          onClick={() => router.push('/vacation/documents')}
-        >
-          <CardContent className="pt-6 text-center">
-            <FileText className="h-8 w-8 mx-auto mb-2 text-purple-500" />
-            <h3 className="font-medium">Documentos</h3>
-            <p className="text-sm text-muted-foreground">Avisos e recibos</p>
-          </CardContent>
-        </Card>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

@@ -432,20 +432,37 @@ export default function EmployeeDetailPage() {
             </CardHeader>
             <CardContent>
               {employee.address ? (
-                <div className="space-y-2">
-                  <p className="font-medium text-[var(--color-text)]">
-                    {employee.address.street}, {employee.address.number}
-                    {employee.address.complement && ` - ${employee.address.complement}`}
-                  </p>
-                  <p className="text-[var(--color-text-secondary)]">
-                    {employee.address.neighborhood}
-                  </p>
-                  <p className="text-[var(--color-text-secondary)]">
-                    {employee.address.city} - {employee.address.state}
-                  </p>
-                  <p className="text-[var(--color-text-secondary)]">
-                    CEP: {employee.address.zipCode}
-                  </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <p className="font-medium text-[var(--color-text)]">
+                      {employee.address.street}, {employee.address.number}
+                      {employee.address.complement && ` - ${employee.address.complement}`}
+                    </p>
+                    <p className="text-[var(--color-text-secondary)]">
+                      {employee.address.neighborhood}
+                    </p>
+                    <p className="text-[var(--color-text-secondary)]">
+                      {employee.address.city} - {employee.address.state}
+                    </p>
+                    <p className="text-[var(--color-text-secondary)]">
+                      CEP: {employee.address.zipCode}
+                    </p>
+                  </div>
+                  <div className="h-[200px] w-full rounded-lg overflow-hidden border border-gray-100 bg-gray-50">
+                    <iframe
+                      width="100%"
+                      height="100%"
+                      frameBorder="0"
+                      scrolling="no"
+                      marginHeight={0}
+                      marginWidth={0}
+                      src={`https://maps.google.com/maps?q=${encodeURIComponent(
+                        `${employee.address.street}, ${employee.address.number}, ${employee.address.city} - ${employee.address.state}`
+                      )}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                      title="Localização"
+                      className="w-full h-full opacity-90 hover:opacity-100 transition-opacity"
+                    />
+                  </div>
                 </div>
               ) : (
                 <p className="text-[var(--color-text-secondary)]">Endereço não cadastrado</p>
