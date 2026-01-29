@@ -58,9 +58,14 @@ const SelectGroup = ({ children }: { children: React.ReactNode }) => (
   <div role="group">{children}</div>
 )
 
-const SelectValue = ({ placeholder }: { placeholder?: string }) => {
+interface SelectValueProps {
+  placeholder?: string
+  children?: React.ReactNode
+}
+
+const SelectValue = ({ placeholder, children }: SelectValueProps) => {
   const { value } = useSelect()
-  return <span>{value || placeholder}</span>
+  return <span>{children || value || placeholder}</span>
 }
 
 const SelectTrigger = React.forwardRef<

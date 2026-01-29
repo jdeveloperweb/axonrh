@@ -48,6 +48,9 @@ export default function EditEmployeePage() {
                     addressZipCode: employee.address?.zipCode || employee.addressZipCode,
                     mobile: employee.personalPhone || employee.mobile,
                     addressCountry: employee.address?.country || employee.addressCountry,
+                    workRegime: employee.workRegime,
+                    hybridWorkDays: employee.hybridWorkDays,
+                    hybridFrequency: employee.hybridFrequency,
                 };
 
                 setInitialData(formattedData);

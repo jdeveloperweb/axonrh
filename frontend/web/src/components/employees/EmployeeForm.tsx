@@ -651,6 +651,7 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                                     <option value="DIVORCED">Divorciado(a)</option>
                                     <option value="WIDOWED">Viúvo(a)</option>
                                     <option value="SEPARATED">Separado(a)</option>
+                                    <option value="STABLE_UNION">União Estável</option>
                                 </select>
                             </div>
 
@@ -920,9 +921,9 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                                 >
                                     <option value="CLT">CLT</option>
                                     <option value="PJ">PJ</option>
-                                    <option value="INTERN">Estagiário</option>
-                                    <option value="APPRENTICE">Jovem Aprendiz</option>
-                                    <option value="TEMPORARY">Temporário</option>
+                                    <option value="ESTAGIARIO">Estagiário</option>
+                                    <option value="APRENDIZ">Jovem Aprendiz</option>
+                                    <option value="TEMPORARIO">Temporário</option>
                                 </select>
                             </div>
 

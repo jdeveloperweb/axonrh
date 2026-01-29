@@ -71,6 +71,22 @@ export function TerminationModal({ employee, isOpen, onClose, onSuccess }: Termi
         exitInterviewDone: false,
     });
 
+    const terminationTypeLabels: Record<string, string> = {
+        'RESIGNATION': 'Pedido de Demissão',
+        'TERMINATION_WITHOUT_CAUSE': 'Dispensa sem Justa Causa',
+        'TERMINATION_WITH_CAUSE': 'Dispensa com Justa Causa',
+        'AGREEMENT': 'Acordo (Reforma Trabalhista)',
+        'END_OF_CONTRACT': 'Término de Contrato',
+        'RETIREMENT': 'Aposentadoria',
+        'DEATH': 'Falecimento'
+    };
+
+    const noticePeriodLabels: Record<string, string> = {
+        'WORKED': 'Trabalhado',
+        'PAID': 'Indenizado',
+        'WAIVED': 'Dispensado / Não se aplica'
+    };
+
     useEffect(() => {
         if (employee) {
             setFormData(prev => ({ ...prev, employeeId: employee.id }));
@@ -134,7 +150,9 @@ export function TerminationModal({ employee, isOpen, onClose, onSuccess }: Termi
                                 onValueChange={(v) => setFormData({ ...formData, terminationType: v as TerminationType })}
                             >
                                 <SelectTrigger className="bg-white border-gray-200">
-                                    <SelectValue placeholder="Selecione o tipo" />
+                                    <SelectValue placeholder="Selecione o tipo">
+                                        {terminationTypeLabels[formData.terminationType]}
+                                    </SelectValue>
                                 </SelectTrigger>
                                 <SelectContent className="bg-white border border-gray-200">
                                     <SelectItem value="RESIGNATION">Pedido de Demissão</SelectItem>
@@ -153,7 +171,9 @@ export function TerminationModal({ employee, isOpen, onClose, onSuccess }: Termi
                                 onValueChange={(v) => setFormData({ ...formData, noticePeriod: v as NoticePeriod })}
                             >
                                 <SelectTrigger className="bg-white border-gray-200">
-                                    <SelectValue placeholder="Selecione o aviso" />
+                                    <SelectValue placeholder="Selecione o aviso">
+                                        {noticePeriodLabels[formData.noticePeriod]}
+                                    </SelectValue>
                                 </SelectTrigger>
                                 <SelectContent className="bg-white border border-gray-200">
                                     <SelectItem value="WORKED">Trabalhado</SelectItem>
@@ -196,17 +216,17 @@ export function TerminationModal({ employee, isOpen, onClose, onSuccess }: Termi
 
                     {/* Regime de Trabalho Display */}
                     <div className="p-4 rounded-lg bg-blue-50 border border-blue-100 flex items-center gap-3">
-                        {employee.workRegime === 'REMOTE' || employee.workRegime === 'HYBRID' ? (
+                        {employee.workRegime === 'REMOTO' || employee.workRegime === 'HIBRIDO' ? (
                             <Home className="w-5 h-5 text-blue-600" />
                         ) : (
                             <Building2 className="w-5 h-5 text-blue-600" />
                         )}
                         <div>
                             <p className="text-sm font-semibold text-blue-900">
-                                Regime de Trabalho: {employee.workRegime === 'REMOTE' ? 'Home Office' : employee.workRegime === 'HYBRID' ? 'Híbrido' : 'Presencial'}
+                                Regime de Trabalho: {employee.workRegime === 'REMOTO' ? 'Home Office' : employee.workRegime === 'HIBRIDO' ? 'Híbrido' : 'Presencial'}
                             </p>
                             <p className="text-xs text-blue-700">
-                                {employee.workRegime === 'REMOTE' ? 'Certifique-se de agendar a coleta dos equipamentos via transportadora.' : 'O colaborador deve entregar os equipamentos pessoalmente no dia do desligamento.'}
+                                {employee.workRegime === 'REMOTO' ? 'Certifique-se de agendar a coleta dos equipamentos via transportadora.' : 'O colaborador deve entregar os equipamentos pessoalmente no dia do desligamento.'}
                             </p>
                         </div>
                     </div>

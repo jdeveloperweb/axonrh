@@ -29,7 +29,8 @@ export default function DepartmentsPage() {
         code: '',
         name: '',
         description: '',
-        managerId: ''
+        managerId: '',
+        parentId: ''
     });
 
     // Fetch data
@@ -70,10 +71,11 @@ export default function DepartmentsPage() {
                 name: department.name,
                 description: department.description || '',
                 managerId: department.manager?.id || '',
+                parentId: department.parent?.id || '',
             });
         } else {
             setEditingDepartment(null);
-            setFormData({ code: '', name: '', description: '', managerId: '' });
+            setFormData({ code: '', name: '', description: '', managerId: '', parentId: '' });
         }
         setShowModal(true);
     };
@@ -81,7 +83,7 @@ export default function DepartmentsPage() {
     const handleCloseModal = () => {
         setShowModal(false);
         setEditingDepartment(null);
-        setFormData({ code: '', name: '', description: '', managerId: '' });
+        setFormData({ code: '', name: '', description: '', managerId: '', parentId: '' });
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -92,6 +94,7 @@ export default function DepartmentsPage() {
                     name: formData.name,
                     description: formData.description || undefined,
                     managerId: formData.managerId ? formData.managerId : undefined,
+                    parentId: formData.parentId ? formData.parentId : undefined,
                 };
                 console.log('Atualizando departamento:', editingDepartment.id, updateData);
                 const result = await departmentsApi.update(editingDepartment.id, updateData);
@@ -211,6 +214,9 @@ export default function DepartmentsPage() {
                                     <th className="px-6 py-3 text-left text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">
                                         Colaboradores
                                     </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">
+                                        Superior
+                                    </th>
                                     <th className="px-6 py-3 text-right text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">
                                         Ações
                                     </th>
@@ -273,6 +279,9 @@ export default function DepartmentsPage() {
                                                     <Users className="w-4 h-4" />
                                                     {dept.employeeCount || 0}
                                                 </div>
+                                            </td>
+                                            <td className="px-6 py-4 text-[var(--color-text-secondary)]">
+                                                {dept.parent?.name || '-'}
                                             </td>
                                             <td className="px-6 py-4 text-right">
                                                 <div className="relative group inline-block">
@@ -351,6 +360,26 @@ export default function DepartmentsPage() {
                                     rows={3}
                                     className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
                                 />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
+                                    Departamento Superior
+                                </label>
+                                <select
+                                    value={formData.parentId || ''}
+                                    onChange={(e) => setFormData({ ...formData, parentId: e.target.value || undefined })}
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                                >
+                                    <option value="">Nenhum (Departamento Raiz)</option>
+                                    {departments
+                                        .filter(d => !editingDepartment || d.id !== editingDepartment.id)
+                                        .map((dept) => (
+                                            <option key={dept.id} value={dept.id}>
+                                                {dept.name}
+                                            </option>
+                                        ))
+                                    }
+                                </select>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-[var(--color-text)] mb-1">

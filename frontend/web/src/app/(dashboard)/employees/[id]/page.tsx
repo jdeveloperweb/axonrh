@@ -515,6 +515,27 @@ export default function EmployeeDetailPage() {
                   <p className="text-sm text-[var(--color-text-secondary)]">Tipo de Contrato</p>
                   <p className="font-medium text-[var(--color-text)]">{employee.employmentType}</p>
                 </div>
+                <div>
+                  <p className="text-sm text-[var(--color-text-secondary)]">Regime de Trabalho</p>
+                  <p className="font-medium text-[var(--color-text)]">
+                    {employee.workRegime === 'PRESENCIAL' ? 'Presencial' :
+                      employee.workRegime === 'REMOTO' ? 'Home Office' :
+                        employee.workRegime === 'HIBRIDO' ? `Híbrido (${employee.hybridFrequency}x na semana)` :
+                          employee.workRegime || '-'}
+                  </p>
+                </div>
+                {employee.workRegime === 'HIBRIDO' && employee.hybridWorkDays && employee.hybridWorkDays.length > 0 && (
+                  <div className="col-span-2">
+                    <p className="text-sm text-[var(--color-text-secondary)]">Dias Presenciais</p>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {employee.hybridWorkDays.map((day) => (
+                        <span key={day} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
+                          {day.charAt(0) + day.slice(1).toLowerCase().replace('terca', 'terça')}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

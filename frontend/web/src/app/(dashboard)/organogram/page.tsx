@@ -231,6 +231,19 @@ export default function OrganogramPage() {
                 </div>
             </div>
 
+            {/* Hint Banner */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
+                <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
+                    <Building2 className="w-5 h-5" />
+                </div>
+                <div>
+                    <h4 className="text-sm font-bold text-blue-900">Dica de Estrutura</h4>
+                    <p className="text-sm text-blue-700">
+                        Para visualizar a hierarquia corretamente, acesse a página de <b>Departamentos</b> e defina o "Departamento Superior" para cada área. Departamentos sem superior serão exibidos como raízes.
+                    </p>
+                </div>
+            </div>
+
             {/* Configuration View */}
             {showConfig && (
                 <Card className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 bg-[var(--color-surface)] border-[var(--color-border)] shadow-xl animate-in fade-in slide-in-from-top-4 duration-300">
@@ -314,7 +327,7 @@ export default function OrganogramPage() {
                         <p className="text-[var(--color-text-secondary)] animate-pulse">Construindo hierarquia...</p>
                     </div>
                 ) : tree.length > 0 ? (
-                    <div className="flex flex-col items-center min-w-max">
+                    <div className="flex flex-row items-start justify-center gap-24 min-w-max">
                         {tree.map(node => (
                             <OrgTreeNode key={node.department.id} node={node} options={options} />
                         ))}
@@ -365,6 +378,14 @@ export default function OrganogramPage() {
 
 function OrgTreeNode({ node, options, depth = 0 }: { node: OrgNode, options: ExportOptions, depth?: number }) {
     const [isExpanded, setIsExpanded] = useState(true);
+    const levelColors = [
+        'border-blue-500 bg-blue-50/30',
+        'border-purple-500 bg-purple-50/30',
+        'border-emerald-500 bg-emerald-50/30',
+        'border-orange-500 bg-orange-50/30',
+        'border-pink-500 bg-pink-50/30',
+    ];
+    const borderColor = levelColors[depth % levelColors.length];
     const hasChildren = node.children.length > 0;
 
     return (
@@ -372,29 +393,38 @@ function OrgTreeNode({ node, options, depth = 0 }: { node: OrgNode, options: Exp
             {/* Node Card */}
             <div className="relative">
                 <Card className={cn(
-                    "relative w-80 p-5 transition-all duration-300 border-[var(--color-border)] bg-[var(--color-surface)] shadow-md hover:shadow-xl hover:-translate-y-1",
-                    depth > 0 && "mt-10"
+                    "relative w-80 p-5 transition-all duration-300 border-2 bg-[var(--color-surface)] shadow-lg hover:shadow-2xl hover:-translate-y-2",
+                    borderColor,
+                    depth > 0 && "mt-12"
                 )}>
+                    {/* Level Badge */}
+                    <div className="absolute -top-3 -right-3 px-2 py-1 rounded-md bg-black text-white text-[9px] font-bold shadow-md z-10">
+                        NÍVEL {depth + 1}
+                    </div>
+
                     {/* Connection Line to Parent */}
                     {depth > 0 && (
-                        <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-[2px] h-10 bg-[var(--color-border)]" />
+                        <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-[2px] h-12 bg-gray-300" />
                     )}
 
                     <div className="space-y-4">
                         {/* Dept Header */}
-                        <div className="flex items-start justify-between border-b border-[var(--color-border)] pb-3">
+                        <div className="flex items-start justify-between border-b border-gray-100 pb-3">
                             <div className="flex items-center gap-2">
-                                <div className="p-2 rounded-lg bg-[var(--color-primary)]/10 text-[var(--color-primary)]">
+                                <div className={cn(
+                                    "p-2 rounded-lg text-white shadow-sm",
+                                    depth === 0 ? "bg-blue-600" : "bg-gray-600"
+                                )}>
                                     <Building2 className="w-4 h-4" />
                                 </div>
                                 <div>
-                                    <h4 className="font-bold text-sm leading-tight text-[var(--color-text-primary)]">{node.department.name}</h4>
+                                    <h4 className="font-extrabold text-sm leading-tight text-[var(--color-text-primary)]">{node.department.name}</h4>
                                     <span className="text-[10px] uppercase text-[var(--color-text-tertiary)] font-mono tracking-tighter">
                                         {node.department.code}
                                     </span>
                                 </div>
                             </div>
-                            <div className="text-[10px] bg-[var(--color-surface-variant)] px-2 py-0.5 rounded-full font-medium">
+                            <div className="text-[10px] bg-white border border-gray-100 px-2 py-0.5 rounded-full font-bold shadow-sm">
                                 {node.employees.length + (node.manager ? 1 : 0)} Colabs
                             </div>
                         </div>
