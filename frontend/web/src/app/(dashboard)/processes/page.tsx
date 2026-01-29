@@ -1,10 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-    Users,
-    UserPlus,
     UserMinus,
     Search,
     Filter,
@@ -12,11 +10,9 @@ import {
     MoreHorizontal,
     Clock,
     CheckCircle2,
-    AlertCircle,
-    ChevronRight,
-    ExternalLink
+    AlertCircle
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -34,7 +30,7 @@ import {
     DropdownMenuItem
 } from '@/components/ui/dropdown-menu';
 
-const admissionStatusMap: Record<AdmissionStatus, { label: string, color: string, icon: any }> = {
+const admissionStatusMap: Record<AdmissionStatus, { label: string, color: string, icon: React.ElementType }> = {
     LINK_GENERATED: { label: 'Link Enviado', color: 'bg-blue-100 text-blue-800', icon: Clock },
     DATA_FILLING: { label: 'Preenchendo Dados', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
     DOCUMENTS_PENDING: { label: 'Doc. Pendentes', color: 'bg-orange-100 text-orange-800', icon: AlertCircle },
@@ -56,11 +52,7 @@ export default function ProcessesPage() {
     const [admissions, setAdmissions] = useState<AdmissionProcess[]>([]);
     const [search, setSearch] = useState('');
 
-    useEffect(() => {
-        fetchAdmissions();
-    }, []);
-
-    const fetchAdmissions = async () => {
+    const fetchAdmissions = useCallback(async () => {
         try {
             setLoading(true);
             const response = await processesApi.admissions.list();
@@ -75,7 +67,11 @@ export default function ProcessesPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [toast]);
+
+    useEffect(() => {
+        fetchAdmissions();
+    }, [fetchAdmissions]);
 
     const filteredAdmissions = admissions.filter(a =>
         a.candidateName.toLowerCase().includes(search.toLowerCase()) ||

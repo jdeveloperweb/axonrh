@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import Image from 'next/image';
 import {
     Users,
     Settings2,
@@ -59,11 +60,7 @@ export default function OrganogramPage() {
 
     const chartRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        loadData();
-    }, []);
-
-    const loadData = async () => {
+    const loadData = useCallback(async () => {
         setLoading(true);
         try {
             const [depts, empsResponse, positionsResponse] = await Promise.all([
@@ -83,7 +80,11 @@ export default function OrganogramPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        loadData();
+    }, [loadData]);
 
     const buildTree = (
         depts: DepartmentDTO[],
@@ -149,7 +150,15 @@ export default function OrganogramPage() {
         } else if (format === 'xlsx') {
             try {
                 const XLSX = await import('xlsx');
-                const flattenData: any[] = [];
+                interface FlattenedNode {
+                    Nivel: number;
+                    Departamento: string;
+                    Codigo: string;
+                    Gestor: string;
+                    Salario_Gestor: string | number;
+                    Total_Colaboradores: number;
+                }
+                const flattenData: FlattenedNode[] = [];
                 const flatten = (nodes: OrgNode[], level = 0) => {
                     nodes.forEach(node => {
                         flattenData.push({
@@ -404,7 +413,13 @@ function OrgTreeNode({ node, options, depth = 0 }: { node: OrgNode, options: Exp
                                             <div className="relative">
                                                 <div className="w-11 h-11 rounded-full overflow-hidden flex-shrink-0 bg-[var(--color-surface-variant)] flex items-center justify-center border-2 border-[var(--color-primary)]/30 ring-2 ring-white dark:ring-gray-900 group-hover:scale-110 transition-transform duration-300">
                                                     {node.manager.photoUrl ? (
-                                                        <img src={node.manager.photoUrl} alt="" className="w-full h-full object-cover" />
+                                                        <Image
+                                                            src={node.manager.photoUrl}
+                                                            alt={node.manager.fullName}
+                                                            width={44}
+                                                            height={44}
+                                                            className="w-full h-full object-cover"
+                                                        />
                                                     ) : (
                                                         <User className="w-6 h-6 text-[var(--color-text-tertiary)]" />
                                                     )}
@@ -444,7 +459,14 @@ function OrgTreeNode({ node, options, depth = 0 }: { node: OrgNode, options: Exp
                                     {node.employees.slice(0, 6).map((emp) => (
                                         <div key={emp.id} className="relative inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-800 bg-gray-100 dark:bg-gray-800 overflow-hidden group/item">
                                             {options.showPhotos && emp.photoUrl ? (
-                                                <img src={emp.photoUrl} className="h-full w-full object-cover" alt={emp.fullName} title={emp.fullName} />
+                                                <Image
+                                                    src={emp.photoUrl}
+                                                    className="h-full w-full object-cover"
+                                                    alt={emp.fullName}
+                                                    title={emp.fullName}
+                                                    width={32}
+                                                    height={32}
+                                                />
                                             ) : (
                                                 <div className="h-full w-full flex items-center justify-center text-[10px] font-bold text-[var(--color-text-secondary)]">
                                                     {emp.fullName.charAt(0)}
