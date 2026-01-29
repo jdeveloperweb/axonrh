@@ -5,19 +5,14 @@ import { useRouter } from 'next/navigation';
 import {
     format,
     startOfMonth,
-    endOfMonth,
-    eachDayOfInterval,
-    isSameDay,
-    isWeekend,
     getDay,
     parseISO,
     isWithinInterval,
+    isWeekend,
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
-    Calendar as CalendarIcon,
     ArrowLeft,
-    Users,
     Sun,
     Home,
     Building,
@@ -28,18 +23,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from '@/components/ui/popover';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 
 import { vacationApi, VacationRequest } from '@/lib/api/vacation';
 import { employeesApi, Employee } from '@/lib/api/employees';
@@ -56,7 +39,7 @@ export default function TeamVacationPage() {
     const [loading, setLoading] = useState(true);
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [vacations, setVacations] = useState<VacationRequest[]>([]);
-    const [departmentId, setDepartmentId] = useState<string>('all');
+    const [departmentId] = useState<string>('all');
 
     // Load Data
     const loadData = useCallback(async () => {
@@ -69,8 +52,6 @@ export default function TeamVacationPage() {
             setEmployees(empResponse.content);
 
             // Fetch vacations for the month of selected date
-            const start = startOfMonth(date);
-            // const end = endOfMonth(date);
             // Backend api accepts year/month.
             await loadVacations(date.getFullYear(), date.getMonth() + 1);
 
@@ -88,7 +69,7 @@ export default function TeamVacationPage() {
 
     useEffect(() => {
         loadData();
-    }, []);
+    }, [loadData]);
 
     // Calculate Status for the selected Date
     const teamStatus = useMemo(() => {

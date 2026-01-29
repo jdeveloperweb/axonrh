@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { CheckCircle, XCircle, ArrowLeft, Calendar, Loader2 } from 'lucide-react';
+import { ArrowLeft, Calendar, Loader2 } from 'lucide-react';
 import { vacationApi, VacationRequest } from '@/lib/api/vacation';
 import { ReviewVacationDialog } from '@/components/vacation/ReviewVacationDialog';
 
@@ -27,7 +27,7 @@ export default function VacationApprovalsPage() {
     const [dialogOpen, setDialogOpen] = useState(false);
 
     // Pagination (simplified for now)
-    const [page, setPage] = useState(0);
+    const [page] = useState(0);
 
     const loadRequests = useCallback(async () => {
         try {
