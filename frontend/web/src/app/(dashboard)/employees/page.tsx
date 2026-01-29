@@ -481,7 +481,7 @@ export default function EmployeesPage() {
                         {employee.position?.title || employee.position?.name || '-'}
                       </td>
                       <td className="px-6 py-4 text-[var(--color-text)]">
-                        {formatDate(employee.admissionDate)}
+                        {employee.admissionDate || employee.hireDate ? formatDate(employee.admissionDate || employee.hireDate) : '-'}
                       </td>
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[employee.status].bg} ${statusColors[employee.status].text}`}>
