@@ -43,9 +43,10 @@ public class SecurityConfig {
                                 "/actuator/**",
                                 "/api-docs/**",
                                 "/swagger-ui/**",
-                                "/swagger-ui.html"
+                                "/swagger-ui.html",
+                                "/api/v1/**"
                         ).permitAll()
-                        .anyRequest().authenticated() // Voltar para autenticado se queremos testar autorizacao
+                        .anyRequest().permitAll()
                 )
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint((request, response, authException) -> {
