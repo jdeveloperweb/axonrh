@@ -360,8 +360,8 @@ export default function ChatWidget({
       <div className="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth bg-white/40">
         {messages.length === 0 && (
           <div className="h-full flex flex-col items-center justify-center text-center animate-in fade-in zoom-in-95 duration-500">
-            <div className="w-24 h-24 mb-6 bg-gradient-to-br from-primary-50 to-primary-100 rounded-[2rem] flex items-center justify-center border border-primary-100 shadow-inner group transition-transform hover:scale-105 duration-500">
-              <ChatIcons.Sparkles className="w-12 h-12 text-primary-500 animate-pulse group-hover:rotate-12" />
+            <div className="w-24 h-24 mb-6 bg-gradient-to-br from-primary to-primary-600 rounded-[2rem] flex items-center justify-center border border-white/20 shadow-lg shadow-primary-500/20 group transition-transform hover:scale-105 duration-500">
+              <ChatIcons.Sparkles className="w-12 h-12 text-white animate-pulse group-hover:rotate-12" />
             </div>
             <h4 className="text-2xl font-bold text-gray-900 mb-2 tracking-tight">
               Olá, eu sou a <span className="text-primary">AxonIA</span>

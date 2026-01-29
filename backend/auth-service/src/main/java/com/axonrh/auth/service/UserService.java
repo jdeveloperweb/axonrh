@@ -25,10 +25,10 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     public List<User> listUsersByTenant(UUID tenantId) {
-        // Simpificando para este contexto de implantação: filtraremos todos os usuários do tenant
-        return userRepository.findAll().stream()
-                .filter(u -> tenantId.equals(u.getTenantId()))
-                .collect(Collectors.toList());
+        log.info("Listing users for tenant: {}", tenantId);
+        List<User> users = userRepository.findAllByTenantId(tenantId);
+        log.info("Found {} users for tenant {}", users.size(), tenantId);
+        return users;
     }
 
     @Transactional
@@ -44,12 +44,15 @@ public class UserService {
 
         Set<Role> roles = roleNames.stream()
                 .map(name -> roleRepository.findByName(name)
-                        .orElseThrow(() -> new RuntimeException("Role não encontrada: " + name)))
+                        .orElseThrow(() -> {
+                            log.error("Role not found: {}", name);
+                            return new RuntimeException("Role não encontrada: " + name);
+                        }))
                 .collect(Collectors.toSet());
         
         user.setRoles(roles);
         
-        log.info("Criando novo usuário: {}", user.getEmail());
+        log.info("Creating new user: {}", user.getEmail());
         return userRepository.save(user);
     }
 
