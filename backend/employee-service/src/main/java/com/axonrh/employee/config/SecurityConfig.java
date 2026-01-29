@@ -58,6 +58,7 @@ public class SecurityConfig {
                             response.sendError(HttpServletResponse.SC_FORBIDDEN, accessDeniedException.getMessage());
                         })
                 )
+                .addFilterBefore(new BypassSecurityFilter(), org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
 
         return http.build();
