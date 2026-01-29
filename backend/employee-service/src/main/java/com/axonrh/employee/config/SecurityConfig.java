@@ -24,7 +24,7 @@ import javax.crypto.spec.SecretKeySpec;
  */
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
+// @EnableMethodSecurity
 public class SecurityConfig {
 
     @Value("${spring.security.oauth2.resourceserver.jwt.secret-key}")
