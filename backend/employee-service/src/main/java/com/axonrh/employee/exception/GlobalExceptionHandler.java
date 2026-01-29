@@ -18,6 +18,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Object> handleAccessDenied(AccessDeniedException ex) {
+        System.err.println(">>> [DEBUG-CRITICAL-SYS] ACCESS DENIED (System.err): " + ex.getMessage());
         log.error(">>> [DEBUG-CRITICAL] ACCESS DENIED: {}", ex.getMessage());
         Map<String, String> error = new HashMap<>();
         error.put("error", "Access Denied");

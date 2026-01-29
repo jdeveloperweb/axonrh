@@ -45,6 +45,18 @@ public class SecurityConfig {
                         ).permitAll()
                         .anyRequest().permitAll() // [DEBUG] Temporarily permit all
                 )
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            System.err.println(">>> [DEBUG-SECURITY] Authentication Entry Point hit!");
+                            System.err.println(">>> [DEBUG-SECURITY] Error: " + authException.getMessage());
+                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, authException.getMessage());
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            System.err.println(">>> [DEBUG-SECURITY] Access Denied Handler hit!");
+                            System.err.println(">>> [DEBUG-SECURITY] Error: " + accessDeniedException.getMessage());
+                            response.sendError(HttpServletResponse.SC_FORBIDDEN, accessDeniedException.getMessage());
+                        })
+                )
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
 
         return http.build();
