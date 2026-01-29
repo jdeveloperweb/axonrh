@@ -21,7 +21,7 @@ import {
   History,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -427,7 +427,7 @@ export default function VacationPage() {
               <div className="flex flex-col items-center justify-center py-16 text-center border-2 border-dashed rounded-lg bg-slate-50">
                 <Calendar className="h-10 w-10 text-muted-foreground mb-3 opacity-50" />
                 <p className="text-lg font-medium text-muted-foreground">Você ainda não possui solicitações</p>
-                <Button variant="link" onClick={() => router.push('/vacation/request')} className="mt-2 text-primary">
+                <Button variant="ghost" onClick={() => router.push('/vacation/request')} className="mt-2 text-primary hover:underline">
                   Criar a primeira solicitação agora
                 </Button>
               </div>
