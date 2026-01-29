@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
-import { setupApi } from '@/lib/api/setup';
+
 
 export default function HomePage() {
   const router = useRouter();
@@ -22,35 +22,6 @@ export default function HomePage() {
     const handleRedirect = async () => {
       if (isLoading && !loadingTimedOut) {
         return;
-      }
-
-      try {
-        const summaryResponse = await setupApi.getSummary();
-        const status = summaryResponse.status as unknown;
-        const isSetupCompleted =
-          (typeof status === 'string' && status === 'COMPLETED') ||
-          (typeof status === 'number' && status === 2) ||
-          summaryResponse.progressPercentage === 100;
-
-        if (!isSetupCompleted) {
-          router.replace('/setup');
-          return;
-        }
-      } catch (error) {
-        console.error('Error loading setup summary:', error);
-
-        // Se for erro de conexão ou serviço indisponível, não redireciona para setup
-        // pois pode ser apenas instabilidade momentânea do backend
-        const isConnectionError = error instanceof Error &&
-          (error.message.includes('conexão') ||
-            error.message.includes('timeout') ||
-            error.message.includes('unavailable'));
-
-        if (!isConnectionError) {
-          router.replace('/setup');
-          return;
-        }
-        // Se for erro de conexão, mantém na home (carregando) ou redireciona para login como fallback
       }
 
       if (isAuthenticated) {

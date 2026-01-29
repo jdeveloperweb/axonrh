@@ -6,7 +6,7 @@ import { ArrowLeft, Edit, MoreHorizontal, User, MapPin, Briefcase, FileText, Use
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ImageCropDialog } from '@/components/ui/image-crop-dialog';
-import { employeesApi, Employee, EmployeeDocument, EmployeeDependent } from '@/lib/api/employees';
+import { employeesApi, Employee, EmployeeDocument } from '@/lib/api/employees';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate, formatCpf, formatCurrency, formatPhone, calculateAge, formatRelativeTime, getPhotoUrl } from '@/lib/utils';
 import { TerminationModal } from '@/components/employees/TerminationModal';
