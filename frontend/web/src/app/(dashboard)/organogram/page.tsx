@@ -239,7 +239,7 @@ export default function OrganogramPage() {
                 <div>
                     <h4 className="text-sm font-bold text-blue-900">Dica de Estrutura</h4>
                     <p className="text-sm text-blue-700">
-                        Para visualizar a hierarquia corretamente, acesse a página de <b>Departamentos</b> e defina o "Departamento Superior" para cada área. Departamentos sem superior serão exibidos como raízes.
+                        Para visualizar a hierarquia corretamente, acesse a página de <b>Departamentos</b> e defina o &quot;Departamento Superior&quot; para cada área. Departamentos sem superior serão exibidos como raízes.
                     </p>
                 </div>
             </div>
