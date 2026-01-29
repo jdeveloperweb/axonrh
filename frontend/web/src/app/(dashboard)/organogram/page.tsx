@@ -349,25 +349,28 @@ export default function OrganogramPage() {
         }
         .org-children-container {
           display: flex;
-          padding-top: 40px;
-          gap: 32px;
+          padding-top: 32px;
+          gap: 64px;
           position: relative;
         }
+        /* Linha vertical que desce do pai */
         .org-children-container::before {
           content: "";
           position: absolute;
           top: 0;
           left: 50%;
           width: 2px;
-          height: 40px;
-          background-color: var(--color-border, #e2e8f0);
+          height: 32px;
+          background-color: #94a3b8; /* slate-400 */
           transform: translateX(-50%);
         }
+        /* Linha horizontal para ramificação de múltiplos filhos */
         .org-hz-line {
           position: absolute;
-          top: 0;
+          top: 32px;
           height: 2px;
-          background-color: var(--color-border, #e2e8f0);
+          background-color: #94a3b8; /* slate-400 */
+          border-radius: 4px;
         }
       `}</style>
         </div>
@@ -395,16 +398,16 @@ function OrgTreeNode({ node, options, depth = 0 }: { node: OrgNode, options: Exp
                 <Card className={cn(
                     "relative w-80 p-5 transition-all duration-300 border-2 bg-[var(--color-surface)] shadow-lg hover:shadow-2xl hover:-translate-y-2",
                     borderColor,
-                    depth > 0 && "mt-12"
+                    depth > 0 && "mt-8"
                 )}>
                     {/* Level Badge */}
                     <div className="absolute -top-3 -right-3 px-2 py-1 rounded-md bg-black text-white text-[9px] font-bold shadow-md z-10">
                         NÍVEL {depth + 1}
                     </div>
 
-                    {/* Connection Line to Parent */}
+                    {/* Linha vertical subindo para o pai */}
                     {depth > 0 && (
-                        <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-[2px] h-12 bg-gray-300" />
+                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-[2px] h-8 bg-[#94a3b8]" />
                     )}
 
                     <div className="space-y-4">
@@ -552,7 +555,10 @@ function OrgTreeNode({ node, options, depth = 0 }: { node: OrgNode, options: Exp
             {/* Children Container */}
             {hasChildren && isExpanded && (
                 <div className="org-children-container">
-                    {/* Horizontal Line logic with multi-children */}
+                    {/* Ponto de junção central */}
+                    <div className="absolute top-[32px] left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-[#94a3b8] z-20 border-2 border-white shadow-sm" />
+
+                    {/* Linha horizontal para múltiplos filhos */}
                     {node.children.length > 1 && (
                         <div
                             className="org-hz-line"
