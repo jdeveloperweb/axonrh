@@ -1,23 +1,136 @@
 import { api } from './client';
-import { AdmissionProcess, AdmissionDocument } from './processes';
 
-export type { AdmissionProcess, AdmissionDocument };
+// types for Admission Process
+export type AdmissionStatus =
+    | 'LINK_GENERATED'
+    | 'DATA_FILLING'
+    | 'DOCUMENTS_PENDING'
+    | 'DOCUMENTS_VALIDATING'
+    | 'CONTRACT_PENDING'
+    | 'SIGNATURE_PENDING'
+    | 'ESOCIAL_PENDING'
+    | 'COMPLETED'
+    | 'CANCELLED'
+    | 'EXPIRED'
+    | 'REJECTED';
+
+export interface AdmissionProcess {
+    id: string;
+    tenantId: string;
+    accessToken: string;
+    publicLink: string;
+    linkExpiresAt: string;
+    linkValid: boolean;
+    candidateName: string;
+    candidateEmail: string;
+    candidateCpf: string;
+    candidatePhone?: string;
+    expectedHireDate?: string;
+    department?: {
+        id: string;
+        name: string;
+    };
+    position?: {
+        id: string;
+        name?: string;
+        title: string;
+    };
+    status: AdmissionStatus;
+    statusDescription: string;
+    currentStep: number;
+    totalSteps: number;
+    progressPercent: number;
+    documents: AdmissionDocument[];
+    pendingDocuments: number;
+    validatedDocuments: number;
+    contractDocumentUrl?: string;
+    contractGeneratedAt?: string;
+    contractSignedAt?: string;
+    contractSigned: boolean;
+    esocialEventId?: string;
+    esocialSentAt?: string;
+    esocialReceipt?: string;
+    employeeId?: string;
+    createdAt: string;
+    completedAt?: string;
+    notes?: string;
+}
+
+export interface AdmissionDocument {
+    id: string;
+    documentType: string;
+    fileName: string;
+    status: string;
+    validationMessage?: string;
+    uploadedAt: string;
+    hasOcrData: boolean;
+}
+
+export interface AdmissionCreateRequest {
+    candidateName: string;
+    candidateEmail: string;
+    candidateCpf: string;
+    candidatePhone?: string;
+    expectedHireDate?: string;
+    departmentId?: string;
+    positionId?: string;
+    linkValidityDays?: number;
+    notes?: string;
+}
+
+export interface AdmissionListParams {
+    page?: number;
+    size?: number;
+    status?: AdmissionStatus;
+    search?: string;
+}
+
+export interface AdmissionListResponse {
+    content: AdmissionProcess[];
+    totalElements: number;
+    totalPages: number;
+    size: number;
+    number: number;
+}
+
+export interface DocumentRequirement {
+    type: string;
+    required: boolean;
+    uploaded: boolean;
+    status: string;
+}
+
+export interface RequiredDocumentsResponse {
+    requirements: DocumentRequirement[];
+    allRequiredUploaded: boolean;
+    totalRequired: number;
+    totalUploaded: number;
+}
 
 export const admissionsApi = {
     // Admin methods (standard)
-    create: async (data: any): Promise<AdmissionProcess> => {
-        return api.post<any, AdmissionProcess>('/admissions', data);
+    create: async (data: AdmissionCreateRequest): Promise<AdmissionProcess> => {
+        return api.post<AdmissionCreateRequest, AdmissionProcess>('/admissions', data);
     },
-    list: async (params: any = {}): Promise<any> => {
+    list: async (params: AdmissionListParams = {}): Promise<AdmissionListResponse> => {
         const searchParams = new URLSearchParams();
         if (params.page !== undefined) searchParams.set('page', params.page.toString());
         if (params.size !== undefined) searchParams.set('size', params.size.toString());
         if (params.status) searchParams.set('status', params.status);
         if (params.search) searchParams.set('search', params.search);
-        return api.get<any, any>(`/admissions?${searchParams.toString()}`);
+        return api.get<AdmissionListResponse, AdmissionListResponse>(`/admissions?${searchParams.toString()}`);
     },
     getById: async (id: string): Promise<AdmissionProcess> => {
         return api.get<AdmissionProcess, AdmissionProcess>(`/admissions/${id}`);
+    },
+    resendLink: async (id: string): Promise<{ message: string; link: string }> => {
+        return api.post<unknown, { message: string; link: string }>(`/admissions/${id}/resend-link`);
+    },
+    cancel: async (id: string, reason?: string): Promise<void> => {
+        await api.post(`/admissions/${id}/cancel`, { reason });
+    },
+    complete: async (id: string): Promise<AdmissionProcess> => {
+        return api.post<unknown, AdmissionProcess>(`/admissions/${id}/complete`);
     },
 
     // Public methods for the candidate wizard
@@ -26,8 +139,7 @@ export const admissionsApi = {
             return api.get<AdmissionProcess, AdmissionProcess>(`/admissions/public/${token}`);
         },
         getDocuments: async (token: string): Promise<AdmissionDocument[]> => {
-            const response = await api.get<AdmissionDocument[], AdmissionDocument[]>(`/admissions/public/${token}/documents`);
-            return response;
+            return api.get<AdmissionDocument[], AdmissionDocument[]>(`/admissions/public/${token}/documents`);
         },
         saveData: async (token: string, data: any): Promise<void> => {
             await api.post(`/admissions/public/${token}/data`, data);
