@@ -68,7 +68,8 @@ public class AddressService {
     @lombok.NoArgsConstructor
     @lombok.AllArgsConstructor
     @lombok.Builder
-    public static class AddressResult {
+    public static class AddressResult implements java.io.Serializable {
+        private static final long serialVersionUID = 1L;
         private String cep;
         private String street;
         private String complement;

@@ -3,6 +3,7 @@ package com.axonrh.employee.dto;
 import com.axonrh.employee.entity.enums.*;
 import lombok.*;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -16,7 +17,9 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class EmployeeResponse {
+public class EmployeeResponse implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private UUID id;
     private UUID tenantId;
@@ -80,7 +83,8 @@ public class EmployeeResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
-    public static class AddressDto {
+    public static class AddressDto implements Serializable {
+        private static final long serialVersionUID = 1L;
         private String street;
         private String number;
         private String complement;
@@ -96,7 +100,8 @@ public class EmployeeResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
-    public static class DepartmentSummary {
+    public static class DepartmentSummary implements Serializable {
+        private static final long serialVersionUID = 1L;
         private UUID id;
         private String code;
         private String name;
@@ -106,7 +111,8 @@ public class EmployeeResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
-    public static class PositionSummary {
+    public static class PositionSummary implements Serializable {
+        private static final long serialVersionUID = 1L;
         private UUID id;
         private String code;
         private String title;
@@ -116,7 +122,8 @@ public class EmployeeResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
-    public static class CostCenterSummary {
+    public static class CostCenterSummary implements Serializable {
+        private static final long serialVersionUID = 1L;
         private UUID id;
         private String code;
         private String name;
@@ -126,7 +133,8 @@ public class EmployeeResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
-    public static class EmployeeSummary {
+    public static class EmployeeSummary implements Serializable {
+        private static final long serialVersionUID = 1L;
         private UUID id;
         private String name;
         private String email;
@@ -137,7 +145,8 @@ public class EmployeeResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
-    public static class DependentSummary {
+    public static class DependentSummary implements Serializable {
+        private static final long serialVersionUID = 1L;
         private UUID id;
         private String name;
         private String relationship;

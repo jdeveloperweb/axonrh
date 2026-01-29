@@ -36,6 +36,27 @@ interface StatCard {
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
+const TRANSLATIONS: Record<string, string> = {
+  // Gênero
+  'MALE': 'Masculino',
+  'FEMALE': 'Feminino',
+  'OTHER': 'Outro',
+  // Etnia
+  'BRANCO': 'Branca',
+  'PARDO': 'Parda',
+  'PRETO': 'Preta',
+  'AMARELO': 'Amarela',
+  'INDIGENA': 'Indígena',
+  // Status de Treinamento
+  'IN_PROGRESS': 'Em Andamento',
+  'COMPLETED': 'Concluído',
+  'NOT_STARTED': 'Não Iniciado',
+  'EXPIRED': 'Expirado',
+  'PENDING': 'Pendente'
+};
+
+const translate = (key: string) => TRANSLATIONS[key] || key;
+
 // ==================== Component ====================
 
 export default function DashboardPage() {
@@ -67,12 +88,18 @@ export default function DashboardPage() {
 
   // Gender Data for Donut Chart
   const genderData = statsData?.genderDistribution
-    ? Object.entries(statsData.genderDistribution).map(([name, value]) => ({ name, value }))
+    ? Object.entries(statsData.genderDistribution).map(([name, value]) => ({
+      name: translate(name),
+      value
+    }))
     : [];
 
   // Race Data for Bar Chart
   const raceData = statsData?.raceDistribution
-    ? Object.entries(statsData.raceDistribution).map(([name, value]) => ({ name, value }))
+    ? Object.entries(statsData.raceDistribution).map(([name, value]) => ({
+      name: translate(name),
+      value
+    }))
     : [];
 
   // History Data for Stability & Turnover
@@ -387,7 +414,10 @@ export default function DashboardPage() {
   const renderLearningTab = () => {
     // Learning Data Transformation
     const statusData = learningStats?.statusDistribution
-      ? Object.entries(learningStats.statusDistribution).map(([name, value]) => ({ name, value }))
+      ? Object.entries(learningStats.statusDistribution).map(([name, value]) => ({
+        name: translate(name),
+        value
+      }))
       : [];
 
     const monthlyActivity = learningStats?.monthlyActivity || [];

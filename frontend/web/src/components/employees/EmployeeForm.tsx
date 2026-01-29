@@ -138,7 +138,8 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
 
     // Load initial data when editing
     useEffect(() => {
-        if (initialData) {
+        if (initialData && Object.keys(initialData).length > 0) {
+            console.log('EmployeeForm: Recebendo dados iniciais:', initialData);
             setFormData(prev => ({
                 ...prev,
                 cpf: initialData.cpf || prev.cpf,
@@ -172,6 +173,8 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                     country: initialData.addressCountry || prev.address.country,
                 }
             }));
+            // Limpa erros ao carregar dados existentes
+            setErrors({});
         }
     }, [initialData]);
 

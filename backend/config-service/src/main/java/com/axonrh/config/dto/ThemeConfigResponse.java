@@ -3,6 +3,7 @@ package com.axonrh.config.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
@@ -15,7 +16,9 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ThemeConfigResponse {
+public class ThemeConfigResponse implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private UUID id;
     private UUID tenantId;

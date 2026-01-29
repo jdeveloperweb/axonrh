@@ -21,7 +21,8 @@ export default function EditEmployeePage() {
             try {
                 setLoading(true);
                 const response = await employeesApi.getById(employeeId);
-                const employee = response;
+                // Garante que pegamos os dados mesmo se vierem envoltos em .data
+                const employee = (response as any).data || response;
 
                 if (!employee) {
                     throw new Error('Colaborador não encontrado');
@@ -29,24 +30,24 @@ export default function EditEmployeePage() {
 
                 const formattedData: Partial<EmployeeCreateRequest> = {
                     ...employee,
-                    birthDate: employee.birthDate?.split('T')[0] || '',
-                    hireDate: employee.admissionDate?.split('T')[0] || '',
-                    baseSalary: employee.salary,
-                    weeklyHours: employee.workHoursPerWeek,
-                    departmentId: employee.department?.id,
-                    positionId: employee.position?.id,
-                    costCenterId: employee.costCenter?.id,
-                    managerId: employee.manager?.id,
+                    birthDate: employee.birthDate?.split('T')?.[0] || '',
+                    hireDate: (employee.admissionDate || employee.hireDate)?.split('T')?.[0] || '',
+                    baseSalary: employee.salary || employee.baseSalary,
+                    weeklyHours: employee.workHoursPerWeek || employee.weeklyHours,
+                    departmentId: employee.department?.id || employee.departmentId,
+                    positionId: employee.position?.id || employee.positionId,
+                    costCenterId: employee.costCenter?.id || employee.costCenterId,
+                    managerId: employee.manager?.id || employee.managerId,
                     // Mapeia endereço para campos planos
-                    addressStreet: employee.address?.street,
-                    addressNumber: employee.address?.number,
-                    addressComplement: employee.address?.complement,
-                    addressNeighborhood: employee.address?.neighborhood,
-                    addressCity: employee.address?.city,
-                    addressState: employee.address?.state,
-                    addressZipCode: employee.address?.zipCode,
-                    mobile: employee.personalPhone,
-                    addressCountry: employee.address?.country,
+                    addressStreet: employee.address?.street || employee.addressStreet,
+                    addressNumber: employee.address?.number || employee.addressNumber,
+                    addressComplement: employee.address?.complement || employee.addressComplement,
+                    addressNeighborhood: employee.address?.neighborhood || employee.addressNeighborhood,
+                    addressCity: employee.address?.city || employee.addressCity,
+                    addressState: employee.address?.state || employee.addressState,
+                    addressZipCode: employee.address?.zipCode || employee.addressZipCode,
+                    mobile: employee.personalPhone || employee.mobile,
+                    addressCountry: employee.address?.country || employee.addressCountry,
                 };
 
                 setInitialData(formattedData);
