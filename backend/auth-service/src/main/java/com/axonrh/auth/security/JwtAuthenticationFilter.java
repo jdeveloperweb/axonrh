@@ -1,4 +1,4 @@
-epackage com.axonrh.auth.security;
+package com.axonrh.auth.security;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

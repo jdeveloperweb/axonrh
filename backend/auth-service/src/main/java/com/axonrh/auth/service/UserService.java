@@ -26,7 +26,18 @@ public class UserService {
 
     public List<User> listUsersByTenant(UUID tenantId) {
         log.info("Listing users for tenant: {}", tenantId);
+        System.out.println("DEBUG_USER_LIST: Searching for tenantId=" + tenantId);
+        
         List<User> users = userRepository.findAllByTenantId(tenantId);
+        
+        System.out.println("DEBUG_USER_LIST: Found " + users.size() + " users.");
+        if (users.isEmpty()) {
+             System.out.println("DEBUG_USER_LIST: Total users in DB: " + userRepository.count());
+             userRepository.findAll().forEach(u -> 
+                System.out.println("DEBUG_USER_LIST: User in DB: " + u.getEmail() + " | Tenant: " + u.getTenantId())
+             );
+        }
+        
         log.info("Found {} users for tenant {}", users.size(), tenantId);
         return users;
     }
