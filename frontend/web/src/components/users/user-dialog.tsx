@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { UserDTO, userApi } from '@/lib/api/users';
+import { getErrorMessage } from '@/lib/api/client';
 import { Loader2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -114,7 +115,7 @@ export function UserDialog({ open, onOpenChange, userToEdit, onSuccess }: UserDi
             onSuccess();
         } catch (error) {
             console.error(error);
-            const errorMessage = (error as any)?.response?.data?.message || (error as any)?.message || "Erro ao salvar usuário.";
+            const errorMessage = getErrorMessage(error);
             toast({ title: "Erro", description: errorMessage, variant: "destructive" });
         } finally {
             setLoading(false);
