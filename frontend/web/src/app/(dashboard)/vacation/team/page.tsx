@@ -4,7 +4,6 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
     format,
-    startOfMonth,
     getDay,
     parseISO,
     isWithinInterval,
