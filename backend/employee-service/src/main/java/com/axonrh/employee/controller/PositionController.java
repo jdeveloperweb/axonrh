@@ -29,7 +29,7 @@ public class PositionController {
     private final PositionService positionService;
 
     @GetMapping
-    @PreAuthorize("hasAuthority('POSITION:READ')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:READ')")
     @Operation(summary = "Listar cargos paginado")
     public ResponseEntity<Page<PositionResponse>> findAll(
             @PageableDefault(size = 20, sort = "title") Pageable pageable) {
@@ -37,7 +37,7 @@ public class PositionController {
     }
 
     @GetMapping("/active")
-    @PreAuthorize("hasAuthority('POSITION:READ')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:READ')")
     @Operation(summary = "Listar todos cargos ativos (sem paginação)")
     public ResponseEntity<List<PositionResponse>> findAllActive(
             @RequestParam(required = false) UUID departmentId) {
@@ -45,7 +45,7 @@ public class PositionController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('POSITION:READ')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:READ')")
     @Operation(summary = "Buscar cargo por ID")
     public ResponseEntity<PositionResponse> findById(@PathVariable UUID id) {
         return ResponseEntity.ok(positionService.findById(id));

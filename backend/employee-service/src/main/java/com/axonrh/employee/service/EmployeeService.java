@@ -49,12 +49,46 @@ public class EmployeeService {
     /**
      * Lista colaboradores com paginacao.
      */
+    /**
+     * Lista colaboradores com filtros dinamicos.
+     */
     @Transactional(readOnly = true)
-    public Page<EmployeeResponse> findAll(Pageable pageable) {
+    public Page<EmployeeResponse> findWithFilters(String search, EmployeeStatus status, UUID departmentId, UUID positionId, Pageable pageable) {
         UUID tenantId = getTenantId();
-        log.debug("Listando colaboradores - tenant: {}", tenantId);
+        log.debug("Filtrando colaboradores - tenant: {}, search: {}, status: {}", tenantId, search, status);
 
-        return employeeRepository.findByTenantIdAndIsActiveTrue(tenantId, pageable)
+        org.springframework.data.jpa.domain.Specification<Employee> spec = (root, query, cb) -> {
+            java.util.List<jakarta.persistence.criteria.Predicate> predicates = new java.util.ArrayList<>();
+
+            predicates.add(cb.equal(root.get("tenantId"), tenantId));
+
+            if (status != null) {
+                predicates.add(cb.equal(root.get("status"), status));
+            }
+
+            if (departmentId != null) {
+                predicates.add(cb.equal(root.get("department").get("id"), departmentId));
+            }
+
+            if (positionId != null) {
+                predicates.add(cb.equal(root.get("position").get("id"), positionId));
+            }
+
+            if (search != null && !search.trim().isEmpty()) {
+                String likePattern = "%" + search.trim().toLowerCase() + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("fullName")), likePattern),
+                        cb.like(cb.lower(root.get("socialName")), likePattern),
+                        cb.like(cb.lower(root.get("registrationNumber")), likePattern),
+                        cb.like(cb.lower(root.get("cpf")), likePattern),
+                        cb.like(cb.lower(root.get("email")), likePattern)
+                ));
+            }
+
+            return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
+        };
+
+        return employeeRepository.findAll(spec, pageable)
                 .map(employeeMapper::toResponse);
     }
 

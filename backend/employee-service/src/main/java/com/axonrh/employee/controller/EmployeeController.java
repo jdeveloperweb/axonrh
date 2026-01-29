@@ -42,11 +42,16 @@ public class EmployeeController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('EMPLOYEE:READ')")
-    @Operation(summary = "Lista colaboradores", description = "Retorna lista paginada de colaboradores ativos")
+    @Operation(summary = "Lista colaboradores", description = "Retorna lista paginada de colaboradores com filtros opcionais")
     public ResponseEntity<Page<EmployeeResponse>> findAll(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) EmployeeStatus status,
+            @RequestParam(required = false) UUID departmentId,
+            @RequestParam(required = false) UUID positionId,
             @PageableDefault(size = 20, sort = "fullName", direction = Sort.Direction.ASC) Pageable pageable) {
 
-        Page<EmployeeResponse> employees = employeeService.findAll(pageable);
+        log.info("Listing employees with filters: search={}, status={}, dept={}, pos={}", search, status, departmentId, positionId);
+        Page<EmployeeResponse> employees = employeeService.findWithFilters(search, status, departmentId, positionId, pageable);
         return ResponseEntity.ok(employees);
     }
 
