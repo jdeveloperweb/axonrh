@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { employeesApi, Employee, EmployeeStatus, EmployeeListParams, Department } from '@/lib/api/employees';
 import { useToast } from '@/hooks/use-toast';
-import { formatDate, formatCpf } from '@/lib/utils';
+import { formatDate, formatCpf, getPhotoUrl } from '@/lib/utils';
 
 const statusColors: Record<EmployeeStatus, { bg: string; text: string; label: string }> = {
   ACTIVE: { bg: 'bg-green-100', text: 'text-green-800', label: 'Ativo' },
@@ -450,7 +450,7 @@ export default function EmployeesPage() {
                         <div className="flex items-center gap-3">
                           {employee.photoUrl ? (
                             <Image
-                              src={employee.photoUrl}
+                              src={getPhotoUrl(employee.photoUrl) || ''}
                               alt={employee.fullName}
                               width={40}
                               height={40}

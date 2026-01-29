@@ -18,6 +18,7 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { employeesApi, OrgNode } from '@/lib/api/employees';
 import { useToast } from '@/hooks/use-toast';
+import { getPhotoUrl } from '@/lib/utils';
 
 
 
@@ -135,7 +136,7 @@ export default function OrgChartPage() {
           <div className="flex items-center gap-3 mb-2">
             {node.photoUrl ? (
               <Image
-                src={node.photoUrl}
+                src={getPhotoUrl(node.photoUrl) || ''}
                 alt={node.name}
                 width={48}
                 height={48}
@@ -331,7 +332,7 @@ export default function OrgChartPage() {
               <div className="flex items-start gap-4">
                 {selectedNode.photoUrl ? (
                   <Image
-                    src={selectedNode.photoUrl}
+                    src={getPhotoUrl(selectedNode.photoUrl) || ''}
                     alt={selectedNode.name}
                     width={64}
                     height={64}

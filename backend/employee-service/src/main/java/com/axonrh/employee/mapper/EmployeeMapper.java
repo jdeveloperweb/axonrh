@@ -1,5 +1,6 @@
 package com.axonrh.employee.mapper;
 
+import com.axonrh.employee.dto.EmployeeDependentRequest;
 import com.axonrh.employee.dto.EmployeeRequest;
 import com.axonrh.employee.dto.EmployeeResponse;
 import com.axonrh.employee.entity.*;
@@ -80,7 +81,32 @@ public interface EmployeeMapper {
 
     @Mapping(target = "name", source = "fullName")
     @Mapping(target = "relationship", expression = "java(dependent.getRelationship().name())")
+    @Mapping(target = "isIRDependent", source = "isIrDependent")
     EmployeeResponse.DependentSummary toDependentSummary(EmployeeDependent dependent);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "tenantId", ignore = true)
+    @Mapping(target = "employee", ignore = true)
+    @Mapping(target = "fullName", source = "name")
+    @Mapping(target = "isIrDependent", source = "isIRDependent")
+    @Mapping(target = "isActive", constant = "true")
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "updatedBy", ignore = true)
+    EmployeeDependent toEntity(EmployeeDependentRequest request);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "tenantId", ignore = true)
+    @Mapping(target = "employee", ignore = true)
+    @Mapping(target = "fullName", source = "name")
+    @Mapping(target = "isIrDependent", source = "isIRDependent")
+    @Mapping(target = "isActive", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "updatedBy", ignore = true)
+    void updateEntity(@MappingTarget EmployeeDependent dependent, EmployeeDependentRequest request);
 
     // ==================== Metodos Auxiliares ====================
 

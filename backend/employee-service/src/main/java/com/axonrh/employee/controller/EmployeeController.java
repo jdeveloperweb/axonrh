@@ -1,8 +1,10 @@
 package com.axonrh.employee.controller;
 
+import com.axonrh.employee.dto.EmployeeDependentRequest;
 import com.axonrh.employee.dto.EmployeeRequest;
 import com.axonrh.employee.dto.EmployeeResponse;
 import com.axonrh.employee.entity.enums.EmployeeStatus;
+import com.axonrh.employee.service.EmployeeDependentService;
 import com.axonrh.employee.service.EmployeeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -33,6 +35,7 @@ import java.util.UUID;
 public class EmployeeController {
 
     private final EmployeeService employeeService;
+    private final EmployeeDependentService dependentService;
 
     @GetMapping("/test")
     public ResponseEntity<String> test() {
@@ -190,6 +193,26 @@ public class EmployeeController {
         log.info("Atualizando foto do colaborador: {}", id);
         EmployeeResponse updated = employeeService.updatePhoto(id, file, userId);
         return ResponseEntity.ok(updated);
+    }
+
+    @GetMapping("/{id}/dependents")
+    //@PreAuthorize("hasAuthority('EMPLOYEE:READ')")
+    @Operation(summary = "Lista dependentes do colaborador")
+    public ResponseEntity<java.util.List<EmployeeResponse.DependentSummary>> getDependents(@PathVariable UUID id) {
+        log.info("Buscando dependentes do colaborador: {}", id);
+        return ResponseEntity.ok(dependentService.findByEmployeeId(id));
+    }
+
+    @PostMapping("/{id}/dependents")
+    //@PreAuthorize("hasAuthority('EMPLOYEE:UPDATE')")
+    @Operation(summary = "Salva dependentes do colaborador")
+    public ResponseEntity<java.util.List<EmployeeResponse.DependentSummary>> saveDependents(
+            @PathVariable UUID id,
+            @Valid @RequestBody java.util.List<EmployeeDependentRequest> requests,
+            @RequestHeader(value = "X-User-Id", required = false) UUID userId) {
+        
+        log.info("Salvando dependentes do colaborador: {}", id);
+        return ResponseEntity.ok(dependentService.saveAll(id, requests, userId));
     }
 
 

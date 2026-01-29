@@ -6,6 +6,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -141,4 +142,8 @@ public class EmployeeRequest {
     private BigDecimal baseSalary;
 
     private SalaryType salaryType;
+
+    // ==================== Relacionamentos ====================
+
+    private List<EmployeeDependentRequest> dependents;
 }

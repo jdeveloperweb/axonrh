@@ -45,6 +45,7 @@ public class EmployeeService {
     private final CpfValidator cpfValidator;
     private final DomainEventPublisher eventPublisher;
     private final FileStorageService fileStorageService;
+    private final EmployeeDependentRepository dependentRepository;
 
     /**
      * Lista colaboradores com paginacao.
@@ -185,6 +186,11 @@ public class EmployeeService {
 
         Employee saved = employeeRepository.save(employee);
 
+        // Salva dependentes se houver
+        if (request.getDependents() != null && !request.getDependents().isEmpty()) {
+            saveDependents(saved, request.getDependents(), userId);
+        }
+
         // Registra historico
         saveHistory(saved, "CREATE", null, null, "Colaborador criado", userId);
 
@@ -237,6 +243,11 @@ public class EmployeeService {
         loadRelationships(employee, request);
 
         Employee saved = employeeRepository.save(employee);
+
+        // Atualiza dependentes se houver
+        if (request.getDependents() != null) {
+            updateDependents(saved, request.getDependents(), userId);
+        }
 
         // Registra historico com diferencas
         Map<String, Object> newValues = captureCurrentValues(saved);
@@ -371,6 +382,31 @@ public class EmployeeService {
                     .orElseThrow(() -> new ResourceNotFoundException("Gestor nao encontrado"));
             employee.setManager(manager);
         }
+    }
+
+    private void saveDependents(Employee employee, List<EmployeeDependentRequest> requests, UUID userId) {
+        if (requests == null) return;
+        
+        List<EmployeeDependent> dependents = requests.stream()
+                .map(req -> {
+                    EmployeeDependent dependent = employeeMapper.toEntity(req);
+                    dependent.setEmployee(employee);
+                    dependent.setTenantId(employee.getTenantId());
+                    dependent.setCreatedBy(userId);
+                    return dependent;
+                })
+                .collect(java.util.stream.Collectors.toList());
+        
+        dependentRepository.saveAll(dependents);
+    }
+
+    private void updateDependents(Employee employee, List<EmployeeDependentRequest> requests, UUID userId) {
+        // Remove existing dependents (simple approach)
+        List<EmployeeDependent> existing = dependentRepository.findByTenantIdAndEmployeeId(employee.getTenantId(), employee.getId());
+        dependentRepository.deleteAll(existing);
+        
+        // Save new ones
+        saveDependents(employee, requests, userId);
     }
 
     private void saveHistory(Employee employee, String changeType, String oldValue,

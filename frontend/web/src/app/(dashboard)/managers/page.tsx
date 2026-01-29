@@ -15,6 +15,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { employeesApi, Employee, Department } from '@/lib/api/employees';
 import { departmentsApi } from '@/lib/api/departments';
+import { getPhotoUrl } from '@/lib/utils';
 
 interface Manager {
     id: string;
@@ -235,7 +236,7 @@ export default function ManagersPage() {
                                 <div className="flex items-start gap-4">
                                     {manager.photoUrl ? (
                                         <Image
-                                            src={manager.photoUrl}
+                                            src={getPhotoUrl(manager.photoUrl) || ''}
                                             alt={manager.name}
                                             width={48}
                                             height={48}
