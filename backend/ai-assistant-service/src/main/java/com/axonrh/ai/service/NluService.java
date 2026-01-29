@@ -86,7 +86,8 @@ public class NluService {
         }
 
         // Employee and Department queries
-        if (containsAny(normalizedMessage, "funcionários", "colaboradores", "empregados", "quem trabalha", "departamento", "setor", "setores", "área")) {
+        if (containsAny(normalizedMessage, "funcionários", "colaboradores", "empregados", "quem trabalha", 
+                "departamento", "setor", "setores", "área", "áreas", "cargo", "cargos", "posição", "posições")) {
             Map<String, Object> entities = extractEmployeeQueryEntities(message);
             return NluResult.builder()
                     .intent("query_employee")
@@ -96,10 +97,86 @@ public class NluService {
                     .build();
         }
 
+        // Salary queries
+        if (containsAny(normalizedMessage, "salário", "salarios", "remuneração", "quanto ganha", "quanto recebe", 
+                "faixa salarial", "salário base")) {
+            return NluResult.builder()
+                    .intent("query_salary")
+                    .confidence(0.88)
+                    .entities(Map.of())
+                    .actionType(AiIntent.ActionType.DATABASE_QUERY)
+                    .build();
+        }
+
+        // Address queries
+        if (containsAny(normalizedMessage, "endereço", "enderecos", "onde mora", "moram", "cidade", "estado", "cep")) {
+            return NluResult.builder()
+                    .intent("query_address")
+                    .confidence(0.88)
+                    .entities(Map.of())
+                    .actionType(AiIntent.ActionType.DATABASE_QUERY)
+                    .build();
+        }
+
+        // Dependents queries
+        if (containsAny(normalizedMessage, "dependente", "dependentes", "filho", "filhos", "cônjuge", "esposa", "marido")) {
+            return NluResult.builder()
+                    .intent("query_dependents")
+                    .confidence(0.88)
+                    .entities(Map.of())
+                    .actionType(AiIntent.ActionType.DATABASE_QUERY)
+                    .build();
+        }
+
+        // Vacation requests queries
+        if (containsAny(normalizedMessage, "férias pendentes", "solicitação de férias", "pedido de férias", 
+                "férias aprovadas", "férias rejeitadas")) {
+            return NluResult.builder()
+                    .intent("query_vacation_requests")
+                    .confidence(0.88)
+                    .entities(Map.of())
+                    .actionType(AiIntent.ActionType.DATABASE_QUERY)
+                    .build();
+        }
+
+        // Timesheet/Ponto queries
+        if (containsAny(normalizedMessage, "ponto", "registro de ponto", "batida", "batidas", "hora extra", 
+                "horas extras", "banco de horas", "overtime")) {
+            return NluResult.builder()
+                    .intent("query_timesheet")
+                    .confidence(0.88)
+                    .entities(Map.of())
+                    .actionType(AiIntent.ActionType.DATABASE_QUERY)
+                    .build();
+        }
+
         // Payroll queries
-        if (containsAny(normalizedMessage, "contracheque", "holerite", "folha de pagamento", "salário", "quanto ganhei")) {
+        if (containsAny(normalizedMessage, "contracheque", "holerite", "folha de pagamento", "folha", 
+                "pagamento", "quanto ganhei", "salário líquido", "salário bruto")) {
             return NluResult.builder()
                     .intent("query_payroll")
+                    .confidence(0.88)
+                    .entities(Map.of())
+                    .actionType(AiIntent.ActionType.DATABASE_QUERY)
+                    .build();
+        }
+
+        // Performance/Evaluation queries
+        if (containsAny(normalizedMessage, "avaliação", "avaliações", "desempenho", "performance", 
+                "meta", "metas", "objetivo", "objetivos")) {
+            return NluResult.builder()
+                    .intent("query_performance")
+                    .confidence(0.88)
+                    .entities(Map.of())
+                    .actionType(AiIntent.ActionType.DATABASE_QUERY)
+                    .build();
+        }
+
+        // Training/Learning queries
+        if (containsAny(normalizedMessage, "treinamento", "treinamentos", "curso", "cursos", "capacitação", 
+                "certificado", "certificados", "matrícula")) {
+            return NluResult.builder()
+                    .intent("query_training")
                     .confidence(0.88)
                     .entities(Map.of())
                     .actionType(AiIntent.ActionType.DATABASE_QUERY)
