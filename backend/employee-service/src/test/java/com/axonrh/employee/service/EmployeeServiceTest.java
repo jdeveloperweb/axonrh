@@ -125,12 +125,12 @@ class EmployeeServiceTest {
             PageRequest pageable = PageRequest.of(0, 10);
             Page<Employee> page = new PageImpl<>(List.of(testEmployee));
 
-            when(employeeRepository.findByTenantIdAndIsActiveTrue(tenantId, pageable))
+            when(employeeRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class), eq(pageable)))
                     .thenReturn(page);
             when(employeeMapper.toResponse(testEmployee)).thenReturn(testResponse);
 
             // When
-            Page<EmployeeResponse> result = employeeService.findAll(pageable);
+            Page<EmployeeResponse> result = employeeService.findWithFilters(null, null, null, null, pageable);
 
             // Then
             assertThat(result).hasSize(1);
