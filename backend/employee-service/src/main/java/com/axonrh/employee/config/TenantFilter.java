@@ -46,6 +46,24 @@ public class TenantFilter extends OncePerRequestFilter {
                 log.warn("Aviso: Header {} nao encontrado no request para {}", TENANT_HEADER, request.getRequestURI());
             }
 
+            // [DEBUG] Inspect Authorization Header
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                log.info(">>> [DEBUG-TRACE] Token found in TenantFilter");
+                try {
+                    String token = authHeader.substring(7);
+                    String[] parts = token.split("\\.");
+                    if (parts.length > 0) {
+                        String headerJson = new String(java.util.Base64.getUrlDecoder().decode(parts[0]));
+                        log.info(">>> [DEBUG-TRACE] JWT Header: " + headerJson);
+                    }
+                } catch (Exception e) {
+                    log.error(">>> [DEBUG-TRACE] Failed to decode JWT header: " + e.getMessage());
+                }
+            } else {
+                log.info(">>> [DEBUG-TRACE] No Authorization header found in TenantFilter");
+            }
+
             // Extrai correlation ID para tracing
             String correlationId = request.getHeader(CORRELATION_HEADER);
             if (correlationId != null && !correlationId.isBlank()) {

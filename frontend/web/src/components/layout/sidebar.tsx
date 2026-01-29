@@ -118,6 +118,7 @@ export function Sidebar() {
                 height={40}
                 style={{ width: tenantTheme.logoWidth ? `${tenantTheme.logoWidth}px` : 'auto', maxHeight: '40px' }}
                 className="object-contain"
+                unoptimized
               />
             ) : (
               <span className="text-xl font-bold text-[var(--color-primary)]">AxonRH</span>

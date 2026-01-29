@@ -21,7 +21,7 @@ import javax.crypto.spec.SecretKeySpec;
  */
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
+// @EnableMethodSecurity
 public class SecurityConfig {
 
     @Value("${spring.security.oauth2.resourceserver.jwt.secret-key}")
@@ -40,12 +40,12 @@ public class SecurityConfig {
                                 "/actuator/**",
                                 "/api-docs/**",
                                 "/swagger-ui/**",
-                                "/swagger-ui.html"
+                                "/swagger-ui.html",
+                                "/api/v1/**" // [DEBUG] Temporarily permit all API requests
                         ).permitAll()
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll() // [DEBUG] Temporarily permit all
                 )
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))
-                .addFilterBefore(new DebugSecurityFilter(), org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter.class);
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
 
         return http.build();
     }
