@@ -13,6 +13,7 @@ import {
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { userApi, UserDTO } from '@/lib/api/users';
 import { useToast } from '@/hooks/use-toast';
+import { UserDialog } from '@/components/users/user-dialog';
 
 export default function UsersPage() {
     const { toast } = useToast();
@@ -20,26 +21,53 @@ export default function UsersPage() {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
 
-    useEffect(() => {
-        const loadUsers = async () => {
-            try {
-                setLoading(true);
-                const data = await userApi.list();
-                setUsers(data);
-            } catch (error) {
-                console.error('Error loading users:', error);
-                toast({
-                    title: 'Erro',
-                    description: 'Erro ao carregar usuários',
-                    variant: 'destructive',
-                });
-            } finally {
-                setLoading(false);
-            }
-        };
+    // Dialog states
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [selectedUser, setSelectedUser] = useState<UserDTO | null>(null);
 
+    const loadUsers = async () => {
+        try {
+            setLoading(true);
+            const data = await userApi.list();
+            setUsers(data);
+        } catch (error) {
+            console.error('Error loading users:', error);
+            toast({
+                title: 'Erro',
+                description: 'Erro ao carregar usuários',
+                variant: 'destructive',
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         loadUsers();
     }, [toast]);
+
+    const handleCreate = () => {
+        setSelectedUser(null);
+        setIsDialogOpen(true);
+    };
+
+    const handleEdit = (user: UserDTO) => {
+        setSelectedUser(user);
+        setIsDialogOpen(true);
+    };
+
+    const handleDelete = async (id: string) => {
+        if (confirm('Tem certeza que deseja excluir este usuário?')) {
+            try {
+                await userApi.delete(id);
+                toast({ title: 'Sucesso', description: 'Usuário excluído com sucesso' });
+                loadUsers();
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                toast({ title: 'Erro', description: 'Erro ao excluir usuário', variant: 'destructive' });
+            }
+        }
+    };
 
     const filteredUsers = users.filter(user =>
         user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -55,7 +83,7 @@ export default function UsersPage() {
                 </div>
                 <button
                     className="btn-primary flex items-center gap-2"
-                    onClick={() => toast({ title: 'Info', description: 'Funcionalidade de criação em breve' })}
+                    onClick={handleCreate}
                 >
                     <UserPlus className="w-4 h-4" />
                     Novo Usuário
@@ -136,13 +164,17 @@ export default function UsersPage() {
                                             </td>
                                             <td className="px-6 py-4 text-right">
                                                 <div className="flex justify-end gap-2">
-                                                    <button className="p-2 hover:bg-[var(--color-surface-variant)] rounded-full transition-colors text-[var(--color-text-secondary)]" title="Editar">
+                                                    <button
+                                                        className="p-2 hover:bg-[var(--color-surface-variant)] rounded-full transition-colors text-[var(--color-text-secondary)]"
+                                                        title="Editar"
+                                                        onClick={() => handleEdit(user)}
+                                                    >
                                                         <Edit2 className="w-4 h-4" />
                                                     </button>
                                                     <button
                                                         className="p-2 hover:bg-red-50 rounded-full transition-colors text-red-500"
                                                         title="Excluir"
-                                                        onClick={() => toast({ title: 'Atenção', description: 'Confirmação de exclusão necessária', variant: 'destructive' })}
+                                                        onClick={() => user.id && handleDelete(user.id)}
                                                     >
                                                         <Trash2 className="w-4 h-4" />
                                                     </button>
@@ -156,6 +188,13 @@ export default function UsersPage() {
                     </div>
                 </CardContent>
             </Card>
+
+            <UserDialog
+                open={isDialogOpen}
+                onOpenChange={setIsDialogOpen}
+                userToEdit={selectedUser}
+                onSuccess={loadUsers}
+            />
         </div>
     );
 }

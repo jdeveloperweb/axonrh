@@ -223,7 +223,7 @@ export default function ChatWidget({
         <div className="flex flex-col h-full border-r border-gray-100">
           <div className="px-6 py-6 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
             <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-              <ChatIcons.History className="w-5 h-5 text-blue-600" />
+              <ChatIcons.History className="w-5 h-5 text-primary" />
               Histórico
             </h3>
             <div className="flex items-center gap-1">
@@ -255,7 +255,7 @@ export default function ChatWidget({
           <div className="flex-1 overflow-y-auto p-4 space-y-2">
             <button
               onClick={createNewChat}
-              className="w-full flex items-center gap-3 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all font-medium mb-4 shadow-lg shadow-blue-500/20 active:scale-[0.98]"
+              className="w-full flex items-center gap-3 px-4 py-3 bg-primary hover:bg-primary-700 text-primary-foreground rounded-xl transition-all font-medium mb-4 shadow-lg shadow-primary-500/20 active:scale-[0.98]"
             >
               <ChatIcons.Plus className="w-5 h-5" />
               Nova Conversa
@@ -274,12 +274,12 @@ export default function ChatWidget({
                   className={cn(
                     "group flex flex-col p-4 rounded-xl cursor-pointer transition-all border relative",
                     conversationId === conv.id
-                      ? "bg-blue-50/80 border-blue-200 shadow-sm"
+                      ? "bg-primary-50/80 border-primary-200 shadow-sm"
                       : "bg-white hover:bg-gray-50 border-gray-100"
                   )}
                 >
                   <div className="flex justify-between items-start mb-1">
-                    <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">
+                    <span className="text-xs font-bold text-primary uppercase tracking-wider">
                       {new Date(conv.createdAt).toLocaleDateString('pt-BR')}
                     </span>
                     <button
@@ -291,7 +291,7 @@ export default function ChatWidget({
                   </div>
                   <h4 className={cn(
                     "text-sm font-semibold truncate pr-6",
-                    conversationId === conv.id ? "text-blue-900" : "text-gray-700"
+                    conversationId === conv.id ? "text-primary-900" : "text-gray-700"
                   )}>
                     {conv.title || 'Nova Conversa'}
                   </h4>
@@ -308,7 +308,7 @@ export default function ChatWidget({
       </div>
 
       {/* Header with Glassmorphism */}
-      <div className="relative px-6 py-4 bg-gradient-to-r from-blue-600/90 to-indigo-700/90 backdrop-blur-md">
+      <div className="relative px-6 py-4 bg-gradient-to-r from-primary/90 to-primary-800/90 backdrop-blur-md">
         <div className="absolute inset-0 bg-white/5 pointer-events-none"></div>
         <div className="flex items-center justify-between relative z-10">
           <div className="flex items-center space-x-4">
@@ -323,13 +323,13 @@ export default function ChatWidget({
               <div className="w-12 h-12 bg-white/20 backdrop-blur-xl rounded-2xl flex items-center justify-center border border-white/30 shadow-inner">
                 <ChatIcons.Bot className="w-7 h-7 text-white" />
               </div>
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-400 border-2 border-white rounded-full animate-pulse shadow-sm"></div>
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-success border-2 border-white rounded-full animate-pulse shadow-sm"></div>
             </div>
             <div>
               <h3 className="text-white font-bold tracking-tight text-lg">AxonIA</h3>
               <div className="flex items-center space-x-1.5">
-                <span className="w-1.5 h-1.5 bg-blue-200 rounded-full"></span>
-                <p className="text-blue-100 text-[10px] font-bold uppercase tracking-widest opacity-80">IA Inteligente</p>
+                <span className="w-1.5 h-1.5 bg-primary-200 rounded-full"></span>
+                <p className="text-primary-100 text-[10px] font-bold uppercase tracking-widest opacity-80">IA Inteligente</p>
               </div>
             </div>
           </div>
@@ -360,11 +360,11 @@ export default function ChatWidget({
       <div className="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth bg-white/40">
         {messages.length === 0 && (
           <div className="h-full flex flex-col items-center justify-center text-center animate-in fade-in zoom-in-95 duration-500">
-            <div className="w-24 h-24 mb-6 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-[2rem] flex items-center justify-center border border-blue-100 shadow-inner group transition-transform hover:scale-105 duration-500">
-              <ChatIcons.Sparkles className="w-12 h-12 text-blue-500 animate-pulse group-hover:rotate-12" />
+            <div className="w-24 h-24 mb-6 bg-gradient-to-br from-primary-50 to-primary-100 rounded-[2rem] flex items-center justify-center border border-primary-100 shadow-inner group transition-transform hover:scale-105 duration-500">
+              <ChatIcons.Sparkles className="w-12 h-12 text-primary-500 animate-pulse group-hover:rotate-12" />
             </div>
             <h4 className="text-2xl font-bold text-gray-900 mb-2 tracking-tight">
-              Olá, eu sou a <span className="text-blue-600">AxonIA</span>
+              Olá, eu sou a <span className="text-primary">AxonIA</span>
             </h4>
             <p className="text-gray-500 max-w-[280px] mx-auto mb-10 text-sm font-normal leading-relaxed">
               Estou aqui para automatizar suas consultas de RH. Por onde começamos?
@@ -374,7 +374,7 @@ export default function ChatWidget({
                 <button
                   key={index}
                   onClick={() => setInput(suggestion)}
-                  className="group flex items-center justify-between p-4 text-sm bg-white hover:bg-blue-600 text-gray-700 hover:text-white rounded-2xl border border-gray-100 hover:border-blue-600 transition-all duration-300 shadow-sm hover:shadow-blue-200 hover:scale-[1.02] active:scale-95"
+                  className="group flex items-center justify-between p-4 text-sm bg-white hover:bg-primary text-gray-700 hover:text-white rounded-2xl border border-gray-100 hover:border-primary transition-all duration-300 shadow-sm hover:shadow-primary-200 hover:scale-[1.02] active:scale-95"
                 >
                   <span className="font-bold text-left">{suggestion}</span>
                   <ChatIcons.ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0 transition-all" />
@@ -412,7 +412,7 @@ export default function ChatWidget({
               <button
                 key={index}
                 onClick={() => submitMessage(suggestion)}
-                className="whitespace-nowrap px-4 py-1.5 text-xs font-bold bg-white text-blue-600 border border-blue-100 rounded-full hover:bg-blue-600 hover:text-white transition-all shadow-sm active:scale-95"
+                className="whitespace-nowrap px-4 py-1.5 text-xs font-bold bg-white text-primary border border-primary-100 rounded-full hover:bg-primary hover:text-white transition-all shadow-sm active:scale-95"
               >
                 {suggestion}
               </button>
@@ -430,11 +430,11 @@ export default function ChatWidget({
               placeholder="Pergunte qualquer coisa..."
               disabled={isLoading}
               rows={1}
-              className="w-full resize-none rounded-2xl border border-gray-200 bg-white px-5 py-4 pr-12 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm hover:shadow-md disabled:bg-gray-50 disabled:cursor-not-allowed"
+              className="w-full resize-none rounded-2xl border border-gray-200 bg-white px-5 py-4 pr-12 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm hover:shadow-md disabled:bg-gray-50 disabled:cursor-not-allowed"
             />
             <button
               type="button"
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-blue-600 transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-primary transition-colors"
               title="Entrada de Voz (Em breve)"
             >
               <ChatIcons.Mic className="w-5 h-5" />
@@ -444,7 +444,7 @@ export default function ChatWidget({
           <button
             type="submit"
             disabled={isLoading || !input.trim()}
-            className="p-4 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 disabled:bg-gray-200 transition-all active:scale-95 shadow-lg shadow-blue-500/20"
+            className="p-4 bg-primary text-primary-foreground rounded-2xl hover:bg-primary-700 disabled:bg-gray-200 transition-all active:scale-95 shadow-lg shadow-primary-500/20"
           >
             {isLoading ? (
               <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -459,7 +459,7 @@ export default function ChatWidget({
         </form>
         <div className="mt-4 flex items-center justify-between">
           <div className="flex items-center gap-1">
-            <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+            <div className="w-2 h-2 bg-success rounded-full"></div>
             <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Sistema Online</span>
           </div>
           <span className="text-[10px] text-gray-400 font-medium tracking-wider uppercase">AxonRH Intelligence v2.0</span>
@@ -486,7 +486,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
         {/* Avatar */}
         <div className={cn(
           "flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-sm shadow-sm",
-          isUser ? 'bg-blue-600 text-white' : 'bg-white border border-gray-100 text-gray-600'
+          isUser ? 'bg-primary text-primary-foreground' : 'bg-white border border-gray-100 text-gray-600'
         )}>
           {isUser ? <ChatIcons.User className="w-4 h-4" /> : <ChatIcons.Bot className="w-4 h-4" />}
         </div>
@@ -496,7 +496,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
           <div className={cn(
             "rounded-2xl px-5 py-3 shadow-sm",
             isUser
-              ? 'bg-blue-600 text-white rounded-tr-none'
+              ? 'bg-primary text-primary-foreground rounded-tr-none'
               : isError
                 ? 'bg-red-50 text-red-800 border border-red-100 rounded-tl-none'
                 : 'bg-white border border-gray-100 text-gray-800 rounded-tl-none'
@@ -712,7 +712,7 @@ function MarkdownContent({ content }: { content: string }) {
               </thead>
               <tbody className="bg-white divide-y divide-gray-100">
                 {currentTable.slice(1).map((row, i) => (
-                  <tr key={i} className="hover:bg-blue-50/50 transition-colors">
+                  <tr key={i} className="hover:bg-primary-50/50 transition-colors">
                     {row.map((cell, j) => (
                       <td key={j} className="px-4 py-3 text-sm text-gray-700">
                         {parseInlineFormatting(formatCellValue(cell))}
@@ -746,15 +746,15 @@ function MarkdownContent({ content }: { content: string }) {
     }
 
     if (line.startsWith('## ')) {
-      elements.push(<h3 key={index} className="font-bold text-lg text-blue-900 mt-4 mb-2">{parseInlineFormatting(line.slice(3))}</h3>);
+      elements.push(<h3 key={index} className="font-bold text-lg text-primary-900 mt-4 mb-2">{parseInlineFormatting(line.slice(3))}</h3>);
     } else if (line.startsWith('### ')) {
-      elements.push(<h4 key={index} className="font-semibold text-blue-800 mt-3 mb-1">{parseInlineFormatting(line.slice(4))}</h4>);
+      elements.push(<h4 key={index} className="font-semibold text-primary-800 mt-3 mb-1">{parseInlineFormatting(line.slice(4))}</h4>);
     } else if (line.startsWith('**') && line.endsWith('**')) {
       elements.push(<p key={index} className="font-semibold text-gray-900 my-1">{line.slice(2, -2)}</p>);
     } else if (line.startsWith('* ') || line.startsWith('- ')) {
       elements.push(
         <div key={index} className="flex items-start space-x-2 ml-2 my-1">
-          <span className="text-blue-500 mt-1.5 w-1.5 h-1.5 bg-blue-500 rounded-full flex-shrink-0"></span>
+          <span className="text-primary-500 mt-1.5 w-1.5 h-1.5 bg-primary-500 rounded-full flex-shrink-0"></span>
           <span className="text-sm text-gray-700">{parseInlineFormatting(line.slice(2).trim())}</span>
         </div>
       );

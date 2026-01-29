@@ -54,13 +54,14 @@ export default function ManagersPage() {
 
             // Extract managers from departments
             const managersData: Manager[] = depts
-                .filter(d => d.managerId)
+                .filter(d => d.manager?.id || d.managerId)
                 .map(d => {
-                    const emp = emps.content.find(e => e.id === d.managerId);
+                    const managerId = d.manager?.id || d.managerId!;
+                    const emp = emps.content.find(e => e.id === managerId);
                     return {
-                        id: d.managerId!,
-                        name: emp?.fullName || d.managerName || 'Desconhecido',
-                        email: emp?.email || '',
+                        id: managerId,
+                        name: emp?.fullName || d.manager?.fullName || d.managerName || 'Desconhecido',
+                        email: emp?.email || d.manager?.email || '',
                         phone: emp?.phone,
                         photoUrl: emp?.photoUrl,
                         department: d.name,

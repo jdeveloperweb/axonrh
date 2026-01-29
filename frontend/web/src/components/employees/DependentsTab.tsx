@@ -46,6 +46,24 @@ export function DependentsTab({ employeeId }: DependentsTabProps) {
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
+
+        // Handle CPF mask
+        if (name === 'cpf') {
+            let v = value.replace(/\D/g, '');
+            if (v.length > 11) v = v.slice(0, 11);
+
+            if (v.length > 9) {
+                v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+            } else if (v.length > 6) {
+                v = v.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
+            } else if (v.length > 3) {
+                v = v.replace(/(\d{3})(\d{1,3})/, '$1.$2');
+            }
+
+            setFormData(prev => ({ ...prev, [name]: v }));
+            return;
+        }
+
         // Handle checkbox
         if (type === 'checkbox') {
             const checked = (e.target as HTMLInputElement).checked;
@@ -94,14 +112,21 @@ export function DependentsTab({ employeeId }: DependentsTabProps) {
 
         try {
             setSaving(true);
+
+            // Clean CPF (remove non-digits)
+            const cleanData = {
+                ...formData,
+                cpf: formData.cpf ? formData.cpf.replace(/\D/g, '') : ''
+            };
+
             if (editingId) {
                 // Update
-                await employeesApi.updateDependent(employeeId, editingId, formData);
+                await employeesApi.updateDependent(employeeId, editingId, cleanData);
                 toast({ title: 'Sucesso', description: 'Dependente atualizado' });
             } else {
                 // Create
                 // Ensure mandatory fields are present for TS
-                await employeesApi.addDependent(employeeId, formData as Omit<EmployeeDependent, 'id'>);
+                await employeesApi.addDependent(employeeId, cleanData as Omit<EmployeeDependent, 'id'>);
                 toast({ title: 'Sucesso', description: 'Dependente adicionado' });
             }
             await loadDependents();

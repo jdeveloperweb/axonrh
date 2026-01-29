@@ -160,6 +160,13 @@ export interface Department {
   managerName?: string;
   employeeCount?: number;
   isActive: boolean;
+  manager?: {
+    id: string;
+    fullName: string;
+    email: string;
+    positionName?: string;
+    registrationNumber?: string;
+  };
 }
 
 export interface Position {
