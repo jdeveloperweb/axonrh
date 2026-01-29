@@ -41,7 +41,7 @@ export default function FloatingAssistant() {
             {/* Toggle Button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="group relative flex items-center justify-center w-14 h-14 bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-2xl shadow-lg hover:shadow-blue-500/40 transform transition-all duration-300 hover:scale-105 active:scale-95"
+                className="group relative flex items-center justify-center w-14 h-14 bg-primary text-white rounded-2xl shadow-lg hover:shadow-blue-500/40 transform transition-all duration-300 hover:scale-105 active:scale-95"
                 title={isOpen ? 'Fechar AxonIA' : 'Abrir AxonIA'}
             >
                 <div className="absolute inset-0 bg-white/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>

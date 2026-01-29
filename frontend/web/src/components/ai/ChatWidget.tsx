@@ -308,7 +308,7 @@ export default function ChatWidget({
       </div>
 
       {/* Header with Glassmorphism */}
-      <div className="relative px-6 py-4 bg-gradient-to-r from-primary to-secondary backdrop-blur-md">
+      <div className="relative px-6 py-4 bg-primary backdrop-blur-md">
         <div className="absolute inset-0 bg-white/5 pointer-events-none"></div>
         <div className="flex items-center justify-between relative z-10">
           <div className="flex items-center space-x-4">
@@ -328,8 +328,8 @@ export default function ChatWidget({
             <div>
               <h3 className="text-white font-bold tracking-tight text-lg">AxonIA</h3>
               <div className="flex items-center space-x-1.5">
-                <span className="w-1.5 h-1.5 bg-primary-200 rounded-full"></span>
-                <p className="text-primary-100 text-[10px] font-bold uppercase tracking-widest opacity-80">IA Inteligente</p>
+                <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
+                <p className="text-white text-[10px] font-bold uppercase tracking-widest opacity-80">IA Inteligente</p>
               </div>
             </div>
           </div>

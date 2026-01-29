@@ -111,9 +111,9 @@ function RecentConversations({ onSelectConversation, activeConversationId }: Rec
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-      <div className="px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100">
+      <div className="px-4 py-3 bg-primary border-b border-primary-600">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-gray-900">Conversas Recentes</h3>
+          <h3 className="text-sm font-semibold text-primary-foreground">Conversas Recentes</h3>
           <div className="flex items-center gap-3">
             {conversations.length > 0 && (
               <button
@@ -127,14 +127,14 @@ function RecentConversations({ onSelectConversation, activeConversationId }: Rec
                     }
                   }
                 }}
-                className="text-xs text-red-500 hover:text-red-700 transition-colors"
+                className="text-xs text-primary-foreground/90 hover:text-white transition-colors"
               >
                 Limpar
               </button>
             )}
             <button
               onClick={loadConversations}
-              className="text-xs text-blue-600 hover:text-blue-800 transition-colors"
+              className="text-xs text-primary-foreground/90 hover:text-white transition-colors"
             >
               Atualizar
             </button>
