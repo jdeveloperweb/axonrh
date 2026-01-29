@@ -114,7 +114,8 @@ export function UserDialog({ open, onOpenChange, userToEdit, onSuccess }: UserDi
             onSuccess();
         } catch (error) {
             console.error(error);
-            toast({ title: "Erro", description: "Erro ao salvar usuário.", variant: "destructive" });
+            const errorMessage = (error as any)?.response?.data?.message || (error as any)?.message || "Erro ao salvar usuário.";
+            toast({ title: "Erro", description: errorMessage, variant: "destructive" });
         } finally {
             setLoading(false);
         }

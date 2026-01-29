@@ -41,6 +41,7 @@ public class UserController {
                 .passwordHash(dto.getPassword())
                 .tenantId(UUID.fromString(tenantId))
                 .avatarUrl(dto.getAvatarUrl())
+                .status(dto.getStatus() != null ? User.UserStatus.valueOf(dto.getStatus()) : User.UserStatus.ACTIVE)
                 .build();
         
         User saved = userService.createUser(user, Set.copyOf(dto.getRoles()));
