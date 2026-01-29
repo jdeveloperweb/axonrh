@@ -183,6 +183,9 @@ export const chatApi = {
   deleteConversation: (id: string) =>
     api.delete<void>(`/ai/chat/conversations/${id}`),
 
+  deleteAllConversations: () =>
+    api.delete<void>('/ai/chat/conversations'),
+
   // Streaming chat using Server-Sent Events
   streamChat: async function* (
     message: string,

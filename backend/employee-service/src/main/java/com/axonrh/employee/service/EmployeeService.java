@@ -44,6 +44,7 @@ public class EmployeeService {
     private final EmployeeMapper employeeMapper;
     private final CpfValidator cpfValidator;
     private final DomainEventPublisher eventPublisher;
+    private final FileStorageService fileStorageService;
 
     /**
      * Lista colaboradores com paginacao.
@@ -267,6 +268,38 @@ public class EmployeeService {
     public long countActive() {
         return employeeRepository.countByTenantIdAndIsActiveTrue(getTenantId());
     }
+
+    /**
+     * Atualiza a foto do colaborador.
+     */
+    @Transactional
+    @CacheEvict(value = "employees", key = "#id")
+    public EmployeeResponse updatePhoto(UUID id, org.springframework.web.multipart.MultipartFile file, UUID userId) {
+        UUID tenantId = getTenantId();
+        log.info("Atualizando foto do colaborador: {} - tenant: {}", id, tenantId);
+
+        Employee employee = employeeRepository.findByTenantIdAndId(tenantId, id)
+                .orElseThrow(() -> new ResourceNotFoundException("Colaborador nao encontrado: " + id));
+
+        // Deleta foto antiga se existir
+        if (employee.getPhotoUrl() != null && !employee.getPhotoUrl().isEmpty()) {
+            fileStorageService.deleteEmployeePhoto(employee.getPhotoUrl());
+        }
+
+        // Salva nova foto
+        String photoUrl = fileStorageService.storeEmployeePhoto(file, id);
+        employee.setPhotoUrl(photoUrl);
+        employee.setUpdatedBy(userId);
+
+        Employee saved = employeeRepository.save(employee);
+        
+        // Registra historico
+        saveHistory(saved, "PHOTO_UPDATE", null, photoUrl, "Foto atualizada", userId);
+
+        log.info("Foto do colaborador atualizada: {}", id);
+        return employeeMapper.toResponse(saved);
+    }
+
 
     // ==================== Metodos Privados ====================
 

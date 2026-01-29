@@ -288,3 +288,16 @@ export function downloadBlob(blob: Blob, filename: string): void {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+
+/**
+ * Returns full photo URL
+ */
+export function getPhotoUrl(path: string | null | undefined): string | null {
+  if (!path) return null;
+  if (path.startsWith('http')) return path;
+
+  // Use API_BASE_URL (removing /api/v1) as base for uploads
+  const baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8180/api/v1').replace('/api/v1', '');
+  return `${baseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
+}
+

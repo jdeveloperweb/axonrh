@@ -222,16 +222,35 @@ export default function ChatWidget({
       )}>
         <div className="flex flex-col h-full border-r border-gray-100">
           <div className="px-6 py-6 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-            <h3 className="font-bold text-gray-900 flex items-center gap-2">
+            <h3 className="font-semibold text-gray-900 flex items-center gap-2">
               <ChatIcons.History className="w-5 h-5 text-blue-600" />
               Histórico
             </h3>
-            <button
-              onClick={() => setShowHistory(false)}
-              className="p-2 hover:bg-white rounded-xl transition-colors text-gray-400 hover:text-gray-600 border border-transparent hover:border-gray-200"
-            >
-              <ChatIcons.X className="w-5 h-5" />
-            </button>
+            <div className="flex items-center gap-1">
+              {conversations.length > 0 && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (confirm('Tem certeza que deseja apagar todo o histórico?')) {
+                      chatApi.deleteAllConversations().then(() => {
+                        setConversations([]);
+                        createNewChat();
+                      });
+                    }
+                  }}
+                  className="p-2 hover:bg-red-50 rounded-xl transition-colors text-gray-400 hover:text-red-500 border border-transparent hover:border-red-100"
+                  title="Limpar Histórico"
+                >
+                  <ChatIcons.Trash className="w-5 h-5" />
+                </button>
+              )}
+              <button
+                onClick={() => setShowHistory(false)}
+                className="p-2 hover:bg-white rounded-xl transition-colors text-gray-400 hover:text-gray-600 border border-transparent hover:border-gray-200"
+              >
+                <ChatIcons.X className="w-5 h-5" />
+              </button>
+            </div>
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-2">
             <button
@@ -344,10 +363,10 @@ export default function ChatWidget({
             <div className="w-24 h-24 mb-6 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-[2rem] flex items-center justify-center border border-blue-100 shadow-inner group transition-transform hover:scale-105 duration-500">
               <ChatIcons.Sparkles className="w-12 h-12 text-blue-500 animate-pulse group-hover:rotate-12" />
             </div>
-            <h4 className="text-2xl font-black text-gray-900 mb-2 tracking-tight">
+            <h4 className="text-2xl font-bold text-gray-900 mb-2 tracking-tight">
               Olá, eu sou a <span className="text-blue-600">AxonIA</span>
             </h4>
-            <p className="text-gray-500 max-w-[280px] mx-auto mb-10 text-sm font-medium leading-relaxed">
+            <p className="text-gray-500 max-w-[280px] mx-auto mb-10 text-sm font-normal leading-relaxed">
               Estou aqui para automatizar suas consultas de RH. Por onde começamos?
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-md">
@@ -685,7 +704,7 @@ function MarkdownContent({ content }: { content: string }) {
               <thead className="bg-gray-50/80">
                 <tr>
                   {currentTable[0].map((cell, i) => (
-                    <th key={i} className="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    <th key={i} className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                       {parseInlineFormatting(cell.trim())}
                     </th>
                   ))}
@@ -731,7 +750,7 @@ function MarkdownContent({ content }: { content: string }) {
     } else if (line.startsWith('### ')) {
       elements.push(<h4 key={index} className="font-semibold text-blue-800 mt-3 mb-1">{parseInlineFormatting(line.slice(4))}</h4>);
     } else if (line.startsWith('**') && line.endsWith('**')) {
-      elements.push(<p key={index} className="font-bold text-gray-900 my-1">{line.slice(2, -2)}</p>);
+      elements.push(<p key={index} className="font-semibold text-gray-900 my-1">{line.slice(2, -2)}</p>);
     } else if (line.startsWith('* ') || line.startsWith('- ')) {
       elements.push(
         <div key={index} className="flex items-start space-x-2 ml-2 my-1">

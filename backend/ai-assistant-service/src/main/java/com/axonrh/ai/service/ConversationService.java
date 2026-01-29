@@ -569,7 +569,19 @@ public class ConversationService {
     }
 
     public Page<Conversation> listConversations(UUID tenantId, UUID userId, Pageable pageable) {
-        return conversationRepository.findByTenantIdAndUserIdOrderByUpdatedAtDesc(tenantId, userId, pageable);
+        return conversationRepository.findByTenantIdAndUserIdAndStatusOrderByUpdatedAtDesc(
+                tenantId, userId, Conversation.ConversationStatus.ACTIVE, pageable);
+    }
+
+    public void deleteAllConversations(UUID tenantId, UUID userId) {
+        List<Conversation> conversations = conversationRepository
+                .findByTenantIdAndUserIdAndStatusAndUpdatedAtAfter(
+                        tenantId, userId, Conversation.ConversationStatus.ACTIVE, Instant.EPOCH);
+        
+        conversations.forEach(c -> {
+            c.setStatus(Conversation.ConversationStatus.DELETED);
+            conversationRepository.save(c);
+        });
     }
 
     public Optional<Conversation> getConversation(String id, UUID tenantId) {

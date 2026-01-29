@@ -61,6 +61,14 @@ spring:
             # - StripPrefix=2
             - name: JwtAuthFilter
 
+        # Uploads (Static Files)
+        - id: employee-uploads
+          uri: http://axonrh-employee-service:8083
+          predicates:
+            - Path=/uploads/employee-photos/**
+          # Nao usamos JwtAuthFilter para fotos publicas/estaticas
+
+
         # Timesheet Service
         - id: timesheet-service
           uri: http://axonrh-timesheet-service:8084

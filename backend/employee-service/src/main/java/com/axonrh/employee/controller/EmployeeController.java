@@ -174,6 +174,20 @@ public class EmployeeController {
         return ResponseEntity.ok(count);
     }
 
+    @PostMapping("/{id}/photo")
+    // @PreAuthorize("hasAuthority('EMPLOYEE:UPDATE')")
+    @Operation(summary = "Atualiza foto do colaborador")
+    public ResponseEntity<EmployeeResponse> updatePhoto(
+            @PathVariable UUID id,
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+            @RequestHeader(value = "X-User-Id", required = false) UUID userId) {
+
+        log.info("Atualizando foto do colaborador: {}", id);
+        EmployeeResponse updated = employeeService.updatePhoto(id, file, userId);
+        return ResponseEntity.ok(updated);
+    }
+
+
     // DEBUG: Exception Handler temporario
     @ExceptionHandler(org.springframework.web.bind.MethodArgumentNotValidException.class)
     public ResponseEntity<Object> handleValidationExceptions(org.springframework.web.bind.MethodArgumentNotValidException ex) {

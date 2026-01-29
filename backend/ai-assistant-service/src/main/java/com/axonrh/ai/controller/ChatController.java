@@ -126,6 +126,15 @@ public class ChatController {
         return ResponseEntity.ok().build();
     }
 
+    @DeleteMapping("/conversations")
+    public ResponseEntity<Void> deleteAllConversations(
+            @RequestHeader("X-Tenant-ID") UUID tenantId,
+            @RequestHeader("X-User-ID") UUID userId) {
+
+        conversationService.deleteAllConversations(tenantId, userId);
+        return ResponseEntity.ok().build();
+    }
+
     @lombok.Data
     public static class ChatRequest {
         private String conversationId;

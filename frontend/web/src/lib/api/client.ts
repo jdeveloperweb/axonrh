@@ -37,6 +37,11 @@ api.interceptors.request.use(
       }
       if (user?.id) {
         config.headers['X-User-Id'] = user.id;
+      } else {
+        const storedUserId = typeof window !== 'undefined' ? localStorage.getItem('userId') : null;
+        if (storedUserId) {
+          config.headers['X-User-Id'] = storedUserId;
+        }
       }
     }
 

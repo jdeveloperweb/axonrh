@@ -26,7 +26,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ImageCropDialog } from '@/components/ui/image-crop-dialog';
 import { employeesApi, Employee, EmployeeDocument, EmployeeDependent } from '@/lib/api/employees';
 import { useToast } from '@/hooks/use-toast';
-import { formatDate, formatCpf, formatCurrency, formatPhone, calculateAge, formatRelativeTime } from '@/lib/utils';
+import { formatDate, formatCpf, formatCurrency, formatPhone, calculateAge, formatRelativeTime, getPhotoUrl } from '@/lib/utils';
 
 type TabKey = 'overview' | 'documents' | 'dependents' | 'history';
 
@@ -248,7 +248,7 @@ export default function EmployeeDetailPage() {
             <div className="relative">
               {employee.photoUrl ? (
                 <Image
-                  src={employee.photoUrl}
+                  src={getPhotoUrl(employee.photoUrl) || ''}
                   alt={employee.fullName}
                   width={128}
                   height={128}

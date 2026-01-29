@@ -314,7 +314,12 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
         }
 
         if (activeTab === 'professional') {
-            // Employment type is passed with default 'CLT'
+            if (!formData.departmentId) {
+                newErrors.departmentId = 'Departamento é obrigatório';
+            }
+            if (!formData.positionId) {
+                newErrors.positionId = 'Cargo é obrigatório';
+            }
         }
 
         setErrors(newErrors);
@@ -694,6 +699,7 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                                             </option>
                                         ))}
                                     </select>
+                                    {errors.departmentId && <p className="text-red-500 text-sm mt-1">{errors.departmentId}</p>}
                                 </div>
 
                                 <div>
@@ -714,6 +720,7 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                                             </option>
                                         ))}
                                     </select>
+                                    {errors.positionId && <p className="text-red-500 text-sm mt-1">{errors.positionId}</p>}
                                 </div>
                             </div>
                         </div>

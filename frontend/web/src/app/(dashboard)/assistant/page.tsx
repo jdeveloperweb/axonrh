@@ -114,12 +114,31 @@ function RecentConversations({ onSelectConversation, activeConversationId }: Rec
       <div className="px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold text-gray-900">Conversas Recentes</h3>
-          <button
-            onClick={loadConversations}
-            className="text-xs text-blue-600 hover:text-blue-800 transition-colors"
-          >
-            Atualizar
-          </button>
+          <div className="flex items-center gap-3">
+            {conversations.length > 0 && (
+              <button
+                onClick={async () => {
+                  if (confirm('Tem certeza que deseja apagar todo o histórico?')) {
+                    try {
+                      await chatApi.deleteAllConversations();
+                      setConversations([]);
+                    } catch (error) {
+                      console.error('Failed to delete history', error);
+                    }
+                  }
+                }}
+                className="text-xs text-red-500 hover:text-red-700 transition-colors"
+              >
+                Limpar
+              </button>
+            )}
+            <button
+              onClick={loadConversations}
+              className="text-xs text-blue-600 hover:text-blue-800 transition-colors"
+            >
+              Atualizar
+            </button>
+          </div>
         </div>
       </div>
 

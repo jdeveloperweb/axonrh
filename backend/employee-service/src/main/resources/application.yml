@@ -106,6 +106,8 @@ employee:
   photos:
     max-size-kb: 500
     allowed-types: jpg,jpeg,png
+    upload-dir: uploads/employee-photos
+
   cpf:
     validate: true
   address:

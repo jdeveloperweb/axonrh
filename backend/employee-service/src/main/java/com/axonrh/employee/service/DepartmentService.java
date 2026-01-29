@@ -205,11 +205,15 @@ public class DepartmentService {
         
         // Departamento pai
         if (department.getParent() != null) {
-            builder.parent(DepartmentDTO.ParentDepartmentDTO.builder()
-                    .id(department.getParent().getId())
-                    .code(department.getParent().getCode())
-                    .name(department.getParent().getName())
-                    .build());
+            try {
+                builder.parent(DepartmentDTO.ParentDepartmentDTO.builder()
+                        .id(department.getParent().getId())
+                        .code(department.getParent().getCode())
+                        .name(department.getParent().getName())
+                        .build());
+            } catch (Exception e) {
+                log.warn("Falha ao carregar departamento pai para {}: {}", department.getId(), e.getMessage());
+            }
         }
         
         // Gestor
@@ -217,23 +221,36 @@ public class DepartmentService {
             UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
             employeeRepository.findByTenantIdAndId(tenantId, department.getManagerId())
                     .ifPresent(manager -> {
+                        String positionName = null;
+                        try {
+                            if (manager.getPosition() != null) {
+                                positionName = manager.getPosition().getTitle();
+                            }
+                        } catch (Exception e) {
+                            log.warn("Falha ao carregar cargo do gestor {}: {}", manager.getId(), e.getMessage());
+                        }
+
                         builder.manager(DepartmentDTO.ManagerBasicDTO.builder()
                                 .id(manager.getId())
                                 .registrationNumber(manager.getRegistrationNumber())
                                 .fullName(manager.getFullName())
                                 .email(manager.getEmail())
-                                .positionName(manager.getPosition() != null ? manager.getPosition().getTitle() : null)
+                                .positionName(positionName)
                                 .build());
                     });
         }
         
         // Centro de custo
         if (department.getCostCenter() != null) {
-            builder.costCenter(DepartmentDTO.CostCenterBasicDTO.builder()
-                    .id(department.getCostCenter().getId())
-                    .code(department.getCostCenter().getCode())
-                    .name(department.getCostCenter().getName())
-                    .build());
+            try {
+                builder.costCenter(DepartmentDTO.CostCenterBasicDTO.builder()
+                        .id(department.getCostCenter().getId())
+                        .code(department.getCostCenter().getCode())
+                        .name(department.getCostCenter().getName())
+                        .build());
+            } catch (Exception e) {
+                log.warn("Falha ao carregar centro de custo para {}: {}", department.getId(), e.getMessage());
+            }
         }
         
         // Contadores
