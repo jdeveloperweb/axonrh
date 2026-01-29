@@ -37,6 +37,54 @@ public class EmployeeDependentService {
     }
 
     @Transactional
+    public EmployeeResponse.DependentSummary save(UUID employeeId, EmployeeDependentRequest request, UUID userId) {
+        UUID tenantId = getTenantId();
+        
+        Employee employee = employeeRepository.findByTenantIdAndId(tenantId, employeeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Colaborador nao encontrado: " + employeeId));
+
+        EmployeeDependent entity = employeeMapper.toEntity(request);
+        entity.setTenantId(tenantId);
+        entity.setEmployee(employee);
+        entity.setCreatedBy(userId);
+
+        EmployeeDependent saved = dependentRepository.save(entity);
+        return employeeMapper.toDependentSummary(saved);
+    }
+
+    @Transactional
+    public EmployeeResponse.DependentSummary update(UUID employeeId, UUID dependentId, EmployeeDependentRequest request, UUID userId) {
+        UUID tenantId = getTenantId();
+        
+        EmployeeDependent entity = dependentRepository.findByTenantIdAndId(tenantId, dependentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Dependente nao encontrado: " + dependentId));
+
+        if (!entity.getEmployee().getId().equals(employeeId)) {
+            throw new IllegalArgumentException("Dependente nao pertence ao colaborador informado");
+        }
+
+        employeeMapper.updateEntity(entity, request);
+        entity.setUpdatedBy(userId);
+
+        EmployeeDependent updated = dependentRepository.save(entity);
+        return employeeMapper.toDependentSummary(updated);
+    }
+
+    @Transactional
+    public void delete(UUID employeeId, UUID dependentId) {
+        UUID tenantId = getTenantId();
+        
+        EmployeeDependent entity = dependentRepository.findByTenantIdAndId(tenantId, dependentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Dependente nao encontrado: " + dependentId));
+
+        if (!entity.getEmployee().getId().equals(employeeId)) {
+            throw new IllegalArgumentException("Dependente nao pertence ao colaborador informado");
+        }
+
+        dependentRepository.delete(entity);
+    }
+
+    @Transactional
     public List<EmployeeResponse.DependentSummary> saveAll(UUID employeeId, List<EmployeeDependentRequest> requests, UUID userId) {
         UUID tenantId = getTenantId();
         
@@ -45,9 +93,6 @@ public class EmployeeDependentService {
 
         // Get existing dependents to identify which to delete/update
         List<EmployeeDependent> existingDependents = dependentRepository.findByTenantIdAndEmployeeId(tenantId, employeeId);
-        
-        // Simple approach for now: delete all and recreate, or update if we had IDs in request.
-        // Assuming the request sends the full list.
         
         dependentRepository.deleteAll(existingDependents);
 

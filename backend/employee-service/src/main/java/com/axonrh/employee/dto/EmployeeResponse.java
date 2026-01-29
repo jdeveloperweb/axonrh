@@ -151,6 +151,8 @@ public class EmployeeResponse implements Serializable {
         private String name;
         private String relationship;
         private LocalDate birthDate;
+        private String cpf;
         private Boolean isIRDependent;
+        private Boolean isHealthPlanDependent;
     }
 }

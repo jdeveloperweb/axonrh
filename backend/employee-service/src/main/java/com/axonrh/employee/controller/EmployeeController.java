@@ -205,13 +205,50 @@ public class EmployeeController {
 
     @PostMapping("/{id}/dependents")
     //@PreAuthorize("hasAuthority('EMPLOYEE:UPDATE')")
-    @Operation(summary = "Salva dependentes do colaborador")
-    public ResponseEntity<java.util.List<EmployeeResponse.DependentSummary>> saveDependents(
+    @Operation(summary = "Adiciona um dependente ao colaborador")
+    public ResponseEntity<EmployeeResponse.DependentSummary> addDependent(
+            @PathVariable UUID id,
+            @Valid @RequestBody EmployeeDependentRequest request,
+            @RequestHeader(value = "X-User-Id", required = false) UUID userId) {
+        
+        log.info("Adicionando dependente ao colaborador: {}", id);
+        return ResponseEntity.status(HttpStatus.CREATED).body(dependentService.save(id, request, userId));
+    }
+
+    @PutMapping("/{id}/dependents/{dependentId}")
+    //@PreAuthorize("hasAuthority('EMPLOYEE:UPDATE')")
+    @Operation(summary = "Atualiza um dependente do colaborador")
+    public ResponseEntity<EmployeeResponse.DependentSummary> updateDependent(
+            @PathVariable UUID id,
+            @PathVariable UUID dependentId,
+            @Valid @RequestBody EmployeeDependentRequest request,
+            @RequestHeader(value = "X-User-Id", required = false) UUID userId) {
+        
+        log.info("Atualizando dependente {} do colaborador: {}", dependentId, id);
+        return ResponseEntity.ok(dependentService.update(id, dependentId, request, userId));
+    }
+
+    @DeleteMapping("/{id}/dependents/{dependentId}")
+    //@PreAuthorize("hasAuthority('EMPLOYEE:UPDATE')")
+    @Operation(summary = "Remove um dependente do colaborador")
+    public ResponseEntity<Void> removeDependent(
+            @PathVariable UUID id,
+            @PathVariable UUID dependentId) {
+        
+        log.info("Removendo dependente {} do colaborador: {}", dependentId, id);
+        dependentService.delete(id, dependentId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/dependents/bulk")
+    //@PreAuthorize("hasAuthority('EMPLOYEE:UPDATE')")
+    @Operation(summary = "Salva lista de dependentes do colaborador (substitui existentes)")
+    public ResponseEntity<java.util.List<EmployeeResponse.DependentSummary>> saveDependentsBulk(
             @PathVariable UUID id,
             @Valid @RequestBody java.util.List<EmployeeDependentRequest> requests,
             @RequestHeader(value = "X-User-Id", required = false) UUID userId) {
         
-        log.info("Salvando dependentes do colaborador: {}", id);
+        log.info("Salvando dependentes em lote para o colaborador: {}", id);
         return ResponseEntity.ok(dependentService.saveAll(id, requests, userId));
     }
 

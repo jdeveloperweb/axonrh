@@ -43,19 +43,19 @@ public class SecurityConfig {
                                 "/actuator/**",
                                 "/api-docs/**",
                                 "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/api/v1/**"
+                                "/swagger-ui.html"
                         ).permitAll()
+                        .requestMatchers("/api/v1/**").permitAll() // Permitir tudo na API por enquanto
                         .anyRequest().permitAll()
                 )
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint((request, response, authException) -> {
-                            System.err.println(">>> [DEBUG-SECURITY] Authentication Entry Point hit!");
+                            System.err.println(">>> [DEBUG-SECURITY] Authentication Entry Point hit! Path: " + request.getRequestURI());
                             System.err.println(">>> [DEBUG-SECURITY] Error: " + authException.getMessage());
                             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, authException.getMessage());
                         })
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
-                            System.err.println(">>> [DEBUG-SECURITY] Access Denied Handler hit!");
+                            System.err.println(">>> [DEBUG-SECURITY] Access Denied Handler hit! Path: " + request.getRequestURI());
                             System.err.println(">>> [DEBUG-SECURITY] Error: " + accessDeniedException.getMessage());
                             response.sendError(HttpServletResponse.SC_FORBIDDEN, accessDeniedException.getMessage());
                         })
@@ -68,7 +68,6 @@ public class SecurityConfig {
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         return (web) -> web.ignoring()
-                .requestMatchers("/api/v1/**")
                 .requestMatchers("/uploads/**")
                 .requestMatchers("/actuator/**", "/api-docs/**", "/swagger-ui/**", "/swagger-ui.html");
     }
@@ -94,42 +93,19 @@ public class SecurityConfig {
             java.util.Collection<org.springframework.security.core.GrantedAuthority> authorities = new java.util.ArrayList<>();
             
             System.err.println(">>> [DEBUG-Security] Processing JWT for user: " + jwt.getSubject());
-            System.err.println(">>> [DEBUG-Security] Claims keys: " + jwt.getClaims().keySet());
 
             // Tenta extrair authorities padrao (scope/scp)
             org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter defaultConverter = 
                 new org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter();
             authorities.addAll(defaultConverter.convert(jwt));
 
-            // Tenta extrair roles do realm_access (Padrao Keycloak)
-            java.util.Map<String, Object> realmAccess = jwt.getClaim("realm_access");
-            if (realmAccess != null && realmAccess.containsKey("roles")) {
-                @SuppressWarnings("unchecked")
-                java.util.List<String> roles = (java.util.List<String>) realmAccess.get("roles");
-                if (roles != null) {
-                    roles.forEach(role -> authorities.add(new org.springframework.security.core.authority.SimpleGrantedAuthority(role)));
-                }
-            }
-
-            // Tenta extrair roles do campo 'roles' direto
-            if (jwt.hasClaim("roles")) {
-                @SuppressWarnings("unchecked")
-                java.util.List<String> roles = jwt.getClaimAsStringList("roles");
-                if (roles != null) {
-                    roles.forEach(role -> authorities.add(new org.springframework.security.core.authority.SimpleGrantedAuthority(role)));
-                }
-            }
-            
-             // Tenta extrair permissions do campo 'permissions' (padrao AxonRH)
+            // Tenta extrair permissions do campo 'permissions' (padrao AxonRH)
             if (jwt.hasClaim("permissions")) {
                 @SuppressWarnings("unchecked")
                 java.util.List<String> perms = jwt.getClaimAsStringList("permissions");
-                System.err.println(">>> [DEBUG-Security] Found permissions claim: " + perms);
                 if (perms != null) {
                     perms.forEach(perm -> authorities.add(new org.springframework.security.core.authority.SimpleGrantedAuthority(perm)));
                 }
-            } else {
-                System.err.println(">>> [DEBUG-Security] 'permissions' claim NOT found!");
             }
 
             System.err.println(">>> [DEBUG-Security] Final Authorities: " + authorities);
@@ -140,7 +116,7 @@ public class SecurityConfig {
     @Bean
     public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
         org.springframework.web.cors.CorsConfiguration configuration = new org.springframework.web.cors.CorsConfiguration();
-        configuration.setAllowedOrigins(java.util.List.of("http://localhost:3000", "http://localhost:3001"));
+        configuration.setAllowedOriginPatterns(java.util.List.of("*"));
         configuration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
         configuration.setAllowedHeaders(java.util.List.of("*"));
         configuration.setAllowCredentials(true);
@@ -149,3 +125,4 @@ public class SecurityConfig {
         return source;
     }
 }
+
