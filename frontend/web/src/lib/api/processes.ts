@@ -90,13 +90,13 @@ export const processesApi = {
     admissions: admissionsApi,
     terminations: {
         getByEmployeeId: async (employeeId: string): Promise<TerminationProcess> => {
-            return api.get<any, TerminationProcess>(`/terminations/employee/${employeeId}`);
+            return api.get<unknown, TerminationProcess>(`/terminations/employee/${employeeId}`);
         },
         initiate: async (data: TerminationRequest): Promise<TerminationProcess> => {
             return api.post<TerminationRequest, TerminationProcess>('/terminations', data);
         },
         complete: async (id: string): Promise<TerminationProcess> => {
-            return api.post<any, TerminationProcess>(`/terminations/${id}/complete`, {});
+            return api.post<unknown, TerminationProcess>(`/terminations/${id}/complete`, {});
         }
     }
 };

@@ -107,6 +107,38 @@ export interface RequiredDocumentsResponse {
     totalUploaded: number;
 }
 
+export interface AdmissionDataRequest {
+    fullName?: string;
+    cpf?: string;
+    birthDate?: string;
+    gender?: string;
+    maritalStatus?: string;
+    phone?: string;
+    email?: string;
+    cep?: string;
+    logradouro?: string;
+    numero?: string;
+    complemento?: string;
+    bairro?: string;
+    cidade?: string;
+    estado?: string;
+}
+
+export interface ContractSignatureRequest {
+    acceptedTerms: boolean;
+    signatureText: string;
+    ipAddress?: string;
+    userAgent?: string;
+}
+
+export interface DocumentUploadResponse {
+    validationStatus: string;
+    ocrData?: {
+        message?: string;
+        [key: string]: unknown;
+    };
+}
+
 export const admissionsApi = {
     // Admin methods (standard)
     create: async (data: AdmissionCreateRequest): Promise<AdmissionProcess> => {
@@ -141,7 +173,7 @@ export const admissionsApi = {
         getDocuments: async (token: string): Promise<AdmissionDocument[]> => {
             return api.get<AdmissionDocument[], AdmissionDocument[]>(`/admissions/public/${token}/documents`);
         },
-        saveData: async (token: string, data: any): Promise<void> => {
+        saveData: async (token: string, data: AdmissionDataRequest): Promise<void> => {
             await api.post(`/admissions/public/${token}/data`, data);
         },
         validateDocuments: async (token: string): Promise<{ allValid: boolean }> => {
@@ -150,14 +182,14 @@ export const admissionsApi = {
         getContract: async (token: string): Promise<{ contractHtml: string }> => {
             return api.get<{ contractHtml: string }, { contractHtml: string }>(`/admissions/public/${token}/contract`);
         },
-        signContract: async (token: string, data: any): Promise<void> => {
+        signContract: async (token: string, data: ContractSignatureRequest): Promise<void> => {
             await api.post(`/admissions/public/${token}/sign`, data);
         },
-        uploadDocument: async (token: string, file: File, type: string): Promise<any> => {
+        uploadDocument: async (token: string, file: File, type: string): Promise<DocumentUploadResponse> => {
             const formData = new FormData();
             formData.append('file', file);
             formData.append('type', type);
-            return api.post(`/admissions/public/${token}/upload`, formData, {
+            return api.post<FormData, DocumentUploadResponse>(`/admissions/public/${token}/upload`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
         }
