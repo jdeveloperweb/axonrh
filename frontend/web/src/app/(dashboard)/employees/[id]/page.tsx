@@ -252,7 +252,12 @@ export default function EmployeeDetailPage() {
                 </div>
                 <div>
                   <p className="text-sm text-[var(--color-text-secondary)]">Admissão</p>
-                  <p className="font-medium text-[var(--color-text)]">{formatDate(employee.hireDate || employee.admissionDate)}</p>
+                  <p className="font-medium text-[var(--color-text)]">
+                    {(() => {
+                      const admissionDate = employee.hireDate || employee.admissionDate;
+                      return admissionDate ? formatDate(admissionDate) : '-';
+                    })()}
+                  </p>
                 </div>
               </div>
 
