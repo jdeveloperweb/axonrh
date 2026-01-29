@@ -184,6 +184,65 @@ export default function VacationPage() {
         </Card>
       </div>
 
+      {/* Management Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="border-l-4 border-l-blue-500">
+          <CardHeader>
+            <CardTitle>Área do Gestor</CardTitle>
+            <CardDescription>Gerencie sua equipe</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              onClick={() => router.push('/vacation/approvals')}
+            >
+              <CheckCircle className="mr-2 h-4 w-4 text-blue-500" />
+              Aprovações Pendentes
+              {statistics.pendingRequests > 0 && (
+                <Badge className="ml-auto bg-blue-100 text-blue-700 hover:bg-blue-100">{statistics.pendingRequests}</Badge>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              onClick={() => router.push('/vacation/team')}
+            >
+              <Users className="mr-2 h-4 w-4 text-purple-500" />
+              Presença da Equipe (Calendário)
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-4 border-l-orange-500">
+          <CardHeader>
+            <CardTitle>Administração RH</CardTitle>
+            <CardDescription>Painel administrativo</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              onClick={() => router.push('/vacation/admin')}
+            >
+              <AlertTriangle className="mr-2 h-4 w-4 text-orange-500" />
+              Monitoramento de Vencimentos
+              {statistics.expiringPeriods > 0 && (
+                <Badge className="ml-auto bg-orange-100 text-orange-700 hover:bg-orange-100">{statistics.expiringPeriods}</Badge>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              disabled
+            >
+              <FileText className="mr-2 h-4 w-4 text-gray-500" />
+              Configurações (Em Breve)
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Active Period Card */}
       {activePeriod && (
         <Card className="bg-gradient-to-br from-primary/10 to-primary/5">

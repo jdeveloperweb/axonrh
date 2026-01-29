@@ -125,8 +125,12 @@ export function DependentsTab({ employeeId }: DependentsTabProps) {
         try {
             setSaving(true);
 
+            // Remove id from payload as the backend DTO does not accept it
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { id, ...dataWithoutId } = formData as EmployeeDependent;
+
             const cleanData = {
-                ...formData,
+                ...dataWithoutId,
                 cpf: formData.cpf ? formData.cpf.replace(/\D/g, '') : ''
             };
 

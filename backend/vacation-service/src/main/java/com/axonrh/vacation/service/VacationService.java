@@ -340,6 +340,21 @@ public class VacationService {
                 .toList();
     }
 
+    /**
+     * Lista ferias em um periodo (Calendar).
+     */
+    @Transactional(readOnly = true)
+    public List<VacationRequestResponse> getCalendarRequests(LocalDate from, LocalDate to) {
+        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+
+        return requestRepository
+                .findByTenantIdAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+                        tenantId, VacationRequestStatus.APPROVED, to, from)
+                .stream()
+                .map(this::toRequestResponse)
+                .toList();
+    }
+
     // ==================== Simulador de Valores (T161) ====================
 
     /**

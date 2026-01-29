@@ -107,22 +107,22 @@ export const vacationApi = {
    * List periods for an employee
    */
   getEmployeePeriods: async (employeeId: string): Promise<VacationPeriod[]> => {
-    return api.get<VacationPeriod[], VacationPeriod[]>(`/vacation/periods/employee/${employeeId}`);
+    return api.get<VacationPeriod[], VacationPeriod[]>(`/vacation-service/api/v1/vacations/periods/employee/${employeeId}`);
   },
 
   /**
    * Get my periods
    */
   getMyPeriods: async (): Promise<VacationPeriod[]> => {
-    return api.get<unknown, VacationPeriod[]>('/vacation/periods/my');
+    return api.get<unknown, VacationPeriod[]>('/vacation-service/api/v1/vacations/periods/my-periods');
   },
 
   /**
    * Get expiring periods
    */
   getExpiringPeriods: async (daysThreshold = 60): Promise<VacationPeriod[]> => {
-    return api.get<unknown, VacationPeriod[]>('/vacation/periods/expiring', {
-      params: { days: daysThreshold }
+    return api.get<unknown, VacationPeriod[]>('/vacation-service/api/v1/vacations/periods/expiring', {
+      params: { daysThreshold }
     });
   },
 
@@ -132,21 +132,21 @@ export const vacationApi = {
    * Create vacation request
    */
   createRequest: async (data: VacationRequestCreateDTO): Promise<VacationRequest> => {
-    return api.post<VacationRequestCreateDTO, VacationRequest>('/vacation/requests', data);
+    return api.post<VacationRequestCreateDTO, VacationRequest>('/vacation-service/api/v1/vacations/requests', data);
   },
 
   /**
    * Get my requests
    */
   getMyRequests: async (): Promise<VacationRequest[]> => {
-    return api.get<unknown, VacationRequest[]>('/vacation/requests/my');
+    return api.get<unknown, VacationRequest[]>('/vacation-service/api/v1/vacations/requests/my-requests');
   },
 
   /**
    * Get pending requests (for managers)
    */
   getPendingRequests: async (page = 0, size = 20): Promise<{ content: VacationRequest[]; totalElements: number }> => {
-    return api.get<unknown, { content: VacationRequest[]; totalElements: number }>('/vacation/requests/pending', {
+    return api.get<unknown, { content: VacationRequest[]; totalElements: number }>('/vacation-service/api/v1/vacations/requests/pending', {
       params: { page, size }
     });
   },
@@ -155,32 +155,28 @@ export const vacationApi = {
    * Approve request
    */
   approveRequest: async (requestId: string, notes?: string): Promise<VacationRequest> => {
-    return api.post<unknown, VacationRequest>(`/vacation/requests/${requestId}/approve`, null, {
-      params: { notes }
-    });
+    return api.put<unknown, VacationRequest>(`/vacation-service/api/v1/vacations/requests/${requestId}/approve`, { notes });
   },
 
   /**
    * Reject request
    */
   rejectRequest: async (requestId: string, reason: string): Promise<VacationRequest> => {
-    return api.post<unknown, VacationRequest>(`/vacation/requests/${requestId}/reject`, null, {
-      params: { reason }
-    });
+    return api.put<unknown, VacationRequest>(`/vacation-service/api/v1/vacations/requests/${requestId}/reject`, { reason });
   },
 
   /**
    * Cancel request
    */
   cancelRequest: async (requestId: string): Promise<VacationRequest> => {
-    return api.post<unknown, VacationRequest>(`/vacation/requests/${requestId}/cancel`);
+    return api.put<unknown, VacationRequest>(`/vacation-service/api/v1/vacations/requests/${requestId}/cancel`, {});
   },
 
   /**
    * Generate notice document
    */
   generateNotice: async (requestId: string): Promise<string> => {
-    const response = await api.post<unknown, { documentUrl: string }>(`/vacation/requests/${requestId}/notice`);
+    const response = await api.post<unknown, { documentUrl: string }>(`/vacation-service/api/v1/vacations/requests/${requestId}/notice`);
     return response.documentUrl;
   },
 
@@ -188,7 +184,7 @@ export const vacationApi = {
    * Generate receipt document
    */
   generateReceipt: async (requestId: string): Promise<string> => {
-    const response = await api.post<unknown, { documentUrl: string }>(`/vacation/requests/${requestId}/receipt`);
+    const response = await api.post<unknown, { documentUrl: string }>(`/vacation-service/api/v1/vacations/requests/${requestId}/receipt`);
     return response.documentUrl;
   },
 
@@ -201,8 +197,8 @@ export const vacationApi = {
     year: number,
     month?: number,
     departmentId?: string
-  ): Promise<TeamCalendarEntry[]> => {
-    return api.get<TeamCalendarEntry[], TeamCalendarEntry[]>('/vacation/calendar/team', {
+  ): Promise<VacationRequest[]> => {
+    return api.get<unknown, VacationRequest[]>('/vacation-service/api/v1/vacations/calendar/team', {
       params: { year, month, departmentId }
     });
   },
@@ -211,7 +207,8 @@ export const vacationApi = {
    * Get my calendar entries
    */
   getMyCalendar: async (year: number): Promise<TeamCalendarEntry[]> => {
-    return api.get<unknown, TeamCalendarEntry[]>('/vacation/calendar/my', {
+    // Not implemented in backend yet, reusing team?
+    return api.get<unknown, TeamCalendarEntry[]>('/vacation-service/api/v1/vacations/calendar/my', {
       params: { year }
     });
   },
