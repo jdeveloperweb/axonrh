@@ -167,7 +167,9 @@ export function DependentsTab({ employeeId }: DependentsTabProps) {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h3 className="text-xl font-semibold text-[var(--color-text)]">Dependentes</h3>
+                    <h3 className="text-xl font-semibold text-[var(--color-text)]">
+                        Dependentes <span className="text-[var(--color-primary)]">({dependents.length})</span>
+                    </h3>
                     <p className="text-sm text-[var(--color-text-secondary)]">Gerencie os dependentes para IR e Plano de Saúde</p>
                 </div>
                 {!isAdding && !editingId && (

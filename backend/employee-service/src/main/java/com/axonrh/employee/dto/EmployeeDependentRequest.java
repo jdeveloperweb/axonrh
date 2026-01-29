@@ -11,6 +11,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDate;
 
 @Data
@@ -33,8 +34,13 @@ public class EmployeeDependentRequest {
     private String cpf;
 
     private Gender gender;
+    @JsonProperty("isIRDependent")
     private Boolean isIRDependent;
+
+    @JsonProperty("isHealthPlanDependent")
     private Boolean isHealthPlanDependent;
+
+    @JsonProperty("isAllowanceDependent")
     private Boolean isAllowanceDependent;
     private String birthCertificateNumber;
     private LocalDate startDate;

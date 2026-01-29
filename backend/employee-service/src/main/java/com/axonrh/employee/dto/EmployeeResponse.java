@@ -7,6 +7,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import java.util.UUID;
 
@@ -156,7 +157,9 @@ public class EmployeeResponse implements Serializable {
         private String relationship;
         private LocalDate birthDate;
         private String cpf;
+        @JsonProperty("isIRDependent")
         private Boolean isIRDependent;
+        @JsonProperty("isHealthPlanDependent")
         private Boolean isHealthPlanDependent;
     }
 }
