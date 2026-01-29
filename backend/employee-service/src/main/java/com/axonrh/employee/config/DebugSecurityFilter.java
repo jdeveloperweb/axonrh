@@ -18,18 +18,29 @@ public class DebugSecurityFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         
         try {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            System.err.println(">>> [DEBUG-FILTER] Request: " + request.getMethod() + " " + request.getRequestURI());
-            if (auth != null) {
-                System.err.println(">>> [DEBUG-FILTER] Auth Class: " + auth.getClass().getName());
-                System.err.println(">>> [DEBUG-FILTER] Principal: " + auth.getPrincipal());
-                System.err.println(">>> [DEBUG-FILTER] Authorities: " + auth.getAuthorities());
-                System.err.println(">>> [DEBUG-FILTER] Is Authenticated: " + auth.isAuthenticated());
+            System.err.println(">>> [DEBUG-FILTER] (PRE-AUTH) Request: " + request.getMethod() + " " + request.getRequestURI());
+            
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                String token = authHeader.substring(7);
+                System.err.println(">>> [DEBUG-FILTER] Token found (length=" + token.length() + ")");
+                
+                // Decode Header
+                try {
+                    String[] parts = token.split("\\.");
+                    if (parts.length > 0) {
+                        String headerJson = new String(java.util.Base64.getUrlDecoder().decode(parts[0]));
+                        System.err.println(">>> [DEBUG-FILTER] JWT Header: " + headerJson);
+                    }
+                } catch (Exception e) {
+                    System.err.println(">>> [DEBUG-FILTER] Failed to decode JWT header: " + e.getMessage());
+                }
             } else {
-                System.err.println(">>> [DEBUG-FILTER] No Authentication object in context (Anonymous?)");
+                System.err.println(">>> [DEBUG-FILTER] No Authorization Bearer header found!");
             }
+
         } catch (Exception e) {
-            System.err.println(">>> [DEBUG-FILTER] Error inspecting security context: " + e.getMessage());
+            System.err.println(">>> [DEBUG-FILTER] Error inspecting request: " + e.getMessage());
         }
         
         filterChain.doFilter(request, response);
