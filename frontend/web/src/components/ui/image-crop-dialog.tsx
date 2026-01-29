@@ -18,7 +18,7 @@ interface Area {
     height: number;
 }
 
-interface CropArea extends Area { }
+type CropArea = Area;
 
 export function ImageCropDialog({
     image,
