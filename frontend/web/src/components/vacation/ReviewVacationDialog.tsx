@@ -82,7 +82,7 @@ export function ReviewVacationDialog({
                         {!type ? (
                             <>
                                 <Button
-                                    variant="destructive"
+                                    variant="danger"
                                     onClick={() => setType('REJECT')}
                                     className="w-full"
                                 >
@@ -101,7 +101,7 @@ export function ReviewVacationDialog({
                                     Voltar
                                 </Button>
                                 <Button
-                                    variant={type === 'REJECT' ? 'destructive' : 'default'}
+                                    variant={type === 'REJECT' ? 'danger' : 'primary'}
                                     className={type === 'APPROVE' ? 'bg-green-600 hover:bg-green-700 text-white' : ''}
                                     onClick={handleConfirm}
                                     disabled={isSubmitting || (type === 'REJECT' && !notes.trim())}
