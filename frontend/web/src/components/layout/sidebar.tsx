@@ -80,10 +80,10 @@ const navGroups: NavGroup[] = [
   {
     title: 'ADMINISTRAÇÃO',
     items: [
+      { label: 'Organograma', href: '/organogram', icon: Users },
       { label: 'Departamentos', href: '/departments', icon: Building2 },
       { label: 'Cargos', href: '/positions', icon: Briefcase },
       { label: 'Gestores', href: '/managers', icon: UserCog },
-      { label: 'Organograma', href: '/organogram', icon: Users },
       { label: 'Configurações', href: '/settings', icon: Settings, permission: 'CONFIG:READ' },
     ]
   }

@@ -186,18 +186,46 @@ export default function OrganogramPage() {
                 const html2canvas = (await import('html2canvas')).default;
 
                 if (chartRef.current) {
+                    // Show a toast or loading state here if possible
                     const canvas = await html2canvas(chartRef.current, {
-                        scale: 2,
+                        scale: 3, // Higher scale for better quality
                         useCORS: true,
                         logging: false,
-                        backgroundColor: '#ffffff'
+                        backgroundColor: '#f8fafc' // Match background-offset
                     });
+
                     const imgData = canvas.toDataURL('image/png');
-                    const pdf = new jspdf.jsPDF('l', 'mm', 'a4');
+                    const pdf = new jspdf.jsPDF({
+                        orientation: canvas.width > canvas.height ? 'l' : 'p',
+                        unit: 'mm',
+                        format: 'a4'
+                    });
+
                     const pdfWidth = pdf.internal.pageSize.getWidth();
-                    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-                    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-                    pdf.save('organograma.pdf');
+                    const pdfHeight = pdf.internal.pageSize.getHeight();
+
+                    const margin = 10;
+                    const maxWidth = pdfWidth - (margin * 2);
+                    const maxHeight = pdfHeight - (margin * 2);
+
+                    const ratio = canvas.width / canvas.height;
+                    let finalWidth = maxWidth;
+                    let finalHeight = maxWidth / ratio;
+
+                    if (finalHeight > maxHeight) {
+                        finalHeight = maxHeight;
+                        finalWidth = maxHeight * ratio;
+                    }
+
+                    const x = (pdfWidth - finalWidth) / 2;
+                    const y = (pdfHeight - finalHeight) / 2;
+
+                    pdf.setFontSize(10);
+                    pdf.setTextColor(100);
+                    pdf.text(`Organograma - ${new Date().toLocaleDateString('pt-BR')}`, margin, 8);
+
+                    pdf.addImage(imgData, 'PNG', x, y, finalWidth, finalHeight);
+                    pdf.save(`organograma_${new Date().getTime()}.pdf`);
                 }
             } catch (err) {
                 console.error("PDF export failed", err);
@@ -346,31 +374,85 @@ export default function OrganogramPage() {
           display: flex;
           flex-direction: column;
           align-items: center;
-        }
-        .org-children-container {
-          display: flex;
-          padding-top: 32px;
-          gap: 64px;
           position: relative;
         }
-        /* Linha vertical que desce do pai */
+
+        .org-children-container {
+          display: flex;
+          padding-top: 48px; /* Espaço para as linhas */
+          gap: 48px;
+          position: relative;
+          transition: all 0.3s ease;
+        }
+
+        /* Linha vertical que desce do pai até a junção */
         .org-children-container::before {
           content: "";
           position: absolute;
           top: 0;
           left: 50%;
-          width: 2px;
-          height: 32px;
-          background-color: #94a3b8; /* slate-400 */
+          width: 3px;
+          height: 24px;
+          background-color: #cbd5e1; /* slate-300 */
           transform: translateX(-50%);
         }
-        /* Linha horizontal para ramificação de múltiplos filhos */
-        .org-hz-line {
+
+        /* Junção central (bolinha) */
+        .org-junction {
           position: absolute;
-          top: 32px;
-          height: 2px;
+          top: 24px;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 10px;
+          height: 10px;
           background-color: #94a3b8; /* slate-400 */
-          border-radius: 4px;
+          border: 2px solid white;
+          border-radius: 50%;
+          z-index: 20;
+          box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        /* Linhas nos filhos */
+        .org-child-node-wrapper {
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+
+        /* Linha vertical que sobe de cada filho até a linha horizontal */
+        .org-child-node-wrapper::before {
+          content: "";
+          position: absolute;
+          top: -24px;
+          left: 50%;
+          width: 3px;
+          height: 24px;
+          background-color: #cbd5e1;
+          transform: translateX(-50%);
+        }
+
+        /* Linha horizontal conectando os filhos */
+        .org-child-node-wrapper::after {
+          content: "";
+          position: absolute;
+          top: -24px;
+          width: 100%;
+          height: 3px;
+          background-color: #cbd5e1;
+        }
+
+        /* Ajustes para o primeiro e último filho */
+        .org-child-node-wrapper:first-child:not(:last-child)::after {
+          width: 50%;
+          left: 50%;
+        }
+        .org-child-node-wrapper:last-child:not(:first-child)::after {
+          width: 50%;
+          left: 0;
+        }
+        .org-child-node-wrapper:only-child::after {
+          display: none;
         }
       `}</style>
         </div>
@@ -398,17 +480,12 @@ function OrgTreeNode({ node, options, depth = 0 }: { node: OrgNode, options: Exp
                 <Card className={cn(
                     "relative w-80 p-5 transition-all duration-300 border-2 bg-[var(--color-surface)] shadow-lg hover:shadow-2xl hover:-translate-y-2",
                     borderColor,
-                    depth > 0 && "mt-8"
+                    depth > 0 && "mt-0"
                 )}>
                     {/* Level Badge */}
                     <div className="absolute -top-3 -right-3 px-2 py-1 rounded-md bg-black text-white text-[9px] font-bold shadow-md z-10">
                         NÍVEL {depth + 1}
                     </div>
-
-                    {/* Linha vertical subindo para o pai */}
-                    {depth > 0 && (
-                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-[2px] h-8 bg-[#94a3b8]" />
-                    )}
 
                     <div className="space-y-4">
                         {/* Dept Header */}
@@ -556,21 +633,12 @@ function OrgTreeNode({ node, options, depth = 0 }: { node: OrgNode, options: Exp
             {hasChildren && isExpanded && (
                 <div className="org-children-container">
                     {/* Ponto de junção central */}
-                    <div className="absolute top-[32px] left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-[#94a3b8] z-20 border-2 border-white shadow-sm" />
-
-                    {/* Linha horizontal para múltiplos filhos */}
-                    {node.children.length > 1 && (
-                        <div
-                            className="org-hz-line"
-                            style={{
-                                left: `${100 / (node.children.length * 2)}%`,
-                                right: `${100 / (node.children.length * 2)}%`
-                            }}
-                        />
-                    )}
+                    <div className="org-junction" />
 
                     {node.children.map(child => (
-                        <OrgTreeNode key={child.department.id} node={child} options={options} depth={depth + 1} />
+                        <div key={child.department.id} className="org-child-node-wrapper">
+                            <OrgTreeNode node={child} options={options} depth={depth + 1} />
+                        </div>
                     ))}
                 </div>
             )}
