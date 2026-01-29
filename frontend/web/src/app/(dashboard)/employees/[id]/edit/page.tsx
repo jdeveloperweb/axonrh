@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { EmployeeForm } from '@/components/employees/EmployeeForm';
-import { employeesApi, EmployeeCreateRequest } from '@/lib/api/employees';
+import { employeesApi, EmployeeCreateRequest, Employee } from '@/lib/api/employees';
 import { useToast } from '@/hooks/use-toast';
 
 export default function EditEmployeePage() {
@@ -21,8 +21,8 @@ export default function EditEmployeePage() {
             try {
                 setLoading(true);
                 const response = await employeesApi.getById(employeeId);
-                // Garante que pegamos os dados mesmo se vierem envoltos em .data
-                const employee = (response as any).data || response;
+                const employeeData = response as unknown as (Employee & { data?: Employee });
+                const employee = (employeeData.data || employeeData) as Employee & Partial<EmployeeCreateRequest>;
 
                 if (!employee) {
                     throw new Error('Colaborador não encontrado');
