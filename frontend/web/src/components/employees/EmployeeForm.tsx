@@ -37,6 +37,7 @@ interface FormData {
     birthDate: string;
     gender: string;
     ethnicity: string;
+    race: string;
     maritalStatus: string;
     nationality: string;
     admissionDate: string;  // Será mapeado para hireDate
@@ -85,6 +86,7 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
         birthDate: '',
         gender: '',
         ethnicity: '',
+        race: '',
         maritalStatus: '',
         nationality: 'Brasileira',
         admissionDate: '',
@@ -166,6 +168,7 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                 birthDate: initialData.birthDate || prev.birthDate,
                 gender: initialData.gender || prev.gender,
                 ethnicity: initialData.ethnicity || prev.ethnicity,
+                race: initialData.race || prev.race || initialData.ethnicity || '',
                 maritalStatus: initialData.maritalStatus || prev.maritalStatus,
                 nationality: initialData.nationality || prev.nationality,
                 admissionDate: initialData.hireDate || prev.admissionDate, // hireDate -> admissionDate
@@ -226,10 +229,21 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                 },
             }));
         } else {
-            setFormData(prev => ({
-                ...prev,
-                [name]: value,
-            }));
+            setFormData(prev => {
+                const newData = {
+                    ...prev,
+                    [name]: value,
+                };
+
+                // Sincroniza etnia e raça já que no formulário são o mesmo campo
+                if (name === 'ethnicity') {
+                    newData.race = value;
+                } else if (name === 'race') {
+                    newData.ethnicity = value;
+                }
+
+                return newData;
+            });
         }
 
         // Clear error when field is changed
@@ -339,6 +353,7 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
             birthDate: data.birthDate,
             gender: data.gender || undefined,
             ethnicity: data.ethnicity || undefined,
+            race: data.race || data.ethnicity || undefined,
             maritalStatus: data.maritalStatus || undefined,
             nationality: data.nationality || undefined,
             hireDate: data.admissionDate,  // admissionDate → hireDate

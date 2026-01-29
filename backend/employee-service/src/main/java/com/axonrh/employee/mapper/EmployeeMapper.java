@@ -32,7 +32,6 @@ public interface EmployeeMapper {
     @Mapping(target = "terminationDate", ignore = true)
     @Mapping(target = "photoUrl", ignore = true)
     @Mapping(target = "userId", ignore = true)
-    @Mapping(target = "race", ignore = true)
     Employee toEntity(EmployeeRequest request);
 
     @Mapping(target = "id", ignore = true)
@@ -52,7 +51,6 @@ public interface EmployeeMapper {
     @Mapping(target = "terminationDate", ignore = true)
     @Mapping(target = "photoUrl", ignore = true)
     @Mapping(target = "userId", ignore = true)
-    @Mapping(target = "race", ignore = true)
     void updateEntity(@MappingTarget Employee employee, EmployeeRequest request);
 
     @Mapping(target = "displayName", expression = "java(employee.getDisplayName())")

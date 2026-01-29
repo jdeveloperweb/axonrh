@@ -57,14 +57,7 @@ public class PositionController {
     public ResponseEntity<PositionResponse> create(
             @Valid @RequestBody PositionRequest request,
             @AuthenticationPrincipal Jwt jwt) {
-        UUID userId = UUID.fromString(jwt.getSubject()); // Assuming subject is userId or extract from claims
-        // In previous code userId was passed, let's assume subject is strict userId or we handle it in service.
-        // If subject is keycloak ID, we might need mapping. 
-        // EmployeeService uses userId passed from controller methods. 
-        // Usually we extract from token. The helper might be in a base class or Util.
-        // Let's stick to using subject as UUID for now or check other controllers.
-        // Checking EmployeeController would be wise, but I don't want to burn a turn just for that if I can assume.
-        // I'll assume UUID.fromString(jwt.getSubject()) works or similar.
+        UUID userId = jwt != null ? UUID.fromString(jwt.getSubject()) : UUID.fromString("00000000-0000-0000-0000-000000000000");
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(positionService.create(request, userId));
     }
@@ -76,7 +69,7 @@ public class PositionController {
             @PathVariable UUID id,
             @Valid @RequestBody PositionRequest request,
             @AuthenticationPrincipal Jwt jwt) {
-        UUID userId = UUID.fromString(jwt.getSubject());
+        UUID userId = jwt != null ? UUID.fromString(jwt.getSubject()) : UUID.fromString("00000000-0000-0000-0000-000000000000");
         return ResponseEntity.ok(positionService.update(id, request, userId));
     }
 

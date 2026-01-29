@@ -15,6 +15,7 @@ export interface Employee {
   birthDate?: string;
   gender?: string;
   ethnicity?: string;
+  race?: string;
   maritalStatus?: string;
   nationality?: string;
   photoUrl?: string;
@@ -121,6 +122,7 @@ export interface EmployeeCreateRequest {
   birthDate: string;  // Obrigatório no backend
   gender?: string;
   ethnicity?: string;
+  race?: string;
   maritalStatus?: string;
   nationality?: string;
   hireDate: string;  // Renomeado de admissionDate
@@ -145,6 +147,7 @@ export interface EmployeeCreateRequest {
 export interface EmployeeUpdateRequest extends Partial<EmployeeCreateRequest> {
   status?: EmployeeStatus;
   ethnicity?: string;
+  race?: string;
 }
 
 export interface Department {

@@ -38,6 +38,15 @@ const statusColors = {
   PENDING: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Pendente' },
 };
 
+const raceTranslations: Record<string, string> = {
+  'BRANCO': 'Branca',
+  'PARDO': 'Parda',
+  'PRETO': 'Preta',
+  'AMARELO': 'Amarela',
+  'INDIGENA': 'Indígena',
+  'NAO_INFORMADO': 'Não informado'
+};
+
 export default function EmployeeDetailPage() {
   const router = useRouter();
   const params = useParams();
@@ -396,6 +405,14 @@ export default function EmployeeDetailPage() {
                   <p className="text-sm text-[var(--color-text-secondary)]">Sexo</p>
                   <p className="font-medium text-[var(--color-text)]">
                     {employee.gender === 'MALE' ? 'Masculino' : employee.gender === 'FEMALE' ? 'Feminino' : employee.gender || '-'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-[var(--color-text-secondary)]">Cor/Raça</p>
+                  <p className="font-medium text-[var(--color-text)]">
+                    {employee.race ?
+                      (raceTranslations[employee.race] || employee.race) :
+                      (employee.ethnicity ? (raceTranslations[employee.ethnicity] || employee.ethnicity) : '-')}
                   </p>
                 </div>
                 <div>

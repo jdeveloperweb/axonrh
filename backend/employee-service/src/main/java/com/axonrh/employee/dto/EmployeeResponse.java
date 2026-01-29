@@ -34,6 +34,8 @@ public class EmployeeResponse implements Serializable {
     private Integer age;
     private Gender gender;
     private MaritalStatus maritalStatus;
+    private Ethnicity ethnicity;
+    private Race race;
     private String nationality;
     private String birthCity;
     private String birthState;
