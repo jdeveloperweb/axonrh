@@ -936,8 +936,28 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                                     className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
                                 />
                             </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
+                                    Gestor Direto
+                                </label>
+                                <select
+                                    name="managerId"
+                                    value={formData.managerId}
+                                    onChange={handleChange}
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                                >
+                                    <option value="">Selecione um gestor</option>
+                                    {managers.map((manager) => (
+                                        <option key={manager.id} value={manager.id}>
+                                            {manager.fullName} {manager.positionName ? `- ${manager.positionName}` : ''}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
                         </div>
                     </CardContent>
+
                 </Card>
             )}
 

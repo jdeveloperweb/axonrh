@@ -31,18 +31,32 @@ export interface CreatePositionData {
 
 export type UpdatePositionData = Partial<CreatePositionData>;
 
+export interface PositionListResponse {
+    content: Position[];
+    totalElements: number;
+    totalPages: number;
+    size: number;
+    number: number;
+    first: boolean;
+    last: boolean;
+}
+
+
 export const positionsApi = {
     getPositions: async (page = 0, size = 20) => {
-        return api.get<any, any>(`/positions?page=${page}&size=${size}`);
+        return api.get<unknown, PositionListResponse>(`/positions?page=${page}&size=${size}`);
     },
+
 
     getActivePositions: async () => {
-        return api.get<any, Position[]>('/positions/active');
+        return api.get<unknown, Position[]>('/positions/active');
     },
 
+
     getPosition: async (id: string) => {
-        return api.get<any, Position>(`/positions/${id}`);
+        return api.get<unknown, Position>(`/positions/${id}`);
     },
+
 
     createPosition: async (data: CreatePositionData) => {
         return api.post<CreatePositionData, Position>('/positions', data);
