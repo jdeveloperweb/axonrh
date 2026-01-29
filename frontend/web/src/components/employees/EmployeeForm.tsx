@@ -110,6 +110,7 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
     const [errors, setErrors] = useState<FormErrors>({});
     const [loading, setLoading] = useState(false);
     const [loadingCep, setLoadingCep] = useState(false);
+    const [loadingReferenceData, setLoadingReferenceData] = useState(true);
 
     // Reference data
     const [departments, setDepartments] = useState<Department[]>([]);
@@ -121,6 +122,7 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
     useEffect(() => {
         const loadData = async () => {
             try {
+                setLoadingReferenceData(true);
                 console.log('🔄 Carregando dados de referência...');
                 const [depts, centers, mngs] = await Promise.all([
                     employeesApi.getDepartments(),
@@ -128,6 +130,8 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                     managersApi.list(),
                 ]);
                 console.log('✅ Departamentos carregados:', depts);
+                console.log('📊 Quantidade de departamentos:', depts?.length || 0);
+                console.log('📋 Estrutura do primeiro departamento:', depts?.[0]);
                 console.log('✅ Centros de custo carregados:', centers);
                 console.log('✅ Gestores carregados:', mngs);
                 setDepartments(depts);
@@ -135,6 +139,12 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                 setManagers(mngs);
             } catch (error: unknown) {
                 console.error('❌ Failed to load reference data:', error);
+                if (error instanceof Error) {
+                    console.error('❌ Error message:', error.message);
+                    console.error('❌ Error stack:', error.stack);
+                }
+            } finally {
+                setLoadingReferenceData(false);
             }
         };
         loadData();
@@ -672,9 +682,12 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                                         name="departmentId"
                                         value={formData.departmentId}
                                         onChange={handleChange}
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                                        disabled={loadingReferenceData}
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] disabled:bg-gray-100 disabled:cursor-not-allowed"
                                     >
-                                        <option value="">Selecione</option>
+                                        <option value="">
+                                            {loadingReferenceData ? 'Carregando...' : departments.length === 0 ? 'Nenhum departamento disponível' : 'Selecione'}
+                                        </option>
                                         {departments.map((dept) => (
                                             <option key={dept.id} value={dept.id}>
                                                 {dept.name}

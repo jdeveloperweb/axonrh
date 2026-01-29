@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ImageCropDialog } from '@/components/ui/image-crop-dialog';
 import { employeesApi, Employee, EmployeeDocument, EmployeeDependent } from '@/lib/api/employees';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate, formatCpf, formatCurrency, formatPhone, calculateAge, formatRelativeTime } from '@/lib/utils';
@@ -56,6 +57,8 @@ export default function EmployeeDetailPage() {
     createdBy: string;
   }
   const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [showCropDialog, setShowCropDialog] = useState(false);
 
   // Fetch employee
   const fetchEmployee = useCallback(async () => {
@@ -116,14 +119,51 @@ export default function EmployeeDetailPage() {
     if (activeTab === 'history') fetchHistory();
   }, [activeTab, fetchDocuments, fetchDependents, fetchHistory]);
 
-  // Handle photo upload
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle photo selection - opens crop dialog
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: 'Erro',
+        description: 'Por favor, selecione uma imagem válida',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Create preview URL and open crop dialog
+    const reader = new FileReader();
+    reader.onload = () => {
+      setSelectedImage(reader.result as string);
+      setShowCropDialog(true);
+    };
+    reader.readAsDataURL(file);
+
+    // Reset input
+    e.target.value = '';
+  };
+
+  // Handle cropped image - upload to server
+  const handleCropComplete = async (croppedBlob: Blob) => {
     try {
+      // Convert blob to file
+      const file = new File([croppedBlob], 'profile-photo.jpg', {
+        type: 'image/jpeg',
+      });
+
+      // Upload to server
       const result = await employeesApi.uploadPhoto(employeeId, file);
+
+      // Update employee state
       setEmployee(prev => prev ? { ...prev, photoUrl: result.photoUrl } : null);
+
+      // Close dialog
+      setShowCropDialog(false);
+      setSelectedImage(null);
+
       toast({
         title: 'Sucesso',
         description: 'Foto atualizada com sucesso',
@@ -136,6 +176,12 @@ export default function EmployeeDetailPage() {
         variant: 'destructive',
       });
     }
+  };
+
+  // Handle crop cancel
+  const handleCropCancel = () => {
+    setShowCropDialog(false);
+    setSelectedImage(null);
   };
 
   const tabs = [
@@ -218,7 +264,7 @@ export default function EmployeeDetailPage() {
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={handlePhotoUpload}
+                  onChange={handlePhotoSelect}
                   className="hidden"
                 />
               </label>
@@ -596,6 +642,16 @@ export default function EmployeeDetailPage() {
             )}
           </CardContent>
         </Card>
+      )}
+
+      {/* Image Crop Dialog */}
+      {showCropDialog && selectedImage && (
+        <ImageCropDialog
+          image={selectedImage}
+          onComplete={handleCropComplete}
+          onCancel={handleCropCancel}
+          aspectRatio={1}
+        />
       )}
     </div>
   );

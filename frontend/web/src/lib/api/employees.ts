@@ -156,7 +156,7 @@ export interface Department {
   managerId?: string;
   managerName?: string;
   employeeCount?: number;
-  active: boolean;
+  isActive: boolean;
 }
 
 export interface Position {
@@ -167,14 +167,14 @@ export interface Position {
   salaryRangeMin?: number;
   salaryRangeMax?: number;
   cboCode?: string;
-  active: boolean;
+  isActive: boolean;
 }
 
 export interface CostCenter {
   id: string;
   name: string;
   code: string;
-  active: boolean;
+  isActive: boolean;
 }
 
 export interface OrgNode {
