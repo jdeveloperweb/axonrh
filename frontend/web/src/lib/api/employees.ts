@@ -24,6 +24,9 @@ export interface Employee {
 
   terminationDate?: string;
   employmentType: string;
+  workRegime?: string;
+  hybridWorkDays?: string[];
+  hybridFrequency?: number;
   status: EmployeeStatus;
   baseSalary?: number;
   salary?: number; // Mantido para compatibilidade
@@ -127,6 +130,9 @@ export interface EmployeeCreateRequest {
   nationality?: string;
   hireDate: string;  // Renomeado de admissionDate
   employmentType: string;
+  workRegime?: string;
+  hybridWorkDays?: string[];
+  hybridFrequency?: number;
   baseSalary?: number;  // Renomeado de salary
   weeklyHours?: number;  // Renomeado de workHoursPerWeek
   departmentId?: string;
@@ -193,6 +199,7 @@ export interface OrgNode {
   position: string;
   department: string;
   photoUrl?: string;
+  updatedAt?: string;
   email?: string;
   children: OrgNode[];
   expanded?: boolean;
@@ -242,10 +249,10 @@ export const employeesApi = {
   },
 
   // Upload employee photo
-  uploadPhoto: async (id: string, file: File): Promise<{ photoUrl: string }> => {
+  uploadPhoto: async (id: string, file: File): Promise<Employee> => {
     const formData = new FormData();
     formData.append('file', file);
-    return api.post<FormData, { photoUrl: string }>(`/employees/${id}/photo`, formData, {
+    return api.post<FormData, Employee>(`/employees/${id}/photo`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },

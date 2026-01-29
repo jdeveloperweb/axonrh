@@ -2,31 +2,15 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import {
-  ArrowLeft,
-  Edit,
-  MoreHorizontal,
-  User,
-  MapPin,
-  Briefcase,
-  FileText,
-  Users,
-  History,
-  Mail,
-  Phone,
-  Calendar,
-  Building2,
-  Camera,
-  Download,
-  DollarSign,
-  Plus
-} from 'lucide-react';
+import { ArrowLeft, Edit, MoreHorizontal, User, MapPin, Briefcase, FileText, Users, History, Mail, Phone, Calendar, Building2, Camera, Download, DollarSign, Plus, UserX } from 'lucide-react';
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ImageCropDialog } from '@/components/ui/image-crop-dialog';
 import { employeesApi, Employee, EmployeeDocument, EmployeeDependent } from '@/lib/api/employees';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate, formatCpf, formatCurrency, formatPhone, calculateAge, formatRelativeTime, getPhotoUrl } from '@/lib/utils';
+import { TerminationModal } from '@/components/employees/TerminationModal';
+import { Button } from '@/components/ui/button';
 
 type TabKey = 'overview' | 'documents' | 'dependents' | 'history';
 
@@ -68,6 +52,7 @@ export default function EmployeeDetailPage() {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [showCropDialog, setShowCropDialog] = useState(false);
+  const [terminationModalOpen, setTerminationModalOpen] = useState(false);
 
   // Fetch employee
   const fetchEmployee = useCallback(async () => {
@@ -167,7 +152,7 @@ export default function EmployeeDetailPage() {
       const result = await employeesApi.uploadPhoto(employeeId, file);
 
       // Update employee state
-      setEmployee(prev => prev ? { ...prev, photoUrl: result.photoUrl } : null);
+      setEmployee(result);
 
       // Close dialog
       setShowCropDialog(false);
@@ -239,13 +224,23 @@ export default function EmployeeDetailPage() {
           <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusInfo.bg} ${statusInfo.text}`}>
             {statusInfo.label}
           </span>
-          <button
+          {employee.status !== 'TERMINATED' && (
+            <Button
+              variant="outline"
+              onClick={() => setTerminationModalOpen(true)}
+              className="flex items-center gap-2 text-red-600 border-red-200 hover:bg-red-50"
+            >
+              <UserX className="w-4 h-4" />
+              Desligar
+            </Button>
+          )}
+          <Button
             onClick={() => router.push(`/employees/${employeeId}/edit`)}
-            className="flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 transition-opacity"
+            className="flex items-center gap-2"
           >
             <Edit className="w-4 h-4" />
             Editar
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -257,7 +252,7 @@ export default function EmployeeDetailPage() {
             <div className="relative">
               {employee.photoUrl ? (
                 <Image
-                  src={getPhotoUrl(employee.photoUrl) || ''}
+                  src={getPhotoUrl(employee.photoUrl, employee.updatedAt) || ''}
                   alt={employee.fullName}
                   width={128}
                   height={128}
@@ -670,6 +665,15 @@ export default function EmployeeDetailPage() {
           aspectRatio={1}
         />
       )}
+
+      {/* Termination Modal */}
+      <TerminationModal
+        isOpen={terminationModalOpen}
+        onClose={() => setTerminationModalOpen(false)}
+        employee={employee}
+        onSuccess={fetchEmployee}
+      />
     </div>
+
   );
 }

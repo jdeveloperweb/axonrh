@@ -119,6 +119,10 @@ public class EmployeeRequest {
 
     private WorkRegime workRegime;
 
+    private List<String> hybridWorkDays;
+
+    private Integer hybridFrequency;
+
     @Min(1)
     @Max(44)
     private Integer weeklyHours;

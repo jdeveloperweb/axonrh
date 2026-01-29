@@ -218,6 +218,14 @@ public class Employee {
     @Column(name = "work_regime", length = 30)
     private WorkRegime workRegime;
 
+    @ElementCollection
+    @CollectionTable(name = "employee_hybrid_days", schema = "shared", joinColumns = @JoinColumn(name = "employee_id"))
+    @Column(name = "day_of_week")
+    private List<String> hybridWorkDays;
+
+    @Column(name = "hybrid_frequency")
+    private Integer hybridFrequency;
+
     @Column(name = "weekly_hours")
     @Builder.Default
     private Integer weeklyHours = 44;

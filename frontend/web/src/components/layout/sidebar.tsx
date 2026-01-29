@@ -21,6 +21,7 @@ import {
   Building2,
   UserCog,
   Briefcase,
+  ClipboardCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
@@ -59,6 +60,7 @@ const navGroups: NavGroup[] = [
       { label: 'Férias', href: '/vacation', icon: Calendar, permission: 'VACATION:READ' },
       { label: 'Desempenho', href: '/performance', icon: BarChart3, permission: 'PERFORMANCE:READ' },
       { label: 'Treinamentos', href: '/learning', icon: BookOpen, permission: 'LEARNING:READ' },
+      { label: 'Processos RH', href: '/processes', icon: ClipboardCheck, permission: 'EMPLOYEE:READ' },
       { label: 'Assistente IA', href: '/assistant', icon: MessageSquare },
     ]
   },
@@ -81,6 +83,7 @@ const navGroups: NavGroup[] = [
       { label: 'Departamentos', href: '/departments', icon: Building2 },
       { label: 'Cargos', href: '/positions', icon: Briefcase },
       { label: 'Gestores', href: '/managers', icon: UserCog },
+      { label: 'Organograma', href: '/organogram', icon: Users },
       { label: 'Configurações', href: '/settings', icon: Settings, permission: 'CONFIG:READ' },
     ]
   }

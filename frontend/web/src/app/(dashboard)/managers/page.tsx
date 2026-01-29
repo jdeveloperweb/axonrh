@@ -23,6 +23,7 @@ interface Manager {
     email: string;
     phone?: string;
     photoUrl?: string;
+    updatedAt?: string;
     department: string;
     departmentId: string;
     subordinatesCount: number;
@@ -64,6 +65,7 @@ export default function ManagersPage() {
                         email: emp?.email || d.manager?.email || '',
                         phone: emp?.phone,
                         photoUrl: emp?.photoUrl,
+                        updatedAt: emp?.updatedAt,
                         department: d.name,
                         departmentId: d.id,
                         subordinatesCount: d.employeeCount || 0,
@@ -237,7 +239,7 @@ export default function ManagersPage() {
                                 <div className="flex items-start gap-4">
                                     {manager.photoUrl ? (
                                         <Image
-                                            src={getPhotoUrl(manager.photoUrl) || ''}
+                                            src={getPhotoUrl(manager.photoUrl, manager.updatedAt) || ''}
                                             alt={manager.name}
                                             width={48}
                                             height={48}

@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { UserDTO, userApi } from '@/lib/api/users';
 import { getErrorMessage } from '@/lib/api/client';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Eye, EyeOff, Wand2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface UserDialogProps {
@@ -36,6 +36,7 @@ const AVAILABLE_ROLES = [
 export function UserDialog({ open, onOpenChange, userToEdit, onSuccess }: UserDialogProps) {
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const [formData, setFormData] = useState<UserDTO>({
         name: '',
         email: '',
@@ -122,6 +123,17 @@ export function UserDialog({ open, onOpenChange, userToEdit, onSuccess }: UserDi
         }
     };
 
+    const generatePassword = () => {
+        const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        const length = 8;
+        let newPassword = "";
+        for (let i = 0; i < length; i++) {
+            newPassword += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        setFormData(prev => ({ ...prev, password: newPassword }));
+        setShowPassword(true);
+    };
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[500px]">
@@ -190,10 +202,32 @@ export function UserDialog({ open, onOpenChange, userToEdit, onSuccess }: UserDi
                                 label={userToEdit ? "Nova Senha (opcional)" : "Senha"}
                                 id="password"
                                 name="password"
-                                type="password"
+                                type={showPassword ? 'text' : 'password'}
                                 value={formData.password || ''}
                                 onChange={handleChange}
                                 placeholder={userToEdit ? "Deixe em branco para manter" : "******"}
+                                className="pr-16"
+                                rightIcon={
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="hover:text-[var(--color-primary)] transition-colors"
+                                            tabIndex={-1}
+                                        >
+                                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={generatePassword}
+                                            className="hover:text-[var(--color-primary)] transition-colors"
+                                            title="Gerar senha aleatória"
+                                            tabIndex={-1}
+                                        >
+                                            <Wand2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                }
                             />
                         </div>
 

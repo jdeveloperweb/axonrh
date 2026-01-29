@@ -29,6 +29,8 @@ import {
 import { employeesApi, Employee, EmployeeStatus, EmployeeListParams, Department } from '@/lib/api/employees';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate, formatCpf, getPhotoUrl } from '@/lib/utils';
+import { TerminationModal } from '@/components/employees/TerminationModal';
+
 
 const statusColors: Record<EmployeeStatus, { bg: string; text: string; label: string }> = {
   ACTIVE: { bg: 'bg-green-100', text: 'text-green-800', label: 'Ativo' },
@@ -58,6 +60,11 @@ export default function EmployeesPage() {
 
   // Reference data
   const [departments, setDepartments] = useState<Department[]>([]);
+
+  // Termination modal state
+  const [terminationModalOpen, setTerminationModalOpen] = useState(false);
+  const [selectedEmployeeForTermination, setSelectedEmployeeForTermination] = useState<Employee | null>(null);
+
 
   // Stats
   const [stats, setStats] = useState({
@@ -180,6 +187,12 @@ export default function EmployeesPage() {
       });
     }
   };
+
+  const handleTerminateClick = (employee: Employee) => {
+    setSelectedEmployeeForTermination(employee);
+    setTerminationModalOpen(true);
+  };
+
 
   const clearFilters = () => {
     setSearch('');
@@ -450,7 +463,7 @@ export default function EmployeesPage() {
                         <div className="flex items-center gap-3">
                           {employee.photoUrl ? (
                             <Image
-                              src={getPhotoUrl(employee.photoUrl) || ''}
+                              src={getPhotoUrl(employee.photoUrl, employee.updatedAt) || ''}
                               alt={employee.fullName}
                               width={40}
                               height={40}
@@ -518,6 +531,16 @@ export default function EmployeesPage() {
                                 <Trash2 className="w-4 h-4" />
                                 Excluir
                               </DropdownMenuItem>
+                              {employee.status !== 'TERMINATED' && (
+                                <DropdownMenuItem
+                                  onClick={() => handleTerminateClick(employee)}
+                                  className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 text-orange-600 cursor-pointer"
+                                >
+                                  <UserX className="w-4 h-4" />
+                                  Desligar
+                                </DropdownMenuItem>
+                              )}
+
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
@@ -573,6 +596,14 @@ export default function EmployeesPage() {
           )}
         </CardContent>
       </Card>
+
+      <TerminationModal
+        isOpen={terminationModalOpen}
+        onClose={() => setTerminationModalOpen(false)}
+        employee={selectedEmployeeForTermination}
+        onSuccess={fetchEmployees}
+      />
     </div>
+
   );
 }

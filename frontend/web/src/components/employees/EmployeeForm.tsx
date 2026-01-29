@@ -48,6 +48,9 @@ interface FormData {
     positionId: string;
     costCenterId: string;
     managerId: string;
+    workRegime: string;
+    hybridWorkDays: string[];
+    hybridFrequency?: number;
     address: {
         street: string;
         number: string;
@@ -97,6 +100,9 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
         positionId: '',
         costCenterId: '',
         managerId: '',
+        workRegime: 'PRESENCIAL',
+        hybridWorkDays: [],
+        hybridFrequency: undefined,
         address: {
             street: '',
             number: '',
@@ -179,6 +185,9 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                 positionId: initialData.positionId || prev.positionId,
                 costCenterId: initialData.costCenterId || prev.costCenterId,
                 managerId: initialData.managerId || prev.managerId,
+                workRegime: initialData.workRegime || prev.workRegime,
+                hybridWorkDays: initialData.hybridWorkDays || prev.hybridWorkDays,
+                hybridFrequency: initialData.hybridFrequency || prev.hybridFrequency,
                 address: {
                     street: initialData.addressStreet || prev.address.street,
                     number: initialData.addressNumber || prev.address.number,
@@ -364,6 +373,9 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
             positionId: data.positionId || undefined,
             costCenterId: data.costCenterId || undefined,
             managerId: data.managerId || undefined,
+            workRegime: data.workRegime || undefined,
+            hybridWorkDays: data.hybridWorkDays || [],
+            hybridFrequency: data.hybridFrequency ? Number(data.hybridFrequency) : undefined,
             // Mapeia objeto address para campos planos
             addressStreet: data.address?.street || undefined,
             addressNumber: data.address?.number || undefined,
@@ -1000,9 +1012,79 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                                     ))}
                                 </select>
                             </div>
+
+                            <div className="md:col-span-2 pt-4 border-t border-gray-100">
+                                <h4 className="text-sm font-semibold text-[var(--color-text)] mb-3">Regime de Trabalho</h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
+                                            Regime
+                                        </label>
+                                        <select
+                                            name="workRegime"
+                                            value={formData.workRegime}
+                                            onChange={handleChange}
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                                        >
+                                            <option value="PRESENCIAL">Presencial</option>
+                                            <option value="REMOTO">Home Office (Remoto)</option>
+                                            <option value="HIBRIDO">Híbrido</option>
+                                        </select>
+                                    </div>
+
+                                    {formData.workRegime === 'HIBRIDO' && (
+                                        <div>
+                                            <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
+                                                Frequência Semanal (vezes)
+                                            </label>
+                                            <input
+                                                type="number"
+                                                name="hybridFrequency"
+                                                value={formData.hybridFrequency || ''}
+                                                onChange={handleChange}
+                                                placeholder="Ex: 3"
+                                                min="1"
+                                                max="6"
+                                                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+
+                                {formData.workRegime === 'HIBRIDO' && (
+                                    <div className="mt-4">
+                                        <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                                            Dias Presenciais
+                                        </label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {['SEGUNDA', 'TERCA', 'QUARTA', 'QUINTA', 'SEXTA', 'SABADO'].map((day) => {
+                                                const label = day.charAt(0) + day.slice(1).toLowerCase().replace('terca', 'terça');
+                                                const isSelected = formData.hybridWorkDays.includes(day);
+                                                return (
+                                                    <button
+                                                        key={day}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const newDays = isSelected
+                                                                ? formData.hybridWorkDays.filter(d => d !== day)
+                                                                : [...formData.hybridWorkDays, day];
+                                                            setFormData(prev => ({ ...prev, hybridWorkDays: newDays }));
+                                                        }}
+                                                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${isSelected
+                                                            ? 'bg-[var(--color-primary)] text-white'
+                                                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                            }`}
+                                                    >
+                                                        {label}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </CardContent>
-
                 </Card>
             )}
 

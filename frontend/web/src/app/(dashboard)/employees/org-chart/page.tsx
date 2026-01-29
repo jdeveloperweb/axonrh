@@ -136,7 +136,7 @@ export default function OrgChartPage() {
           <div className="flex items-center gap-3 mb-2">
             {node.photoUrl ? (
               <Image
-                src={getPhotoUrl(node.photoUrl) || ''}
+                src={getPhotoUrl(node.photoUrl, node.updatedAt) || ''}
                 alt={node.name}
                 width={48}
                 height={48}
@@ -332,7 +332,7 @@ export default function OrgChartPage() {
               <div className="flex items-start gap-4">
                 {selectedNode.photoUrl ? (
                   <Image
-                    src={getPhotoUrl(selectedNode.photoUrl) || ''}
+                    src={getPhotoUrl(selectedNode.photoUrl, selectedNode.updatedAt) || ''}
                     alt={selectedNode.name}
                     width={64}
                     height={64}

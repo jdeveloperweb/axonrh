@@ -58,6 +58,8 @@ public class EmployeeResponse implements Serializable {
     private LocalDate terminationDate;
     private EmploymentType employmentType;
     private WorkRegime workRegime;
+    private List<String> hybridWorkDays;
+    private Integer hybridFrequency;
     private Integer weeklyHours;
     private String shift;
     private Integer yearsOfService;

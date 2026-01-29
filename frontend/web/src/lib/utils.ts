@@ -292,12 +292,21 @@ export function downloadBlob(blob: Blob, filename: string): void {
 /**
  * Returns full photo URL
  */
-export function getPhotoUrl(path: string | null | undefined): string | null {
+export function getPhotoUrl(path: string | null | undefined, updatedAt?: string | Date): string | null {
   if (!path) return null;
   if (path.startsWith('http')) return path;
 
   // Use API_BASE_URL (removing /api/v1) as base for uploads
   const baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8180/api/v1').replace('/api/v1', '');
-  return `${baseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
+  const url = `${baseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
+
+  if (updatedAt) {
+    const t = typeof updatedAt === 'string' ? new Date(updatedAt).getTime() : new Date(updatedAt).getTime();
+    if (!isNaN(t)) {
+      return `${url}${url.includes('?') ? '&' : '?'}v=${t}`;
+    }
+  }
+
+  return url;
 }
 
