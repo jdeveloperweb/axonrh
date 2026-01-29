@@ -205,6 +205,46 @@ public class NluService {
                     .build();
         }
 
+        // Notifications
+        if (containsAny(normalizedMessage, "notificação", "notificações", "alerta", "aviso", "mensagens")) {
+            return NluResult.builder()
+                    .intent("query_notifications")
+                    .confidence(0.88)
+                    .entities(Map.of())
+                    .actionType(AiIntent.ActionType.DATABASE_QUERY)
+                    .build();
+        }
+
+        // Company Profile
+        if (containsAny(normalizedMessage, "dados da empresa", "cnpj da empresa", "razão social", "endereço da empresa")) {
+            return NluResult.builder()
+                    .intent("query_company")
+                    .confidence(0.88)
+                    .entities(Map.of())
+                    .actionType(AiIntent.ActionType.DATABASE_QUERY)
+                    .build();
+        }
+
+        // Certificates
+        if (containsAny(normalizedMessage, "certificado digital", "certificado a1", "certificado a3", "validade do certificado")) {
+            return NluResult.builder()
+                    .intent("query_certificates")
+                    .confidence(0.88)
+                    .entities(Map.of())
+                    .actionType(AiIntent.ActionType.DATABASE_QUERY)
+                    .build();
+        }
+
+        // PDI
+        if (containsAny(normalizedMessage, "pdi", "plano de desenvolvimento", "meu desenvolvimento")) {
+            return NluResult.builder()
+                    .intent("query_pdi")
+                    .confidence(0.88)
+                    .entities(Map.of())
+                    .actionType(AiIntent.ActionType.DATABASE_QUERY)
+                    .build();
+        }
+
         return null;
     }
 

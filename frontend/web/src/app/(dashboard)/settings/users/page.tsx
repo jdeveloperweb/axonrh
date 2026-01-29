@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     Search,
     UserPlus,
@@ -25,7 +25,7 @@ export default function UsersPage() {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<UserDTO | null>(null);
 
-    const loadUsers = async () => {
+    const loadUsers = useCallback(async () => {
         try {
             setLoading(true);
             const data = await userApi.list();
@@ -40,11 +40,11 @@ export default function UsersPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [toast]);
 
     useEffect(() => {
         loadUsers();
-    }, [toast]);
+    }, [loadUsers]);
 
     const handleCreate = () => {
         setSelectedUser(null);
