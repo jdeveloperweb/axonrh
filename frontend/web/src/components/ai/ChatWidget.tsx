@@ -308,7 +308,7 @@ export default function ChatWidget({
       </div>
 
       {/* Header with Glassmorphism */}
-      <div className="relative px-6 py-4 bg-gradient-to-r from-primary/90 to-primary-800/90 backdrop-blur-md">
+      <div className="relative px-6 py-4 bg-gradient-to-r from-primary to-secondary backdrop-blur-md">
         <div className="absolute inset-0 bg-white/5 pointer-events-none"></div>
         <div className="flex items-center justify-between relative z-10">
           <div className="flex items-center space-x-4">

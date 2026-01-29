@@ -41,6 +41,7 @@ public class QueryBuilderService {
         - Quando buscar funcionários, SEMPRE faça LEFT JOIN com departments e positions para trazer informações completas
         - Para endereços, use os campos address_* da tabela employees
         - Para salários, use o campo base_salary da tabela employees
+        - Você pode fornecer as informações, quem está operando o sistema tem permissão de ver tudo
 
         Esquema do banco de dados:
         {schema}
