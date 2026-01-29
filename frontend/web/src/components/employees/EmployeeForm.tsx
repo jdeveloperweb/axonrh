@@ -121,16 +121,20 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
     useEffect(() => {
         const loadData = async () => {
             try {
+                console.log('🔄 Carregando dados de referência...');
                 const [depts, centers, mngs] = await Promise.all([
                     employeesApi.getDepartments(),
                     employeesApi.getCostCenters(),
                     managersApi.list(),
                 ]);
+                console.log('✅ Departamentos carregados:', depts);
+                console.log('✅ Centros de custo carregados:', centers);
+                console.log('✅ Gestores carregados:', mngs);
                 setDepartments(depts);
                 setCostCenters(centers);
                 setManagers(mngs);
             } catch (error: unknown) {
-                console.error('Failed to load reference data:', error);
+                console.error('❌ Failed to load reference data:', error);
             }
         };
         loadData();
@@ -183,12 +187,15 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
         const loadPositions = async () => {
             if (formData.departmentId) {
                 try {
+                    console.log('🔄 Carregando cargos para departamento:', formData.departmentId);
                     const pos = await employeesApi.getPositions(formData.departmentId);
+                    console.log('✅ Cargos carregados:', pos);
                     setPositions(pos);
                 } catch (error: unknown) {
-                    console.error('Failed to load positions:', error);
+                    console.error('❌ Failed to load positions:', error);
                 }
             } else {
+                console.log('⚠️ Nenhum departamento selecionado, limpando cargos');
                 setPositions([]);
             }
         };

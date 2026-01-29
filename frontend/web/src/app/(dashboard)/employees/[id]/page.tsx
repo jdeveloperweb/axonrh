@@ -63,6 +63,7 @@ export default function EmployeeDetailPage() {
       setLoading(true);
       const data = await employeesApi.getById(employeeId);
       setEmployee(data);
+      setLoading(false);
     } catch (error) {
       console.error(error);
       toast({
@@ -251,7 +252,7 @@ export default function EmployeeDetailPage() {
                 </div>
                 <div>
                   <p className="text-sm text-[var(--color-text-secondary)]">Admissão</p>
-                  <p className="font-medium text-[var(--color-text)]">{formatDate(employee.admissionDate)}</p>
+                  <p className="font-medium text-[var(--color-text)]">{formatDate(employee.hireDate || employee.admissionDate)}</p>
                 </div>
               </div>
 
@@ -271,7 +272,7 @@ export default function EmployeeDetailPage() {
                 </div>
                 <div>
                   <p className="text-sm text-[var(--color-text-secondary)]">Telefone</p>
-                  <p className="font-medium text-[var(--color-text)]">{formatPhone(employee.phone || employee.personalPhone || '')}</p>
+                  <p className="font-medium text-[var(--color-text)]">{formatPhone(employee.phone || employee.mobile || employee.personalPhone || '')}</p>
                 </div>
               </div>
 
@@ -360,7 +361,7 @@ export default function EmployeeDetailPage() {
                 </div>
                 <div>
                   <p className="text-sm text-[var(--color-text-secondary)]">Telefone Pessoal</p>
-                  <p className="font-medium text-[var(--color-text)]">{formatPhone(employee.personalPhone || '')}</p>
+                  <p className="font-medium text-[var(--color-text)]">{formatPhone(employee.mobile || employee.personalPhone || '')}</p>
                 </div>
               </div>
             </CardContent>
@@ -423,7 +424,7 @@ export default function EmployeeDetailPage() {
                 </div>
                 <div>
                   <p className="text-sm text-[var(--color-text-secondary)]">Gestor</p>
-                  <p className="font-medium text-[var(--color-text)]">{employee.manager?.fullName || '-'}</p>
+                  <p className="font-medium text-[var(--color-text)]">{employee.manager?.name || employee.manager?.fullName || '-'}</p>
                 </div>
               </div>
             </CardContent>
@@ -441,11 +442,11 @@ export default function EmployeeDetailPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-[var(--color-text-secondary)]">Salário Base</p>
-                  <p className="font-medium text-[var(--color-text)]">{formatCurrency(employee.salary || 0)}</p>
+                  <p className="font-medium text-[var(--color-text)]">{formatCurrency(employee.baseSalary || employee.salary || 0)}</p>
                 </div>
                 <div>
                   <p className="text-sm text-[var(--color-text-secondary)]">Carga Horária</p>
-                  <p className="font-medium text-[var(--color-text)]">{employee.workHoursPerWeek || 44}h semanais</p>
+                  <p className="font-medium text-[var(--color-text)]">{employee.weeklyHours || employee.workHoursPerWeek || 44}h semanais</p>
                 </div>
                 <div>
                   <p className="text-sm text-[var(--color-text-secondary)]">Tipo de Contrato</p>

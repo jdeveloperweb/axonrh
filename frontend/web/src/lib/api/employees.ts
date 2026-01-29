@@ -10,20 +10,24 @@ export interface Employee {
   email?: string;
   personalEmail?: string;
   phone?: string;
-  personalPhone?: string;
+  mobile?: string;
+  personalPhone?: string; // Mantido para compatibilidade
   birthDate?: string;
   gender?: string;
   ethnicity?: string;
   maritalStatus?: string;
   nationality?: string;
   photoUrl?: string;
-  admissionDate: string;
+  hireDate: string;
+  admissionDate?: string; // Mantido para compatibilidade temporaria se necessario
 
   terminationDate?: string;
   employmentType: string;
   status: EmployeeStatus;
-  salary?: number;
-  workHoursPerWeek?: number;
+  baseSalary?: number;
+  salary?: number; // Mantido para compatibilidade
+  weeklyHours?: number;
+  workHoursPerWeek?: number; // Mantido para compatibilidade
   department?: {
     id: string;
     name: string;
@@ -42,7 +46,8 @@ export interface Employee {
   };
   manager?: {
     id: string;
-    fullName: string;
+    name: string;
+    fullName?: string; // Como alias
     photoUrl?: string;
   };
   address?: EmployeeAddress;
@@ -311,6 +316,26 @@ export const employeesApi = {
 
   // Search address by CEP
   searchCep: async (cep: string): Promise<EmployeeAddress> => {
-    return api.get<unknown, EmployeeAddress>(`/address/cep/${cep}`);
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const data = await response.json();
+
+      if (data.erro) {
+        throw new Error('CEP não encontrado');
+      }
+
+      return {
+        street: data.logradouro || '',
+        neighborhood: data.bairro || '',
+        city: data.localidade || '',
+        state: data.uf || '',
+        zipCode: data.cep || cep,
+        number: '',
+        country: 'Brasil'
+      };
+    } catch (error) {
+      console.error('ViaCEP error:', error);
+      throw new Error('Falha ao buscar CEP na ViaCEP');
+    }
   },
 };

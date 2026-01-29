@@ -18,6 +18,7 @@ import {
 import { AdmissionDocument } from '@/lib/api/admissions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { admissionsApi, AdmissionProcess } from '@/lib/api/admissions';
+import { employeesApi } from '@/lib/api/employees';
 import { useToast } from '@/hooks/use-toast';
 
 interface Step {
@@ -229,6 +230,24 @@ export default function AdmissionWizardPage() {
 
   const handleBack = () => {
     setCurrentStep(prev => Math.max(prev - 1, 1));
+  };
+
+  const handleCepBlur = async () => {
+    const cep = addressData.cep.replace(/\D/g, '');
+    if (cep.length === 8) {
+      try {
+        const address = await employeesApi.searchCep(cep);
+        setAddressData(prev => ({
+          ...prev,
+          logradouro: address.street || prev.logradouro,
+          bairro: address.neighborhood || prev.bairro,
+          cidade: address.city || prev.cidade,
+          estado: address.state || prev.estado,
+        }));
+      } catch (error) {
+        console.error('Erro ao buscar CEP:', error);
+      }
+    }
   };
 
   // Handle document upload
@@ -525,6 +544,7 @@ export default function AdmissionWizardPage() {
                     type="text"
                     value={addressData.cep}
                     onChange={(e) => setAddressData(prev => ({ ...prev, cep: e.target.value }))}
+                    onBlur={handleCepBlur}
                     placeholder="00000-000"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -600,10 +620,33 @@ export default function AdmissionWizardPage() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Selecione</option>
-                    <option value="SP">São Paulo</option>
-                    <option value="RJ">Rio de Janeiro</option>
+                    <option value="AC">Acre</option>
+                    <option value="AL">Alagoas</option>
+                    <option value="AP">Amapá</option>
+                    <option value="AM">Amazonas</option>
+                    <option value="BA">Bahia</option>
+                    <option value="CE">Ceará</option>
+                    <option value="DF">Distrito Federal</option>
+                    <option value="ES">Espírito Santo</option>
+                    <option value="GO">Goiás</option>
+                    <option value="MA">Maranhão</option>
+                    <option value="MT">Mato Grosso</option>
+                    <option value="MS">Mato Grosso do Sul</option>
                     <option value="MG">Minas Gerais</option>
-                    {/* Add other states */}
+                    <option value="PA">Pará</option>
+                    <option value="PB">Paraíba</option>
+                    <option value="PR">Paraná</option>
+                    <option value="PE">Pernambuco</option>
+                    <option value="PI">Piauí</option>
+                    <option value="RJ">Rio de Janeiro</option>
+                    <option value="RN">Rio Grande do Norte</option>
+                    <option value="RS">Rio Grande do Sul</option>
+                    <option value="RO">Rondônia</option>
+                    <option value="RR">Roraima</option>
+                    <option value="SC">Santa Catarina</option>
+                    <option value="SP">São Paulo</option>
+                    <option value="SE">Sergipe</option>
+                    <option value="TO">Tocantins</option>
                   </select>
                 </div>
               </div>

@@ -90,29 +90,32 @@ export default function DepartmentsPage() {
             if (editingDepartment) {
                 const updateData: UpdateDepartmentDTO = {
                     name: formData.name,
-                    description: formData.description,
-                    managerId: formData.managerId || undefined,
-                    // code is generally not updatable or handled separately depending on backend logic
+                    description: formData.description || undefined,
+                    managerId: formData.managerId ? formData.managerId : undefined,
                 };
-                await departmentsApi.update(editingDepartment.id, updateData);
+                console.log('Atualizando departamento:', editingDepartment.id, updateData);
+                const result = await departmentsApi.update(editingDepartment.id, updateData);
+                console.log('Resultado da atualização:', result);
                 toast({
                     title: 'Sucesso',
                     description: 'Departamento atualizado com sucesso',
                 });
             } else {
-                await departmentsApi.create(formData);
+                console.log('Criando departamento:', formData);
+                const result = await departmentsApi.create(formData);
+                console.log('Resultado da criação:', result);
                 toast({
                     title: 'Sucesso',
                     description: 'Departamento criado com sucesso',
                 });
             }
             handleCloseModal();
-            fetchData();
+            await fetchData();
         } catch (error: unknown) {
-            console.error(error);
+            console.error('Erro ao salvar departamento:', error);
             toast({
                 title: 'Erro',
-                description: 'Falha ao salvar departamento',
+                description: error instanceof Error ? error.message : 'Falha ao salvar departamento',
                 variant: 'destructive',
             });
         }

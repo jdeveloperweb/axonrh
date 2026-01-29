@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/v1/positions")
+@RequestMapping("/api/v1/positions")
 @RequiredArgsConstructor
 @Tag(name = "Cargos", description = "Gerenciamento de cargos")
 public class PositionController {

@@ -101,12 +101,13 @@ public class DepartmentService {
             department.setCode(dto.getCode());
         }
         
-        // Atualizar outros campos
+        // Atualizar outros campos - sempre atualiza se fornecido
         if (dto.getName() != null) {
             department.setName(dto.getName());
         }
+        // Permite limpar a descrição
         if (dto.getDescription() != null) {
-            department.setDescription(dto.getDescription());
+            department.setDescription(dto.getDescription().isEmpty() ? null : dto.getDescription());
         }
         if (dto.getIsActive() != null) {
             department.setIsActive(dto.getIsActive());
@@ -119,7 +120,7 @@ public class DepartmentService {
             department.setParent(parent);
         }
         
-        // Atualizar gestor
+        // Atualizar gestor - permite remover gestor enviando null
         if (dto.getManagerId() != null) {
             validateManager(tenantId, dto.getManagerId());
             department.setManagerId(dto.getManagerId());
