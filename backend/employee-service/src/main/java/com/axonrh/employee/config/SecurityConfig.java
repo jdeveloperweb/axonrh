@@ -69,6 +69,9 @@ public class SecurityConfig {
         public java.util.Collection<org.springframework.security.core.GrantedAuthority> convert(org.springframework.security.oauth2.jwt.Jwt jwt) {
             java.util.Collection<org.springframework.security.core.GrantedAuthority> authorities = new java.util.ArrayList<>();
             
+            System.err.println(">>> [DEBUG-Security] Processing JWT for user: " + jwt.getSubject());
+            System.err.println(">>> [DEBUG-Security] Claims keys: " + jwt.getClaims().keySet());
+
             // Tenta extrair authorities padrao (scope/scp)
             org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter defaultConverter = 
                 new org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter();
@@ -97,11 +100,15 @@ public class SecurityConfig {
             if (jwt.hasClaim("permissions")) {
                 @SuppressWarnings("unchecked")
                 java.util.List<String> perms = jwt.getClaimAsStringList("permissions");
+                System.err.println(">>> [DEBUG-Security] Found permissions claim: " + perms);
                 if (perms != null) {
                     perms.forEach(perm -> authorities.add(new org.springframework.security.core.authority.SimpleGrantedAuthority(perm)));
                 }
+            } else {
+                System.err.println(">>> [DEBUG-Security] 'permissions' claim NOT found!");
             }
 
+            System.err.println(">>> [DEBUG-Security] Final Authorities: " + authorities);
             return authorities;
         }
     }
