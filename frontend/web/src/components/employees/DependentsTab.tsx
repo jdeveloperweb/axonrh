@@ -341,7 +341,7 @@ export function DependentsTab({ employeeId }: DependentsTabProps) {
                     <div className="text-center py-16 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
                         <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                         <p className="text-gray-500 font-medium">Nenhum dependente cadastrado.</p>
-                        <p className="text-sm text-gray-400 mt-1">Clique em "Adicionar" para começar.</p>
+                        <p className="text-sm text-gray-400 mt-1">Clique em &quot;Adicionar&quot; para começar.</p>
                     </div>
                 )}
             </div>
