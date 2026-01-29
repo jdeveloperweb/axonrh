@@ -6,23 +6,11 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "**.axonrh.com.br",
+        hostname: "**",
       },
       {
-        protocol: "https",
-        hostname: "storage.googleapis.com",
-      },
-      {
-        protocol: "https",
-        hostname: "**.amazonaws.com",
-      },
-      {
-        protocol: "https",
-        hostname: "b2carelink.com.br",
-      },
-      {
-        protocol: "https",
-        hostname: "prognum.com.br",
+        protocol: "http",
+        hostname: "**",
       },
     ],
   },

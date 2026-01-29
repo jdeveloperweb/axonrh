@@ -30,8 +30,8 @@ export default function EditEmployeePage() {
 
                 const formattedData: Partial<EmployeeCreateRequest> = {
                     ...data,
-                    birthDate: data.birthDate?.split('T')[0],
-                    hireDate: data.admissionDate?.split('T')[0],
+                    birthDate: data.birthDate?.split('T')[0] || '',
+                    hireDate: data.admissionDate?.split('T')[0] || '',
                     baseSalary: data.salary,
                     weeklyHours: data.workHoursPerWeek,
                     departmentId: data.department?.id,
@@ -55,10 +55,9 @@ export default function EditEmployeePage() {
                 console.error('Error loading employee:', error);
                 toast({
                     title: 'Erro',
-                    description: 'Falha ao carregar dados do colaborador',
+                    description: 'Falha ao carregar dados do colaborador. Verifique se o ID é válido.',
                     variant: 'destructive',
                 });
-                router.push('/employees');
             } finally {
                 setLoading(false);
             }

@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { employeesApi, EmployeeCreateRequest, Department, Position, CostCenter } from '@/lib/api/employees';
+import { managersApi, ManagerDTO } from '@/lib/api/managers';
 import { useToast } from '@/hooks/use-toast';
 import { isValidCpf, isValidEmail } from '@/lib/utils';
 import { DocumentsTab } from './DocumentsTab';
@@ -114,17 +115,20 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
     const [departments, setDepartments] = useState<Department[]>([]);
     const [positions, setPositions] = useState<Position[]>([]);
     const [costCenters, setCostCenters] = useState<CostCenter[]>([]);
+    const [managers, setManagers] = useState<ManagerDTO[]>([]);
 
     // Load reference data
     useEffect(() => {
         const loadData = async () => {
             try {
-                const [depts, centers] = await Promise.all([
+                const [depts, centers, mngs] = await Promise.all([
                     employeesApi.getDepartments(),
                     employeesApi.getCostCenters(),
+                    managersApi.list(),
                 ]);
                 setDepartments(depts);
                 setCostCenters(centers);
+                setManagers(mngs);
             } catch (error: unknown) {
                 console.error('Failed to load reference data:', error);
             }
@@ -360,7 +364,9 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                     title: 'Sucesso',
                     description: 'Dados pessoais salvos. Agora você pode preencher as outras abas.',
                 });
-                router.push(`/employees/${employee.id}/edit`);
+                // Mudar para a próxima aba e atualizar URL sem refresh total se possível
+                setActiveTab('address');
+                window.history.replaceState(null, '', `/employees/${employee.id}/edit`);
             } else {
                 // UPDATE
                 await employeesApi.update(employeeId, submitData);
@@ -640,6 +646,54 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                                 {errors.personalEmail && <p className="text-red-500 text-sm mt-1">{errors.personalEmail}</p>}
                             </div>
                         </div>
+
+                        {/* Professional Allocation Section */}
+                        <div className="pt-6 border-t border-gray-100">
+                            <h3 className="text-lg font-semibold text-[var(--color-text)] mb-4 flex items-center gap-2">
+                                <Briefcase className="w-5 h-5 text-[var(--color-primary)]" />
+                                Alocação Profissional
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
+                                        Departamento
+                                    </label>
+                                    <select
+                                        name="departmentId"
+                                        value={formData.departmentId}
+                                        onChange={handleChange}
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                                    >
+                                        <option value="">Selecione</option>
+                                        {departments.map((dept) => (
+                                            <option key={dept.id} value={dept.id}>
+                                                {dept.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
+                                        Cargo
+                                    </label>
+                                    <select
+                                        name="positionId"
+                                        value={formData.positionId}
+                                        onChange={handleChange}
+                                        disabled={!formData.departmentId}
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                    >
+                                        <option value="">Selecione</option>
+                                        {positions.map((pos) => (
+                                            <option key={pos.id} value={pos.id}>
+                                                {pos.title}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
             )}
@@ -817,45 +871,6 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
 
                             <div>
                                 <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
-                                    Departamento
-                                </label>
-                                <select
-                                    name="departmentId"
-                                    value={formData.departmentId}
-                                    onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                                >
-                                    <option value="">Selecione</option>
-                                    {departments.map((dept) => (
-                                        <option key={dept.id} value={dept.id}>
-                                            {dept.name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
-                                    Cargo
-                                </label>
-                                <select
-                                    name="positionId"
-                                    value={formData.positionId}
-                                    onChange={handleChange}
-                                    disabled={!formData.departmentId}
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] disabled:bg-gray-100 disabled:cursor-not-allowed"
-                                >
-                                    <option value="">Selecione</option>
-                                    {positions.map((pos) => (
-                                        <option key={pos.id} value={pos.id}>
-                                            {pos.title}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
                                     Centro de Custo
                                 </label>
                                 <select
@@ -872,6 +887,7 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                                     ))}
                                 </select>
                             </div>
+
 
                             <div>
                                 <label className="block text-sm font-medium text-[var(--color-text)] mb-1">

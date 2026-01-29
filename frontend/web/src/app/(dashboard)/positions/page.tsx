@@ -218,104 +218,128 @@ export default function PositionsPage() {
                 </CardContent>
             </Card>
 
-            {/* Positions Table */}
-            <Card>
-                <CardContent className="p-0">
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead>
-                                <tr className="border-b border-gray-200 bg-gray-50">
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">
-                                        Código
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">
-                                        Cargo
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">
-                                        Departamento
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">
-                                        Nível
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">
-                                        Salário (Faixa)
-                                    </th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">
-                                        Ações
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200">
-                                {loading ? (
-                                    Array.from({ length: 3 }).map((_, i) => (
-                                        <tr key={i}>
-                                            <td className="px-6 py-4"><div className="w-16 h-4 bg-gray-200 rounded animate-pulse" /></td>
-                                            <td className="px-6 py-4"><div className="w-32 h-4 bg-gray-200 rounded animate-pulse" /></td>
-                                            <td className="px-6 py-4"><div className="w-24 h-4 bg-gray-200 rounded animate-pulse" /></td>
-                                            <td className="px-6 py-4"><div className="w-16 h-4 bg-gray-200 rounded animate-pulse" /></td>
-                                            <td className="px-6 py-4"><div className="w-20 h-4 bg-gray-200 rounded animate-pulse" /></td>
-                                            <td className="px-6 py-4"><div className="w-8 h-8 bg-gray-200 rounded animate-pulse ml-auto" /></td>
-                                        </tr>
-                                    ))
-                                ) : filteredPositions.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={6} className="px-6 py-12 text-center text-[var(--color-text-secondary)]">
-                                            <Briefcase className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                                            <p className="text-lg font-medium">Nenhum cargo encontrado</p>
-                                            <p className="text-sm">Crie um novo cargo para começar</p>
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    filteredPositions.map((pos) => (
-                                        <tr key={pos.id} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4 text-sm font-medium text-[var(--color-text-secondary)]">
-                                                {pos.code}
-                                            </td>
-                                            <td className="px-6 py-4 text-sm font-medium text-[var(--color-text)]">
-                                                {pos.title}
-                                            </td>
-                                            <td className="px-6 py-4 text-sm text-[var(--color-text-secondary)]">
-                                                {pos.departmentName || '-'}
-                                            </td>
-                                            <td className="px-6 py-4 text-sm text-[var(--color-text-secondary)]">
-                                                {pos.level || '-'}
-                                            </td>
-                                            <td className="px-6 py-4 text-sm text-[var(--color-text-secondary)]">
-                                                {pos.salaryRangeMin ? `R$ ${pos.salaryRangeMin.toFixed(2)}` : '-'}
-                                                {' - '}
-                                                {pos.salaryRangeMax ? `R$ ${pos.salaryRangeMax.toFixed(2)}` : '-'}
-                                            </td>
-                                            <td className="px-6 py-4 text-right">
-                                                <div className="relative group inline-block">
-                                                    <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                                                        <MoreHorizontal className="w-4 h-4 text-[var(--color-text-secondary)]" />
-                                                    </button>
-                                                    <div className="absolute right-0 mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
-                                                        <button
-                                                            onClick={() => handleOpenModal(pos)}
-                                                            className="w-full flex items-center gap-2 px-4 py-2 text-left hover:bg-gray-50 first:rounded-t-lg"
-                                                        >
-                                                            <Edit className="w-4 h-4" />
-                                                            Editar
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDelete(pos.id, pos.title)}
-                                                            className="w-full flex items-center gap-2 px-4 py-2 text-left hover:bg-gray-50 text-red-600 last:rounded-b-lg"
-                                                        >
-                                                            <Trash2 className="w-4 h-4" />
-                                                            Excluir
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </CardContent>
-            </Card>
+            {/* Positions Table Grouped by Department */}
+            <div className="space-y-6">
+                {loading ? (
+                    <Card>
+                        <CardContent className="p-0">
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <tbody className="divide-y divide-gray-200">
+                                        {Array.from({ length: 5 }).map((_, i) => (
+                                            <tr key={i}>
+                                                <td className="px-6 py-4"><div className="w-16 h-4 bg-gray-200 rounded animate-pulse" /></td>
+                                                <td className="px-6 py-4"><div className="w-32 h-4 bg-gray-200 rounded animate-pulse" /></td>
+                                                <td className="px-6 py-4"><div className="w-24 h-4 bg-gray-200 rounded animate-pulse" /></td>
+                                                <td className="px-6 py-4"><div className="w-16 h-4 bg-gray-200 rounded animate-pulse" /></td>
+                                                <td className="px-6 py-4"><div className="w-20 h-4 bg-gray-200 rounded animate-pulse" /></td>
+                                                <td className="px-6 py-4"><div className="w-8 h-8 bg-gray-200 rounded animate-pulse ml-auto" /></td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </CardContent>
+                    </Card>
+                ) : filteredPositions.length === 0 ? (
+                    <Card>
+                        <CardContent className="p-12 text-center text-[var(--color-text-secondary)]">
+                            <Briefcase className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                            <p className="text-lg font-medium">Nenhum cargo encontrado</p>
+                            <p className="text-sm">Crie um novo cargo para começar</p>
+                        </CardContent>
+                    </Card>
+                ) : (
+                    Object.entries(
+                        filteredPositions.reduce((acc, pos) => {
+                            const deptName = pos.departmentName || 'Sem Departamento';
+                            if (!acc[deptName]) acc[deptName] = [];
+                            acc[deptName].push(pos);
+                            return acc;
+                        }, {} as Record<string, Position[]>)
+                    ).map(([deptName, deptPositions]) => (
+                        <Card key={deptName}>
+                            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                                <h3 className="text-sm font-semibold text-[var(--color-text)] flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full bg-[var(--color-primary)]" />
+                                    {deptName}
+                                    <span className="text-xs font-normal text-[var(--color-text-secondary)] ml-2">
+                                        ({deptPositions.length} {deptPositions.length === 1 ? 'cargo' : 'cargos'})
+                                    </span>
+                                </h3>
+                            </div>
+                            <CardContent className="p-0">
+                                <div className="overflow-x-auto">
+                                    <table className="w-full">
+                                        <thead>
+                                            <tr className="border-b border-gray-200 bg-white">
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider w-1/6">
+                                                    Código
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider w-1/3">
+                                                    Cargo
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider w-1/6">
+                                                    Nível
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider w-1/4">
+                                                    Salário (Faixa)
+                                                </th>
+                                                <th className="px-6 py-3 text-right text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider w-10">
+                                                    Ações
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-100">
+                                            {deptPositions.map((pos) => (
+                                                <tr key={pos.id} className="hover:bg-gray-50/50 transition-colors">
+                                                    <td className="px-6 py-4 text-sm font-medium text-[var(--color-text-secondary)]">
+                                                        {pos.code}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-sm font-medium text-[var(--color-text)]">
+                                                        {pos.title}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-sm text-[var(--color-text-secondary)]">
+                                                        {pos.level || '-'}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-sm text-[var(--color-text-secondary)]">
+                                                        {pos.salaryRangeMin ? `R$ ${pos.salaryRangeMin.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '-'}
+                                                        {' - '}
+                                                        {pos.salaryRangeMax ? `R$ ${pos.salaryRangeMax.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '-'}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right">
+                                                        <div className="relative group inline-block">
+                                                            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                                                                <MoreHorizontal className="w-4 h-4 text-[var(--color-text-secondary)]" />
+                                                            </button>
+                                                            <div className="absolute right-0 mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+                                                                <button
+                                                                    onClick={() => handleOpenModal(pos)}
+                                                                    className="w-full flex items-center gap-2 px-4 py-2 text-left hover:bg-gray-50 first:rounded-t-lg"
+                                                                >
+                                                                    <Edit className="w-4 h-4" />
+                                                                    Editar
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleDelete(pos.id, pos.title)}
+                                                                    className="w-full flex items-center gap-2 px-4 py-2 text-left hover:bg-gray-50 text-red-600 last:rounded-b-lg"
+                                                                >
+                                                                    <Trash2 className="w-4 h-4" />
+                                                                    Excluir
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))
+                )}
+            </div>
 
             {/* Modal */}
             {showModal && (

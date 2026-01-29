@@ -14,6 +14,7 @@ import Image from "next/image";
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { employeesApi, Employee, Department } from '@/lib/api/employees';
+import { departmentsApi } from '@/lib/api/departments';
 
 interface Manager {
     id: string;
@@ -22,6 +23,7 @@ interface Manager {
     phone?: string;
     photoUrl?: string;
     department: string;
+    departmentId: string;
     subordinatesCount: number;
 }
 
@@ -61,6 +63,7 @@ export default function ManagersPage() {
                         phone: emp?.phone,
                         photoUrl: emp?.photoUrl,
                         department: d.name,
+                        departmentId: d.id,
                         subordinatesCount: d.employeeCount || 0,
                     };
                 });
@@ -100,7 +103,17 @@ export default function ManagersPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            // TODO: Implementar API de atribuição de gestor
+            if (!formData.departmentId || !formData.employeeId) {
+                toast({
+                    title: 'Erro',
+                    description: 'Selecione o departamento e o colaborador',
+                    variant: 'destructive',
+                });
+                return;
+            }
+
+            await departmentsApi.assignManager(formData.departmentId, formData.employeeId);
+
             toast({
                 title: 'Sucesso',
                 description: 'Gestor atribuído com sucesso',
@@ -117,11 +130,12 @@ export default function ManagersPage() {
         }
     };
 
-    const handleRemove = async (id: string, name: string, department: string) => {
+    const handleRemove = async (departmentId: string, name: string, department: string) => {
         if (!confirm(`Remover ${name} como gestor do departamento ${department}?`)) return;
 
         try {
-            // TODO: Implementar API de remoção de gestor
+            await departmentsApi.removeManager(departmentId);
+
             toast({
                 title: 'Sucesso',
                 description: 'Gestor removido com sucesso',
@@ -251,7 +265,7 @@ export default function ManagersPage() {
                                         </button>
                                         <div className="absolute right-0 mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
                                             <button
-                                                onClick={() => handleRemove(manager.id, manager.name, manager.department)}
+                                                onClick={() => handleRemove(manager.departmentId, manager.name, manager.department)}
                                                 className="w-full flex items-center gap-2 px-4 py-2 text-left hover:bg-gray-50 text-red-600 rounded-lg"
                                             >
                                                 <Trash2 className="w-4 h-4" />

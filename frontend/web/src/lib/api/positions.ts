@@ -33,31 +33,26 @@ export type UpdatePositionData = Partial<CreatePositionData>;
 
 export const positionsApi = {
     getPositions: async (page = 0, size = 20) => {
-        const response = await api.get(`/v1/positions?page=${page}&size=${size}`);
-        return response.data;
+        return api.get<any, any>(`/positions?page=${page}&size=${size}`);
     },
 
     getActivePositions: async () => {
-        const response = await api.get('/v1/positions/active');
-        return response.data;
+        return api.get<any, Position[]>('/positions/active');
     },
 
     getPosition: async (id: string) => {
-        const response = await api.get(`/v1/positions/${id}`);
-        return response.data;
+        return api.get<any, Position>(`/positions/${id}`);
     },
 
     createPosition: async (data: CreatePositionData) => {
-        const response = await api.post('/v1/positions', data);
-        return response.data;
+        return api.post<CreatePositionData, Position>('/positions', data);
     },
 
     updatePosition: async (id: string, data: UpdatePositionData) => {
-        const response = await api.put(`/v1/positions/${id}`, data);
-        return response.data;
+        return api.put<UpdatePositionData, Position>(`/positions/${id}`, data);
     },
 
     deletePosition: async (id: string) => {
-        await api.delete(`/v1/positions/${id}`);
+        await api.delete(`/positions/${id}`);
     },
 };

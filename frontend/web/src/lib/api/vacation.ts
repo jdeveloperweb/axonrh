@@ -107,25 +107,23 @@ export const vacationApi = {
    * List periods for an employee
    */
   getEmployeePeriods: async (employeeId: string): Promise<VacationPeriod[]> => {
-    return api.get<VacationPeriod[], VacationPeriod[]>(`/api/v1/vacation/periods/employee/${employeeId}`);
+    return api.get<VacationPeriod[], VacationPeriod[]>(`/vacation/periods/employee/${employeeId}`);
   },
 
   /**
    * Get my periods
    */
   getMyPeriods: async (): Promise<VacationPeriod[]> => {
-    const response = await api.get('/api/v1/vacation/periods/my');
-    return response.data;
+    return api.get<unknown, VacationPeriod[]>('/vacation/periods/my');
   },
 
   /**
    * Get expiring periods
    */
   getExpiringPeriods: async (daysThreshold = 60): Promise<VacationPeriod[]> => {
-    const response = await api.get('/api/v1/vacation/periods/expiring', {
+    return api.get<unknown, VacationPeriod[]>('/vacation/periods/expiring', {
       params: { days: daysThreshold }
     });
-    return response.data;
   },
 
   // ==================== Requests ====================
@@ -134,32 +132,30 @@ export const vacationApi = {
    * Create vacation request
    */
   createRequest: async (data: VacationRequestCreateDTO): Promise<VacationRequest> => {
-    return api.post<VacationRequestCreateDTO, VacationRequest>('/api/v1/vacation/requests', data);
+    return api.post<VacationRequestCreateDTO, VacationRequest>('/vacation/requests', data);
   },
 
   /**
    * Get my requests
    */
   getMyRequests: async (): Promise<VacationRequest[]> => {
-    const response = await api.get('/api/v1/vacation/requests/my');
-    return response.data;
+    return api.get<unknown, VacationRequest[]>('/vacation/requests/my');
   },
 
   /**
    * Get pending requests (for managers)
    */
   getPendingRequests: async (page = 0, size = 20): Promise<{ content: VacationRequest[]; totalElements: number }> => {
-    const response = await api.get('/api/v1/vacation/requests/pending', {
+    return api.get<unknown, { content: VacationRequest[]; totalElements: number }>('/vacation/requests/pending', {
       params: { page, size }
     });
-    return response.data;
   },
 
   /**
    * Approve request
    */
   approveRequest: async (requestId: string, notes?: string): Promise<VacationRequest> => {
-    return api.post<unknown, VacationRequest>(`/api/v1/vacation/requests/${requestId}/approve`, null, {
+    return api.post<unknown, VacationRequest>(`/vacation/requests/${requestId}/approve`, null, {
       params: { notes }
     });
   },
@@ -168,34 +164,32 @@ export const vacationApi = {
    * Reject request
    */
   rejectRequest: async (requestId: string, reason: string): Promise<VacationRequest> => {
-    const response = await api.post(`/api/v1/vacation/requests/${requestId}/reject`, null, {
+    return api.post<unknown, VacationRequest>(`/vacation/requests/${requestId}/reject`, null, {
       params: { reason }
     });
-    return response.data;
   },
 
   /**
    * Cancel request
    */
   cancelRequest: async (requestId: string): Promise<VacationRequest> => {
-    const response = await api.post(`/api/v1/vacation/requests/${requestId}/cancel`);
-    return response.data;
+    return api.post<unknown, VacationRequest>(`/vacation/requests/${requestId}/cancel`);
   },
 
   /**
    * Generate notice document
    */
   generateNotice: async (requestId: string): Promise<string> => {
-    const response = await api.post(`/api/v1/vacation/requests/${requestId}/notice`);
-    return response.data.documentUrl;
+    const response = await api.post<unknown, { documentUrl: string }>(`/vacation/requests/${requestId}/notice`);
+    return response.documentUrl;
   },
 
   /**
    * Generate receipt document
    */
   generateReceipt: async (requestId: string): Promise<string> => {
-    const response = await api.post(`/api/v1/vacation/requests/${requestId}/receipt`);
-    return response.data.documentUrl;
+    const response = await api.post<unknown, { documentUrl: string }>(`/vacation/requests/${requestId}/receipt`);
+    return response.documentUrl;
   },
 
   // ==================== Calendar ====================
@@ -208,20 +202,18 @@ export const vacationApi = {
     month?: number,
     departmentId?: string
   ): Promise<TeamCalendarEntry[]> => {
-    const response = await api.get('/api/v1/vacation/calendar/team', {
+    return api.get<TeamCalendarEntry[], TeamCalendarEntry[]>('/vacation/calendar/team', {
       params: { year, month, departmentId }
     });
-    return response.data;
   },
 
   /**
    * Get my calendar entries
    */
   getMyCalendar: async (year: number): Promise<TeamCalendarEntry[]> => {
-    const response = await api.get('/api/v1/vacation/calendar/my', {
+    return api.get<unknown, TeamCalendarEntry[]>('/vacation/calendar/my', {
       params: { year }
     });
-    return response.data;
   },
 
   // ==================== Simulation ====================
@@ -230,8 +222,7 @@ export const vacationApi = {
    * Simulate vacation values
    */
   simulate: async (data: VacationSimulationRequest): Promise<VacationSimulation> => {
-    const response = await api.post('/api/v1/vacation/simulate', data);
-    return response.data;
+    return api.post<VacationSimulationRequest, VacationSimulation>('/vacation/simulate', data);
   },
 
   // ==================== Statistics ====================
@@ -250,7 +241,7 @@ export const vacationApi = {
       expiringPeriods: number;
       employeesOnVacation: number;
       upcomingVacations: number;
-    }>('/api/v1/vacation/statistics');
+    }>('/vacation/statistics');
   },
 };
 
