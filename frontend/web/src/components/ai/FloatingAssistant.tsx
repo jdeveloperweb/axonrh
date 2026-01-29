@@ -19,7 +19,7 @@ export default function FloatingAssistant() {
 
     const context = {
         userName: user?.name,
-        userRole: (user as any)?.role || (user as any)?.roles?.[0],
+        userRole: user?.roles?.[0],
         currentPage: pathname,
         companyName: 'AxonRH'
     };

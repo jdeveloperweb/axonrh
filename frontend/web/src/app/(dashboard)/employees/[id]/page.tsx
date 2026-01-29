@@ -62,8 +62,7 @@ export default function EmployeeDetailPage() {
     try {
       setLoading(true);
       const data = await employeesApi.getById(employeeId);
-      const employeeData = (data as any).data || data;
-      setEmployee(employeeData);
+      setEmployee(data);
     } catch (error) {
       console.error(error);
       toast({

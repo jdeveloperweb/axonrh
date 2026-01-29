@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { chatApi, ChatMessage } from '@/lib/api/ai';
+import { chatApi, ChatMessage, ConversationContext, Conversation } from '@/lib/api/ai';
 import { ChatIcons } from './ChatIcons';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -16,7 +16,7 @@ interface ChatWidgetProps {
   className?: string;
   initialMessage?: string;
   onClose?: () => void;
-  context?: any;
+  context?: ConversationContext;
 }
 
 export default function ChatWidget({
@@ -31,7 +31,7 @@ export default function ChatWidget({
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState(initialConversationId);
-  const [conversations, setConversations] = useState<any[]>([]);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -169,7 +169,7 @@ export default function ChatWidget({
       setIsLoading(false);
       setIsStreaming(false);
     }
-  }, [conversationId, isLoading, loadHistory]);
+  }, [conversationId, isLoading, loadHistory, context]);
 
   useEffect(() => {
     if (initialConversationId) {

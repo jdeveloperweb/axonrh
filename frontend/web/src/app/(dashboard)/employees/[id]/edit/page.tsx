@@ -21,7 +21,7 @@ export default function EditEmployeePage() {
             try {
                 setLoading(true);
                 const response = await employeesApi.getById(employeeId);
-                const employee = (response as any).data || response;
+                const employee = response;
 
                 if (!employee) {
                     throw new Error('Colaborador não encontrado');
