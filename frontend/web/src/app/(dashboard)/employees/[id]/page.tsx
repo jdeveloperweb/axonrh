@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { formatDate, formatCpf, formatCurrency, formatPhone, calculateAge, formatRelativeTime, getPhotoUrl } from '@/lib/utils';
 import { TerminationModal } from '@/components/employees/TerminationModal';
 import { Button } from '@/components/ui/button';
+import { DependentsTab } from '@/components/employees/DependentsTab';
 
 type TabKey = 'overview' | 'documents' | 'dependents' | 'history';
 
@@ -42,7 +43,7 @@ export default function EmployeeDetailPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
   const [documents, setDocuments] = useState<EmployeeDocument[]>([]);
-  const [dependents, setDependents] = useState<EmployeeDependent[]>([]);
+
   interface HistoryEntry {
     action: string;
     description: string;
@@ -83,15 +84,7 @@ export default function EmployeeDetailPage() {
     }
   }, [employeeId]);
 
-  // Fetch dependents
-  const fetchDependents = useCallback(async () => {
-    try {
-      const data = await employeesApi.getDependents(employeeId);
-      setDependents(data);
-    } catch (error) {
-      console.error('Failed to load dependents:', error);
-    }
-  }, [employeeId]);
+
 
   // Fetch history
   const fetchHistory = useCallback(async () => {
@@ -109,9 +102,8 @@ export default function EmployeeDetailPage() {
 
   useEffect(() => {
     if (activeTab === 'documents') fetchDocuments();
-    if (activeTab === 'dependents') fetchDependents();
     if (activeTab === 'history') fetchHistory();
-  }, [activeTab, fetchDocuments, fetchDependents, fetchHistory]);
+  }, [activeTab, fetchDocuments, fetchHistory]);
 
   // Handle photo selection - opens crop dialog
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -591,54 +583,7 @@ export default function EmployeeDetailPage() {
       )}
 
       {activeTab === 'dependents' && (
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Dependentes</CardTitle>
-            <button className="flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 transition-opacity">
-              <Plus className="w-4 h-4" />
-              Adicionar
-            </button>
-          </CardHeader>
-          <CardContent>
-            {dependents.length === 0 ? (
-              <div className="text-center py-12">
-                <Users className="w-12 h-12 mx-auto mb-4 text-[var(--color-text-secondary)] opacity-50" />
-                <p className="text-[var(--color-text-secondary)]">Nenhum dependente cadastrado</p>
-              </div>
-            ) : (
-              <div className="divide-y divide-gray-200">
-                {dependents.map((dep) => (
-                  <div key={dep.id} className="flex items-center justify-between py-4">
-                    <div className="flex items-center gap-4">
-                      <div className="p-2 bg-gray-100 rounded-lg">
-                        <User className="w-5 h-5 text-[var(--color-text-secondary)]" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-[var(--color-text)]">{dep.name}</p>
-                        <p className="text-sm text-[var(--color-text-secondary)]">
-                          {dep.relationship} • {formatDate(dep.birthDate)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="flex gap-2">
-                        {dep.isIRDependent && (
-                          <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">IR</span>
-                        )}
-                        {dep.isHealthPlanDependent && (
-                          <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Plano</span>
-                        )}
-                      </div>
-                      <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                        <MoreHorizontal className="w-4 h-4 text-[var(--color-text-secondary)]" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <DependentsTab employeeId={employeeId} />
       )}
 
       {activeTab === 'history' && (

@@ -84,7 +84,9 @@ export function DependentsTab({ employeeId }: DependentsTabProps) {
         setIsAdding(false);
         setFormData({
             ...dependent,
-            birthDate: dependent.birthDate?.split('T')[0]
+            birthDate: dependent.birthDate?.split('T')[0],
+            isIRDependent: !!dependent.isIRDependent,
+            isHealthPlanDependent: !!dependent.isHealthPlanDependent,
         });
     };
 
@@ -243,7 +245,7 @@ export function DependentsTab({ employeeId }: DependentsTabProps) {
                                     <input
                                         type="checkbox"
                                         name="isIRDependent"
-                                        checked={formData.isIRDependent}
+                                        checked={!!formData.isIRDependent}
                                         onChange={handleInputChange}
                                         className="w-5 h-5 rounded border-gray-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
                                     />
@@ -253,7 +255,7 @@ export function DependentsTab({ employeeId }: DependentsTabProps) {
                                     <input
                                         type="checkbox"
                                         name="isHealthPlanDependent"
-                                        checked={formData.isHealthPlanDependent}
+                                        checked={!!formData.isHealthPlanDependent}
                                         onChange={handleInputChange}
                                         className="w-5 h-5 rounded border-gray-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
                                     />
