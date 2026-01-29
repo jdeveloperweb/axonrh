@@ -22,7 +22,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { departmentsApi, DepartmentDTO } from '@/lib/api/departments';
 import { employeesApi, Employee } from '@/lib/api/employees';
 import { positionsApi, Position } from '@/lib/api/positions';
-import { cn } from '@/lib/utils';
+import { cn, getPhotoUrl } from '@/lib/utils';
 
 // --- Types ---
 
@@ -444,7 +444,7 @@ function OrgTreeNode({ node, options, depth = 0 }: { node: OrgNode, options: Exp
                                                 <div className="w-11 h-11 rounded-full overflow-hidden flex-shrink-0 bg-[var(--color-surface-variant)] flex items-center justify-center border-2 border-[var(--color-primary)]/30 ring-2 ring-white dark:ring-gray-900 group-hover:scale-110 transition-transform duration-300">
                                                     {node.manager.photoUrl ? (
                                                         <Image
-                                                            src={node.manager.photoUrl}
+                                                            src={getPhotoUrl(node.manager.photoUrl, node.manager.updatedAt) || ''}
                                                             alt={node.manager.fullName}
                                                             width={44}
                                                             height={44}
@@ -490,7 +490,7 @@ function OrgTreeNode({ node, options, depth = 0 }: { node: OrgNode, options: Exp
                                         <div key={emp.id} className="relative inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-800 bg-gray-100 dark:bg-gray-800 overflow-hidden group/item">
                                             {options.showPhotos && emp.photoUrl ? (
                                                 <Image
-                                                    src={emp.photoUrl}
+                                                    src={getPhotoUrl(emp.photoUrl, emp.updatedAt) || ''}
                                                     className="h-full w-full object-cover"
                                                     alt={emp.fullName}
                                                     title={emp.fullName}
