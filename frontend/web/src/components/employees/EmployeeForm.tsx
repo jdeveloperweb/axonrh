@@ -368,15 +368,19 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
         try {
             // Limpeza de campos para não enviar string vazia onde o backend espera UUID ou Nulo
             const cleanId = (id?: string) => (id && id.length > 5) ? id : undefined;
+            const cleanNumber = (val: string | number | undefined) => {
+                const num = Number(val);
+                return isNaN(num) ? 0 : num;
+            };
 
             const submitData: EmployeeCreateRequest = {
-                cpf: formData.cpf,
-                fullName: formData.fullName,
-                socialName: formData.socialName || undefined,
-                email: formData.email,
-                personalEmail: formData.personalEmail || undefined,
-                phone: formData.phone || undefined,
-                mobile: formData.personalPhone || undefined,
+                cpf: formData.cpf.replace(/\D/g, ''),
+                fullName: formData.fullName.trim(),
+                socialName: formData.socialName?.trim() || undefined,
+                email: formData.email.trim(),
+                personalEmail: formData.personalEmail?.trim() || undefined,
+                phone: formData.phone?.replace(/\D/g, '') || undefined,
+                mobile: formData.personalPhone?.replace(/\D/g, '') || undefined,
                 birthDate: formData.birthDate,
                 gender: formData.gender,
                 ethnicity: formData.ethnicity,
@@ -385,8 +389,8 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                 nationality: formData.nationality,
                 hireDate: formData.admissionDate,
                 employmentType: formData.employmentType,
-                baseSalary: Number(formData.salary) || 0,
-                weeklyHours: Number(formData.workHoursPerWeek) || 44,
+                baseSalary: cleanNumber(formData.salary) > 0 ? cleanNumber(formData.salary) : 0.01,
+                weeklyHours: cleanNumber(formData.workHoursPerWeek) > 0 ? cleanNumber(formData.workHoursPerWeek) : 44,
                 departmentId: cleanId(formData.departmentId),
                 positionId: cleanId(formData.positionId),
                 costCenterId: cleanId(formData.costCenterId),
@@ -394,17 +398,17 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                 workRegime: formData.workRegime,
                 hybridWorkDays: formData.hybridWorkDays,
                 hybridFrequency: formData.hybridFrequency,
-                addressStreet: formData.address.street || undefined,
-                addressNumber: formData.address.number || undefined,
-                addressComplement: formData.address.complement || undefined,
-                addressNeighborhood: formData.address.neighborhood || undefined,
-                addressCity: formData.address.city || undefined,
-                addressState: formData.address.state || undefined,
-                addressZipCode: formData.address.zipCode || undefined,
+                addressStreet: formData.address.street?.trim() || undefined,
+                addressNumber: formData.address.number?.trim() || undefined,
+                addressComplement: formData.address.complement?.trim() || undefined,
+                addressNeighborhood: formData.address.neighborhood?.trim() || undefined,
+                addressCity: formData.address.city?.trim() || undefined,
+                addressState: formData.address.state?.trim() || undefined,
+                addressZipCode: formData.address.zipCode?.replace(/\D/g, '') || undefined,
                 addressCountry: formData.address.country || 'Brasil'
             };
 
-            console.log('� Final Payload for API:', JSON.stringify(submitData, null, 2));
+            console.log('🚀 Final Payload for API:', JSON.stringify(submitData, null, 2));
 
             if (!isEditing) {
                 // CREATE
