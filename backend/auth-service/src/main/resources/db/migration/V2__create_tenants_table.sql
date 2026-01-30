@@ -63,12 +63,12 @@ CREATE TABLE IF NOT EXISTS shared.tenants (
 );
 
 -- Indices
-CREATE INDEX idx_tenants_subdomain ON shared.tenants(subdomain);
-CREATE INDEX idx_tenants_custom_domain ON shared.tenants(custom_domain) WHERE custom_domain IS NOT NULL;
-CREATE INDEX idx_tenants_status ON shared.tenants(status);
-CREATE INDEX idx_tenants_plan ON shared.tenants(plan);
-CREATE INDEX idx_tenants_cnpj ON shared.tenants(cnpj) WHERE cnpj IS NOT NULL;
-CREATE INDEX idx_tenants_created_at ON shared.tenants(created_at);
+CREATE INDEX IF NOT EXISTS idx_tenants_subdomain ON shared.tenants(subdomain);
+CREATE INDEX IF NOT EXISTS idx_tenants_custom_domain ON shared.tenants(custom_domain) WHERE custom_domain IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_tenants_status ON shared.tenants(status);
+CREATE INDEX IF NOT EXISTS idx_tenants_plan ON shared.tenants(plan);
+CREATE INDEX IF NOT EXISTS idx_tenants_cnpj ON shared.tenants(cnpj) WHERE cnpj IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_tenants_created_at ON shared.tenants(created_at);
 
 -- Trigger para updated_at
 CREATE OR REPLACE FUNCTION shared.update_updated_at_column()
@@ -79,10 +79,15 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trg_tenants_updated_at
-    BEFORE UPDATE ON shared.tenants
-    FOR EACH ROW
-    EXECUTE FUNCTION shared.update_updated_at_column();
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_tenants_updated_at') THEN
+        CREATE TRIGGER trg_tenants_updated_at
+            BEFORE UPDATE ON shared.tenants
+            FOR EACH ROW
+            EXECUTE FUNCTION shared.update_updated_at_column();
+    END IF;
+END $$;
 
 -- Comentarios
 COMMENT ON TABLE shared.tenants IS 'Cadastro de empresas/clientes do sistema (multi-tenant)';

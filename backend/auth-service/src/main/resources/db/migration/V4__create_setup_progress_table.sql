@@ -64,9 +64,9 @@ CREATE TABLE IF NOT EXISTS shared.setup_progress (
 );
 
 -- Indices
-CREATE INDEX idx_setup_progress_tenant ON shared.setup_progress(tenant_id);
-CREATE INDEX idx_setup_progress_status ON shared.setup_progress(status);
-CREATE INDEX idx_setup_progress_current_step ON shared.setup_progress(current_step);
+CREATE INDEX IF NOT EXISTS idx_setup_progress_tenant ON shared.setup_progress(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_setup_progress_status ON shared.setup_progress(status);
+CREATE INDEX IF NOT EXISTS idx_setup_progress_current_step ON shared.setup_progress(current_step);
 
 -- Trigger para updated_at
 CREATE TRIGGER trg_setup_progress_updated_at
@@ -104,8 +104,8 @@ CREATE TABLE IF NOT EXISTS shared.setup_activity_log (
 );
 
 -- Indices
-CREATE INDEX idx_setup_activity_log_setup ON shared.setup_activity_log(setup_progress_id);
-CREATE INDEX idx_setup_activity_log_tenant ON shared.setup_activity_log(tenant_id);
-CREATE INDEX idx_setup_activity_log_created ON shared.setup_activity_log(created_at);
+CREATE INDEX IF NOT EXISTS idx_setup_activity_log_setup ON shared.setup_activity_log(setup_progress_id);
+CREATE INDEX IF NOT EXISTS idx_setup_activity_log_tenant ON shared.setup_activity_log(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_setup_activity_log_created ON shared.setup_activity_log(created_at);
 
 COMMENT ON TABLE shared.setup_activity_log IS 'Log de todas as atividades durante o processo de setup';

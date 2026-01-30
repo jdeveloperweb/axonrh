@@ -153,8 +153,8 @@ CREATE TABLE IF NOT EXISTS shared.tenant_config_history (
 );
 
 -- Indices
-CREATE INDEX idx_tenant_config_history_tenant ON shared.tenant_config_history(tenant_id);
-CREATE INDEX idx_tenant_config_history_config ON shared.tenant_config_history(tenant_config_id);
-CREATE INDEX idx_tenant_config_history_changed_at ON shared.tenant_config_history(changed_at);
+CREATE INDEX IF NOT EXISTS idx_tenant_config_history_tenant ON shared.tenant_config_history(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_tenant_config_history_config ON shared.tenant_config_history(tenant_config_id);
+CREATE INDEX IF NOT EXISTS idx_tenant_config_history_changed_at ON shared.tenant_config_history(changed_at);
 
 COMMENT ON TABLE shared.tenant_config_history IS 'Historico de alteracoes nas configuracoes de tema';

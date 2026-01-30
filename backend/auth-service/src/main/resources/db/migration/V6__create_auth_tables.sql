@@ -43,14 +43,19 @@ CREATE TABLE IF NOT EXISTS shared.users (
     CONSTRAINT uk_users_email_tenant UNIQUE (email, tenant_id)
 );
 
-CREATE INDEX idx_users_email ON shared.users(email);
-CREATE INDEX idx_users_tenant ON shared.users(tenant_id);
-CREATE INDEX idx_users_status ON shared.users(status);
+CREATE INDEX IF NOT EXISTS idx_users_email ON shared.users(email);
+CREATE INDEX IF NOT EXISTS idx_users_tenant ON shared.users(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_users_status ON shared.users(status);
 
-CREATE TRIGGER trg_users_updated_at
-    BEFORE UPDATE ON shared.users
-    FOR EACH ROW
-    EXECUTE FUNCTION shared.update_updated_at_column();
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_users_updated_at') THEN
+        CREATE TRIGGER trg_users_updated_at
+            BEFORE UPDATE ON shared.users
+            FOR EACH ROW
+            EXECUTE FUNCTION shared.update_updated_at_column();
+    END IF;
+END $$;
 
 -- =====================================================
 -- TABELA: shared.roles
@@ -72,13 +77,18 @@ CREATE TABLE IF NOT EXISTS shared.roles (
     CONSTRAINT uk_roles_name_tenant UNIQUE (name, tenant_id)
 );
 
-CREATE INDEX idx_roles_tenant ON shared.roles(tenant_id);
-CREATE INDEX idx_roles_name ON shared.roles(name);
+CREATE INDEX IF NOT EXISTS idx_roles_tenant ON shared.roles(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_roles_name ON shared.roles(name);
 
-CREATE TRIGGER trg_roles_updated_at
-    BEFORE UPDATE ON shared.roles
-    FOR EACH ROW
-    EXECUTE FUNCTION shared.update_updated_at_column();
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_roles_updated_at') THEN
+        CREATE TRIGGER trg_roles_updated_at
+            BEFORE UPDATE ON shared.roles
+            FOR EACH ROW
+            EXECUTE FUNCTION shared.update_updated_at_column();
+    END IF;
+END $$;
 
 -- =====================================================
 -- TABELA: shared.permissions
@@ -98,8 +108,8 @@ CREATE TABLE IF NOT EXISTS shared.permissions (
     CONSTRAINT uk_permissions_resource_action UNIQUE (resource, action)
 );
 
-CREATE INDEX idx_permissions_resource ON shared.permissions(resource);
-CREATE INDEX idx_permissions_module ON shared.permissions(module);
+CREATE INDEX IF NOT EXISTS idx_permissions_resource ON shared.permissions(resource);
+CREATE INDEX IF NOT EXISTS idx_permissions_module ON shared.permissions(module);
 
 -- =====================================================
 -- TABELA: shared.user_roles
@@ -114,8 +124,8 @@ CREATE TABLE IF NOT EXISTS shared.user_roles (
     PRIMARY KEY (user_id, role_id)
 );
 
-CREATE INDEX idx_user_roles_user ON shared.user_roles(user_id);
-CREATE INDEX idx_user_roles_role ON shared.user_roles(role_id);
+CREATE INDEX IF NOT EXISTS idx_user_roles_user ON shared.user_roles(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_roles_role ON shared.user_roles(role_id);
 
 -- =====================================================
 -- TABELA: shared.role_permissions
@@ -129,8 +139,8 @@ CREATE TABLE IF NOT EXISTS shared.role_permissions (
     PRIMARY KEY (role_id, permission_id)
 );
 
-CREATE INDEX idx_role_permissions_role ON shared.role_permissions(role_id);
-CREATE INDEX idx_role_permissions_permission ON shared.role_permissions(permission_id);
+CREATE INDEX IF NOT EXISTS idx_role_permissions_role ON shared.role_permissions(role_id);
+CREATE INDEX IF NOT EXISTS idx_role_permissions_permission ON shared.role_permissions(permission_id);
 
 -- =====================================================
 -- TABELA: shared.refresh_tokens
@@ -153,9 +163,9 @@ CREATE TABLE IF NOT EXISTS shared.refresh_tokens (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_refresh_tokens_token ON shared.refresh_tokens(token);
-CREATE INDEX idx_refresh_tokens_user ON shared.refresh_tokens(user_id);
-CREATE INDEX idx_refresh_tokens_expires ON shared.refresh_tokens(expires_at);
+CREATE INDEX IF NOT EXISTS idx_refresh_tokens_token ON shared.refresh_tokens(token);
+CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON shared.refresh_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires ON shared.refresh_tokens(expires_at);
 
 -- =====================================================
 -- TABELA: shared.login_attempts
@@ -178,10 +188,10 @@ CREATE TABLE IF NOT EXISTS shared.login_attempts (
     attempted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_login_attempts_email ON shared.login_attempts(email);
-CREATE INDEX idx_login_attempts_user ON shared.login_attempts(user_id);
-CREATE INDEX idx_login_attempts_ip ON shared.login_attempts(ip_address);
-CREATE INDEX idx_login_attempts_attempted ON shared.login_attempts(attempted_at);
+CREATE INDEX IF NOT EXISTS idx_login_attempts_email ON shared.login_attempts(email);
+CREATE INDEX IF NOT EXISTS idx_login_attempts_user ON shared.login_attempts(user_id);
+CREATE INDEX IF NOT EXISTS idx_login_attempts_ip ON shared.login_attempts(ip_address);
+CREATE INDEX IF NOT EXISTS idx_login_attempts_attempted ON shared.login_attempts(attempted_at);
 
 -- Particionar por data para melhor performance (ultimos 90 dias)
 -- Em producao, considerar criar particoes automaticas
