@@ -159,29 +159,5 @@ WHERE (resource IN ('EMPLOYEE', 'TIMESHEET', 'VACATION') AND action IN ('READ', 
    OR (resource = 'REPORT' AND action IN ('READ', 'EXPORT'))
 ON CONFLICT DO NOTHING;
 
--- =====================================================
--- SEED: Usuario admin para tenant de demonstracao
--- =====================================================
-INSERT INTO shared.users (
-    id, tenant_id, name, email, password_hash, status, email_verified_at
-) VALUES (
-    'd1111111-1111-1111-1111-111111111111',
-    'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', -- tenant_exemplo
-    'Administrador',
-    'admin@exemplo.com.br',
-    -- Senha: Admin@123 (hash Argon2)
-    '$argon2id$v=19$m=65536,t=3,p=1$c29tZXNhbHQ$RdescudvJCsgt3ub+b+dWRWJTmaaJObG',
-    'ACTIVE',
-    NOW()
-) ON CONFLICT DO NOTHING;
-
--- Associar admin ao role ADMIN
-INSERT INTO shared.user_roles (user_id, role_id)
-VALUES ('d1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111')
-ON CONFLICT DO NOTHING;
-
-DO $$
-BEGIN
-    RAISE NOTICE 'Roles e Permissions criados com sucesso!';
-    RAISE NOTICE 'Usuario admin criado: admin@exemplo.com.br / Admin@123';
-END $$;
+-- SEED: Usuario admin removido para instalacao limpa via Setup Wizard.
+-- O primeiro usuario deve ser criado durante o processo de configuracao inicial.
