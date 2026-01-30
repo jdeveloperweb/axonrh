@@ -366,15 +366,17 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
         setLoading(true);
 
         try {
-            // Mapping internal form data to API request
+            // Limpeza de campos para não enviar string vazia onde o backend espera UUID ou Nulo
+            const cleanId = (id?: string) => (id && id.length > 5) ? id : undefined;
+
             const submitData: EmployeeCreateRequest = {
                 cpf: formData.cpf,
                 fullName: formData.fullName,
-                socialName: formData.socialName,
+                socialName: formData.socialName || undefined,
                 email: formData.email,
-                personalEmail: formData.personalEmail,
-                phone: formData.phone,
-                mobile: formData.personalPhone,
+                personalEmail: formData.personalEmail || undefined,
+                phone: formData.phone || undefined,
+                mobile: formData.personalPhone || undefined,
                 birthDate: formData.birthDate,
                 gender: formData.gender,
                 ethnicity: formData.ethnicity,
@@ -385,24 +387,24 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                 employmentType: formData.employmentType,
                 baseSalary: Number(formData.salary) || 0,
                 weeklyHours: Number(formData.workHoursPerWeek) || 44,
-                departmentId: formData.departmentId || undefined,
-                positionId: formData.positionId || undefined,
-                costCenterId: formData.costCenterId || undefined,
-                managerId: formData.managerId || undefined,
+                departmentId: cleanId(formData.departmentId),
+                positionId: cleanId(formData.positionId),
+                costCenterId: cleanId(formData.costCenterId),
+                managerId: cleanId(formData.managerId),
                 workRegime: formData.workRegime,
                 hybridWorkDays: formData.hybridWorkDays,
                 hybridFrequency: formData.hybridFrequency,
-                addressStreet: formData.address.street,
-                addressNumber: formData.address.number,
-                addressComplement: formData.address.complement,
-                addressNeighborhood: formData.address.neighborhood,
-                addressCity: formData.address.city,
-                addressState: formData.address.state,
-                addressZipCode: formData.address.zipCode,
-                addressCountry: formData.address.country
+                addressStreet: formData.address.street || undefined,
+                addressNumber: formData.address.number || undefined,
+                addressComplement: formData.address.complement || undefined,
+                addressNeighborhood: formData.address.neighborhood || undefined,
+                addressCity: formData.address.city || undefined,
+                addressState: formData.address.state || undefined,
+                addressZipCode: formData.address.zipCode || undefined,
+                addressCountry: formData.address.country || 'Brasil'
             };
 
-            console.log('📤 Submitting data:', submitData);
+            console.log('� Final Payload for API:', JSON.stringify(submitData, null, 2));
 
             if (!isEditing) {
                 // CREATE
@@ -512,7 +514,7 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
     ];
 
     return (
-        <div className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
             <div className="flex border-b border-gray-200">
                 {tabs.map((tab) => (
                     <button
@@ -920,12 +922,12 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
             {!['documents', 'dependents'].includes(activeTab) && (
                 <div className="flex justify-end gap-4 pt-6 mt-6 border-t border-gray-100 mb-10">
                     <button type="button" onClick={() => router.push('/employees')} className="px-6 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium">Cancelar</button>
-                    <button type="button" onClick={handleSubmit} disabled={loading} className="px-8 py-2 bg-[var(--color-primary)] text-white rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity shadow-sm disabled:opacity-50 text-sm font-semibold">
+                    <button type="submit" disabled={loading} className="px-8 py-2 bg-[var(--color-primary)] text-white rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity shadow-sm disabled:opacity-50 text-sm font-semibold">
                         {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                         {loading ? 'Salvando...' : 'Salvar Alterações'}
                     </button>
                 </div>
             )}
-        </div>
+        </form>
     );
 }
