@@ -56,7 +56,7 @@ const navGroups: NavGroup[] = [
       // { label: 'Departamentos', href: '/departments', icon: Building2 }, // Future
       // { label: 'Cargos', href: '/positions', icon: Briefcase }, // Future
       // { label: 'Vagas', href: '/vacancies', icon: Target }, // Future
-      { label: 'Ponto', href: '/timesheet', icon: Clock, permission: 'TIMESHEET:READ' },
+      { label: 'Ponto', href: '/timesheet/record', icon: Clock, permission: 'TIMESHEET:READ' },
       { label: 'Férias', href: '/vacation', icon: Calendar, permission: 'VACATION:READ' },
       { label: 'Desempenho', href: '/performance', icon: BarChart3, permission: 'PERFORMANCE:READ' },
       { label: 'Treinamentos', href: '/learning', icon: BookOpen, permission: 'LEARNING:READ' },
