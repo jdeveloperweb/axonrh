@@ -1,6 +1,6 @@
 CREATE TABLE tenant_integrations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    tenant_id UUID NOT NULL REFERENCES tenants(id),
+    tenant_id UUID NOT NULL,
     
     -- eSocial Configuration
     esocial_enabled BOOLEAN DEFAULT FALSE,

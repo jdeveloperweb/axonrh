@@ -9,8 +9,7 @@ CREATE TABLE IF NOT EXISTS shared.tenant_branding (
     font_family VARCHAR(100) DEFAULT 'Plus Jakarta Sans',
     base_font_size INTEGER DEFAULT 16,
     created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    updated_at TIMESTAMP WITHOUT TIME ZONE,
-    CONSTRAINT fk_tenant_branding_tenant FOREIGN KEY (tenant_id) REFERENCES shared.tenants(id) ON DELETE CASCADE
+    updated_at TIMESTAMP WITHOUT TIME ZONE
 );
 
 -- Add comment to table
