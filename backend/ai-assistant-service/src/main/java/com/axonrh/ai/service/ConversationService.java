@@ -99,7 +99,7 @@ public class ConversationService {
             response = switch (nluResult.getActionType()) {
                 case DATABASE_QUERY -> handleDatabaseQuery(userMessage, nluResult, tenantId, userId);
                 case CALCULATION -> handleCalculation(nluResult);
-                case KNOWLEDGE_SEARCH -> handleKnowledgeSearch(userMessage, nluResult, tenantId);
+                case KNOWLEDGE_SEARCH -> handleKnowledgeSearch(conversation, userMessage, nluResult, tenantId);
                 case ACTION_CONFIRMATION -> handleActionConfirmation(nluResult);
                 default -> handleGeneralChat(conversation, userMessage, nluResult);
             };
@@ -179,7 +179,7 @@ public class ConversationService {
                             syncResponse = switch (nluResult.getActionType()) {
                                 case DATABASE_QUERY -> handleDatabaseQuery(userMessage, nluResult, tenantId, userId);
                                 case CALCULATION -> handleCalculation(nluResult);
-                                case KNOWLEDGE_SEARCH -> handleKnowledgeSearch(userMessage, nluResult, tenantId);
+                                case KNOWLEDGE_SEARCH -> handleKnowledgeSearch(conversation, userMessage, nluResult, tenantId);
                                 case ACTION_CONFIRMATION -> handleActionConfirmation(nluResult);
                                 default -> handleGeneralChat(conversation, userMessage, nluResult);
                             };
@@ -425,14 +425,14 @@ public class ConversationService {
         return formatCalculationResult(result);
     }
 
-    private String handleKnowledgeSearch(String question, NluService.NluResult nluResult, UUID tenantId) {
+    private String handleKnowledgeSearch(Conversation conversation, String question, NluService.NluResult nluResult, UUID tenantId) {
         String topic = nluResult.getEntities().containsKey("topic") ?
                 (String) nluResult.getEntities().get("topic") : "";
 
         List<KnowledgeService.SearchResult> results = knowledgeService.search(question, tenantId, 3);
 
         if (results.isEmpty()) {
-            return handleGeneralChat(null, question);
+            return handleGeneralChat(conversation, question, nluResult);
         }
 
         StringBuilder response = new StringBuilder();
