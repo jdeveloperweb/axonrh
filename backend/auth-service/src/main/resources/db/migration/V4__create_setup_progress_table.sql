@@ -63,6 +63,30 @@ CREATE TABLE IF NOT EXISTS shared.setup_progress (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Garantir que colunas existam caso a tabela tenha sido criada em uma versao anterior incompleta
+ALTER TABLE shared.setup_progress ADD COLUMN IF NOT EXISTS validation_errors JSONB DEFAULT '[]';
+ALTER TABLE shared.setup_progress ADD COLUMN IF NOT EXISTS warnings JSONB DEFAULT '[]';
+ALTER TABLE shared.setup_progress ADD COLUMN IF NOT EXISTS current_step INTEGER DEFAULT 1;
+ALTER TABLE shared.setup_progress ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'IN_PROGRESS';
+ALTER TABLE shared.setup_progress ADD COLUMN IF NOT EXISTS step1_company_data JSONB DEFAULT '{"completed": false}';
+ALTER TABLE shared.setup_progress ADD COLUMN IF NOT EXISTS step2_org_structure JSONB DEFAULT '{"completed": false}';
+ALTER TABLE shared.setup_progress ADD COLUMN IF NOT EXISTS step3_labor_rules JSONB DEFAULT '{"completed": false}';
+ALTER TABLE shared.setup_progress ADD COLUMN IF NOT EXISTS step4_visual_identity JSONB DEFAULT '{"completed": false}';
+ALTER TABLE shared.setup_progress ADD COLUMN IF NOT EXISTS step5_modules JSONB DEFAULT '{"completed": false}';
+ALTER TABLE shared.setup_progress ADD COLUMN IF NOT EXISTS step6_users JSONB DEFAULT '{"completed": false}';
+ALTER TABLE shared.setup_progress ADD COLUMN IF NOT EXISTS step7_integrations JSONB DEFAULT '{"completed": false}';
+ALTER TABLE shared.setup_progress ADD COLUMN IF NOT EXISTS step8_data_import JSONB DEFAULT '{"completed": false}';
+ALTER TABLE shared.setup_progress ADD COLUMN IF NOT EXISTS step9_review JSONB DEFAULT '{"completed": false}';
+ALTER TABLE shared.setup_progress ADD COLUMN IF NOT EXISTS started_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+ALTER TABLE shared.setup_progress ADD COLUMN IF NOT EXISTS completed_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE shared.setup_progress ADD COLUMN IF NOT EXISTS activated_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE shared.setup_progress ADD COLUMN IF NOT EXISTS last_activity_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+ALTER TABLE shared.setup_progress ADD COLUMN IF NOT EXISTS responsible_user_id UUID;
+ALTER TABLE shared.setup_progress ADD COLUMN IF NOT EXISTS responsible_user_name VARCHAR(200);
+ALTER TABLE shared.setup_progress ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+ALTER TABLE shared.setup_progress ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+
+
 -- Indices
 CREATE INDEX IF NOT EXISTS idx_setup_progress_tenant ON shared.setup_progress(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_setup_progress_status ON shared.setup_progress(status);
