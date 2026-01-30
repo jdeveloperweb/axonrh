@@ -385,9 +385,9 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                 employmentType: formData.employmentType,
                 baseSalary: Number(formData.salary) || 0,
                 weeklyHours: Number(formData.workHoursPerWeek) || 44,
-                departmentId: formData.departmentId,
-                positionId: formData.positionId,
-                costCenterId: formData.costCenterId,
+                departmentId: formData.departmentId || undefined,
+                positionId: formData.positionId || undefined,
+                costCenterId: formData.costCenterId || undefined,
                 managerId: formData.managerId || undefined,
                 workRegime: formData.workRegime,
                 hybridWorkDays: formData.hybridWorkDays,
@@ -487,11 +487,15 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                 });
             }
 
-        } catch (error: unknown) {
-            console.error('Erro ao salvar:', error);
+        } catch (error: any) {
+            console.error('❌ Erro detalhado ao salvar:', {
+                status: error.response?.status,
+                data: error.response?.data,
+                message: error.message
+            });
             toast({
-                title: 'Erro',
-                description: 'Falha ao salvar dados',
+                title: 'Erro ao Salvar',
+                description: error.response?.data?.message || 'Falha ao processar requisição no servidor.',
                 variant: 'destructive',
             });
         } finally {
@@ -914,11 +918,11 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
             {activeTab === 'dependents' && <DependentsTab employeeId={employeeId!} />}
 
             {!['documents', 'dependents'].includes(activeTab) && (
-                <div className="flex justify-end gap-4">
-                    <button type="button" onClick={() => router.push('/employees')} className="px-6 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">Cancelar</button>
-                    <button type="button" onClick={handleSubmit} disabled={loading} className="px-6 py-2 bg-[var(--color-primary)] text-white rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity">
+                <div className="flex justify-end gap-4 pt-6 mt-6 border-t border-gray-100 mb-10">
+                    <button type="button" onClick={() => router.push('/employees')} className="px-6 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium">Cancelar</button>
+                    <button type="button" onClick={handleSubmit} disabled={loading} className="px-8 py-2 bg-[var(--color-primary)] text-white rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity shadow-sm disabled:opacity-50 text-sm font-semibold">
                         {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                        {loading ? 'Salvando...' : 'Salvar'}
+                        {loading ? 'Salvando...' : 'Salvar Alterações'}
                     </button>
                 </div>
             )}
