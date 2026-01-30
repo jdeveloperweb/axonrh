@@ -436,35 +436,54 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                 // UPDATE
                 await employeesApi.update(employeeId!, submitData);
 
-                // Creation/Deletion logic for existing collaborators
-                if (formData.allowPlatformAccess && !hasExistingAccess && formData.platformPassword) {
-                    try {
-                        await userApi.create({
-                            name: formData.fullName,
-                            email: formData.email,
-                            password: formData.platformPassword,
-                            status: 'ACTIVE',
-                            roles: formData.platformRoles
-                        });
-                        setHasExistingAccess(true);
-                        toast({ title: 'Acesso Criado', description: 'O usuário foi criado.' });
-                    } catch (e) {
-                        toast({ title: 'Erro', description: 'Não foi possível criar o acesso.', variant: 'destructive' });
+                // Lógica de Acesso (Criação, Atualização de Roles ou Remoção)
+                if (formData.allowPlatformAccess) {
+                    if (!hasExistingAccess && formData.platformPassword) {
+                        // CRIAR NOVO ACESSO
+                        try {
+                            await userApi.create({
+                                name: formData.fullName,
+                                email: formData.email,
+                                password: formData.platformPassword,
+                                status: 'ACTIVE',
+                                roles: formData.platformRoles
+                            });
+                            setHasExistingAccess(true);
+                            toast({ title: 'Acesso Criado', description: 'O usuário foi criado com sucesso.' });
+                        } catch (e) {
+                            console.error('Erro ao criar acesso:', e);
+                            toast({ title: 'Ops!', description: 'Não foi possível criar o usuário de acesso.', variant: 'destructive' });
+                        }
+                    } else if (hasExistingAccess && existingUserId) {
+                        // ATUALIZAR ROLES DO ACESSO EXISTENTE
+                        try {
+                            await userApi.update(existingUserId, {
+                                name: formData.fullName,
+                                email: formData.email,
+                                status: 'ACTIVE',
+                                roles: formData.platformRoles
+                            });
+                            toast({ title: 'Acessos Atualizados', description: 'Os perfis de acesso foram sincronizados.' });
+                        } catch (e) {
+                            console.error('Erro ao atualizar acesso:', e);
+                        }
                     }
-                } else if (!formData.allowPlatformAccess && hasExistingAccess && existingUserId) {
+                } else if (hasExistingAccess && existingUserId) {
+                    // REMOVER ACESSO
                     try {
                         await userApi.delete(existingUserId);
                         setHasExistingAccess(false);
                         setExistingUserId(null);
-                        toast({ title: 'Acesso Removido', description: 'O acesso foi removido.' });
+                        toast({ title: 'Acesso Removido', description: 'O acesso à plataforma foi desabilitado.' });
                     } catch (e) {
+                        console.error('Erro ao remover acesso:', e);
                         toast({ title: 'Erro', description: 'Não foi possível remover o acesso.', variant: 'destructive' });
                     }
                 }
 
                 toast({
                     title: 'Sucesso',
-                    description: 'Dados atualizados com sucesso',
+                    description: 'Colaborador e acessos atualizados.',
                 });
             }
 

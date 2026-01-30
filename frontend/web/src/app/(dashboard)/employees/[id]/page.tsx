@@ -7,11 +7,13 @@ import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ImageCropDialog } from '@/components/ui/image-crop-dialog';
 import { employeesApi, Employee, EmployeeDocument } from '@/lib/api/employees';
+import { userApi, UserDTO } from '@/lib/api/users';
 import { useToast } from '@/hooks/use-toast';
-import { formatDate, formatCpf, formatCurrency, formatPhone, calculateAge, formatRelativeTime, getPhotoUrl } from '@/lib/utils';
+import { formatDate, formatCpf, formatCurrency, formatPhone, calculateAge, formatRelativeTime, getPhotoUrl, isValidEmail } from '@/lib/utils';
 import { TerminationModal } from '@/components/employees/TerminationModal';
 import { Button } from '@/components/ui/button';
 import { DependentsTab } from '@/components/employees/DependentsTab';
+import { ShieldCheck, ShieldAlert, Key } from 'lucide-react';
 
 type TabKey = 'overview' | 'documents' | 'dependents' | 'history';
 
@@ -54,6 +56,10 @@ export default function EmployeeDetailPage() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [showCropDialog, setShowCropDialog] = useState(false);
   const [terminationModalOpen, setTerminationModalOpen] = useState(false);
+
+  // Platform Access State
+  const [platformUser, setPlatformUser] = useState<UserDTO | null>(null);
+  const [checkingAccess, setCheckingAccess] = useState(false);
 
   // Fetch employee
   const fetchEmployee = useCallback(async () => {
@@ -99,6 +105,25 @@ export default function EmployeeDetailPage() {
   useEffect(() => {
     fetchEmployee();
   }, [fetchEmployee]);
+
+  // Check platform access whenever employee data (email) changes
+  useEffect(() => {
+    const checkAccess = async () => {
+      if (employee?.email && isValidEmail(employee.email)) {
+        try {
+          setCheckingAccess(true);
+          const users = await userApi.list();
+          const existingUser = users.find(u => u.email.toLowerCase() === employee.email!.toLowerCase());
+          setPlatformUser(existingUser || null);
+        } catch (error) {
+          console.warn('⚠️ Não foi possível verificar acesso à plataforma:', error);
+        } finally {
+          setCheckingAccess(false);
+        }
+      }
+    };
+    checkAccess();
+  }, [employee?.email]);
 
   useEffect(() => {
     if (activeTab === 'documents') fetchDocuments();
@@ -216,6 +241,17 @@ export default function EmployeeDetailPage() {
           <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusInfo.bg} ${statusInfo.text}`}>
             {statusInfo.label}
           </span>
+          {platformUser ? (
+            <span className="flex items-center gap-1.5 px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-sm font-semibold border border-indigo-100 shadow-sm">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              Acesso Ativo
+            </span>
+          ) : (
+            <span className="flex items-center gap-1.5 px-3 py-1 bg-gray-50 text-gray-500 rounded-full text-sm font-medium border border-gray-100">
+              <ShieldAlert className="w-3.5 h-3.5" />
+              Sem Acesso
+            </span>
+          )}
           {employee.status !== 'TERMINATED' && (
             <Button
               variant="outline"
@@ -409,6 +445,27 @@ export default function EmployeeDetailPage() {
                 <div>
                   <p className="text-sm text-[var(--color-text-secondary)]">Nacionalidade</p>
                   <p className="font-medium text-[var(--color-text)]">{employee.nationality || '-'}</p>
+                </div>
+                <div className="col-span-2 pt-4 border-t border-gray-100 mt-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Key className="w-4 h-4 text-indigo-500" />
+                      <p className="text-sm font-bold text-gray-700">Acesso à Plataforma</p>
+                    </div>
+                    {checkingAccess ? (
+                      <span className="text-xs text-gray-400 animate-pulse">Verificando...</span>
+                    ) : platformUser ? (
+                      <div className="flex flex-wrap gap-2">
+                        {platformUser.roles.map(role => (
+                          <span key={role} className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-bold rounded-full uppercase tracking-wider">
+                            {role}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-xs text-gray-400">Nenhum perfil atribuído</span>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <p className="text-sm text-[var(--color-text-secondary)]">E-mail Pessoal</p>
