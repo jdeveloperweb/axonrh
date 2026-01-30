@@ -58,38 +58,41 @@ export function ActionConfirmation({ content, onConfirm, onCancel }: ActionConfi
     };
 
     return (
-        <div className="flex flex-col gap-4 p-4 bg-white border border-gray-100 rounded-xl shadow-sm mt-2 max-w-sm">
-            <div className="flex items-center gap-3">
+        <div className="flex flex-col gap-5 p-6 bg-white border border-gray-100 rounded-[1.5rem] shadow-[0_10px_30px_rgba(0,0,0,0.05)] max-w-sm m-2">
+            <div className="flex items-center gap-4">
                 <div className={cn(
-                    "w-10 h-10 rounded-full flex items-center justify-center bg-gray-50 border border-gray-100",
-                    data.action === 'propose_termination' ? 'bg-red-50 border-red-100' : 'bg-green-50 border-green-100'
+                    "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500",
+                    data.action === 'propose_termination'
+                        ? 'bg-red-50 text-red-500 border border-red-100'
+                        : 'bg-green-50 text-green-600 border border-green-100'
                 )}>
                     {getIcon()}
                 </div>
                 <div>
-                    <h4 className="text-sm font-bold text-gray-900">{getActionTitle(data.action)}</h4>
-                    <p className="text-xs text-gray-500">Ação Pendente</p>
+                    <h4 className="text-base font-black text-gray-900 tracking-tight">{getActionTitle(data.action)}</h4>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-50 text-amber-600 border border-amber-100">
+                        Ação Pendente
+                    </span>
                 </div>
             </div>
 
-            <p className="text-sm text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{
-                __html: getActionDescription().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            <p className="text-[15px] text-gray-600 leading-relaxed font-medium" dangerouslySetInnerHTML={{
+                __html: getActionDescription().replace(/\*\*(.*?)\*\*/g, '<strong class="text-gray-900 font-black">$1</strong>')
             }} />
 
-            <div className="flex gap-2">
+            <div className="flex gap-3">
                 <button
                     onClick={onConfirm}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-bold hover:bg-primary-700 transition-all active:scale-95 shadow-sm"
+                    className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-primary text-white rounded-xl text-sm font-black hover:bg-primary-700 transition-all active:scale-95 shadow-lg shadow-primary/20"
                 >
                     <Check className="w-4 h-4" />
                     Confirmar
                 </button>
                 <button
                     onClick={onCancel}
-                    className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-50 text-gray-700 border border-gray-200 rounded-lg text-sm font-bold hover:bg-gray-100 transition-all active:scale-95"
+                    className="px-5 py-3 bg-gray-50 text-gray-600 border border-gray-100 rounded-xl text-sm font-bold hover:bg-gray-100 hover:text-gray-900 transition-all active:scale-95"
                 >
-                    <XCircle className="w-4 h-4" />
-                    Não agora
+                    Ignorar
                 </button>
             </div>
         </div>

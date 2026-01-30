@@ -213,142 +213,145 @@ export default function ChatWidget({
 
   return (
     <div className={cn(
-      "flex flex-col h-full bg-white/80 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden relative",
+      "flex flex-col h-full bg-white/90 backdrop-blur-2xl border border-white/40 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] overflow-hidden relative",
       className
     )}>
       {/* Sidebar de Histórico - Overlay */}
       <div className={cn(
-        "absolute inset-0 z-30 transform transition-transform duration-300 ease-in-out bg-white/95 backdrop-blur-md",
-        showHistory ? "translate-x-0" : "-translate-x-full"
+        "absolute inset-0 z-50 transform transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]",
+        showHistory ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0 pointer-events-none"
       )}>
-        <div className="flex flex-col h-full border-r border-gray-100">
-          <div className="px-6 py-6 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-            <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-              <ChatIcons.History className="w-5 h-5 text-primary" />
-              Histórico
-            </h3>
-            <div className="flex items-center gap-1">
-              {conversations.length > 0 && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (confirm('Tem certeza que deseja apagar todo o histórico?')) {
-                      chatApi.deleteAllConversations().then(() => {
-                        setConversations([]);
-                        createNewChat();
-                      });
-                    }
-                  }}
-                  className="p-2 hover:bg-red-50 rounded-xl transition-colors text-gray-400 hover:text-red-500 border border-transparent hover:border-red-100"
-                  title="Limpar Histórico"
-                >
-                  <ChatIcons.Trash className="w-5 h-5" />
-                </button>
-              )}
+        <div className="flex h-full w-full">
+          <div className="w-80 h-full bg-white/95 backdrop-blur-xl border-r border-gray-100/50 shadow-2xl flex flex-col">
+            <div className="px-8 py-8 border-b border-gray-100/50 flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 tracking-tight">Histórico</h3>
+                <p className="text-xs text-gray-500 font-medium">Suas conversas anteriores</p>
+              </div>
               <button
                 onClick={() => setShowHistory(false)}
-                className="p-2 hover:bg-white rounded-xl transition-colors text-gray-400 hover:text-gray-600 border border-transparent hover:border-gray-200"
+                className="p-2.5 hover:bg-gray-100 rounded-2xl transition-all text-gray-400 hover:text-gray-900 border border-transparent hover:border-gray-200"
               >
                 <ChatIcons.X className="w-5 h-5" />
               </button>
             </div>
-          </div>
-          <div className="flex-1 overflow-y-auto p-4 space-y-2">
-            <button
-              onClick={createNewChat}
-              className="w-full flex items-center gap-3 px-4 py-3 bg-primary hover:bg-primary-700 text-primary-foreground rounded-xl transition-all font-medium mb-4 shadow-lg shadow-primary-500/20 active:scale-[0.98]"
-            >
-              <ChatIcons.Plus className="w-5 h-5" />
-              Nova Conversa
-            </button>
+            <div className="flex-1 overflow-y-auto p-6 space-y-3 no-scrollbar">
+              <button
+                onClick={createNewChat}
+                className="w-full flex items-center justify-center gap-2.5 px-6 py-4 bg-primary hover:bg-primary-700 text-white rounded-2xl transition-all font-bold mb-6 shadow-lg shadow-primary-500/25 active:scale-[0.98] group"
+              >
+                <ChatIcons.Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
+                Nova Conversa
+              </button>
 
-            {conversations.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-10 opacity-40">
-                <ChatIcons.MessageSquare className="w-12 h-12 mb-2" />
-                <p className="text-sm font-medium">Buscando mensagens...</p>
-              </div>
-            ) : (
-              conversations.map((conv) => (
-                <div
-                  key={conv.id}
-                  onClick={() => loadConversation(conv.id)}
-                  className={cn(
-                    "group flex flex-col p-4 rounded-xl cursor-pointer transition-all border relative",
-                    conversationId === conv.id
-                      ? "bg-primary-50/80 border-primary-200 shadow-sm"
-                      : "bg-white hover:bg-gray-50 border-gray-100"
-                  )}
-                >
-                  <div className="flex justify-between items-start mb-1">
-                    <span className="text-xs font-bold text-primary uppercase tracking-wider">
-                      {new Date(conv.createdAt).toLocaleDateString('pt-BR')}
-                    </span>
-                    <button
-                      onClick={(e) => deleteChat(conv.id, e)}
-                      className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-lg transition-all"
-                    >
-                      <ChatIcons.Trash className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <h4 className={cn(
-                    "text-sm font-semibold truncate pr-6",
-                    conversationId === conv.id ? "text-primary-900" : "text-gray-700"
-                  )}>
-                    {conv.title || 'Nova Conversa'}
-                  </h4>
-                  {conv.summary && (
-                    <p className="text-[11px] text-gray-500 line-clamp-1 mt-1 font-medium italic">
-                      {conv.summary}
-                    </p>
-                  )}
+              {conversations.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 opacity-30">
+                  <ChatIcons.MessageSquare className="w-12 h-12 mb-3" />
+                  <p className="text-sm font-bold tracking-tight">Nenhuma conversa encontrada</p>
                 </div>
-              ))
-            )}
+              ) : (
+                conversations.map((conv) => (
+                  <div
+                    key={conv.id}
+                    onClick={() => loadConversation(conv.id)}
+                    className={cn(
+                      "group flex flex-col p-5 rounded-[1.5rem] cursor-pointer transition-all border relative",
+                      conversationId === conv.id
+                        ? "bg-primary-50/50 border-primary-200 shadow-sm ring-1 ring-primary-100"
+                        : "bg-white hover:bg-gray-50 border-gray-100 hover:border-gray-200"
+                    )}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="text-[10px] font-black text-primary uppercase tracking-[0.1em]">
+                        {new Date(conv.createdAt).toLocaleDateString('pt-BR')}
+                      </span>
+                      <button
+                        onClick={(e) => deleteChat(conv.id, e)}
+                        className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-xl transition-all"
+                      >
+                        <ChatIcons.Trash className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <h4 className={cn(
+                      "text-sm font-bold truncate pr-4",
+                      conversationId === conv.id ? "text-primary-900" : "text-gray-700 font-semibold"
+                    )}>
+                      {conv.title || 'Nova Conversa'}
+                    </h4>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="p-6 border-t border-gray-100/50">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (confirm('Tem certeza que deseja apagar todo o histórico?')) {
+                    chatApi.deleteAllConversations().then(() => {
+                      setConversations([]);
+                      createNewChat();
+                    });
+                  }
+                }}
+                className="w-full flex items-center justify-center gap-2 py-3 text-xs font-bold text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all border border-transparent hover:border-red-100"
+              >
+                <ChatIcons.Trash className="w-4 h-4" />
+                Limpar todo histórico
+              </button>
+            </div>
           </div>
+          <div
+            className="flex-1 bg-black/5 cursor-pointer"
+            onClick={() => setShowHistory(false)}
+          />
         </div>
       </div>
 
-      {/* Header with Glassmorphism */}
-      <div className="relative px-6 py-4 bg-primary backdrop-blur-md">
-        <div className="absolute inset-0 bg-white/5 pointer-events-none"></div>
+      {/* Header - Modern & Floating */}
+      <div className="relative px-8 py-6 bg-gradient-to-r from-primary via-primary to-primary-dark">
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 pointer-events-none"></div>
         <div className="flex items-center justify-between relative z-10">
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-5">
             <button
               onClick={() => setShowHistory(true)}
-              className="p-2 hover:bg-white/10 rounded-xl transition-colors text-white/80 hover:text-white border border-white/10"
-              title="Ver Histórico"
+              className="p-3 bg-white/10 hover:bg-white/20 rounded-[1.25rem] transition-all text-white/90 hover:text-white border border-white/20 backdrop-blur-md active:scale-95 group"
+              title="Histórico"
             >
-              <ChatIcons.History className="w-6 h-6" />
+              <ChatIcons.History className="w-6 h-6 group-hover:rotate-12 transition-transform" />
             </button>
-            <div className="relative">
-              <div className="w-12 h-12 bg-white/20 backdrop-blur-xl rounded-2xl flex items-center justify-center border border-white/30 shadow-inner">
-                <ChatIcons.Bot className="w-7 h-7 text-white" />
+            <div className="relative group">
+              <div className="w-14 h-14 bg-white/10 backdrop-blur-2xl rounded-[1.5rem] flex items-center justify-center border border-white/30 shadow-2xl transition-transform group-hover:scale-105 duration-300">
+                <ChatIcons.Bot className="w-8 h-8 text-white" />
               </div>
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-success border-2 border-white rounded-full animate-pulse shadow-sm"></div>
+              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-success border-4 border-primary rounded-full animate-pulse shadow-lg ring-2 ring-white/10"></div>
             </div>
             <div>
-              <h3 className="text-white font-bold tracking-tight text-lg">AxonIA</h3>
-              <div className="flex items-center space-x-1.5">
-                <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
-                <p className="text-white text-[10px] font-bold uppercase tracking-widest opacity-80">IA Inteligente</p>
+              <div className="flex items-center gap-2">
+                <h3 className="text-white font-black tracking-tight text-2xl uppercase">AxonIA</h3>
+                <span className="px-2 py-0.5 bg-white/20 backdrop-blur-md rounded-lg text-[10px] text-white font-black uppercase tracking-widest border border-white/20">PRO</span>
+              </div>
+              <div className="flex items-center space-x-2 mt-1 px-2 py-0.5 bg-black/10 rounded-full w-fit border border-white/10">
+                <div className="w-1.5 h-1.5 bg-success rounded-full animate-pulse"></div>
+                <p className="text-white text-[10px] font-bold uppercase tracking-wider opacity-90">IA Generativa Ativa</p>
               </div>
             </div>
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-4">
             {isStreaming && (
-              <div className="flex items-center space-x-2 px-3 py-1.5 bg-white/10 backdrop-blur-md rounded-full border border-white/20 animate-in fade-in slide-in-from-right-4 transition-all">
-                <div className="flex space-x-0.5">
-                  <div className="w-1 h-1 bg-white rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                  <div className="w-1 h-1 bg-white rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                  <div className="w-1 h-1 bg-white rounded-full animate-bounce"></div>
+              <div className="flex items-center space-x-3 px-4 py-2 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-xl transition-all">
+                <div className="flex space-x-1">
+                  <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                  <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                  <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce"></div>
                 </div>
-                <span className="text-white text-[10px] font-bold uppercase tracking-wider">Processando</span>
+                <span className="text-white text-[10px] font-black uppercase tracking-[0.2em]">Sincronizando</span>
               </div>
             )}
             {onClose && (
               <button
                 onClick={onClose}
-                className="p-2 hover:bg-white/10 rounded-xl transition-colors text-white/80 hover:text-white border border-white/10"
+                className="p-3 bg-white/10 hover:bg-white/20 rounded-[1.25rem] transition-all text-white/90 hover:text-white border border-white/20 backdrop-blur-md active:scale-95"
               >
                 <ChatIcons.X className="w-5 h-5" />
               </button>
@@ -358,27 +361,38 @@ export default function ChatWidget({
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth bg-white/40">
+      <div className="flex-1 overflow-y-auto p-10 space-y-10 scroll-smooth bg-gradient-to-b from-gray-50/50 to-white no-scrollbar">
         {messages.length === 0 && (
-          <div className="h-full flex flex-col items-center justify-center text-center animate-in fade-in zoom-in-95 duration-500">
-            <div className="w-24 h-24 mb-6 bg-gradient-to-br from-primary to-primary-600 rounded-[2rem] flex items-center justify-center border border-white/20 shadow-lg shadow-primary-500/20 group transition-transform hover:scale-105 duration-500">
-              <ChatIcons.Sparkles className="w-12 h-12 text-white animate-pulse group-hover:rotate-12" />
+          <div className="h-full flex flex-col items-center justify-center text-center max-w-2xl mx-auto py-12">
+            <div className="relative mb-12">
+              <div className="absolute inset-0 bg-primary/20 blur-[80px] rounded-full animate-pulse"></div>
+              <div className="relative w-32 h-32 bg-gradient-to-br from-primary to-primary-700 rounded-[2.5rem] flex items-center justify-center border-4 border-white shadow-[0_25px_60px_-15px_rgba(var(--color-primary-rgb),0.5)] group transition-all hover:scale-110 duration-700 cursor-default">
+                <ChatIcons.Sparkles className="w-16 h-16 text-white animate-pulse group-hover:rotate-12 transition-transform" />
+              </div>
             </div>
-            <h4 className="text-2xl font-bold text-gray-900 mb-2 tracking-tight">
-              Olá, eu sou a <span className="text-primary">AxonIA</span>
+
+            <h4 className="text-4xl font-black text-gray-900 mb-4 tracking-tighter leading-tight">
+              Olá, eu sou a <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary-700">AxonIA</span>
             </h4>
-            <p className="text-gray-500 max-w-[280px] mx-auto mb-10 text-sm font-normal leading-relaxed">
-              Estou aqui para automatizar suas consultas de RH. Por onde começamos?
+            <p className="text-gray-500 max-w-md mx-auto mb-12 text-lg font-medium leading-relaxed opacity-80">
+              Sua inteligência artificial integrada para RH. Como posso facilitar seu dia hoje?
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-md">
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
               {suggestions.map((suggestion, index) => (
                 <button
                   key={index}
                   onClick={() => setInput(suggestion)}
-                  className="group flex items-center justify-between p-4 text-sm bg-white hover:bg-primary text-gray-700 hover:text-white rounded-2xl border border-gray-100 hover:border-primary transition-all duration-300 shadow-sm hover:shadow-primary-200 hover:scale-[1.02] active:scale-95"
+                  className="group flex flex-col items-start p-6 text-sm bg-white hover:bg-primary rounded-[2rem] border border-gray-100 hover:border-primary transition-all duration-500 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_40px_rgba(var(--color-primary-rgb),0.15)] hover:-translate-y-1 active:scale-95 text-left"
                 >
-                  <span className="font-bold text-left">{suggestion}</span>
-                  <ChatIcons.ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0 transition-all" />
+                  <div className="w-10 h-10 bg-gray-50 group-hover:bg-white/20 rounded-xl mb-4 flex items-center justify-center transition-colors">
+                    {index === 0 && <ChatIcons.Calculator className="w-5 h-5 text-primary group-hover:text-white" />}
+                    {index === 1 && <ChatIcons.BookOpen className="w-5 h-5 text-primary group-hover:text-white" />}
+                    {index === 2 && <ChatIcons.MessageSquare className="w-5 h-5 text-primary group-hover:text-white" />}
+                    {index === 3 && <ChatIcons.Sparkles className="w-5 h-5 text-primary group-hover:text-white" />}
+                  </div>
+                  <span className="font-black text-gray-900 group-hover:text-white transition-colors text-base tracking-tight mb-1">{suggestion}</span>
+                  <p className="text-xs text-gray-400 group-hover:text-white/80 transition-colors font-medium">Clique para iniciar esta tarefa</p>
                 </button>
               ))}
             </div>
@@ -400,30 +414,29 @@ export default function ChatWidget({
         ))}
 
         {isLoading && !isStreaming && (
-          <div className="flex justify-start">
-            <div className="bg-white border border-gray-100 rounded-2xl rounded-tl-none px-5 py-3 shadow-sm">
-              <div className="flex space-x-1 py-1">
-                <div className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce"></div>
-                <div className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                <div className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+          <div className="flex justify-start animate-fade-in">
+            <div className="bg-white border border-gray-100/50 rounded-[2rem] rounded-tl-none px-8 py-5 shadow-xl">
+              <div className="flex space-x-2">
+                <div className="w-2 h-2 bg-primary/20 rounded-full animate-bounce [animation-duration:1s]"></div>
+                <div className="w-2 h-2 bg-primary/40 rounded-full animate-bounce [animation-delay:-0.2s] [animation-duration:1s]"></div>
+                <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce [animation-delay:-0.4s] [animation-duration:1s]"></div>
               </div>
             </div>
           </div>
         )}
 
-        <div ref={messagesEndRef} />
+        <div ref={messagesEndRef} className="h-4" />
       </div>
 
-      {/* Input Section */}
-      <div className="p-6 bg-gray-50/50 border-t border-gray-100">
-        {/* Suggestion Pills - Only show if current chat is empty */}
+      {/* Input Section - Super Clean & Modern */}
+      <div className="p-8 bg-white border-t border-gray-100/50">
         {messages.length > 0 && (
-          <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar">
+          <div className="flex gap-2 overflow-x-auto pb-6 no-scrollbar">
             {suggestions.slice(0, 3).map((suggestion, index) => (
               <button
                 key={index}
                 onClick={() => submitMessage(suggestion)}
-                className="whitespace-nowrap px-4 py-1.5 text-xs font-bold bg-white text-primary border border-primary-100 rounded-full hover:bg-primary hover:text-white transition-all shadow-sm active:scale-95"
+                className="whitespace-nowrap px-6 py-2.5 text-xs font-black bg-gray-50 text-gray-600 border border-gray-100 rounded-full hover:bg-primary hover:text-white hover:border-primary transition-all shadow-sm active:scale-95 uppercase tracking-wider"
               >
                 {suggestion}
               </button>
@@ -431,49 +444,51 @@ export default function ChatWidget({
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="relative group flex items-end gap-2">
-          <div className="relative flex-1">
+        <form onSubmit={handleSubmit} className="relative group flex items-center gap-4">
+          <div className="relative flex-1 group">
+            <div className="absolute inset-0 bg-primary/5 blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-700"></div>
             <textarea
               ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Pergunte qualquer coisa..."
+              placeholder="Digite sua mensagem ou pedido..."
               disabled={isLoading}
               rows={1}
-              className="w-full resize-none rounded-2xl border border-gray-200 bg-white px-5 py-4 pr-12 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm hover:shadow-md disabled:bg-gray-50 disabled:cursor-not-allowed"
+              className="relative w-full resize-none rounded-[2rem] border-2 border-gray-100 bg-white px-8 py-5 pr-16 text-gray-900 font-medium placeholder:text-gray-400 placeholder:font-bold focus:outline-none focus:ring-0 focus:border-primary transition-all shadow-sm group-hover:shadow-xl group-hover:border-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed text-lg"
             />
             <button
               type="button"
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-primary transition-colors"
-              title="Entrada de Voz (Em breve)"
+              className="absolute right-6 top-1/2 -translate-y-1/2 p-2.5 text-gray-400 hover:text-primary transition-all hover:scale-110"
+              title="Voz"
             >
-              <ChatIcons.Mic className="w-5 h-5" />
+              <ChatIcons.Mic className="w-6 h-6" />
             </button>
           </div>
 
           <button
             type="submit"
             disabled={isLoading || !input.trim()}
-            className="p-4 bg-primary text-primary-foreground rounded-2xl hover:bg-primary-700 disabled:bg-gray-200 transition-all active:scale-95 shadow-lg shadow-primary-500/20"
+            className="p-6 bg-primary text-white rounded-[2rem] hover:bg-primary-700 disabled:bg-gray-100 disabled:text-gray-400 transition-all active:scale-90 shadow-2xl shadow-primary/20 flex-shrink-0 group"
           >
             {isLoading ? (
-              <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 animate-spin" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor"
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>
             ) : (
-              <ChatIcons.Send className="w-5 h-5" />
+              <ChatIcons.Send className="w-6 h-6 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
             )}
           </button>
         </form>
-        <div className="mt-4 flex items-center justify-between">
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 bg-success rounded-full"></div>
-            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Sistema Online</span>
+
+        <div className="mt-8 flex items-center justify-between border-t border-gray-50 pt-4">
+          <div className="flex items-center gap-3 px-3 py-1.5 bg-success/5 rounded-full border border-success/10">
+            <div className="w-2 h-2 bg-success rounded-full animate-pulse"></div>
+            <span className="text-[10px] text-success font-black uppercase tracking-[0.2em]">Neural Network Online</span>
           </div>
-          <span className="text-[10px] text-gray-400 font-medium tracking-wider uppercase">AxonRH Intelligence v2.0</span>
+          <p className="text-[10px] text-gray-300 font-bold tracking-[0.15em] uppercase">AxonRH Intelligence <span className="text-primary/40">Enterprise v2.0</span></p>
         </div>
       </div>
 
@@ -496,32 +511,37 @@ function MessageBubble({
 
   return (
     <div className={cn(
-      "flex w-full animate-in fade-in slide-in-from-bottom-2 duration-300",
+      "flex w-full animate-in fade-in slide-in-from-bottom-6 duration-700 ease-out",
       isUser ? 'justify-end' : 'justify-start'
     )}>
       <div className={cn(
-        "flex max-w-[85%] space-x-3",
+        "flex max-w-[85%] space-x-5 px-2",
         isUser ? 'flex-row-reverse space-x-reverse' : 'flex-row'
       )}>
-        {/* Avatar */}
+        {/* Avatar - More Stylized */}
         <div className={cn(
-          "flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-sm shadow-sm",
-          isUser ? 'bg-primary text-primary-foreground' : 'bg-white border border-gray-100 text-gray-600'
+          "flex-shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center text-sm shadow-xl transition-transform hover:scale-110 cursor-default",
+          isUser
+            ? 'bg-gradient-to-br from-primary to-primary-700 text-white border-2 border-white'
+            : 'bg-white border-2 border-gray-100 text-primary'
         )}>
-          {isUser ? <ChatIcons.User className="w-4 h-4" /> : <ChatIcons.Bot className="w-4 h-4" />}
+          {isUser ? <ChatIcons.User className="w-5 h-5" /> : <ChatIcons.Bot className="w-6 h-6" />}
         </div>
 
-        {/* Bubble */}
-        <div className="flex flex-col space-y-1">
+        {/* Bubble - More Modern Shapes */}
+        <div className={cn(
+          "flex flex-col space-y-2",
+          isUser ? "items-end" : "items-start"
+        )}>
           <div className={cn(
-            "rounded-2xl px-5 py-3 shadow-sm",
+            "rounded-[2rem] px-8 py-5 shadow-2xl relative transition-all hover:shadow-primary/5 group",
             isUser
-              ? 'bg-primary text-primary-foreground rounded-tr-none'
+              ? 'bg-gradient-to-br from-primary to-primary-700 text-white rounded-tr-none'
               : isError
                 ? 'bg-red-50 text-red-800 border border-red-100 rounded-tl-none'
                 : isActionConfirmation
-                  ? 'bg-primary-50/50 border border-primary-100 rounded-tl-none !p-0 overflow-hidden'
-                  : 'bg-white border border-gray-100 text-gray-800 rounded-tl-none'
+                  ? 'bg-primary-50/30 border border-primary-200/50 rounded-tl-none !p-0 overflow-hidden backdrop-blur-sm'
+                  : 'bg-white border-b-4 border-gray-100/50 text-gray-800 rounded-tl-none ring-1 ring-black/5'
           )}>
             {isActionConfirmation ? (
               <ActionConfirmation
@@ -530,28 +550,32 @@ function MessageBubble({
                 onCancel={onActionCancel}
               />
             ) : message.type === 'CALCULATION' || message.type === 'QUERY_RESULT' || !isUser ? (
-              <div className="prose prose-sm max-w-none prose-slate">
+              <div className="prose prose-sm max-w-none prose-slate prose-p:font-medium prose-headings:font-black prose-headings:text-primary-900 prose-strong:text-primary-800">
                 <MarkdownContent content={message.content} />
               </div>
             ) : (
-              <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</p>
+              <p className="whitespace-pre-wrap text-[15px] leading-relaxed font-bold tracking-tight">{message.content}</p>
             )}
-          </div>
 
-          <span className={cn(
-            "text-[10px] font-bold uppercase tracking-wider",
-            isUser ? 'text-gray-400 text-right' : 'text-gray-400'
-          )}>
-            {new Date(message.timestamp).toLocaleTimeString('pt-BR', {
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-          </span>
+            {/* Timestamp hover indicator */}
+            <div className={cn(
+              "absolute -bottom-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300 w-max",
+              isUser ? "right-0" : "left-0"
+            )}>
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+                {new Date(message.timestamp).toLocaleTimeString('pt-BR', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
 }
+
 
 // Processa texto inline com negrito **texto**
 function parseInlineFormatting(text: string): React.ReactNode[] {

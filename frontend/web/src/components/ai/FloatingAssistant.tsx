@@ -5,6 +5,7 @@ import ChatWidget from './ChatWidget';
 import { ChatIcons } from './ChatIcons';
 import { usePathname } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
+import { cn } from '@/lib/utils';
 
 export default function FloatingAssistant() {
     const [isOpen, setIsOpen] = useState(false);
@@ -26,39 +27,47 @@ export default function FloatingAssistant() {
 
 
     return (
-        <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
+        <div className="fixed bottom-8 right-8 z-[100] flex flex-col items-end">
             {/* Chat Window */}
             {isOpen && (
-                <div className="mb-4 w-[520px] h-[720px] max-h-[calc(100vh-120px)] shadow-2xl animate-in slide-in-from-bottom-4 fade-in duration-300">
+                <div className="mb-6 w-[550px] h-[800px] max-h-[calc(100vh-160px)] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.2)] animate-in slide-in-from-bottom-10 fade-in zoom-in-95 duration-500 ease-out origin-bottom-right">
                     <ChatWidget
                         onClose={() => setIsOpen(false)}
-                        className="h-full border-2 border-blue-100/50"
+                        className="h-full"
                         context={context}
                     />
                 </div>
             )}
 
-            {/* Toggle Button */}
+            {/* Toggle Button - Super Modernized */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="group relative flex items-center justify-center w-14 h-14 bg-primary text-white rounded-2xl shadow-lg hover:shadow-blue-500/40 transform transition-all duration-300 hover:scale-105 active:scale-95"
+                className={cn(
+                    "group relative flex items-center justify-center w-16 h-16 rounded-[1.5rem] transition-all duration-500 shadow-2xl active:scale-90",
+                    isOpen
+                        ? "bg-gray-900 text-white rotate-90"
+                        : "bg-gradient-to-br from-primary to-primary-700 text-white hover:shadow-primary/40 hover:-translate-y-1 hover:scale-105"
+                )}
                 title={isOpen ? 'Fechar AxonIA' : 'Abrir AxonIA'}
             >
-                <div className="absolute inset-0 bg-white/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                {/* Glow effect */}
+                {!isOpen && <div className="absolute inset-0 bg-primary/40 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>}
+                <div className="absolute inset-0 bg-white/10 rounded-[1.5rem] opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
                 {isOpen ? (
-                    <ChatIcons.X className="w-6 h-6 animate-in spin-in-90 duration-300" />
+                    <ChatIcons.X className="w-7 h-7" />
                 ) : (
                     <div className="relative">
-                        <ChatIcons.Bot className="w-7 h-7" />
-                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 border-2 border-white rounded-full"></div>
+                        <ChatIcons.Bot className="w-9 h-9" />
+                        <div className="absolute top-0 -right-1 w-4 h-4 bg-success border-4 border-primary rounded-full animate-pulse shadow-lg ring-2 ring-white/10"></div>
                     </div>
                 )}
 
-                {/* Tooltip on hover when closed */}
+                {/* Modern Tooltip */}
                 {!isOpen && (
-                    <div className="absolute right-full mr-4 px-3 py-1.5 bg-gray-900 text-white text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-xl">
-                        AxonIA
-                        <div className="absolute top-1/2 -right-1 -translate-y-1/2 border-4 border-transparent border-l-gray-900"></div>
+                    <div className="absolute right-full mr-6 px-4 py-2 bg-white text-gray-900 text-sm font-black rounded-2xl opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100 translate-x-4 group-hover:translate-x-0 pointer-events-none shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-gray-100 whitespace-nowrap">
+                        Olá! Como posso ajudar? ✨
+                        <div className="absolute top-1/2 -right-2 -translate-y-1/2 border-[8px] border-transparent border-l-white"></div>
                     </div>
                 )}
             </button>

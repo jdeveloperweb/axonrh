@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import ChatWidget from '@/components/ai/ChatWidget';
 import { useSearchParams } from 'next/navigation';
 import { chatApi, Conversation } from '@/lib/api/ai';
+import { ChatIcons } from '@/components/ai/ChatIcons';
+import { cn } from '@/lib/utils';
 
 export default function AssistantPage() {
   const searchParams = useSearchParams();
@@ -16,38 +18,70 @@ export default function AssistantPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                AxonIA
-              </h1>
-              <p className="text-sm text-gray-500">
-                Seu assistente virtual para dúvidas e solicitações
-              </p>
+    <div className="min-h-screen bg-[#FDFDFD] relative overflow-hidden">
+      {/* Abstract Background Orbs */}
+      <div className="absolute top-[-10%] left-[-5%] w-[40%] h-[40%] bg-primary/5 blur-[120px] rounded-full animate-pulse"></div>
+      <div className="absolute bottom-[-10%] right-[-5%] w-[35%] h-[35%] bg-primary/10 blur-[100px] rounded-full animate-pulse [animation-delay:1s]"></div>
+
+      {/* Main Content */}
+      <div className="relative z-10 max-w-[1600px] mx-auto px-6 lg:px-12 py-10 h-screen flex flex-col">
+        {/* Minimal Header */}
+        <div className="flex items-center justify-between mb-10">
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase">Inteligência <span className="text-primary">Artificial</span></h1>
+              <span className="px-3 py-1 bg-gray-900 text-white text-[10px] font-black rounded-lg uppercase tracking-widest">v2.5</span>
+            </div>
+            <p className="text-gray-400 font-bold text-xs uppercase tracking-[0.3em] mt-2 ml-1">
+              AxonRH Advanced Neural Assistant
+            </p>
+          </div>
+
+          <div className="hidden md:flex items-center gap-6">
+            <div className="text-right">
+              <p className="text-xs font-black text-gray-900 uppercase tracking-wider">Status do Core</p>
+              <div className="flex items-center justify-end gap-2 mt-1">
+                <div className="w-2 h-2 bg-success rounded-full animate-ping"></div>
+                <span className="text-[10px] font-bold text-success uppercase tracking-widest">Otimizado</span>
+              </div>
+            </div>
+            <div className="h-10 w-[1px] bg-gray-100"></div>
+            <div className="flex -space-x-3">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="w-10 h-10 rounded-xl border-2 border-white bg-gray-100 flex items-center justify-center text-[10px] font-black text-gray-400 shadow-sm overflow-hidden">
+                  <img src={`https://i.pravatar.cc/100?img=${i + 10}`} alt="avatar" />
+                </div>
+              ))}
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-3">
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-10 min-h-0">
+          <div className="lg:col-span-9 flex flex-col min-h-0">
             <ChatWidget
-              className="h-[calc(100vh-200px)]"
+              className="flex-1 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.1)]"
               initialMessage={initialQuery || undefined}
               conversationId={activeConversationId}
             />
           </div>
-          <div className="space-y-6">
+
+          <div className="lg:col-span-3 flex flex-col gap-8">
             <RecentConversations
               onSelectConversation={handleConversationSelect}
               activeConversationId={activeConversationId}
             />
+
+            <div className="bg-gray-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden group hover:scale-[1.02] transition-transform duration-500 cursor-help shadow-2xl">
+              <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:rotate-12 transition-transform duration-700">
+                <ChatIcons.Sparkles className="w-24 h-24" />
+              </div>
+              <h4 className="text-xl font-black mb-4 tracking-tight relative z-10">Dica Pro</h4>
+              <p className="text-sm text-gray-400 font-medium leading-relaxed mb-6 block relative z-10">
+                Você pode pedir para a AxonIA calcular rescisões, simular férias ou até listar funcionários por departamento de forma instantânea.
+              </p>
+              <div className="w-12 h-1 px-4 bg-primary rounded-full mb-2"></div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-primary">IA Capacitada</span>
+            </div>
           </div>
         </div>
       </div>
@@ -110,99 +144,114 @@ function RecentConversations({ onSelectConversation, activeConversationId }: Rec
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-      <div className="px-4 py-3 bg-primary border-b border-primary-600">
+    <div className="bg-white rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] border border-gray-100/50 overflow-hidden flex flex-col">
+      <div className="px-8 py-6 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100/50">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-primary-foreground">Conversas Recentes</h3>
-          <div className="flex items-center gap-3">
-            {conversations.length > 0 && (
-              <button
-                onClick={async () => {
-                  if (confirm('Tem certeza que deseja apagar todo o histórico?')) {
-                    try {
-                      await chatApi.deleteAllConversations();
-                      setConversations([]);
-                    } catch (error) {
-                      console.error('Failed to delete history', error);
-                    }
-                  }
-                }}
-                className="text-xs text-primary-foreground/90 hover:text-white transition-colors"
-              >
-                Limpar
-              </button>
-            )}
-            <button
-              onClick={loadConversations}
-              className="text-xs text-primary-foreground/90 hover:text-white transition-colors"
-            >
-              Atualizar
-            </button>
+          <div>
+            <h3 className="text-lg font-black text-gray-900 tracking-tight">Histórico</h3>
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">Sessões Recentes</p>
           </div>
+          <button
+            onClick={loadConversations}
+            className="p-2.5 hover:bg-gray-100 rounded-xl transition-all text-gray-400 hover:text-gray-900"
+            title="Atualizar"
+          >
+            <ChatIcons.History className="w-4 h-4" />
+          </button>
         </div>
       </div>
 
-      <div className="max-h-[400px] overflow-y-auto">
+      <div className="max-h-[350px] overflow-y-auto no-scrollbar">
         {isLoading ? (
-          <div className="p-4 space-y-3">
+          <div className="p-8 space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="animate-pulse">
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-3 bg-gray-100 rounded w-1/2"></div>
+              <div key={i} className="animate-pulse flex items-center gap-4">
+                <div className="w-10 h-10 bg-gray-100 rounded-xl"></div>
+                <div className="flex-1">
+                  <div className="h-3 bg-gray-100 rounded w-3/4 mb-2"></div>
+                  <div className="h-2 bg-gray-50 rounded w-1/2"></div>
+                </div>
               </div>
             ))}
           </div>
         ) : error ? (
-          <div className="p-4 text-center">
-            <p className="text-sm text-gray-500">{error}</p>
+          <div className="p-8 text-center">
+            <div className="w-12 h-12 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <ChatIcons.X className="w-6 h-6" />
+            </div>
+            <p className="text-sm font-bold text-gray-900 mb-1">{error}</p>
             <button
               onClick={loadConversations}
-              className="mt-2 text-xs text-blue-600 hover:text-blue-800"
+              className="mt-2 text-xs font-black text-primary hover:text-primary-700 uppercase tracking-widest"
             >
               Tentar novamente
             </button>
           </div>
         ) : conversations.length === 0 ? (
-          <div className="p-6 text-center">
-            <div className="w-12 h-12 mx-auto mb-3 bg-gray-100 rounded-full flex items-center justify-center">
-              <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
+          <div className="p-10 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 bg-gray-50 rounded-[1.5rem] flex items-center justify-center border border-gray-100/50">
+              <ChatIcons.MessageSquare className="w-8 h-8 text-gray-300" />
             </div>
-            <p className="text-sm text-gray-500">Nenhuma conversa ainda</p>
-            <p className="text-xs text-gray-400 mt-1">Suas conversas aparecerão aqui</p>
+            <p className="text-sm font-bold text-gray-900">Vazio por aqui</p>
+            <p className="text-xs text-gray-400 mt-1 font-medium italic">Inicie uma nova conversa com a AxonIA</p>
           </div>
         ) : (
-          <ul className="divide-y divide-gray-50">
+          <div className="p-4 space-y-2">
             {conversations.map((conv) => (
-              <li key={conv.id}>
-                <button
-                  onClick={() => onSelectConversation(conv.id)}
-                  className={`w-full flex items-center justify-between p-3 hover:bg-blue-50/50 transition-colors text-left group ${activeConversationId === conv.id ? 'bg-blue-50 border-l-2 border-blue-500' : ''
-                    }`}
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate group-hover:text-blue-700 transition-colors">
-                      {getConversationTitle(conv)}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      {formatDate(conv.updatedAt || conv.createdAt)}
-                    </p>
-                    {conv.metadata?.messageCount && (
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        {conv.metadata.messageCount} mensagens
-                      </p>
-                    )}
-                  </div>
-                  <svg className="w-4 h-4 text-gray-300 group-hover:text-blue-500 transition-colors flex-shrink-0 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </li>
+              <button
+                key={conv.id}
+                onClick={() => onSelectConversation(conv.id)}
+                className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all text-left group ${activeConversationId === conv.id
+                  ? 'bg-primary/5 ring-1 ring-primary/20 border-primary-100 shadow-sm'
+                  : 'hover:bg-gray-50 border-transparent hover:border-gray-100'
+                  }`}
+              >
+                <div className={cn(
+                  "w-10 h-10 rounded-xl flex items-center justify-center text-xs shadow-sm transition-transform group-hover:scale-110",
+                  activeConversationId === conv.id ? "bg-primary text-white" : "bg-white border border-gray-100 text-gray-400"
+                )}>
+                  <ChatIcons.MessageSquare className="w-4 h-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={cn(
+                    "text-sm font-bold truncate transition-colors",
+                    activeConversationId === conv.id ? "text-primary-900" : "text-gray-700 group-hover:text-primary"
+                  )}>
+                    {getConversationTitle(conv)}
+                  </p>
+                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">
+                    {formatDate(conv.updatedAt || conv.createdAt)}
+                  </p>
+                </div>
+                <ChatIcons.ChevronRight className={cn(
+                  "w-4 h-4 transition-all",
+                  activeConversationId === conv.id ? "text-primary translate-x-0" : "text-gray-200 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 group-hover:text-primary"
+                )} />
+              </button>
             ))}
-          </ul>
+          </div>
         )}
       </div>
+
+      {conversations.length > 0 && (
+        <div className="p-4 border-t border-gray-100/50 bg-gray-50/50">
+          <button
+            onClick={async () => {
+              if (confirm('Tem certeza que deseja apagar todo o histórico?')) {
+                try {
+                  await chatApi.deleteAllConversations();
+                  setConversations([]);
+                } catch (error) {
+                  console.error('Failed to delete history', error);
+                }
+              }
+            }}
+            className="w-full py-3 text-[10px] font-black text-gray-400 hover:text-red-500 transition-colors uppercase tracking-[0.2em]"
+          >
+            Limpar Histórico Completo
+          </button>
+        </div>
+      )}
     </div>
   );
 }
