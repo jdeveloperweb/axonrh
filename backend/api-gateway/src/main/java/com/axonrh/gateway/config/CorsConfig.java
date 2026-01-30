@@ -21,6 +21,7 @@ public class CorsConfig {
 
         // Origins permitidas
         corsConfig.setAllowedOriginPatterns(Arrays.asList(
+                "https://axonrh.mjolnix.com.br",
                 "https://*.axonrh.com.br",
                 "http://localhost:*",
                 "http://127.0.0.1:*",

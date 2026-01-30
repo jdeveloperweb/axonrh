@@ -77,14 +77,14 @@ export default function CourseCatalog() {
                             <Sparkles className="h-4 w-4 text-primary-light" />
                             <span>Transforme sua carreira hoje</span>
                         </div>
-                        <div className="space-y-4">
-                            <h1 className="text-5xl md:text-7xl font-extrabold text-white tracking-tight leading-[1.1]">
+                        <div className="space-y-6">
+                            <h1 className="text-5xl md:text-7xl font-black text-white tracking-tight leading-[1.1]">
                                 Explore seu <br />
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-light to-blue-300">
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-light via-blue-400 to-indigo-300">
                                     Potencial Infinito
                                 </span>
                             </h1>
-                            <p className="max-w-xl text-blue-100/70 text-lg md:text-xl leading-relaxed">
+                            <p className="max-w-xl text-blue-50/90 text-lg md:text-xl font-medium leading-relaxed">
                                 Mergulhe em trilhas de conhecimento exclusivas, desenhadas por especialistas
                                 para acelerar seu crescimento profissional com a Axon Academy.
                             </p>
@@ -104,34 +104,38 @@ export default function CourseCatalog() {
                         </div>
                     </div>
 
-                    <div className="hidden lg:block relative h-[400px]">
-                        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent rounded-3xl backdrop-blur-[2px] border border-white/5 shadow-2xl overflow-hidden group-hover:scale-[1.02] transition-transform duration-700">
-                            <div className="absolute inset-0 opacity-40 mix-blend-overlay bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
-                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                                <BookOpen className="h-48 w-48 text-white/10" />
-                            </div>
+                    <div className="hidden lg:block relative h-[450px]">
+                        <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-transparent rounded-[3rem] backdrop-blur-[2px] border border-white/10 shadow-2xl overflow-hidden group-hover:scale-[1.02] transition-transform duration-700">
+                            {/* Premium Hero Image */}
+                            <Image
+                                src="/images/learning-hero.png"
+                                alt="Learning Illustration"
+                                fill
+                                className="object-cover opacity-80 mix-blend-lighten"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-60" />
 
-                            {/* Floating Stats */}
-                            <div className="absolute top-10 right-10 p-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl animate-bounce duration-[4s]">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-green-500/20 rounded-lg">
-                                        <TrendingUp className="h-5 w-5 text-green-400" />
+                            {/* Floating Stats with better contrast */}
+                            <div className="absolute top-10 right-10 p-5 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl animate-bounce duration-[4s]">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-2.5 bg-green-500/30 rounded-xl">
+                                        <TrendingUp className="h-6 w-6 text-green-400" />
                                     </div>
                                     <div>
-                                        <p className="text-[10px] uppercase tracking-wider text-blue-100/50 font-bold">Progresso Médio</p>
-                                        <p className="text-white font-bold text-lg">84%</p>
+                                        <p className="text-[11px] uppercase tracking-widest text-white/70 font-black">Progresso Médio</p>
+                                        <p className="text-white font-black text-xl">84%</p>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="absolute bottom-10 left-10 p-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl animate-bounce duration-[5s] delay-1000">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-primary/20 rounded-lg">
-                                        <Award className="h-5 w-5 text-primary-light" />
+                            <div className="absolute bottom-10 left-10 p-5 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl animate-bounce duration-[5s] delay-1000">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-2.5 bg-primary/30 rounded-xl">
+                                        <Award className="h-6 w-6 text-primary-light" />
                                     </div>
                                     <div>
-                                        <p className="text-[10px] uppercase tracking-wider text-blue-100/50 font-bold">Certificados</p>
-                                        <p className="text-white font-bold text-lg">15.4k+</p>
+                                        <p className="text-[11px] uppercase tracking-widest text-white/70 font-black">Certificados</p>
+                                        <p className="text-white font-black text-xl">15.4k+</p>
                                     </div>
                                 </div>
                             </div>
@@ -164,47 +168,54 @@ export default function CourseCatalog() {
                             <button
                                 onClick={() => setSelectedCategory(null)}
                                 className={cn(
-                                    "flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 group",
+                                    "flex items-center justify-between px-5 py-4 rounded-2xl transition-all duration-300 group relative overflow-hidden",
                                     selectedCategory === null
-                                        ? "bg-primary text-white shadow-lg shadow-primary/20"
-                                        : "hover:bg-muted"
+                                        ? "bg-slate-950 text-white shadow-xl shadow-slate-200"
+                                        : "bg-white border border-slate-100 hover:border-primary/30 hover:bg-slate-50"
                                 )}
                             >
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-3 relative z-10">
                                     <div className={cn(
-                                        "p-2 rounded-lg transition-colors",
-                                        selectedCategory === null ? "bg-white/20" : "bg-muted-foreground/10 group-hover:bg-primary/10"
+                                        "p-2.5 rounded-xl transition-colors",
+                                        selectedCategory === null ? "bg-primary/20 text-primary-light" : "bg-slate-100 text-slate-500 group-hover:bg-primary/10 group-hover:text-primary"
                                     )}>
                                         <BookMarked className="h-4 w-4" />
                                     </div>
-                                    <span className="font-semibold text-sm">Todas as Categorias</span>
+                                    <span className="font-bold text-sm tracking-tight">Todas as Categorias</span>
                                 </div>
-                                <span className="text-xs opacity-60 font-mono">{courses.length}</span>
+                                <span className={cn(
+                                    "text-xs font-black px-2 py-1 rounded-lg relative z-10",
+                                    selectedCategory === null ? "bg-white/10 text-white/60" : "bg-slate-100 text-slate-400 group-hover:bg-primary/5 group-hover:text-primary/70"
+                                )}>{courses.length}</span>
                             </button>
 
                             {categories.map(category => {
                                 const count = courses.filter(c => c.categoryId === category.id).length;
+                                const isSelected = selectedCategory === category.id;
                                 return (
                                     <button
                                         key={category.id}
                                         onClick={() => setSelectedCategory(category.id)}
                                         className={cn(
-                                            "flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 group",
-                                            selectedCategory === category.id
-                                                ? "bg-primary text-white shadow-lg shadow-primary/20"
-                                                : "hover:bg-muted"
+                                            "flex items-center justify-between px-5 py-4 rounded-2xl transition-all duration-300 group relative overflow-hidden",
+                                            isSelected
+                                                ? "bg-slate-950 text-white shadow-xl shadow-slate-200"
+                                                : "bg-white border border-slate-100 hover:border-primary/30 hover:bg-slate-50"
                                         )}
                                     >
-                                        <div className="flex items-center gap-3">
+                                        <div className="flex items-center gap-3 relative z-10">
                                             <div className={cn(
-                                                "p-2 rounded-lg transition-colors",
-                                                selectedCategory === category.id ? "bg-white/20" : "bg-muted-foreground/10 group-hover:bg-primary/10"
+                                                "p-2.5 rounded-xl transition-colors",
+                                                isSelected ? "bg-primary/20 text-primary-light" : "bg-slate-100 text-slate-500 group-hover:bg-primary/10 group-hover:text-primary"
                                             )}>
                                                 <Zap className="h-4 w-4" />
                                             </div>
-                                            <span className="font-semibold text-sm truncate max-w-[140px] text-left">{category.name}</span>
+                                            <span className="font-bold text-sm tracking-tight truncate max-w-[140px] text-left">{category.name}</span>
                                         </div>
-                                        <span className="text-xs opacity-60 font-mono">{count}</span>
+                                        <span className={cn(
+                                            "text-xs font-black px-2 py-1 rounded-lg relative z-10",
+                                            isSelected ? "bg-white/10 text-white/60" : "bg-slate-100 text-slate-400 group-hover:bg-primary/5 group-hover:text-primary/70"
+                                        )}>{count}</span>
                                     </button>
                                 );
                             })}
@@ -217,38 +228,47 @@ export default function CourseCatalog() {
                             <TrendingUp className="h-5 w-5 text-primary" />
                             Nível
                         </h3>
-                        <div className="grid grid-cols-1 gap-2">
+                        <div className="grid grid-cols-1 gap-3">
                             {['INICIANTE', 'INTERMEDIARIO', 'AVANCADO'].map(level => (
                                 <button
                                     key={level}
                                     onClick={() => setSelectedLevel(selectedLevel === level ? null : level)}
                                     className={cn(
-                                        "px-4 py-3 rounded-xl border text-sm font-semibold transition-all hover:scale-[1.02] active:scale-95 text-left",
+                                        "px-5 py-4 rounded-2xl border text-sm font-bold transition-all hover:scale-[1.02] active:scale-95 text-left flex items-center justify-between group",
                                         selectedLevel === level
-                                            ? "bg-slate-900 text-white border-slate-900"
-                                            : "bg-background border-border hover:border-primary/50"
+                                            ? "bg-slate-950 text-white border-slate-950 shadow-xl shadow-slate-200"
+                                            : "bg-white border-slate-200 hover:border-primary/50 text-slate-600"
                                     )}
                                 >
-                                    {level === 'INICIANTE' ? 'Iniciante' : level === 'INTERMEDIARIO' ? 'Intermediário' : 'Avançado'}
+                                    <span>{level === 'INICIANTE' ? 'Iniciante' : level === 'INTERMEDIARIO' ? 'Intermediário' : 'Avançado'}</span>
+                                    <ChevronRight className={cn(
+                                        "h-4 w-4 transition-transform",
+                                        selectedLevel === level ? "text-primary translate-x-1" : "text-slate-300 group-hover:translate-x-1"
+                                    )} />
                                 </button>
                             ))}
                         </div>
                     </div>
 
                     {/* Quick Promotion Card */}
-                    <div className="bg-gradient-to-br from-indigo-600 to-indigo-800 p-6 rounded-3xl text-white space-y-4 shadow-xl shadow-indigo-200 hidden lg:block overflow-hidden relative group">
-                        <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
-                        <CardHeader className="p-0 space-y-2">
-                            <div className="bg-white/20 w-fit p-2 rounded-lg backdrop-blur-md">
-                                <Award className="h-5 w-5" />
+                    <div className="bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-800 p-8 rounded-[2.5rem] text-white space-y-6 shadow-2xl shadow-indigo-200 hidden lg:block overflow-hidden relative group border border-white/10">
+                        <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000" />
+                        <div className="absolute -left-10 -bottom-10 w-32 h-32 bg-primary/20 rounded-full blur-2xl group-hover:animate-pulse" />
+
+                        <CardHeader className="p-0 space-y-4 relative z-10">
+                            <div className="bg-white/20 w-fit p-3 rounded-2xl backdrop-blur-md border border-white/20 shadow-inner">
+                                <Award className="h-6 w-6 text-white" />
                             </div>
-                            <CardTitle className="text-lg">Trilha de Liderança</CardTitle>
-                            <CardDescription className="text-indigo-100/70">
-                                12 cursos exclusivos para você se tornar um gestor de elite.
-                            </CardDescription>
+                            <div>
+                                <CardTitle className="text-2xl font-black tracking-tight">Trilha de Liderança</CardTitle>
+                                <CardDescription className="text-indigo-100 font-medium text-base mt-2 leading-relaxed">
+                                    Conquiste as habilidades necessárias para liderar times de alto desempenho.
+                                </CardDescription>
+                            </div>
                         </CardHeader>
-                        <Button variant="white" className="w-full rounded-xl text-indigo-700 font-bold hover:bg-slate-100">
-                            Explorar Trilha
+
+                        <Button className="w-full h-14 rounded-2xl bg-white text-indigo-700 font-black text-lg hover:bg-slate-50 hover:scale-105 transition-all shadow-xl shadow-indigo-900/20 active:scale-95">
+                            Explorar AGORA
                         </Button>
                     </div>
                 </aside>
@@ -269,22 +289,22 @@ export default function CourseCatalog() {
                         <div className="flex items-center gap-6 shrink-0 w-full md:w-auto justify-between md:justify-end">
                             <div className="bg-muted/50 p-1.5 rounded-2xl flex items-center gap-1">
                                 <Button
-                                    variant={viewMode === 'grid' ? "white" : "ghost"}
+                                    variant="ghost"
                                     size="icon"
                                     className={cn(
                                         "h-10 w-10 rounded-xl transition-all",
-                                        viewMode === 'grid' && "shadow-md bg-background scale-110"
+                                        viewMode === 'grid' ? "bg-white text-primary shadow-md scale-110" : "text-muted-foreground hover:bg-white/50"
                                     )}
                                     onClick={() => setViewMode('grid')}
                                 >
                                     <LayoutGrid className="h-5 w-5" />
                                 </Button>
                                 <Button
-                                    variant={viewMode === 'list' ? "white" : "ghost"}
+                                    variant="ghost"
                                     size="icon"
                                     className={cn(
                                         "h-10 w-10 rounded-xl transition-all",
-                                        viewMode === 'list' && "shadow-md bg-background scale-110"
+                                        viewMode === 'list' ? "bg-white text-primary shadow-md scale-110" : "text-muted-foreground hover:bg-white/50"
                                     )}
                                     onClick={() => setViewMode('list')}
                                 >
@@ -308,20 +328,29 @@ export default function CourseCatalog() {
                             <p className="text-xl font-medium text-muted-foreground animate-pulse">Preparando seu catálogo personalizado...</p>
                         </div>
                     ) : filteredCourses.length === 0 ? (
-                        <div className="text-center py-32 bg-card rounded-[3rem] border-2 border-dashed border-border/50 group hover:border-primary/20 transition-colors">
-                            <div className="mb-6 inline-flex relative">
-                                <BookOpen className="h-24 w-24 text-muted-foreground/10 group-hover:scale-110 transition-transform duration-500" />
-                                <Search className="h-10 w-10 text-primary absolute -bottom-2 -right-2 bg-background p-2 rounded-full shadow-lg" />
+                        <div className="text-center py-32 bg-white rounded-[3.5rem] border border-slate-100 shadow-sm relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-slate-50 rounded-full blur-3xl -mr-32 -mt-32" />
+                            <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -ml-32 -mb-32" />
+
+                            <div className="relative mb-8 inline-flex">
+                                <div className="h-32 w-32 rounded-[2.5rem] bg-slate-50 flex items-center justify-center group-hover:scale-110 transition-transform duration-700 shadow-inner">
+                                    <BookOpen className="h-16 w-16 text-slate-200" />
+                                </div>
+                                <div className="absolute -bottom-2 -right-2 h-14 w-14 bg-white rounded-2xl shadow-xl border border-slate-50 flex items-center justify-center">
+                                    <Search className="h-6 w-6 text-primary animate-pulse" />
+                                </div>
                             </div>
-                            <h3 className="text-3xl font-bold mb-3 italic">Nada por aqui ainda...</h3>
-                            <p className="text-muted-foreground max-w-sm mx-auto text-lg mb-10 leading-relaxed">
+
+                            <h3 className="text-4xl font-black mb-4 text-slate-900 tracking-tight">Nada por aqui ainda...</h3>
+                            <p className="text-slate-500 max-w-sm mx-auto text-lg mb-12 font-medium leading-relaxed">
                                 Não encontramos cursos que correspondam aos seus filtros atuais.
-                                Tente ampliar sua pesquisa.
+                                Que tal tentar novos termos?
                             </p>
+
                             <Button
                                 variant="outline"
                                 size="lg"
-                                className="h-14 px-10 rounded-2xl border-2 hover:bg-slate-50 hover:text-primary transition-all active:scale-95"
+                                className="h-16 px-12 rounded-2xl border-2 border-slate-200 hover:border-primary hover:bg-primary/5 hover:text-primary transition-all active:scale-95 font-black text-lg shadow-xl shadow-slate-100"
                                 onClick={() => {
                                     setSearchQuery('');
                                     setSelectedCategory(null);

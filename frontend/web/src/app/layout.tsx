@@ -39,6 +39,10 @@ export const metadata: Metadata = {
   title: 'AxonRH - Gestão de RH e DP',
   description: 'Sistema Integrado de Gestão de RH e Departamento Pessoal com IA Conversacional',
   keywords: ['RH', 'Departamento Pessoal', 'Gestão de Pessoas', 'IA', 'HRIS'],
+  icons: {
+    icon: '/favicon.png',
+    apple: '/favicon.png',
+  },
 };
 
 
