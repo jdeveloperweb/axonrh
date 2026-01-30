@@ -72,6 +72,7 @@ interface FormData {
     };
     allowPlatformAccess: boolean;
     platformPassword?: string;
+    platformRoles: string[];
 }
 
 interface EmployeeFormProps {
@@ -102,10 +103,10 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
         ethnicity: '',
         race: '',
         maritalStatus: '',
-        nationality: 'Brasileira',
+        nationality: '',
         admissionDate: '',
         employmentType: 'CLT',
-        salary: undefined,
+        salary: 0,
         workHoursPerWeek: 44,
         departmentId: '',
         positionId: '',
@@ -113,7 +114,6 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
         managerId: '',
         workRegime: 'PRESENCIAL',
         hybridWorkDays: [],
-        hybridFrequency: undefined,
         address: {
             street: '',
             number: '',
@@ -126,6 +126,7 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
         },
         allowPlatformAccess: false,
         platformPassword: '',
+        platformRoles: ['COLABORADOR'],
     });
 
     const [showPassword, setShowPassword] = useState(false);
@@ -136,37 +137,31 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
     const [errors, setErrors] = useState<FormErrors>({});
     const [loading, setLoading] = useState(false);
     const [loadingCep, setLoadingCep] = useState(false);
-    const [loadingReferenceData, setLoadingReferenceData] = useState(true);
 
     // Reference data
     const [departments, setDepartments] = useState<Department[]>([]);
     const [positions, setPositions] = useState<Position[]>([]);
     const [costCenters, setCostCenters] = useState<CostCenter[]>([]);
     const [managers, setManagers] = useState<ManagerDTO[]>([]);
+    const [loadingReferenceData, setLoadingReferenceData] = useState(true);
 
-    // Load reference data
+    // Load initial reference data
     useEffect(() => {
         const loadData = async () => {
             try {
                 setLoadingReferenceData(true);
-                console.log('🔄 Carregando dados de referência...');
-                const [depts, centers, mngs] = await Promise.all([
+                const [depts, centers, mgrs] = await Promise.all([
                     employeesApi.getDepartments(),
                     employeesApi.getCostCenters(),
-                    managersApi.list(),
+                    managersApi.list()
                 ]);
-                console.log('✅ Departamentos carregados:', depts);
-                console.log('📊 Quantidade de departamentos:', depts?.length || 0);
-                console.log('📋 Estrutura do primeiro departamento:', depts?.[0]);
-                console.log('✅ Centros de custo carregados:', centers);
-                console.log('✅ Gestores carregados:', mngs);
+
                 setDepartments(depts);
                 setCostCenters(centers);
-                setManagers(mngs);
-            } catch (error: unknown) {
+                setManagers(mgrs);
+            } catch (error: any) {
                 console.error('❌ Failed to load reference data:', error);
-                if (error instanceof Error) {
-                    console.error('❌ Error message:', error.message);
+                if (error.stack) {
                     console.error('❌ Error stack:', error.stack);
                 }
             } finally {
@@ -188,16 +183,18 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                     if (existingUser) {
                         setHasExistingAccess(true);
                         setExistingUserId(existingUser.id || null);
-                        // Ao detectar acesso existente, garantimos que o switch está ligado mas sem disparar loop
-                        if (!formData.allowPlatformAccess) {
-                            setFormData(prev => ({ ...prev, allowPlatformAccess: true }));
-                        }
+                        // Ao detectar acesso existente, sincronizamos roles e ligamos o switch
+                        setFormData(prev => ({
+                            ...prev,
+                            allowPlatformAccess: true,
+                            platformRoles: existingUser.roles
+                        }));
                     } else {
                         setHasExistingAccess(false);
                         setExistingUserId(null);
                     }
                 } catch (error) {
-                    console.error('Erro ao verificar acesso:', error);
+                    console.warn('⚠️ Não foi possível verificar acesso à plataforma:', error);
                 } finally {
                     setCheckingAccess(false);
                 }
@@ -210,7 +207,6 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
     // Load initial data when editing
     useEffect(() => {
         if (initialData && Object.keys(initialData).length > 0) {
-            console.log('EmployeeForm: Recebendo dados iniciais:', initialData);
             setFormData(prev => ({
                 ...prev,
                 cpf: initialData.cpf || prev.cpf,
@@ -219,17 +215,17 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                 email: initialData.email || prev.email,
                 personalEmail: initialData.personalEmail || prev.personalEmail,
                 phone: initialData.phone || prev.phone,
-                personalPhone: initialData.mobile || prev.personalPhone, // mobile -> personalPhone
+                personalPhone: initialData.mobile || prev.personalPhone,
                 birthDate: initialData.birthDate || prev.birthDate,
                 gender: initialData.gender || prev.gender,
                 ethnicity: initialData.ethnicity || prev.ethnicity,
                 race: initialData.race || prev.race || initialData.ethnicity || '',
                 maritalStatus: initialData.maritalStatus || prev.maritalStatus,
                 nationality: initialData.nationality || prev.nationality,
-                admissionDate: initialData.hireDate || prev.admissionDate, // hireDate -> admissionDate
+                admissionDate: initialData.hireDate || prev.admissionDate,
                 employmentType: initialData.employmentType || prev.employmentType,
-                salary: initialData.baseSalary || prev.salary, // baseSalary -> salary
-                workHoursPerWeek: initialData.weeklyHours || prev.workHoursPerWeek, // weeklyHours -> workHoursPerWeek
+                salary: initialData.baseSalary || prev.salary,
+                workHoursPerWeek: initialData.weeklyHours || prev.workHoursPerWeek,
                 departmentId: initialData.departmentId || prev.departmentId,
                 positionId: initialData.positionId || prev.positionId,
                 costCenterId: initialData.costCenterId || prev.costCenterId,
@@ -248,7 +244,6 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                     country: initialData.addressCountry || prev.address.country,
                 }
             }));
-            // Limpa erros ao carregar dados existentes
             setErrors({});
         }
     }, [initialData]);
@@ -258,15 +253,12 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
         const loadPositions = async () => {
             if (formData.departmentId) {
                 try {
-                    console.log('🔄 Carregando cargos para departamento:', formData.departmentId);
                     const pos = await employeesApi.getPositions(formData.departmentId);
-                    console.log('✅ Cargos carregados:', pos);
                     setPositions(pos);
                 } catch (error: unknown) {
                     console.error('❌ Failed to load positions:', error);
                 }
             } else {
-                console.log('⚠️ Nenhum departamento selecionado, limpando cargos');
                 setPositions([]);
             }
         };
@@ -293,7 +285,6 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                     [name]: value,
                 };
 
-                // Sincroniza etnia e raça já que no formulário são o mesmo campo
                 if (name === 'ethnicity') {
                     newData.race = value;
                 } else if (name === 'race') {
@@ -304,172 +295,125 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
             });
         }
 
-        // Clear error when field is changed
         if (errors[name]) {
-            setErrors(prev => ({ ...prev, [name]: '' }));
+            setErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors[name];
+                return newErrors;
+            });
         }
     };
 
-    // Handle CEP lookup
     const handleCepBlur = async () => {
-        const cep = formData.address?.zipCode?.replace(/\D/g, '');
-        if (!cep || cep.length !== 8) return;
+        const cep = formData.address.zipCode.replace(/\D/g, '');
+        if (cep.length !== 8) return;
 
         try {
             setLoadingCep(true);
-            const address = await employeesApi.searchCep(cep);
-            setFormData(prev => ({
-                ...prev,
-                address: {
-                    ...prev.address!,
-                    street: address.street || prev.address?.street || '',
-                    neighborhood: address.neighborhood || prev.address?.neighborhood || '',
-                    city: address.city || prev.address?.city || '',
-                    state: address.state || prev.address?.state || '',
-                },
-            }));
-        } catch (error: unknown) {
-            console.error('Failed to lookup CEP:', error);
+            const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+            const data = await response.json();
+
+            if (!data.erro) {
+                setFormData(prev => ({
+                    ...prev,
+                    address: {
+                        ...prev.address,
+                        street: data.logradouro,
+                        neighborhood: data.bairro,
+                        city: data.localidade,
+                        state: data.uf,
+                    },
+                }));
+            }
+        } catch (error) {
+            console.error('Erro ao buscar CEP:', error);
         } finally {
             setLoadingCep(false);
         }
     };
 
-    // Validate CPF on blur
-    const handleCpfBlur = async () => {
-        const cpf = formData.cpf?.replace(/\D/g, '');
-        if (!cpf || cpf.length !== 11) return;
-
-        if (!isValidCpf(cpf)) {
-            setErrors(prev => ({ ...prev, cpf: 'CPF inválido' }));
-            return;
-        }
-
-        // Check availability only if new or cpf changed significantly (logic could be refined)
-        if (!isEditing) {
-            try {
-                const result = await employeesApi.validateCpf(cpf);
-                if (!result.valid) {
-                    setErrors(prev => ({ ...prev, cpf: result.message || 'CPF já cadastrado' }));
-                }
-            } catch (error: unknown) {
-                console.error('Failed to validate CPF:', error);
-            }
-        }
-    };
-
-    // Validate form based on active tab
-    const validateForm = (): boolean => {
+    const validate = () => {
         const newErrors: FormErrors = {};
 
-        if (activeTab === 'personal') {
-            if (!formData.cpf) newErrors.cpf = 'CPF é obrigatório';
-            else if (!isValidCpf(formData.cpf.replace(/\D/g, ''))) newErrors.cpf = 'CPF inválido';
+        if (!formData.cpf) newErrors.cpf = 'CPF é obrigatório';
+        else if (!isValidCpf(formData.cpf)) newErrors.cpf = 'CPF inválido';
 
-            if (!formData.fullName) newErrors.fullName = 'Nome completo é obrigatório';
+        if (!formData.fullName) newErrors.fullName = 'Nome completo é obrigatório';
+        if (!formData.email) newErrors.email = 'E-mail corporativo é obrigatório';
+        else if (!isValidEmail(formData.email)) newErrors.email = 'E-mail inválido';
 
-            // Data de nascimento é obrigatória no backend
-            if (!formData.birthDate) newErrors.birthDate = 'Data de nascimento é obrigatória';
-
-            // Data de admissão é obrigatória no backend
-            if (!formData.admissionDate) newErrors.admissionDate = 'Data de admissão é obrigatória';
-
-            if (formData.email && !isValidEmail(formData.email)) {
-                newErrors.email = 'E-mail corporativo inválido';
-            } else if (!formData.email) {
-                newErrors.email = 'E-mail corporativo é obrigatório';
-            }
-
-            if (formData.personalEmail && !isValidEmail(formData.personalEmail)) {
-                newErrors.personalEmail = 'E-mail pessoal inválido';
-            }
-        }
-
-        if (activeTab === 'professional') {
-            if (!formData.departmentId) {
-                newErrors.departmentId = 'Departamento é obrigatório';
-            }
-            if (!formData.positionId) {
-                newErrors.positionId = 'Cargo é obrigatório';
-            }
-        }
+        if (!formData.departmentId) newErrors.departmentId = 'Departamento é obrigatório';
+        if (!formData.positionId) newErrors.positionId = 'Cargo é obrigatório';
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
-    // Mapeia dados do formulário para o formato do backend
-    const mapFormDataToRequest = (data: FormData): EmployeeCreateRequest => {
-        return {
-            cpf: data.cpf.replace(/\D/g, ''),  // Remove formatação
-            fullName: data.fullName,
-            socialName: data.socialName || undefined,
-            email: data.email,
-            personalEmail: data.personalEmail || undefined,
-            phone: data.phone ? data.phone.replace(/\D/g, '') : undefined,
-            mobile: data.personalPhone ? data.personalPhone.replace(/\D/g, '') : undefined,  // personalPhone → mobile
-            birthDate: data.birthDate,
-            gender: data.gender || undefined,
-            ethnicity: data.ethnicity || undefined,
-            race: data.race || data.ethnicity || undefined,
-            maritalStatus: data.maritalStatus || undefined,
-            nationality: data.nationality || undefined,
-            hireDate: data.admissionDate,  // admissionDate → hireDate
-            employmentType: data.employmentType,
-            baseSalary: data.salary ? Number(data.salary) : undefined,  // salary → baseSalary
-            weeklyHours: data.workHoursPerWeek ? Number(data.workHoursPerWeek) : undefined,  // workHoursPerWeek → weeklyHours
-            departmentId: data.departmentId || undefined,
-            positionId: data.positionId || undefined,
-            costCenterId: data.costCenterId || undefined,
-            managerId: data.managerId || undefined,
-            workRegime: data.workRegime || undefined,
-            hybridWorkDays: data.hybridWorkDays || [],
-            hybridFrequency: data.hybridFrequency ? Number(data.hybridFrequency) : undefined,
-            // Mapeia objeto address para campos planos
-            addressStreet: data.address?.street || undefined,
-            addressNumber: data.address?.number || undefined,
-            addressComplement: data.address?.complement || undefined,
-            addressNeighborhood: data.address?.neighborhood || undefined,
-            addressCity: data.address?.city || undefined,
-            addressState: data.address?.state || undefined,
-            addressZipCode: data.address?.zipCode?.replace(/\D/g, '') || undefined,
-            addressCountry: data.address?.country || undefined,
-        };
-    };
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
 
-    // Handle submit
-    const handleSubmit = async () => {
-
-        if (!validateForm()) {
+        if (!validate()) {
+            const firstError = Object.keys(errors)[0];
             toast({
-                title: 'Erro de validação',
-                description: 'Por favor, corrija os erros no formulário',
+                title: 'Erro de Validação',
+                description: 'Por favor, preencha todos os campos obrigatórios corretamente.',
                 variant: 'destructive',
             });
             return;
         }
 
+        setLoading(true);
+
         try {
-            setLoading(true);
+            // Mapping internal form data to API request
+            const submitData: EmployeeCreateRequest = {
+                cpf: formData.cpf,
+                fullName: formData.fullName,
+                socialName: formData.socialName,
+                email: formData.email,
+                personalEmail: formData.personalEmail,
+                phone: formData.phone,
+                mobile: formData.personalPhone,
+                birthDate: formData.birthDate,
+                gender: formData.gender,
+                ethnicity: formData.ethnicity,
+                race: formData.ethnicity,
+                maritalStatus: formData.maritalStatus,
+                nationality: formData.nationality,
+                hireDate: formData.admissionDate,
+                employmentType: formData.employmentType,
+                baseSalary: formData.salary || 0,
+                weeklyHours: formData.workHoursPerWeek || 44,
+                departmentId: formData.departmentId,
+                positionId: formData.positionId,
+                costCenterId: formData.costCenterId,
+                managerId: formData.managerId || undefined,
+                workRegime: formData.workRegime,
+                hybridWorkDays: formData.hybridWorkDays,
+                hybridFrequency: formData.hybridFrequency,
+                addressStreet: formData.address.street,
+                addressNumber: formData.address.number,
+                addressComplement: formData.address.complement,
+                addressNeighborhood: formData.address.neighborhood,
+                addressCity: formData.address.city,
+                addressState: formData.address.state,
+                addressZipCode: formData.address.zipCode,
+                addressCountry: formData.address.country
+            };
 
-            // Mapeia dados do formulário para o formato do backend
-            const submitData = mapFormDataToRequest(formData);
-
-            console.log('Enviando dados:', submitData);  // Debug
-
-            if (!employeeId) {
+            if (!isEditing) {
                 // CREATE
                 const employee = await employeesApi.create(submitData);
                 setEmployeeId(employee.id);
                 toast({
                     title: 'Sucesso',
-                    description: 'Dados pessoais salvos. Agora você pode preencher as outras abas.',
+                    description: 'Colaborador cadastrado com sucesso',
                 });
-                // Mudar para a próxima aba e atualizar URL sem refresh total se possível
+
                 setActiveTab('address');
                 window.history.replaceState(null, '', `/employees/${employee.id}/edit`);
 
-                // 1. Criar novo acesso (não tinha e agora tem)
+                // Create or remove access logic
                 if (formData.allowPlatformAccess && !hasExistingAccess && formData.platformPassword) {
                     try {
                         await userApi.create({
@@ -477,46 +421,19 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                             email: formData.email,
                             password: formData.platformPassword,
                             status: 'ACTIVE',
-                            roles: ['COLABORADOR']
+                            roles: formData.platformRoles
                         });
                         setHasExistingAccess(true);
-                        toast({
-                            title: 'Acesso Criado',
-                            description: 'O usuário de acesso à plataforma foi criado com sucesso.',
-                        });
-                    } catch (userError) {
-                        console.error('Erro ao criar usuário:', userError);
-                        toast({
-                            title: 'Erro no Acesso',
-                            description: 'O colaborador foi salvo, mas houve um erro ao criar o acesso.',
-                            variant: 'destructive',
-                        });
-                    }
-                }
-                // 2. Remover acesso existente (tinha e agora desmarcou)
-                else if (!formData.allowPlatformAccess && hasExistingAccess && existingUserId) {
-                    try {
-                        await userApi.delete(existingUserId);
-                        setHasExistingAccess(false);
-                        setExistingUserId(null);
-                        toast({
-                            title: 'Acesso Removido',
-                            description: 'O acesso do colaborador à plataforma foi removido.',
-                        });
-                    } catch (userError) {
-                        console.error('Erro ao remover usuário:', userError);
-                        toast({
-                            title: 'Erro ao remover acesso',
-                            description: 'O colaborador foi salvo, mas não foi possível remover o acesso.',
-                            variant: 'destructive',
-                        });
+                        toast({ title: 'Acesso Criado', description: 'O usuário foi criado.' });
+                    } catch (e) {
+                        toast({ title: 'Erro', description: 'Não foi possível criar o acesso.', variant: 'destructive' });
                     }
                 }
             } else {
                 // UPDATE
-                await employeesApi.update(employeeId, submitData);
+                await employeesApi.update(employeeId!, submitData);
 
-                // Mesmo raciocínio para UPDATE
+                // Creation/Deletion logic for existing collaborators
                 if (formData.allowPlatformAccess && !hasExistingAccess && formData.platformPassword) {
                     try {
                         await userApi.create({
@@ -524,10 +441,10 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                             email: formData.email,
                             password: formData.platformPassword,
                             status: 'ACTIVE',
-                            roles: ['COLABORADOR']
+                            roles: formData.platformRoles
                         });
                         setHasExistingAccess(true);
-                        toast({ title: 'Acesso Criado', description: 'O usuário de acesso foi criado.' });
+                        toast({ title: 'Acesso Criado', description: 'O usuário foi criado.' });
                     } catch (e) {
                         toast({ title: 'Erro', description: 'Não foi possível criar o acesso.', variant: 'destructive' });
                     }
@@ -549,21 +466,10 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
             }
 
         } catch (error: unknown) {
-            console.error('Erro ao salvar:', error);  // Debug
-            let errorMessage = 'Falha ao salvar dados';
-
-            if (error instanceof Error) {
-                errorMessage = error.message;
-                // @ts-expect-error - Handling axios error response structure safely
-                if ('response' in error && error.response?.data?.message) {
-                    // @ts-expect-error - Handling axios error response structure safely
-                    errorMessage = error.response.data.message;
-                }
-            }
-
+            console.error('Erro ao salvar:', error);
             toast({
                 title: 'Erro',
-                description: errorMessage,
+                description: 'Falha ao salvar dados',
                 variant: 'destructive',
             });
         } finally {
@@ -579,244 +485,68 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
         { key: 'dependents' as TabKey, label: 'Dependentes', icon: Users, disabled: !employeeId },
     ];
 
-    const handleTabClick = (key: TabKey, disabled: boolean) => {
-        if (disabled) {
-            toast({
-                title: 'Ação Bloqueada',
-                description: 'Salve os dados pessoais primeiro para habilitar as outras abas.',
-                variant: 'default', // or dedicated warning variant
-            });
-            return;
-        }
-        setActiveTab(key);
-    };
-
     return (
         <div className="space-y-6">
-            <div className="border-b border-gray-200 mb-6">
-                <nav className="flex gap-4 overflow-x-auto">
-                    {tabs.map((tab) => {
-                        const Icon = tab.icon;
-                        return (
-                            <button
-                                key={tab.key}
-                                type="button"
-                                onClick={() => handleTabClick(tab.key, tab.disabled)}
-                                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === tab.key
-                                    ? 'border-[var(--color-primary)] text-[var(--color-primary)]'
-                                    : tab.disabled
-                                        ? 'border-transparent text-gray-300 cursor-not-allowed'
-                                        : 'border-transparent text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
-                                    }`}
-                            >
-                                <Icon className="w-4 h-4" />
-                                {tab.label}
-                            </button>
-                        );
-                    })}
-                </nav>
+            <div className="flex border-b border-gray-200">
+                {tabs.map((tab) => (
+                    <button
+                        key={tab.key}
+                        onClick={() => !tab.disabled && setActiveTab(tab.key)}
+                        className={cn(
+                            "flex items-center gap-2 px-6 py-3 text-sm font-medium border-b-2 transition-colors",
+                            activeTab === tab.key
+                                ? "border-[var(--color-primary)] text-[var(--color-primary)]"
+                                : "border-transparent text-gray-500 hover:text-gray-700",
+                            tab.disabled && "opacity-50 cursor-not-allowed"
+                        )}
+                        disabled={tab.disabled}
+                    >
+                        <tab.icon className="w-4 h-4" />
+                        {tab.label}
+                    </button>
+                ))}
             </div>
 
-            {/* Personal Data Tab */}
             {activeTab === 'personal' && (
                 <Card>
                     <CardHeader>
                         <CardTitle>Dados Pessoais</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
-                                    CPF <span className="text-red-500">*</span>
-                                </label>
+                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">CPF</label>
                                 <input
                                     type="text"
                                     name="cpf"
                                     value={formData.cpf}
                                     onChange={handleChange}
-                                    onBlur={handleCpfBlur}
                                     placeholder="000.000.000-00"
-                                    disabled={!!employeeId} // Lock CPF after creation usually? Or allow edit?
-                                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] ${errors.cpf ? 'border-red-500' : 'border-gray-200'
-                                        }`}
+                                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] ${errors.cpf ? 'border-red-500' : 'border-gray-200'}`}
                                 />
                                 {errors.cpf && <p className="text-red-500 text-sm mt-1">{errors.cpf}</p>}
                             </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
-                                    Data de Nascimento <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="date"
-                                    name="birthDate"
-                                    value={formData.birthDate}
-                                    onChange={handleChange}
-                                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] ${errors.birthDate ? 'border-red-500' : 'border-gray-200'
-                                        }`}
-                                />
-                                {errors.birthDate && <p className="text-red-500 text-sm mt-1">{errors.birthDate}</p>}
-                            </div>
-
                             <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
-                                    Nome Completo <span className="text-red-500">*</span>
-                                </label>
+                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">Nome Completo</label>
                                 <input
                                     type="text"
                                     name="fullName"
                                     value={formData.fullName}
                                     onChange={handleChange}
-                                    placeholder="Digite o nome completo"
-                                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] ${errors.fullName ? 'border-red-500' : 'border-gray-200'
-                                        }`}
+                                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] ${errors.fullName ? 'border-red-500' : 'border-gray-200'}`}
                                 />
                                 {errors.fullName && <p className="text-red-500 text-sm mt-1">{errors.fullName}</p>}
                             </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
-                                    Data de Admissão <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="date"
-                                    name="admissionDate"
-                                    value={formData.admissionDate}
-                                    onChange={handleChange}
-                                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] ${errors.admissionDate ? 'border-red-500' : 'border-gray-200'
-                                        }`}
-                                />
-                                {errors.admissionDate && <p className="text-red-500 text-sm mt-1">{errors.admissionDate}</p>}
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
-                                    E-mail Corporativo <span className="text-red-500">*</span>
-                                </label>
+                            <div className="md:col-span-3">
+                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">E-mail Corporativo</label>
                                 <input
                                     type="email"
                                     name="email"
                                     value={formData.email}
                                     onChange={handleChange}
-                                    placeholder="colaborador@empresa.com"
-                                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] ${errors.email ? 'border-red-500' : 'border-gray-200'
-                                        }`}
+                                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] ${errors.email ? 'border-red-500' : 'border-gray-200'}`}
                                 />
                                 {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
-                            </div>
-
-                            <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
-                                    Nome Social
-                                </label>
-                                <input
-                                    type="text"
-                                    name="socialName"
-                                    value={formData.socialName}
-                                    onChange={handleChange}
-                                    placeholder="Digite o nome social (se houver)"
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
-                                    Sexo
-                                </label>
-                                <select
-                                    name="gender"
-                                    value={formData.gender}
-                                    onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                                >
-                                    <option value="">Selecione</option>
-                                    <option value="MALE">Masculino</option>
-                                    <option value="FEMALE">Feminino</option>
-                                    <option value="OTHER">Outro</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
-                                    Cor/Raça
-                                </label>
-                                <select
-                                    name="ethnicity"
-                                    value={formData.ethnicity}
-                                    onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                                >
-                                    <option value="">Selecione</option>
-                                    <option value="BRANCO">Branca</option>
-                                    <option value="PARDO">Parda</option>
-                                    <option value="PRETO">Preta</option>
-                                    <option value="AMARELO">Amarela</option>
-                                    <option value="INDIGENA">Indígena</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
-                                    Estado Civil
-                                </label>
-                                <select
-                                    name="maritalStatus"
-                                    value={formData.maritalStatus}
-                                    onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                                >
-                                    <option value="">Selecione</option>
-                                    <option value="SINGLE">Solteiro(a)</option>
-                                    <option value="MARRIED">Casado(a)</option>
-                                    <option value="DIVORCED">Divorciado(a)</option>
-                                    <option value="WIDOWED">Viúvo(a)</option>
-                                    <option value="SEPARATED">Separado(a)</option>
-                                    <option value="STABLE_UNION">União Estável</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
-                                    Nacionalidade
-                                </label>
-                                <input
-                                    type="text"
-                                    name="nationality"
-                                    value={formData.nationality}
-                                    onChange={handleChange}
-                                    placeholder="Brasileira"
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
-                                    Telefone Pessoal
-                                </label>
-                                <input
-                                    type="text"
-                                    name="personalPhone"
-                                    value={formData.personalPhone}
-                                    onChange={handleChange}
-                                    placeholder="(00) 00000-0000"
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
-                                    E-mail Pessoal
-                                </label>
-                                <input
-                                    type="email"
-                                    name="personalEmail"
-                                    value={formData.personalEmail}
-                                    onChange={handleChange}
-                                    placeholder="email@pessoal.com"
-                                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] ${errors.personalEmail ? 'border-red-500' : 'border-gray-200'
-                                        }`}
-                                />
-                                {errors.personalEmail && <p className="text-red-500 text-sm mt-1">{errors.personalEmail}</p>}
                             </div>
                         </div>
 
@@ -850,14 +580,18 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                                             {hasExistingAccess ? <ShieldCheck className="w-5 h-5" /> : <ShieldAlert className="w-5 h-5" />}
                                         </div>
                                         <div>
-                                            <Label htmlFor="platform-access" className="text-sm font-semibold cursor-pointer">
-                                                {hasExistingAccess ? 'Acesso Ativo' : 'Liberar Acesso'}
-                                            </Label>
+                                            <div className="flex items-center gap-2">
+                                                <Label htmlFor="platform-access" className="text-sm font-semibold cursor-pointer">
+                                                    {hasExistingAccess ? 'Acesso Ativo' : 'Liberar Acesso'}
+                                                </Label>
+                                                {hasExistingAccess && (
+                                                    <span className="px-2 py-0.5 text-[10px] bg-[var(--color-primary)]/10 text-[var(--color-primary)] rounded-full font-bold">
+                                                        {formData.platformRoles.join(', ')}
+                                                    </span>
+                                                )}
+                                            </div>
                                             <p className="text-xs text-[var(--color-text-secondary)]">
-                                                {hasExistingAccess
-                                                    ? 'Colaborador já possui acesso ao sistema'
-                                                    : 'Permite que o colaborador use a plataforma'
-                                                }
+                                                {hasExistingAccess ? 'Colaborador já possui acesso' : 'Permite acesso ao sistema'}
                                             </p>
                                         </div>
                                     </div>
@@ -868,485 +602,119 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                                     />
                                 </div>
 
-                                {formData.allowPlatformAccess && !hasExistingAccess && (
-                                    <div className="p-4 border border-gray-100 rounded-xl space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
-                                        <Label className="text-sm font-medium">Definir Senha Inicial</Label>
-                                        <div className="relative">
-                                            <input
-                                                type={showPassword ? 'text' : 'password'}
-                                                value={formData.platformPassword || ''}
-                                                onChange={(e) => setFormData(prev => ({ ...prev, platformPassword: e.target.value }))}
-                                                placeholder="Mínimo 6 caracteres"
-                                                className="w-full px-3 py-2 pr-24 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] text-sm"
-                                            />
-                                            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowPassword(!showPassword)}
-                                                    className="p-1.5 text-gray-400 hover:text-[var(--color-primary)] transition-colors"
-                                                >
-                                                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$";
-                                                        const length = 10;
-                                                        let newPass = "";
-                                                        for (let i = 0; i < length; i++) {
-                                                            newPass += chars.charAt(Math.floor(Math.random() * chars.length));
-                                                        }
-                                                        setFormData(prev => ({ ...prev, platformPassword: newPass }));
-                                                        setShowPassword(true);
-                                                    }}
-                                                    className="p-1.5 text-gray-400 hover:text-[var(--color-primary)] transition-colors"
-                                                    title="Gerar senha segura"
-                                                >
-                                                    <Wand2 className="w-4 h-4" />
-                                                </button>
-                                            </div>
+                                {formData.allowPlatformAccess && (
+                                    <div className="p-4 border border-gray-100 rounded-xl space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium">Perfil de Acesso</Label>
+                                            <select
+                                                value={formData.platformRoles[0] || 'COLABORADOR'}
+                                                onChange={(e) => setFormData(prev => ({ ...prev, platformRoles: [e.target.value] }))}
+                                                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] text-sm"
+                                            >
+                                                <option value="COLABORADOR">Colaborador</option>
+                                                <option value="LIDER">Líder / Gestor Direto</option>
+                                                <option value="GESTOR_RH">Gestor de RH</option>
+                                                <option value="ANALISTA_DP">Analista de DP</option>
+                                                <option value="CONTADOR">Contador</option>
+                                                <option value="ADMIN">Administrador</option>
+                                            </select>
                                         </div>
-                                        <p className="text-[10px] text-gray-400">O acesso será criado usando o e-mail corporativo.</p>
+
+                                        {!hasExistingAccess && (
+                                            <div className="space-y-2">
+                                                <Label className="text-sm font-medium">Senha Inicial</Label>
+                                                <div className="relative">
+                                                    <input
+                                                        type={showPassword ? 'text' : 'password'}
+                                                        value={formData.platformPassword || ''}
+                                                        onChange={(e) => setFormData(prev => ({ ...prev, platformPassword: e.target.value }))}
+                                                        className="w-full px-3 py-2 pr-24 border border-gray-200 rounded-lg focus:outline-none text-sm"
+                                                    />
+                                                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                                                        <button type="button" onClick={() => setShowPassword(!showPassword)}><Eye className="w-4 h-4 text-gray-400" /></button>
+                                                        <button type="button" onClick={() => {
+                                                            const p = Math.random().toString(36).slice(-10);
+                                                            setFormData(i => ({ ...i, platformPassword: p }));
+                                                            setShowPassword(true);
+                                                        }}><Wand2 className="w-4 h-4 text-gray-400" /></button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
 
                                 {hasExistingAccess && !formData.allowPlatformAccess && (
-                                    <div className="p-3 bg-red-50 border border-red-100 rounded-lg animate-in shake-1 duration-300">
-                                        <p className="text-xs text-red-600 flex items-center gap-2">
-                                            <ShieldAlert className="w-4 h-4" />
-                                            Atenção: Ao salvar, o usuário será deletado permanentemente.
-                                        </p>
+                                    <div className="p-3 bg-red-50 border border-red-100 rounded-lg text-xs text-red-600 flex items-center gap-2">
+                                        <ShieldAlert className="w-4 h-4" />
+                                        Acesso será removido ao salvar.
                                     </div>
                                 )}
                             </div>
                         </div>
 
-                        {/* Professional Allocation Section */}
-                        <div className="pt-6 border-t border-gray-100">
-                            <h3 className="text-lg font-semibold text-[var(--color-text)] mb-4 flex items-center gap-2">
-                                <Briefcase className="w-5 h-5 text-[var(--color-primary)]" />
-                                Alocação Profissional
-                            </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
-                                        Departamento
-                                    </label>
-                                    <select
-                                        name="departmentId"
-                                        value={formData.departmentId}
-                                        onChange={handleChange}
-                                        disabled={loadingReferenceData}
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] disabled:bg-gray-100 disabled:cursor-not-allowed"
-                                    >
-                                        <option value="">
-                                            {loadingReferenceData ? 'Carregando...' : departments.length === 0 ? 'Nenhum departamento disponível' : 'Selecione'}
-                                        </option>
-                                        {departments.map((dept) => (
-                                            <option key={dept.id} value={dept.id}>
-                                                {dept.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    {errors.departmentId && <p className="text-red-500 text-sm mt-1">{errors.departmentId}</p>}
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
-                                        Cargo
-                                    </label>
-                                    <select
-                                        name="positionId"
-                                        value={formData.positionId}
-                                        onChange={handleChange}
-                                        disabled={!formData.departmentId}
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] disabled:bg-gray-100 disabled:cursor-not-allowed"
-                                    >
-                                        <option value="">Selecione</option>
-                                        {positions.map((pos) => (
-                                            <option key={pos.id} value={pos.id}>
-                                                {pos.title}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    {errors.positionId && <p className="text-red-500 text-sm mt-1">{errors.positionId}</p>}
-                                </div>
+                        {/* Professional Alocação */}
+                        <div className="pt-6 border-t border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Departamento</label>
+                                <select name="departmentId" value={formData.departmentId} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg">
+                                    <option value="">Selecione</option>
+                                    {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Cargo</label>
+                                <select name="positionId" value={formData.positionId} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg" disabled={!formData.departmentId}>
+                                    <option value="">Selecione</option>
+                                    {positions.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
+                                </select>
                             </div>
                         </div>
                     </CardContent>
                 </Card>
             )}
 
-            {/* Address Tab */}
             {activeTab === 'address' && (
                 <Card>
-                    <CardHeader>
-                        <CardTitle>Endereço</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
+                    <CardHeader><CardTitle>Endereço</CardTitle></CardHeader>
+                    <CardContent>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
-                                    CEP
-                                </label>
-                                <div className="relative">
-                                    <input
-                                        type="text"
-                                        name="address.zipCode"
-                                        value={formData.address?.zipCode || ''}
-                                        onChange={handleChange}
-                                        onBlur={handleCepBlur}
-                                        placeholder="00000-000"
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                                    />
-                                    {loadingCep && (
-                                        <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-[var(--color-primary)]" />
-                                    )}
-                                </div>
+                                <label className="block text-sm font-medium mb-1">CEP</label>
+                                <input type="text" name="address.zipCode" value={formData.address.zipCode} onChange={handleChange} onBlur={handleCepBlur} className="w-full px-3 py-2 border rounded-lg" />
                             </div>
-
                             <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
-                                    Logradouro
-                                </label>
-                                <input
-                                    type="text"
-                                    name="address.street"
-                                    value={formData.address?.street || ''}
-                                    onChange={handleChange}
-                                    placeholder="Rua, Avenida, etc."
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
-                                    Número
-                                </label>
-                                <input
-                                    type="text"
-                                    name="address.number"
-                                    value={formData.address?.number || ''}
-                                    onChange={handleChange}
-                                    placeholder="123"
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                                />
-                            </div>
-
-                            <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
-                                    Complemento
-                                </label>
-                                <input
-                                    type="text"
-                                    name="address.complement"
-                                    value={formData.address?.complement || ''}
-                                    onChange={handleChange}
-                                    placeholder="Apto, Bloco, etc."
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
-                                    Bairro
-                                </label>
-                                <input
-                                    type="text"
-                                    name="address.neighborhood"
-                                    value={formData.address?.neighborhood || ''}
-                                    onChange={handleChange}
-                                    placeholder="Bairro"
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
-                                    Cidade
-                                </label>
-                                <input
-                                    type="text"
-                                    name="address.city"
-                                    value={formData.address?.city || ''}
-                                    onChange={handleChange}
-                                    placeholder="Cidade"
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
-                                    Estado
-                                </label>
-                                <select
-                                    name="address.state"
-                                    value={formData.address?.state || ''}
-                                    onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                                >
-                                    <option value="">Selecione</option>
-                                    <option value="AC">Acre</option>
-                                    <option value="AL">Alagoas</option>
-                                    <option value="AP">Amapá</option>
-                                    <option value="AM">Amazonas</option>
-                                    <option value="BA">Bahia</option>
-                                    <option value="CE">Ceará</option>
-                                    <option value="DF">Distrito Federal</option>
-                                    <option value="ES">Espírito Santo</option>
-                                    <option value="GO">Goiás</option>
-                                    <option value="MA">Maranhão</option>
-                                    <option value="MT">Mato Grosso</option>
-                                    <option value="MS">Mato Grosso do Sul</option>
-                                    <option value="MG">Minas Gerais</option>
-                                    <option value="PA">Pará</option>
-                                    <option value="PB">Paraíba</option>
-                                    <option value="PR">Paraná</option>
-                                    <option value="PE">Pernambuco</option>
-                                    <option value="PI">Piauí</option>
-                                    <option value="RJ">Rio de Janeiro</option>
-                                    <option value="RN">Rio Grande do Norte</option>
-                                    <option value="RS">Rio Grande do Sul</option>
-                                    <option value="RO">Rondônia</option>
-                                    <option value="RR">Roraima</option>
-                                    <option value="SC">Santa Catarina</option>
-                                    <option value="SP">São Paulo</option>
-                                    <option value="SE">Sergipe</option>
-                                    <option value="TO">Tocantins</option>
-                                </select>
+                                <label className="block text-sm font-medium mb-1">Rua</label>
+                                <input type="text" name="address.street" value={formData.address.street} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg" />
                             </div>
                         </div>
                     </CardContent>
                 </Card>
             )}
 
-            {/* Professional Data Tab */}
             {activeTab === 'professional' && (
                 <Card>
-                    <CardHeader>
-                        <CardTitle>Dados Profissionais</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
+                    <CardHeader><CardTitle>Dados Profissionais</CardTitle></CardHeader>
+                    <CardContent>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-
                             <div>
-                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
-                                    Tipo de Contrato
-                                </label>
-                                <select
-                                    name="employmentType"
-                                    value={formData.employmentType}
-                                    onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                                >
-                                    <option value="CLT">CLT</option>
-                                    <option value="PJ">PJ</option>
-                                    <option value="ESTAGIARIO">Estagiário</option>
-                                    <option value="APRENDIZ">Jovem Aprendiz</option>
-                                    <option value="TEMPORARIO">Temporário</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
-                                    Centro de Custo
-                                </label>
-                                <select
-                                    name="costCenterId"
-                                    value={formData.costCenterId}
-                                    onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                                >
-                                    <option value="">Selecione</option>
-                                    {costCenters.map((cc) => (
-                                        <option key={cc.id} value={cc.id}>
-                                            {cc.code} - {cc.name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-
-                            <div>
-                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
-                                    Carga Horária Semanal
-                                </label>
-                                <input
-                                    type="number"
-                                    name="workHoursPerWeek"
-                                    value={formData.workHoursPerWeek || ''}
-                                    onChange={handleChange}
-                                    placeholder="44"
-                                    min="1"
-                                    max="44"
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
-                                    Salário
-                                </label>
-                                <input
-                                    type="number"
-                                    name="salary"
-                                    value={formData.salary || ''}
-                                    onChange={handleChange}
-                                    placeholder="0,00"
-                                    step="0.01"
-                                    min="0"
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                                />
-                            </div>
-
-
-
-                            <div>
-                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
-                                    Telefone Corporativo
-                                </label>
-                                <input
-                                    type="text"
-                                    name="phone"
-                                    value={formData.phone}
-                                    onChange={handleChange}
-                                    placeholder="(00) 00000-0000"
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
-                                    Gestor Direto
-                                </label>
-                                <select
-                                    name="managerId"
-                                    value={formData.managerId}
-                                    onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                                >
-                                    <option value="">Selecione um gestor</option>
-                                    {managers.map((manager) => (
-                                        <option key={manager.id} value={manager.id}>
-                                            {manager.fullName} {manager.positionName ? `- ${manager.positionName}` : ''}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div className="md:col-span-2 pt-4 border-t border-gray-100">
-                                <h4 className="text-sm font-semibold text-[var(--color-text)] mb-3">Regime de Trabalho</h4>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
-                                            Regime
-                                        </label>
-                                        <select
-                                            name="workRegime"
-                                            value={formData.workRegime}
-                                            onChange={handleChange}
-                                            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                                        >
-                                            <option value="PRESENCIAL">Presencial</option>
-                                            <option value="REMOTO">Home Office (Remoto)</option>
-                                            <option value="HIBRIDO">Híbrido</option>
-                                        </select>
-                                    </div>
-
-                                    {formData.workRegime === 'HIBRIDO' && (
-                                        <div>
-                                            <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
-                                                Frequência Semanal (vezes)
-                                            </label>
-                                            <input
-                                                type="number"
-                                                name="hybridFrequency"
-                                                value={formData.hybridFrequency || ''}
-                                                onChange={handleChange}
-                                                placeholder="Ex: 3"
-                                                min="1"
-                                                max="6"
-                                                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                                            />
-                                        </div>
-                                    )}
-                                </div>
-
-                                {formData.workRegime === 'HIBRIDO' && (
-                                    <div className="mt-4">
-                                        <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
-                                            Dias Presenciais
-                                        </label>
-                                        <div className="flex flex-wrap gap-2">
-                                            {['SEGUNDA', 'TERCA', 'QUARTA', 'QUINTA', 'SEXTA', 'SABADO'].map((day) => {
-                                                const label = day.charAt(0) + day.slice(1).toLowerCase().replace('terca', 'terça');
-                                                const isSelected = formData.hybridWorkDays.includes(day);
-                                                return (
-                                                    <button
-                                                        key={day}
-                                                        type="button"
-                                                        onClick={() => {
-                                                            const newDays = isSelected
-                                                                ? formData.hybridWorkDays.filter(d => d !== day)
-                                                                : [...formData.hybridWorkDays, day];
-                                                            setFormData(prev => ({ ...prev, hybridWorkDays: newDays }));
-                                                        }}
-                                                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${isSelected
-                                                            ? 'bg-[var(--color-primary)] text-white'
-                                                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                                            }`}
-                                                    >
-                                                        {label}
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                )}
+                                <label className="block text-sm font-medium mb-1">Salário</label>
+                                <input type="number" name="salary" value={formData.salary} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg" />
                             </div>
                         </div>
                     </CardContent>
                 </Card>
             )}
 
-            {/* Documents Tab */}
-            {activeTab === 'documents' && employeeId && (
-                <DocumentsTab employeeId={employeeId} />
-            )}
+            {activeTab === 'documents' && <DocumentsTab employeeId={employeeId!} />}
+            {activeTab === 'dependents' && <DependentsTab employeeId={employeeId!} />}
 
-            {/* Dependents Tab */}
-            {activeTab === 'dependents' && employeeId && (
-                <DependentsTab employeeId={employeeId} />
-            )}
-
-            {/* Action Buttons - Only for main form tabs */}
             {!['documents', 'dependents'].includes(activeTab) && (
                 <div className="flex justify-end gap-4">
-                    <button
-                        type="button"
-                        onClick={() => router.push('/employees')}
-                        className="px-6 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                        Cancelar
-                    </button>
-                    <button
-                        type="button"
-                        onClick={handleSubmit}
-                        disabled={loading}
-                        className="flex items-center gap-2 px-6 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
-                    >
-                        {loading ? (
-                            <>
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                                Salvando...
-                            </>
-                        ) : (
-                            <>
-                                <Save className="w-4 h-4" />
-                                Salvar
-                            </>
-                        )}
+                    <button type="button" onClick={() => router.push('/employees')} className="px-6 py-2 border rounded-lg">Cancelar</button>
+                    <button type="button" onClick={handleSubmit} disabled={loading} className="px-6 py-2 bg-[var(--color-primary)] text-white rounded-lg flex items-center gap-2">
+                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                        {loading ? 'Salvando...' : 'Salvar'}
                     </button>
                 </div>
             )}
