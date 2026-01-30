@@ -58,7 +58,7 @@ public class EmployeeService {
     @Transactional(readOnly = true)
     public Page<EmployeeResponse> findWithFilters(String search, EmployeeStatus status, UUID departmentId, UUID positionId, Pageable pageable) {
         UUID tenantId = getTenantId();
-        log.debug("Filtrando colaboradores - tenant: {}, search: {}, status: {}", tenantId, search, status);
+        log.info(">>> [DEBUG-TRACE] EmployeeService.findWithFilters - Search: {}, Status: {}, Dept: {}, Pos: {}", search, status, departmentId, positionId);
 
         org.springframework.data.jpa.domain.Specification<Employee> spec = (root, query, cb) -> {
             java.util.List<jakarta.persistence.criteria.Predicate> predicates = new java.util.ArrayList<>();
@@ -67,6 +67,9 @@ public class EmployeeService {
 
             if (status != null) {
                 predicates.add(cb.equal(root.get("status"), status));
+            } else {
+                // Por padrao, mostra apenas profissionais ativos no sistema
+                predicates.add(cb.equal(root.get("isActive"), true));
             }
 
             if (departmentId != null) {
@@ -237,7 +240,14 @@ public class EmployeeService {
         }
 
         // Atualiza campos
+        log.info(">>> [DEBUG-CRITICAL] Update request hireDate: {}", request.getHireDate());
         employeeMapper.updateEntity(employee, request);
+        
+        // Explicitamente seta a data de admissao se presente no request
+        if (request.getHireDate() != null) {
+            employee.setHireDate(request.getHireDate());
+        }
+        
         employee.setCpf(newCpf);
         employee.setUpdatedBy(userId);
 
@@ -435,6 +445,7 @@ public class EmployeeService {
         values.put("positionId", employee.getPosition() != null ? employee.getPosition().getId() : null);
         values.put("baseSalary", employee.getBaseSalary());
         values.put("status", employee.getStatus());
+        values.put("hireDate", employee.getHireDate());
         return values;
     }
 
