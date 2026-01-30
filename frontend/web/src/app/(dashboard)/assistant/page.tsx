@@ -117,7 +117,7 @@ function RecentConversations({ onSelectConversation, activeConversationId }: Rec
     try {
       setIsLoading(true);
       const response = await chatApi.listConversations(0, 20); // Fetches more to fill the list
-      setConversations(response.data.content || []);
+      setConversations((response as any).content || []);
       setError(null);
     } catch (err) {
       console.error('Erro ao carregar conversas:', err);
