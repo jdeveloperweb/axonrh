@@ -17,6 +17,7 @@ import {
   ArrowRight,
   Calendar,
   Star,
+  BrainCircuit,
 } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -454,6 +455,20 @@ export default function PerformanceDashboard() {
               </CardTitle>
               <CardDescription>
                 Dar e receber feedback
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </Link>
+
+        <Link href="/performance/disc">
+          <Card className="cursor-pointer hover:bg-muted/50 transition-colors">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <BrainCircuit className="h-5 w-5" />
+                Perfil DISC
+              </CardTitle>
+              <CardDescription>
+                Analise Comportamental
               </CardDescription>
             </CardHeader>
           </Card>

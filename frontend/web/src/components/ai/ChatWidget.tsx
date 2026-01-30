@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { chatApi, ChatMessage, ConversationContext, Conversation } from '@/lib/api/ai';
 import { ChatIcons } from './ChatIcons';
+import { ActionConfirmation } from './ActionConfirmation';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -385,7 +386,17 @@ export default function ChatWidget({
         )}
 
         {messages.map((message) => (
-          <MessageBubble key={message.id} message={message} />
+          <MessageBubble
+            key={message.id}
+            message={message}
+            onActionConfirm={() => submitMessage("Sim, pode confirmar.")}
+            onActionCancel={() => setMessages(prev => [...prev, {
+              id: Date.now().toString(),
+              role: 'assistant',
+              content: 'Entendido. A ação foi cancelada.',
+              timestamp: new Date().toISOString()
+            }])}
+          />
         ))}
 
         {isLoading && !isStreaming && (
@@ -470,9 +481,18 @@ export default function ChatWidget({
   );
 }
 
-function MessageBubble({ message }: { message: ChatMessage }) {
+function MessageBubble({
+  message,
+  onActionConfirm,
+  onActionCancel
+}: {
+  message: ChatMessage;
+  onActionConfirm: () => void;
+  onActionCancel: () => void;
+}) {
   const isUser = message.role === 'user';
   const isError = message.type === 'ERROR';
+  const isActionConfirmation = message.type === 'ACTION_CONFIRMATION';
 
   return (
     <div className={cn(
@@ -499,9 +519,17 @@ function MessageBubble({ message }: { message: ChatMessage }) {
               ? 'bg-primary text-primary-foreground rounded-tr-none'
               : isError
                 ? 'bg-red-50 text-red-800 border border-red-100 rounded-tl-none'
-                : 'bg-white border border-gray-100 text-gray-800 rounded-tl-none'
+                : isActionConfirmation
+                  ? 'bg-primary-50/50 border border-primary-100 rounded-tl-none !p-0 overflow-hidden'
+                  : 'bg-white border border-gray-100 text-gray-800 rounded-tl-none'
           )}>
-            {message.type === 'CALCULATION' || message.type === 'QUERY_RESULT' || !isUser ? (
+            {isActionConfirmation ? (
+              <ActionConfirmation
+                content={message.content}
+                onConfirm={onActionConfirm}
+                onCancel={onActionCancel}
+              />
+            ) : message.type === 'CALCULATION' || message.type === 'QUERY_RESULT' || !isUser ? (
               <div className="prose prose-sm max-w-none prose-slate">
                 <MarkdownContent content={message.content} />
               </div>

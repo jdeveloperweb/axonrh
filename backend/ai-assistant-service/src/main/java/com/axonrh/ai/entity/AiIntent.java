@@ -80,6 +80,7 @@ public class AiIntent {
         KNOWLEDGE_SEARCH,
         API_CALL,
         WORKFLOW_TRIGGER,
-        INFORMATION
+        INFORMATION,
+        ACTION_CONFIRMATION
     }
 }

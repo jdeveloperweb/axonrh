@@ -91,7 +91,8 @@ public class Conversation {
             QUERY_RESULT,
             CALCULATION,
             ERROR,
-            SUGGESTION
+            SUGGESTION,
+            ACTION_CONFIRMATION
         }
     }
 

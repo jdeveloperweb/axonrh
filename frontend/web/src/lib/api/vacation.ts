@@ -126,6 +126,13 @@ export const vacationApi = {
     });
   },
 
+  /**
+   * Notify expiration
+   */
+  notifyExpiration: async (periodId: string): Promise<void> => {
+    return api.post<unknown, void>(`/vacation-service/api/v1/vacations/periods/${periodId}/notify`, {});
+  },
+
   // ==================== Requests ====================
 
   /**

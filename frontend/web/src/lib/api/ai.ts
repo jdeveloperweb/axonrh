@@ -7,7 +7,7 @@ export interface ChatMessage {
   id: string;
   role: 'system' | 'user' | 'assistant' | 'tool';
   content: string;
-  type?: 'TEXT' | 'QUERY_RESULT' | 'CALCULATION' | 'ERROR' | 'SUGGESTION';
+  type?: 'TEXT' | 'QUERY_RESULT' | 'CALCULATION' | 'ERROR' | 'SUGGESTION' | 'ACTION_CONFIRMATION';
   metadata?: Record<string, unknown>;
   timestamp: string;
 }
@@ -49,6 +49,7 @@ export interface ChatResponse {
   id: string;
   content: string;
   role: 'assistant';
+  type?: 'TEXT' | 'QUERY_RESULT' | 'CALCULATION' | 'ERROR' | 'SUGGESTION' | 'ACTION_CONFIRMATION';
   provider?: string;
   model?: string;
   finishReason?: string;

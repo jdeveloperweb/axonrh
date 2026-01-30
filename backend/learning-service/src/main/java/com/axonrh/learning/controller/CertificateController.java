@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/certificates")
+@RequestMapping("/api/v1/learning/certificates")
 public class CertificateController {
 
     private final CertificateService certificateService;

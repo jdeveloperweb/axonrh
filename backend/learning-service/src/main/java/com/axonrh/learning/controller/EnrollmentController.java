@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/enrollments")
+@RequestMapping("/api/v1/learning/enrollments")
 public class EnrollmentController {
 
     private final EnrollmentService enrollmentService;

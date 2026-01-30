@@ -53,12 +53,21 @@ export default function VacationAdminPage() {
         loadData();
     }, [loadData]);
 
-    const handleNotify = (period: VacationPeriod) => {
-        // Mock notification
-        toast({
-            title: 'Notificação Enviada',
-            description: `Lembrete enviado para ${period.employeeName || 'o colaborador'}.`,
-        });
+    const handleNotify = async (period: VacationPeriod) => {
+        try {
+            await vacationApi.notifyExpiration(period.id);
+            toast({
+                title: 'Notificação Enviada',
+                description: `Lembrete enviado para ${period.employeeName || 'o colaborador'}.`,
+            });
+        } catch (error) {
+            console.error('Error sending notification:', error);
+            toast({
+                title: 'Erro',
+                description: 'Falha ao enviar notificação.',
+                variant: 'destructive',
+            });
+        }
     };
 
     const filteredPeriods = expiringPeriods.filter(p =>

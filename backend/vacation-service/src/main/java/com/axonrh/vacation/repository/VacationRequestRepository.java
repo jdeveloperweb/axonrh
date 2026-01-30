@@ -20,6 +20,13 @@ public interface VacationRequestRepository extends JpaRepository<VacationRequest
             Pageable pageable
     );
 
+    Page<VacationRequest> findByTenantIdAndStatusAndEmployeeIdInOrderByCreatedAtAsc(
+            UUID tenantId,
+            VacationRequestStatus status,
+            List<UUID> employeeIds,
+            Pageable pageable
+    );
+
     List<VacationRequest> findByTenantIdAndEmployeeIdOrderByCreatedAtDesc(
             UUID tenantId,
             UUID employeeId

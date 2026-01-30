@@ -23,16 +23,19 @@ import java.util.UUID;
 @Transactional
 public class EnrollmentService {
 
-    private final EnrollmentRepository enrollmentRepository;
-    private final CourseRepository courseRepository;
-    private final CertificateService certificateService;
+    private final PathEnrollmentRepository pathEnrollmentRepository;
+    private final LearningPathRepository learningPathRepository;
 
     public EnrollmentService(EnrollmentRepository enrollmentRepository,
                             CourseRepository courseRepository,
-                            CertificateService certificateService) {
+                            CertificateService certificateService,
+                            PathEnrollmentRepository pathEnrollmentRepository,
+                            LearningPathRepository learningPathRepository) {
         this.enrollmentRepository = enrollmentRepository;
         this.courseRepository = courseRepository;
         this.certificateService = certificateService;
+        this.pathEnrollmentRepository = pathEnrollmentRepository;
+        this.learningPathRepository = learningPathRepository;
     }
 
     // ==================== Enrollment ====================
@@ -161,6 +164,38 @@ public class EnrollmentService {
         Enrollment enrollment = get(tenantId, enrollmentId);
         enrollment.issueCertificate(certificateId);
         return enrollmentRepository.save(enrollment);
+    }
+
+    // ==================== Learning Paths ====================
+
+    public PathEnrollment enrollInPath(UUID tenantId, UUID pathId, UUID employeeId, String employeeName) {
+        // Implementation for path enrollment
+        com.axonrh.learning.entity.LearningPath path = learningPathRepository.findById(pathId)
+                .filter(p -> p.getTenantId().equals(tenantId))
+                .orElseThrow(() -> new EntityNotFoundException("Trilha de aprendizagem nao encontrada"));
+
+        com.axonrh.learning.entity.PathEnrollment pathEnrollment = new com.axonrh.learning.entity.PathEnrollment();
+        pathEnrollment.setTenantId(tenantId);
+        pathEnrollment.setPathId(pathId);
+        pathEnrollment.setEmployeeId(employeeId);
+        pathEnrollment.setEmployeeName(employeeName);
+        pathEnrollment.setEnrolledAt(java.time.LocalDateTime.now());
+        pathEnrollment.setStatus(EnrollmentStatus.ENROLLED);
+
+        // Enroll in all required courses of the path
+        path.getCourses().forEach(pc -> {
+            try {
+                enroll(tenantId, pc.getCourseId(), employeeId, employeeName, null);
+            } catch (Exception e) {
+                // Ignore if already enrolled
+            }
+        });
+
+        return pathEnrollmentRepository.save(pathEnrollment);
+    }
+
+    public List<com.axonrh.learning.entity.PathEnrollment> getPathEnrollmentsByEmployee(UUID tenantId, UUID employeeId) {
+        return pathEnrollmentRepository.findByTenantIdAndEmployeeId(tenantId, employeeId);
     }
 
     // ==================== Statistics ====================

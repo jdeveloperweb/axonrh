@@ -257,6 +257,20 @@ public class GeofenceService {
                 .build();
     }
 
+    /**
+     * Lista geofences permitidas para o colaborador.
+     */
+    @Transactional(readOnly = true)
+    public List<GeofenceResponse> getMyGeofences(UUID employeeId) {
+        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+
+        return geofenceRepository.findByTenantIdAndActiveTrue(tenantId)
+                .stream()
+                .filter(geofence -> isEmployeeAllowed(geofence, employeeId))
+                .map(this::toResponse)
+                .toList();
+    }
+
     private String buildFullAddress(Geofence geofence) {
         StringBuilder sb = new StringBuilder();
         if (geofence.getAddress() != null) sb.append(geofence.getAddress());

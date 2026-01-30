@@ -18,7 +18,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/learning/dashboard")
+@RequestMapping("/api/v1/learning/dashboard")
 @RequiredArgsConstructor
 @Slf4j
 public class LearningDashboardController {

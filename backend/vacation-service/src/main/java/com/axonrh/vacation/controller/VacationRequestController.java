@@ -52,11 +52,11 @@ public class VacationRequestController {
     // --- Manager / Approver Endpoints ---
 
     @GetMapping("/pending")
-    public ResponseEntity<Page<VacationRequestResponse>> getPendingRequests(Pageable pageable) {
-        // In a real scenario, we might want to filter by manager here, 
-        // but for now we return all pending requests for the tenant
-        // and let the frontend filter or the manager see all if allowed.
-        return ResponseEntity.ok(service.getPendingRequests(pageable));
+    public ResponseEntity<Page<VacationRequestResponse>> getPendingRequests(
+            Pageable pageable,
+            @AuthenticationPrincipal Jwt jwt) {
+        UUID managerId = getUserId(jwt);
+        return ResponseEntity.ok(service.getPendingRequestsForManager(managerId, pageable));
     }
 
     @PutMapping("/{id}/approve")

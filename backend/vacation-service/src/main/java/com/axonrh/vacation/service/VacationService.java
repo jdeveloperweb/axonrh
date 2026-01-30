@@ -20,6 +20,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import com.axonrh.vacation.client.EmployeeServiceClient;
+import com.axonrh.vacation.dto.EmployeeDTO;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -41,18 +43,21 @@ public class VacationService {
     private final VacationCalculationService calculationService;
     private final VacationDocumentService documentService;
     private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final EmployeeServiceClient employeeServiceClient;
 
     public VacationService(
             VacationPeriodRepository periodRepository,
             VacationRequestRepository requestRepository,
             VacationCalculationService calculationService,
             VacationDocumentService documentService,
-            @Qualifier("vacationKafkaTemplate") KafkaTemplate<String, Object> kafkaTemplate) {
+            @Qualifier("vacationKafkaTemplate") KafkaTemplate<String, Object> kafkaTemplate,
+            EmployeeServiceClient employeeServiceClient) {
         this.periodRepository = periodRepository;
         this.requestRepository = requestRepository;
         this.calculationService = calculationService;
         this.documentService = documentService;
         this.kafkaTemplate = kafkaTemplate;
+        this.employeeServiceClient = employeeServiceClient;
     }
 
     @Value("${vacation.min-advance-days:30}")
@@ -191,7 +196,30 @@ public class VacationService {
         // Atualizar status do periodo
         updatePeriodStatus(period);
 
-        publishEvent("VACATION_REQUESTED", saved);
+        // Buscar gestor para notificacao
+        UUID managerId = null;
+        UUID managerUserId = null;
+        try {
+            EmployeeDTO employee = employeeServiceClient.getEmployee(employeeId);
+            if (employee != null && employee.getManager() != null) {
+                managerId = employee.getManager().getId();
+                // Tenta pegar userId do objeto aninhado ou busca o manager
+                if (employee.getManager().getUserId() != null) {
+                    managerUserId = employee.getManager().getUserId();
+                } else {
+                    try {
+                        EmployeeDTO manager = employeeServiceClient.getEmployee(managerId);
+                        managerUserId = manager.getUserId();
+                    } catch (Exception ex) {
+                        log.warn("Nao foi possivel buscar detalhes do gestor {}", managerId);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("Erro ao buscar gestor do colaborador {}", employeeId, e);
+        }
+
+        publishEvent("VACATION_REQUESTED", saved, managerId, managerUserId);
 
         log.info("Solicitacao de ferias criada - colaborador: {}, periodo: {} a {}",
                 employeeId, dto.getStartDate(), dto.getEndDate());
@@ -240,7 +268,7 @@ public class VacationService {
         // Atualizar status do periodo
         updatePeriodStatus(period);
 
-        publishEvent("VACATION_APPROVED", saved);
+        publishEvent("VACATION_APPROVED", saved, null, null);
 
         log.info("Ferias aprovadas - solicitacao: {}, aprovador: {}", requestId, approverId);
 
@@ -269,7 +297,7 @@ public class VacationService {
 
         VacationRequest saved = requestRepository.save(request);
 
-        publishEvent("VACATION_REJECTED", saved);
+        publishEvent("VACATION_REJECTED", saved, null, null);
 
         log.info("Ferias rejeitadas - solicitacao: {}, motivo: {}", requestId, reason);
 
@@ -323,6 +351,37 @@ public class VacationService {
 
         return requestRepository
                 .findByTenantIdAndStatusOrderByCreatedAtAsc(tenantId, VacationRequestStatus.PENDING, pageable)
+                .map(this::toRequestResponse);
+    }
+
+    /**
+     * Lista solicitacoes pendentes de subordinados (T162).
+     */
+    @Transactional(readOnly = true)
+    public Page<VacationRequestResponse> getPendingRequestsForManager(UUID managerId, Pageable pageable) {
+        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        
+        List<UUID> subordinateIds = new ArrayList<>();
+        try {
+            List<EmployeeDTO> subordinates = employeeServiceClient.getSubordinates(managerId);
+            if (subordinates != null) {
+                subordinateIds = subordinates.stream()
+                        .map(EmployeeDTO::getId)
+                        .toList();
+            }
+        } catch (Exception e) {
+            log.error("Erro ao buscar subordinados do gestor {}", managerId, e);
+            // Em caso de erro, retorna vazio ou comportamento fallback
+            return Page.empty();
+        }
+
+        if (subordinateIds.isEmpty()) {
+            return Page.empty();
+        }
+
+        return requestRepository
+                .findByTenantIdAndStatusAndEmployeeIdInOrderByCreatedAtAsc(
+                        tenantId, VacationRequestStatus.PENDING, subordinateIds, pageable)
                 .map(this::toRequestResponse);
     }
 
@@ -597,7 +656,50 @@ public class VacationService {
         };
     }
 
-    private void publishEvent(String eventType, VacationRequest request) {
+    /**
+     * Envia notificacao de vencimento de periodo.
+     */
+    @Transactional
+    public void sendPeriodExpirationNotification(UUID periodId) {
+        VacationPeriod period = periodRepository.findById(periodId)
+                .orElseThrow(() -> new ResourceNotFoundException("Periodo nao encontrado"));
+
+        UUID managerId = null;
+        UUID managerUserId = null;
+        UUID employeeUserId = null;
+        
+        try {
+            EmployeeDTO employee = employeeServiceClient.getEmployee(period.getEmployeeId());
+            if (employee != null) {
+                employeeUserId = employee.getUserId();
+                if (employee.getManager() != null) {
+                    managerId = employee.getManager().getId();
+                    if (employee.getManager().getUserId() != null) {
+                        managerUserId = employee.getManager().getUserId();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("Erro ao buscar dados do colaborador para notificacao", e);
+        }
+
+        Map<String, Object> event = new HashMap<>();
+        event.put("eventType", "VACATION_EXPIRATION_WARNING");
+        event.put("tenantId", period.getTenantId().toString());
+        event.put("employeeId", period.getEmployeeId().toString());
+        event.put("periodId", period.getId().toString());
+        event.put("concessionEndDate", period.getConcessionEndDate().toString());
+        event.put("timestamp", LocalDateTime.now().toString());
+        if (employeeUserId != null) event.put("requesterUserId", employeeUserId.toString());
+        if (managerId != null) event.put("managerId", managerId.toString());
+        if (managerUserId != null) event.put("managerUserId", managerUserId.toString());
+
+        kafkaTemplate.send("vacation.domain.events", period.getEmployeeId().toString(), event);
+        
+        log.info("Notificacao de vencimento enviada - periodo: {}", periodId);
+    }
+
+    private void publishEvent(String eventType, VacationRequest request, UUID managerId, UUID managerUserId) {
         Map<String, Object> event = new HashMap<>();
         event.put("eventType", eventType);
         event.put("tenantId", request.getTenantId().toString());
@@ -607,6 +709,13 @@ public class VacationService {
         event.put("startDate", request.getStartDate().toString());
         event.put("endDate", request.getEndDate().toString());
         event.put("timestamp", LocalDateTime.now().toString());
+        event.put("requesterUserId", request.getCreatedBy().toString());
+        if (managerId != null) {
+            event.put("managerId", managerId.toString());
+        }
+        if (managerUserId != null) {
+            event.put("managerUserId", managerUserId.toString());
+        }
 
         kafkaTemplate.send("vacation.domain.events", request.getEmployeeId().toString(), event);
     }

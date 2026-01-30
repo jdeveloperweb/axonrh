@@ -220,6 +220,29 @@ export interface PDIStatistics {
   averageProgress: number;
 }
 
+export interface DiscEvaluation {
+  id: string;
+  employeeId: string;
+  dScore: number;
+  iScore: number;
+  sScore: number;
+  cScore: number;
+  primaryProfile: string;
+  secondaryProfile?: string;
+  profileDescription?: string;
+  completedAt: string;
+}
+
+export interface DiscQuestion {
+  id: number;
+  text: string;
+  options: {
+    id: string;
+    text: string;
+    value: 'D' | 'I' | 'S' | 'C';
+  }[];
+}
+
 // ==================== Cycles API ====================
 
 export const cyclesApi = {
@@ -420,3 +443,17 @@ export const pdisApi = {
   getManagerStatistics: (managerId: string) =>
     api.get<PDIStatistics, PDIStatistics>(`/pdis/manager/${managerId}/statistics`),
 };
+
+// ==================== DISC API ====================
+
+export const discApi = {
+  getLatest: (employeeId: string) =>
+    api.get<DiscEvaluation, DiscEvaluation>(`/performance/disc/employee/${employeeId}/latest`),
+
+  submit: (answers: Record<string, string>) =>
+    api.post<DiscEvaluation, DiscEvaluation>('/performance/disc', { answers }),
+
+  getQuestions: () =>
+    api.get<DiscQuestion[]>('/performance/disc/questions'),
+};
+

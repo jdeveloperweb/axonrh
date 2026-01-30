@@ -28,8 +28,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { timesheetApi, TimeRecord, TimeRecordRequest } from '@/lib/api/timesheet';
+import { timesheetApi, TimeRecord, TimeRecordRequest, Geofence } from '@/lib/api/timesheet';
 import { formatTime } from '@/lib/utils';
+import dynamic from 'next/dynamic';
+
+const GeofenceMap = dynamic(() => import('@/components/timesheet/GeofenceMap'), {
+  ssr: false,
+  loading: () => <div className="h-[350px] w-full bg-muted animate-pulse rounded-lg flex items-center justify-center text-muted-foreground">Carregando mapa...</div>
+});
 
 type RecordType = 'ENTRY' | 'EXIT' | 'BREAK_START' | 'BREAK_END';
 
@@ -45,6 +51,7 @@ export default function TimeRecordPage() {
   const router = useRouter();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [todayRecords, setTodayRecords] = useState<TimeRecord[]>([]);
+  const [geofences, setGeofences] = useState<Geofence[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [selectedType, setSelectedType] = useState<RecordType | null>(null);
@@ -107,12 +114,15 @@ export default function TimeRecordPage() {
     }
   }, []);
 
-  // Load today's records
   const loadTodayRecords = useCallback(async () => {
     try {
       setLoading(true);
-      const records = await timesheetApi.getTodayRecords();
+      const [records, myGeofences] = await Promise.all([
+        timesheetApi.getTodayRecords(),
+        timesheetApi.getMyAllowedGeofences()
+      ]);
       setTodayRecords(records);
+      setGeofences(myGeofences);
     } catch (error) {
       console.error('Erro ao carregar registros:', error);
     } finally {
@@ -293,6 +303,43 @@ export default function TimeRecordPage() {
                   </span>
                 </>
               )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Map Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MapPin className="h-5 w-5" />
+            Mapa de Cercas Digitais
+          </CardTitle>
+          <CardDescription>
+            Verifique se você está dentro da área permitida para registro.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <GeofenceMap
+            userLocation={{
+              latitude: location.latitude,
+              longitude: location.longitude
+            }}
+            geofences={geofences}
+            height="350px"
+          />
+          <div className="mt-4 flex gap-4 text-sm">
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded-full bg-green-500/20 border border-green-500"></div>
+              <span>Dentro da Cerca</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded-full bg-red-500/20 border border-red-500"></div>
+              <span>Fora da Cerca</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <MapPin className="h-3 w-3 text-blue-500" />
+              <span>Sua Posição</span>
             </div>
           </div>
         </CardContent>

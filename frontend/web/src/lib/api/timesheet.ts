@@ -470,6 +470,13 @@ export const timesheetApi = {
   },
 
   /**
+   * Get my allowed geofences
+   */
+  getMyAllowedGeofences: async (): Promise<Geofence[]> => {
+    return api.get<Geofence[], Geofence[]>('/timesheet/geofences/my-allowed');
+  },
+
+  /**
    * Create geofence
    */
   createGeofence: async (data: GeofenceRequest): Promise<Geofence> => {

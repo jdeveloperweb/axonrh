@@ -16,6 +16,7 @@ public class ChatResponse {
     private String id;
     private String content;
     private ChatMessage.Role role;
+    private String type;
     private String provider;
     private String model;
     private String finishReason;

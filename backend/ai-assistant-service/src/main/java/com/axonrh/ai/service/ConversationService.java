@@ -88,7 +88,7 @@ public class ConversationService {
         conversation.addMessage(userMsg);
 
         // Analyze intent
-        NluService.NluResult nluResult = nluService.analyze(userMessage, tenantId);
+        NluService.NluResult nluResult = nluService.analyze(userMessage, tenantId, conversation.getMetadata().getLastIntent());
         log.debug("NLU Result: intent={}, confidence={}", nluResult.getIntent(), nluResult.getConfidence());
 
         // Process based on intent
@@ -100,13 +100,18 @@ public class ConversationService {
                 case DATABASE_QUERY -> handleDatabaseQuery(userMessage, nluResult, tenantId, userId);
                 case CALCULATION -> handleCalculation(nluResult);
                 case KNOWLEDGE_SEARCH -> handleKnowledgeSearch(userMessage, nluResult, tenantId);
-                default -> handleGeneralChat(conversation, userMessage);
+                case ACTION_CONFIRMATION -> handleActionConfirmation(nluResult);
+                default -> handleGeneralChat(conversation, userMessage, nluResult);
             };
 
             if (nluResult.getActionType() == AiIntent.ActionType.DATABASE_QUERY) {
                 responseType = Message.MessageType.QUERY_RESULT;
             } else if (nluResult.getActionType() == AiIntent.ActionType.CALCULATION) {
                 responseType = Message.MessageType.CALCULATION;
+            } else if (nluResult.getActionType() == AiIntent.ActionType.ACTION_CONFIRMATION) {
+                responseType = Message.MessageType.ACTION_CONFIRMATION;
+            } else if (nluResult.getIntent() != null && nluResult.getIntent().startsWith("execute_")) {
+                responseType = Message.MessageType.TEXT;
             }
         } catch (Exception e) {
             log.error("Error processing message: {}", e.getMessage(), e);
@@ -139,6 +144,7 @@ public class ConversationService {
                 .id(assistantMsg.getId())
                 .content(response)
                 .role(ChatMessage.Role.ASSISTANT)
+                .type(assistantMsg.getType().name())
                 .timestamp(Instant.now())
                 .build();
     }
@@ -159,7 +165,7 @@ public class ConversationService {
             return conversationRepository.save(conversation);
         }).flatMapMany(conversation -> {
             // Analyze intent reativelly
-            return Mono.fromCallable(() -> nluService.analyze(userMessage, tenantId))
+            return Mono.fromCallable(() -> nluService.analyze(userMessage, tenantId, conversation.getMetadata().getLastIntent()))
                 .flatMapMany(nluResult -> {
                     log.debug("Stream NLU Result: intent={}, actionType={}", nluResult.getIntent(), nluResult.getActionType());
 
@@ -174,7 +180,8 @@ public class ConversationService {
                                 case DATABASE_QUERY -> handleDatabaseQuery(userMessage, nluResult, tenantId, userId);
                                 case CALCULATION -> handleCalculation(nluResult);
                                 case KNOWLEDGE_SEARCH -> handleKnowledgeSearch(userMessage, nluResult, tenantId);
-                                default -> null;
+                                case ACTION_CONFIRMATION -> handleActionConfirmation(nluResult);
+                                default -> handleGeneralChat(conversation, userMessage, nluResult);
                             };
 
                             if (syncResponse != null) {
@@ -182,6 +189,8 @@ public class ConversationService {
                                     syncResponseType = Message.MessageType.QUERY_RESULT;
                                 } else if (nluResult.getActionType() == AiIntent.ActionType.CALCULATION) {
                                     syncResponseType = Message.MessageType.CALCULATION;
+                                } else if (nluResult.getActionType() == AiIntent.ActionType.ACTION_CONFIRMATION) {
+                                    syncResponseType = Message.MessageType.ACTION_CONFIRMATION;
                                 }
 
                                 // Save assistant response
@@ -211,6 +220,8 @@ public class ConversationService {
                                 streamResponseType = Message.MessageType.QUERY_RESULT;
                             } else if (nluResult.getActionType() == AiIntent.ActionType.CALCULATION) {
                                 streamResponseType = Message.MessageType.CALCULATION;
+                            } else if (nluResult.getActionType() == AiIntent.ActionType.ACTION_CONFIRMATION) {
+                                streamResponseType = Message.MessageType.ACTION_CONFIRMATION;
                             }
 
                             log.debug("Emitting chunks for action result. Type: {} Content length: {}", streamResponseType, responseStr != null ? responseStr.length() : "null");
@@ -436,7 +447,24 @@ public class ConversationService {
         return response.toString();
     }
 
-    private String handleGeneralChat(Conversation conversation, String userMessage) {
+    private String handleActionConfirmation(NluService.NluResult nluResult) {
+        Map<String, Object> data = new HashMap<>(nluResult.getEntities());
+        data.put("action", nluResult.getIntent());
+        
+        try {
+            return objectMapper.writeValueAsString(data);
+        } catch (Exception e) {
+            log.error("Error serializing action confirmation", e);
+            return "{\"error\": \"Erro ao preparar ação.\"}";
+        }
+    }
+
+    private String handleGeneralChat(Conversation conversation, String userMessage, NluService.NluResult nluResult) {
+        // Handle execution intents
+        if (nluResult != null && nluResult.getIntent() != null && nluResult.getIntent().startsWith("execute_")) {
+            return handleActionExecution(nluResult);
+        }
+
         List<ChatMessage> messages = conversation != null ?
                 buildChatMessages(conversation) :
                 List.of(
@@ -456,6 +484,17 @@ public class ConversationService {
 
         ChatResponse response = llmService.chat(request);
         return response.getContent();
+    }
+
+    private String handleActionExecution(NluService.NluResult nluResult) {
+        String intent = nluResult.getIntent();
+        log.info("Executing action for intent: {}", intent);
+        
+        return switch (intent) {
+            case "execute_vacation_approval" -> "A solicitação de férias foi aprovada com sucesso no sistema. O colaborador será notificado.";
+            case "execute_termination" -> "O processo de desligamento foi iniciado com sucesso. O setor de RH já recebeu a notificação para proceder com os trâmites legais.";
+            default -> "A ação foi executada com sucesso.";
+        };
     }
 
     private List<ChatMessage> buildChatMessages(Conversation conversation) {

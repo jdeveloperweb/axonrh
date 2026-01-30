@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Edit, MoreHorizontal, User, MapPin, Briefcase, FileText, Users, History, Mail, Phone, Calendar, Building2, Camera, Download, DollarSign, Plus, UserX } from 'lucide-react';
+import { ArrowLeft, Edit, MoreHorizontal, User, MapPin, Briefcase, FileText, Users, History, Mail, Phone, Calendar, Building2, Camera, Download, DollarSign, Plus, UserX, Copy, ExternalLink } from 'lucide-react';
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ImageCropDialog } from '@/components/ui/image-crop-dialog';
@@ -422,33 +422,13 @@ export default function EmployeeDetailPage() {
             </CardContent>
           </Card>
 
-          {/* Address */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MapPin className="w-5 h-5" />
-                Endereço
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+          {/* Address - Creative Redesign */}
+          <Card className="col-span-1 lg:col-span-1 overflow-hidden border-none shadow-lg relative group h-[320px] w-full transition-all duration-300 hover:shadow-xl">
+            <CardContent className="p-0 h-full w-full relative">
               {employee.address ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <p className="font-medium text-[var(--color-text)]">
-                      {employee.address.street}, {employee.address.number}
-                      {employee.address.complement && ` - ${employee.address.complement}`}
-                    </p>
-                    <p className="text-[var(--color-text-secondary)]">
-                      {employee.address.neighborhood}
-                    </p>
-                    <p className="text-[var(--color-text-secondary)]">
-                      {employee.address.city} - {employee.address.state}
-                    </p>
-                    <p className="text-[var(--color-text-secondary)]">
-                      CEP: {employee.address.zipCode}
-                    </p>
-                  </div>
-                  <div className="h-[200px] w-full rounded-lg overflow-hidden border border-gray-100 bg-gray-50">
+                <>
+                  {/* Map Background */}
+                  <div className="absolute inset-0 z-0">
                     <iframe
                       width="100%"
                       height="100%"
@@ -460,12 +440,73 @@ export default function EmployeeDetailPage() {
                         `${employee.address.street}, ${employee.address.number}, ${employee.address.city} - ${employee.address.state}`
                       )}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
                       title="Localização"
-                      className="w-full h-full opacity-90 hover:opacity-100 transition-opacity"
+                      className="w-full h-full filter grayscale-[20%] group-hover:grayscale-0 transition-all duration-700 scale-100 group-hover:scale-110"
                     />
                   </div>
-                </div>
+
+                  {/* Overlay Gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none z-10 transition-opacity duration-300 group-hover:opacity-70" />
+
+                  {/* Floating Info Card */}
+                  <div className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-md rounded-xl p-4 shadow-lg border border-white/40 z-20 transform transition-all duration-300 translate-y-2 group-hover:translate-y-0">
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <MapPin className="w-3.5 h-3.5 text-[var(--color-primary)]" />
+                          <span className="text-xs font-bold text-[var(--color-primary)] uppercase tracking-wider">Localização</span>
+                        </div>
+
+                        <h4 className="font-bold text-gray-900 text-base leading-tight">
+                          {employee.address.street}, {employee.address.number}
+                        </h4>
+                        <p className="text-sm text-gray-600 font-medium">
+                          {employee.address.neighborhood}
+                          {employee.address.complement && <span className="text-gray-400 font-normal"> • {employee.address.complement}</span>}
+                        </p>
+                        <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold mt-1">
+                          {employee.address.city} - {employee.address.state}
+                        </p>
+                        <div className="inline-flex items-center gap-1.5 mt-2 px-2 py-1 bg-gray-100/80 rounded-md text-xs font-mono text-gray-600">
+                          <span>CEP: {employee.address.zipCode}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-2 shrink-0">
+                        <button
+                          onClick={() => {
+                            if (!employee.address) return;
+                            const fullAddress = `${employee.address.street}, ${employee.address.number} - ${employee.address.neighborhood}, ${employee.address.city} - ${employee.address.state}, ${employee.address.zipCode}`;
+                            navigator.clipboard.writeText(fullAddress);
+                            toast({
+                              title: "Endereço copiado",
+                              description: "Endereço copiado para a área de transferência",
+                            });
+                          }}
+                          className="p-2 rounded-full bg-white shadow-sm hover:bg-gray-50 text-gray-600 transition-colors border border-gray-100"
+                          title="Copiar Endereço"
+                        >
+                          <Copy className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (!employee.address) return;
+                            const query = encodeURIComponent(`${employee.address.street}, ${employee.address.number}, ${employee.address.city} - ${employee.address.state}`);
+                            window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
+                          }}
+                          className="p-2 rounded-full bg-[var(--color-primary)] shadow-sm hover:opacity-90 text-white transition-opacity border border-transparent"
+                          title="Abrir no Google Maps"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </>
               ) : (
-                <p className="text-[var(--color-text-secondary)]">Endereço não cadastrado</p>
+                <div className="flex flex-col items-center justify-center h-full bg-gray-50 text-gray-400">
+                  <MapPin className="w-12 h-12 mb-2 opacity-20" />
+                  <p>Endereço não cadastrado</p>
+                </div>
               )}
             </CardContent>
           </Card>

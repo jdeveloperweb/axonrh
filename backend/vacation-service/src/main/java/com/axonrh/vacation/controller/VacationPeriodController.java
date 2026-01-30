@@ -43,6 +43,12 @@ public class VacationPeriodController {
         return ResponseEntity.ok(service.simulate(request));
     }
 
+    @PostMapping("/{id}/notify")
+    public ResponseEntity<Void> notifyExpiration(@PathVariable UUID id) {
+        service.sendPeriodExpirationNotification(id);
+        return ResponseEntity.ok().build();
+    }
+
     // --- Helpers ---
 
     private UUID getUserId(Jwt jwt) {

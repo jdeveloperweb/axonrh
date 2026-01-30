@@ -49,7 +49,21 @@ public class NluService {
         }
         """;
 
-    public NluResult analyze(String userMessage, UUID tenantId) {
+    public NluResult analyze(String userMessage, UUID tenantId, String lastIntent) {
+        // Check for confirmation of previous action
+        if (lastIntent != null && lastIntent.startsWith("propose_")) {
+             String normalized = userMessage.toLowerCase().trim();
+             if (containsAny(normalized, "sim", "confirmar", "aprovar", "pode ser", "ok", "confirmo")) {
+                 String action = lastIntent.replace("propose_", "execute_");
+                 return NluResult.builder()
+                    .intent(action)
+                    .confidence(0.99)
+                    .entities(Map.of())
+                    .actionType(AiIntent.ActionType.INFORMATION) // We will handle execution in ConversationService and return info
+                    .build();
+             }
+        }
+
         // First, try rule-based matching for common patterns
         NluResult ruleBasedResult = ruleBasedAnalysis(userMessage);
         if (ruleBasedResult != null && ruleBasedResult.getConfidence() > 0.85) {
@@ -245,7 +259,43 @@ public class NluService {
                     .build();
         }
 
+        // Vacation Approval Action
+        if (containsAny(normalizedMessage, "aprovar férias", "autorizar férias", "confirmar férias")) {
+            Map<String, Object> entities = extractActionEntities(message);
+            return NluResult.builder()
+                    .intent("propose_vacation_approval")
+                    .confidence(0.95)
+                    .entities(entities)
+                    .actionType(AiIntent.ActionType.ACTION_CONFIRMATION)
+                    .build();
+        }
+
+        // Termination Action
+        if (containsAny(normalizedMessage, "demitir", "desligar funcionário", "iniciar desligamento", "terminar contrato")) {
+            Map<String, Object> entities = extractActionEntities(message);
+            return NluResult.builder()
+                    .intent("propose_termination")
+                    .confidence(0.95)
+                    .entities(entities)
+                    .actionType(AiIntent.ActionType.ACTION_CONFIRMATION)
+                    .build();
+        }
+
         return null;
+    }
+
+    private Map<String, Object> extractActionEntities(String message) {
+        Map<String, Object> entities = new HashMap<>();
+        
+        // Simple name extraction heuristic: words after "de", "do", "da", "o", "a"
+        // This is a naive implementation, ideally we would use NER or look up against employee DB
+        Pattern namePattern = Pattern.compile("(?:de|do|da|o|a)\\s+([A-Z][a-z]+(?:\\s+[A-Z][a-z]+)*)", Pattern.DOTALL);
+        Matcher matcher = namePattern.matcher(message);
+        if (matcher.find()) {
+            entities.put("employeeName", matcher.group(1));
+        }
+
+        return entities;
     }
 
     private NluResult llmBasedAnalysis(String message, UUID tenantId) {

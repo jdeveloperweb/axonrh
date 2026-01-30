@@ -79,6 +79,15 @@ public class GeofenceController {
         return ResponseEntity.ok(geofences);
     }
 
+    @GetMapping("/my-allowed")
+    @Operation(summary = "Minhas geofences", description = "Lista geofences permitidas para o usuario logado")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET_RECORD', 'ADMIN')")
+    public ResponseEntity<List<GeofenceResponse>> getMyGeofences(@AuthenticationPrincipal Jwt jwt) {
+        UUID userId = UUID.fromString(jwt.getSubject()); // In this context, userId is the employeeId
+        List<GeofenceResponse> geofences = geofenceService.getMyGeofences(userId);
+        return ResponseEntity.ok(geofences);
+    }
+
     @DeleteMapping("/{id}")
     @Operation(summary = "Desativar geofence", description = "Desativa uma cerca geografica")
     @PreAuthorize("hasAnyAuthority('TIMESHEET_ADMIN', 'ADMIN')")
