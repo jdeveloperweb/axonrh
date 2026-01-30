@@ -17,7 +17,7 @@ public class LearningPathCourse {
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "learning_path_id", nullable = false)
+    @JoinColumn(name = "path_id", nullable = false)
     private LearningPath learningPath;
 
     @Column(name = "course_id", nullable = false)

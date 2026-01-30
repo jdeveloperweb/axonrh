@@ -37,8 +37,8 @@ public class LearningPath {
     @Column(name = "thumbnail_url")
     private String thumbnailUrl;
 
-    @Column(name = "duration_minutes")
-    private Integer durationMinutes;
+    @Column(name = "duration_hours")
+    private Integer durationHours;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
