@@ -3,11 +3,15 @@ package com.axonrh.learning.service;
 import com.axonrh.learning.entity.Certificate;
 import com.axonrh.learning.entity.Course;
 import com.axonrh.learning.entity.Enrollment;
+import com.axonrh.learning.entity.LearningPath;
 import com.axonrh.learning.entity.Lesson;
 import com.axonrh.learning.entity.LessonProgress;
+import com.axonrh.learning.entity.PathEnrollment;
 import com.axonrh.learning.entity.enums.EnrollmentStatus;
 import com.axonrh.learning.repository.EnrollmentRepository;
 import com.axonrh.learning.repository.CourseRepository;
+import com.axonrh.learning.repository.LearningPathRepository;
+import com.axonrh.learning.repository.PathEnrollmentRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,6 +27,9 @@ import java.util.UUID;
 @Transactional
 public class EnrollmentService {
 
+    private final EnrollmentRepository enrollmentRepository;
+    private final CourseRepository courseRepository;
+    private final CertificateService certificateService;
     private final PathEnrollmentRepository pathEnrollmentRepository;
     private final LearningPathRepository learningPathRepository;
 
@@ -170,11 +177,11 @@ public class EnrollmentService {
 
     public PathEnrollment enrollInPath(UUID tenantId, UUID pathId, UUID employeeId, String employeeName) {
         // Implementation for path enrollment
-        com.axonrh.learning.entity.LearningPath path = learningPathRepository.findById(pathId)
+        LearningPath path = learningPathRepository.findById(pathId)
                 .filter(p -> p.getTenantId().equals(tenantId))
                 .orElseThrow(() -> new EntityNotFoundException("Trilha de aprendizagem nao encontrada"));
 
-        com.axonrh.learning.entity.PathEnrollment pathEnrollment = new com.axonrh.learning.entity.PathEnrollment();
+        PathEnrollment pathEnrollment = new PathEnrollment();
         pathEnrollment.setTenantId(tenantId);
         pathEnrollment.setPathId(pathId);
         pathEnrollment.setEmployeeId(employeeId);
@@ -194,7 +201,7 @@ public class EnrollmentService {
         return pathEnrollmentRepository.save(pathEnrollment);
     }
 
-    public List<com.axonrh.learning.entity.PathEnrollment> getPathEnrollmentsByEmployee(UUID tenantId, UUID employeeId) {
+    public List<PathEnrollment> getPathEnrollmentsByEmployee(UUID tenantId, UUID employeeId) {
         return pathEnrollmentRepository.findByTenantIdAndEmployeeId(tenantId, employeeId);
     }
 
