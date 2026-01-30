@@ -13,14 +13,18 @@ import {
     Key,
     Wand2,
     Eye,
-    EyeOff
+    EyeOff,
+    ShieldCheck,
+    ShieldAlert
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { employeesApi, EmployeeCreateRequest, Department, Position, CostCenter } from '@/lib/api/employees';
 import { managersApi, ManagerDTO } from '@/lib/api/managers';
 import { userApi } from '@/lib/api/users';
 import { useToast } from '@/hooks/use-toast';
-import { isValidCpf, isValidEmail } from '@/lib/utils';
+import { cn, isValidCpf, isValidEmail } from '@/lib/utils';
 import { DocumentsTab } from './DocumentsTab';
 import { DependentsTab } from './DependentsTab';
 
@@ -125,6 +129,9 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
     });
 
     const [showPassword, setShowPassword] = useState(false);
+    const [hasExistingAccess, setHasExistingAccess] = useState(false);
+    const [existingUserId, setExistingUserId] = useState<string | null>(null);
+    const [checkingAccess, setCheckingAccess] = useState(false);
 
     const [errors, setErrors] = useState<FormErrors>({});
     const [loading, setLoading] = useState(false);
@@ -168,6 +175,34 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
         };
         loadData();
     }, []);
+
+    // Check if user has platform access based on email
+    useEffect(() => {
+        const checkAccess = async () => {
+            if (formData.email && isValidEmail(formData.email)) {
+                try {
+                    setCheckingAccess(true);
+                    const users = await userApi.list();
+                    const existingUser = users.find(u => u.email.toLowerCase() === formData.email.toLowerCase());
+
+                    if (existingUser) {
+                        setHasExistingAccess(true);
+                        setExistingUserId(existingUser.id || null);
+                        setFormData(prev => ({ ...prev, allowPlatformAccess: true }));
+                    } else {
+                        setHasExistingAccess(false);
+                        setExistingUserId(null);
+                        // If it's a new collaborator, we keep allowPlatformAccess as whatever it was
+                    }
+                } catch (error) {
+                    console.error('Erro ao verificar acesso:', error);
+                } finally {
+                    setCheckingAccess(false);
+                }
+            }
+        };
+        checkAccess();
+    }, [formData.email, isEditing]);
 
     // Load initial data when editing
     useEffect(() => {
@@ -431,8 +466,8 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                 setActiveTab('address');
                 window.history.replaceState(null, '', `/employees/${employee.id}/edit`);
 
-                // Se houver solicitação de acesso à plataforma, cria o usuário
-                if (formData.allowPlatformAccess && formData.platformPassword) {
+                // 1. Criar novo acesso (não tinha e agora tem)
+                if (formData.allowPlatformAccess && !hasExistingAccess && formData.platformPassword) {
                     try {
                         await userApi.create({
                             name: formData.fullName,
@@ -441,6 +476,7 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                             status: 'ACTIVE',
                             roles: ['COLABORADOR']
                         });
+                        setHasExistingAccess(true);
                         toast({
                             title: 'Acesso Criado',
                             description: 'O usuário de acesso à plataforma foi criado com sucesso.',
@@ -449,7 +485,26 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                         console.error('Erro ao criar usuário:', userError);
                         toast({
                             title: 'Erro no Acesso',
-                            description: 'O colaborador foi salvo, mas houve um erro ao criar o acesso à plataforma.',
+                            description: 'O colaborador foi salvo, mas houve um erro ao criar o acesso.',
+                            variant: 'destructive',
+                        });
+                    }
+                }
+                // 2. Remover acesso existente (tinha e agora desmarcou)
+                else if (!formData.allowPlatformAccess && hasExistingAccess && existingUserId) {
+                    try {
+                        await userApi.delete(existingUserId);
+                        setHasExistingAccess(false);
+                        setExistingUserId(null);
+                        toast({
+                            title: 'Acesso Removido',
+                            description: 'O acesso do colaborador à plataforma foi removido.',
+                        });
+                    } catch (userError) {
+                        console.error('Erro ao remover usuário:', userError);
+                        toast({
+                            title: 'Erro ao remover acesso',
+                            description: 'O colaborador foi salvo, mas não foi possível remover o acesso.',
                             variant: 'destructive',
                         });
                     }
@@ -457,6 +512,33 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
             } else {
                 // UPDATE
                 await employeesApi.update(employeeId, submitData);
+
+                // Mesmo raciocínio para UPDATE
+                if (formData.allowPlatformAccess && !hasExistingAccess && formData.platformPassword) {
+                    try {
+                        await userApi.create({
+                            name: formData.fullName,
+                            email: formData.email,
+                            password: formData.platformPassword,
+                            status: 'ACTIVE',
+                            roles: ['COLABORADOR']
+                        });
+                        setHasExistingAccess(true);
+                        toast({ title: 'Acesso Criado', description: 'O usuário de acesso foi criado.' });
+                    } catch (e) {
+                        toast({ title: 'Erro', description: 'Não foi possível criar o acesso.', variant: 'destructive' });
+                    }
+                } else if (!formData.allowPlatformAccess && hasExistingAccess && existingUserId) {
+                    try {
+                        await userApi.delete(existingUserId);
+                        setHasExistingAccess(false);
+                        setExistingUserId(null);
+                        toast({ title: 'Acesso Removido', description: 'O acesso foi removido.' });
+                    } catch (e) {
+                        toast({ title: 'Erro', description: 'Não foi possível remover o acesso.', variant: 'destructive' });
+                    }
+                }
+
                 toast({
                     title: 'Sucesso',
                     description: 'Dados atualizados com sucesso',
@@ -736,72 +818,105 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                         </div>
 
                         {/* Platform Access Section */}
-                        {!isEditing && (
-                            <div className="pt-6 border-t border-gray-100">
-                                <h3 className="text-lg font-semibold text-[var(--color-text)] mb-4 flex items-center gap-2">
+                        <div className="pt-6 border-t border-gray-100">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-semibold text-[var(--color-text)] flex items-center gap-2">
                                     <Key className="w-5 h-5 text-[var(--color-primary)]" />
                                     Acesso à Plataforma
                                 </h3>
-                                <div className="space-y-4 max-w-md">
-                                    <label className="flex items-center gap-3 p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            checked={formData.allowPlatformAccess}
-                                            onChange={(e) => setFormData(prev => ({ ...prev, allowPlatformAccess: e.target.checked }))}
-                                            className="w-4 h-4 rounded border-gray-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-                                        />
-                                        <div className="flex-1">
-                                            <p className="text-sm font-medium text-[var(--color-text)]">Liberar acesso ao sistema</p>
-                                            <p className="text-xs text-[var(--color-text-secondary)]">Cria automaticamente um usuário com o perfil de colaborador</p>
-                                        </div>
-                                    </label>
+                                {checkingAccess && (
+                                    <div className="flex items-center gap-2 text-xs text-gray-400">
+                                        <Loader2 className="w-3 h-3 animate-spin" />
+                                        Verificando...
+                                    </div>
+                                )}
+                            </div>
 
-                                    {formData.allowPlatformAccess && (
-                                        <div className="animate-in slide-in-from-top-2 duration-200">
-                                            <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
-                                                Senha Inicial
-                                            </label>
-                                            <div className="relative">
-                                                <input
-                                                    type={showPassword ? 'text' : 'password'}
-                                                    value={formData.platformPassword || ''}
-                                                    onChange={(e) => setFormData(prev => ({ ...prev, platformPassword: e.target.value }))}
-                                                    placeholder="Defina a senha do colaborador"
-                                                    className="w-full px-3 py-2 pr-24 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                                                />
-                                                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setShowPassword(!showPassword)}
-                                                        className="p-1.5 text-gray-400 hover:text-[var(--color-primary)] transition-colors"
-                                                        title={showPassword ? "Ocultar senha" : "Ver senha"}
-                                                    >
-                                                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
-                                                            const length = 10;
-                                                            let newPass = "";
-                                                            for (let i = 0; i < length; i++) {
-                                                                newPass += chars.charAt(Math.floor(Math.random() * chars.length));
-                                                            }
-                                                            setFormData(prev => ({ ...prev, platformPassword: newPass }));
-                                                            setShowPassword(true);
-                                                        }}
-                                                        className="p-1.5 text-gray-400 hover:text-[var(--color-primary)] transition-colors"
-                                                        title="Gerar senha aleatória"
-                                                    >
-                                                        <Wand2 className="w-4 h-4" />
-                                                    </button>
-                                                </div>
+                            <div className="space-y-4 max-w-md">
+                                <div className={cn(
+                                    "flex items-center justify-between p-4 border rounded-xl transition-all duration-300",
+                                    formData.allowPlatformAccess
+                                        ? "border-[var(--color-primary)] bg-[var(--color-primary)]/5 shadow-sm"
+                                        : "border-gray-100 bg-gray-50/50"
+                                )}>
+                                    <div className="flex items-center gap-3">
+                                        <div className={cn(
+                                            "p-2 rounded-lg",
+                                            formData.allowPlatformAccess ? "bg-[var(--color-primary)] text-white" : "bg-gray-100 text-gray-400"
+                                        )}>
+                                            {hasExistingAccess ? <ShieldCheck className="w-5 h-5" /> : <ShieldAlert className="w-5 h-5" />}
+                                        </div>
+                                        <div>
+                                            <Label htmlFor="platform-access" className="text-sm font-semibold cursor-pointer">
+                                                {hasExistingAccess ? 'Acesso Ativo' : 'Liberar Acesso'}
+                                            </Label>
+                                            <p className="text-xs text-[var(--color-text-secondary)]">
+                                                {hasExistingAccess
+                                                    ? 'Colaborador já possui acesso ao sistema'
+                                                    : 'Permite que o colaborador use a plataforma'
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <Switch
+                                        id="platform-access"
+                                        checked={formData.allowPlatformAccess}
+                                        onCheckedChange={(checked) => setFormData(prev => ({ ...prev, allowPlatformAccess: checked }))}
+                                    />
+                                </div>
+
+                                {formData.allowPlatformAccess && !hasExistingAccess && (
+                                    <div className="p-4 border border-gray-100 rounded-xl space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                                        <Label className="text-sm font-medium">Definir Senha Inicial</Label>
+                                        <div className="relative">
+                                            <input
+                                                type={showPassword ? 'text' : 'password'}
+                                                value={formData.platformPassword || ''}
+                                                onChange={(e) => setFormData(prev => ({ ...prev, platformPassword: e.target.value }))}
+                                                placeholder="Mínimo 6 caracteres"
+                                                className="w-full px-3 py-2 pr-24 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] text-sm"
+                                            />
+                                            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                    className="p-1.5 text-gray-400 hover:text-[var(--color-primary)] transition-colors"
+                                                >
+                                                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$";
+                                                        const length = 10;
+                                                        let newPass = "";
+                                                        for (let i = 0; i < length; i++) {
+                                                            newPass += chars.charAt(Math.floor(Math.random() * chars.length));
+                                                        }
+                                                        setFormData(prev => ({ ...prev, platformPassword: newPass }));
+                                                        setShowPassword(true);
+                                                    }}
+                                                    className="p-1.5 text-gray-400 hover:text-[var(--color-primary)] transition-colors"
+                                                    title="Gerar senha segura"
+                                                >
+                                                    <Wand2 className="w-4 h-4" />
+                                                </button>
                                             </div>
                                         </div>
-                                    )}
-                                </div>
+                                        <p className="text-[10px] text-gray-400">O acesso será criado usando o e-mail corporativo.</p>
+                                    </div>
+                                )}
+
+                                {hasExistingAccess && !formData.allowPlatformAccess && (
+                                    <div className="p-3 bg-red-50 border border-red-100 rounded-lg animate-in shake-1 duration-300">
+                                        <p className="text-xs text-red-600 flex items-center gap-2">
+                                            <ShieldAlert className="w-4 h-4" />
+                                            Atenção: Ao salvar, o usuário será deletado permanentemente.
+                                        </p>
+                                    </div>
+                                )}
                             </div>
-                        )}
+                        </div>
 
                         {/* Professional Allocation Section */}
                         <div className="pt-6 border-t border-gray-100">
