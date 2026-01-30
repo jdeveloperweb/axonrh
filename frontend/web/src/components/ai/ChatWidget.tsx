@@ -54,9 +54,9 @@ export default function ChatWidget({
   const loadConversation = useCallback(async (id: string) => {
     try {
       setIsLoading(true);
-      const response = await chatApi.getConversation(id);
-      if (response && response.data && response.data.messages) {
-        setMessages(response.data.messages.filter((m: ChatMessage) => m.role !== 'system'));
+      const response = await chatApi.getConversation(id) as any;
+      if (response && response.messages) {
+        setMessages(response.messages.filter((m: ChatMessage) => m.role !== 'system'));
       }
     } catch (error) {
       console.error('Failed to load conversation:', error);
@@ -77,13 +77,13 @@ export default function ChatWidget({
     // Se não houver conversa ativa, criar uma
     if (!currentConvId) {
       try {
-        const convResponse = await chatApi.createConversation(context);
-        if (convResponse.data && convResponse.data.id) {
-          currentConvId = convResponse.data.id;
+        const convResponse = await chatApi.createConversation(context) as any;
+        if (convResponse && convResponse.id) {
+          currentConvId = convResponse.id;
           setConversationId(currentConvId);
           // Notify parent about new conversation
           if (onConversationCreated) {
-            onConversationCreated(currentConvId);
+            onConversationCreated(currentConvId as string);
           }
         }
       } catch (error) {
