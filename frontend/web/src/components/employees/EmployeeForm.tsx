@@ -537,7 +537,59 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                                 />
                                 {errors.fullName && <p className="text-red-500 text-sm mt-1">{errors.fullName}</p>}
                             </div>
-                            <div className="md:col-span-3">
+                            <div className="md:col-span-2">
+                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">Nome Social</label>
+                                <input
+                                    type="text"
+                                    name="socialName"
+                                    value={formData.socialName}
+                                    onChange={handleChange}
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">Data de Nascimento</label>
+                                <input
+                                    type="date"
+                                    name="birthDate"
+                                    value={formData.birthDate}
+                                    onChange={handleChange}
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">Gênero</label>
+                                <select name="gender" value={formData.gender} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg">
+                                    <option value="">Selecione</option>
+                                    <option value="MALE">Masculino</option>
+                                    <option value="FEMALE">Feminino</option>
+                                    <option value="OTHER">Outro</option>
+                                    <option value="PREFER_NOT_TO_SAY">Prefiro não dizer</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">Raça/Etnia</label>
+                                <select name="ethnicity" value={formData.ethnicity} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg">
+                                    <option value="">Selecione</option>
+                                    <option value="BRANCO">Branca</option>
+                                    <option value="PRETO">Preta</option>
+                                    <option value="PARDO">Parda</option>
+                                    <option value="AMARELO">Amarela</option>
+                                    <option value="INDIGENA">Indígena</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">Estado Civil</label>
+                                <select name="maritalStatus" value={formData.maritalStatus} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg">
+                                    <option value="">Selecione</option>
+                                    <option value="SINGLE">Solteiro(a)</option>
+                                    <option value="MARRIED">Casado(a)</option>
+                                    <option value="DIVORCED">Divorciado(a)</option>
+                                    <option value="WIDOWED">Viúvo(a)</option>
+                                    <option value="STABLE_UNION">União Estável</option>
+                                </select>
+                            </div>
+                            <div>
                                 <label className="block text-sm font-medium text-[var(--color-text)] mb-1">E-mail Corporativo</label>
                                 <input
                                     type="email"
@@ -547,6 +599,46 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                                     className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] ${errors.email ? 'border-red-500' : 'border-gray-200'}`}
                                 />
                                 {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">E-mail Pessoal</label>
+                                <input
+                                    type="email"
+                                    name="personalEmail"
+                                    value={formData.personalEmail}
+                                    onChange={handleChange}
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">Telefone</label>
+                                <input
+                                    type="text"
+                                    name="phone"
+                                    value={formData.phone}
+                                    onChange={handleChange}
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">Celular/Pessoal</label>
+                                <input
+                                    type="text"
+                                    name="personalPhone"
+                                    value={formData.personalPhone}
+                                    onChange={handleChange}
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">Nacionalidade</label>
+                                <input
+                                    type="text"
+                                    name="nationality"
+                                    value={formData.nationality}
+                                    onChange={handleChange}
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                                />
                             </div>
                         </div>
 
@@ -652,24 +744,6 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                                 )}
                             </div>
                         </div>
-
-                        {/* Professional Alocação */}
-                        <div className="pt-6 border-t border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Departamento</label>
-                                <select name="departmentId" value={formData.departmentId} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg">
-                                    <option value="">Selecione</option>
-                                    {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Cargo</label>
-                                <select name="positionId" value={formData.positionId} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg" disabled={!formData.departmentId}>
-                                    <option value="">Selecione</option>
-                                    {positions.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
-                                </select>
-                            </div>
-                        </div>
                     </CardContent>
                 </Card>
             )}
@@ -677,15 +751,35 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
             {activeTab === 'address' && (
                 <Card>
                     <CardHeader><CardTitle>Endereço</CardTitle></CardHeader>
-                    <CardContent>
+                    <CardContent className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label className="block text-sm font-medium mb-1">CEP</label>
-                                <input type="text" name="address.zipCode" value={formData.address.zipCode} onChange={handleChange} onBlur={handleCepBlur} className="w-full px-3 py-2 border rounded-lg" />
+                                <input type="text" name="address.zipCode" value={formData.address.zipCode} onChange={handleChange} onBlur={handleCepBlur} className="w-full px-3 py-2 border border-gray-200 rounded-lg" />
                             </div>
                             <div className="md:col-span-2">
-                                <label className="block text-sm font-medium mb-1">Rua</label>
-                                <input type="text" name="address.street" value={formData.address.street} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg" />
+                                <label className="block text-sm font-medium mb-1">Rua/Logradouro</label>
+                                <input type="text" name="address.street" value={formData.address.street} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Número</label>
+                                <input type="text" name="address.number" value={formData.address.number} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg" />
+                            </div>
+                            <div className="md:col-span-2">
+                                <label className="block text-sm font-medium mb-1">Complemento</label>
+                                <input type="text" name="address.complement" value={formData.address.complement} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Bairro</label>
+                                <input type="text" name="address.neighborhood" value={formData.address.neighborhood} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Cidade</label>
+                                <input type="text" name="address.city" value={formData.address.city} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Estado (UF)</label>
+                                <input type="text" name="address.state" value={formData.address.state} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg" />
                             </div>
                         </div>
                     </CardContent>
@@ -695,13 +789,94 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
             {activeTab === 'professional' && (
                 <Card>
                     <CardHeader><CardTitle>Dados Profissionais</CardTitle></CardHeader>
-                    <CardContent>
+                    <CardContent className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium mb-1">Salário</label>
-                                <input type="number" name="salary" value={formData.salary} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg" />
+                                <label className="block text-sm font-medium mb-1">Data de Admissão</label>
+                                <input type="date" name="admissionDate" value={formData.admissionDate} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Tipo de Contratação</label>
+                                <select name="employmentType" value={formData.employmentType} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg">
+                                    <option value="CLT">CLT</option>
+                                    <option value="PJ">PJ (Prestador de Serviço)</option>
+                                    <option value="INTERN">Estagiário</option>
+                                    <option value="APPRENTICE">Aprendiz</option>
+                                    <option value="TEMPORARY">Temporário</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Departamento</label>
+                                <select name="departmentId" value={formData.departmentId} onChange={handleChange} className={`w-full px-3 py-2 border rounded-lg ${errors.departmentId ? 'border-red-500' : 'border-gray-200'}`}>
+                                    <option value="">Selecione</option>
+                                    {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Cargo</label>
+                                <select name="positionId" value={formData.positionId} onChange={handleChange} className={`w-full px-3 py-2 border rounded-lg ${errors.positionId ? 'border-red-500' : 'border-gray-200'}`} disabled={!formData.departmentId}>
+                                    <option value="">Selecione</option>
+                                    {positions.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Centro de Custo</label>
+                                <select name="costCenterId" value={formData.costCenterId} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg">
+                                    <option value="">Selecione</option>
+                                    {costCenters.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Gestor Direto</label>
+                                <select name="managerId" value={formData.managerId} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg">
+                                    <option value="">Selecione</option>
+                                    {managers.map(m => <option key={m.id} value={m.id}>{m.fullName}</option>)}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Salário Base</label>
+                                <input type="number" name="salary" value={formData.salary} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Carga Horária Semanal</label>
+                                <input type="number" name="workHoursPerWeek" value={formData.workHoursPerWeek} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Regime de Trabalho</label>
+                                <select name="workRegime" value={formData.workRegime} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg">
+                                    <option value="PRESENCIAL">Presencial</option>
+                                    <option value="REMOTE">Home Office (Total)</option>
+                                    <option value="HYBRID">Híbrido</option>
+                                </select>
                             </div>
                         </div>
+
+                        {formData.workRegime === 'HYBRID' && (
+                            <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl space-y-3">
+                                <label className="block text-sm font-semibold text-blue-900">Dias de Trabalho Híbrido</label>
+                                <div className="flex flex-wrap gap-2">
+                                    {['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'].map(day => (
+                                        <button
+                                            key={day}
+                                            type="button"
+                                            onClick={() => {
+                                                const current = formData.hybridWorkDays || [];
+                                                const next = current.includes(day) ? current.filter(d => d !== day) : [...current, day];
+                                                setFormData(prev => ({ ...prev, hybridWorkDays: next }));
+                                            }}
+                                            className={cn(
+                                                "px-3 py-1.5 rounded-full text-xs font-medium transition-all",
+                                                formData.hybridWorkDays?.includes(day)
+                                                    ? "bg-blue-600 text-white shadow-sm"
+                                                    : "bg-white text-blue-600 border border-blue-200 hover:border-blue-400"
+                                            )}
+                                        >
+                                            {day}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             )}
@@ -711,8 +886,8 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
 
             {!['documents', 'dependents'].includes(activeTab) && (
                 <div className="flex justify-end gap-4">
-                    <button type="button" onClick={() => router.push('/employees')} className="px-6 py-2 border rounded-lg">Cancelar</button>
-                    <button type="button" onClick={handleSubmit} disabled={loading} className="px-6 py-2 bg-[var(--color-primary)] text-white rounded-lg flex items-center gap-2">
+                    <button type="button" onClick={() => router.push('/employees')} className="px-6 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">Cancelar</button>
+                    <button type="button" onClick={handleSubmit} disabled={loading} className="px-6 py-2 bg-[var(--color-primary)] text-white rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity">
                         {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                         {loading ? 'Salvando...' : 'Salvar'}
                     </button>
