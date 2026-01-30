@@ -7,6 +7,7 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -36,8 +37,8 @@ public class PathEnrollment {
     @Column(nullable = false)
     private EnrollmentStatus status = EnrollmentStatus.ENROLLED;
 
-    @Column(name = "progress_percentage")
-    private int progressPercentage = 0;
+    @Column(name = "progress_percentage", precision = 5, scale = 2)
+    private BigDecimal progressPercentage = BigDecimal.ZERO;
 
     @Column(name = "enrolled_at")
     private LocalDateTime enrolledAt;
