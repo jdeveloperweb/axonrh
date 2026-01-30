@@ -181,6 +181,9 @@ export const chatApi = {
   archiveConversation: (id: string) =>
     api.post<void>(`/ai/chat/conversations/${id}/archive`),
 
+  updateConversation: (id: string, title: string) =>
+    api.patch<void>(`/ai/chat/conversations/${id}`, { title }),
+
   deleteConversation: (id: string) =>
     api.delete<void>(`/ai/chat/conversations/${id}`),
 

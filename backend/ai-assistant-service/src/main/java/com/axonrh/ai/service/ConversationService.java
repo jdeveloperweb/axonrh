@@ -87,9 +87,16 @@ public class ConversationService {
                 .build();
         conversation.addMessage(userMsg);
 
-        // Analyze intent
+        // Analysis intent
         NluService.NluResult nluResult = nluService.analyze(userMessage, tenantId, conversation.getMetadata().getLastIntent());
         log.debug("NLU Result: intent={}, confidence={}", nluResult.getIntent(), nluResult.getConfidence());
+
+        // Auto-generate title if it's the first user message
+        if (conversation.getTitle() == null || conversation.getTitle().isEmpty() || conversation.getTitle().equals("Nova conversa")) {
+            String newTitle = userMessage.length() > 30 ? userMessage.substring(0, 30) + "..." : userMessage;
+            conversation.setTitle(newTitle);
+            conversationRepository.save(conversation);
+        }
 
         // Process based on intent
         String response;
@@ -168,6 +175,13 @@ public class ConversationService {
             return Mono.fromCallable(() -> nluService.analyze(userMessage, tenantId, conversation.getMetadata().getLastIntent()))
                 .flatMapMany(nluResult -> {
                     log.debug("Stream NLU Result: intent={}, actionType={}", nluResult.getIntent(), nluResult.getActionType());
+
+                    // Auto-generate title if it's the first user message
+                    if (conversation.getTitle() == null || conversation.getTitle().isEmpty() || conversation.getTitle().equals("Nova conversa")) {
+                        String newTitle = userMessage.length() > 30 ? userMessage.substring(0, 30) + "..." : userMessage;
+                        conversation.setTitle(newTitle);
+                        conversationRepository.save(conversation);
+                    }
 
                     // For non-INFORMATION actions, handle synchronouly but return as Flux
                     if (nluResult.getActionType() != AiIntent.ActionType.INFORMATION) {
@@ -639,6 +653,19 @@ public class ConversationService {
         conversationRepository.findByIdAndTenantId(id, tenantId).ifPresent(c -> {
             c.setStatus(Conversation.ConversationStatus.DELETED);
             conversationRepository.save(c);
+        });
+    }
+
+    public void updateConversation(String id, String title, UUID tenantId) {
+        conversationRepository.findByIdAndTenantId(id, tenantId).ifPresent(c -> {
+            boolean updated = false;
+            if (title != null && !title.isBlank()) {
+                c.setTitle(title);
+                updated = true;
+            }
+            if (updated) {
+                conversationRepository.save(c);
+            }
         });
     }
 }

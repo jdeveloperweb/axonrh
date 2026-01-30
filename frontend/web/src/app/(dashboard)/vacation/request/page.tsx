@@ -161,7 +161,7 @@ export default function VacationRequestPage() {
 
     if (!loading && periods.length === 0) {
         return (
-            <div className="container max-w-4xl py-16 animate-in fade-in duration-500">
+            <div className="container max-w-4xl py-16 animate-in fade-in duration-500 min-h-[60vh] flex flex-col justify-center">
                 <div className="flex flex-col items-center text-center space-y-6">
                     <div className="bg-orange-50 p-6 rounded-full ring-8 ring-orange-50/50">
                         <AlertTriangle className="h-16 w-16 text-orange-500" />

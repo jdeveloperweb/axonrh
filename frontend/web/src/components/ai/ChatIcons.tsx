@@ -14,7 +14,9 @@ import {
     History,
     Plus,
     Trash2,
-    Mic
+    Mic,
+    Pencil,
+    Check
 } from 'lucide-react';
 
 export const ChatIcons = {
@@ -33,7 +35,9 @@ export const ChatIcons = {
     History,
     Plus,
     Trash: Trash2,
-    Mic
+    Mic,
+    Edit: Pencil,
+    Check
 };
 
 

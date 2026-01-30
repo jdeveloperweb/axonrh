@@ -108,6 +108,8 @@ function RecentConversations({ onSelectConversation, activeConversationId }: Rec
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState('');
 
   useEffect(() => {
     loadConversations();
@@ -136,6 +138,49 @@ function RecentConversations({ onSelectConversation, activeConversationId }: Rec
       } catch (error) {
         console.error('Failed to delete history', error);
       }
+    }
+  };
+
+  const deleteConversation = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (confirm('Tem certeza que deseja apagar esta conversa?')) {
+      try {
+        await chatApi.deleteConversation(id);
+        setConversations(prev => prev.filter(c => c.id !== id));
+        if (activeConversationId === id) {
+          onSelectConversation(undefined);
+        }
+      } catch (error) {
+        console.error('Failed to delete conversation', error);
+      }
+    }
+  };
+
+  const startEditing = (e: React.MouseEvent, conv: Conversation) => {
+    e.stopPropagation();
+    setEditingId(conv.id);
+    setEditTitle(conv.title || getConversationTitle(conv));
+  };
+
+  const cancelEditing = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setEditingId(null);
+    setEditTitle('');
+  };
+
+  const saveTitle = async (e: React.MouseEvent | React.FormEvent, id: string) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (!editTitle.trim()) return;
+
+    try {
+      await chatApi.updateConversation(id, editTitle);
+      setConversations(prev => prev.map(c =>
+        c.id === id ? { ...c, title: editTitle } : c
+      ));
+      setEditingId(null);
+    } catch (error) {
+      console.error('Failed to update conversation title', error);
     }
   };
 
@@ -235,41 +280,86 @@ function RecentConversations({ onSelectConversation, activeConversationId }: Rec
           </div>
         ) : (
           conversations.map((conv) => (
-            <button
+            <div
               key={conv.id}
-              onClick={() => onSelectConversation(conv.id)}
               className={cn(
-                "w-full flex items-center gap-4 p-4 rounded-2xl transition-all text-left group relative overflow-hidden border",
+                "relative group flex items-center gap-4 p-4 rounded-2xl transition-all text-left border overflow-hidden",
                 activeConversationId === conv.id
                   ? 'bg-primary/5 border-primary/20 shadow-sm ring-1 ring-primary/10'
                   : 'bg-transparent hover:bg-gray-50/80 border-transparent hover:border-gray-100'
               )}
             >
-              {activeConversationId === conv.id && (
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full"></div>
+              {editingId === conv.id ? (
+                <div className="flex-1 flex gap-2 z-20" onClick={e => e.stopPropagation()}>
+                  <input
+                    autoFocus
+                    className="flex-1 bg-white border border-primary/30 rounded-lg px-2 py-1 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    value={editTitle}
+                    onChange={e => setEditTitle(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') saveTitle(e, conv.id);
+                      if (e.key === 'Escape') cancelEditing();
+                    }}
+                  />
+                  <button onClick={(e) => saveTitle(e, conv.id)} className="p-1.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100">
+                    <ChatIcons.Check className="w-3.5 h-3.5" />
+                  </button>
+                  <button onClick={(e) => cancelEditing(e)} className="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100">
+                    <ChatIcons.X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <button
+                    onClick={() => onSelectConversation(conv.id)}
+                    className="absolute inset-0 z-0"
+                  />
+                  {activeConversationId === conv.id && (
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full"></div>
+                  )}
+                  <div className={cn(
+                    "w-10 h-10 rounded-xl flex items-center justify-center text-xs shadow-sm transition-transform group-hover:scale-105 flex-shrink-0 relative z-10 pointer-events-none",
+                    activeConversationId === conv.id ? "bg-primary text-white" : "bg-white border border-gray-100 text-gray-400"
+                  )}>
+                    <ChatIcons.MessageSquare className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 min-w-0 z-10 pointer-events-none">
+                    <p className={cn(
+                      "text-xs font-bold truncate transition-colors mb-0.5",
+                      activeConversationId === conv.id ? "text-primary-900" : "text-gray-700 group-hover:text-primary"
+                    )}>
+                      {getConversationTitle(conv)}
+                    </p>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+                      {formatDate(conv.updatedAt || conv.createdAt)}
+                    </p>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className={cn(
+                    "flex gap-1 z-20 transition-all duration-200",
+                    activeConversationId === conv.id
+                      ? "opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0"
+                      : "opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0"
+                  )}>
+                    <button
+                      onClick={(e) => startEditing(e, conv)}
+                      className="p-1.5 text-gray-400 hover:text-primary hover:bg-white rounded-lg transition-colors shadow-sm border border-transparent hover:border-gray-100"
+                      title="Renomear"
+                    >
+                      <ChatIcons.Edit className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={(e) => deleteConversation(e, conv.id)}
+                      className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-white rounded-lg transition-colors shadow-sm border border-transparent hover:border-red-100"
+                      title="Excluir"
+                    >
+                      <ChatIcons.Trash className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </>
               )}
-              <div className={cn(
-                "w-10 h-10 rounded-xl flex items-center justify-center text-xs shadow-sm transition-transform group-hover:scale-105 flex-shrink-0",
-                activeConversationId === conv.id ? "bg-primary text-white" : "bg-white border border-gray-100 text-gray-400"
-              )}>
-                <ChatIcons.MessageSquare className="w-4 h-4" />
-              </div>
-              <div className="flex-1 min-w-0 z-10">
-                <p className={cn(
-                  "text-xs font-bold truncate transition-colors mb-0.5",
-                  activeConversationId === conv.id ? "text-primary-900" : "text-gray-700 group-hover:text-primary"
-                )}>
-                  {getConversationTitle(conv)}
-                </p>
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
-                  {formatDate(conv.updatedAt || conv.createdAt)}
-                </p>
-              </div>
-              <ChatIcons.ChevronRight className={cn(
-                "w-3 h-3 transition-all flex-shrink-0",
-                activeConversationId === conv.id ? "text-primary translate-x-0" : "text-gray-200 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 group-hover:text-primary"
-              )} />
-            </button>
+            </div>
           ))
         )}
       </div>

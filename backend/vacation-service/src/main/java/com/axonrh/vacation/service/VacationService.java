@@ -81,7 +81,14 @@ public class VacationService {
     @Transactional
     public VacationPeriod createPeriod(UUID employeeId, String employeeName, LocalDate admissionDate) {
         UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        return createPeriod(tenantId, employeeId, employeeName, admissionDate);
+    }
 
+    /**
+     * Cria periodo aquisitivo para um colaborador (uso interno/listeners).
+     */
+    @Transactional
+    public VacationPeriod createPeriod(UUID tenantId, UUID employeeId, String employeeName, LocalDate admissionDate) {
         // Calcular datas do periodo aquisitivo
         LocalDate acquisitionStart = admissionDate;
         LocalDate acquisitionEnd = admissionDate.plusYears(1).minusDays(1);
@@ -103,8 +110,8 @@ public class VacationService {
                 .build();
 
         VacationPeriod saved = periodRepository.save(period);
-        log.info("Periodo aquisitivo criado - colaborador: {}, periodo: {} a {}",
-                employeeId, acquisitionStart, acquisitionEnd);
+        log.info("Periodo aquisitivo criado - tenant: {}, colaborador: {}, periodo: {} a {}",
+                tenantId, employeeId, acquisitionStart, acquisitionEnd);
 
         return saved;
     }

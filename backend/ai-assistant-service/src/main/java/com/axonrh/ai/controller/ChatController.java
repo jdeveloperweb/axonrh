@@ -135,6 +135,16 @@ public class ChatController {
         return ResponseEntity.ok().build();
     }
 
+    @PatchMapping("/conversations/{id}")
+    public ResponseEntity<Void> updateConversation(
+            @RequestHeader("X-Tenant-ID") UUID tenantId,
+            @PathVariable String id,
+            @RequestBody ConversationUpdateRequest request) {
+
+        conversationService.updateConversation(id, request.getTitle(), tenantId);
+        return ResponseEntity.ok().build();
+    }
+
     @lombok.Data
     public static class ChatRequest {
         private String conversationId;
@@ -148,5 +158,10 @@ public class ChatController {
         private String userRole;
         private String department;
         private java.util.List<String> permissions;
+    }
+
+    @lombok.Data
+    public static class ConversationUpdateRequest {
+        private String title;
     }
 }
