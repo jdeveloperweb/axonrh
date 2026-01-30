@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { coursesApi, enrollmentsApi, Course, Enrollment, Lesson } from '@/lib/api/learning';
 import { useAuthStore } from '@/stores/auth-store';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 
 export default function LearnCourse() {
@@ -225,7 +226,7 @@ export default function LearnCourse() {
                                         size="lg"
                                         className="font-bold text-xs uppercase rounded-xl"
                                         onClick={handleCompleteLesson}
-                                        disabled={completing || (currentLesson && isLessonCompleted(currentLesson.id))}
+                                        disabled={!!(completing || (currentLesson && isLessonCompleted(currentLesson.id)))}
                                     >
                                         {currentLesson && isLessonCompleted(currentLesson.id) ? (
                                             <span className="flex items-center gap-2 text-green-500">
