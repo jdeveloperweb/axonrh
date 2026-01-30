@@ -145,15 +145,20 @@ export function Sidebar() {
       <nav className="flex-1 py-4 px-2 overflow-y-auto">
         <div className="space-y-6">
           {navGroups.map((group, groupIndex) => {
-            // Se for colaborador e o grupo for ADMINISTRAÇÃO, pula
-            const isCollaborator = user?.roles?.includes('COLABORADOR') && user?.roles?.length === 1;
-            if (isCollaborator && group.title === 'ADMINISTRAÇÃO') return null;
+            const roles = user?.roles || [];
+            const isAdmin = roles.includes('ADMIN');
+            const isOnlyCollaborator = roles.includes('COLABORADOR') && roles.length === 1;
+
+            // Se for apenas colaborador e o grupo for ADMINISTRAÇÃO, pula
+            if (isOnlyCollaborator && group.title === 'ADMINISTRAÇÃO') return null;
 
             const groupFilteredItems = group.items.filter((item) => {
               if (!hasPermission(item.permission)) return false;
 
-              // Filtros específicos para colaborador
-              if (isCollaborator) {
+              // Filtros específicos: Administrador vê tudo. Colaborador puro tem restrições.
+              if (isAdmin) return true;
+
+              if (isOnlyCollaborator) {
                 if (item.label === 'Colaboradores') return false;
                 if (item.label === 'Processos RH') return false;
               }
