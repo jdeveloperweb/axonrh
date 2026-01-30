@@ -6,7 +6,7 @@
 -- =====================================================
 -- T155: Periodos Aquisitivos
 -- =====================================================
-CREATE TABLE vacation_periods (
+CREATE TABLE IF NOT EXISTS vacation_periods (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL,
     employee_id UUID NOT NULL,
@@ -44,15 +44,15 @@ CREATE TABLE vacation_periods (
     CONSTRAINT uk_vacation_period UNIQUE (tenant_id, employee_id, acquisition_start_date)
 );
 
-CREATE INDEX idx_vacation_periods_tenant ON vacation_periods(tenant_id);
-CREATE INDEX idx_vacation_periods_employee ON vacation_periods(employee_id);
-CREATE INDEX idx_vacation_periods_status ON vacation_periods(tenant_id, status);
-CREATE INDEX idx_vacation_periods_expiring ON vacation_periods(concession_end_date, status);
+CREATE INDEX IF NOT EXISTS idx_vacation_periods_tenant ON vacation_periods(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_vacation_periods_employee ON vacation_periods(employee_id);
+CREATE INDEX IF NOT EXISTS idx_vacation_periods_status ON vacation_periods(tenant_id, status);
+CREATE INDEX IF NOT EXISTS idx_vacation_periods_expiring ON vacation_periods(concession_end_date, status);
 
 -- =====================================================
 -- T156: Solicitacoes de Ferias
 -- =====================================================
-CREATE TABLE vacation_requests (
+CREATE TABLE IF NOT EXISTS vacation_requests (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL,
     employee_id UUID NOT NULL,
@@ -104,16 +104,16 @@ CREATE TABLE vacation_requests (
     updated_by UUID
 );
 
-CREATE INDEX idx_vacation_requests_tenant ON vacation_requests(tenant_id);
-CREATE INDEX idx_vacation_requests_employee ON vacation_requests(employee_id);
-CREATE INDEX idx_vacation_requests_period ON vacation_requests(vacation_period_id);
-CREATE INDEX idx_vacation_requests_status ON vacation_requests(tenant_id, status);
-CREATE INDEX idx_vacation_requests_dates ON vacation_requests(start_date, end_date);
+CREATE INDEX IF NOT EXISTS idx_vacation_requests_tenant ON vacation_requests(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_vacation_requests_employee ON vacation_requests(employee_id);
+CREATE INDEX IF NOT EXISTS idx_vacation_requests_period ON vacation_requests(vacation_period_id);
+CREATE INDEX IF NOT EXISTS idx_vacation_requests_status ON vacation_requests(tenant_id, status);
+CREATE INDEX IF NOT EXISTS idx_vacation_requests_dates ON vacation_requests(start_date, end_date);
 
 -- =====================================================
 -- T157: Programacao de Ferias (Calendario)
 -- =====================================================
-CREATE TABLE vacation_schedules (
+CREATE TABLE IF NOT EXISTS vacation_schedules (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL,
     year INTEGER NOT NULL,
@@ -142,11 +142,11 @@ CREATE TABLE vacation_schedules (
     CONSTRAINT uk_vacation_schedule UNIQUE (tenant_id, year, department_id)
 );
 
-CREATE INDEX idx_vacation_schedules_tenant ON vacation_schedules(tenant_id);
-CREATE INDEX idx_vacation_schedules_year ON vacation_schedules(tenant_id, year);
+CREATE INDEX IF NOT EXISTS idx_vacation_schedules_tenant ON vacation_schedules(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_vacation_schedules_year ON vacation_schedules(tenant_id, year);
 
 -- Itens do calendario (planejamento por colaborador)
-CREATE TABLE vacation_schedule_items (
+CREATE TABLE IF NOT EXISTS vacation_schedule_items (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     vacation_schedule_id UUID NOT NULL REFERENCES vacation_schedules(id) ON DELETE CASCADE,
     employee_id UUID NOT NULL,
@@ -172,13 +172,13 @@ CREATE TABLE vacation_schedule_items (
     updated_at TIMESTAMP
 );
 
-CREATE INDEX idx_schedule_items_schedule ON vacation_schedule_items(vacation_schedule_id);
-CREATE INDEX idx_schedule_items_employee ON vacation_schedule_items(employee_id);
+CREATE INDEX IF NOT EXISTS idx_schedule_items_schedule ON vacation_schedule_items(vacation_schedule_id);
+CREATE INDEX IF NOT EXISTS idx_schedule_items_employee ON vacation_schedule_items(employee_id);
 
 -- =====================================================
 -- Ferias Coletivas
 -- =====================================================
-CREATE TABLE collective_vacations (
+CREATE TABLE IF NOT EXISTS collective_vacations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL,
     name VARCHAR(200) NOT NULL,
@@ -220,11 +220,11 @@ CREATE TABLE collective_vacations (
     approved_at TIMESTAMP
 );
 
-CREATE INDEX idx_collective_vacations_tenant ON collective_vacations(tenant_id);
-CREATE INDEX idx_collective_vacations_dates ON collective_vacations(start_date, end_date);
+CREATE INDEX IF NOT EXISTS idx_collective_vacations_tenant ON collective_vacations(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_collective_vacations_dates ON collective_vacations(start_date, end_date);
 
 -- Colaboradores em ferias coletivas
-CREATE TABLE collective_vacation_employees (
+CREATE TABLE IF NOT EXISTS collective_vacation_employees (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     collective_vacation_id UUID NOT NULL REFERENCES collective_vacations(id) ON DELETE CASCADE,
     employee_id UUID NOT NULL,
@@ -242,12 +242,12 @@ CREATE TABLE collective_vacation_employees (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_collective_employees ON collective_vacation_employees(collective_vacation_id);
+CREATE INDEX IF NOT EXISTS idx_collective_employees ON collective_vacation_employees(collective_vacation_id);
 
 -- =====================================================
 -- Configuracoes de Ferias
 -- =====================================================
-CREATE TABLE vacation_configs (
+CREATE TABLE IF NOT EXISTS vacation_configs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL,
 
@@ -287,7 +287,7 @@ CREATE TABLE vacation_configs (
 -- =====================================================
 -- Historico de alteracoes
 -- =====================================================
-CREATE TABLE vacation_history (
+CREATE TABLE IF NOT EXISTS vacation_history (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL,
     entity_type VARCHAR(50) NOT NULL, -- PERIOD, REQUEST, SCHEDULE
@@ -301,8 +301,8 @@ CREATE TABLE vacation_history (
     created_by_name VARCHAR(200)
 );
 
-CREATE INDEX idx_vacation_history_entity ON vacation_history(entity_type, entity_id);
-CREATE INDEX idx_vacation_history_tenant ON vacation_history(tenant_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_vacation_history_entity ON vacation_history(entity_type, entity_id);
+CREATE INDEX IF NOT EXISTS idx_vacation_history_tenant ON vacation_history(tenant_id, created_at DESC);
 
 -- =====================================================
 -- Comentarios
