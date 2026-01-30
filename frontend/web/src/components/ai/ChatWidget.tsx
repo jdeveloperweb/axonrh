@@ -37,6 +37,7 @@ export default function ChatWidget({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const initializedRef = useRef(false);
+  const lastConversationIdRef = useRef<string | undefined>(initialConversationId);
 
   // Reset internal state when prop changes
   useEffect(() => {
@@ -56,7 +57,7 @@ export default function ChatWidget({
       setIsLoading(true);
       const response = await chatApi.getConversation(id) as any;
       if (response && response.messages) {
-        setMessages(response.messages.filter((m: ChatMessage) => m.role !== 'system'));
+        setMessages(response.messages.filter((m: ChatMessage) => m.role?.toLowerCase() !== 'system'));
       }
     } catch (error) {
       console.error('Failed to load conversation:', error);
@@ -80,6 +81,7 @@ export default function ChatWidget({
         const convResponse = await chatApi.createConversation(context) as any;
         if (convResponse && convResponse.id) {
           currentConvId = convResponse.id;
+          lastConversationIdRef.current = currentConvId; // Evita que o useEffect de carregamento sobrescreva o estado atual
           setConversationId(currentConvId);
           // Notify parent about new conversation
           if (onConversationCreated) {
@@ -159,8 +161,11 @@ export default function ChatWidget({
   }, [conversationId, isLoading, context, onConversationCreated]);
 
   useEffect(() => {
-    if (initialConversationId) {
+    if (initialConversationId && initialConversationId !== lastConversationIdRef.current) {
       loadConversation(initialConversationId);
+      lastConversationIdRef.current = initialConversationId;
+    } else if (!initialConversationId) {
+      lastConversationIdRef.current = undefined;
     }
   }, [initialConversationId, loadConversation]);
 
@@ -378,7 +383,7 @@ function MessageBubble({
   onActionConfirm: () => void;
   onActionCancel: () => void;
 }) {
-  const isUser = message.role === 'user';
+  const isUser = message.role?.toLowerCase() === 'user';
   const isError = message.type === 'ERROR';
   const isActionConfirmation = message.type === 'ACTION_CONFIRMATION';
 
@@ -407,7 +412,7 @@ function MessageBubble({
           isUser ? "items-end" : "items-start"
         )}>
           <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">
-            {isUser ? 'Você' : 'AxonIA'}
+            {isUser ? 'Você' : message.role?.toLowerCase() === 'system' ? 'Sistema' : 'AxonIA'}
           </span>
           <div className={cn(
             "rounded-2xl px-6 py-4 shadow-sm relative text-sm leading-relaxed",

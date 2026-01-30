@@ -201,7 +201,7 @@ function RecentConversations({ onSelectConversation, activeConversationId }: Rec
   const getConversationTitle = (conv: Conversation) => {
     if (conv.title) return conv.title;
     // Tenta pegar a primeira mensagem do usuário como título se o backend não tiver gerado titulo ainda
-    const firstUserMessage = conv.messages?.find(m => m.role === 'user');
+    const firstUserMessage = conv.messages?.find(m => m.role?.toLowerCase() === 'user');
     if (firstUserMessage) {
       return firstUserMessage.content.length > 30
         ? firstUserMessage.content.substring(0, 30) + '...'
