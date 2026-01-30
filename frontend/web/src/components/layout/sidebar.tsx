@@ -166,7 +166,7 @@ export function Sidebar() {
                           href={item.href}
                           className={cn(
                             'flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-md)]',
-                            'transition-colors duration-[var(--transition-fast)]',
+                            'transition-colors duration-fast',
                             'hover:bg-[var(--color-surface-variant)]',
                             isActive && 'bg-[var(--color-primary)] text-[var(--color-text-on-primary)]',
                             isSidebarCollapsed && 'justify-center'

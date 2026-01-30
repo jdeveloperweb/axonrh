@@ -154,7 +154,7 @@
 
   /* Botões */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 font-medium rounded-[var(--radius-md)] transition-all duration-[var(--transition-fast)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 font-medium rounded-[var(--radius-md)] transition-all duration-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-primary {
@@ -180,7 +180,7 @@
 
   /* Inputs */
   .input {
-    @apply w-full h-12 px-4 rounded-[var(--radius-lg)] bg-[var(--color-background)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-disabled)] shadow-[var(--shadow-sm)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-all duration-[var(--transition-fast)] disabled:bg-[var(--color-surface-variant)] disabled:opacity-60 disabled:cursor-not-allowed;
+    @apply w-full h-12 px-4 rounded-[var(--radius-lg)] bg-[var(--color-background)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-disabled)] shadow-[var(--shadow-sm)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-all duration-fast disabled:bg-[var(--color-surface-variant)] disabled:opacity-60 disabled:cursor-not-allowed;
   }
 
   .input-error {
@@ -203,7 +203,7 @@
 
   /* Sidebar */
   .sidebar {
-    @apply fixed left-0 top-0 h-screen w-[var(--sidebar-width)] bg-[var(--color-surface)] border-r border-[var(--color-border)] transition-all duration-[var(--transition-normal)] z-40;
+    @apply fixed left-0 top-0 h-screen w-[var(--sidebar-width)] bg-[var(--color-surface)] border-r border-[var(--color-border)] transition-all duration-normal z-40;
   }
 
   .sidebar-collapsed {
@@ -212,12 +212,12 @@
 
   /* Header */
   .header {
-    @apply fixed top-0 right-0 h-[var(--header-height)] left-[var(--sidebar-width)] bg-[var(--color-background)] border-b border-[var(--color-border)] z-30 flex items-center justify-between px-6 transition-all duration-[var(--transition-normal)];
+    @apply fixed top-0 right-0 h-[var(--header-height)] left-[var(--sidebar-width)] bg-[var(--color-background)] border-b border-[var(--color-border)] z-30 flex items-center justify-between px-6 transition-all duration-normal;
   }
 
   /* Main Content */
   .main-content {
-    @apply ml-[var(--sidebar-width)] mt-[var(--header-height)] p-6 min-h-[calc(100vh-var(--header-height))] transition-all duration-[var(--transition-normal)];
+    @apply ml-[var(--sidebar-width)] mt-[var(--header-height)] p-6 min-h-[calc(100vh-var(--header-height))] transition-all duration-normal;
   }
 
   /* Main Layout Collapsed Adjustments */
@@ -231,6 +231,14 @@
 }
 
 @layer utilities {
+  .duration-fast {
+    transition-duration: var(--transition-fast);
+  }
+
+  .duration-normal {
+    transition-duration: var(--transition-normal);
+  }
+
   @keyframes float {
 
     0%,
