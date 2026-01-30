@@ -155,7 +155,8 @@ start_backend() {
     echo -e "\n${YELLOW}Starting backend services...${NC}"
 
     cd "$PROJECT_ROOT"
-    docker compose --profile backend up -d --build
+    docker compose --profile backend stop
+    docker compose --profile backend up -d --build --force-recreate
 
     echo -e "${GREEN}✓ Backend services starting...${NC}"
     echo -e "  - Config Service: http://localhost:8888"
@@ -169,7 +170,8 @@ start_frontend() {
     echo -e "\n${YELLOW}Starting frontend...${NC}"
 
     cd "$PROJECT_ROOT"
-    docker compose --profile frontend up -d --build
+    docker compose --profile frontend stop
+    docker compose --profile frontend up -d --build --force-recreate
 
     echo -e "${GREEN}✓ Frontend started at http://localhost:3000${NC}"
 }
@@ -180,7 +182,8 @@ start_single_backend_service() {
 
     cd "$PROJECT_ROOT"
     echo -e "${YELLOW}Starting ${service}...${NC}"
-    docker compose --profile backend up -d --build "${service}"
+    docker compose --profile backend stop "${service}"
+    docker compose --profile backend up -d --build --force-recreate "${service}"
 }
 
 select_backend_service() {
@@ -229,9 +232,11 @@ menu() {
         1)
             check_docker
             git_pull
-            echo -e "\n${YELLOW}Starting all services with Docker Compose...${NC}"
+            echo -e "\n${YELLOW}Stopping all app services...${NC}"
+            docker compose --profile backend --profile frontend stop
+            echo -e "\n${YELLOW}Starting all services with Docker Compose (forcing recreate)...${NC}"
             cd "$PROJECT_ROOT"
-            docker compose --profile backend --profile frontend up -d --build
+            docker compose --profile backend --profile frontend up -d --build --force-recreate
             ;;
         2)
             check_docker

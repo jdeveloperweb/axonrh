@@ -3,17 +3,17 @@
 -- =====================================================
 
 -- Limpeza preventiva para garantir schema correto
-DROP TABLE IF EXISTS accounting_entries CASCADE;
-DROP TABLE IF EXISTS accounting_exports CASCADE;
-DROP TABLE IF EXISTS cnab_records CASCADE;
-DROP TABLE IF EXISTS cnab_files CASCADE;
-DROP TABLE IF EXISTS esocial_events CASCADE;
-DROP TABLE IF EXISTS webhook_deliveries CASCADE;
-DROP TABLE IF EXISTS webhooks CASCADE;
-DROP TABLE IF EXISTS digital_certificates CASCADE;
+DROP TABLE IF EXISTS int_accounting_entries CASCADE;
+DROP TABLE IF EXISTS int_accounting_exports CASCADE;
+DROP TABLE IF EXISTS int_cnab_records CASCADE;
+DROP TABLE IF EXISTS int_cnab_files CASCADE;
+DROP TABLE IF EXISTS int_esocial_events CASCADE;
+DROP TABLE IF EXISTS int_webhook_deliveries CASCADE;
+DROP TABLE IF EXISTS int_webhooks CASCADE;
+DROP TABLE IF EXISTS int_digital_certificates CASCADE;
 
 -- Configuracao de certificados digitais
-CREATE TABLE digital_certificates (
+CREATE TABLE int_digital_certificates (
     id UUID PRIMARY KEY,
     tenant_id UUID NOT NULL,
     name VARCHAR(255) NOT NULL,
@@ -30,10 +30,10 @@ CREATE TABLE digital_certificates (
     updated_at TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_certificates_tenant ON digital_certificates(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_int_digital_certificates_tenant ON int_digital_certificates(tenant_id);
 
 -- Webhooks configurados
-CREATE TABLE webhooks (
+CREATE TABLE int_webhooks (
     id UUID PRIMARY KEY,
     tenant_id UUID NOT NULL,
     name VARCHAR(255) NOT NULL,
@@ -55,14 +55,14 @@ CREATE TABLE webhooks (
     updated_at TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_webhooks_tenant ON webhooks(tenant_id);
-CREATE INDEX IF NOT EXISTS idx_webhooks_active ON webhooks(tenant_id, is_active);
+CREATE INDEX IF NOT EXISTS idx_int_webhooks_tenant ON int_webhooks(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_int_webhooks_active ON int_webhooks(tenant_id, is_active);
 
 -- Historico de chamadas de webhook
-CREATE TABLE webhook_deliveries (
+CREATE TABLE int_webhook_deliveries (
     id UUID PRIMARY KEY,
     tenant_id UUID NOT NULL,
-    webhook_id UUID NOT NULL REFERENCES webhooks(id),
+    webhook_id UUID NOT NULL REFERENCES int_webhooks(id),
     event_type VARCHAR(50) NOT NULL,
     request_url VARCHAR(255) NOT NULL,
     request_method VARCHAR(10),
@@ -77,11 +77,11 @@ CREATE TABLE webhook_deliveries (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_webhook ON webhook_deliveries(webhook_id);
-CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_tenant ON webhook_deliveries(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_int_webhook_deliveries_webhook ON int_webhook_deliveries(webhook_id);
+CREATE INDEX IF NOT EXISTS idx_int_webhook_deliveries_tenant ON int_webhook_deliveries(tenant_id);
 
 -- Eventos eSocial
-CREATE TABLE esocial_events (
+CREATE TABLE int_esocial_events (
     id UUID PRIMARY KEY,
     tenant_id UUID NOT NULL,
     event_type VARCHAR(50) NOT NULL,
@@ -103,11 +103,11 @@ CREATE TABLE esocial_events (
     updated_at TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_esocial_events_tenant ON esocial_events(tenant_id);
-CREATE INDEX IF NOT EXISTS idx_esocial_events_status ON esocial_events(status);
+CREATE INDEX IF NOT EXISTS idx_int_esocial_events_tenant ON int_esocial_events(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_int_esocial_events_status ON int_esocial_events(status);
 
 -- Arquivos CNAB (remessa/retorno bancario)
-CREATE TABLE cnab_files (
+CREATE TABLE int_cnab_files (
     id UUID PRIMARY KEY,
     tenant_id UUID NOT NULL,
     file_type VARCHAR(50) NOT NULL,
@@ -132,13 +132,13 @@ CREATE TABLE cnab_files (
     updated_at TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_cnab_files_tenant ON cnab_files(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_int_cnab_files_tenant ON int_cnab_files(tenant_id);
 
 -- Registros individuais do CNAB
-CREATE TABLE cnab_records (
+CREATE TABLE int_cnab_records (
     id UUID PRIMARY KEY,
     tenant_id UUID NOT NULL,
-    cnab_file_id UUID NOT NULL REFERENCES cnab_files(id),
+    cnab_file_id UUID NOT NULL REFERENCES int_cnab_files(id),
     record_type VARCHAR(50) NOT NULL,
     sequence_number INTEGER NOT NULL,
     employee_id UUID,
@@ -163,10 +163,10 @@ CREATE TABLE cnab_records (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_cnab_records_file ON cnab_records(cnab_file_id);
+CREATE INDEX IF NOT EXISTS idx_int_cnab_records_file ON int_cnab_records(cnab_file_id);
 
 -- Exportacoes Contabeis
-CREATE TABLE accounting_exports (
+CREATE TABLE int_accounting_exports (
     id UUID PRIMARY KEY,
     tenant_id UUID NOT NULL,
     export_type VARCHAR(50) NOT NULL,
@@ -186,13 +186,13 @@ CREATE TABLE accounting_exports (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_accounting_exports_tenant ON accounting_exports(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_int_accounting_exports_tenant ON int_accounting_exports(tenant_id);
 
 -- Lancamentos contabeis
-CREATE TABLE accounting_entries (
+CREATE TABLE int_accounting_entries (
     id UUID PRIMARY KEY,
     tenant_id UUID NOT NULL,
-    accounting_export_id UUID NOT NULL REFERENCES accounting_exports(id),
+    accounting_export_id UUID NOT NULL REFERENCES int_accounting_exports(id),
     entry_date DATE NOT NULL,
     sequence_number INTEGER NOT NULL,
     entry_type VARCHAR(50) NOT NULL,
@@ -213,4 +213,4 @@ CREATE TABLE accounting_entries (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_accounting_entries_export ON accounting_entries(accounting_export_id);
+CREATE INDEX IF NOT EXISTS idx_int_accounting_entries_export ON int_accounting_entries(accounting_export_id);

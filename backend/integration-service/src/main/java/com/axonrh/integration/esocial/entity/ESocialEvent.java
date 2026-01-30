@@ -13,7 +13,7 @@ import java.util.UUID;
  * Evento do eSocial.
  */
 @Entity
-@Table(name = "esocial_events")
+@Table(name = "int_esocial_events")
 public class ESocialEvent {
 
     @Id

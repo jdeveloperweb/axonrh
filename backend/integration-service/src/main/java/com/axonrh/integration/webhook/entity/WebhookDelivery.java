@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "webhook_deliveries")
+@Table(name = "int_webhook_deliveries")
 public class WebhookDelivery {
 
     @Id

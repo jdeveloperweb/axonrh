@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "cnab_files")
+@Table(name = "int_cnab_files")
 public class CnabFile {
 
     @Id

@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "digital_certificates")
+@Table(name = "int_digital_certificates")
 public class DigitalCertificate {
 
     @Id
