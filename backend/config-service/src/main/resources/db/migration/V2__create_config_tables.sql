@@ -3,7 +3,7 @@
 -- =====================================================
 
 CREATE TABLE IF NOT EXISTS shared.tenant_configs (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL,
 
     logo_url VARCHAR(500),
@@ -50,7 +50,7 @@ CREATE INDEX IF NOT EXISTS idx_tenant_configs_active ON shared.tenant_configs(te
 CREATE INDEX IF NOT EXISTS idx_tenant_configs_version ON shared.tenant_configs(tenant_id, version);
 
 CREATE TABLE IF NOT EXISTS shared.config_versions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL,
     version INTEGER NOT NULL,
     config_snapshot JSONB NOT NULL,
