@@ -188,11 +188,13 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                     if (existingUser) {
                         setHasExistingAccess(true);
                         setExistingUserId(existingUser.id || null);
-                        setFormData(prev => ({ ...prev, allowPlatformAccess: true }));
+                        // Ao detectar acesso existente, garantimos que o switch está ligado mas sem disparar loop
+                        if (!formData.allowPlatformAccess) {
+                            setFormData(prev => ({ ...prev, allowPlatformAccess: true }));
+                        }
                     } else {
                         setHasExistingAccess(false);
                         setExistingUserId(null);
-                        // If it's a new collaborator, we keep allowPlatformAccess as whatever it was
                     }
                 } catch (error) {
                     console.error('Erro ao verificar acesso:', error);
@@ -202,7 +204,8 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
             }
         };
         checkAccess();
-    }, [formData.email, isEditing]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [formData.email]);
 
     // Load initial data when editing
     useEffect(() => {
