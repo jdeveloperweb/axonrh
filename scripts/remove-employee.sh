@@ -26,9 +26,6 @@ DECLARE
     v_user_id UUID;
     v_cpf VARCHAR := '__CPF_PLACEHOLDER__';
     v_schema RECORD;
-    
-    -- Função interna para deletar se a tabela existir
-    v_sql TEXT;
 BEGIN
     -- 1. Localizar o Colaborador (sempre no shared)
     SELECT id, user_id INTO v_employee_id, v_user_id 
@@ -91,11 +88,16 @@ BEGIN
         END IF;
 
         -- Learning
-        IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = v_schema.schema_name AND table_name = 'enrollments') THEN
-            -- Primeiro as matrículas em trilhas
-            IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = v_schema.schema_name AND table_name = 'path_enrollments') THEN
+        -- Ajustado: A tabela path_enrollments parece usar employee_id diretamente ou ter estrutura diferente em alguns schemas
+        IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = v_schema.schema_name AND table_name = 'path_enrollments') THEN
+            IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = v_schema.schema_name AND table_name = 'path_enrollments' AND column_name = 'employee_id') THEN
+                EXECUTE format('DELETE FROM %I.path_enrollments WHERE employee_id = $1', v_schema.schema_name) USING v_employee_id;
+            ELSIF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = v_schema.schema_name AND table_name = 'path_enrollments' AND column_name = 'enrollment_id') THEN
                 EXECUTE format('DELETE FROM %I.path_enrollments WHERE enrollment_id IN (SELECT id FROM %I.enrollments WHERE employee_id = $1)', v_schema.schema_name, v_schema.schema_name) USING v_employee_id;
             END IF;
+        END IF;
+        
+        IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = v_schema.schema_name AND table_name = 'enrollments') THEN
             EXECUTE format('DELETE FROM %I.enrollments WHERE employee_id = $1', v_schema.schema_name) USING v_employee_id;
         END IF;
 
