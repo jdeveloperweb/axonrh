@@ -342,8 +342,8 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
         if (!formData.email) newErrors.email = 'E-mail corporativo é obrigatório';
         else if (!isValidEmail(formData.email)) newErrors.email = 'E-mail inválido';
 
-        if (!formData.departmentId) newErrors.departmentId = 'Departamento é obrigatório';
-        if (!formData.positionId) newErrors.positionId = 'Cargo é obrigatório';
+        if (!formData.birthDate) newErrors.birthDate = 'Data de nascimento é obrigatória';
+        if (!formData.admissionDate) newErrors.admissionDate = 'Data de admissão é obrigatória';
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -353,7 +353,7 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
         e.preventDefault();
 
         if (!validate()) {
-            const firstError = Object.keys(errors)[0];
+            console.warn('❌ Validation failed:', errors);
             toast({
                 title: 'Erro de Validação',
                 description: 'Por favor, preencha todos os campos obrigatórios corretamente.',
@@ -362,6 +362,7 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
             return;
         }
 
+        console.log('🚀 Starting handleSubmit', { isEditing, employeeId });
         setLoading(true);
 
         try {
@@ -377,13 +378,13 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                 birthDate: formData.birthDate,
                 gender: formData.gender,
                 ethnicity: formData.ethnicity,
-                race: formData.ethnicity,
+                race: formData.race,
                 maritalStatus: formData.maritalStatus,
                 nationality: formData.nationality,
                 hireDate: formData.admissionDate,
                 employmentType: formData.employmentType,
-                baseSalary: formData.salary || 0,
-                weeklyHours: formData.workHoursPerWeek || 44,
+                baseSalary: Number(formData.salary) || 0,
+                weeklyHours: Number(formData.workHoursPerWeek) || 44,
                 departmentId: formData.departmentId,
                 positionId: formData.positionId,
                 costCenterId: formData.costCenterId,
@@ -400,6 +401,8 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                 addressZipCode: formData.address.zipCode,
                 addressCountry: formData.address.country
             };
+
+            console.log('📤 Submitting data:', submitData);
 
             if (!isEditing) {
                 // CREATE
