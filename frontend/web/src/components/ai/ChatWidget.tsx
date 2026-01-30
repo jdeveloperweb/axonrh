@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { chatApi, ChatMessage, ConversationContext, Conversation } from '@/lib/api/ai';
+import { chatApi, ChatMessage, ConversationContext } from '@/lib/api/ai';
 import { ChatIcons } from './ChatIcons';
 import { ActionConfirmation } from './ActionConfirmation';
 import { clsx, type ClassValue } from 'clsx';
@@ -26,29 +26,30 @@ export default function ChatWidget({
   initialMessage,
   onClose,
   context,
+  onConversationCreated
 }: ChatWidgetProps) {
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState(initialConversationId);
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [showHistory, setShowHistory] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const initializedRef = useRef(false);
 
-  const loadHistory = useCallback(async () => {
-    try {
-      const response = await chatApi.listConversations();
-      if (response && response.data && response.data.content) {
-        setConversations(response.data.content);
-      }
-    } catch (error) {
-      console.error('Failed to load history:', error);
+  // Reset internal state when prop changes
+  useEffect(() => {
+    setConversationId(initialConversationId);
+    if (!initialConversationId) {
+      setMessages([]);
+      setInput('');
+      initializedRef.current = false;
+    } else {
+      // If switching to an existing conversation, we should probably fetch messages if not already done
+      // But the useEffect below handles that.
     }
-  }, []);
+  }, [initialConversationId]);
 
   const loadConversation = useCallback(async (id: string) => {
     try {
@@ -56,8 +57,6 @@ export default function ChatWidget({
       const response = await chatApi.getConversation(id);
       if (response && response.data && response.data.messages) {
         setMessages(response.data.messages.filter((m: ChatMessage) => m.role !== 'system'));
-        setConversationId(id);
-        setShowHistory(false);
       }
     } catch (error) {
       console.error('Failed to load conversation:', error);
@@ -65,27 +64,6 @@ export default function ChatWidget({
       setIsLoading(false);
     }
   }, []);
-
-  const createNewChat = useCallback(() => {
-    setMessages([]);
-    setConversationId(undefined);
-    setShowHistory(false);
-    setInput('');
-  }, []);
-
-  const deleteChat = useCallback(async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!confirm('Tem certeza que deseja excluir esta conversa?')) return;
-    try {
-      await chatApi.deleteConversation(id);
-      setConversations(prev => prev.filter(c => c.id !== id));
-      if (conversationId === id) {
-        createNewChat();
-      }
-    } catch (error) {
-      console.error('Failed to delete conversation:', error);
-    }
-  }, [conversationId, createNewChat]);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -103,10 +81,14 @@ export default function ChatWidget({
         if (convResponse.data && convResponse.data.id) {
           currentConvId = convResponse.data.id;
           setConversationId(currentConvId);
-          loadHistory(); // Atualiza a lista de histórico
+          // Notify parent about new conversation
+          if (onConversationCreated) {
+            onConversationCreated(currentConvId);
+          }
         }
       } catch (error) {
         console.error('Failed to create conversation:', error);
+        return; // Don't proceed if creation failed
       }
     }
 
@@ -155,8 +137,12 @@ export default function ChatWidget({
         );
       }
 
-      // Refresh history to update titles/summaries
-      loadHistory();
+      // Notify parent to refresh list title/preview if needed
+      // Use conversationId or currentConvId (which is definitely set now)
+      if (onConversationCreated && currentConvId) {
+        onConversationCreated(currentConvId);
+      }
+
     } catch (error) {
       console.error('Error sending message:', error);
       setMessages(prev =>
@@ -170,14 +156,13 @@ export default function ChatWidget({
       setIsLoading(false);
       setIsStreaming(false);
     }
-  }, [conversationId, isLoading, loadHistory, context]);
+  }, [conversationId, isLoading, context, onConversationCreated]);
 
   useEffect(() => {
     if (initialConversationId) {
       loadConversation(initialConversationId);
     }
-    loadHistory();
-  }, [initialConversationId, loadConversation, loadHistory]);
+  }, [initialConversationId, loadConversation]);
 
   useEffect(() => {
     scrollToBottom();
@@ -213,145 +198,46 @@ export default function ChatWidget({
 
   return (
     <div className={cn(
-      "flex flex-col h-full bg-white/90 backdrop-blur-2xl border border-white/40 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] overflow-hidden relative",
+      "flex flex-col h-full bg-white/60 backdrop-blur-2xl border border-white/60 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.04)] overflow-hidden relative transition-all duration-300",
       className
     )}>
-      {/* Sidebar de Histórico - Overlay */}
-      <div className={cn(
-        "absolute inset-0 z-50 transform transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]",
-        showHistory ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0 pointer-events-none"
-      )}>
-        <div className="flex h-full w-full">
-          <div className="w-80 h-full bg-white/95 backdrop-blur-xl border-r border-gray-100/50 shadow-2xl flex flex-col">
-            <div className="px-8 py-8 border-b border-gray-100/50 flex items-center justify-between">
-              <div>
-                <h3 className="text-xl font-bold text-gray-900 tracking-tight">Histórico</h3>
-                <p className="text-xs text-gray-500 font-medium">Suas conversas anteriores</p>
-              </div>
-              <button
-                onClick={() => setShowHistory(false)}
-                className="p-2.5 hover:bg-gray-100 rounded-2xl transition-all text-gray-400 hover:text-gray-900 border border-transparent hover:border-gray-200"
-              >
-                <ChatIcons.X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-6 space-y-3 no-scrollbar">
-              <button
-                onClick={createNewChat}
-                className="w-full flex items-center justify-center gap-2.5 px-6 py-4 bg-primary hover:bg-primary-700 text-white rounded-2xl transition-all font-bold mb-6 shadow-lg shadow-primary-500/25 active:scale-[0.98] group"
-              >
-                <ChatIcons.Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
-                Nova Conversa
-              </button>
 
-              {conversations.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 opacity-30">
-                  <ChatIcons.MessageSquare className="w-12 h-12 mb-3" />
-                  <p className="text-sm font-bold tracking-tight">Nenhuma conversa encontrada</p>
-                </div>
-              ) : (
-                conversations.map((conv) => (
-                  <div
-                    key={conv.id}
-                    onClick={() => loadConversation(conv.id)}
-                    className={cn(
-                      "group flex flex-col p-5 rounded-[1.5rem] cursor-pointer transition-all border relative",
-                      conversationId === conv.id
-                        ? "bg-primary-50/50 border-primary-200 shadow-sm ring-1 ring-primary-100"
-                        : "bg-white hover:bg-gray-50 border-gray-100 hover:border-gray-200"
-                    )}
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="text-[10px] font-black text-primary uppercase tracking-[0.1em]">
-                        {new Date(conv.createdAt).toLocaleDateString('pt-BR')}
-                      </span>
-                      <button
-                        onClick={(e) => deleteChat(conv.id, e)}
-                        className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-xl transition-all"
-                      >
-                        <ChatIcons.Trash className="w-4 h-4" />
-                      </button>
-                    </div>
-                    <h4 className={cn(
-                      "text-sm font-bold truncate pr-4",
-                      conversationId === conv.id ? "text-primary-900" : "text-gray-700 font-semibold"
-                    )}>
-                      {conv.title || 'Nova Conversa'}
-                    </h4>
-                  </div>
-                ))
-              )}
-            </div>
-
-            <div className="p-6 border-t border-gray-100/50">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (confirm('Tem certeza que deseja apagar todo o histórico?')) {
-                    chatApi.deleteAllConversations().then(() => {
-                      setConversations([]);
-                      createNewChat();
-                    });
-                  }
-                }}
-                className="w-full flex items-center justify-center gap-2 py-3 text-xs font-bold text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all border border-transparent hover:border-red-100"
-              >
-                <ChatIcons.Trash className="w-4 h-4" />
-                Limpar todo histórico
-              </button>
-            </div>
-          </div>
-          <div
-            className="flex-1 bg-black/5 cursor-pointer"
-            onClick={() => setShowHistory(false)}
-          />
-        </div>
-      </div>
-
-      {/* Header - Modern & Floating */}
-      <div className="relative px-8 py-6 bg-gradient-to-r from-primary via-primary to-primary-dark">
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 pointer-events-none"></div>
+      {/* Header - Minimal & Clean */}
+      <div className="relative px-8 py-5 border-b border-gray-100/50 bg-white/40">
         <div className="flex items-center justify-between relative z-10">
-          <div className="flex items-center space-x-5">
-            <button
-              onClick={() => setShowHistory(true)}
-              className="p-3 bg-white/10 hover:bg-white/20 rounded-[1.25rem] transition-all text-white/90 hover:text-white border border-white/20 backdrop-blur-md active:scale-95 group"
-              title="Histórico"
-            >
-              <ChatIcons.History className="w-6 h-6 group-hover:rotate-12 transition-transform" />
-            </button>
+          <div className="flex items-center space-x-4">
             <div className="relative group">
-              <div className="w-14 h-14 bg-white/10 backdrop-blur-2xl rounded-[1.5rem] flex items-center justify-center border border-white/30 shadow-2xl transition-transform group-hover:scale-105 duration-300">
-                <ChatIcons.Bot className="w-8 h-8 text-white" />
+              <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary-700 rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 transition-transform group-hover:scale-105 duration-300 text-white">
+                <ChatIcons.Bot className="w-6 h-6" />
               </div>
-              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-success border-4 border-primary rounded-full animate-pulse shadow-lg ring-2 ring-white/10"></div>
+              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-success border-2 border-white rounded-full animate-pulse shadow-sm"></div>
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-white font-black tracking-tight text-2xl uppercase">AxonIA</h3>
-                <span className="px-2 py-0.5 bg-white/20 backdrop-blur-md rounded-lg text-[10px] text-white font-black uppercase tracking-widest border border-white/20">PRO</span>
+                <h3 className="text-gray-900 font-bold tracking-tight text-lg">AxonIA</h3>
+                <span className="px-2 py-0.5 bg-primary/10 rounded-md text-[10px] text-primary font-black uppercase tracking-widest border border-primary/10">PRO</span>
               </div>
-              <div className="flex items-center space-x-2 mt-1 px-2 py-0.5 bg-black/10 rounded-full w-fit border border-white/10">
-                <div className="w-1.5 h-1.5 bg-success rounded-full animate-pulse"></div>
-                <p className="text-white text-[10px] font-bold uppercase tracking-wider opacity-90">IA Generativa Ativa</p>
+              <div className="flex items-center space-x-1.5">
+                <div className="w-1 h-1 bg-success rounded-full"></div>
+                <p className="text-gray-400 text-xs font-medium">Online e pronta para ajudar</p>
               </div>
             </div>
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3">
             {isStreaming && (
-              <div className="flex items-center space-x-3 px-4 py-2 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-xl transition-all">
-                <div className="flex space-x-1">
-                  <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                  <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                  <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce"></div>
+              <div className="flex items-center space-x-2 px-3 py-1.5 bg-primary/5 rounded-lg border border-primary/10">
+                <div className="flex space-x-0.5">
+                  <div className="w-1 h-1 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                  <div className="w-1 h-1 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                  <div className="w-1 h-1 bg-primary rounded-full animate-bounce"></div>
                 </div>
-                <span className="text-white text-[10px] font-black uppercase tracking-[0.2em]">Sincronizando</span>
+                <span className="text-primary text-[10px] font-bold uppercase tracking-wider">Digitando</span>
               </div>
             )}
             {onClose && (
               <button
                 onClick={onClose}
-                className="p-3 bg-white/10 hover:bg-white/20 rounded-[1.25rem] transition-all text-white/90 hover:text-white border border-white/20 backdrop-blur-md active:scale-95"
+                className="p-2 hover:bg-gray-100 rounded-xl transition-all text-gray-400 hover:text-gray-900"
               >
                 <ChatIcons.X className="w-5 h-5" />
               </button>
@@ -361,38 +247,43 @@ export default function ChatWidget({
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-10 space-y-10 scroll-smooth bg-gradient-to-b from-gray-50/50 to-white no-scrollbar">
+      <div className="flex-1 overflow-y-auto p-8 space-y-8 scroll-smooth no-scrollbar">
         {messages.length === 0 && (
-          <div className="h-full flex flex-col items-center justify-center text-center max-w-2xl mx-auto py-12">
-            <div className="relative mb-12">
-              <div className="absolute inset-0 bg-primary/20 blur-[80px] rounded-full animate-pulse"></div>
-              <div className="relative w-32 h-32 bg-gradient-to-br from-primary to-primary-700 rounded-[2.5rem] flex items-center justify-center border-4 border-white shadow-[0_25px_60px_-15px_rgba(var(--color-primary-rgb),0.5)] group transition-all hover:scale-110 duration-700 cursor-default">
-                <ChatIcons.Sparkles className="w-16 h-16 text-white animate-pulse group-hover:rotate-12 transition-transform" />
+          <div className="h-full flex flex-col items-center justify-center text-center max-w-xl mx-auto pb-10">
+            <div className="mb-8 relative">
+              <div className="absolute inset-0 bg-primary/20 blur-[60px] rounded-full animate-pulse"></div>
+              <div className="relative w-24 h-24 bg-white rounded-[2rem] flex items-center justify-center border-4 border-white shadow-[0_20px_50px_rgba(0,0,0,0.1)] mb-4">
+                <ChatIcons.Sparkles className="w-12 h-12 text-primary animate-pulse" />
               </div>
             </div>
 
-            <h4 className="text-4xl font-black text-gray-900 mb-4 tracking-tighter leading-tight">
-              Olá, eu sou a <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary-700">AxonIA</span>
+            <h4 className="text-3xl font-black text-gray-900 mb-3 tracking-tight">
+              Como posso ajudar hoje?
             </h4>
-            <p className="text-gray-500 max-w-md mx-auto mb-12 text-lg font-medium leading-relaxed opacity-80">
-              Sua inteligência artificial integrada para RH. Como posso facilitar seu dia hoje?
+            <p className="text-gray-500 mb-10 font-medium leading-relaxed">
+              Utilize o poder da IA para acelerar suas tarefas de RH.
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
               {suggestions.map((suggestion, index) => (
                 <button
                   key={index}
-                  onClick={() => setInput(suggestion)}
-                  className="group flex flex-col items-start p-6 text-sm bg-white hover:bg-primary rounded-[2rem] border border-gray-100 hover:border-primary transition-all duration-500 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_40px_rgba(var(--color-primary-rgb),0.15)] hover:-translate-y-1 active:scale-95 text-left"
+                  onClick={() => {
+                    setInput(suggestion);
+                    // Optional: auto submit
+                    // submitMessage(suggestion); 
+                  }}
+                  className="group flex items-center p-4 text-left bg-white hover:bg-primary/5 rounded-2xl border border-gray-100 hover:border-primary/20 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 active:scale-[0.98]"
                 >
-                  <div className="w-10 h-10 bg-gray-50 group-hover:bg-white/20 rounded-xl mb-4 flex items-center justify-center transition-colors">
-                    {index === 0 && <ChatIcons.Calculator className="w-5 h-5 text-primary group-hover:text-white" />}
-                    {index === 1 && <ChatIcons.BookOpen className="w-5 h-5 text-primary group-hover:text-white" />}
-                    {index === 2 && <ChatIcons.MessageSquare className="w-5 h-5 text-primary group-hover:text-white" />}
-                    {index === 3 && <ChatIcons.Sparkles className="w-5 h-5 text-primary group-hover:text-white" />}
+                  <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center group-hover:bg-white group-hover:text-primary transition-colors text-gray-400 mr-3">
+                    {index === 0 && <ChatIcons.Calculator className="w-4 h-4" />}
+                    {index === 1 && <ChatIcons.BookOpen className="w-4 h-4" />}
+                    {index === 2 && <ChatIcons.MessageSquare className="w-4 h-4" />}
+                    {index === 3 && <ChatIcons.Sparkles className="w-4 h-4" />}
                   </div>
-                  <span className="font-black text-gray-900 group-hover:text-white transition-colors text-base tracking-tight mb-1">{suggestion}</span>
-                  <p className="text-xs text-gray-400 group-hover:text-white/80 transition-colors font-medium">Clique para iniciar esta tarefa</p>
+                  <span className="text-xs font-semibold text-gray-600 group-hover:text-primary-900 transition-colors line-clamp-2">
+                    {suggestion}
+                  </span>
                 </button>
               ))}
             </div>
@@ -414,84 +305,66 @@ export default function ChatWidget({
         ))}
 
         {isLoading && !isStreaming && (
-          <div className="flex justify-start animate-fade-in">
-            <div className="bg-white border border-gray-100/50 rounded-[2rem] rounded-tl-none px-8 py-5 shadow-xl">
-              <div className="flex space-x-2">
-                <div className="w-2 h-2 bg-primary/20 rounded-full animate-bounce [animation-duration:1s]"></div>
-                <div className="w-2 h-2 bg-primary/40 rounded-full animate-bounce [animation-delay:-0.2s] [animation-duration:1s]"></div>
-                <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce [animation-delay:-0.4s] [animation-duration:1s]"></div>
-              </div>
+          <div className="flex justify-start animate-fade-in pl-2">
+            <div className="bg-white border border-gray-100 px-6 py-4 rounded-3xl rounded-tl-none shadow-sm flex space-x-1.5 items-center">
+              <span className="text-xs font-bold text-gray-400 mr-2">Pensando</span>
+              <div className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce [animation-duration:0.8s]"></div>
+              <div className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce [animation-delay:-0.2s] [animation-duration:0.8s]"></div>
+              <div className="w-1.5 h-1.5 bg-primary/80 rounded-full animate-bounce [animation-delay:-0.4s] [animation-duration:0.8s]"></div>
             </div>
           </div>
         )}
 
-        <div ref={messagesEndRef} className="h-4" />
+        <div ref={messagesEndRef} className="h-px" />
       </div>
 
-      {/* Input Section - Super Clean & Modern */}
-      <div className="p-8 bg-white border-t border-gray-100/50">
-        {messages.length > 0 && (
-          <div className="flex gap-2 overflow-x-auto pb-6 no-scrollbar">
-            {suggestions.slice(0, 3).map((suggestion, index) => (
-              <button
-                key={index}
-                onClick={() => submitMessage(suggestion)}
-                className="whitespace-nowrap px-6 py-2.5 text-xs font-black bg-gray-50 text-gray-600 border border-gray-100 rounded-full hover:bg-primary hover:text-white hover:border-primary transition-all shadow-sm active:scale-95 uppercase tracking-wider"
-              >
-                {suggestion}
-              </button>
-            ))}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="relative group flex items-center gap-4">
-          <div className="relative flex-1 group">
-            <div className="absolute inset-0 bg-primary/5 blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-700"></div>
+      {/* Input Section */}
+      <div className="p-6 bg-white/60 backdrop-blur-md border-t border-white/60">
+        <form onSubmit={handleSubmit} className="relative flex items-end gap-3">
+          <div className="relative flex-1 bg-white rounded-[1.5rem] border border-gray-200/60 shadow-sm focus-within:shadow-md focus-within:border-primary/30 transition-all duration-300">
             <textarea
               ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Digite sua mensagem ou pedido..."
+              placeholder="Digite sua mensagem..."
               disabled={isLoading}
               rows={1}
-              className="relative w-full resize-none rounded-[2rem] border-2 border-gray-100 bg-white px-8 py-5 pr-16 text-gray-900 font-medium placeholder:text-gray-400 placeholder:font-bold focus:outline-none focus:ring-0 focus:border-primary transition-all shadow-sm group-hover:shadow-xl group-hover:border-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed text-lg"
+              className="w-full resize-none bg-transparent px-6 py-4 pr-12 text-gray-900 placeholder:text-gray-400 focus:outline-none disabled:bg-gray-50 disabled:cursor-not-allowed max-h-32 text-sm font-medium"
+              style={{ minHeight: '56px' }}
             />
             <button
               type="button"
-              className="absolute right-6 top-1/2 -translate-y-1/2 p-2.5 text-gray-400 hover:text-primary transition-all hover:scale-110"
-              title="Voz"
+              className="absolute right-4 bottom-3 p-1.5 text-gray-400 hover:text-primary transition-colors disabled:opacity-50"
+              disabled={isLoading}
             >
-              <ChatIcons.Mic className="w-6 h-6" />
+              <ChatIcons.Mic className="w-5 h-5" />
             </button>
           </div>
 
           <button
             type="submit"
             disabled={isLoading || !input.trim()}
-            className="p-6 bg-primary text-white rounded-[2rem] hover:bg-primary-700 disabled:bg-gray-100 disabled:text-gray-400 transition-all active:scale-90 shadow-2xl shadow-primary/20 flex-shrink-0 group"
+            className="h-[56px] w-[56px] bg-gray-900 text-white rounded-[1.5rem] hover:bg-black disabled:bg-gray-200 disabled:text-gray-400 transition-all active:scale-95 shadow-lg flex items-center justify-center group"
           >
             {isLoading ? (
-              <svg className="w-6 h-6 animate-spin" fill="none" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor"
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>
             ) : (
-              <ChatIcons.Send className="w-6 h-6 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+              <ChatIcons.Send className="w-5 h-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             )}
           </button>
         </form>
 
-        <div className="mt-8 flex items-center justify-between border-t border-gray-50 pt-4">
-          <div className="flex items-center gap-3 px-3 py-1.5 bg-success/5 rounded-full border border-success/10">
-            <div className="w-2 h-2 bg-success rounded-full animate-pulse"></div>
-            <span className="text-[10px] text-success font-black uppercase tracking-[0.2em]">Neural Network Online</span>
-          </div>
-          <p className="text-[10px] text-gray-300 font-bold tracking-[0.15em] uppercase">AxonRH Intelligence <span className="text-primary/40">Enterprise v2.0</span></p>
+        <div className="mt-4 flex justify-center">
+          <p className="text-[10px] text-gray-400 font-medium">
+            A AxonIA pode cometer erros. Verifique informações importantes.
+          </p>
         </div>
       </div>
-
     </div>
   );
 }
@@ -511,37 +384,40 @@ function MessageBubble({
 
   return (
     <div className={cn(
-      "flex w-full animate-in fade-in slide-in-from-bottom-6 duration-700 ease-out",
+      "flex w-full animate-fade-in group/bubble",
       isUser ? 'justify-end' : 'justify-start'
     )}>
       <div className={cn(
-        "flex max-w-[85%] space-x-5 px-2",
-        isUser ? 'flex-row-reverse space-x-reverse' : 'flex-row'
+        "flex max-w-[85%] gap-4",
+        isUser ? 'flex-row-reverse' : 'flex-row'
       )}>
-        {/* Avatar - More Stylized */}
+        {/* Avatar */}
         <div className={cn(
-          "flex-shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center text-sm shadow-xl transition-transform hover:scale-110 cursor-default",
+          "flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-xs shadow-sm mt-1",
           isUser
-            ? 'bg-gradient-to-br from-primary to-primary-700 text-white border-2 border-white'
-            : 'bg-white border-2 border-gray-100 text-primary'
+            ? 'bg-gray-900 text-white'
+            : 'bg-white border border-gray-100 text-primary'
         )}>
-          {isUser ? <ChatIcons.User className="w-5 h-5" /> : <ChatIcons.Bot className="w-6 h-6" />}
+          {isUser ? <ChatIcons.User className="w-4 h-4" /> : <ChatIcons.Bot className="w-5 h-5" />}
         </div>
 
-        {/* Bubble - More Modern Shapes */}
+        {/* Content */}
         <div className={cn(
-          "flex flex-col space-y-2",
+          "flex flex-col space-y-1",
           isUser ? "items-end" : "items-start"
         )}>
+          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">
+            {isUser ? 'Você' : 'AxonIA'}
+          </span>
           <div className={cn(
-            "rounded-[2rem] px-8 py-5 shadow-2xl relative transition-all hover:shadow-primary/5 group",
+            "rounded-2xl px-6 py-4 shadow-sm relative text-sm leading-relaxed",
             isUser
-              ? 'bg-gradient-to-br from-primary to-primary-700 text-white rounded-tr-none'
+              ? 'bg-gray-900 text-white rounded-tr-none'
               : isError
                 ? 'bg-red-50 text-red-800 border border-red-100 rounded-tl-none'
                 : isActionConfirmation
-                  ? 'bg-primary-50/30 border border-primary-200/50 rounded-tl-none !p-0 overflow-hidden backdrop-blur-sm'
-                  : 'bg-white border-b-4 border-gray-100/50 text-gray-800 rounded-tl-none ring-1 ring-black/5'
+                  ? 'bg-white border border-primary/20 shadow-lg rounded-tl-none p-0 overflow-hidden'
+                  : 'bg-white border border-gray-100 text-gray-800 rounded-tl-none'
           )}>
             {isActionConfirmation ? (
               <ActionConfirmation
@@ -550,26 +426,20 @@ function MessageBubble({
                 onCancel={onActionCancel}
               />
             ) : message.type === 'CALCULATION' || message.type === 'QUERY_RESULT' || !isUser ? (
-              <div className="prose prose-sm max-w-none prose-slate prose-p:font-medium prose-headings:font-black prose-headings:text-primary-900 prose-strong:text-primary-800">
+              <div className="prose prose-sm max-w-none prose-slate prose-p:my-1 prose-headings:my-2 prose-ul:my-1 prose-li:my-0">
                 <MarkdownContent content={message.content} />
               </div>
             ) : (
-              <p className="whitespace-pre-wrap text-[15px] leading-relaxed font-bold tracking-tight">{message.content}</p>
+              <p className="whitespace-pre-wrap font-medium">{message.content}</p>
             )}
-
-            {/* Timestamp hover indicator */}
-            <div className={cn(
-              "absolute -bottom-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300 w-max",
-              isUser ? "right-0" : "left-0"
-            )}>
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
-                {new Date(message.timestamp).toLocaleTimeString('pt-BR', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
-              </span>
-            </div>
           </div>
+
+          <span className="text-[10px] text-gray-300 px-1 opacity-0 group-hover/bubble:opacity-100 transition-opacity">
+            {new Date(message.timestamp).toLocaleTimeString('pt-BR', {
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </span>
         </div>
       </div>
     </div>
@@ -798,27 +668,19 @@ function MarkdownContent({ content }: { content: string }) {
     }
 
     if (line.startsWith('## ')) {
-      elements.push(<h3 key={index} className="font-bold text-lg text-primary-900 mt-4 mb-2">{parseInlineFormatting(line.slice(3))}</h3>);
+      elements.push(<h2 key={index} className="text-xl font-bold text-gray-900 mt-6 mb-3">{parseInlineFormatting(line.replace('## ', ''))}</h2>);
     } else if (line.startsWith('### ')) {
-      elements.push(<h4 key={index} className="font-semibold text-primary-800 mt-3 mb-1">{parseInlineFormatting(line.slice(4))}</h4>);
-    } else if (line.startsWith('**') && line.endsWith('**')) {
-      elements.push(<p key={index} className="font-semibold text-gray-900 my-1">{line.slice(2, -2)}</p>);
-    } else if (line.startsWith('* ') || line.startsWith('- ')) {
-      elements.push(
-        <div key={index} className="flex items-start space-x-2 ml-2 my-1">
-          <span className="text-primary-500 mt-1.5 w-1.5 h-1.5 bg-primary-500 rounded-full flex-shrink-0"></span>
-          <span className="text-sm text-gray-700">{parseInlineFormatting(line.slice(2).trim())}</span>
-        </div>
-      );
-    } else if (trimmed === '') {
+      elements.push(<h3 key={index} className="text-lg font-semibold text-gray-800 mt-4 mb-2">{parseInlineFormatting(line.replace('### ', ''))}</h3>);
+    } else if (line.startsWith('- ')) {
+      elements.push(<li key={index} className="ml-4 list-disc text-gray-700 mb-1">{parseInlineFormatting(line.replace('- ', ''))}</li>);
+    } else if (line.trim() === '') {
       elements.push(<div key={index} className="h-2"></div>);
     } else {
-      // Processa negrito inline em linhas normais
-      elements.push(<p key={index} className="text-sm text-gray-700 leading-relaxed my-1">{parseInlineFormatting(line)}</p>);
+      elements.push(<p key={index} className="mb-2 text-gray-700">{parseInlineFormatting(line)}</p>);
     }
   });
 
   flushTable(lines.length);
 
-  return <div className="space-y-1">{elements}</div>;
+  return <>{elements}</>;
 }
