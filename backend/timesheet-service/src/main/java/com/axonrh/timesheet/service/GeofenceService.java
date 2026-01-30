@@ -19,6 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.Collections;
 import java.util.List;
@@ -33,12 +34,15 @@ public class GeofenceService {
 
     private final GeofenceRepository geofenceRepository;
     private final ObjectMapper objectMapper;
+    private final JdbcTemplate jdbcTemplate;
 
     public GeofenceService(
             GeofenceRepository geofenceRepository,
-            @Qualifier("timesheetKafkaObjectMapper") ObjectMapper objectMapper) {
+            @Qualifier("timesheetKafkaObjectMapper") ObjectMapper objectMapper,
+            JdbcTemplate jdbcTemplate) {
         this.geofenceRepository = geofenceRepository;
         this.objectMapper = objectMapper;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     /**
@@ -193,7 +197,7 @@ public class GeofenceService {
 
         if (containingGeofences.isEmpty()) {
             log.debug("Nenhuma geofence contem a localizacao ({}, {})", latitude, longitude);
-            return new GeofenceValidationResult(false, null, null);
+            // Don't return yet, check company geofence
         }
 
         // Verificar se alguma geofence permite o colaborador
@@ -204,9 +208,57 @@ public class GeofenceService {
             }
         }
 
+        // Verificar geofence da sede (Company Profile)
+        GeofenceValidationResult companyResult = checkCompanyGeofence(tenantId, latitude, longitude);
+        if (companyResult.isWithin()) {
+            log.debug("Colaborador {} autorizado na cerca digital da sede", employeeId);
+            return companyResult;
+        }
+
         // Colaborador nao autorizado nas geofences encontradas
         log.debug("Colaborador {} nao autorizado nas geofences encontradas", employeeId);
         return new GeofenceValidationResult(false, null, null);
+    }
+
+    /**
+     * Verifica cerca digital definida no perfil da empresa.
+     */
+    private GeofenceValidationResult checkCompanyGeofence(UUID tenantId, double lat, double lon) {
+        try {
+            String sql = "SELECT geofence_enabled, geofence_latitude, geofence_longitude, geofence_radius " +
+                         "FROM company_profiles WHERE tenant_id = ?";
+            
+            return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
+                boolean enabled = rs.getBoolean("geofence_enabled");
+                if (!enabled) return new GeofenceValidationResult(false, null, null);
+
+                Double compLat = rs.getDouble("geofence_latitude");
+                Double compLon = rs.getDouble("geofence_longitude");
+                int radius = rs.getInt("geofence_radius");
+
+                if (compLat == 0 && compLon == 0) return new GeofenceValidationResult(false, null, null);
+
+                double distance = calculateDistance(compLat, compLon, lat, lon);
+                if (distance <= radius) {
+                    return new GeofenceValidationResult(true, tenantId, "Sede (Cerca Digital)");
+                }
+                return new GeofenceValidationResult(false, null, null);
+            }, tenantId);
+        } catch (Exception e) {
+            log.error("Erro ao verificar cerca digital da empresa para tenant {}", tenantId, e);
+            return new GeofenceValidationResult(false, null, null);
+        }
+    }
+
+    private double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+        final int R = 6371000; // Raio da Terra em metros
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                   Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+                   Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
     }
 
     /**

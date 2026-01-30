@@ -369,6 +369,10 @@ public class SetupWizardService {
         target.setAccountantCrc(source.getAccountantCrc());
         target.setAccountantEmail(source.getAccountantEmail());
         target.setAccountantPhone(source.getAccountantPhone());
+        target.setGeofenceEnabled(source.getGeofenceEnabled());
+        target.setGeofenceLatitude(source.getGeofenceLatitude());
+        target.setGeofenceLongitude(source.getGeofenceLongitude());
+        target.setGeofenceRadius(source.getGeofenceRadius());
     }
 
     public Optional<CompanyProfile> getCompanyProfile(UUID tenantId, UUID userId) {

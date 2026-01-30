@@ -468,6 +468,64 @@ function Step1CompanyData({
           </select>
         </div>
       </div>
+
+      <hr className="border-slate-200" />
+
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-slate-900">Cerca Digital</h3>
+            <p className="text-sm text-slate-500">
+              Defina o perímetro permitido para o registro de ponto presencial.
+            </p>
+          </div>
+          <Switch
+            checked={profile.geofenceEnabled || false}
+            onCheckedChange={(checked) => onChange({ ...profile, geofenceEnabled: checked })}
+          />
+        </div>
+
+        {profile.geofenceEnabled && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700">Latitude</label>
+              <input
+                type="number"
+                step="any"
+                value={profile.geofenceLatitude || ''}
+                onChange={(e) => onChange({ ...profile, geofenceLatitude: parseFloat(e.target.value) })}
+                placeholder="-23.5505"
+                className="mt-2 block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700">Longitude</label>
+              <input
+                type="number"
+                step="any"
+                value={profile.geofenceLongitude || ''}
+                onChange={(e) => onChange({ ...profile, geofenceLongitude: parseFloat(e.target.value) })}
+                placeholder="-46.6333"
+                className="mt-2 block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700">Raio (metros)</label>
+              <input
+                type="number"
+                value={profile.geofenceRadius || 100}
+                onChange={(e) => onChange({ ...profile, geofenceRadius: parseInt(e.target.value) })}
+                className="mt-2 block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200"
+              />
+            </div>
+            <div className="md:col-span-3">
+              <p className="text-xs text-slate-500">
+                Dica: Você pode obter as coordenadas no Google Maps clicando com o botão direito no local desejado.
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

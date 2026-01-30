@@ -112,6 +112,19 @@ public class CompanyProfile {
     @Column(name = "accountant_phone", length = 20)
     private String accountantPhone;
 
+    // Digital Fence (Geofence)
+    @Column(name = "geofence_enabled")
+    private Boolean geofenceEnabled = false;
+
+    @Column(name = "geofence_latitude")
+    private Double geofenceLatitude;
+
+    @Column(name = "geofence_longitude")
+    private Double geofenceLongitude;
+
+    @Column(name = "geofence_radius")
+    private Integer geofenceRadius = 100;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -234,6 +247,18 @@ public class CompanyProfile {
 
     public String getAccountantPhone() { return accountantPhone; }
     public void setAccountantPhone(String accountantPhone) { this.accountantPhone = accountantPhone; }
+
+    public Boolean getGeofenceEnabled() { return geofenceEnabled; }
+    public void setGeofenceEnabled(Boolean geofenceEnabled) { this.geofenceEnabled = geofenceEnabled; }
+
+    public Double getGeofenceLatitude() { return geofenceLatitude; }
+    public void setGeofenceLatitude(Double geofenceLatitude) { this.geofenceLatitude = geofenceLatitude; }
+
+    public Double getGeofenceLongitude() { return geofenceLongitude; }
+    public void setGeofenceLongitude(Double geofenceLongitude) { this.geofenceLongitude = geofenceLongitude; }
+
+    public Integer getGeofenceRadius() { return geofenceRadius; }
+    public void setGeofenceRadius(Integer geofenceRadius) { this.geofenceRadius = geofenceRadius; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

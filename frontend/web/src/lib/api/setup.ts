@@ -89,6 +89,10 @@ export interface CompanyProfile {
   accountantCrc?: string;
   accountantEmail?: string;
   accountantPhone?: string;
+  geofenceEnabled?: boolean;
+  geofenceLatitude?: number;
+  geofenceLongitude?: number;
+  geofenceRadius?: number;
 }
 
 export interface ImportJob {
