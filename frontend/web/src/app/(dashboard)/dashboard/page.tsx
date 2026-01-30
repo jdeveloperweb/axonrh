@@ -23,6 +23,7 @@ import {
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { useAuthStore } from '@/stores/auth-store';
 import { dashboardApi, DashboardStats, LearningStats } from '@/lib/api/dashboard';
+import { CollaboratorDashboard } from '@/components/dashboard/CollaboratorDashboard';
 
 // ==================== Types ====================
 
@@ -66,7 +67,12 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('geral');
 
+  const roles = user?.roles || [];
+  const isManagement = roles.includes('ADMIN') || roles.includes('RH');
+
   useEffect(() => {
+    if (!isManagement) return;
+
     async function loadStats() {
       try {
         const [dashboardData, learningData] = await Promise.all([
@@ -82,7 +88,7 @@ export default function DashboardPage() {
       }
     }
     loadStats();
-  }, []);
+  }, [isManagement]);
 
   // --- Data Transformation for Charts ---
 
@@ -533,8 +539,12 @@ export default function DashboardPage() {
     );
   };
 
-  if (loading) {
-    return <div className="flex h-96 items-center justify-center">Carregando dashboard...</div>;
+  if (loading && isManagement) {
+    return <div className="flex h-96 items-center justify-center text-gray-400">Carregando painel de gestão...</div>;
+  }
+
+  if (!isManagement) {
+    return <CollaboratorDashboard />;
   }
 
   return (

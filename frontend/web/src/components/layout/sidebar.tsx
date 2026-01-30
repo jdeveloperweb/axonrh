@@ -147,20 +147,21 @@ export function Sidebar() {
           {navGroups.map((group, groupIndex) => {
             const roles = user?.roles || [];
             const isAdmin = roles.includes('ADMIN');
-            const isOnlyCollaborator = roles.includes('COLABORADOR') && roles.length === 1;
+            const isRH = roles.includes('RH');
+            const hasAdminAccess = isAdmin || isRH;
 
-            // Se for apenas colaborador e o grupo for ADMINISTRAÇÃO, pula
-            if (isOnlyCollaborator && group.title === 'ADMINISTRAÇÃO') return null;
+            // Só quem tem acesso admin (ADMIN ou RH) vê o grupo de administração
+            if (group.title === 'ADMINISTRAÇÃO' && !hasAdminAccess) return null;
 
             const groupFilteredItems = group.items.filter((item) => {
               if (!hasPermission(item.permission)) return false;
 
-              // Filtros específicos: Administrador vê tudo. Colaborador puro tem restrições.
-              if (isAdmin) return true;
+              // Filtros específicos: Administrador e RH vêem tudo.
+              if (hasAdminAccess) return true;
 
-              if (isOnlyCollaborator) {
-                if (item.label === 'Colaboradores') return false;
-                if (item.label === 'Processos RH') return false;
+              // Colaboradores puros, Líderes e Gestores não vêem estas telas específicas de gestão
+              if (item.label === 'Colaboradores' || item.label === 'Processos RH') {
+                return false;
               }
 
               return true;

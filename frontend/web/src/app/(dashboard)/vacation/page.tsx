@@ -36,12 +36,19 @@ import {
 } from '@/components/ui/table';
 import { vacationApi, VacationPeriod, VacationRequest } from '@/lib/api/vacation';
 import { cn } from '@/lib/utils';
+import { useAuthStore } from '@/stores/auth-store';
 
 export default function VacationPage() {
   const router = useRouter();
+  const { user } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [periods, setPeriods] = useState<VacationPeriod[]>([]);
   const [requests, setRequests] = useState<VacationRequest[]>([]);
+
+  const roles = user?.roles || [];
+  const isAdmin = roles.includes('ADMIN');
+  const isRH = roles.includes('RH');
+  const isManager = roles.includes('GESTOR') || roles.includes('LIDER');
   const [statistics, setStatistics] = useState({
     pendingRequests: 0,
     expiringPeriods: 0,
@@ -365,43 +372,47 @@ export default function VacationPage() {
           </div>
 
           {/* Manager / Admin Section */}
-          <div className="space-y-4 pt-4 border-t">
-            <h3 className="font-semibold text-lg text-muted-foreground">Gestão</h3>
+          {(isAdmin || isRH || isManager) && (
+            <div className="space-y-4 pt-4 border-t">
+              <h3 className="font-semibold text-lg text-muted-foreground">Gestão</h3>
 
-            <Card className="border shadow-none bg-slate-50 overflow-hidden">
-              <div className="h-1 w-full bg-blue-500"></div>
-              <CardContent className="p-0">
-                <button
-                  onClick={() => router.push('/vacation/approvals')}
-                  className="w-full text-left p-4 hover:bg-slate-100 transition-colors flex items-center justify-between border-b"
-                >
-                  <span className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-blue-600" />
-                    <span className="font-medium text-sm">Aprovações Pendentes</span>
-                  </span>
-                  {statistics.pendingRequests > 0 && (
-                    <Badge variant="secondary" className="bg-blue-200 text-blue-800 hover:bg-blue-300">
-                      {statistics.pendingRequests}
-                    </Badge>
+              <Card className="border shadow-none bg-slate-50 overflow-hidden">
+                <div className="h-1 w-full bg-blue-500"></div>
+                <CardContent className="p-0">
+                  <button
+                    onClick={() => router.push('/vacation/approvals')}
+                    className="w-full text-left p-4 hover:bg-slate-100 transition-colors flex items-center justify-between border-b"
+                  >
+                    <span className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-blue-600" />
+                      <span className="font-medium text-sm">Aprovações Pendentes</span>
+                    </span>
+                    {statistics.pendingRequests > 0 && (
+                      <Badge variant="secondary" className="bg-blue-200 text-blue-800 hover:bg-blue-300">
+                        {statistics.pendingRequests}
+                      </Badge>
+                    )}
+                  </button>
+                  {(isAdmin || isRH) && (
+                    <button
+                      onClick={() => router.push('/vacation/admin')}
+                      className="w-full text-left p-4 hover:bg-slate-100 transition-colors flex items-center justify-between"
+                    >
+                      <span className="flex items-center gap-2">
+                        <AlertTriangle className="h-4 w-4 text-orange-600" />
+                        <span className="font-medium text-sm">Monitoramento (RH)</span>
+                      </span>
+                      {statistics.expiringPeriods > 0 && (
+                        <Badge variant="secondary" className="bg-orange-200 text-orange-800 hover:bg-orange-300">
+                          {statistics.expiringPeriods}
+                        </Badge>
+                      )}
+                    </button>
                   )}
-                </button>
-                <button
-                  onClick={() => router.push('/vacation/admin')}
-                  className="w-full text-left p-4 hover:bg-slate-100 transition-colors flex items-center justify-between"
-                >
-                  <span className="flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 text-orange-600" />
-                    <span className="font-medium text-sm">Monitoramento (RH)</span>
-                  </span>
-                  {statistics.expiringPeriods > 0 && (
-                    <Badge variant="secondary" className="bg-orange-200 text-orange-800 hover:bg-orange-300">
-                      {statistics.expiringPeriods}
-                    </Badge>
-                  )}
-                </button>
-              </CardContent>
-            </Card>
-          </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
       </div>
 
