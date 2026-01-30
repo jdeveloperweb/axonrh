@@ -159,6 +159,67 @@ export default function VacationRequestPage() {
         );
     }
 
+    if (!loading && periods.length === 0) {
+        return (
+            <div className="container max-w-4xl py-16 animate-in fade-in duration-500">
+                <div className="flex flex-col items-center text-center space-y-6">
+                    <div className="bg-orange-50 p-6 rounded-full ring-8 ring-orange-50/50">
+                        <AlertTriangle className="h-16 w-16 text-orange-500" />
+                    </div>
+
+                    <div className="space-y-2 max-w-lg">
+                        <h1 className="text-2xl font-bold text-slate-900">Nenhum Período Aquisitivo Disponível</h1>
+                        <p className="text-muted-foreground text-lg">
+                            No momento, não encontramos períodos de férias disponíveis para você solicitar.
+                        </p>
+                    </div>
+
+                    <Card className="w-full max-w-md bg-slate-50 border-dashed border-2 shadow-none">
+                        <CardContent className="pt-6">
+                            <h3 className="font-semibold mb-4 flex items-center gap-2">
+                                <Info className="h-4 w-4 text-blue-500" />
+                                Por que isso acontece?
+                            </h3>
+                            <ul className="text-sm text-left space-y-3 text-slate-600">
+                                <li className="flex gap-3 items-start">
+                                    <div className="h-1.5 w-1.5 rounded-full bg-slate-400 mt-1.5 shrink-0" />
+                                    <span>Seus períodos anteriores já foram totalmente utilizados ou agendados.</span>
+                                </li>
+                                <li className="flex gap-3 items-start">
+                                    <div className="h-1.5 w-1.5 rounded-full bg-slate-400 mt-1.5 shrink-0" />
+                                    <span>Você pode ainda não ter completado o período aquisitivo (12 meses).</span>
+                                </li>
+                                <li className="flex gap-3 items-start">
+                                    <div className="h-1.5 w-1.5 rounded-full bg-slate-400 mt-1.5 shrink-0" />
+                                    <span>O RH ainda não processou a liberação do seu novo período.</span>
+                                </li>
+                            </ul>
+                        </CardContent>
+                    </Card>
+
+                    <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                        <Button
+                            variant="outline"
+                            size="lg"
+                            onClick={() => router.back()}
+                            className="min-w-[140px] gap-2"
+                        >
+                            <ArrowLeft className="h-4 w-4" />
+                            Voltar
+                        </Button>
+                        <Button
+                            size="lg"
+                            className="min-w-[140px]"
+                            onClick={() => router.push('/vacation')}
+                        >
+                            Ver Meus Históricos
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="container max-w-6xl py-8 space-y-8 animate-in fade-in duration-500">
             {/* Header com Estilo Premium */}
@@ -208,74 +269,61 @@ export default function VacationRequestPage() {
                             <h2 className="text-xl font-semibold">1. Qual período você deseja usar?</h2>
                         </div>
 
-                        {periods.length === 0 ? (
-                            <Alert className="bg-orange-50 border-orange-200 text-orange-900 rounded-2xl p-6">
-                                <AlertTriangle className="h-6 w-6 text-orange-600" />
-                                <div className="ml-4">
-                                    <AlertTitle className="text-lg font-bold">Nenhum período aquisitivo disponível</AlertTitle>
-                                    <AlertDescription className="mt-1 opacity-90">
-                                        Não encontramos períodos de férias prontos para solicitação no momento.
-                                        Se você acredita que isso está errado, entre em contato com o RH.
-                                    </AlertDescription>
-                                </div>
-                            </Alert>
-                        ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {periods.map((period) => (
-                                    <div
-                                        key={period.id}
-                                        onClick={() => {
-                                            form.setValue('vacationPeriodId', period.id);
-                                            setSelectedPeriod(period);
-                                        }}
-                                        className={cn(
-                                            "cursor-pointer group relative overflow-hidden rounded-2xl border-2 p-5 transition-all duration-300 hover:shadow-lg",
-                                            selectedPeriod?.id === period.id
-                                                ? "border-primary bg-primary/5 shadow-md"
-                                                : "border-border bg-card hover:border-primary/30"
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {periods.map((period) => (
+                                <div
+                                    key={period.id}
+                                    onClick={() => {
+                                        form.setValue('vacationPeriodId', period.id);
+                                        setSelectedPeriod(period);
+                                    }}
+                                    className={cn(
+                                        "cursor-pointer group relative overflow-hidden rounded-2xl border-2 p-5 transition-all duration-300 hover:shadow-lg",
+                                        selectedPeriod?.id === period.id
+                                            ? "border-primary bg-primary/5 shadow-md"
+                                            : "border-border bg-card hover:border-primary/30"
+                                    )}
+                                >
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div className="space-y-1">
+                                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Período Aquisitivo</p>
+                                            <p className="text-base font-bold">
+                                                {format(new Date(period.acquisitionStartDate), 'dd/MM/yyyy')} - {format(new Date(period.acquisitionEndDate), 'dd/MM/yyyy')}
+                                            </p>
+                                        </div>
+                                        {selectedPeriod?.id === period.id && (
+                                            <div className="bg-primary text-white p-1 rounded-full animate-in zoom-in">
+                                                <CheckCircle2 className="h-5 w-5" />
+                                            </div>
                                         )}
-                                    >
-                                        <div className="flex justify-between items-start mb-4">
-                                            <div className="space-y-1">
-                                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Período Aquisitivo</p>
-                                                <p className="text-base font-bold">
-                                                    {format(new Date(period.acquisitionStartDate), 'dd/MM/yyyy')} - {format(new Date(period.acquisitionEndDate), 'dd/MM/yyyy')}
-                                                </p>
-                                            </div>
-                                            {selectedPeriod?.id === period.id && (
-                                                <div className="bg-primary text-white p-1 rounded-full animate-in zoom-in">
-                                                    <CheckCircle2 className="h-5 w-5" />
-                                                </div>
-                                            )}
-                                        </div>
+                                    </div>
 
-                                        <div className="flex items-center gap-4 text-sm">
-                                            <div className="bg-background px-3 py-1.5 rounded-lg border">
-                                                <span className="text-muted-foreground mr-1">T:</span>
-                                                <span className="font-bold">{period.totalDays}d</span>
-                                            </div>
-                                            <div className="bg-background px-3 py-1.5 rounded-lg border">
-                                                <span className="text-muted-foreground mr-1">U:</span>
-                                                <span className="font-bold">{period.usedDays}d</span>
-                                            </div>
-                                            <div className="bg-primary/10 text-primary px-3 py-1.5 rounded-lg font-bold">
-                                                {period.remainingDays} dias restantes
-                                            </div>
+                                    <div className="flex items-center gap-4 text-sm">
+                                        <div className="bg-background px-3 py-1.5 rounded-lg border">
+                                            <span className="text-muted-foreground mr-1">T:</span>
+                                            <span className="font-bold">{period.totalDays}d</span>
                                         </div>
-
-                                        <div className="mt-4 pt-4 border-t border-dashed flex items-center justify-between text-xs text-muted-foreground">
-                                            <span>Prazo para concessão:</span>
-                                            <span className={cn(
-                                                "font-semibold",
-                                                period.isExpiringSoon ? "text-orange-600" : "text-foreground"
-                                            )}>
-                                                {format(new Date(period.concessionEndDate), 'dd/MM/yyyy')}
-                                            </span>
+                                        <div className="bg-background px-3 py-1.5 rounded-lg border">
+                                            <span className="text-muted-foreground mr-1">U:</span>
+                                            <span className="font-bold">{period.usedDays}d</span>
+                                        </div>
+                                        <div className="bg-primary/10 text-primary px-3 py-1.5 rounded-lg font-bold">
+                                            {period.remainingDays} dias restantes
                                         </div>
                                     </div>
-                                ))}
-                            </div>
-                        )}
+
+                                    <div className="mt-4 pt-4 border-t border-dashed flex items-center justify-between text-xs text-muted-foreground">
+                                        <span>Prazo para concessão:</span>
+                                        <span className={cn(
+                                            "font-semibold",
+                                            period.isExpiringSoon ? "text-orange-600" : "text-foreground"
+                                        )}>
+                                            {format(new Date(period.concessionEndDate), 'dd/MM/yyyy')}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                         {form.formState.errors.vacationPeriodId && (
                             <p className="text-sm text-red-500 px-1 font-medium">{form.formState.errors.vacationPeriodId.message}</p>
                         )}
@@ -310,7 +358,7 @@ export default function VacationRequestPage() {
                                     }}
                                 />
                                 <p className="text-[10px] text-muted-foreground mt-4 text-center">
-                                    Dica: Selecione a data de início e depois a data de término.
+                                    Dica: Para selecionar, clique na data de início e depois na data de fim.
                                 </p>
                             </div>
 
@@ -488,7 +536,7 @@ export default function VacationRequestPage() {
                                         size="lg"
                                         className="w-full rounded-2xl h-14 font-bold text-base shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
                                         onClick={form.handleSubmit(onSubmit)}
-                                        disabled={submitting || (!!selectedPeriod && totalDaysUsed > selectedPeriod.remainingDays) || totalDaysUsed === 0}
+                                        disabled={submitting || !selectedPeriod || (!!selectedPeriod && totalDaysUsed > selectedPeriod.remainingDays) || totalDaysUsed === 0}
                                     >
                                         {submitting ? (
                                             <>
