@@ -18,16 +18,13 @@ echo "Iniciando remoção segura do colaborador CPF: $CPF"
 echo "------------------------------------------------------------"
 
 # Bloco SQL para execução dentro do container
-SQL=$(cat <<EOF
--- Aumenta o search_path para incluir todos os schemas possíveis
-SELECT string_agg(schema_name, ',') FROM information_schema.schemata WHERE schema_name NOT LIKE 'pg_%' AND schema_name != 'information_schema' \gset schemas_
-SET search_path TO :schemas_paths, public;
-
-DO \$\$
+# IMPORTANTE: Usamos \ EOF para evitar que o shell tente interpretar os $1, $2 do PL/pgSQL
+SQL=$(cat <<'EOF'
+DO $$
 DECLARE
     v_employee_id UUID;
     v_user_id UUID;
-    v_cpf VARCHAR := '$CPF';
+    v_cpf VARCHAR := '__CPF_PLACEHOLDER__';
     v_schema RECORD;
 BEGIN
     -- 1. Localizar o Colaborador (sempre no shared)
@@ -47,48 +44,48 @@ BEGIN
         FROM information_schema.schemata 
         WHERE schema_name = 'shared' OR schema_name LIKE 'tenant_%'
     LOOP
-        EXECUTE format('SET search_path TO %I, public', v_schema.schema_name);
+        RAISE NOTICE 'Limpando dados no schema: %', v_schema.schema_name;
         
-        -- Limpeza Férias
+        -- Férias
         IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = v_schema.schema_name AND table_name = 'vacation_requests') THEN
-            EXECUTE 'DELETE FROM vacation_requests WHERE employee_id = $1' USING v_employee_id;
-            EXECUTE 'DELETE FROM vacation_periods WHERE employee_id = $1' USING v_employee_id;
-            EXECUTE 'DELETE FROM collective_vacation_employees WHERE employee_id = $1' USING v_employee_id;
+            EXECUTE format('DELETE FROM %I.vacation_requests WHERE employee_id = $1', v_schema.schema_name) USING v_employee_id;
+            EXECUTE format('DELETE FROM %I.vacation_periods WHERE employee_id = $1', v_schema.schema_name) USING v_employee_id;
+            EXECUTE format('DELETE FROM %I.collective_vacation_employees WHERE employee_id = $1', v_schema.schema_name) USING v_employee_id;
         END IF;
 
-        -- Limpeza Ponto
+        -- Ponto
         IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = v_schema.schema_name AND table_name = 'time_records') THEN
-            EXECUTE 'DELETE FROM time_records WHERE employee_id = $1' USING v_employee_id;
-            EXECUTE 'DELETE FROM time_adjustments WHERE employee_id = $1' USING v_employee_id;
-            EXECUTE 'DELETE FROM daily_summaries WHERE employee_id = $1' USING v_employee_id;
-            EXECUTE 'DELETE FROM overtime_banks WHERE employee_id = $1' USING v_employee_id;
+            EXECUTE format('DELETE FROM %I.time_records WHERE employee_id = $1', v_schema.schema_name) USING v_employee_id;
+            EXECUTE format('DELETE FROM %I.time_adjustments WHERE employee_id = $1', v_schema.schema_name) USING v_employee_id;
+            EXECUTE format('DELETE FROM %I.daily_summaries WHERE employee_id = $1', v_schema.schema_name) USING v_employee_id;
+            EXECUTE format('DELETE FROM %I.overtime_banks WHERE employee_id = $1', v_schema.schema_name) USING v_employee_id;
         END IF;
 
-        -- Limpeza Performance
+        -- Performance
         IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = v_schema.schema_name AND table_name = 'evaluations') THEN
-            EXECUTE 'DELETE FROM feedback_records WHERE to_employee_id = $1 OR from_employee_id = $1' USING v_employee_id;
-            EXECUTE 'DELETE FROM goals WHERE employee_id = $1' USING v_employee_id;
-            EXECUTE 'DELETE FROM pdis WHERE employee_id = $1' USING v_employee_id;
-            EXECUTE 'DELETE FROM evaluations WHERE evaluatee_id = $1 OR evaluator_id = $1' USING v_employee_id;
+            EXECUTE format('DELETE FROM %I.feedback_records WHERE to_employee_id = $1 OR from_employee_id = $1', v_schema.schema_name) USING v_employee_id;
+            EXECUTE format('DELETE FROM %I.goals WHERE employee_id = $1', v_schema.schema_name) USING v_employee_id;
+            EXECUTE format('DELETE FROM %I.pdis WHERE employee_id = $1', v_schema.schema_name) USING v_employee_id;
+            EXECUTE format('DELETE FROM %I.evaluations WHERE evaluatee_id = $1 OR evaluator_id = $1', v_schema.schema_name) USING v_employee_id;
         END IF;
 
-        -- Limpeza Learning
+        -- Learning
         IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = v_schema.schema_name AND table_name = 'enrollments') THEN
-            EXECUTE 'DELETE FROM path_enrollments WHERE enrollment_id IN (SELECT id FROM enrollments WHERE employee_id = $1)' USING v_employee_id;
-            EXECUTE 'DELETE FROM enrollments WHERE employee_id = $1' USING v_employee_id;
+            EXECUTE format('DELETE FROM %I.path_enrollments WHERE enrollment_id IN (SELECT id FROM %I.enrollments WHERE employee_id = $1)', v_schema.schema_name, v_schema.schema_name) USING v_employee_id;
+            EXECUTE format('DELETE FROM %I.enrollments WHERE employee_id = $1', v_schema.schema_name) USING v_employee_id;
         END IF;
 
-        -- Limpeza Notifications
+        -- Notifications
         IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = v_schema.schema_name AND table_name = 'notifications') THEN
-            EXECUTE 'DELETE FROM notifications WHERE recipient_id = $1' USING v_user_id;
+            EXECUTE format('DELETE FROM %I.notifications WHERE recipient_id = $1', v_schema.schema_name) USING v_user_id;
         END IF;
 
-        -- Limpeza Employee Service (específicas por schema)
+        -- Employee Service (específicas por schema)
         IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = v_schema.schema_name AND table_name = 'employee_documents') THEN
-            EXECUTE 'DELETE FROM employee_documents WHERE employee_id = $1' USING v_employee_id;
-            EXECUTE 'DELETE FROM employee_dependents WHERE employee_id = $1' USING v_employee_id;
-            EXECUTE 'DELETE FROM employee_history WHERE employee_id = $1' USING v_employee_id;
-            EXECUTE 'DELETE FROM employee_contracts WHERE employee_id = $1' USING v_employee_id;
+            EXECUTE format('DELETE FROM %I.employee_documents WHERE employee_id = $1', v_schema.schema_name) USING v_employee_id;
+            EXECUTE format('DELETE FROM %I.employee_dependents WHERE employee_id = $1', v_schema.schema_name) USING v_employee_id;
+            EXECUTE format('DELETE FROM %I.employee_history WHERE employee_id = $1', v_schema.schema_name) USING v_employee_id;
+            EXECUTE format('DELETE FROM %I.employee_contracts WHERE employee_id = $1', v_schema.schema_name) USING v_employee_id;
         END IF;
     END LOOP;
 
@@ -100,14 +97,18 @@ BEGIN
     END IF;
 
     RAISE NOTICE 'REMOÇÃO CONCLUÍDA COM SUCESSO!';
-END \$\$;
+END $$;
 EOF
 )
 
+# Substitui o placeholder pelo CPF real
+FINAL_SQL=$(echo "$SQL" | sed "s/__CPF_PLACEHOLDER__/$CPF/g")
+
 # Executar via Docker no container do Postgres
-echo "$SQL" | docker exec -i axonrh-postgres psql -U axonrh -d axonrh
+echo "$FINAL_SQL" | docker exec -i axonrh-postgres psql -U axonrh -d axonrh
 
 if [ $? -eq 0 ]; then
+    echo "------------------------------------------------------------"
     echo "Script finalizado com sucesso."
 else
     echo "Erro ao executar a remoção no banco de dados."
