@@ -91,12 +91,20 @@ public class EmployeeController {
 
     @GetMapping("/validate-cpf/{cpf}")
     @Operation(summary = "Valida se CPF ja esta cadastrado")
-    public ResponseEntity<java.util.Map<String, Boolean>> validateCpf(
+    public ResponseEntity<java.util.Map<String, Object>> validateCpf(
             @Parameter(description = "CPF a validar") @PathVariable String cpf) {
 
         log.debug("Validando CPF: {}", cpf);
         boolean exists = employeeService.existsByCpf(cpf);
-        return ResponseEntity.ok(java.util.Map.of("exists", exists));
+        
+        java.util.Map<String, Object> response = new java.util.HashMap<>();
+        response.put("exists", exists);
+        response.put("valid", !exists);
+        if (exists) {
+            response.put("message", "CPF já cadastrado");
+        }
+        
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/search")

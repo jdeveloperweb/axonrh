@@ -327,8 +327,8 @@ export const employeesApi = {
   },
 
   // Validate CPF
-  validateCpf: async (cpf: string): Promise<{ valid: boolean; message?: string }> => {
-    return api.get<unknown, { valid: boolean; message?: string }>(`/employees/validate-cpf/${cpf}`);
+  validateCpf: async (cpf: string): Promise<{ valid: boolean; exists: boolean; message?: string }> => {
+    return api.get<unknown, { valid: boolean; exists: boolean; message?: string }>(`/employees/validate-cpf/${cpf}`);
   },
 
   // Search address by CEP
