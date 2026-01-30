@@ -604,6 +604,17 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                                 {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
                             </div>
                             <div>
+                                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">Data de Admissão</label>
+                                <input
+                                    type="date"
+                                    name="admissionDate"
+                                    value={formData.admissionDate}
+                                    onChange={handleChange}
+                                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] ${errors.admissionDate ? 'border-red-500' : 'border-gray-200'}`}
+                                />
+                                {errors.admissionDate && <p className="text-red-500 text-sm mt-1">{errors.admissionDate}</p>}
+                            </div>
+                            <div>
                                 <label className="block text-sm font-medium text-[var(--color-text)] mb-1">E-mail Pessoal</label>
                                 <input
                                     type="email"
@@ -794,10 +805,6 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                     <CardHeader><CardTitle>Dados Profissionais</CardTitle></CardHeader>
                     <CardContent className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Data de Admissão</label>
-                                <input type="date" name="admissionDate" value={formData.admissionDate} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg" />
-                            </div>
                             <div>
                                 <label className="block text-sm font-medium mb-1">Tipo de Contratação</label>
                                 <select name="employmentType" value={formData.employmentType} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg">
