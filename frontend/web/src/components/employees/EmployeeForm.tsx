@@ -9,11 +9,16 @@ import {
     Briefcase,
     FileText,
     Users,
-    Loader2
+    Loader2,
+    Key,
+    Wand2,
+    Eye,
+    EyeOff
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { employeesApi, EmployeeCreateRequest, Department, Position, CostCenter } from '@/lib/api/employees';
 import { managersApi, ManagerDTO } from '@/lib/api/managers';
+import { userApi } from '@/lib/api/users';
 import { useToast } from '@/hooks/use-toast';
 import { isValidCpf, isValidEmail } from '@/lib/utils';
 import { DocumentsTab } from './DocumentsTab';
@@ -61,6 +66,8 @@ interface FormData {
         zipCode: string;
         country: string;
     };
+    allowPlatformAccess: boolean;
+    platformPassword?: string;
 }
 
 interface EmployeeFormProps {
@@ -113,7 +120,11 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
             zipCode: '',
             country: 'Brasil',
         },
+        allowPlatformAccess: false,
+        platformPassword: '',
     });
+
+    const [showPassword, setShowPassword] = useState(false);
 
     const [errors, setErrors] = useState<FormErrors>({});
     const [loading, setLoading] = useState(false);
@@ -419,6 +430,30 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                 // Mudar para a próxima aba e atualizar URL sem refresh total se possível
                 setActiveTab('address');
                 window.history.replaceState(null, '', `/employees/${employee.id}/edit`);
+
+                // Se houver solicitação de acesso à plataforma, cria o usuário
+                if (formData.allowPlatformAccess && formData.platformPassword) {
+                    try {
+                        await userApi.create({
+                            name: formData.fullName,
+                            email: formData.email,
+                            password: formData.platformPassword,
+                            status: 'ACTIVE',
+                            roles: ['COLABORADOR']
+                        });
+                        toast({
+                            title: 'Acesso Criado',
+                            description: 'O usuário de acesso à plataforma foi criado com sucesso.',
+                        });
+                    } catch (userError) {
+                        console.error('Erro ao criar usuário:', userError);
+                        toast({
+                            title: 'Erro no Acesso',
+                            description: 'O colaborador foi salvo, mas houve um erro ao criar o acesso à plataforma.',
+                            variant: 'destructive',
+                        });
+                    }
+                }
             } else {
                 // UPDATE
                 await employeesApi.update(employeeId, submitData);
@@ -699,6 +734,74 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                                 {errors.personalEmail && <p className="text-red-500 text-sm mt-1">{errors.personalEmail}</p>}
                             </div>
                         </div>
+
+                        {/* Platform Access Section */}
+                        {!isEditing && (
+                            <div className="pt-6 border-t border-gray-100">
+                                <h3 className="text-lg font-semibold text-[var(--color-text)] mb-4 flex items-center gap-2">
+                                    <Key className="w-5 h-5 text-[var(--color-primary)]" />
+                                    Acesso à Plataforma
+                                </h3>
+                                <div className="space-y-4 max-w-md">
+                                    <label className="flex items-center gap-3 p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={formData.allowPlatformAccess}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, allowPlatformAccess: e.target.checked }))}
+                                            className="w-4 h-4 rounded border-gray-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                                        />
+                                        <div className="flex-1">
+                                            <p className="text-sm font-medium text-[var(--color-text)]">Liberar acesso ao sistema</p>
+                                            <p className="text-xs text-[var(--color-text-secondary)]">Cria automaticamente um usuário com o perfil de colaborador</p>
+                                        </div>
+                                    </label>
+
+                                    {formData.allowPlatformAccess && (
+                                        <div className="animate-in slide-in-from-top-2 duration-200">
+                                            <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
+                                                Senha Inicial
+                                            </label>
+                                            <div className="relative">
+                                                <input
+                                                    type={showPassword ? 'text' : 'password'}
+                                                    value={formData.platformPassword || ''}
+                                                    onChange={(e) => setFormData(prev => ({ ...prev, platformPassword: e.target.value }))}
+                                                    placeholder="Defina a senha do colaborador"
+                                                    className="w-full px-3 py-2 pr-24 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                                                />
+                                                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowPassword(!showPassword)}
+                                                        className="p-1.5 text-gray-400 hover:text-[var(--color-primary)] transition-colors"
+                                                        title={showPassword ? "Ocultar senha" : "Ver senha"}
+                                                    >
+                                                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+                                                            const length = 10;
+                                                            let newPass = "";
+                                                            for (let i = 0; i < length; i++) {
+                                                                newPass += chars.charAt(Math.floor(Math.random() * chars.length));
+                                                            }
+                                                            setFormData(prev => ({ ...prev, platformPassword: newPass }));
+                                                            setShowPassword(true);
+                                                        }}
+                                                        className="p-1.5 text-gray-400 hover:text-[var(--color-primary)] transition-colors"
+                                                        title="Gerar senha aleatória"
+                                                    >
+                                                        <Wand2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
 
                         {/* Professional Allocation Section */}
                         <div className="pt-6 border-t border-gray-100">

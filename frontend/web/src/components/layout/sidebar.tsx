@@ -145,7 +145,22 @@ export function Sidebar() {
       <nav className="flex-1 py-4 px-2 overflow-y-auto">
         <div className="space-y-6">
           {navGroups.map((group, groupIndex) => {
-            const groupFilteredItems = group.items.filter((item) => hasPermission(item.permission));
+            // Se for colaborador e o grupo for ADMINISTRAÇÃO, pula
+            const isCollaborator = user?.roles?.includes('COLABORADOR') && user?.roles?.length === 1;
+            if (isCollaborator && group.title === 'ADMINISTRAÇÃO') return null;
+
+            const groupFilteredItems = group.items.filter((item) => {
+              if (!hasPermission(item.permission)) return false;
+
+              // Filtros específicos para colaborador
+              if (isCollaborator) {
+                if (item.label === 'Colaboradores') return false;
+                if (item.label === 'Processos RH') return false;
+              }
+
+              return true;
+            });
+
             if (groupFilteredItems.length === 0) return null;
 
             return (
