@@ -8,7 +8,7 @@
 -- Descricao: Cadastro de empresas/clientes (tenants)
 -- =====================================================
 CREATE TABLE IF NOT EXISTS shared.tenants (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
     -- Identificacao
     name VARCHAR(200) NOT NULL,

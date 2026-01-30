@@ -8,7 +8,7 @@
 -- Descricao: Controle do progresso do wizard de implantacao
 -- =====================================================
 CREATE TABLE IF NOT EXISTS shared.setup_progress (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL UNIQUE REFERENCES shared.tenants(id) ON DELETE CASCADE,
 
     -- Progresso do Wizard
@@ -84,7 +84,7 @@ COMMENT ON COLUMN shared.setup_progress.validation_errors IS 'Lista de erros de 
 -- Descricao: Log de atividades durante o setup
 -- =====================================================
 CREATE TABLE IF NOT EXISTS shared.setup_activity_log (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     setup_progress_id UUID NOT NULL REFERENCES shared.setup_progress(id) ON DELETE CASCADE,
     tenant_id UUID NOT NULL REFERENCES shared.tenants(id) ON DELETE CASCADE,
 

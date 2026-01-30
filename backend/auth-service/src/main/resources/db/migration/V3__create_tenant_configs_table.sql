@@ -8,7 +8,7 @@
 -- Descricao: Configuracoes de identidade visual e personalizacao
 -- =====================================================
 CREATE TABLE IF NOT EXISTS shared.tenant_configs (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL REFERENCES shared.tenants(id) ON DELETE CASCADE,
 
     -- Versionamento de Configuracao
@@ -137,7 +137,7 @@ COMMENT ON COLUMN shared.tenant_configs.login_config IS 'Personalizacao da tela 
 -- Descricao: Historico de alteracoes nas configuracoes
 -- =====================================================
 CREATE TABLE IF NOT EXISTS shared.tenant_config_history (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_config_id UUID NOT NULL REFERENCES shared.tenant_configs(id) ON DELETE CASCADE,
     tenant_id UUID NOT NULL REFERENCES shared.tenants(id) ON DELETE CASCADE,
 

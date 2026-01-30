@@ -8,7 +8,7 @@
 -- Descricao: Historico de versoes de configuracoes para rollback
 -- =====================================================
 CREATE TABLE IF NOT EXISTS shared.config_versions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL REFERENCES shared.tenants(id) ON DELETE CASCADE,
 
     version INTEGER NOT NULL,

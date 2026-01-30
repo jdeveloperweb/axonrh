@@ -8,7 +8,7 @@
 -- Descricao: Usuarios do sistema
 -- =====================================================
 CREATE TABLE IF NOT EXISTS shared.users (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL REFERENCES shared.tenants(id) ON DELETE CASCADE,
 
     -- Identificacao
@@ -57,7 +57,7 @@ CREATE TRIGGER trg_users_updated_at
 -- Descricao: Papeis para RBAC
 -- =====================================================
 CREATE TABLE IF NOT EXISTS shared.roles (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID REFERENCES shared.tenants(id) ON DELETE CASCADE, -- null = role global
 
     name VARCHAR(50) NOT NULL,
@@ -85,7 +85,7 @@ CREATE TRIGGER trg_roles_updated_at
 -- Descricao: Permissoes granulares
 -- =====================================================
 CREATE TABLE IF NOT EXISTS shared.permissions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
     resource VARCHAR(50) NOT NULL,
     action VARCHAR(30) NOT NULL,
@@ -137,7 +137,7 @@ CREATE INDEX idx_role_permissions_permission ON shared.role_permissions(permissi
 -- Descricao: Tokens de refresh para renovacao de sessao
 -- =====================================================
 CREATE TABLE IF NOT EXISTS shared.refresh_tokens (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     token VARCHAR(500) UNIQUE NOT NULL,
     user_id UUID NOT NULL REFERENCES shared.users(id) ON DELETE CASCADE,
 
@@ -162,7 +162,7 @@ CREATE INDEX idx_refresh_tokens_expires ON shared.refresh_tokens(expires_at);
 -- Descricao: Log de tentativas de login
 -- =====================================================
 CREATE TABLE IF NOT EXISTS shared.login_attempts (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
     email VARCHAR(255) NOT NULL,
     tenant_id UUID,
