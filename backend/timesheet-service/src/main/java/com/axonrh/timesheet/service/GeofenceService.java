@@ -225,8 +225,9 @@ public class GeofenceService {
      */
     private GeofenceValidationResult checkCompanyGeofence(UUID tenantId, double lat, double lon) {
         try {
+            // Removemos o prefixo 'shared.' pois o default_schema ja eh 'shared'
             String sql = "SELECT geofence_enabled, geofence_latitude, geofence_longitude, geofence_radius " +
-                         "FROM shared.company_profiles WHERE tenant_id = ?";
+                         "FROM company_profiles WHERE tenant_id = ?";
             
             return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
                 boolean enabled = rs.getBoolean("geofence_enabled");
@@ -236,7 +237,11 @@ public class GeofenceService {
                 Double compLon = rs.getDouble("geofence_longitude");
                 int radius = rs.getInt("geofence_radius");
 
+                // Se latitude/longitude forem 0 ou null (getDouble retorna 0.0), ignoramos
                 if (compLat == 0 && compLon == 0) return new GeofenceValidationResult(false, null, null);
+                
+                // Fallback de seguranca para raio
+                if (radius <= 0) radius = 100;
 
                 double distance = calculateDistance(compLat, compLon, lat, lon);
                 if (distance <= radius) {
@@ -332,23 +337,33 @@ public class GeofenceService {
 
     private java.util.Optional<GeofenceResponse> fetchCompanyGeofence(UUID tenantId) {
         try {
+            // Removemos o prefixo 'shared.' pois o default_schema ja eh 'shared'
             String sql = "SELECT geofence_enabled, geofence_latitude, geofence_longitude, geofence_radius, legal_name " +
-                         "FROM shared.company_profiles WHERE tenant_id = ?";
+                         "FROM company_profiles WHERE tenant_id = ?";
             
             return jdbcTemplate.query(sql, (rs) -> {
                 if (rs.next()) {
                     boolean enabled = rs.getBoolean("geofence_enabled");
-                    if (!enabled) return java.util.Optional.empty();
+                    if (!enabled) {
+                        log.debug("Cerca digital desabilitada para o tenant {}", tenantId);
+                        return java.util.Optional.empty();
+                    }
 
                     Double compLat = rs.getDouble("geofence_latitude");
                     Double compLon = rs.getDouble("geofence_longitude");
                     int radius = rs.getInt("geofence_radius");
                     String companyName = rs.getString("legal_name");
 
-                    if (compLat == 0 && compLon == 0) return java.util.Optional.empty();
+                    if (compLat == 0 && compLon == 0) {
+                        log.debug("Cerca digital habilitada mas sem coordenadas para o tenant {}", tenantId);
+                        return java.util.Optional.empty();
+                    }
+                    
+                    // Fallback de seguranca para raio
+                    if (radius <= 0) radius = 100;
 
                     return java.util.Optional.of(GeofenceResponse.builder()
-                            .id(tenantId) // Usar tenantId como ID para a cerca da empresa
+                            .id(tenantId)
                             .name(companyName != null ? companyName : "Sede")
                             .description("Cerca digital da sede")
                             .latitude(compLat)
