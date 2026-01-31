@@ -69,15 +69,25 @@ export function formatDate(date: Date | string, format: 'short' | 'long' | 'full
   return new Intl.DateTimeFormat('pt-BR', optionsMap[format]).format(d);
 }
 
-/**
- * Formata hora.
- */
-export function formatTime(date: Date | string): string {
-  const d = typeof date === 'string' ? new Date(date) : date;
-  return new Intl.DateTimeFormat('pt-BR', {
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(d);
+export function formatTime(date: Date | string | null | undefined): string {
+  if (!date) return '--:--';
+
+  // If it's a time string like "HH:mm:ss" or "HH:mm"
+  if (typeof date === 'string' && /^\d{2}:\d{2}(:\d{2})?$/.test(date)) {
+    return date.substring(0, 5);
+  }
+
+  try {
+    const d = typeof date === 'string' ? new Date(date) : date;
+    if (isNaN(d.getTime())) return typeof date === 'string' ? date.substring(0, 5) : '--:--';
+
+    return new Intl.DateTimeFormat('pt-BR', {
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(d);
+  } catch (e) {
+    return '--:--';
+  }
 }
 
 /**

@@ -214,7 +214,7 @@ export default function TimeRecordPage() {
         description: 'Registrar fim do intervalo',
       },
     };
-    return configs[type];
+    return configs[type] || configs.ENTRY;
   };
 
   const handleTypeSelect = (type: RecordType) => {
@@ -281,7 +281,7 @@ export default function TimeRecordPage() {
       REJECTED: { label: 'Rejeitado', variant: 'destructive' as const },
       ADJUSTED: { label: 'Ajustado', variant: 'secondary' as const },
     };
-    const config = statusConfig[status];
+    const config = statusConfig[status] || statusConfig.VALID;
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
@@ -352,7 +352,8 @@ export default function TimeRecordPage() {
           <GeofenceMap
             userLocation={{
               latitude: location.latitude,
-              longitude: location.longitude
+              longitude: location.longitude,
+              accuracy: location.accuracy
             }}
             geofences={geofences}
             height="350px"
@@ -436,9 +437,9 @@ export default function TimeRecordPage() {
             </Alert>
           ) : (
             <div className="space-y-3">
-              {todayRecords.map((record) => {
+              {todayRecords.filter(r => r).map((record) => {
                 const config = getRecordTypeConfig(record.recordType);
-                const Icon = config.icon;
+                const Icon = config.icon || Clock;
 
                 return (
                   <div
