@@ -39,6 +39,7 @@ public class TimeRecordService {
     private final GeofenceRepository geofenceRepository;
     private final GeofenceService geofenceService;
     private final DailySummaryService dailySummaryService;
+    private final TimeAdjustmentService adjustmentService;
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @Value("${timesheet.tolerance.default-minutes:5}")
@@ -268,6 +269,23 @@ public class TimeRecordService {
     public long countPendingRecords() {
         UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
         return timeRecordRepository.countByTenantIdAndStatus(tenantId, RecordStatus.PENDING_APPROVAL);
+    }
+
+    /**
+     * Estatisticas para o dashboard.
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Long> getStatistics() {
+        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        LocalDate today = LocalDate.now();
+
+        Map<String, Long> stats = new HashMap<>();
+        stats.put("pendingRecords", countPendingRecords());
+        stats.put("pendingAdjustments", adjustmentService.countPendingAdjustments());
+        stats.put("todayRecords", timeRecordRepository.countByTenantIdAndRecordDate(tenantId, today));
+        stats.put("employeesWithIssues", 0L); // TODO: Implementar logica de inconsistencias
+
+        return stats;
     }
 
     // ==================== Metodos Privados ====================

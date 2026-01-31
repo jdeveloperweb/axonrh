@@ -62,6 +62,9 @@ public interface TimeRecordRepository extends JpaRepository<TimeRecord, UUID> {
     // Contagem de registros pendentes
     long countByTenantIdAndStatus(UUID tenantId, RecordStatus status);
 
+    // Contagem de registros no dia
+    long countByTenantIdAndRecordDate(UUID tenantId, LocalDate recordDate);
+
     // Contagem por status em um periodo
     @Query("""
         SELECT tr.status, COUNT(tr)

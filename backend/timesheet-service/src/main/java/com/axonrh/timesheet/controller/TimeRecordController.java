@@ -111,6 +111,15 @@ public class TimeRecordController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/records/today")
+    @Operation(summary = "Registros de hoje", description = "Retorna registros de hoje do colaborador logado")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET_RECORD', 'ADMIN')")
+    public ResponseEntity<List<TimeRecordResponse>> getTodayRecords(@AuthenticationPrincipal Jwt jwt) {
+        UUID employeeId = UUID.fromString(jwt.getSubject());
+        List<TimeRecordResponse> records = timeRecordService.getRecordsByDate(employeeId, LocalDate.now());
+        return ResponseEntity.ok(records);
+    }
+
     @GetMapping("/records/employee/{employeeId}/next-type")
     @Operation(summary = "Proximo tipo esperado", description = "Retorna o proximo tipo de registro esperado")
     @PreAuthorize("hasAnyAuthority('TIMESHEET_VIEW', 'TIMESHEET_RECORD', 'ADMIN')")
@@ -202,6 +211,14 @@ public class TimeRecordController {
 
         DailySummaryService.PeriodTotals totals = dailySummaryService.getPeriodTotals(employeeId, startDate, endDate);
         return ResponseEntity.ok(totals);
+    }
+
+    @GetMapping("/statistics")
+    @Operation(summary = "Estatisticas", description = "Retorna estatisticas de ponto para o dashboard")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET_VIEW', 'TIMESHEET_MANAGE', 'ADMIN')")
+    public ResponseEntity<Map<String, Long>> getStatistics() {
+        Map<String, Long> stats = timeRecordService.getStatistics();
+        return ResponseEntity.ok(stats);
     }
 
     private String getRecordTypeLabel(RecordType type) {
