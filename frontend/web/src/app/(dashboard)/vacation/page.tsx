@@ -443,57 +443,95 @@ export default function VacationPage() {
                 </Button>
               </div>
             ) : (
-              <div className="rounded-md border overflow-hidden">
-                <Table>
-                  <TableHeader className="bg-slate-50">
-                    <TableRow>
-                      <TableHead>Período Solicitado</TableHead>
-                      <TableHead>Qtd. Dias</TableHead>
-                      <TableHead>Abono (Venda)</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Criado em</TableHead>
-                      <TableHead className="text-right">Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {requests.map((request) => (
-                      <TableRow key={request.id} className="hover:bg-slate-50/50">
-                        <TableCell className="font-medium">
-                          <div className="flex flex-col">
-                            <span>{formatDate(request.startDate)} - {formatDate(request.endDate)}</span>
-                            <span className="text-xs text-muted-foreground">{request.requestTypeLabel}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>{request.daysCount} dias</TableCell>
-                        <TableCell>
-                          {request.soldDaysCount > 0 ? (
-                            <Badge variant="secondary" className="bg-green-50 text-green-700">
-                              + {request.soldDaysCount} dias
-                            </Badge>
-                          ) : (
-                            <span className="text-muted-foreground text-sm">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell>{getStatusBadge(request.status)}</TableCell>
-                        <TableCell className="text-muted-foreground text-sm">
-                          {formatDateTime(request.createdAt)}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                            onClick={() => router.push(`/vacation/requests/${request.id}`)}
-                          >
-                            <ChevronRight className="h-4 w-4" />
-                            <span className="sr-only">Ver detalhes</span>
-                          </Button>
-                        </TableCell>
+              <>
+                <div className="hidden md:block rounded-md border overflow-hidden">
+                  <Table>
+                    <TableHeader className="bg-slate-50">
+                      <TableRow>
+                        <TableHead>Período Solicitado</TableHead>
+                        <TableHead>Qtd. Dias</TableHead>
+                        <TableHead>Abono (Venda)</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Criado em</TableHead>
+                        <TableHead className="text-right">Ações</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                    </TableHeader>
+                    <TableBody>
+                      {requests.map((request) => (
+                        <TableRow key={request.id} className="hover:bg-slate-50/50">
+                          <TableCell className="font-medium">
+                            <div className="flex flex-col">
+                              <span>{formatDate(request.startDate)} - {formatDate(request.endDate)}</span>
+                              <span className="text-xs text-muted-foreground">{request.requestTypeLabel}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>{request.daysCount} dias</TableCell>
+                          <TableCell>
+                            {request.soldDaysCount > 0 ? (
+                              <Badge variant="secondary" className="bg-green-50 text-green-700">
+                                + {request.soldDaysCount} dias
+                              </Badge>
+                            ) : (
+                              <span className="text-muted-foreground text-sm">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell>{getStatusBadge(request.status)}</TableCell>
+                          <TableCell className="text-muted-foreground text-sm">
+                            {formatDateTime(request.createdAt)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              onClick={() => router.push(`/vacation/requests/${request.id}`)}
+                            >
+                              <ChevronRight className="h-4 w-4" />
+                              <span className="sr-only">Ver detalhes</span>
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* Mobile View for Requests */}
+                <div className="grid grid-cols-1 gap-4 md:hidden">
+                  {requests.map((request) => (
+                    <Card key={request.id} className="border shadow-sm active:scale-[0.98] transition-transform" onClick={() => router.push(`/vacation/requests/${request.id}`)}>
+                      <CardContent className="p-4">
+                        <div className="flex justify-between items-start mb-3">
+                          <div>
+                            <div className="text-sm font-bold text-foreground">
+                              {formatDate(request.startDate)} - {formatDate(request.endDate)}
+                            </div>
+                            <div className="text-xs text-muted-foreground">{request.requestTypeLabel}</div>
+                          </div>
+                          {getStatusBadge(request.status)}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 text-xs border-t pt-3">
+                          <div>
+                            <span className="text-muted-foreground block">Dias Gozo</span>
+                            <span className="font-medium">{request.daysCount} dias</span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground block">Abono</span>
+                            <span className="font-medium">
+                              {request.soldDaysCount > 0 ? `${request.soldDaysCount} dias` : '-'}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="mt-3 text-[10px] text-muted-foreground flex justify-between items-center">
+                          <span>Criado em {formatDateTime(request.createdAt)}</span>
+                          <ChevronRight className="h-4 w-4" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </>
             )}
           </TabsContent>
 

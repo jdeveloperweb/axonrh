@@ -27,10 +27,10 @@ export default function FloatingAssistant() {
 
 
     return (
-        <div className="fixed bottom-8 right-8 z-[100] flex flex-col items-end">
+        <div className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-[100] flex flex-col items-end">
             {/* Chat Window */}
             {isOpen && (
-                <div className="mb-6 w-[550px] h-[800px] max-h-[calc(100vh-160px)] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.2)] animate-in slide-in-from-bottom-10 fade-in zoom-in-95 duration-500 ease-out origin-bottom-right">
+                <div className="mb-4 sm:mb-6 w-[calc(100vw-2rem)] sm:w-[550px] h-[calc(100vh-120px)] sm:h-[800px] max-h-[calc(100vh-80px)] sm:max-h-[calc(100vh-160px)] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.2)] animate-in slide-in-from-bottom-10 fade-in zoom-in-95 duration-500 ease-out origin-bottom-right">
                     <ChatWidget
                         onClose={() => setIsOpen(false)}
                         className="h-full"

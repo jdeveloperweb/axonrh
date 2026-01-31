@@ -284,24 +284,24 @@ export default function TimeRecordPage() {
   const nextExpected = getNextExpectedType();
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="container mx-auto py-4 sm:py-6 space-y-4 sm:space-y-6 px-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Registro de Ponto</h1>
-          <p className="text-muted-foreground capitalize">{formatCurrentDate()}</p>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Registro de Ponto</h1>
+          <p className="text-sm sm:text-base text-muted-foreground capitalize">{formatCurrentDate()}</p>
         </div>
-        <Button variant="outline" onClick={loadTodayRecords} disabled={loading}>
+        <Button variant="outline" size="sm" onClick={loadTodayRecords} disabled={loading} className="w-full sm:w-auto">
           <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
           Atualizar
         </Button>
       </div>
 
       {/* Clock Card */}
-      <Card className="bg-gradient-to-br from-primary/10 to-primary/5">
+      <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-none shadow-sm">
         <CardContent className="pt-6">
           <div className="text-center">
-            <div className="text-6xl font-mono font-bold tracking-wider text-primary">
+            <div className="text-4xl sm:text-6xl font-mono font-bold tracking-wider text-primary">
               {formatCurrentTime()}
             </div>
             <div className="mt-4 flex items-center justify-center gap-2 text-muted-foreground">

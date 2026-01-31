@@ -80,32 +80,34 @@ export function CollaboratorDashboard() {
     }
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500 p-1">
+        <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-500 p-1">
             {/* Welcome Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
                         Olá, {user?.name?.split(' ')[0] || 'Colaborador'}!
                     </h1>
-                    <p className="text-gray-500 mt-1">
+                    <p className="text-sm sm:text-base text-gray-500 mt-1">
                         Aqui está o que está acontecendo com você hoje.
                     </p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="grid grid-cols-2 md:flex items-center gap-3">
                     <Button
                         variant="outline"
-                        className="hidden md:flex border-gray-200 hover:bg-white hover:text-[var(--color-primary)] hover:border-[var(--color-primary)] transition-all"
+                        className="border-gray-200 hover:bg-white hover:text-[var(--color-primary)] hover:border-[var(--color-primary)] transition-all text-xs sm:text-sm"
                         onClick={() => router.push('/assistant')}
                     >
-                        <MessageSquare className="w-4 h-4 mr-2 text-[var(--color-primary)]" />
-                        Falar com AxonIA
+                        <MessageSquare className="w-4 h-4 mr-0 sm:mr-2 text-[var(--color-primary)]" />
+                        <span className="hidden sm:inline">Falar com AxonIA</span>
+                        <span className="sm:hidden">AxonIA</span>
                     </Button>
                     <Button
-                        className="bg-[var(--color-primary)] hover:bg-[var(--color-primary)]/90 shadow-sm shadow-[var(--color-primary)]/20 text-white"
+                        className="bg-[var(--color-primary)] hover:bg-[var(--color-primary)]/90 shadow-sm shadow-[var(--color-primary)]/20 text-white text-xs sm:text-sm"
                         onClick={() => router.push('/timesheet/record')}
                     >
-                        <Clock className="w-4 h-4 mr-2" />
-                        Registrar Ponto
+                        <Clock className="w-4 h-4 mr-0 sm:mr-2" />
+                        <span className="hidden sm:inline">Registrar Ponto</span>
+                        <span className="sm:hidden">Bater Ponto</span>
                     </Button>
                 </div>
             </div>
@@ -305,8 +307,8 @@ export function CollaboratorDashboard() {
                                         <div key={idx} className="flex items-center justify-between">
                                             <div className="flex items-center gap-3">
                                                 <div className={`w-2 h-2 rounded-full ${record.recordType === 'ENTRY' ? 'bg-green-500' :
-                                                        record.recordType === 'EXIT' ? 'bg-red-500' :
-                                                            'bg-blue-500'
+                                                    record.recordType === 'EXIT' ? 'bg-red-500' :
+                                                        'bg-blue-500'
                                                     }`} />
                                                 <span className="text-sm font-semibold text-gray-700">{record.recordTypeLabel}</span>
                                             </div>

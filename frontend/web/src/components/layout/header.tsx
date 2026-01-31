@@ -1,15 +1,17 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { Bell, Search, Sun, Moon, Monitor, Sparkles, Bot } from 'lucide-react';
+import { Bell, Search, Sun, Moon, Monitor, Sparkles, Bot, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useThemeStore, type Theme } from '@/stores/theme-store';
+import { useLayoutStore } from '@/stores/layout-store';
 import { useRouter } from 'next/navigation';
 
 // ==================== Component ====================
 
 export function Header() {
   const { theme, setTheme } = useThemeStore();
+  const { toggleMobileMenu } = useLayoutStore();
   const [showThemeMenu, setShowThemeMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [isAiMode, setIsAiMode] = useState(false);
@@ -46,6 +48,15 @@ export function Header() {
 
   return (
     <header className="header">
+      {/* Mobile Menu Toggle */}
+      <button
+        onClick={toggleMobileMenu}
+        className="p-2 mr-2 rounded-[var(--radius-md)] hover:bg-[var(--color-surface-variant)] lg:hidden"
+        aria-label="Toggle Menu"
+      >
+        <Menu className="w-6 h-6" />
+      </button>
+
       {/* Search Bar Container */}
       <div className={cn(
         "flex items-center gap-4 flex-1 max-w-xl transition-all duration-500",
