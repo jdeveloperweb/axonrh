@@ -300,42 +300,49 @@ export function downloadBlob(blob: Blob, filename: string): void {
 }
 
 /**
- * Returns full photo URL
+ * Retorna a URL completa da foto, tratando paths relativos, absolutos e localhost.
  */
 export function getPhotoUrl(path: string | null | undefined, updatedAt?: string | Date): string | null {
   if (!path) return null;
 
-  // Se a URL gravada no banco for do MinIO com localhost (comum nos logs atuais)
-  // nós a limpamos para que o browser use o domínio atual.
-  let cleanPath = path;
+  let finalUrl = path;
+
+  // 1. Trata URLs do MinIO com localhost (comum se os dados foram gerados localmente)
   if (path.startsWith('http://localhost:9000/')) {
-    // Tenta converter para um path relativo que o gateway saiba lidar ou 
-    // apenas remove o host para testar caminhos relativos
-    cleanPath = path.replace('http://localhost:9000/', '/api/v1/config/logos/');
+    const isEmployee = path.includes('employee') || path.includes('photo');
+    const targetPath = isEmployee ? '/api/v1/employees/photos/' : '/api/v1/config/logos/';
+    finalUrl = path.replace(/http:\/\/localhost:9000\/[^\/]+\//, targetPath);
   }
 
-  if (cleanPath.startsWith('http')) return cleanPath;
-
-  // Normaliza caminhos antigos
-  if (cleanPath.startsWith('/uploads/employee-photos/')) {
-    cleanPath = cleanPath.replace('/uploads/employee-photos/', '/api/v1/employees/photos/');
+  // 2. Normaliza caminhos antigos ou que apontam para o diretório de uploads diretamente
+  if (finalUrl.startsWith('/uploads/employee-photos/')) {
+    finalUrl = finalUrl.replace('/uploads/employee-photos/', '/api/v1/employees/photos/');
   }
 
-  // Se já começa com /api, o browser resolve relativo à raiz do site (https://axonrh.mjolnix.com.br/api/...)
-  // Isso é o ideal para produção.
-  let finalUrl = cleanPath;
+  // 3. Garante que se o path não começar com / nem http, ele receba o prefixo correto
+  // Mas evita duplicar se já começar com partes do path esperado
+  if (!finalUrl.startsWith('/') && !finalUrl.startsWith('http')) {
+    if (finalUrl.includes('employees/photos/')) {
+      finalUrl = `/${finalUrl}`;
+    } else {
+      finalUrl = `/api/v1/employees/photos/${finalUrl}`;
+    }
+  }
 
-  // Se não começar com / nem http, adicionamos a base da API
-  if (!cleanPath.startsWith('/') && !cleanPath.startsWith('http')) {
-    const baseUrl = (process.env.NEXT_PUBLIC_API_URL || '').replace('/api/v1', '');
-    finalUrl = `${baseUrl}/${cleanPath}`;
+  // 4. Se estivermos em produção e o NEXT_PUBLIC_API_URL estiver definido com um domínio,
+  // preferimos usar a URL absoluta para evitar ambiguidades no browser ou no next/image
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+  if (finalUrl.startsWith('/') && apiUrl.startsWith('http')) {
+    const domain = new URL(apiUrl).origin;
+    // Evita duplicar se o finalUrl já tiver o prefixo da API que está no domain (improvável mas por segurança)
+    finalUrl = `${domain}${finalUrl}`;
   }
 
   // Cache busting
   if (updatedAt) {
     const t = typeof updatedAt === 'string' ? new Date(updatedAt).getTime() : new Date(updatedAt).getTime();
     if (!isNaN(t)) {
-      return `${finalUrl}${finalUrl.includes('?') ? '&' : '?'}v=${t}`;
+      finalUrl = `${finalUrl}${finalUrl.includes('?') ? '&' : '?'}v=${t}`;
     }
   }
 

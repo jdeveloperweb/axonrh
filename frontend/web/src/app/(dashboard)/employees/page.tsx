@@ -462,15 +462,18 @@ export default function EmployeesPage() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           {employee.photoUrl ? (
-                            <Image
+                            <img
                               src={getPhotoUrl(employee.photoUrl, employee.updatedAt) || ''}
                               alt={employee.fullName}
-                              width={40}
-                              height={40}
                               className="w-10 h-10 rounded-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                                (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                              }}
                             />
-                          ) : (
-                            <div className="w-10 h-10 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center font-medium">
+                          ) : null}
+                          {(true) && (
+                            <div className={`${employee.photoUrl ? 'hidden' : ''} w-10 h-10 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center font-medium`}>
                               {employee.fullName.charAt(0).toUpperCase()}
                             </div>
                           )}

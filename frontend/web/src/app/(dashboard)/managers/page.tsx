@@ -238,15 +238,18 @@ export default function ManagersPage() {
                             <CardContent className="p-6">
                                 <div className="flex items-start gap-4">
                                     {manager.photoUrl ? (
-                                        <Image
+                                        <img
                                             src={getPhotoUrl(manager.photoUrl, manager.updatedAt) || ''}
                                             alt={manager.name}
-                                            width={48}
-                                            height={48}
                                             className="w-12 h-12 rounded-full object-cover"
+                                            onError={(e) => {
+                                                (e.target as HTMLImageElement).style.display = 'none';
+                                                (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                                            }}
                                         />
-                                    ) : (
-                                        <div className="w-12 h-12 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center font-medium text-lg">
+                                    ) : null}
+                                    {(true) && (
+                                        <div className={`${manager.photoUrl ? 'hidden' : ''} w-12 h-12 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center font-medium text-lg`}>
                                             {manager.name.charAt(0).toUpperCase()}
                                         </div>
                                     )}
