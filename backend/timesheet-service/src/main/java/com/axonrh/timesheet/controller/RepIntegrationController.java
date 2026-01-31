@@ -29,7 +29,7 @@ public class RepIntegrationController {
 
     @PostMapping(value = "/afd/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Importar AFD", description = "Importa arquivo AFD do REP (Portaria 671)")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:UPDATE', 'ADMIN')")
     public ResponseEntity<AfdImportResult> importAfdFile(
             @RequestParam("file") MultipartFile file,
             @RequestParam String repId,
@@ -42,7 +42,7 @@ public class RepIntegrationController {
 
     @PostMapping(value = "/afd/validate", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Validar AFD", description = "Valida estrutura do arquivo AFD antes da importacao")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:UPDATE', 'ADMIN')")
     public ResponseEntity<AfdValidationResult> validateAfdFile(
             @RequestParam("file") MultipartFile file) {
 

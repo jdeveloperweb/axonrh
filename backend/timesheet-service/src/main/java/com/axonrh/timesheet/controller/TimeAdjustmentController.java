@@ -32,7 +32,7 @@ public class TimeAdjustmentController {
 
     @PostMapping
     @Operation(summary = "Solicitar ajuste", description = "Cria uma solicitacao de ajuste de ponto")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET_RECORD', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:CREATE', 'ADMIN')")
     public ResponseEntity<TimeAdjustmentResponse> createAdjustment(
             @Valid @RequestBody TimeAdjustmentRequest request,
             @AuthenticationPrincipal Jwt jwt) {
@@ -46,7 +46,7 @@ public class TimeAdjustmentController {
 
     @GetMapping("/pending")
     @Operation(summary = "Ajustes pendentes", description = "Lista ajustes pendentes de aprovacao")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET_MANAGE', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:UPDATE', 'TIMESHEET:APPROVE', 'ADMIN')")
     public ResponseEntity<Page<TimeAdjustmentResponse>> getPendingAdjustments(Pageable pageable) {
         Page<TimeAdjustmentResponse> adjustments = adjustmentService.getPendingAdjustments(pageable);
         return ResponseEntity.ok(adjustments);
@@ -54,7 +54,7 @@ public class TimeAdjustmentController {
 
     @GetMapping("/employee/{employeeId}")
     @Operation(summary = "Ajustes do colaborador", description = "Lista ajustes de um colaborador")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET_VIEW', 'TIMESHEET_MANAGE', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:READ', 'TIMESHEET:UPDATE', 'ADMIN')")
     public ResponseEntity<Page<TimeAdjustmentResponse>> getEmployeeAdjustments(
             @PathVariable UUID employeeId,
             Pageable pageable) {
@@ -65,7 +65,7 @@ public class TimeAdjustmentController {
 
     @PostMapping("/{adjustmentId}/approve")
     @Operation(summary = "Aprovar ajuste", description = "Aprova uma solicitacao de ajuste")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET_MANAGE', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:UPDATE', 'TIMESHEET:APPROVE', 'ADMIN')")
     public ResponseEntity<TimeAdjustmentResponse> approveAdjustment(
             @PathVariable UUID adjustmentId,
             @RequestParam(required = false) String notes,
@@ -81,7 +81,7 @@ public class TimeAdjustmentController {
 
     @PostMapping("/{adjustmentId}/reject")
     @Operation(summary = "Rejeitar ajuste", description = "Rejeita uma solicitacao de ajuste")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET_MANAGE', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:UPDATE', 'TIMESHEET:APPROVE', 'ADMIN')")
     public ResponseEntity<TimeAdjustmentResponse> rejectAdjustment(
             @PathVariable UUID adjustmentId,
             @RequestParam String reason,
@@ -97,7 +97,7 @@ public class TimeAdjustmentController {
 
     @PostMapping("/{adjustmentId}/cancel")
     @Operation(summary = "Cancelar ajuste", description = "Cancela uma solicitacao de ajuste (pelo solicitante)")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET_RECORD', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:CREATE', 'ADMIN')")
     public ResponseEntity<TimeAdjustmentResponse> cancelAdjustment(
             @PathVariable UUID adjustmentId,
             @AuthenticationPrincipal Jwt jwt) {
@@ -109,7 +109,7 @@ public class TimeAdjustmentController {
 
     @GetMapping("/pending/count")
     @Operation(summary = "Contagem de pendentes", description = "Retorna quantidade de ajustes pendentes")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET_VIEW', 'TIMESHEET_MANAGE', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:READ', 'TIMESHEET:UPDATE', 'ADMIN')")
     public ResponseEntity<Map<String, Long>> countPendingAdjustments() {
         long count = adjustmentService.countPendingAdjustments();
         return ResponseEntity.ok(Map.of("count", count));

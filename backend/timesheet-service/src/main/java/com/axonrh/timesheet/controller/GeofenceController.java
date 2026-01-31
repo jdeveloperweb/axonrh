@@ -32,7 +32,7 @@ public class GeofenceController {
 
     @PostMapping
     @Operation(summary = "Criar geofence", description = "Cria uma nova cerca geografica")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:UPDATE', 'ADMIN')")
     public ResponseEntity<GeofenceResponse> createGeofence(
             @Valid @RequestBody GeofenceRequest request,
             @AuthenticationPrincipal Jwt jwt) {
@@ -44,7 +44,7 @@ public class GeofenceController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Atualizar geofence", description = "Atualiza uma cerca geografica")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:UPDATE', 'ADMIN')")
     public ResponseEntity<GeofenceResponse> updateGeofence(
             @PathVariable UUID id,
             @Valid @RequestBody GeofenceRequest request,
@@ -57,7 +57,7 @@ public class GeofenceController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Buscar geofence", description = "Busca uma cerca geografica por ID")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET_VIEW', 'TIMESHEET_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:READ', 'TIMESHEET:UPDATE', 'ADMIN')")
     public ResponseEntity<GeofenceResponse> getGeofenceById(@PathVariable UUID id) {
         GeofenceResponse response = geofenceService.getGeofenceById(id);
         return ResponseEntity.ok(response);
@@ -65,7 +65,7 @@ public class GeofenceController {
 
     @GetMapping
     @Operation(summary = "Listar geofences", description = "Lista todas as cercas geograficas")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET_VIEW', 'TIMESHEET_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:READ', 'TIMESHEET:UPDATE', 'ADMIN')")
     public ResponseEntity<Page<GeofenceResponse>> listGeofences(Pageable pageable) {
         Page<GeofenceResponse> geofences = geofenceService.listGeofences(pageable);
         return ResponseEntity.ok(geofences);
@@ -73,7 +73,7 @@ public class GeofenceController {
 
     @GetMapping("/active")
     @Operation(summary = "Geofences ativas", description = "Lista apenas geofences ativas")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET_VIEW', 'TIMESHEET_RECORD', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:READ', 'TIMESHEET:CREATE', 'ADMIN')")
     public ResponseEntity<List<GeofenceResponse>> getActiveGeofences() {
         List<GeofenceResponse> geofences = geofenceService.getActiveGeofences();
         return ResponseEntity.ok(geofences);
@@ -81,7 +81,7 @@ public class GeofenceController {
 
     @GetMapping("/my-allowed")
     @Operation(summary = "Minhas geofences", description = "Lista geofences permitidas para o usuario logado")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET_RECORD', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:CREATE', 'ADMIN')")
     public ResponseEntity<List<GeofenceResponse>> getMyGeofences(@AuthenticationPrincipal Jwt jwt) {
         UUID userId = UUID.fromString(jwt.getSubject()); // In this context, userId is the employeeId
         List<GeofenceResponse> geofences = geofenceService.getMyGeofences(userId);
@@ -90,7 +90,7 @@ public class GeofenceController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Desativar geofence", description = "Desativa uma cerca geografica")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:UPDATE', 'ADMIN')")
     public ResponseEntity<Void> deleteGeofence(
             @PathVariable UUID id,
             @AuthenticationPrincipal Jwt jwt) {

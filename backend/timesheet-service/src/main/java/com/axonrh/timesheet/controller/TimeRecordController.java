@@ -41,7 +41,7 @@ public class TimeRecordController {
 
     @PostMapping("/records")
     @Operation(summary = "Registrar ponto", description = "Registra entrada, saida ou intervalo")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET_RECORD', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:CREATE', 'ADMIN')")
     public ResponseEntity<TimeRecordResponse> registerTimeRecord(
             @Valid @RequestBody TimeRecordRequest request,
             @AuthenticationPrincipal Jwt jwt) {
@@ -53,7 +53,7 @@ public class TimeRecordController {
 
     @PostMapping("/records/quick")
     @Operation(summary = "Registro rapido", description = "Registra automaticamente o proximo tipo de ponto esperado")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET_RECORD', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:CREATE', 'ADMIN')")
     public ResponseEntity<TimeRecordResponse> quickRecord(
             @RequestParam UUID employeeId,
             @RequestParam(required = false) Double latitude,
@@ -81,7 +81,7 @@ public class TimeRecordController {
 
     @GetMapping("/records/employee/{employeeId}")
     @Operation(summary = "Buscar registros por periodo", description = "Lista registros de ponto de um colaborador")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET_VIEW', 'TIMESHEET_MANAGE', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:READ', 'TIMESHEET:UPDATE', 'ADMIN')")
     public ResponseEntity<List<TimeRecordResponse>> getRecordsByPeriod(
             @PathVariable UUID employeeId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -93,7 +93,7 @@ public class TimeRecordController {
 
     @GetMapping("/records/employee/{employeeId}/date/{date}")
     @Operation(summary = "Buscar registros por data", description = "Lista registros de um dia especifico")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET_VIEW', 'TIMESHEET_MANAGE', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:READ', 'TIMESHEET:UPDATE', 'ADMIN')")
     public ResponseEntity<List<TimeRecordResponse>> getRecordsByDate(
             @PathVariable UUID employeeId,
             @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
@@ -104,7 +104,7 @@ public class TimeRecordController {
 
     @GetMapping("/records/employee/{employeeId}/last")
     @Operation(summary = "Ultimo registro", description = "Retorna o ultimo registro do colaborador")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET_VIEW', 'TIMESHEET_MANAGE', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:READ', 'TIMESHEET:UPDATE', 'ADMIN')")
     public ResponseEntity<TimeRecordResponse> getLastRecord(@PathVariable UUID employeeId) {
         return timeRecordService.getLastRecord(employeeId)
                 .map(ResponseEntity::ok)
@@ -113,7 +113,7 @@ public class TimeRecordController {
 
     @GetMapping("/records/today")
     @Operation(summary = "Registros de hoje", description = "Retorna registros de hoje do colaborador logado")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET_RECORD', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:CREATE', 'ADMIN')")
     public ResponseEntity<List<TimeRecordResponse>> getTodayRecords(@AuthenticationPrincipal Jwt jwt) {
         UUID employeeId = UUID.fromString(jwt.getSubject());
         List<TimeRecordResponse> records = timeRecordService.getRecordsByDate(employeeId, LocalDate.now());
@@ -122,7 +122,7 @@ public class TimeRecordController {
 
     @GetMapping("/records/employee/{employeeId}/next-type")
     @Operation(summary = "Proximo tipo esperado", description = "Retorna o proximo tipo de registro esperado")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET_VIEW', 'TIMESHEET_RECORD', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:READ', 'TIMESHEET:CREATE', 'ADMIN')")
     public ResponseEntity<Map<String, Object>> getNextExpectedType(@PathVariable UUID employeeId) {
         RecordType nextType = timeRecordService.getExpectedNextRecordType(employeeId);
         return ResponseEntity.ok(Map.of(
@@ -135,7 +135,7 @@ public class TimeRecordController {
 
     @GetMapping("/records/pending")
     @Operation(summary = "Registros pendentes", description = "Lista registros pendentes de aprovacao")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET_MANAGE', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:UPDATE', 'TIMESHEET:APPROVE', 'ADMIN')")
     public ResponseEntity<Page<TimeRecordResponse>> getPendingRecords(Pageable pageable) {
         Page<TimeRecordResponse> records = timeRecordService.getPendingRecords(pageable);
         return ResponseEntity.ok(records);
@@ -143,7 +143,7 @@ public class TimeRecordController {
 
     @PostMapping("/records/{recordId}/approve")
     @Operation(summary = "Aprovar registro", description = "Aprova um registro pendente")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET_MANAGE', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:UPDATE', 'TIMESHEET:APPROVE', 'ADMIN')")
     public ResponseEntity<TimeRecordResponse> approveRecord(
             @PathVariable UUID recordId,
             @RequestParam(required = false) String notes,
@@ -156,7 +156,7 @@ public class TimeRecordController {
 
     @PostMapping("/records/{recordId}/reject")
     @Operation(summary = "Rejeitar registro", description = "Rejeita um registro pendente")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET_MANAGE', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:UPDATE', 'TIMESHEET:APPROVE', 'ADMIN')")
     public ResponseEntity<TimeRecordResponse> rejectRecord(
             @PathVariable UUID recordId,
             @RequestParam String reason,
@@ -169,7 +169,7 @@ public class TimeRecordController {
 
     @GetMapping("/records/pending/count")
     @Operation(summary = "Contagem de pendentes", description = "Retorna quantidade de registros pendentes")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET_VIEW', 'TIMESHEET_MANAGE', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:READ', 'TIMESHEET:UPDATE', 'ADMIN')")
     public ResponseEntity<Map<String, Long>> countPendingRecords() {
         long count = timeRecordService.countPendingRecords();
         return ResponseEntity.ok(Map.of("count", count));
@@ -179,7 +179,7 @@ public class TimeRecordController {
 
     @GetMapping("/timesheet/employee/{employeeId}")
     @Operation(summary = "Espelho de ponto", description = "Retorna espelho de ponto de um periodo")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET_VIEW', 'TIMESHEET_MANAGE', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:READ', 'TIMESHEET:UPDATE', 'ADMIN')")
     public ResponseEntity<List<DailySummaryResponse>> getTimesheet(
             @PathVariable UUID employeeId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -191,7 +191,7 @@ public class TimeRecordController {
 
     @GetMapping("/timesheet/employee/{employeeId}/date/{date}")
     @Operation(summary = "Resumo diario", description = "Retorna resumo de um dia especifico")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET_VIEW', 'TIMESHEET_MANAGE', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:READ', 'TIMESHEET:UPDATE', 'ADMIN')")
     public ResponseEntity<DailySummaryResponse> getDailySummary(
             @PathVariable UUID employeeId,
             @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
@@ -203,7 +203,7 @@ public class TimeRecordController {
 
     @GetMapping("/timesheet/employee/{employeeId}/totals")
     @Operation(summary = "Totais do periodo", description = "Retorna totais de horas de um periodo")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET_VIEW', 'TIMESHEET_MANAGE', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:READ', 'TIMESHEET:UPDATE', 'ADMIN')")
     public ResponseEntity<DailySummaryService.PeriodTotals> getPeriodTotals(
             @PathVariable UUID employeeId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -215,7 +215,7 @@ public class TimeRecordController {
 
     @GetMapping("/statistics")
     @Operation(summary = "Estatisticas", description = "Retorna estatisticas de ponto para o dashboard")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET_VIEW', 'TIMESHEET_MANAGE', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:READ', 'TIMESHEET:UPDATE', 'ADMIN')")
     public ResponseEntity<Map<String, Long>> getStatistics() {
         Map<String, Long> stats = timeRecordService.getStatistics();
         return ResponseEntity.ok(stats);

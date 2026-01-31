@@ -32,7 +32,7 @@ public class OvertimeBankController {
 
     @GetMapping("/employee/{employeeId}/balance")
     @Operation(summary = "Saldo atual", description = "Retorna o saldo atual do banco de horas")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET_VIEW', 'TIMESHEET_MANAGE', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:READ', 'TIMESHEET:UPDATE', 'ADMIN')")
     public ResponseEntity<Map<String, Object>> getCurrentBalance(@PathVariable UUID employeeId) {
         int balance = overtimeBankService.getCurrentBalance(employeeId);
         return ResponseEntity.ok(Map.of(
@@ -45,7 +45,7 @@ public class OvertimeBankController {
 
     @GetMapping("/employee/{employeeId}/summary")
     @Operation(summary = "Resumo do banco de horas", description = "Retorna resumo completo do banco de horas")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET_VIEW', 'TIMESHEET_MANAGE', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:READ', 'TIMESHEET:UPDATE', 'ADMIN')")
     public ResponseEntity<OvertimeBankSummary> getSummary(
             @PathVariable UUID employeeId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -57,7 +57,7 @@ public class OvertimeBankController {
 
     @GetMapping("/employee/{employeeId}/movements")
     @Operation(summary = "Movimentacoes", description = "Lista movimentacoes do banco de horas")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET_VIEW', 'TIMESHEET_MANAGE', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:READ', 'TIMESHEET:UPDATE', 'ADMIN')")
     public ResponseEntity<Page<OvertimeBankResponse>> getMovements(
             @PathVariable UUID employeeId,
             Pageable pageable) {
@@ -68,7 +68,7 @@ public class OvertimeBankController {
 
     @PostMapping("/employee/{employeeId}/debit")
     @Operation(summary = "Registrar compensacao", description = "Registra compensacao de horas (folga)")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET_MANAGE', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:UPDATE', 'ADMIN')")
     public ResponseEntity<OvertimeBankResponse> addDebit(
             @PathVariable UUID employeeId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
@@ -84,7 +84,7 @@ public class OvertimeBankController {
 
     @PostMapping("/employee/{employeeId}/adjustment")
     @Operation(summary = "Ajuste manual", description = "Registra ajuste manual no banco de horas")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:UPDATE', 'ADMIN')")
     public ResponseEntity<OvertimeBankResponse> addAdjustment(
             @PathVariable UUID employeeId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
@@ -100,7 +100,7 @@ public class OvertimeBankController {
 
     @PostMapping("/employee/{employeeId}/payout")
     @Operation(summary = "Pagamento de horas", description = "Registra pagamento de horas extras em dinheiro")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:UPDATE', 'ADMIN')")
     public ResponseEntity<OvertimeBankResponse> addPayout(
             @PathVariable UUID employeeId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
