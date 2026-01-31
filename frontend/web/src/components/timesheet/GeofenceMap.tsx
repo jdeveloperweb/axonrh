@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, Fragment } from 'react';
 import { MapContainer, TileLayer, Circle, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -109,7 +109,7 @@ export default function GeofenceMap({ userLocation, geofences, height = '300px' 
                 {geofences.map((fence) => {
                     const inside = isInside(fence);
                     return (
-                        <div key={fence.id}>
+                        <Fragment key={fence.id}>
                             <Circle
                                 center={[fence.latitude, fence.longitude]}
                                 radius={fence.radiusMeters}
@@ -128,7 +128,7 @@ export default function GeofenceMap({ userLocation, geofences, height = '300px' 
                                     </div>
                                 </Popup>
                             </Marker>
-                        </div>
+                        </Fragment>
                     );
                 })}
 

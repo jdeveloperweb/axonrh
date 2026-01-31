@@ -225,9 +225,9 @@ public class GeofenceService {
      */
     private GeofenceValidationResult checkCompanyGeofence(UUID tenantId, double lat, double lon) {
         try {
-            // Removemos o prefixo 'shared.' pois o default_schema ja eh 'shared'
+            // Adicionamos o prefixo 'shared.' pois o JdbcTemplate nao usa o default_schema do Hibernate
             String sql = "SELECT geofence_enabled, geofence_latitude, geofence_longitude, geofence_radius " +
-                         "FROM company_profiles WHERE tenant_id = ?";
+                         "FROM shared.company_profiles WHERE tenant_id = ?";
             
             return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
                 boolean enabled = rs.getBoolean("geofence_enabled");
@@ -337,9 +337,9 @@ public class GeofenceService {
 
     private java.util.Optional<GeofenceResponse> fetchCompanyGeofence(UUID tenantId) {
         try {
-            // Removemos o prefixo 'shared.' pois o default_schema ja eh 'shared'
+            // Adicionamos o prefixo 'shared.' pois o JdbcTemplate nao usa o default_schema do Hibernate
             String sql = "SELECT geofence_enabled, geofence_latitude, geofence_longitude, geofence_radius, legal_name " +
-                         "FROM company_profiles WHERE tenant_id = ?";
+                         "FROM shared.company_profiles WHERE tenant_id = ?";
             
             return jdbcTemplate.query(sql, (rs) -> {
                 if (rs.next()) {

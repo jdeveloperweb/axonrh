@@ -32,7 +32,7 @@ public interface GeofenceRepository extends JpaRepository<Geofence, UUID> {
 
     // Geofences proximas de uma coordenada (para validacao)
     @Query(value = """
-        SELECT * FROM geofences g
+        SELECT * FROM shared.geofences g
         WHERE g.tenant_id = :tenantId
         AND g.active = true
         AND (
