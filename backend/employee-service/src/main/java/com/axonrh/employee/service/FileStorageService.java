@@ -68,8 +68,8 @@ public class FileStorageService {
             
             log.info("Foto do colaborador {} salva com sucesso: {}", employeeId, filename);
             
-            // Retornar caminho relativo
-            return "/uploads/employee-photos/" + filename;
+            // Retornar caminho acessivel pela API (garante roteamento pelo gateway)
+            return "/api/v1/employees/photos/" + filename;
         } catch (IOException ex) {
             log.error("Erro ao salvar foto do colaborador {}", employeeId, ex);
             throw new RuntimeException("Erro ao salvar arquivo", ex);

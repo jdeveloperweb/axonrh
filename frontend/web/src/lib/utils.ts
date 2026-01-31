@@ -296,9 +296,37 @@ export function getPhotoUrl(path: string | null | undefined, updatedAt?: string 
   if (!path) return null;
   if (path.startsWith('http')) return path;
 
-  // Use API_BASE_URL (removing /api/v1) as base for uploads
-  const baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8180/api/v1').replace('/api/v1', '');
-  const url = `${baseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
+  // Normaliza o path: se for um path antigo de uploads, converte para o novo path da API
+  // que sabemos que o gateway roteia corretamente sem autenticação.
+  let cleanPath = path;
+  if (path.startsWith('/uploads/employee-photos/')) {
+    cleanPath = path.replace('/uploads/employee-photos/', '/api/v1/employees/photos/');
+  }
+
+  // Determina a base URL
+  let baseUrl = '';
+
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    // Se temos a env var, removemos o /api/v1 e usamos como base
+    baseUrl = process.env.NEXT_PUBLIC_API_URL.replace('/api/v1', '');
+  } else if (typeof window !== 'undefined') {
+    // Se no browser e sem env var, verifica se estamos no localhost
+    const hostname = window.location.hostname;
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      // Localmente fora do docker, os serviços costumam estar na porta 8180 ou via gateway na 8080
+      // Tentamos o padrão do projeto
+      baseUrl = 'http://localhost:8180';
+    } else {
+      // Na internet, se não temos a base setada, usamos caminhos relativos ao domínio atual
+      baseUrl = '';
+    }
+  } else {
+    // Fallback padrão se tudo falhar (e.g. Server Side Rendering sem env var)
+    baseUrl = 'http://localhost:8180';
+  }
+
+  // Constrói a URL final
+  const url = `${baseUrl}${cleanPath.startsWith('/') ? '' : '/'}${cleanPath}`;
 
   if (updatedAt) {
     const t = typeof updatedAt === 'string' ? new Date(updatedAt).getTime() : new Date(updatedAt).getTime();
