@@ -523,15 +523,20 @@ function OrgTreeNode({ node, options, depth = 0 }: { node: OrgNode, options: Exp
                                             <div className="relative">
                                                 <div className="w-11 h-11 rounded-full overflow-hidden flex-shrink-0 bg-[var(--color-surface-variant)] flex items-center justify-center border-2 border-[var(--color-primary)]/30 ring-2 ring-white dark:ring-gray-900 group-hover:scale-110 transition-transform duration-300">
                                                     {node.manager.photoUrl ? (
-                                                        <Image
+                                                        <img
                                                             src={getPhotoUrl(node.manager.photoUrl, node.manager.updatedAt) || ''}
                                                             alt={node.manager.fullName}
-                                                            width={44}
-                                                            height={44}
                                                             className="w-full h-full object-cover"
+                                                            onError={(e) => {
+                                                                (e.target as HTMLImageElement).style.display = 'none';
+                                                                (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                                                            }}
                                                         />
-                                                    ) : (
-                                                        <User className="w-6 h-6 text-[var(--color-text-tertiary)]" />
+                                                    ) : null}
+                                                    {(true) && (
+                                                        <div className={`${node.manager.photoUrl ? 'hidden' : ''}`}>
+                                                            <User className="w-6 h-6 text-[var(--color-text-tertiary)]" />
+                                                        </div>
                                                     )}
                                                 </div>
                                                 <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-blue-500 border-2 border-white flex items-center justify-center shadow-sm">
@@ -569,14 +574,21 @@ function OrgTreeNode({ node, options, depth = 0 }: { node: OrgNode, options: Exp
                                     {node.employees.slice(0, 6).map((emp) => (
                                         <div key={emp.id} className="relative inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-800 bg-gray-100 dark:bg-gray-800 overflow-hidden group/item">
                                             {options.showPhotos && emp.photoUrl ? (
-                                                <Image
-                                                    src={getPhotoUrl(emp.photoUrl, emp.updatedAt) || ''}
-                                                    className="h-full w-full object-cover"
-                                                    alt={emp.fullName}
-                                                    title={emp.fullName}
-                                                    width={32}
-                                                    height={32}
-                                                />
+                                                <>
+                                                    <img
+                                                        src={getPhotoUrl(emp.photoUrl, emp.updatedAt) || ''}
+                                                        className="h-full w-full object-cover"
+                                                        alt={emp.fullName}
+                                                        title={emp.fullName}
+                                                        onError={(e) => {
+                                                            (e.target as HTMLImageElement).style.display = 'none';
+                                                            (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                                                        }}
+                                                    />
+                                                    <div className="hidden h-full w-full flex items-center justify-center text-[10px] font-bold text-[var(--color-text-secondary)]">
+                                                        {emp.fullName.charAt(0)}
+                                                    </div>
+                                                </>
                                             ) : (
                                                 <div className="h-full w-full flex items-center justify-center text-[10px] font-bold text-[var(--color-text-secondary)]">
                                                     {emp.fullName.charAt(0)}

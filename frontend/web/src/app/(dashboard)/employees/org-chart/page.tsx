@@ -135,15 +135,18 @@ export default function OrgChartPage() {
           {/* Avatar */}
           <div className="flex items-center gap-3 mb-2">
             {node.photoUrl ? (
-              <Image
+              <img
                 src={getPhotoUrl(node.photoUrl, node.updatedAt) || ''}
                 alt={node.name}
-                width={48}
-                height={48}
                 className="w-12 h-12 rounded-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                  (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                }}
               />
-            ) : (
-              <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+            ) : null}
+            {(true) && (
+              <div className={`${node.photoUrl ? 'hidden' : ''} w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center`}>
                 <User className="w-6 h-6 text-blue-600" />
               </div>
             )}
@@ -331,15 +334,18 @@ export default function OrgChartPage() {
             <CardContent className="p-4">
               <div className="flex items-start gap-4">
                 {selectedNode.photoUrl ? (
-                  <Image
+                  <img
                     src={getPhotoUrl(selectedNode.photoUrl, selectedNode.updatedAt) || ''}
                     alt={selectedNode.name}
-                    width={64}
-                    height={64}
                     className="w-16 h-16 rounded-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                      (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                    }}
                   />
-                ) : (
-                  <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                ) : null}
+                {(true) && (
+                  <div className={`${selectedNode.photoUrl ? 'hidden' : ''} w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0`}>
                     <User className="w-8 h-8 text-blue-600" />
                   </div>
                 )}

@@ -21,7 +21,7 @@ import {
 import { useAuthStore } from "@/stores/auth-store";
 import { useThemeStore } from "@/stores/theme-store";
 import { configApi } from "@/lib/api/config";
-import { cn } from "@/lib/utils";
+import { cn, getPhotoUrl } from "@/lib/utils";
 
 // ==================== Schema de Validacao ====================
 
@@ -171,7 +171,7 @@ export default function LoginClient() {
         <div className="flex flex-col gap-6 text-center lg:text-left">
           <div className="flex items-center justify-center lg:justify-start gap-3">
             {loginConfig.logoUrl ? (
-              <Image src={loginConfig.logoUrl} alt="Logo" width={150} height={48} className="h-12 w-auto" />
+              <Image src={getPhotoUrl(loginConfig.logoUrl) || ''} alt="Logo" width={150} height={48} className="h-12 w-auto" unoptimized />
             ) : (
               <h1 className="font-heading text-4xl sm:text-5xl font-extrabold tracking-tight">
                 <span className="text-slate-900">Axon</span>

@@ -23,7 +23,7 @@ import {
   Briefcase,
   ClipboardCheck,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, getPhotoUrl } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
 import { useThemeStore } from '@/stores/theme-store';
 import { useLayoutStore } from '@/stores/layout-store';
@@ -125,7 +125,7 @@ export function Sidebar() {
             <div className="flex items-center gap-2">
               {tenantTheme?.logoUrl ? (
                 <Image
-                  src={tenantTheme.logoUrl}
+                  src={getPhotoUrl(tenantTheme.logoUrl) || ''}
                   alt="Logo"
                   width={tenantTheme.logoWidth || 150}
                   height={40}

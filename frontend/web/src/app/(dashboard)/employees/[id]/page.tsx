@@ -279,15 +279,18 @@ export default function EmployeeDetailPage() {
             {/* Photo */}
             <div className="relative">
               {employee.photoUrl ? (
-                <Image
+                <img
                   src={getPhotoUrl(employee.photoUrl, employee.updatedAt) || ''}
                   alt={employee.fullName}
-                  width={128}
-                  height={128}
                   className="w-32 h-32 rounded-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                    (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                  }}
                 />
-              ) : (
-                <div className="w-32 h-32 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center text-4xl font-bold">
+              ) : null}
+              {(true) && (
+                <div className={`${employee.photoUrl ? 'hidden' : ''} w-32 h-32 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center text-4xl font-bold`}>
                   {employee.fullName.charAt(0).toUpperCase()}
                 </div>
               )}
