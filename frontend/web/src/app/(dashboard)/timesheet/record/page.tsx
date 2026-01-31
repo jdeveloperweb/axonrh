@@ -192,19 +192,19 @@ export default function TimeRecordPage() {
       ENTRY: {
         label: 'Entrada',
         icon: LogIn,
-        color: 'bg-green-500 hover:bg-green-600',
+        color: 'bg-emerald-500 hover:bg-emerald-600',
         description: 'Registrar início da jornada',
       },
       EXIT: {
         label: 'Saída',
         icon: LogOut,
-        color: 'bg-red-500 hover:bg-red-600',
+        color: 'bg-rose-500 hover:bg-rose-600',
         description: 'Registrar fim da jornada',
       },
       BREAK_START: {
         label: 'Início Intervalo',
         icon: Coffee,
-        color: 'bg-yellow-500 hover:bg-yellow-600',
+        color: 'bg-amber-500 hover:bg-amber-600',
         description: 'Registrar início do intervalo',
       },
       BREAK_END: {
@@ -275,11 +275,11 @@ export default function TimeRecordPage() {
 
   const getStatusBadge = (status: TimeRecord['status']) => {
     const statusConfig = {
-      VALID: { label: 'Válido', variant: 'default' as const },
+      VALID: { label: 'Válido', variant: 'success' as const },
       PENDING_APPROVAL: { label: 'Pendente', variant: 'warning' as const },
       APPROVED: { label: 'Aprovado', variant: 'success' as const },
-      REJECTED: { label: 'Rejeitado', variant: 'destructive' as const },
-      ADJUSTED: { label: 'Ajustado', variant: 'secondary' as const },
+      REJECTED: { label: 'Rejeitado', variant: 'destructive-soft' as const },
+      ADJUSTED: { label: 'Ajustado', variant: 'info' as const },
     };
     const config = statusConfig[status] || statusConfig.VALID;
     return <Badge variant={config.variant}>{config.label}</Badge>;

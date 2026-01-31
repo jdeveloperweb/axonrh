@@ -306,9 +306,9 @@ export function CollaboratorDashboard() {
                                     todayRecords.map((record, idx) => (
                                         <div key={idx} className="flex items-center justify-between">
                                             <div className="flex items-center gap-3">
-                                                <div className={`w-2 h-2 rounded-full ${record.recordType === 'ENTRY' ? 'bg-green-500' :
-                                                    record.recordType === 'EXIT' ? 'bg-red-500' :
-                                                        'bg-blue-500'
+                                                <div className={`w-2 h-2 rounded-full ${record.recordType === 'ENTRY' ? 'bg-emerald-500' :
+                                                    record.recordType === 'EXIT' ? 'bg-rose-500' :
+                                                        'bg-amber-500'
                                                     }`} />
                                                 <span className="text-sm font-semibold text-gray-700">{record.recordTypeLabel}</span>
                                             </div>
