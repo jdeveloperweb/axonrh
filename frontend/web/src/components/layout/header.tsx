@@ -59,7 +59,7 @@ export function Header() {
 
       {/* Search Bar Container */}
       <div className={cn(
-        "flex items-center gap-4 flex-1 max-w-xl transition-all duration-500",
+        "flex items-center gap-2 sm:gap-4 flex-1 max-w-xl transition-all duration-500",
         isAiMode ? "scale-105" : ""
       )}>
         <form onSubmit={handleSearch} className="relative flex-1 group">
@@ -77,9 +77,9 @@ export function Header() {
           <input
             ref={searchInputRef}
             type="search"
-            placeholder={isAiMode ? "Pergunte algo à IA do Axon..." : "Buscar colaboradores, documentos..."}
+            placeholder={isAiMode ? "Pergunte à IA..." : "Buscar..."}
             className={cn(
-              "input pl-10 pr-12 py-2.5 w-full transition-all duration-300 border-2",
+              "input pl-10 pr-10 sm:pr-12 h-10 sm:h-12 w-full transition-all duration-300 border-2 text-sm sm:text-base",
               isAiMode
                 ? "border-purple-400 focus:border-purple-600 focus:ring-purple-200 placeholder:text-purple-400/70"
                 : "border-transparent focus:border-[var(--color-primary)] placeholder:text-gray-400"
@@ -91,17 +91,18 @@ export function Header() {
             type="button"
             onClick={toggleAiMode}
             className={cn(
-              "absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md transition-all duration-300 flex items-center justify-center",
+              "absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded-md transition-all duration-300 flex items-center justify-center",
               isAiMode
                 ? "bg-purple-100 text-purple-600 hover:bg-purple-200"
                 : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-[var(--color-primary)]"
             )}
             title={isAiMode ? "Desativar modo IA" : "Ativar assistente IA"}
           >
-            <Bot className={cn("w-4 h-4", isAiMode && "animate-bounce")} />
+            <Bot className={cn("w-3.5 h-3.5 sm:w-4 sm:h-4", isAiMode && "animate-bounce")} />
           </button>
         </form>
       </div>
+
 
       {/* Actions */}
       <div className="flex items-center gap-2">

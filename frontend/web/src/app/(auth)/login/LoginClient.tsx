@@ -150,7 +150,7 @@ export default function LoginClient() {
     "input bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-sky-200 focus:border-sky-400";
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center px-6 py-16 text-slate-900">
+    <div className="min-h-screen relative flex items-center justify-center px-4 sm:px-6 py-8 sm:py-16 text-slate-900">
       <div
         className="absolute inset-0 bg-gradient-to-br from-[#f2f7ff] via-[#eaf6ff] to-[#e9f8f5]"
         style={{
@@ -167,28 +167,28 @@ export default function LoginClient() {
       <div className="absolute -top-32 right-0 h-72 w-72 rounded-full bg-sky-200/60 blur-[120px]" />
       <div className="absolute bottom-0 left-0 h-72 w-72 rounded-full bg-emerald-200/60 blur-[120px]" />
 
-      <div className="relative z-10 w-full max-w-6xl grid gap-12 lg:grid-cols-[1.15fr,0.85fr] items-center">
-        <div className="flex flex-col gap-6 text-center lg:text-left">
+      <div className="relative z-10 w-full max-w-6xl grid gap-8 lg:gap-12 lg:grid-cols-[1.15fr,0.85fr] items-center">
+        <div className="flex flex-col gap-4 sm:gap-6 text-center lg:text-left">
           <div className="flex items-center justify-center lg:justify-start gap-3">
             {loginConfig.logoUrl ? (
-              <Image src={getPhotoUrl(loginConfig.logoUrl) || ''} alt="Logo" width={150} height={48} className="h-12 w-auto" unoptimized />
+              <Image src={getPhotoUrl(loginConfig.logoUrl) || ''} alt="Logo" width={150} height={48} className="h-10 sm:h-12 w-auto" unoptimized />
             ) : (
-              <h1 className="font-heading text-4xl sm:text-5xl font-extrabold tracking-tight">
+              <h1 className="font-heading text-3xl sm:text-5xl font-extrabold tracking-tight">
                 <span className="text-slate-900">Axon</span>
                 <span className="text-sky-600">RH</span>
               </h1>
             )}
           </div>
 
-          <h2 className="font-heading text-3xl sm:text-4xl font-semibold text-slate-900">
+          <h2 className="font-heading text-2xl sm:text-4xl font-semibold text-slate-900 leading-tight">
             Boas-vindas ao seu acesso inteligente do ecossistema de RH
           </h2>
-          <p className="text-base sm:text-lg text-slate-600 max-w-xl mx-auto lg:mx-0">
+          <p className="text-sm sm:text-lg text-slate-600 max-w-xl mx-auto lg:mx-0">
             {loginConfig.welcomeMessage ||
-              "Faça login para continuar com segurança, personalização e visão completa do seu time. Seus dados permanecem protegidos e organizados do primeiro acesso."}
+              "Faça login para continuar com segurança, personalização e visão completa do seu time."}
           </p>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2 text-left">
+          <div className="hidden sm:grid gap-4 sm:grid-cols-2 lg:grid-cols-2 text-left">
             {[
               {
                 icon: Bot,
@@ -231,17 +231,18 @@ export default function LoginClient() {
           </div>
         </div>
 
-        <div className="w-full">
+        <div className="w-full max-w-md mx-auto lg:max-w-none">
           <div className="relative">
-            <div className="relative rounded-3xl border border-white/80 bg-white/90 shadow-xl shadow-slate-200/70 backdrop-blur-xl p-8 sm:p-10">
+            <div className="relative rounded-3xl border border-white/40 glass shadow-2xl shadow-slate-200/50 p-6 sm:p-10">
               <div className="mb-6 text-left">
-                <h2 className="font-heading text-2xl font-semibold text-slate-900">
+                <h2 className="font-heading text-xl sm:text-2xl font-semibold text-slate-900">
                   Faça login
                 </h2>
-                <p className="text-sm text-slate-500">
+                <p className="text-xs sm:text-sm text-slate-500">
                   Use seu e-mail corporativo para entrar
                 </p>
               </div>
+
 
               {/* Mensagem de sessao expirada */}
               {expired && (

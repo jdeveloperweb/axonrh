@@ -15,7 +15,8 @@ import {
   Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
@@ -393,15 +394,20 @@ export default function TimeRecordPage() {
               return (
                 <Button
                   key={type}
-                  className={`h-24 flex-col gap-2 ${config.color} ${isExpected ? 'ring-2 ring-offset-2 ring-primary' : ''
-                    }`}
+                  className={cn(
+                    "h-24 sm:h-28 flex-col gap-2 transition-all active:scale-95",
+                    config.color,
+                    isExpected ? 'ring-2 ring-offset-2 ring-primary shadow-lg' : 'shadow-sm'
+                  )}
                   onClick={() => handleTypeSelect(type)}
                   disabled={submitting}
                 >
-                  <Icon className="h-8 w-8" />
-                  <span className="text-sm font-medium">{config.label}</span>
+                  <Icon className="h-7 w-7 sm:h-8 sm:w-8" />
+                  <span className="text-[10px] sm:text-sm font-bold uppercase tracking-tight text-center leading-tight px-1">
+                    {config.label}
+                  </span>
                   {isExpected && (
-                    <Badge variant="secondary" className="text-xs">
+                    <Badge variant="secondary" className="text-[9px] sm:text-xs py-0 h-4 sm:h-5 bg-white/20 text-white border-none">
                       Esperado
                     </Badge>
                   )}

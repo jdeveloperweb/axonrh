@@ -562,7 +562,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 p-1 bg-gray-100/80 rounded-lg w-fit">
+      <div className="flex items-center gap-2 p-1 bg-gray-100/80 rounded-lg w-full sm:w-fit overflow-x-auto no-scrollbar whitespace-nowrap">
         {[
           { id: 'geral', label: 'Geral', icon: BarChart3 },
           { id: 'hiring', label: 'Contratação & Retenção', icon: Users },
@@ -585,6 +585,7 @@ export default function DashboardPage() {
           );
         })}
       </div>
+
 
       {/* Tab Content */}
       <div className="min-h-[500px]">
