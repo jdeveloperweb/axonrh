@@ -245,7 +245,7 @@ public class GeofenceService {
 
                 double distance = calculateDistance(compLat, compLon, lat, lon);
                 if (distance <= radius) {
-                    return new GeofenceValidationResult(true, tenantId, "Sede (Cerca Digital)");
+                    return new GeofenceValidationResult(true, null, "Sede (Cerca Digital)");
                 }
                 return new GeofenceValidationResult(false, null, null);
             }, tenantId);
