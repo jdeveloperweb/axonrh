@@ -164,6 +164,21 @@ public class ConfigController {
     }
 
     /**
+     * Serve a imagem do logo diretamente (necessário para acesso público sem MinIO público).
+     */
+    @GetMapping(value = "/logos/{tenantId}/{filename}", produces = {MediaType.IMAGE_PNG_VALUE, MediaType.IMAGE_JPEG_VALUE, "image/svg+xml"})
+    public ResponseEntity<byte[]> getLogoFile(@PathVariable UUID tenantId, @PathVariable String filename) {
+        String objectName = tenantId + "/" + filename;
+        byte[] bytes = logoService.getLogoBytes(objectName);
+        if (bytes == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok()
+                .header("Cache-Control", "public, max-age=86400")
+                .body(bytes);
+    }
+
+    /**
      * Remove logo.
      */
     @DeleteMapping("/logo/{tenantId}")

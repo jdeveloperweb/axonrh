@@ -29,6 +29,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { timesheetApi, TimeRecord, TimeRecordRequest, Geofence } from '@/lib/api/timesheet';
+import { useAuthStore } from '@/stores/auth-store';
 import { formatTime } from '@/lib/utils';
 import dynamic from 'next/dynamic';
 
@@ -49,6 +50,7 @@ interface LocationState {
 
 export default function TimeRecordPage() {
   const router = useRouter();
+  const { user } = useAuthStore();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [todayRecords, setTodayRecords] = useState<TimeRecord[]>([]);
   const [geofences, setGeofences] = useState<Geofence[]>([]);
@@ -227,7 +229,9 @@ export default function TimeRecordPage() {
       setSubmitting(true);
 
       const request: TimeRecordRequest = {
+        employeeId: user?.id || '',
         recordType: selectedType,
+        source: 'WEB',
         latitude: location.latitude ?? undefined,
         longitude: location.longitude ?? undefined,
         photoBase64: photoBase64 ?? undefined,

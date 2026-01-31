@@ -177,8 +177,23 @@ public class LogoService {
                     .build());
         }
 
-        // Retorna URL publica
-        return minioEndpoint + "/" + logosBucket + "/" + objectName;
+        // Retorna Path relativo para ser resolvido via Gateway/Dominio atual
+        return "/api/v1/config/logos/" + objectName;
+    }
+
+    /**
+     * Busca os bytes de um objeto no MinIO.
+     */
+    public byte[] getLogoBytes(String objectName) {
+        try (InputStream stream = minioClient.getObject(GetObjectArgs.builder()
+                .bucket(logosBucket)
+                .object(objectName)
+                .build())) {
+            return stream.readAllBytes();
+        } catch (Exception e) {
+            log.error("Erro ao buscar bytes no MinIO: {}", e.getMessage());
+            return null;
+        }
     }
 
     private void deleteFromMinio(String objectName) {

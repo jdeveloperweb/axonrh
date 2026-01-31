@@ -294,47 +294,41 @@ export function downloadBlob(blob: Blob, filename: string): void {
  */
 export function getPhotoUrl(path: string | null | undefined, updatedAt?: string | Date): string | null {
   if (!path) return null;
-  if (path.startsWith('http')) return path;
 
-  // Normaliza o path: se for um path antigo de uploads, converte para o novo path da API
-  // que sabemos que o gateway roteia corretamente sem autenticação.
+  // Se a URL gravada no banco for do MinIO com localhost (comum nos logs atuais)
+  // nós a limpamos para que o browser use o domínio atual.
   let cleanPath = path;
-  if (path.startsWith('/uploads/employee-photos/')) {
-    cleanPath = path.replace('/uploads/employee-photos/', '/api/v1/employees/photos/');
+  if (path.startsWith('http://localhost:9000/')) {
+    // Tenta converter para um path relativo que o gateway saiba lidar ou 
+    // apenas remove o host para testar caminhos relativos
+    cleanPath = path.replace('http://localhost:9000/', '/api/v1/config/logos/');
   }
 
-  // Determina a base URL
-  let baseUrl = '';
+  if (cleanPath.startsWith('http')) return cleanPath;
 
-  if (process.env.NEXT_PUBLIC_API_URL) {
-    // Se temos a env var, removemos o /api/v1 e usamos como base
-    baseUrl = process.env.NEXT_PUBLIC_API_URL.replace('/api/v1', '');
-  } else if (typeof window !== 'undefined') {
-    // Se no browser e sem env var, verifica se estamos no localhost
-    const hostname = window.location.hostname;
-    if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      // Localmente fora do docker, os serviços costumam estar na porta 8180 ou via gateway na 8080
-      // Tentamos o padrão do projeto
-      baseUrl = 'http://localhost:8180';
-    } else {
-      // Na internet, se não temos a base setada, usamos caminhos relativos ao domínio atual
-      baseUrl = '';
-    }
-  } else {
-    // Fallback padrão se tudo falhar (e.g. Server Side Rendering sem env var)
-    baseUrl = 'http://localhost:8180';
+  // Normaliza caminhos antigos
+  if (cleanPath.startsWith('/uploads/employee-photos/')) {
+    cleanPath = cleanPath.replace('/uploads/employee-photos/', '/api/v1/employees/photos/');
   }
 
-  // Constrói a URL final
-  const url = `${baseUrl}${cleanPath.startsWith('/') ? '' : '/'}${cleanPath}`;
+  // Se já começa com /api, o browser resolve relativo à raiz do site (https://axonrh.mjolnix.com.br/api/...)
+  // Isso é o ideal para produção.
+  let finalUrl = cleanPath;
 
+  // Se não começar com / nem http, adicionamos a base da API
+  if (!cleanPath.startsWith('/') && !cleanPath.startsWith('http')) {
+    const baseUrl = (process.env.NEXT_PUBLIC_API_URL || '').replace('/api/v1', '');
+    finalUrl = `${baseUrl}/${cleanPath}`;
+  }
+
+  // Cache busting
   if (updatedAt) {
     const t = typeof updatedAt === 'string' ? new Date(updatedAt).getTime() : new Date(updatedAt).getTime();
     if (!isNaN(t)) {
-      return `${url}${url.includes('?') ? '&' : '?'}v=${t}`;
+      return `${finalUrl}${finalUrl.includes('?') ? '&' : '?'}v=${t}`;
     }
   }
 
-  return url;
+  return finalUrl;
 }
 

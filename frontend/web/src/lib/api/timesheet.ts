@@ -194,7 +194,9 @@ export interface PeriodTotals {
 // ==================== Request Types ====================
 
 export interface TimeRecordRequest {
+  employeeId: string;
   recordType: 'ENTRY' | 'EXIT' | 'BREAK_START' | 'BREAK_END';
+  source: 'WEB' | 'MOBILE' | 'REP' | 'BIOMETRIC' | 'FACIAL' | 'MANUAL' | 'IMPORT';
   latitude?: number;
   longitude?: number;
   photoBase64?: string;
