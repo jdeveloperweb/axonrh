@@ -316,11 +316,55 @@ public class GeofenceService {
     public List<GeofenceResponse> getMyGeofences(UUID employeeId) {
         UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
 
-        return geofenceRepository.findByTenantIdAndActiveTrue(tenantId)
+        List<GeofenceResponse> geofences = new java.util.ArrayList<>(
+            geofenceRepository.findByTenantIdAndActiveTrue(tenantId)
                 .stream()
                 .filter(geofence -> isEmployeeAllowed(geofence, employeeId))
                 .map(this::toResponse)
-                .toList();
+                .toList()
+        );
+
+        // Adicionar cerca digital da empresa se configurada
+        fetchCompanyGeofence(tenantId).ifPresent(geofences::add);
+
+        return geofences;
+    }
+
+    private java.util.Optional<GeofenceResponse> fetchCompanyGeofence(UUID tenantId) {
+        try {
+            String sql = "SELECT geofence_enabled, geofence_latitude, geofence_longitude, geofence_radius, legal_name " +
+                         "FROM company_profiles WHERE tenant_id = ?";
+            
+            return jdbcTemplate.query(sql, (rs) -> {
+                if (rs.next()) {
+                    boolean enabled = rs.getBoolean("geofence_enabled");
+                    if (!enabled) return java.util.Optional.empty();
+
+                    Double compLat = rs.getDouble("geofence_latitude");
+                    Double compLon = rs.getDouble("geofence_longitude");
+                    int radius = rs.getInt("geofence_radius");
+                    String companyName = rs.getString("legal_name");
+
+                    if (compLat == 0 && compLon == 0) return java.util.Optional.empty();
+
+                    return java.util.Optional.of(GeofenceResponse.builder()
+                            .id(tenantId) // Usar tenantId como ID para a cerca da empresa
+                            .name(companyName != null ? companyName : "Sede")
+                            .description("Cerca digital da sede")
+                            .latitude(compLat)
+                            .longitude(compLon)
+                            .radiusMeters(radius)
+                            .locationType("HEADQUARTERS")
+                            .locationTypeLabel("Matriz")
+                            .active(true)
+                            .build());
+                }
+                return java.util.Optional.empty();
+            }, tenantId);
+        } catch (Exception e) {
+            log.error("Erro ao buscar cerca digital da empresa para tenant {}", tenantId, e);
+            return java.util.Optional.empty();
+        }
     }
 
     private String buildFullAddress(Geofence geofence) {

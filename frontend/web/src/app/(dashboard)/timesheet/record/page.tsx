@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Clock,
@@ -66,6 +66,26 @@ export default function TimeRecordPage() {
     error: null,
     loading: true,
   });
+
+  const isInsideGeofence = useMemo(() => {
+    if (!location.latitude || !location.longitude || geofences.length === 0) return false;
+
+    return geofences.some(fence => {
+      const R = 6371000;
+      const lat1 = location.latitude! * Math.PI / 180;
+      const lat2 = fence.latitude * Math.PI / 180;
+      const dLat = (fence.latitude - location.latitude!) * Math.PI / 180;
+      const dLon = (fence.longitude - location.longitude!) * Math.PI / 180;
+
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1) * Math.cos(lat2) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      const distance = R * c;
+
+      return distance <= fence.radiusMeters;
+    });
+  }, [location.latitude, location.longitude, geofences]);
 
   // Update clock every second
   useEffect(() => {
@@ -301,6 +321,11 @@ export default function TimeRecordPage() {
                   <span>
                     Localização capturada (precisão: {location.accuracy?.toFixed(0)}m)
                   </span>
+                  {geofences.length > 0 && (
+                    <Badge variant={isInsideGeofence ? "success" : "destructive"} className="ml-2">
+                      {isInsideGeofence ? "Área Autorizada" : "Fora da Área"}
+                    </Badge>
+                  )}
                 </>
               )}
             </div>

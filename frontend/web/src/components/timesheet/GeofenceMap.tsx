@@ -96,7 +96,7 @@ export default function GeofenceMap({ userLocation, geofences, height = '300px' 
     };
 
     return (
-        <div style={{ height, width: '100%', borderRadius: '0.5rem', overflow: 'hidden' }}>
+        <div style={{ height, width: '100%', borderRadius: '0.5rem', overflow: 'hidden', position: 'relative', zIndex: 0 }}>
             <MapContainer
                 center={center}
                 zoom={16}
@@ -121,29 +121,24 @@ export default function GeofenceMap({ userLocation, geofences, height = '300px' 
                 {geofences.map((fence) => {
                     const inside = isInside(fence);
                     return (
-                        <div key={fence.id}>
-                            <Circle
-                                center={[fence.latitude, fence.longitude]}
-                                radius={fence.radiusMeters}
-                                pathOptions={{
-                                    color: inside ? 'green' : 'red',
-                                    fillColor: inside ? 'green' : 'red',
-                                    fillOpacity: 0.2
-                                }}
-                            >
-                                <Popup>
-                                    <strong>{fence.name}</strong><br />
-                                    {fence.description}
-                                    <div className={`text-xs font-bold mt-1 ${inside ? 'text-green-600' : 'text-red-600'}`}>
-                                        {inside ? 'Você está dentro da área' : 'Você está fora da área'}
-                                    </div>
-                                </Popup>
-                            </Circle>
-                            {/* Optional: Add marker for center of geofence */}
-                            {/* <Marker position={[fence.latitude, fence.longitude]} icon={geofenceIcon}>
-                 <Popup>{fence.name}</Popup>
-              </Marker> */}
-                        </div>
+                        <Circle
+                            key={fence.id}
+                            center={[fence.latitude, fence.longitude]}
+                            radius={fence.radiusMeters}
+                            pathOptions={{
+                                color: inside ? '#22c55e' : '#ef4444',
+                                fillColor: inside ? '#22c55e' : '#ef4444',
+                                fillOpacity: 0.2
+                            }}
+                        >
+                            <Popup>
+                                <strong>{fence.name}</strong><br />
+                                {fence.description}
+                                <div className={`text-xs font-bold mt-1 ${inside ? 'text-green-600' : 'text-red-600'}`}>
+                                    {inside ? 'Você está dentro da área' : 'Você está fora da área'}
+                                </div>
+                            </Popup>
+                        </Circle>
                     );
                 })}
             </MapContainer>
