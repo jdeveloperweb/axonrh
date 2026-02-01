@@ -94,6 +94,8 @@ export interface EmployeeDependent {
   isHealthPlanDependent: boolean;
 }
 
+export type WorkRegime = 'PRESENCIAL' | 'REMOTO' | 'HIBRIDO';
+
 export interface EmployeeListParams {
   page?: number;
   size?: number;
@@ -102,6 +104,22 @@ export interface EmployeeListParams {
   status?: EmployeeStatus;
   departmentId?: string;
   positionId?: string;
+  workRegime?: WorkRegime;
+  hybridDay?: string;
+}
+
+export interface EmployeeStats {
+  total: number;
+  active: number;
+  onLeave: number;
+  terminated: number;
+  pending: number;
+  presencial: number;
+  remoto: number;
+  hibrido: number;
+  totalMonthlySalary: number;
+  averageSalary: number;
+  byDepartment: Record<string, number>;
 }
 
 export interface EmployeeListResponse {
@@ -214,12 +232,26 @@ export const employeesApi = {
     if (params.page !== undefined) searchParams.set('page', params.page.toString());
     if (params.size !== undefined) searchParams.set('size', params.size.toString());
     if (params.sort) searchParams.set('sort', params.sort);
+    if (params.status) searchParams.set('status', params.status);
+    if (params.departmentId) searchParams.set('departmentId', params.departmentId);
+    if (params.positionId) searchParams.set('positionId', params.positionId);
+    if (params.workRegime) searchParams.set('workRegime', params.workRegime);
+    if (params.hybridDay) searchParams.set('hybridDay', params.hybridDay);
+
+    return api.get<EmployeeListResponse, EmployeeListResponse>(`/employees?${searchParams.toString()}`);
+  },
+
+  // Get employee stats with filters
+  getStats: async (params: EmployeeListParams = {}): Promise<EmployeeStats> => {
+    const searchParams = new URLSearchParams();
     if (params.search) searchParams.set('search', params.search);
     if (params.status) searchParams.set('status', params.status);
     if (params.departmentId) searchParams.set('departmentId', params.departmentId);
     if (params.positionId) searchParams.set('positionId', params.positionId);
+    if (params.workRegime) searchParams.set('workRegime', params.workRegime);
+    if (params.hybridDay) searchParams.set('hybridDay', params.hybridDay);
 
-    return api.get<EmployeeListResponse, EmployeeListResponse>(`/employees?${searchParams.toString()}`);
+    return api.get<EmployeeStats, EmployeeStats>(`/employees/stats?${searchParams.toString()}`);
   },
 
   // Get single employee
@@ -320,6 +352,8 @@ export const employeesApi = {
     if (params?.search) searchParams.set('search', params.search);
     if (params?.status) searchParams.set('status', params.status);
     if (params?.departmentId) searchParams.set('departmentId', params.departmentId);
+    if (params?.workRegime) searchParams.set('workRegime', params.workRegime);
+    if (params?.hybridDay) searchParams.set('hybridDay', params.hybridDay);
 
     return api.get<unknown, Blob>(`/employees/export?${searchParams.toString()}`, {
       responseType: 'blob',

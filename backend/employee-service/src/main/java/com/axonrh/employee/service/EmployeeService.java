@@ -4,8 +4,10 @@ import com.axonrh.employee.config.TenantContext;
 import com.axonrh.employee.dto.EmployeeDependentRequest;
 import com.axonrh.employee.dto.EmployeeRequest;
 import com.axonrh.employee.dto.EmployeeResponse;
+import com.axonrh.employee.dto.EmployeeStatsResponse;
 import com.axonrh.employee.entity.*;
 import com.axonrh.employee.entity.enums.EmployeeStatus;
+import com.axonrh.employee.entity.enums.WorkRegime;
 import com.axonrh.employee.exception.DuplicateResourceException;
 import com.axonrh.employee.exception.InvalidCpfException;
 import com.axonrh.employee.exception.ResourceNotFoundException;
@@ -56,9 +58,10 @@ public class EmployeeService {
      * Lista colaboradores com filtros dinamicos.
      */
     @Transactional(readOnly = true)
-    public Page<EmployeeResponse> findWithFilters(String search, EmployeeStatus status, UUID departmentId, UUID positionId, Pageable pageable) {
+    public Page<EmployeeResponse> findWithFilters(String search, EmployeeStatus status, UUID departmentId, UUID positionId, WorkRegime workRegime, String hybridDay, Pageable pageable) {
         UUID tenantId = getTenantId();
-        log.info(">>> [DEBUG-TRACE] EmployeeService.findWithFilters - Search: {}, Status: {}, Dept: {}, Pos: {}", search, status, departmentId, positionId);
+        log.info(">>> [DEBUG-TRACE] EmployeeService.findWithFilters - Search: {}, Status: {}, Dept: {}, Pos: {}, Regime: {}, Day: {}", 
+                search, status, departmentId, positionId, workRegime, hybridDay);
 
         org.springframework.data.jpa.domain.Specification<Employee> spec = (root, query, cb) -> {
             java.util.List<jakarta.persistence.criteria.Predicate> predicates = new java.util.ArrayList<>();
@@ -80,6 +83,15 @@ public class EmployeeService {
                 predicates.add(cb.equal(root.get("position").get("id"), positionId));
             }
 
+            if (workRegime != null) {
+                predicates.add(cb.equal(root.get("workRegime"), workRegime));
+            }
+
+            if (hybridDay != null && !hybridDay.trim().isEmpty()) {
+                jakarta.persistence.criteria.Expression<java.util.Collection<String>> hybridDays = root.get("hybridWorkDays");
+                predicates.add(cb.isMember(hybridDay, hybridDays));
+            }
+
             if (search != null && !search.trim().isEmpty()) {
                 String likePattern = "%" + search.trim().toLowerCase() + "%";
                 predicates.add(cb.or(
@@ -98,9 +110,126 @@ public class EmployeeService {
                 .map(employeeMapper::toResponse);
     }
 
-    /**
-     * Lista colaboradores por status.
-     */
+    @Transactional(readOnly = true)
+    public EmployeeStatsResponse getStats(String search, EmployeeStatus status, UUID departmentId, UUID positionId, WorkRegime workRegime, String hybridDay) {
+        UUID tenantId = getTenantId();
+
+        org.springframework.data.jpa.domain.Specification<Employee> spec = (root, query, cb) -> {
+            java.util.List<jakarta.persistence.criteria.Predicate> predicates = new java.util.ArrayList<>();
+            predicates.add(cb.equal(root.get("tenantId"), tenantId));
+            
+            if (status != null) {
+                predicates.add(cb.equal(root.get("status"), status));
+            }
+            if (departmentId != null) {
+                predicates.add(cb.equal(root.get("department").get("id"), departmentId));
+            }
+            if (positionId != null) {
+                predicates.add(cb.equal(root.get("position").get("id"), positionId));
+            }
+            if (workRegime != null) {
+                predicates.add(cb.equal(root.get("workRegime"), workRegime));
+            }
+            if (hybridDay != null && !hybridDay.trim().isEmpty()) {
+                predicates.add(cb.isMember(hybridDay, root.get("hybridWorkDays")));
+            }
+            if (search != null && !search.trim().isEmpty()) {
+                String likePattern = "%" + search.trim().toLowerCase() + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("fullName")), likePattern),
+                        cb.like(cb.lower(root.get("socialName")), likePattern),
+                        cb.like(cb.lower(root.get("registrationNumber")), likePattern),
+                        cb.like(cb.lower(root.get("cpf")), likePattern),
+                        cb.like(cb.lower(root.get("email")), likePattern)
+                ));
+            }
+            return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
+        };
+
+        java.util.List<Employee> allFiltered = employeeRepository.findAll(spec);
+        
+        long total = allFiltered.size();
+        long active = allFiltered.stream().filter(e -> e.getStatus() == EmployeeStatus.ACTIVE).count();
+        long onLeave = allFiltered.stream().filter(e -> e.getStatus() == EmployeeStatus.ON_LEAVE).count();
+        long terminated = allFiltered.stream().filter(e -> e.getStatus() == EmployeeStatus.TERMINATED).count();
+        long pending = allFiltered.stream().filter(e -> e.getStatus() == EmployeeStatus.PENDING).count();
+
+        long presencial = allFiltered.stream().filter(e -> e.getWorkRegime() == WorkRegime.PRESENCIAL).count();
+        long remoto = allFiltered.stream().filter(e -> e.getWorkRegime() == WorkRegime.REMOTO).count();
+        long hibrido = allFiltered.stream().filter(e -> e.getWorkRegime() == WorkRegime.HIBRIDO).count();
+
+        java.math.BigDecimal totalSalary = allFiltered.stream()
+                .map(e -> e.getBaseSalary() != null ? e.getBaseSalary() : java.math.BigDecimal.ZERO)
+                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+        
+        java.math.BigDecimal averageSalary = total > 0 
+                ? totalSalary.divide(java.math.BigDecimal.valueOf(total), 2, java.math.RoundingMode.HALF_UP) 
+                : java.math.BigDecimal.ZERO;
+
+        java.util.Map<String, Long> byDept = allFiltered.stream()
+                .filter(e -> e.getDepartment() != null)
+                .collect(java.util.stream.Collectors.groupingBy(e -> e.getDepartment().getName(), java.util.stream.Collectors.counting()));
+
+        return EmployeeStatsResponse.builder()
+                .total(total)
+                .active(active)
+                .onLeave(onLeave)
+                .terminated(terminated)
+                .pending(pending)
+                .presencial(presencial)
+                .remoto(remoto)
+                .hibrido(hibrido)
+                .totalMonthlySalary(totalSalary)
+                .averageSalary(averageSalary)
+                .byDepartment(byDept)
+                .build();
+    }
+    @Transactional(readOnly = true)
+    public byte[] exportEmployees(String search, EmployeeStatus status, UUID departmentId, UUID positionId, WorkRegime workRegime, String hybridDay, String format) {
+        // Implementamos CSV por padrao por ser leve e pratico
+        org.springframework.data.jpa.domain.Specification<Employee> spec = (root, query, cb) -> {
+            java.util.List<jakarta.persistence.criteria.Predicate> predicates = new java.util.ArrayList<>();
+            predicates.add(cb.equal(root.get("tenantId"), getTenantId()));
+            if (status != null) predicates.add(cb.equal(root.get("status"), status));
+            if (departmentId != null) predicates.add(cb.equal(root.get("department").get("id"), departmentId));
+            if (positionId != null) predicates.add(cb.equal(root.get("position").get("id"), positionId));
+            if (workRegime != null) predicates.add(cb.equal(root.get("workRegime"), workRegime));
+            if (hybridDay != null && !hybridDay.trim().isEmpty()) predicates.add(cb.isMember(hybridDay, root.get("hybridWorkDays")));
+            if (search != null && !search.trim().isEmpty()) {
+                String likePattern = "%" + search.trim().toLowerCase() + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("fullName")), likePattern),
+                        cb.like(cb.lower(root.get("socialName")), likePattern),
+                        cb.like(cb.lower(root.get("registrationNumber")), likePattern),
+                        cb.like(cb.lower(root.get("cpf")), likePattern),
+                        cb.like(cb.lower(root.get("email")), likePattern)
+                ));
+            }
+            return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
+        };
+
+        java.util.List<Employee> employees = employeeRepository.findAll(spec);
+        
+        StringBuilder csv = new StringBuilder();
+        // Header
+        csv.append("Matricula;Nome Completo;CPF;Email;Departamento;Cargo;Status;Regime;Dias Hibridos;Salario Base\n");
+        
+        for (Employee e : employees) {
+            csv.append(e.getRegistrationNumber()).append(";");
+            csv.append(e.getFullName()).append(";");
+            csv.append(e.getCpf()).append(";");
+            csv.append(e.getEmail()).append(";");
+            csv.append(e.getDepartment() != null ? e.getDepartment().getName() : "-").append(";");
+            csv.append(e.getPosition() != null ? e.getPosition().getTitle() : "-").append(";");
+            csv.append(e.getStatus()).append(";");
+            csv.append(e.getWorkRegime() != null ? e.getWorkRegime() : "-").append(";");
+            csv.append(e.getHybridWorkDays() != null ? String.join(",", e.getHybridWorkDays()) : "-").append(";");
+            csv.append(e.getBaseSalary() != null ? e.getBaseSalary() : "0").append("\n");
+        }
+        
+        return csv.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+    }
+ 
     @Transactional(readOnly = true)
     public Page<EmployeeResponse> findByStatus(EmployeeStatus status, Pageable pageable) {
         UUID tenantId = getTenantId();

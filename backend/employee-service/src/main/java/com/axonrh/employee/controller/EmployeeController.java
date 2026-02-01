@@ -51,13 +51,50 @@ public class EmployeeController {
             @RequestParam(required = false) EmployeeStatus status,
             @RequestParam(required = false) UUID departmentId,
             @RequestParam(required = false) UUID positionId,
+            @RequestParam(required = false) com.axonrh.employee.entity.enums.WorkRegime workRegime,
+            @RequestParam(required = false) String hybridDay,
             @PageableDefault(size = 20, sort = "fullName", direction = Sort.Direction.ASC) Pageable pageable) {
 
-        log.info("Listing employees with filters: search={}, status={}, dept={}, pos={}", search, status, departmentId, positionId);
-        Page<EmployeeResponse> employees = employeeService.findWithFilters(search, status, departmentId, positionId, pageable);
+        log.info("Listing employees with filters: search={}, status={}, dept={}, pos={}, regime={}, day={}", search, status, departmentId, positionId, workRegime, hybridDay);
+        Page<EmployeeResponse> employees = employeeService.findWithFilters(search, status, departmentId, positionId, workRegime, hybridDay, pageable);
         return ResponseEntity.ok(employees);
     }
 
+    @GetMapping("/stats")
+    @PreAuthorize("hasAuthority('EMPLOYEE:READ')")
+    @Operation(summary = "Retorna estatisticas de colaboradores", description = "Retorna contagens e somas baseadas nos filtros")
+    public ResponseEntity<com.axonrh.employee.dto.EmployeeStatsResponse> getStats(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) EmployeeStatus status,
+            @RequestParam(required = false) UUID departmentId,
+            @RequestParam(required = false) UUID positionId,
+            @RequestParam(required = false) com.axonrh.employee.entity.enums.WorkRegime workRegime,
+            @RequestParam(required = false) String hybridDay) {
+ 
+        return ResponseEntity.ok(employeeService.getStats(search, status, departmentId, positionId, workRegime, hybridDay));
+    }
+ 
+    @GetMapping("/export")
+    @PreAuthorize("hasAuthority('EMPLOYEE:READ')")
+    @Operation(summary = "Exporta colaboradores", description = "Gera arquivo de exportacao (CSV) baseado nos filtros")
+    public ResponseEntity<byte[]> export(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) EmployeeStatus status,
+            @RequestParam(required = false) UUID departmentId,
+            @RequestParam(required = false) UUID positionId,
+            @RequestParam(required = false) com.axonrh.employee.entity.enums.WorkRegime workRegime,
+            @RequestParam(required = false) String hybridDay,
+            @RequestParam(defaultValue = "csv") String format) {
+ 
+        byte[] data = employeeService.exportEmployees(search, status, departmentId, positionId, workRegime, hybridDay, format);
+        
+        String filename = "colaboradores_" + java.time.LocalDate.now() + ".csv";
+        return ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .contentType(org.springframework.http.MediaType.parseMediaType("text/csv"))
+                .body(data);
+    }
+ 
     @GetMapping("/status/{status}")
     @PreAuthorize("hasAuthority('EMPLOYEE:READ')")
     @Operation(summary = "Lista colaboradores por status")
