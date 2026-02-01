@@ -147,6 +147,33 @@ export default function BrandingPage() {
         }
     };
 
+    const updateGlobalTheme = useCallback(() => {
+        if (loading) return;
+
+        setTenantTheme({
+            tenantId: config.tenantId || '',
+            logoUrl: config.logoUrl || '',
+            logoWidth: config.extraSettings?.logoWidth || 150,
+            colors: {
+                primary: config.primaryColor || '#1976D2',
+                secondary: config.secondaryColor || '#424242',
+                accent: config.accentColor || '#FF4081',
+                background: config.backgroundColor || '#FFFFFF',
+                surface: config.surfaceColor || '#FAFAFA',
+                textPrimary: config.textPrimaryColor || '#212121',
+                textSecondary: config.textSecondaryColor || '#757575',
+            },
+            baseFontSize: config.extraSettings?.baseFontSize || 16,
+            customCss: config.customCss,
+            faviconUrl: config.faviconUrl
+        });
+    }, [config, loading, setTenantTheme]);
+
+    // Sincroniza em tempo real enquanto edita
+    useEffect(() => {
+        updateGlobalTheme();
+    }, [config.primaryColor, config.secondaryColor, config.accentColor, config.logoUrl, config.extraSettings?.logoWidth, config.extraSettings?.baseFontSize, updateGlobalTheme]);
+
     const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;

@@ -127,7 +127,8 @@ export function Sidebar() {
                 <div
                   className="relative flex items-center"
                   style={{
-                    width: isSidebarCollapsed ? '32px' : `${tenantTheme.logoWidth || 150}px`,
+                    width: isSidebarCollapsed ? '32px' : '100%',
+                    maxWidth: isSidebarCollapsed ? '32px' : `${tenantTheme.logoWidth || 150}px`,
                     height: '40px'
                   }}
                 >
