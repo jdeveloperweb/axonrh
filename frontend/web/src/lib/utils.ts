@@ -309,6 +309,9 @@ export function getPhotoUrl(
 ): string | null {
   if (!path) return null;
 
+  // Se já for uma URL absoluta (link externo), retorna sem alterar
+  if (path.startsWith('http')) return path;
+
   let finalUrl = path;
 
   // 1. Trata URLs do MinIO com localhost

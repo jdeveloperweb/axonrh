@@ -14,6 +14,13 @@ import java.util.Map;
 @AllArgsConstructor
 @Builder
 public class ThemeConfigRequest {
+    
+    // ==================== Logos e Imagens ====================
+    private String logoUrl;
+    private String logoDarkUrl;
+    private String faviconUrl;
+    private String loginBackgroundUrl;
+
 
     // ==================== Cores do Tema Claro ====================
 

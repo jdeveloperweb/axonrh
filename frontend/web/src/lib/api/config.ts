@@ -31,6 +31,9 @@ export interface ThemeConfig {
 }
 
 export interface ThemeConfigRequest {
+  logoUrl?: string;
+  logoDarkUrl?: string;
+  faviconUrl?: string;
   primaryColor?: string;
   secondaryColor?: string;
   accentColor?: string;

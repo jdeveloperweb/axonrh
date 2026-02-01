@@ -98,6 +98,8 @@ export default function BrandingPage() {
             const tenantId = config.tenantId || localStorage.getItem('tenantId') || localStorage.getItem('setup_tenant_id') || '';
 
             await configApi.updateThemeConfig(tenantId, {
+                logoUrl: config.logoUrl,
+                faviconUrl: config.faviconUrl,
                 primaryColor: config.primaryColor,
                 secondaryColor: config.secondaryColor,
                 accentColor: config.accentColor,

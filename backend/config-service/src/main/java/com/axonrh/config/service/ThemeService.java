@@ -263,6 +263,12 @@ public class ThemeService {
         if (request.getLoginFooterText() != null) config.setLoginFooterText(request.getLoginFooterText());
         if (request.getShowPoweredBy() != null) config.setShowPoweredBy(request.getShowPoweredBy());
 
+        // Logos e Imagens
+        if (request.getLogoUrl() != null) config.setLogoUrl(request.getLogoUrl());
+        if (request.getLogoDarkUrl() != null) config.setLogoDarkUrl(request.getLogoDarkUrl());
+        if (request.getFaviconUrl() != null) config.setFaviconUrl(request.getFaviconUrl());
+        if (request.getLoginBackgroundUrl() != null) config.setLoginBackgroundUrl(request.getLoginBackgroundUrl());
+
         // CSS e extras
         if (request.getCustomCss() != null) config.setCustomCss(request.getCustomCss());
         if (request.getExtraSettings() != null) config.setExtraSettings(request.getExtraSettings());
