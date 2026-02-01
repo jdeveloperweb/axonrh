@@ -15,8 +15,7 @@ import { Button } from '@/components/ui/button';
 import { DependentsTab } from '@/components/employees/DependentsTab';
 import { ShieldCheck, ShieldAlert, Key, CreditCard } from 'lucide-react';
 import { EmployeeBadge } from '@/components/employees/EmployeeBadge';
-import { configApi, ThemeConfig } from '@/lib/api/config';
-import { authApi } from '@/lib/api/auth';
+import { useThemeStore } from '@/stores/theme-store';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
@@ -66,9 +65,8 @@ export default function EmployeeDetailPage() {
   const [platformUser, setPlatformUser] = useState<UserDTO | null>(null);
   const [checkingAccess, setCheckingAccess] = useState(false);
 
-  // Theme & Logo for Badge
-  const [themeConfig, setThemeConfig] = useState<ThemeConfig | undefined>(undefined);
-  const [companyLogo, setCompanyLogo] = useState<string | undefined>(undefined);
+  // Theme & Branding from store
+  const { tenantTheme } = useThemeStore();
   const [generatingBadge, setGeneratingBadge] = useState(false);
 
   // Fetch employee
@@ -139,25 +137,6 @@ export default function EmployeeDetailPage() {
     if (activeTab === 'documents') fetchDocuments();
     if (activeTab === 'history') fetchHistory();
   }, [activeTab, fetchDocuments, fetchHistory]);
-
-  // Fetch Theme Config
-  useEffect(() => {
-    const fetchTheme = async () => {
-      try {
-        const user = await authApi.me();
-        if (user.tenantId) {
-          const config = await configApi.getThemeConfig(user.tenantId);
-          setThemeConfig(config);
-          if (config.logoUrl) {
-            setCompanyLogo(getPhotoUrl(config.logoUrl) || undefined);
-          }
-        }
-      } catch (error) {
-        console.warn('Failed to load theme config for badge:', error);
-      }
-    };
-    fetchTheme();
-  }, []);
 
   const handleGenerateBadge = async () => {
     try {
@@ -317,7 +296,14 @@ export default function EmployeeDetailPage() {
             {statusInfo.label}
           </span>
           {platformUser ? (
-            <span className="flex items-center gap-1.5 px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-sm font-semibold border border-indigo-100 shadow-sm">
+            <span
+              className="flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold border shadow-sm"
+              style={{
+                backgroundColor: tenantTheme?.colors.primary ? `${tenantTheme.colors.primary}10` : undefined,
+                color: tenantTheme?.colors.primary || undefined,
+                borderColor: tenantTheme?.colors.primary ? `${tenantTheme.colors.primary}30` : undefined
+              }}
+            >
               <ShieldCheck className="w-3.5 h-3.5" />
               Acesso Ativo
             </span>
@@ -341,7 +327,11 @@ export default function EmployeeDetailPage() {
             variant="outline"
             onClick={handleGenerateBadge}
             disabled={generatingBadge}
-            className="flex items-center gap-2 border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+            className="flex items-center gap-2"
+            style={{
+              borderColor: tenantTheme?.colors.primary ? `${tenantTheme.colors.primary}40` : undefined,
+              color: tenantTheme?.colors.primary || undefined
+            }}
           >
             <CreditCard className="w-4 h-4" />
             {generatingBadge ? 'Gerando...' : 'Gerar Crachá'}
@@ -536,7 +526,10 @@ export default function EmployeeDetailPage() {
                 <div className="col-span-2 pt-4 border-t border-gray-100 mt-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Key className="w-4 h-4 text-indigo-500" />
+                      <Key
+                        className="w-4 h-4"
+                        style={{ color: tenantTheme?.colors.primary || undefined }}
+                      />
                       <p className="text-sm font-bold text-gray-700">Acesso à Plataforma</p>
                     </div>
                     {checkingAccess ? (
@@ -544,7 +537,14 @@ export default function EmployeeDetailPage() {
                     ) : platformUser ? (
                       <div className="flex flex-wrap gap-2">
                         {platformUser.roles.map(role => (
-                          <span key={role} className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-bold rounded-full uppercase tracking-wider">
+                          <span
+                            key={role}
+                            className="px-2 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wider"
+                            style={{
+                              backgroundColor: tenantTheme?.colors.primary ? `${tenantTheme.colors.primary}15` : undefined,
+                              color: tenantTheme?.colors.primary || undefined
+                            }}
+                          >
                             {role}
                           </span>
                         ))}
@@ -852,8 +852,8 @@ export default function EmployeeDetailPage() {
         <div id="employee-badge-container">
           <EmployeeBadge
             employee={employee}
-            theme={themeConfig}
-            companyLogo={companyLogo}
+            colors={tenantTheme?.colors}
+            companyLogo={tenantTheme?.logoUrl ? getPhotoUrl(tenantTheme.logoUrl) || undefined : undefined}
           />
         </div>
       </div>

@@ -8,14 +8,18 @@ import Image from 'next/image';
 
 interface EmployeeBadgeProps {
     employee: Employee;
-    theme?: ThemeConfig;
+    colors?: {
+        primary: string;
+        secondary: string;
+        accent: string;
+    };
     companyLogo?: string;
 }
 
-export const EmployeeBadge: React.FC<EmployeeBadgeProps> = ({ employee, theme, companyLogo }) => {
-    const primaryColor = theme?.primaryColor || '#4F46E5';
-    const secondaryColor = theme?.secondaryColor || primaryColor;
-    const accentColor = theme?.accentColor || primaryColor;
+export const EmployeeBadge: React.FC<EmployeeBadgeProps> = ({ employee, colors, companyLogo }) => {
+    const primaryColor = colors?.primary || '#4F46E5';
+    const secondaryColor = colors?.secondary || primaryColor;
+    const accentColor = colors?.accent || primaryColor;
 
     return (
         <div
