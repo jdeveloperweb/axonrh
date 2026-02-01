@@ -124,15 +124,21 @@ export function Sidebar() {
           {!isSidebarCollapsed && (
             <div className="flex items-center gap-2">
               {tenantTheme?.logoUrl ? (
-                <Image
-                  src={getPhotoUrl(tenantTheme.logoUrl) || ''}
-                  alt="Logo"
-                  width={tenantTheme.logoWidth || 150}
-                  height={40}
-                  style={{ width: tenantTheme.logoWidth ? `${tenantTheme.logoWidth}px` : 'auto', maxHeight: '40px' }}
-                  className="object-contain"
-                  unoptimized
-                />
+                <div
+                  className="relative flex items-center"
+                  style={{
+                    width: isSidebarCollapsed ? '32px' : `${tenantTheme.logoWidth || 150}px`,
+                    height: '40px'
+                  }}
+                >
+                  <Image
+                    src={getPhotoUrl(tenantTheme.logoUrl, undefined, 'logo') || ''}
+                    alt="Logo"
+                    fill
+                    className="object-contain object-left"
+                    unoptimized
+                  />
+                </div>
               ) : (
                 <span className="text-xl font-bold text-[var(--color-primary)]">AxonRH</span>
               )}

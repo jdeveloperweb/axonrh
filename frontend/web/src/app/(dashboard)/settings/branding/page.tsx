@@ -39,6 +39,7 @@ export default function BrandingPage() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const fetchBranding = useThemeStore(state => state.fetchBranding);
+    const setTenantTheme = useThemeStore(state => state.setTenantTheme);
 
     const loadBranding = useCallback(async () => {
         try {
@@ -111,7 +112,25 @@ export default function BrandingPage() {
                 changeDescription: 'Atualização via painel de branding'
             });
 
-            await fetchBranding();
+            // Atualiza globalmente o estado do tema para refletir imediatamente sem F5
+            setTenantTheme({
+                tenantId: config.tenantId || '',
+                logoUrl: config.logoUrl || '',
+                logoWidth: (config.extraSettings?.logoWidth as number) || 150,
+                colors: {
+                    primary: config.primaryColor || '#1976D2',
+                    secondary: config.secondaryColor || '#424242',
+                    accent: config.accentColor || '#FF4081',
+                    background: config.backgroundColor || '#FFFFFF',
+                    surface: config.surfaceColor || '#FAFAFA',
+                    textPrimary: config.textPrimaryColor || '#212121',
+                    textSecondary: config.textSecondaryColor || '#757575',
+                },
+                baseFontSize: (config.extraSettings?.baseFontSize as number) || 16,
+                customCss: config.customCss || '',
+                faviconUrl: config.faviconUrl || ''
+            });
+
             toast({
                 title: 'Sucesso',
                 description: 'Configurações de marca salvas com sucesso!',
