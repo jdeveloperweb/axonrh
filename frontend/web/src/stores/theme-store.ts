@@ -77,7 +77,20 @@ export const useThemeStore = create<ThemeState>()(
 
       fetchBranding: async () => {
         try {
-          const tenantId = localStorage.getItem('tenantId') || localStorage.getItem('setup_tenant_id') || '';
+          // Tenta pegar o tenantId de várias fontes
+          let tenantId = localStorage.getItem('tenantId') || localStorage.getItem('setup_tenant_id');
+
+          // Se não estiver no localStorage, tenta extrair do auth-store (Zustand persistido)
+          if (!tenantId) {
+            const authStorage = localStorage.getItem('axonrh-auth');
+            if (authStorage) {
+              try {
+                const parsed = JSON.parse(authStorage);
+                tenantId = parsed.state?.user?.tenantId;
+              } catch (e) { }
+            }
+          }
+
           if (!tenantId) return;
 
           const { configApi } = await import('@/lib/api/config');
@@ -106,14 +119,25 @@ export const useThemeStore = create<ThemeState>()(
 
             set({ tenantTheme });
 
+            // Aplica cores e variáveis CSS
             applyColorsToDocument(colors);
 
-            const fontFamily = (config.extraSettings?.fontFamily as string) || 'Plus Jakarta Sans';
+            // Aplica Fonte
+            const extraSettings = config.extraSettings || {};
+            const fontFamily = (extraSettings.fontFamily as string) || 'Plus Jakarta Sans';
             const fontVar = getFontVariable(fontFamily);
             document.body.style.fontFamily = `${fontVar}, sans-serif`;
 
             if (tenantTheme.baseFontSize) {
               applyFontSize(tenantTheme.baseFontSize);
+            }
+
+            if (tenantTheme.customCss) {
+              applyCustomCss(tenantTheme.customCss);
+            }
+
+            if (tenantTheme.faviconUrl) {
+              updateFavicon(tenantTheme.faviconUrl);
             }
           }
         } catch (error) {

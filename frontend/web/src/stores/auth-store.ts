@@ -43,6 +43,10 @@ export const useAuthStore = create<AuthState>()(
             error: null,
           });
 
+          if (response.user.tenantId) {
+            localStorage.setItem('tenantId', response.user.tenantId);
+          }
+
           // Carrega o branding do tenant após login
           const { useThemeStore } = await import('./theme-store');
           await useThemeStore.getState().fetchBranding();

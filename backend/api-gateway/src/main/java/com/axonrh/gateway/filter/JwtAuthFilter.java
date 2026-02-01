@@ -38,7 +38,8 @@ public class JwtAuthFilter extends AbstractGatewayFilterFactory<JwtAuthFilter.Co
             "/actuator/health",
             "/api/v1/setup",
             "/api/v1/employees/photos/",
-            "/api/v1/config/logos/"
+            "/api/v1/config/logos/",
+            "/api/v1/config/theme/"
     );
 
     @Value("${jwt.secret}")
