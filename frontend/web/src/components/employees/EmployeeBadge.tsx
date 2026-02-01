@@ -59,6 +59,11 @@ export const EmployeeBadge: React.FC<EmployeeBadgeProps> = ({ employee, colors, 
                             alt="Logo"
                             className="max-h-full max-w-[200px] object-contain"
                             crossOrigin="anonymous"
+                            onError={(e) => {
+                                // If logo fails to load, hide the image container and fallback will be handled by parent state if possible
+                                // But here we just hide the broken image
+                                e.currentTarget.style.display = 'none';
+                            }}
                         />
                     </div>
                 ) : (

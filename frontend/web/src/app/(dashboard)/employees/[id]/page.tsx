@@ -296,14 +296,7 @@ export default function EmployeeDetailPage() {
             {statusInfo.label}
           </span>
           {platformUser ? (
-            <span
-              className="flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold border shadow-sm"
-              style={{
-                backgroundColor: tenantTheme?.colors.primary ? `${tenantTheme.colors.primary}10` : undefined,
-                color: tenantTheme?.colors.primary || undefined,
-                borderColor: tenantTheme?.colors.primary ? `${tenantTheme.colors.primary}30` : undefined
-              }}
-            >
+            <span className="flex items-center gap-1.5 px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-sm font-semibold border border-indigo-100 shadow-sm">
               <ShieldCheck className="w-3.5 h-3.5" />
               Acesso Ativo
             </span>
@@ -327,11 +320,7 @@ export default function EmployeeDetailPage() {
             variant="outline"
             onClick={handleGenerateBadge}
             disabled={generatingBadge}
-            className="flex items-center gap-2"
-            style={{
-              borderColor: tenantTheme?.colors.primary ? `${tenantTheme.colors.primary}40` : undefined,
-              color: tenantTheme?.colors.primary || undefined
-            }}
+            className="flex items-center gap-2 border-slate-200"
           >
             <CreditCard className="w-4 h-4" />
             {generatingBadge ? 'Gerando...' : 'Gerar Crachá'}
@@ -526,10 +515,7 @@ export default function EmployeeDetailPage() {
                 <div className="col-span-2 pt-4 border-t border-gray-100 mt-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Key
-                        className="w-4 h-4"
-                        style={{ color: tenantTheme?.colors.primary || undefined }}
-                      />
+                      <Key className="w-4 h-4 text-indigo-500" />
                       <p className="text-sm font-bold text-gray-700">Acesso à Plataforma</p>
                     </div>
                     {checkingAccess ? (
@@ -539,11 +525,7 @@ export default function EmployeeDetailPage() {
                         {platformUser.roles.map(role => (
                           <span
                             key={role}
-                            className="px-2 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wider"
-                            style={{
-                              backgroundColor: tenantTheme?.colors.primary ? `${tenantTheme.colors.primary}15` : undefined,
-                              color: tenantTheme?.colors.primary || undefined
-                            }}
+                            className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-bold rounded-full uppercase tracking-wider"
                           >
                             {role}
                           </span>
@@ -853,7 +835,7 @@ export default function EmployeeDetailPage() {
           <EmployeeBadge
             employee={employee}
             colors={tenantTheme?.colors}
-            companyLogo={tenantTheme?.logoUrl ? getPhotoUrl(tenantTheme.logoUrl) || undefined : undefined}
+            companyLogo={tenantTheme?.logoUrl ? getPhotoUrl(tenantTheme.logoUrl, undefined, 'logo') || undefined : undefined}
           />
         </div>
       </div>

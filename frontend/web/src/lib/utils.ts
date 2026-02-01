@@ -300,32 +300,35 @@ export function downloadBlob(blob: Blob, filename: string): void {
 }
 
 /**
- * Retorna a URL completa da foto, tratando paths relativos, absolutos e localhost.
+ * Retorna a URL completa da foto ou logo, tratando paths relativos, absolutos e localhost.
  */
-export function getPhotoUrl(path: string | null | undefined, updatedAt?: string | Date): string | null {
+export function getPhotoUrl(
+  path: string | null | undefined,
+  updatedAt?: string | Date,
+  type: 'photo' | 'logo' = 'photo'
+): string | null {
   if (!path) return null;
 
   let finalUrl = path;
 
-  // 1. Trata URLs do MinIO com localhost (comum se os dados foram gerados localmente)
+  // 1. Trata URLs do MinIO com localhost
   if (path.startsWith('http://localhost:9000/')) {
-    const isEmployee = path.includes('employee') || path.includes('photo');
-    const targetPath = isEmployee ? '/api/v1/employees/photos/' : '/api/v1/config/logos/';
+    const targetPath = type === 'photo' ? '/api/v1/employees/photos/' : '/api/v1/config/logos/';
     finalUrl = path.replace(/http:\/\/localhost:9000\/[^\/]+\//, targetPath);
   }
 
-  // 2. Normaliza caminhos antigos ou que apontam para o diretório de uploads diretamente
+  // 2. Normaliza caminhos antigos
   if (finalUrl.startsWith('/uploads/employee-photos/')) {
     finalUrl = finalUrl.replace('/uploads/employee-photos/', '/api/v1/employees/photos/');
   }
 
   // 3. Garante que se o path não começar com / nem http, ele receba o prefixo correto
-  // Mas evita duplicar se já começar com partes do path esperado
   if (!finalUrl.startsWith('/') && !finalUrl.startsWith('http')) {
-    if (finalUrl.includes('employees/photos/')) {
+    if (finalUrl.includes('employees/photos/') || finalUrl.includes('config/logos/')) {
       finalUrl = `/${finalUrl}`;
     } else {
-      finalUrl = `/api/v1/employees/photos/${finalUrl}`;
+      const prefix = type === 'logo' ? '/api/v1/config/logos/' : '/api/v1/employees/photos/';
+      finalUrl = `${prefix}${finalUrl}`;
     }
   }
 
