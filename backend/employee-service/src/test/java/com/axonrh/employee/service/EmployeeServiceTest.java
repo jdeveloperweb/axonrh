@@ -130,7 +130,7 @@ class EmployeeServiceTest {
             when(employeeMapper.toResponse(testEmployee)).thenReturn(testResponse);
 
             // When
-            Page<EmployeeResponse> result = employeeService.findWithFilters(null, null, null, null, pageable);
+            Page<EmployeeResponse> result = employeeService.findWithFilters(null, null, null, null, null, null, pageable);
 
             // Then
             assertThat(result).hasSize(1);
