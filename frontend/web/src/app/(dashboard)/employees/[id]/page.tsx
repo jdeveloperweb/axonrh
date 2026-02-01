@@ -149,8 +149,7 @@ export default function EmployeeDetailPage() {
           const config = await configApi.getThemeConfig(user.tenantId);
           setThemeConfig(config);
           if (config.logoUrl) {
-            // Ensure logo is loaded and accessible (CORS can be tricky, but we try)
-            setCompanyLogo(config.logoUrl);
+            setCompanyLogo(getPhotoUrl(config.logoUrl) || undefined);
           }
         }
       } catch (error) {
