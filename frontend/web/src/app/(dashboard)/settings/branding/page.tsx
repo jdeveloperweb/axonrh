@@ -244,9 +244,10 @@ export default function BrandingPage() {
                                     <label className="text-sm font-semibold mb-2 block">Caminho da Logo</label>
                                     <input
                                         type="text"
-                                        className="w-full px-4 py-2 bg-[var(--color-surface-variant)] rounded-[var(--radius-md)] border-none text-sm text-[var(--color-text-secondary)]"
-                                        disabled
-                                        value={config.logoUrl || 'Nenhum arquivo enviado'}
+                                        className="w-full px-4 py-2 bg-[var(--color-surface-variant)] rounded-[var(--radius-md)] border-none text-sm text-[var(--color-text-primary)]"
+                                        value={config.logoUrl || ''}
+                                        onChange={(e) => setConfig({ ...config, logoUrl: e.target.value })}
+                                        placeholder="URL da logo (PNG, JPG ou SVG)"
                                     />
                                 </div>
                                 <div>

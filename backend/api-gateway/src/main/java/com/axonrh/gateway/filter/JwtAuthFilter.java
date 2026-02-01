@@ -55,8 +55,8 @@ public class JwtAuthFilter extends AbstractGatewayFilterFactory<JwtAuthFilter.Co
             ServerHttpRequest request = exchange.getRequest();
             String path = request.getPath().value();
 
-            // Verifica se e um path publico
-            if (isPublicPath(path)) {
+            // Verifica se e um path publico (somente GET para temas e logos)
+            if (isPublicPath(path, request.getMethod())) {
                 return chain.filter(exchange);
             }
 
@@ -101,7 +101,10 @@ public class JwtAuthFilter extends AbstractGatewayFilterFactory<JwtAuthFilter.Co
         };
     }
 
-    private boolean isPublicPath(String path) {
+    private boolean isPublicPath(String path, org.springframework.http.HttpMethod method) {
+        if (path.startsWith("/api/v1/config/theme/") || path.startsWith("/api/v1/config/logos/") || path.startsWith("/api/v1/employees/photos/")) {
+            return method == org.springframework.http.HttpMethod.GET;
+        }
         return PUBLIC_PATHS.stream().anyMatch(path::startsWith);
     }
 
