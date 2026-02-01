@@ -320,6 +320,16 @@ public class Employee {
 
     // ==================== Metodos ====================
 
+    @PrePersist
+    public void prePersist() {
+        if (this.id == null) {
+            this.id = UUID.randomUUID();
+        }
+        if (this.registrationNumber == null || this.registrationNumber.isBlank()) {
+            this.registrationNumber = this.id.toString().substring(0, 8).toUpperCase();
+        }
+    }
+
     public String getDisplayName() {
         return socialName != null && !socialName.isBlank() ? socialName : fullName;
     }

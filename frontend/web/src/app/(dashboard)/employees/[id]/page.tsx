@@ -13,7 +13,12 @@ import { formatDate, formatCpf, formatCurrency, formatPhone, calculateAge, forma
 import { TerminationModal } from '@/components/employees/TerminationModal';
 import { Button } from '@/components/ui/button';
 import { DependentsTab } from '@/components/employees/DependentsTab';
-import { ShieldCheck, ShieldAlert, Key } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, Key, CreditCard } from 'lucide-react';
+import { EmployeeBadge } from '@/components/employees/EmployeeBadge';
+import { configApi, ThemeConfig } from '@/lib/api/config';
+import { authApi } from '@/lib/api/auth';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 type TabKey = 'overview' | 'documents' | 'dependents' | 'history';
 
@@ -60,6 +65,11 @@ export default function EmployeeDetailPage() {
   // Platform Access State
   const [platformUser, setPlatformUser] = useState<UserDTO | null>(null);
   const [checkingAccess, setCheckingAccess] = useState(false);
+
+  // Theme & Logo for Badge
+  const [themeConfig, setThemeConfig] = useState<ThemeConfig | undefined>(undefined);
+  const [companyLogo, setCompanyLogo] = useState<string | undefined>(undefined);
+  const [generatingBadge, setGeneratingBadge] = useState(false);
 
   // Fetch employee
   const fetchEmployee = useCallback(async () => {
@@ -129,6 +139,72 @@ export default function EmployeeDetailPage() {
     if (activeTab === 'documents') fetchDocuments();
     if (activeTab === 'history') fetchHistory();
   }, [activeTab, fetchDocuments, fetchHistory]);
+
+  // Fetch Theme Config
+  useEffect(() => {
+    const fetchTheme = async () => {
+      try {
+        const user = await authApi.me();
+        if (user.tenantId) {
+          const config = await configApi.getThemeConfig(user.tenantId);
+          setThemeConfig(config);
+          if (config.logoUrl) {
+            // Ensure logo is loaded and accessible (CORS can be tricky, but we try)
+            setCompanyLogo(config.logoUrl);
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to load theme config for badge:', error);
+      }
+    };
+    fetchTheme();
+  }, []);
+
+  const handleGenerateBadge = async () => {
+    try {
+      setGeneratingBadge(true);
+
+      // Give React a moment to ensure the hidden badge is rendered
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      const badgeElement = document.getElementById('employee-badge-container');
+      if (!badgeElement) {
+        throw new Error('Container do crachá não encontrado');
+      }
+
+      const canvas = await html2canvas(badgeElement, {
+        scale: 3, // High quality
+        useCORS: true,
+        backgroundColor: null,
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+
+      // CR80 size: 53.98mm x 85.6mm
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: [53.98, 85.6]
+      });
+
+      pdf.addImage(imgData, 'PNG', 0, 0, 53.98, 85.6);
+      pdf.save(`cracha-${employee?.fullName.toLowerCase().replace(/\s+/g, '-')}.pdf`);
+
+      toast({
+        title: 'Sucesso',
+        description: 'Crachá gerado com sucesso!',
+      });
+    } catch (error) {
+      console.error('Failed to generate badge:', error);
+      toast({
+        title: 'Erro',
+        description: 'Falha ao gerar o crachá em PDF',
+        variant: 'destructive',
+      });
+    } finally {
+      setGeneratingBadge(false);
+    }
+  };
 
   // Handle photo selection - opens crop dialog
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -262,6 +338,15 @@ export default function EmployeeDetailPage() {
               Desligar
             </Button>
           )}
+          <Button
+            variant="outline"
+            onClick={handleGenerateBadge}
+            disabled={generatingBadge}
+            className="flex items-center gap-2 border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+          >
+            <CreditCard className="w-4 h-4" />
+            {generatingBadge ? 'Gerando...' : 'Gerar Crachá'}
+          </Button>
           <Button
             onClick={() => router.push(`/employees/${employeeId}/edit`)}
             className="flex items-center gap-2"
@@ -757,7 +842,22 @@ export default function EmployeeDetailPage() {
         employee={employee}
         onSuccess={fetchEmployee}
       />
+      {/* Hidden Badge for Rendering */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '-10000px',
+          left: '-10000px'
+        }}
+      >
+        <div id="employee-badge-container">
+          <EmployeeBadge
+            employee={employee}
+            theme={themeConfig}
+            companyLogo={companyLogo}
+          />
+        </div>
+      </div>
     </div>
-
   );
 }

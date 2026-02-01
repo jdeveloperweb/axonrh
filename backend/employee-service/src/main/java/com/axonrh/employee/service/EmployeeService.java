@@ -120,6 +120,12 @@ public class EmployeeService {
         Employee employee = employeeRepository.findByIdWithRelations(tenantId, id)
                 .orElseThrow(() -> new ResourceNotFoundException("Colaborador nao encontrado: " + id));
 
+        // Se matricula nao existir, gera agora (retrocompatibilidade)
+        if (employee.getRegistrationNumber() == null || employee.getRegistrationNumber().isBlank()) {
+            employee.setRegistrationNumber(employee.getId().toString().substring(0, 8).toUpperCase());
+            employeeRepository.save(employee);
+        }
+
         return employeeMapper.toResponse(employee);
     }
 
@@ -246,6 +252,11 @@ public class EmployeeService {
         // Explicitamente seta a data de admissao se presente no request
         if (request.getHireDate() != null) {
             employee.setHireDate(request.getHireDate());
+        }
+        
+        // Garante matricula se nao existir
+        if (employee.getRegistrationNumber() == null || employee.getRegistrationNumber().isBlank()) {
+            employee.setRegistrationNumber(employee.getId().toString().substring(0, 8).toUpperCase());
         }
         
         employee.setCpf(newCpf);
