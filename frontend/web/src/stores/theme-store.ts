@@ -68,9 +68,19 @@ export const useThemeStore = create<ThemeState>()(
         if (tenantTheme) {
           applyColorsToDocument(tenantTheme.colors);
 
-          // Apply font settings
+          // Aplica configurações de fonte
           if (tenantTheme.baseFontSize) {
             applyFontSize(tenantTheme.baseFontSize);
+          }
+
+          // Aplica CSS customizado
+          if (tenantTheme.customCss) {
+            applyCustomCss(tenantTheme.customCss);
+          }
+
+          // Atualiza favicon
+          if (tenantTheme.faviconUrl) {
+            updateFavicon(tenantTheme.faviconUrl);
           }
         }
       },
@@ -185,6 +195,7 @@ export const useThemeStore = create<ThemeState>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         theme: state.theme,
+        tenantTheme: state.tenantTheme,
       }),
     }
   )
