@@ -23,6 +23,7 @@ import java.util.UUID;
 public class WorkScheduleResponse {
 
     private UUID id;
+    private UUID tenantId;
     private String name;
     private String description;
 

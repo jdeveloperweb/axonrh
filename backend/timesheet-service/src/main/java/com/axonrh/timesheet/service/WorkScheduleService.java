@@ -151,7 +151,7 @@ public class WorkScheduleService {
         List<WorkScheduleResponse.ScheduleDayResponse> days = entity.getScheduleDays().stream()
                 .map(day -> WorkScheduleResponse.ScheduleDayResponse.builder()
                         .id(day.getId())
-                        .dayOfWeek(day.getDayOfWeek().name())
+                        .dayOfWeek(day.getDayOfWeek())
                         .isWorkDay(day.getIsWorkDay())
                         .entryTime(day.getEntryTime())
                         .exitTime(day.getExitTime())
