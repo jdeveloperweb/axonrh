@@ -51,7 +51,7 @@ public class WorkScheduleResponse {
 
     private Boolean active;
 
-    private List<ScheduleDayResponse> scheduleDays;
+    private List<ScheduleDayResponse> days;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

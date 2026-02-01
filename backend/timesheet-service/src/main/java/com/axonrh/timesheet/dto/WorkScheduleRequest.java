@@ -57,7 +57,7 @@ public class WorkScheduleRequest {
     private String unionAgreementName;
 
     // Horarios por dia da semana
-    private List<ScheduleDayRequest> scheduleDays;
+    private List<ScheduleDayRequest> days;
 
     @Data
     @Builder

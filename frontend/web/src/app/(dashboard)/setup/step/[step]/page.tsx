@@ -12,9 +12,11 @@ import {
   BRAZIL_STATES,
   validateCNPJ,
 } from '@/lib/api/setup';
+import { configApi } from '@/lib/api/config';
 import { useThemeStore } from '@/stores/theme-store';
 import { Switch } from '@/components/ui/switch';
 import Image from 'next/image';
+import { getPhotoUrl } from '@/lib/utils';
 
 
 export default function SetupStepPage() {
@@ -147,6 +149,24 @@ export default function SetupStepPage() {
         await setupApi.saveStepData(stepNumber, laborRules);
       } else if (stepNumber === 4) {
         await setupApi.saveStepData(stepNumber, branding);
+        const setupTenantId = typeof window !== 'undefined' ? localStorage.getItem('setup_tenant_id') : null;
+        if (setupTenantId) {
+          try {
+            await configApi.updateThemeConfig(setupTenantId, {
+              primaryColor: branding.primaryColor,
+              secondaryColor: branding.secondaryColor,
+              accentColor: branding.accentColor,
+              extraSettings: {
+                logoWidth: branding.logoWidth,
+                fontFamily: branding.fontFamily,
+                baseFontSize: branding.baseFontSize
+              },
+              changeDescription: 'Salvo via Setup Wizard'
+            });
+          } catch (e) {
+            console.error('Erro ao salvar no config-service:', e);
+          }
+        }
         // Atualiza o tema global imediatamente
         fetchBranding();
       } else if (stepNumber === 5) {
@@ -1074,8 +1094,44 @@ function Step4Branding({
         <div>
           <h3 className="text-lg font-semibold text-slate-900 mb-4">Logo da Empresa</h3>
           <div className="space-y-4">
+            <div className="flex flex-col items-center p-4 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer group"
+              onClick={() => document.getElementById('setup-logo-upload')?.click()}>
+              {config.logoUrl ? (
+                <Image
+                  src={getPhotoUrl(config.logoUrl, undefined, 'logo') || ''}
+                  alt="Logo Preview"
+                  width={config.logoWidth}
+                  height={100}
+                  className="max-h-24 object-contain mb-2"
+                  unoptimized
+                />
+              ) : (
+                <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center mb-2">
+                  <span className="text-blue-600 text-xl">+</span>
+                </div>
+              )}
+              <p className="text-xs font-medium text-slate-600">Clique para upload da logo</p>
+              <input
+                id="setup-logo-upload"
+                type="file"
+                className="hidden"
+                accept="image/*"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  const tenantId = localStorage.getItem('setup_tenant_id');
+                  if (!tenantId) return;
+                  try {
+                    const response = await configApi.uploadLogo(tenantId, file);
+                    onChange({ ...config, logoUrl: response.url });
+                  } catch (err) {
+                    alert('Erro ao carregar logo');
+                  }
+                }}
+              />
+            </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">URL do Logo</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">URL do Logo (ou caminho relativo)</label>
               <input
                 type="text"
                 value={config.logoUrl}

@@ -205,6 +205,9 @@ public class SetupWizardService {
     private void processActivation(SetupProgress progress) {
         log.info("Iniciando ativação final para tenant: {}", progress.getTenantId());
         
+        // Ativar Regras Trabalhistas
+        processLaborRules(progress.getTenantId(), progress.getStepData(3));
+        
         // Ativar Branding
         processBranding(progress.getTenantId(), progress.getStepData(4));
         
@@ -593,8 +596,53 @@ public class SetupWizardService {
     }
 
     private void processLaborRules(UUID tenantId, Map<String, Object> data) {
-        // Save labor rules configuration
-        log.info("Processing labor rules for tenant: {}", tenantId);
+        log.info("Processando regras trabalhistas para o tenant: {}", tenantId);
+        if (data == null || data.isEmpty()) {
+            log.warn("Nenhum dado de regra trabalhista fornecido para o tenant {}", tenantId);
+            return;
+        }
+
+        try {
+            int weeklyHours = data.containsKey("defaultWeeklyHours") ? 
+                ((Number) data.get("defaultWeeklyHours")).intValue() : 44;
+            int tolerance = data.containsKey("toleranceMinutes") ? 
+                ((Number) data.get("toleranceMinutes")).intValue() : 10;
+            boolean overtimeApproval = data.containsKey("overtimeRequiresApproval") ? 
+                (Boolean) data.get("overtimeRequiresApproval") : true;
+            
+            log.info("Criando jornada padrão: {}h semanais, tolerância {}min", weeklyHours, tolerance);
+
+            UUID scheduleId = UUID.randomUUID();
+            
+            // Inserir escala padrão na tabela shared.work_schedules
+            entityManager.createNativeQuery(
+                "INSERT INTO shared.work_schedules (id, tenant_id, name, description, schedule_type, weekly_hours_minutes, " +
+                "tolerance_minutes, overtime_bank_enabled, active, created_at) " +
+                "VALUES (?, ?, 'Jornada Padrão', 'Escala criada automaticamente pelo setup', 'FIXED', ?, ?, true, true, CURRENT_TIMESTAMP) " +
+                "ON CONFLICT DO NOTHING")
+                .setParameter(1, scheduleId)
+                .setParameter(2, tenantId)
+                .setParameter(3, weeklyHours * 60)
+                .setParameter(4, tolerance)
+                .executeUpdate();
+
+            // Inserir dias da semana (Segunda a Sexta)
+            String[] weekDays = {"MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"};
+            for (String day : weekDays) {
+                entityManager.createNativeQuery(
+                    "INSERT INTO shared.schedule_days (work_schedule_id, day_of_week, is_work_day, entry_time, exit_time, expected_work_minutes) " +
+                    "VALUES (?, ?, true, '08:00:00', '18:00:00', ?) " +
+                    "ON CONFLICT DO NOTHING")
+                    .setParameter(1, scheduleId)
+                    .setParameter(2, day)
+                    .setParameter(3, (weeklyHours / 5) * 60)
+                    .executeUpdate();
+            }
+            
+            log.info("Jornada padrão criada com sucesso para o tenant {}", tenantId);
+        } catch (Exception e) {
+            log.error("Erro ao processar regras trabalhistas: {}", e.getMessage());
+        }
     }
 
     private void processBranding(UUID tenantId, Map<String, Object> data) {

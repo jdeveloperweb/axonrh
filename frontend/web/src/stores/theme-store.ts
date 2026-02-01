@@ -77,39 +77,43 @@ export const useThemeStore = create<ThemeState>()(
 
       fetchBranding: async () => {
         try {
-          const { settingsApi } = await import('@/lib/api/settings');
-          const branding = await settingsApi.getBranding();
+          const tenantId = localStorage.getItem('tenantId') || localStorage.getItem('setup_tenant_id') || '';
+          if (!tenantId) return;
 
-          if (branding) {
+          const { configApi } = await import('@/lib/api/config');
+          const config = await configApi.getThemeConfig(tenantId);
+
+          if (config) {
             const colors: ThemeColors = {
-              primary: branding.primaryColor || defaultColors.primary,
-              secondary: branding.secondaryColor || defaultColors.secondary,
-              accent: branding.accentColor || defaultColors.accent,
-              background: defaultColors.background,
-              surface: defaultColors.surface,
-              textPrimary: defaultColors.textPrimary,
-              textSecondary: defaultColors.textSecondary,
+              primary: config.primaryColor || defaultColors.primary,
+              secondary: config.secondaryColor || defaultColors.secondary,
+              accent: config.accentColor || defaultColors.accent,
+              background: config.backgroundColor || defaultColors.background,
+              surface: config.surfaceColor || defaultColors.surface,
+              textPrimary: config.textPrimaryColor || defaultColors.textPrimary,
+              textSecondary: config.textSecondaryColor || defaultColors.textSecondary,
             };
 
             const tenantTheme: TenantTheme = {
-              tenantId: localStorage.getItem('setup_tenant_id') || '',
-              logoUrl: branding.logoUrl,
-              logoWidth: branding.logoWidth, // Mapped
+              tenantId: config.tenantId,
+              logoUrl: config.logoUrl,
+              logoWidth: (config.extraSettings?.logoWidth as number) || 150,
               colors: colors,
-              baseFontSize: branding.baseFontSize // Mapped
+              baseFontSize: (config.extraSettings?.baseFontSize as number) || 16,
+              customCss: config.customCss,
+              faviconUrl: config.faviconUrl
             };
 
             set({ tenantTheme });
 
             applyColorsToDocument(colors);
 
-            if (branding.fontFamily) {
-              const fontVar = getFontVariable(branding.fontFamily);
-              document.body.style.fontFamily = `${fontVar}, sans-serif`;
-            }
+            const fontFamily = (config.extraSettings?.fontFamily as string) || 'Plus Jakarta Sans';
+            const fontVar = getFontVariable(fontFamily);
+            document.body.style.fontFamily = `${fontVar}, sans-serif`;
 
-            if (branding.baseFontSize) {
-              applyFontSize(branding.baseFontSize);
+            if (tenantTheme.baseFontSize) {
+              applyFontSize(tenantTheme.baseFontSize);
             }
           }
         } catch (error) {

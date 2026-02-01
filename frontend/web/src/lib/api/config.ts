@@ -26,6 +26,7 @@ export interface ThemeConfig {
   loginFooterText?: string;
   showPoweredBy: boolean;
   customCss?: string;
+  extraSettings?: Record<string, any>;
   version: number;
 }
 
@@ -47,6 +48,7 @@ export interface ThemeConfigRequest {
   loginFooterText?: string;
   showPoweredBy?: boolean;
   customCss?: string;
+  extraSettings?: Record<string, any>;
   changeDescription?: string;
 }
 
