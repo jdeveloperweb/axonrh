@@ -26,11 +26,9 @@ public class UpdateDepartmentDTO {
 
     private String description;
 
-    private UUID parentId;
-
-    private UUID managerId;
-
-    private UUID costCenterId;
+    private String parentId;
+    private String managerId;
+    private String costCenterId;
 
     private Boolean isActive;
 }

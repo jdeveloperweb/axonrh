@@ -55,9 +55,9 @@ export function DepartmentForm({ department, onSuccess, onCancel }: DepartmentFo
                 code: formData.code,
                 name: formData.name,
                 description: formData.description || undefined,
-                parentId: formData.parentId || undefined,
-                managerId: formData.managerId || undefined,
-                costCenterId: formData.costCenterId || undefined,
+                parentId: formData.parentId,
+                managerId: formData.managerId,
+                costCenterId: formData.costCenterId,
             };
 
             if (department) {

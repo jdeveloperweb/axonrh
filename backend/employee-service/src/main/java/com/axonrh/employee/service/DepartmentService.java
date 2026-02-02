@@ -115,22 +115,37 @@ public class DepartmentService {
         
         // Atualizar departamento pai
         if (dto.getParentId() != null) {
-            Department parent = departmentRepository.findByTenantIdAndId(tenantId, dto.getParentId())
-                    .orElseThrow(() -> new RuntimeException("Departamento pai não encontrado"));
-            department.setParent(parent);
+            if (dto.getParentId().isEmpty()) {
+                department.setParent(null);
+            } else {
+                UUID parentUuid = UUID.fromString(dto.getParentId());
+                Department parent = departmentRepository.findByTenantIdAndId(tenantId, parentUuid)
+                        .orElseThrow(() -> new RuntimeException("Departamento pai não encontrado"));
+                department.setParent(parent);
+            }
         }
         
-        // Atualizar gestor - permite remover gestor enviando null
+        // Atualizar gestor - permite remover gestor enviando ""
         if (dto.getManagerId() != null) {
-            validateManager(tenantId, dto.getManagerId());
-            department.setManagerId(dto.getManagerId());
+            if (dto.getManagerId().isEmpty()) {
+                department.setManagerId(null);
+            } else {
+                UUID managerUuid = UUID.fromString(dto.getManagerId());
+                validateManager(tenantId, managerUuid);
+                department.setManagerId(managerUuid);
+            }
         }
         
-        // Atualizar centro de custo
+        // Atualizar centro de custo - permite remover enviando ""
         if (dto.getCostCenterId() != null) {
-            CostCenter costCenter = costCenterRepository.findById(dto.getCostCenterId())
-                    .orElseThrow(() -> new RuntimeException("Centro de custo não encontrado"));
-            department.setCostCenter(costCenter);
+            if (dto.getCostCenterId().isEmpty()) {
+                department.setCostCenter(null);
+            } else {
+                UUID costCenterUuid = UUID.fromString(dto.getCostCenterId());
+                CostCenter costCenter = costCenterRepository.findById(costCenterUuid)
+                        .orElseThrow(() -> new RuntimeException("Centro de custo não encontrado"));
+                department.setCostCenter(costCenter);
+            }
         }
         
         Department updated = departmentRepository.save(department);
