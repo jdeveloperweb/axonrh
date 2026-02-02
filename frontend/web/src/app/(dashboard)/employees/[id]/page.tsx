@@ -391,9 +391,9 @@ export default function EmployeeDetailPage() {
                 variant="outline"
                 onClick={handleGenerateBadge}
                 disabled={generatingBadge}
-                className="flex-1 lg:flex-none h-11 px-6 rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all font-bold text-xs uppercase tracking-widest gap-2"
+                className="flex-1 lg:flex-none h-11 px-6 rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-all font-bold text-xs uppercase tracking-widest gap-2"
               >
-                <CreditCard className="w-4 h-4" />
+                <CreditCard className="w-4 h-4 text-slate-500" />
                 {generatingBadge ? 'Gerando...' : 'Crachá'}
               </Button>
 
