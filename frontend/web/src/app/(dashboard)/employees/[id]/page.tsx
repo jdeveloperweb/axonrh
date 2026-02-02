@@ -300,123 +300,122 @@ export default function EmployeeDetailPage() {
 
   return (
     <div className="p-0 space-y-8 animate-fade-in">
-      {/* 🚀 New Premium Header Design */}
-      <div className="relative mb-24">
-        {/* Banner mais neutro e elegante */}
-        <div className="h-44 md:h-56 rounded-b-[2.5rem] bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
-          <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, currentColor 1px, transparent 0)', backgroundSize: '32px 32px' }} />
-          <div className="absolute -top-24 -right-24 w-96 h-96 bg-[var(--color-primary)]/10 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-indigo-500/5 rounded-full blur-3xl" />
+      {/* 🚀 Clean Integrated Header Design */}
+      <div className="px-6 md:px-12 pt-8">
+        <div className="bg-white dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800 rounded-[3rem] p-6 md:p-10 shadow-xl relative overflow-hidden group">
+          {/* Subtle decoration elements */}
+          <div className="absolute top-0 right-0 w-96 h-96 bg-[var(--color-primary)]/5 rounded-full blur-3xl -tr-24 -mt-24 pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl -bl-24 -mb-24 pointer-events-none" />
 
+          {/* Simple Back Button */}
           <button
             onClick={() => router.back()}
-            className="absolute top-6 left-6 p-2.5 bg-white/20 hover:bg-white/40 text-white rounded-xl transition-all backdrop-blur-md border border-white/20 shadow-lg z-10 group"
+            className="absolute top-6 left-6 p-2 text-slate-400 hover:text-[var(--color-primary)] hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all z-20 group/back"
           >
-            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+            <ArrowLeft className="w-5 h-5 group-hover/back:-translate-x-1 transition-transform" />
           </button>
-        </div>
 
-        {/* Content overlapping the banner */}
-        <div className="absolute -bottom-16 left-6 right-6 md:left-12 md:right-12 flex flex-col md:flex-row items-end gap-6">
-          {/* Photo Profile with Ring & Action */}
-          <div className="relative group shrink-0">
-            <div className="w-36 h-36 md:w-44 md:h-44 rounded-[2.5rem] border-[6px] border-white dark:border-slate-900 shadow-2xl overflow-hidden bg-slate-100 relative">
-              {employee.photoUrl ? (
-                <img
-                  src={getPhotoUrl(employee.photoUrl, employee.updatedAt) || ''}
-                  alt={employee.fullName}
-                  className="w-full h-full object-cover transition-transform group-hover:scale-110 duration-700"
-                />
-              ) : (
-                <div className="w-full h-full bg-slate-200 text-slate-400 flex items-center justify-center text-5xl font-bold">
-                  {employee.fullName.charAt(0).toUpperCase()}
-                </div>
-              )}
-
-              {/* Overlay on hover for Photo Change */}
-              <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer backdrop-blur-sm">
-                <Camera className="w-8 h-8 text-white" />
-                <input type="file" accept="image/*" onChange={handlePhotoSelect} className="hidden" />
-              </label>
-            </div>
-
-            {/* Status Floating Badge */}
-            <div className={`absolute -top-2 -right-2 px-4 py-1.5 rounded-2xl text-xs font-black uppercase tracking-widest ${statusInfo.bg} ${statusInfo.text} border-2 shadow-xl ring-4 ring-white dark:ring-slate-900`}>
-              {statusInfo.label}
-            </div>
-          </div>
-
-          {/* Info Block & Primary Actions */}
-          <div className="flex-1 flex flex-col md:flex-row items-start md:items-end justify-between gap-6 pb-2 w-full">
-            <div className="space-y-3">
-              <div className="flex flex-col gap-1">
-                <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-none">
-                  {employee.socialName || employee.fullName}
-                </h1>
-                <div className="flex flex-wrap items-center gap-3 mt-1">
-                  <span className="flex items-center gap-1.5 text-lg font-medium text-slate-500 dark:text-slate-400">
-                    <Briefcase className="w-5 h-5 text-[var(--color-primary)]" />
-                    {employee.position?.title || employee.position?.name || 'Sem cargo'}
-                  </span>
-                  <span className="h-1.5 w-1.5 rounded-full bg-slate-300 hidden md:block" />
-                  <span className="flex items-center gap-1.5 text-lg font-medium text-slate-500 dark:text-slate-400">
-                    <Building2 className="w-5 h-5 text-[var(--color-primary)]" />
-                    {employee.department?.name || 'Sem departamento'}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {platformUser ? (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 rounded-full text-xs font-bold border border-indigo-100 dark:border-indigo-900/50 shadow-sm">
-                    <ShieldCheck className="w-3.5 h-3.5 text-indigo-500" />
-                    Acesso Ativo
-                  </span>
+          <div className="flex flex-col lg:flex-row items-center lg:items-end gap-8 relative z-10 w-full">
+            {/* Photo Profile with Ring & Action */}
+            <div className="relative group/photo shrink-0">
+              <div className="w-40 h-40 md:w-48 md:h-48 rounded-[2.5rem] shadow-2xl overflow-hidden bg-slate-100 ring-8 ring-white dark:ring-slate-950 relative">
+                {employee.photoUrl ? (
+                  <img
+                    src={getPhotoUrl(employee.photoUrl, employee.updatedAt) || ''}
+                    alt={employee.fullName}
+                    className="w-full h-full object-cover transition-transform group-hover/photo:scale-110 duration-700"
+                  />
                 ) : (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-full text-xs font-bold border border-slate-200 dark:border-slate-700 shadow-sm">
-                    <ShieldAlert className="w-3.5 h-3.5" />
-                    Sem Acesso
-                  </span>
+                  <div className="w-full h-full bg-slate-200 text-slate-400 flex items-center justify-center text-6xl font-black">
+                    {employee.fullName.charAt(0).toUpperCase()}
+                  </div>
                 )}
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-50 dark:bg-slate-800/50 text-slate-500 rounded-full text-xs font-mono border border-slate-100 dark:border-slate-700 shadow-sm">
-                  ID: #{employee.registrationNumber}
-                </span>
+
+                {/* Overlay on hover for Photo Change */}
+                <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/photo:opacity-100 transition-opacity cursor-pointer backdrop-blur-sm">
+                  <Camera className="w-8 h-8 text-white" />
+                  <input type="file" accept="image/*" onChange={handlePhotoSelect} className="hidden" />
+                </label>
+              </div>
+
+              {/* Status Floating Badge */}
+              <div className={`absolute -top-2 -right-2 px-5 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest ${statusInfo.bg} ${statusInfo.text} border-2 shadow-xl ring-4 ring-white dark:ring-slate-950`}>
+                {statusInfo.label}
               </div>
             </div>
 
-            {/* Desktop Actions Row */}
-            <div className="flex items-center gap-2 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md p-1.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl">
-              <Button
-                variant="ghost"
-                onClick={handleGenerateBadge}
-                disabled={generatingBadge}
-                className="h-11 px-4 text-slate-600 dark:text-slate-300 hover:text-[var(--color-primary)] hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl transition-all gap-2"
-              >
-                <CreditCard className="w-4.5 h-4.5" />
-                <span className="text-sm font-bold uppercase tracking-tight">{generatingBadge ? 'Gerando...' : 'Crachá'}</span>
-              </Button>
+            {/* Info Block & Primary Actions */}
+            <div className="flex-1 flex flex-col md:flex-row items-center lg:items-end justify-between gap-8 pb-2 w-full text-center lg:text-left">
+              <div className="space-y-4">
+                <div className="flex flex-col gap-2">
+                  <h1 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-none">
+                    {employee.socialName || employee.fullName}
+                  </h1>
+                  <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 mt-1 text-lg font-medium text-slate-500 dark:text-slate-400">
+                    <span className="flex items-center gap-2">
+                      <Briefcase className="w-5 h-5 text-[var(--color-primary)]" />
+                      {employee.position?.title || employee.position?.name || 'Sem cargo'}
+                    </span>
+                    <span className="h-1.5 w-1.5 rounded-full bg-slate-300 hidden md:block" />
+                    <span className="flex items-center gap-2">
+                      <Building2 className="w-5 h-5 text-[var(--color-primary)]" />
+                      {employee.department?.name || 'Sem departamento'}
+                    </span>
+                  </div>
+                </div>
 
-              <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1" />
+                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2">
+                  {platformUser ? (
+                    <span className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 rounded-full text-[10px] font-black border border-indigo-100 dark:border-indigo-900/50 shadow-sm uppercase tracking-wider">
+                      <ShieldCheck className="w-4 h-4 text-indigo-500" />
+                      ACESSO ATIVO
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-full text-[10px] font-black border border-slate-200 dark:border-slate-700 shadow-sm uppercase tracking-wider">
+                      <ShieldAlert className="w-4 h-4" />
+                      SEM ACESSO
+                    </span>
+                  )}
+                  <span className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-slate-50 dark:bg-slate-800/50 text-slate-500 rounded-full text-[10px] font-black font-mono border border-slate-100 dark:border-slate-700 shadow-sm tracking-wider">
+                    ID #{employee.registrationNumber}
+                  </span>
+                </div>
+              </div>
 
-              <Button
-                variant="ghost"
-                onClick={() => router.push(`/employees/${employeeId}/edit`)}
-                className="h-11 px-4 text-[var(--color-primary)] hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-all gap-2"
-              >
-                <Edit className="w-4.5 h-4.5" />
-                <span className="text-sm font-bold uppercase tracking-tight">Editar</span>
-              </Button>
-
-              {employee.status !== 'TERMINATED' && (
+              {/* Desktop Actions Row */}
+              <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800/50 p-2 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm">
                 <Button
                   variant="ghost"
-                  onClick={() => setTerminationModalOpen(true)}
-                  className="h-11 px-4 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition-all gap-2"
+                  onClick={handleGenerateBadge}
+                  disabled={generatingBadge}
+                  className="h-12 px-5 text-slate-600 dark:text-slate-300 hover:text-[var(--color-primary)] hover:bg-white dark:hover:bg-slate-700 rounded-2xl transition-all gap-2 shadow-sm hover:shadow"
                 >
-                  <UserX className="w-4.5 h-4.5" />
-                  <span className="text-sm font-bold uppercase tracking-tight">Desligar</span>
+                  <CreditCard className="w-5 h-5" />
+                  <span className="text-xs font-black uppercase tracking-widest">{generatingBadge ? 'Gerando...' : 'Crachá'}</span>
                 </Button>
-              )}
+
+                <div className="w-px h-8 bg-slate-200 dark:bg-slate-700 mx-1" />
+
+                <Button
+                  variant="ghost"
+                  onClick={() => router.push(`/employees/${employeeId}/edit`)}
+                  className="h-12 px-5 text-[var(--color-primary)] hover:bg-white dark:hover:bg-blue-900/20 rounded-2xl transition-all gap-2 shadow-sm hover:shadow"
+                >
+                  <Edit className="w-5 h-5" />
+                  <span className="text-xs font-black uppercase tracking-widest">Editar</span>
+                </Button>
+
+                {employee.status !== 'TERMINATED' && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => setTerminationModalOpen(true)}
+                    className="h-12 px-5 text-rose-500 hover:bg-white dark:hover:bg-rose-950/30 rounded-2xl transition-all gap-2 shadow-sm hover:shadow"
+                  >
+                    <UserX className="w-5 h-5" />
+                    <span className="text-xs font-black uppercase tracking-widest">Desligar</span>
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </div>
