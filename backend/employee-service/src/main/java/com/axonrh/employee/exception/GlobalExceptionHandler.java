@@ -8,6 +8,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -43,6 +44,15 @@ public class GlobalExceptionHandler {
         error.put("error", "Missing Header");
         error.put("header", ex.getHeaderName());
         return ResponseEntity.badRequest().body(error);
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<Object> handleNoResourceFound(NoResourceFoundException ex) {
+        log.warn("Recurso não encontrado: {}", ex.getResourcePath());
+        Map<String, String> error = new HashMap<>();
+        error.put("error", "Not Found");
+        error.put("message", "O recurso solicitado não existe");
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
     @ExceptionHandler(Exception.class)

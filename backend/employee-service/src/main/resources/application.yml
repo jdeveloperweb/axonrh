@@ -22,7 +22,7 @@ spring:
       ddl-auto: validate
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+# dialect: org.hibernate.dialect.PostgreSQLDialect (Removed as it is auto-detected)
         format_sql: true
         default_schema: shared
         jdbc:
@@ -124,7 +124,7 @@ logging:
     com.axonrh.employee: ${LOG_LEVEL:DEBUG}
     org.hibernate.SQL: ${SQL_LOG_LEVEL:WARN}
     org.springframework.kafka: INFO
-    org.springframework.security: TRACE
+    org.springframework.security: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] [%X{tenantId}] [%X{correlationId}] %-5level %logger{36} - %msg%n"
 
