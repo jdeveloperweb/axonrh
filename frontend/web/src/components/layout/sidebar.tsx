@@ -121,30 +121,36 @@ export function Sidebar() {
       >
         {/* Logo */}
         <div className="flex items-center justify-between h-[var(--header-height)] px-4 border-b border-[var(--color-border)]">
-          {!isSidebarCollapsed && (
-            <div className="flex items-center gap-2">
-              {tenantTheme?.logoUrl ? (
-                <div
-                  className="relative flex items-center"
+          <div className="flex items-center gap-2 overflow-hidden">
+            {tenantTheme?.logoUrl ? (
+              <div
+                key={`${tenantTheme.logoUrl}-${tenantTheme.logoWidth}`}
+                className="relative flex items-center justify-start overflow-hidden"
+                style={{
+                  width: isSidebarCollapsed ? '32px' : 'auto',
+                  height: '48px',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                <img
+                  src={getPhotoUrl(tenantTheme.logoUrl, new Date().getTime().toString(), 'logo') || ''}
+                  alt="Logo"
+                  className={cn(
+                    "h-full w-auto object-contain object-left",
+                    isSidebarCollapsed ? "min-w-[32px]" : ""
+                  )}
                   style={{
-                    width: isSidebarCollapsed ? '32px' : '100%',
-                    maxWidth: isSidebarCollapsed ? '32px' : `${tenantTheme.logoWidth || 150}px`,
-                    height: '40px'
+                    maxWidth: isSidebarCollapsed ? '32px' : '180px', // Limite um pouco maior para logos horizontais
                   }}
-                >
-                  <Image
-                    src={getPhotoUrl(tenantTheme.logoUrl, undefined, 'logo') || ''}
-                    alt="Logo"
-                    fill
-                    className="object-contain object-left"
-                    unoptimized
-                  />
-                </div>
-              ) : (
+                />
+              </div>
+            ) : (
+              !isSidebarCollapsed && (
                 <span className="text-xl font-bold text-[var(--color-primary)]">AxonRH</span>
-              )}
-            </div>
-          )}
+              )
+            )}
+          </div>
+
           <button
             onClick={toggleSidebar}
             className="p-2 rounded-[var(--radius-md)] hover:bg-[var(--color-surface-variant)] transition-colors"
