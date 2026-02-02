@@ -152,27 +152,41 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
     // Load initial reference data
     useEffect(() => {
         const loadData = async () => {
-            try {
-                setLoadingReferenceData(true);
-                const [depts, centers, mgrs, scheds] = await Promise.all([
-                    employeesApi.getDepartments(),
-                    employeesApi.getCostCenters(),
-                    managersApi.list(),
-                    timesheetApi.listSchedules()
-                ]);
+            setLoadingReferenceData(true);
 
+            // Load departments
+            try {
+                const depts = await employeesApi.getDepartments();
                 setDepartments(depts);
-                setCostCenters(centers);
-                setManagers(mgrs);
-                setSchedules(scheds);
-            } catch (error: any) {
-                console.error('❌ Failed to load reference data:', error);
-                if (error.stack) {
-                    console.error('❌ Error stack:', error.stack);
-                }
-            } finally {
-                setLoadingReferenceData(false);
+            } catch (error) {
+                console.error('❌ Failed to load departments:', error);
             }
+
+            // Load cost centers
+            try {
+                const centers = await employeesApi.getCostCenters();
+                setCostCenters(centers);
+            } catch (error) {
+                console.error('❌ Failed to load cost centers:', error);
+            }
+
+            // Load managers
+            try {
+                const mgrs = await managersApi.list();
+                setManagers(mgrs);
+            } catch (error) {
+                console.error('❌ Failed to load managers:', error);
+            }
+
+            // Load schedules
+            try {
+                const scheds = await timesheetApi.listSchedules();
+                setSchedules(scheds);
+            } catch (error) {
+                console.error('❌ Failed to load schedules:', error);
+            }
+
+            setLoadingReferenceData(false);
         };
         loadData();
     }, []);
