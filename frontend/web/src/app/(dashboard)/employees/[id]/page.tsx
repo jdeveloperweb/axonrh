@@ -300,123 +300,123 @@ export default function EmployeeDetailPage() {
 
   return (
     <div className="p-0 space-y-8 animate-fade-in">
-      {/* 🚀 Clean Integrated Header Design */}
-      <div className="px-6 md:px-12 pt-8">
-        <div className="bg-white dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800 rounded-[3rem] p-6 md:p-10 shadow-xl relative overflow-hidden group">
-          {/* Subtle decoration elements */}
-          <div className="absolute top-0 right-0 w-96 h-96 bg-[var(--color-primary)]/5 rounded-full blur-3xl -tr-24 -mt-24 pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl -bl-24 -mb-24 pointer-events-none" />
-
-          {/* Simple Back Button */}
+      {/* 🚀 Refined Header Design */}
+      <div className="px-6 md:px-12 pt-6 space-y-4">
+        {/* Back Button Row */}
+        <div className="flex items-center">
           <button
             onClick={() => router.back()}
-            className="absolute top-6 left-6 p-2 text-slate-400 hover:text-[var(--color-primary)] hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all z-20 group/back"
+            className="flex items-center gap-2 text-slate-500 hover:text-[var(--color-primary)] transition-colors group"
           >
-            <ArrowLeft className="w-5 h-5 group-hover/back:-translate-x-1 transition-transform" />
-          </button>
-
-          <div className="flex flex-col lg:flex-row items-center lg:items-end gap-8 relative z-10 w-full">
-            {/* Photo Profile with Ring & Action */}
-            <div className="relative group/photo shrink-0">
-              <div className="w-40 h-40 md:w-48 md:h-48 rounded-[2.5rem] shadow-2xl overflow-hidden bg-slate-100 ring-8 ring-white dark:ring-slate-950 relative">
-                {employee.photoUrl ? (
-                  <img
-                    src={getPhotoUrl(employee.photoUrl, employee.updatedAt) || ''}
-                    alt={employee.fullName}
-                    className="w-full h-full object-cover transition-transform group-hover/photo:scale-110 duration-700"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-slate-200 text-slate-400 flex items-center justify-center text-6xl font-black">
-                    {employee.fullName.charAt(0).toUpperCase()}
-                  </div>
-                )}
-
-                {/* Overlay on hover for Photo Change */}
-                <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/photo:opacity-100 transition-opacity cursor-pointer backdrop-blur-sm">
-                  <Camera className="w-8 h-8 text-white" />
-                  <input type="file" accept="image/*" onChange={handlePhotoSelect} className="hidden" />
-                </label>
-              </div>
-
-              {/* Status Floating Badge */}
-              <div className={`absolute -top-2 -right-2 px-5 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest ${statusInfo.bg} ${statusInfo.text} border-2 shadow-xl ring-4 ring-white dark:ring-slate-950`}>
-                {statusInfo.label}
-              </div>
+            <div className="p-2 bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-100 dark:border-slate-700 group-hover:border-[var(--color-primary)]/30">
+              <ArrowLeft className="w-4 h-4" />
             </div>
+            <span className="text-sm font-bold">Voltar</span>
+          </button>
+        </div>
 
-            {/* Info Block & Primary Actions */}
-            <div className="flex-1 flex flex-col md:flex-row items-center lg:items-end justify-between gap-8 pb-2 w-full text-center lg:text-left">
-              <div className="space-y-4">
-                <div className="flex flex-col gap-2">
-                  <h1 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-none">
+        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 md:p-8 shadow-sm">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
+
+            <div className="flex flex-col md:flex-row items-center gap-6">
+              {/* Photo Profile */}
+              <div className="relative shrink-0">
+                <div className="w-32 h-32 md:w-40 md:h-40 rounded-2xl shadow-md overflow-hidden bg-slate-100 border-4 border-white dark:border-slate-800 relative group/photo">
+                  {employee.photoUrl ? (
+                    <img
+                      src={getPhotoUrl(employee.photoUrl, employee.updatedAt) || ''}
+                      alt={employee.fullName}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-slate-200 text-slate-400 flex items-center justify-center text-5xl font-black">
+                      {employee.fullName.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+
+                  {/* Overlay for Photo Change */}
+                  <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/photo:opacity-100 transition-opacity cursor-pointer backdrop-blur-sm">
+                    <Camera className="w-6 h-6 text-white" />
+                    <input type="file" accept="image/*" onChange={handlePhotoSelect} className="hidden" />
+                  </label>
+                </div>
+
+                {/* Status Badge */}
+                <div className={`absolute -top-2 -right-2 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider ${statusInfo.bg} ${statusInfo.text} border-2 shadow-sm ring-2 ring-white dark:ring-slate-900`}>
+                  {statusInfo.label}
+                </div>
+              </div>
+
+              {/* Name and Info */}
+              <div className="text-center md:text-left space-y-3">
+                <div>
+                  <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
                     {employee.socialName || employee.fullName}
                   </h1>
-                  <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 mt-1 text-lg font-medium text-slate-500 dark:text-slate-400">
-                    <span className="flex items-center gap-2">
-                      <Briefcase className="w-5 h-5 text-[var(--color-primary)]" />
+                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-1 text-slate-500 dark:text-slate-400">
+                    <span className="flex items-center gap-1.5 font-bold text-sm">
+                      <Briefcase className="w-4 h-4 text-[var(--color-primary)]/70" />
                       {employee.position?.title || employee.position?.name || 'Sem cargo'}
                     </span>
-                    <span className="h-1.5 w-1.5 rounded-full bg-slate-300 hidden md:block" />
-                    <span className="flex items-center gap-2">
-                      <Building2 className="w-5 h-5 text-[var(--color-primary)]" />
+                    <span className="h-1 w-1 rounded-full bg-slate-300 hidden md:block" />
+                    <span className="flex items-center gap-1.5 font-bold text-sm">
+                      <Building2 className="w-4 h-4 text-[var(--color-primary)]/70" />
                       {employee.department?.name || 'Sem departamento'}
                     </span>
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2">
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
                   {platformUser ? (
-                    <span className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 rounded-full text-[10px] font-black border border-indigo-100 dark:border-indigo-900/50 shadow-sm uppercase tracking-wider">
-                      <ShieldCheck className="w-4 h-4 text-indigo-500" />
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 rounded-lg text-[10px] font-black border border-indigo-100 dark:border-indigo-900/50 shadow-xs uppercase tracking-wider">
+                      <ShieldCheck className="w-3.5 h-3.5" />
                       ACESSO ATIVO
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-full text-[10px] font-black border border-slate-200 dark:border-slate-700 shadow-sm uppercase tracking-wider">
-                      <ShieldAlert className="w-4 h-4" />
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-50 dark:bg-slate-800 text-slate-500 rounded-lg text-[10px] font-black border border-slate-200 dark:border-slate-700 shadow-xs uppercase tracking-wider">
+                      <ShieldAlert className="w-3.5 h-3.5" />
                       SEM ACESSO
                     </span>
                   )}
-                  <span className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-slate-50 dark:bg-slate-800/50 text-slate-500 rounded-full text-[10px] font-black font-mono border border-slate-100 dark:border-slate-700 shadow-sm tracking-wider">
-                    ID #{employee.registrationNumber}
+                  <span className="px-3 py-1 bg-slate-50 dark:bg-slate-800/50 text-slate-400 rounded-lg text-[10px] font-bold font-mono border border-slate-100 dark:border-slate-700">
+                    #{employee.registrationNumber}
                   </span>
                 </div>
               </div>
-
-              {/* Desktop Actions Row */}
-              <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800/50 p-2 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm">
-                <Button
-                  variant="ghost"
-                  onClick={handleGenerateBadge}
-                  disabled={generatingBadge}
-                  className="h-12 px-5 text-slate-600 dark:text-slate-300 hover:text-[var(--color-primary)] hover:bg-white dark:hover:bg-slate-700 rounded-2xl transition-all gap-2 shadow-sm hover:shadow"
-                >
-                  <CreditCard className="w-5 h-5" />
-                  <span className="text-xs font-black uppercase tracking-widest">{generatingBadge ? 'Gerando...' : 'Crachá'}</span>
-                </Button>
-
-                <div className="w-px h-8 bg-slate-200 dark:bg-slate-700 mx-1" />
-
-                <Button
-                  variant="ghost"
-                  onClick={() => router.push(`/employees/${employeeId}/edit`)}
-                  className="h-12 px-5 text-[var(--color-primary)] hover:bg-white dark:hover:bg-blue-900/20 rounded-2xl transition-all gap-2 shadow-sm hover:shadow"
-                >
-                  <Edit className="w-5 h-5" />
-                  <span className="text-xs font-black uppercase tracking-widest">Editar</span>
-                </Button>
-
-                {employee.status !== 'TERMINATED' && (
-                  <Button
-                    variant="ghost"
-                    onClick={() => setTerminationModalOpen(true)}
-                    className="h-12 px-5 text-rose-500 hover:bg-white dark:hover:bg-rose-950/30 rounded-2xl transition-all gap-2 shadow-sm hover:shadow"
-                  >
-                    <UserX className="w-5 h-5" />
-                    <span className="text-xs font-black uppercase tracking-widest">Desligar</span>
-                  </Button>
-                )}
-              </div>
             </div>
+
+            {/* Actions */}
+            <div className="flex flex-wrap items-center justify-center gap-3 w-full lg:w-auto">
+              <Button
+                variant="outline"
+                onClick={handleGenerateBadge}
+                disabled={generatingBadge}
+                className="flex-1 lg:flex-none h-11 px-6 rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all font-bold text-xs uppercase tracking-widest gap-2"
+              >
+                <CreditCard className="w-4 h-4" />
+                {generatingBadge ? 'Gerando...' : 'Crachá'}
+              </Button>
+
+              <Button
+                onClick={() => router.push(`/employees/${employeeId}/edit`)}
+                className="flex-1 lg:flex-none h-11 px-6 rounded-xl bg-[var(--color-primary)] hover:opacity-90 text-white transition-all font-bold text-xs uppercase tracking-widest gap-2"
+              >
+                <Edit className="w-4 h-4" />
+                Editar
+              </Button>
+
+              {employee.status !== 'TERMINATED' && (
+                <Button
+                  variant="ghost"
+                  onClick={() => setTerminationModalOpen(true)}
+                  className="flex-1 lg:flex-none h-11 px-6 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all font-bold text-xs uppercase tracking-widest gap-2"
+                >
+                  <UserX className="w-4 h-4" />
+                  Desligar
+                </Button>
+              )}
+            </div>
+
           </div>
         </div>
       </div>
