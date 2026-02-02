@@ -22,7 +22,10 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 public class WorkScheduleRequest {
+
+    private UUID id;
 
     @NotBlank(message = "Nome da escala e obrigatorio")
     @Size(max = 100)
@@ -66,7 +69,9 @@ public class WorkScheduleRequest {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
     public static class ScheduleDayRequest {
+        private UUID id;
         @NotNull
         private String dayOfWeek; // MONDAY, TUESDAY, etc.
         private Boolean isWorkDay;

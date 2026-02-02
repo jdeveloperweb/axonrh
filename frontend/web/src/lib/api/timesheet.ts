@@ -551,6 +551,31 @@ export const timesheetApi = {
     });
   },
 
+  // ==================== Holidays ====================
+
+  /**
+   * List all holidays
+   */
+  listHolidays: async (): Promise<any[]> => {
+    return api.get<any[], any[]>('/timesheet/holidays');
+  },
+
+  /**
+   * Import holidays automatically
+   */
+  importHolidays: async (year?: number): Promise<number> => {
+    return api.post<unknown, number>('/timesheet/holidays/import', null, {
+      params: { year }
+    });
+  },
+
+  /**
+   * Delete a holiday
+   */
+  deleteHoliday: async (id: string): Promise<void> => {
+    await api.delete(`/timesheet/holidays/${id}`);
+  },
+
   // ==================== Statistics ====================
 
   /**

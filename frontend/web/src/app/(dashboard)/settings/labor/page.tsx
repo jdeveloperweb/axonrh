@@ -73,10 +73,16 @@ export default function LaborSettingsPage() {
         ]
     });
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [holidays, setHolidays] = useState<any[]>([]);
+    const [importingHolidays, setImportingHolidays] = useState(false);
+    const [loadingHolidays, setLoadingHolidays] = useState(false);
+
 
     useEffect(() => {
         loadData();
+        loadHolidays();
     }, []);
+
 
     const loadData = async () => {
         try {
@@ -90,6 +96,44 @@ export default function LaborSettingsPage() {
             setLoading(false);
         }
     };
+
+    const loadHolidays = async () => {
+        try {
+            setLoadingHolidays(true);
+            const data = await timesheetApi.listHolidays();
+            setHolidays(data);
+        } catch (error) {
+            console.error('Error loading holidays:', error);
+        } finally {
+            setLoadingHolidays(false);
+        }
+    };
+
+    const handleImportHolidays = async () => {
+        try {
+            setImportingHolidays(true);
+            const count = await timesheetApi.importHolidays(new Date().getFullYear());
+            toast.success(`${count} feriados nacionais importados com sucesso`);
+            loadHolidays();
+        } catch (error) {
+            console.error('Error importing holidays:', error);
+            toast.error('Erro ao importar feriados');
+        } finally {
+            setImportingHolidays(false);
+        }
+    };
+
+    const handleDeleteHoliday = async (id: string) => {
+        if (!confirm('Deseja excluir este feriado?')) return;
+        try {
+            await timesheetApi.deleteHoliday(id);
+            toast.success('Feriado excluído');
+            loadHolidays();
+        } catch (error) {
+            toast.error('Erro ao excluir feriado');
+        }
+    };
+
 
     const handleCreateNew = () => {
         setEditingId(null);
@@ -345,21 +389,84 @@ export default function LaborSettingsPage() {
 
                 <TabsContent value="holidays">
                     <Card className="border-none shadow-lg bg-[var(--color-surface)]">
-                        <CardHeader>
-                            <CardTitle>Feriados e Datas Especiais</CardTitle>
-                            <CardDescription>Configure os feriados que serão considerados no cálculo do ponto.</CardDescription>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                            <div>
+                                <CardTitle>Feriados e Datas Especiais</CardTitle>
+                                <CardDescription>Configure os feriados que serão considerados no cálculo do ponto.</CardDescription>
+                            </div>
+                            <Button
+                                onClick={handleImportHolidays}
+                                disabled={importingHolidays}
+                                className="btn-primary"
+                            >
+                                {importingHolidays ? (
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                ) : (
+                                    <Plus className="w-4 h-4 mr-2" />
+                                )}
+                                Importar Feriados
+                            </Button>
                         </CardHeader>
                         <CardContent>
-                            <div className="p-8 text-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
-                                <Calendar className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                                <h3 className="font-semibold text-slate-600">Módulo de Feriados</h3>
-                                <p className="text-sm text-slate-500 max-w-sm mx-auto mt-2">
-                                    Em breve você poderá importar feriados nacionais, estaduais e municipais automaticamente.
-                                </p>
-                            </div>
+                            {loadingHolidays ? (
+                                <div className="flex justify-center py-12">
+                                    <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+                                </div>
+                            ) : holidays.length === 0 ? (
+                                <div className="p-12 text-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                                    <Calendar className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                                    <h3 className="font-semibold text-slate-600">Nenhum feriado cadastrado</h3>
+                                    <p className="text-sm text-slate-500 max-w-sm mx-auto mt-2">
+                                        Clique no botão acima para importar os feriados nacionais automaticamente baseados no endereço da sua empresa.
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="overflow-hidden rounded-xl border border-slate-100 shadow-sm">
+                                    <table className="w-full text-sm text-left">
+                                        <thead className="bg-slate-50 text-slate-600 font-medium border-b border-slate-100">
+                                            <tr>
+                                                <th className="px-6 py-4">Data</th>
+                                                <th className="px-6 py-4">Nome</th>
+                                                <th className="px-6 py-4">Tipo</th>
+                                                <th className="px-6 py-4 text-right">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-50">
+                                            {holidays.sort((a, b) => a.date.localeCompare(b.date)).map((holiday) => (
+                                                <tr key={holiday.id} className="hover:bg-slate-50/50 transition-colors">
+                                                    <td className="px-6 py-4 font-medium text-slate-700">
+                                                        {new Date(holiday.date + 'T00:00:00').toLocaleDateString('pt-BR')}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-slate-600">{holiday.name}</td>
+                                                    <td className="px-6 py-4">
+                                                        <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${holiday.type === 'NATIONAL' ? 'bg-blue-100 text-blue-700' :
+                                                                holiday.type === 'STATE' ? 'bg-orange-100 text-orange-700' :
+                                                                    'bg-emerald-100 text-emerald-700'
+                                                            }`}>
+                                                            {holiday.type === 'NATIONAL' ? 'Nacional' :
+                                                                holiday.type === 'STATE' ? 'Estadual' : 'Municipal'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                                            onClick={() => handleDeleteHoliday(holiday.id)}
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </Button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                 </TabsContent>
+
 
                 <TabsContent value="general">
                     <Card className="border-none shadow-lg bg-[var(--color-surface)]">

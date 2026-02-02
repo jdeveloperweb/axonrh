@@ -16,4 +16,9 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addInterceptor(tenantInterceptor)
                 .addPathPatterns("/api/**");
     }
+
+    @org.springframework.context.annotation.Bean
+    public org.springframework.web.client.RestTemplate restTemplate() {
+        return new org.springframework.web.client.RestTemplate();
+    }
 }
