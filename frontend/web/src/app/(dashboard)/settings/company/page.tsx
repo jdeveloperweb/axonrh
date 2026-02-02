@@ -411,8 +411,8 @@ export default function CompanySettingsPage() {
                                 </div>
                             </div>
                         ) : (
-                            <div className="py-12 text-center bg-slate-50 dark:bg-slate-800/20 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 group-hover:border-indigo-300 transition-colors">
-                                <div className="w-20 h-20 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-center mx-auto mb-4 group-hover:rotate-6 transition-transform">
+                            <div className="py-12 flex flex-col items-center justify-center text-center bg-slate-50 dark:bg-slate-800/20 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 group-hover:border-indigo-300 transition-colors">
+                                <div className="w-20 h-20 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-center mb-4 group-hover:rotate-6 transition-transform">
                                     <Shield className="w-10 h-10 text-slate-300" />
                                 </div>
                                 <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Cerca Digital Desativada</h3>
@@ -420,11 +420,11 @@ export default function CompanySettingsPage() {
                                     Ao ativar a cerca digital, você restringe o local onde os colaboradores podem registrar o ponto. Registros fora da área exigirão aprovação.
                                 </p>
                                 <Button
-                                    variant="outline"
                                     onClick={() => setProfile({ ...profile, geofenceEnabled: true })}
-                                    className="mt-6 rounded-xl border-indigo-200 dark:border-indigo-900 text-indigo-600 dark:text-indigo-400 font-bold"
+                                    className="mt-8 h-12 px-8 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-xl shadow-indigo-200 dark:shadow-none transition-all font-black uppercase tracking-widest text-[10px] flex items-center gap-3 group/btn"
                                 >
-                                    Ativar Agora
+                                    <Shield className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                    Ativar Cerca Digital
                                 </Button>
                             </div>
                         )}
