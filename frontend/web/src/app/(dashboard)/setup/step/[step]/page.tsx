@@ -17,8 +17,8 @@ import { useThemeStore } from '@/stores/theme-store';
 import { Switch } from '@/components/ui/switch';
 import Image from 'next/image';
 import { getPhotoUrl } from '@/lib/utils';
-
-
+import { Shield, MapPin, Info, Loader2, Crosshair, ExternalLink } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 export default function SetupStepPage() {
   const router = useRouter();
   const params = useParams();
@@ -373,6 +373,33 @@ function Step1CompanyData({
   profile: CompanyProfile;
   onChange: (profile: CompanyProfile) => void;
 }) {
+  const [gettingLocation, setGettingLocation] = useState(false);
+
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      alert('Geolocalização não é suportada pelo seu navegador');
+      return;
+    }
+
+    setGettingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        onChange({
+          ...profile,
+          geofenceLatitude: position.coords.latitude,
+          geofenceLongitude: position.coords.longitude
+        });
+        setGettingLocation(false);
+      },
+      (error) => {
+        console.error('Error getting location:', error);
+        setGettingLocation(false);
+        alert('Não foi possível obter sua localização. Verifique as permissões.');
+      },
+      { enableHighAccuracy: true }
+    );
+  };
+
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -492,12 +519,17 @@ function Step1CompanyData({
       <hr className="border-slate-200" />
 
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-semibold text-slate-900">Cerca Digital</h3>
-            <p className="text-sm text-slate-500">
-              Defina o perímetro permitido para o registro de ponto presencial.
-            </p>
+        <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg">
+              <Shield className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Cerca Digital (Geofencing)</h3>
+              <p className="text-sm text-slate-500">
+                Defina o perímetro permitido para o registro de ponto presencial.
+              </p>
+            </div>
           </div>
           <Switch
             checked={profile.geofenceEnabled || false}
@@ -506,42 +538,86 @@ function Step1CompanyData({
         </div>
 
         {profile.geofenceEnabled && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in slide-in-from-top-2 duration-300">
-            <div>
-              <label className="block text-sm font-semibold text-slate-700">Latitude</label>
-              <input
-                type="number"
-                step="any"
-                value={profile.geofenceLatitude || ''}
-                onChange={(e) => onChange({ ...profile, geofenceLatitude: parseFloat(e.target.value) })}
-                placeholder="-23.5505"
-                className="mt-2 block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200"
-              />
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in fade-in slide-in-from-top-4 duration-500 mt-6">
+            <div className="lg:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <label className="block text-xs font-black uppercase tracking-widest text-slate-500">Latitude</label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="any"
+                    value={profile.geofenceLatitude || ''}
+                    onChange={(e) => onChange({ ...profile, geofenceLatitude: parseFloat(e.target.value) })}
+                    placeholder="-23.5505"
+                    className="block w-full rounded-xl border border-slate-200 bg-white px-10 py-2.5 text-sm font-mono shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                  />
+                  <MapPin className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="block text-xs font-black uppercase tracking-widest text-slate-500">Longitude</label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="any"
+                    value={profile.geofenceLongitude || ''}
+                    onChange={(e) => onChange({ ...profile, geofenceLongitude: parseFloat(e.target.value) })}
+                    placeholder="-46.6333"
+                    className="block w-full rounded-xl border border-slate-200 bg-white px-10 py-2.5 text-sm font-mono shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                  />
+                  <MapPin className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="block text-xs font-black uppercase tracking-widest text-slate-500">Raio (metros)</label>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    value={profile.geofenceRadius || 100}
+                    onChange={(e) => onChange({ ...profile, geofenceRadius: parseInt(e.target.value) })}
+                    className="block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleGetLocation}
+                    disabled={gettingLocation}
+                    className="shrink-0 h-[42px] px-4 rounded-xl border-indigo-200 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 flex items-center gap-2 font-bold text-xs uppercase tracking-widest transition-all"
+                  >
+                    {gettingLocation ? <Loader2 className="w-4 h-4 animate-spin" /> : <Crosshair className="w-4 h-4" />}
+                    {gettingLocation ? '...' : 'Capturar'}
+                  </Button>
+                </div>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-semibold text-slate-700">Longitude</label>
-              <input
-                type="number"
-                step="any"
-                value={profile.geofenceLongitude || ''}
-                onChange={(e) => onChange({ ...profile, geofenceLongitude: parseFloat(e.target.value) })}
-                placeholder="-46.6333"
-                className="mt-2 block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-slate-700">Raio (metros)</label>
-              <input
-                type="number"
-                value={profile.geofenceRadius || 100}
-                onChange={(e) => onChange({ ...profile, geofenceRadius: parseInt(e.target.value) })}
-                className="mt-2 block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200"
-              />
-            </div>
-            <div className="md:col-span-3">
-              <p className="text-xs text-slate-500">
-                Dica: Você pode obter as coordenadas no Google Maps clicando com o botão direito no local desejado.
-              </p>
+
+            <div className="lg:col-span-12">
+              <div className="relative h-[250px] w-full rounded-2xl overflow-hidden border-2 border-slate-100 shadow-sm bg-slate-50">
+                {profile.geofenceLatitude && profile.geofenceLongitude ? (
+                  <iframe
+                    width="100%"
+                    height="100%"
+                    frameBorder="0"
+                    scrolling="no"
+                    marginHeight={0}
+                    marginWidth={0}
+                    src={`https://maps.google.com/maps?q=${profile.geofenceLatitude},${profile.geofenceLongitude}&t=&z=16&ie=UTF8&iwloc=&output=embed`}
+                    title="Geofence Preview"
+                    className="filter grayscale-[30%] hover:grayscale-0 transition-all duration-500"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full text-slate-400 italic">
+                    <MapPin className="w-8 h-8 mb-2 opacity-20" />
+                    <p className="text-xs">Insira as coordenadas ou clique em capturar para ver o mapa</p>
+                  </div>
+                )}
+                <div className="absolute bottom-4 left-4 right-4 flex items-start gap-3 p-3 rounded-xl bg-white/90 backdrop-blur-sm shadow-lg border border-white/50 text-[10px] leading-relaxed">
+                  <Info className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
+                  <p className="text-slate-600 font-medium">
+                    O raio de <span className="font-bold text-indigo-600">{profile.geofenceRadius || 100}m</span> garante que o ponto só seja batido dentro desta área.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         )}
