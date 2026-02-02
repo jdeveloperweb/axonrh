@@ -61,21 +61,24 @@ public class DepartmentService {
                 .build();
         
         // Definir departamento pai se fornecido
-        if (dto.getParentId() != null) {
-            Department parent = departmentRepository.findByTenantIdAndId(tenantId, dto.getParentId())
+        if (dto.getParentId() != null && !dto.getParentId().isEmpty()) {
+            UUID parentUuid = UUID.fromString(dto.getParentId());
+            Department parent = departmentRepository.findByTenantIdAndId(tenantId, parentUuid)
                     .orElseThrow(() -> new RuntimeException("Departamento pai não encontrado"));
             department.setParent(parent);
         }
         
         // Definir gestor se fornecido
-        if (dto.getManagerId() != null) {
-            validateManager(tenantId, dto.getManagerId());
-            department.setManagerId(dto.getManagerId());
+        if (dto.getManagerId() != null && !dto.getManagerId().isEmpty()) {
+            UUID managerUuid = UUID.fromString(dto.getManagerId());
+            validateManager(tenantId, managerUuid);
+            department.setManagerId(managerUuid);
         }
         
         // Definir centro de custo se fornecido
-        if (dto.getCostCenterId() != null) {
-            CostCenter costCenter = costCenterRepository.findById(dto.getCostCenterId())
+        if (dto.getCostCenterId() != null && !dto.getCostCenterId().isEmpty()) {
+            UUID costCenterUuid = UUID.fromString(dto.getCostCenterId());
+            CostCenter costCenter = costCenterRepository.findById(costCenterUuid)
                     .orElseThrow(() -> new RuntimeException("Centro de custo não encontrado"));
             department.setCostCenter(costCenter);
         }

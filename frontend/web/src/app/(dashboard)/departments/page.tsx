@@ -93,8 +93,8 @@ export default function DepartmentsPage() {
                 const updateData: UpdateDepartmentDTO = {
                     name: formData.name,
                     description: formData.description || undefined,
-                    managerId: formData.managerId ? formData.managerId : undefined,
-                    parentId: formData.parentId ? formData.parentId : undefined,
+                    managerId: formData.managerId || "",
+                    parentId: formData.parentId || "",
                 };
                 console.log('Atualizando departamento:', editingDepartment.id, updateData);
                 const result = await departmentsApi.update(editingDepartment.id, updateData);

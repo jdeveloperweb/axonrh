@@ -28,9 +28,9 @@ public class CreateDepartmentDTO {
 
     private String description;
 
-    private UUID parentId;
+    private String parentId;
 
-    private UUID managerId;
+    private String managerId;
 
-    private UUID costCenterId;
+    private String costCenterId;
 }
