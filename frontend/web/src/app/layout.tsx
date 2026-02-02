@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Outfit, Plus_Jakarta_Sans, Inter, Roboto, Open_Sans, Montserrat } from 'next/font/google';
+import { Outfit, Plus_Jakarta_Sans, Inter, Roboto, Open_Sans, Montserrat, Ubuntu, Lato, Poppins, Raleway, Playfair_Display } from 'next/font/google';
 import './globals.css';
 
 
@@ -34,6 +34,34 @@ const montserrat = Montserrat({
   variable: '--font-montserrat',
   display: 'swap',
 });
+const ubuntu = Ubuntu({
+  weight: ['400', '500', '700'],
+  subsets: ['latin'],
+  variable: '--font-ubuntu',
+  display: 'swap',
+});
+const lato = Lato({
+  weight: ['400', '700'],
+  subsets: ['latin'],
+  variable: '--font-lato',
+  display: 'swap',
+});
+const poppins = Poppins({
+  weight: ['400', '500', '600', '700'],
+  subsets: ['latin'],
+  variable: '--font-poppins',
+  display: 'swap',
+});
+const raleway = Raleway({
+  subsets: ['latin'],
+  variable: '--font-raleway',
+  display: 'swap',
+});
+const playfair = Playfair_Display({
+  subsets: ['latin'],
+  variable: '--font-playfair',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'AxonRH - Gestão de RH e DP',
@@ -54,7 +82,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <body className={`${plusJakarta.variable} ${outfit.variable} ${inter.variable} ${roboto.variable} ${openSans.variable} ${montserrat.variable} font-sans`}>
+      <body className={`${plusJakarta.variable} ${outfit.variable} ${inter.variable} ${roboto.variable} ${openSans.variable} ${montserrat.variable} ${ubuntu.variable} ${lato.variable} ${poppins.variable} ${raleway.variable} ${playfair.variable} font-sans`}>
         {children}
       </body>
     </html>

@@ -13,7 +13,7 @@ import {
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { configApi, ThemeConfig } from '@/lib/api/config';
-import { useThemeStore } from '@/stores/theme-store';
+import { useThemeStore, SUPPORTED_FONTS, getFontVariable } from '@/stores/theme-store';
 import { useToast } from '@/hooks/use-toast';
 import { getPhotoUrl } from '@/lib/utils';
 
@@ -72,26 +72,6 @@ export default function BrandingPage() {
         loadBranding();
     }, [loadBranding]);
 
-    const fonts = [
-        'Plus Jakarta Sans',
-        'Outfit',
-        'Inter',
-        'Roboto',
-        'Open Sans',
-        'Montserrat'
-    ];
-
-    const getFontVariable = (name: string): string => {
-        switch (name) {
-            case 'Plus Jakarta Sans': return 'var(--font-primary)';
-            case 'Outfit': return 'var(--font-secondary)';
-            case 'Inter': return 'var(--font-inter)';
-            case 'Roboto': return 'var(--font-roboto)';
-            case 'Open Sans': return 'var(--font-opensans)';
-            case 'Montserrat': return 'var(--font-montserrat)';
-            default: return 'var(--font-primary)';
-        }
-    }
 
     const handleSave = async () => {
         try {
@@ -127,6 +107,7 @@ export default function BrandingPage() {
                     textSecondary: config.textSecondaryColor || '#757575',
                 },
                 baseFontSize: (config.extraSettings?.baseFontSize as number) || 16,
+                fontFamily: (config.extraSettings?.fontFamily as string) || 'Plus Jakarta Sans',
                 customCss: config.customCss || '',
                 faviconUrl: config.faviconUrl || ''
             });
@@ -164,6 +145,7 @@ export default function BrandingPage() {
                 textSecondary: config.textSecondaryColor || '#757575',
             },
             baseFontSize: config.extraSettings?.baseFontSize || 16,
+            fontFamily: config.extraSettings?.fontFamily || 'Plus Jakarta Sans',
             customCss: config.customCss || '',
             faviconUrl: config.faviconUrl || ''
         });
@@ -172,7 +154,7 @@ export default function BrandingPage() {
     // Sincroniza em tempo real enquanto edita
     useEffect(() => {
         updateGlobalTheme();
-    }, [config.primaryColor, config.secondaryColor, config.accentColor, config.logoUrl, config.extraSettings?.logoWidth, config.extraSettings?.baseFontSize, updateGlobalTheme]);
+    }, [config.primaryColor, config.secondaryColor, config.accentColor, config.logoUrl, config.extraSettings?.logoWidth, config.extraSettings?.baseFontSize, config.extraSettings?.fontFamily, updateGlobalTheme]);
 
     const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -406,7 +388,7 @@ export default function BrandingPage() {
                                         extraSettings: { ...config.extraSettings, fontFamily: e.target.value }
                                     })}
                                 >
-                                    {fonts.map(font => (
+                                    {SUPPORTED_FONTS.map(font => (
                                         <option key={font} value={font}>{font}</option>
                                     ))}
                                 </select>
