@@ -124,7 +124,7 @@ public class EmployeeRequest {
     private Integer hybridFrequency;
 
     @Min(1)
-    @Max(44)
+    @Max(168)
     private Integer weeklyHours;
 
     private String shift;

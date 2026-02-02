@@ -358,9 +358,11 @@ export default function SchedulesPage() {
                   </div>
                 </div>
 
-                {/* Days Preview */}
                 <div className="flex gap-1">
-                  {schedule.days.map((day) => {
+                  {[...schedule.days].sort((a, b) => {
+                    const order = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+                    return order.indexOf(a.dayOfWeek) - order.indexOf(b.dayOfWeek);
+                  }).map((day) => {
                     const dayConfig = DAYS_OF_WEEK.find((d) => d.value === day.dayOfWeek);
                     return (
                       <div

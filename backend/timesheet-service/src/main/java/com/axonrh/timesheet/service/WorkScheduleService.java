@@ -127,23 +127,31 @@ public class WorkScheduleService {
         entity.setUnionAgreementId(request.getUnionAgreementId());
         entity.setUnionAgreementName(request.getUnionAgreementName());
 
-        // Update schedule days
-        entity.getScheduleDays().clear();
+        // Update schedule days robustly
         if (request.getDays() != null) {
+            // Map existing days by dayOfWeek for easy lookup
+            java.util.Map<DayOfWeek, ScheduleDay> existingDays = entity.getScheduleDays().stream()
+                    .collect(java.util.stream.Collectors.toMap(ScheduleDay::getDayOfWeek, d -> d));
+
+            // Clear the list while maintaining references if possible, or just rebuild it correctly
+            entity.getScheduleDays().clear();
+
             request.getDays().forEach(dayReq -> {
-                ScheduleDay day = ScheduleDay.builder()
-                        .dayOfWeek(DayOfWeek.valueOf(dayReq.getDayOfWeek()))
-                        .isWorkDay(dayReq.getIsWorkDay())
-                        .entryTime(dayReq.getEntryTime())
-                        .exitTime(dayReq.getExitTime())
-                        .breakStartTime(dayReq.getBreakStartTime())
-                        .breakEndTime(dayReq.getBreakEndTime())
-                        .break2StartTime(dayReq.getBreak2StartTime())
-                        .break2EndTime(dayReq.getBreak2EndTime())
-                        .expectedWorkMinutes(dayReq.getExpectedWorkMinutes())
-                        .toleranceMinutes(dayReq.getToleranceMinutes())
-                        .notes(dayReq.getNotes())
-                        .build();
+                DayOfWeek dow = DayOfWeek.valueOf(dayReq.getDayOfWeek());
+                ScheduleDay day = existingDays.getOrDefault(dow, new ScheduleDay());
+                
+                day.setDayOfWeek(dow);
+                day.setIsWorkDay(dayReq.getIsWorkDay());
+                day.setEntryTime(dayReq.getEntryTime());
+                day.setExitTime(dayReq.getExitTime());
+                day.setBreakStartTime(dayReq.getBreakStartTime());
+                day.setBreakEndTime(dayReq.getBreakEndTime());
+                day.setBreak2StartTime(dayReq.getBreak2StartTime());
+                day.setBreak2EndTime(dayReq.getBreak2EndTime());
+                day.setExpectedWorkMinutes(dayReq.getExpectedWorkMinutes());
+                day.setToleranceMinutes(dayReq.getToleranceMinutes());
+                day.setNotes(dayReq.getNotes());
+                
                 entity.addScheduleDay(day);
             });
         }
@@ -151,9 +159,11 @@ public class WorkScheduleService {
 
     private WorkScheduleResponse mapToResponse(WorkSchedule entity) {
         List<WorkScheduleResponse.ScheduleDayResponse> days = entity.getScheduleDays().stream()
+                .sorted(java.util.Comparator.comparing(d -> d.getDayOfWeek().getValue())) // Monday(1) to Sunday(7)
                 .map(day -> WorkScheduleResponse.ScheduleDayResponse.builder()
                         .id(day.getId())
                         .dayOfWeek(day.getDayOfWeek())
+                        .dayOfWeekLabel(day.getDayOfWeek().getDisplayName(java.time.format.TextStyle.FULL, new java.util.Locale("pt", "BR")))
                         .isWorkDay(day.getIsWorkDay())
                         .entryTime(day.getEntryTime())
                         .exitTime(day.getExitTime())
@@ -162,10 +172,11 @@ public class WorkScheduleService {
                         .break2StartTime(day.getBreak2StartTime())
                         .break2EndTime(day.getBreak2EndTime())
                         .expectedWorkMinutes(day.getExpectedWorkMinutes())
+                        .expectedWorkFormatted(formatMinutes(day.getExpectedWorkMinutes()))
                         .toleranceMinutes(day.getToleranceMinutes())
                         .notes(day.getNotes())
                         .build())
-                .collect(Collectors.toList());
+                .collect(java.util.stream.Collectors.toList());
 
         return WorkScheduleResponse.builder()
                 .id(entity.getId())
@@ -176,6 +187,7 @@ public class WorkScheduleService {
                 .workRegime(entity.getWorkRegime())
                 .workRegimeLabel(entity.getWorkRegime() != null ? entity.getWorkRegime().name() : null)
                 .weeklyHoursMinutes(entity.getWeeklyHoursMinutes())
+                .weeklyHoursFormatted(formatMinutes(entity.getWeeklyHoursMinutes()))
                 .toleranceMinutes(entity.getToleranceMinutes())
                 .minBreakMinutes(entity.getMinBreakMinutes())
                 .maxDailyOvertimeMinutes(entity.getMaxDailyOvertimeMinutes())
@@ -191,5 +203,12 @@ public class WorkScheduleService {
                 .active(entity.getActive())
                 .days(days)
                 .build();
+    }
+
+    private String formatMinutes(Integer minutes) {
+        if (minutes == null) return "0h00";
+        int h = minutes / 60;
+        int m = minutes % 60;
+        return String.format("%dh%02d", h, m);
     }
 }
