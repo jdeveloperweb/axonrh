@@ -26,6 +26,7 @@ import { DependentsTab } from '@/components/employees/DependentsTab';
 import { ShieldCheck, ShieldAlert, Key, CreditCard } from 'lucide-react';
 import { EmployeeBadge } from '@/components/employees/EmployeeBadge';
 import { useThemeStore } from '@/stores/theme-store';
+import { useAuthStore } from '@/stores/auth-store';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
@@ -79,6 +80,7 @@ export default function EmployeeDetailPage() {
 
   // Theme & Branding from store
   const { tenantTheme } = useThemeStore();
+  const { user } = useAuthStore();
   const [generatingBadge, setGeneratingBadge] = useState(false);
 
   // Fetch employee
@@ -827,58 +829,84 @@ export default function EmployeeDetailPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl flex items-start gap-4">
-                <AlertTriangle className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
-                <div className="text-sm text-blue-800">
-                  <p className="font-bold">Atenção</p>
-                  <p>Vincular uma escala define os horários de entrada, saída e regras de banco de horas para este colaborador.</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label>Escala de Trabalho Atual</Label>
-                  <div className="flex gap-2">
-                    <Select
-                      defaultValue={employee.workScheduleId}
-                      onValueChange={async (value) => {
-                        try {
-                          await timesheetApi.assignSchedule(employeeId, value, new Date().toISOString().split('T')[0]);
-                          toast({ title: 'Sucesso', description: 'Escala atribuída com sucesso!' });
-                          fetchEmployee();
-                        } catch (e) {
-                          toast({ title: 'Erro', description: 'Falha ao atribuir escala', variant: 'destructive' });
-                        }
-                      }}
-                    >
-                      <SelectTrigger className="flex-1">
-                        <SelectValue placeholder="Selecione uma escala..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Nenhuma escala</SelectItem>
-                        {loadingSchedules ? (
-                          <SelectItem value="loading">Carregando...</SelectItem>
-                        ) : (
-                          schedules.map(s => (
-                            <SelectItem key={s.id} value={s.id}>{s.name} ({s.weeklyHoursFormatted})</SelectItem>
-                          ))
-                        )}
-                      </SelectContent>
-                    </Select>
+              {/* Only show configuration for Admins or RH */}
+              {user?.roles?.some((role: string) => ['ADMIN', 'RH'].includes(role)) ? (
+                <>
+                  <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl flex items-start gap-4">
+                    <AlertTriangle className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                    <div className="text-sm text-blue-800">
+                      <p className="font-bold">Atenção</p>
+                      <p>Vincular uma escala define os horários de entrada, saída e regras de banco de horas para este colaborador.</p>
+                    </div>
                   </div>
-                </div>
 
-                <div className="space-y-2">
-                  <Label>Vigência da Escala (Início)</Label>
-                  <Input type="date" defaultValue={new Date().toISOString().split('T')[0]} />
-                </div>
-              </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label>Escala de Trabalho Atual</Label>
+                      <div className="flex gap-2">
+                        <Select
+                          value={employee.workScheduleId || 'none'}
+                          onValueChange={async (value) => {
+                            try {
+                              await timesheetApi.assignSchedule(employeeId, value === 'none' ? '' : value, new Date().toISOString().split('T')[0]);
+                              toast({ title: 'Sucesso', description: 'Escala atribuída com sucesso!' });
+                              fetchEmployee();
+                            } catch (e) {
+                              toast({ title: 'Erro', description: 'Falha ao atribuir escala', variant: 'destructive' });
+                            }
+                          }}
+                        >
+                          <SelectTrigger className="flex-1">
+                            <SelectValue placeholder="Selecione uma escala...">
+                              {employee.workScheduleId && schedules.length > 0 ? (
+                                schedules.find(s => s.id === employee.workScheduleId)?.name || 'Escala não encontrada'
+                              ) : employee.workScheduleId ? (
+                                'Carregando escala...'
+                              ) : (
+                                'Nenhuma escala'
+                              )}
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Nenhuma escala</SelectItem>
+                            {loadingSchedules ? (
+                              <div className="p-2 text-sm text-center text-slate-500">Carregando escalas...</div>
+                            ) : (
+                              schedules.map(s => (
+                                <SelectItem key={s.id} value={s.id}>{s.name} ({s.weeklyHoursFormatted})</SelectItem>
+                              ))
+                            )}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
 
-              <div className="pt-6 border-t flex justify-end">
-                <Button onClick={() => router.push('/settings/labor')} variant="outline" className="text-xs">
-                  Gerenciar Modelos de Escala
-                </Button>
-              </div>
+                    <div className="space-y-2">
+                      <Label>Vigência da Escala (Início)</Label>
+                      <Input type="date" defaultValue={new Date().toISOString().split('T')[0]} />
+                    </div>
+                  </div>
+
+                  <div className="pt-6 border-t flex justify-end">
+                    <Button onClick={() => router.push('/settings/labor')} variant="outline" className="text-xs">
+                      Gerenciar Modelos de Escala
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <div className="p-12 text-center space-y-4">
+                  <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-400">
+                    <Clock className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">Escala do Colaborador</h3>
+                    <p className="text-slate-500 max-w-sm mx-auto mt-1">
+                      Você pode visualizar os registros de ponto do colaborador, mas a alteração de escala é restrita ao RH ou Administradores.
+                    </p>
+                  </div>
+                  {/* TODO: Adicionar visualização dos horários da escala atual sem permitir edição */}
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
