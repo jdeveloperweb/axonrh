@@ -2,16 +2,26 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Edit, MoreHorizontal, User, MapPin, Briefcase, FileText, Users, History, Mail, Phone, Calendar, Building2, Camera, Download, DollarSign, Plus, UserX, Copy, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Edit, MoreHorizontal, User, MapPin, Briefcase, FileText, Users, History, Mail, Phone, Calendar, Building2, Camera, Download, DollarSign, Plus, UserX, Copy, ExternalLink, Clock, AlertTriangle } from 'lucide-react';
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ImageCropDialog } from '@/components/ui/image-crop-dialog';
 import { employeesApi, Employee, EmployeeDocument } from '@/lib/api/employees';
 import { userApi, UserDTO } from '@/lib/api/users';
+import { timesheetApi, WorkSchedule } from '@/lib/api/timesheet';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate, formatCpf, formatCurrency, formatPhone, calculateAge, formatRelativeTime, getPhotoUrl, isValidEmail } from '@/lib/utils';
 import { TerminationModal } from '@/components/employees/TerminationModal';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { DependentsTab } from '@/components/employees/DependentsTab';
 import { ShieldCheck, ShieldAlert, Key, CreditCard } from 'lucide-react';
 import { EmployeeBadge } from '@/components/employees/EmployeeBadge';
@@ -19,7 +29,7 @@ import { useThemeStore } from '@/stores/theme-store';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
-type TabKey = 'overview' | 'documents' | 'dependents' | 'history';
+type TabKey = 'overview' | 'documents' | 'dependents' | 'timesheet' | 'history';
 
 const statusColors = {
   ACTIVE: { bg: 'bg-green-100', text: 'text-green-800', label: 'Ativo' },
@@ -60,6 +70,8 @@ export default function EmployeeDetailPage() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [showCropDialog, setShowCropDialog] = useState(false);
   const [terminationModalOpen, setTerminationModalOpen] = useState(false);
+  const [schedules, setSchedules] = useState<WorkSchedule[]>([]);
+  const [loadingSchedules, setLoadingSchedules] = useState(false);
 
   // Platform Access State
   const [platformUser, setPlatformUser] = useState<UserDTO | null>(null);
@@ -136,6 +148,20 @@ export default function EmployeeDetailPage() {
   useEffect(() => {
     if (activeTab === 'documents') fetchDocuments();
     if (activeTab === 'history') fetchHistory();
+    if (activeTab === 'timesheet') {
+      const loadSchedules = async () => {
+        try {
+          setLoadingSchedules(true);
+          const data = await timesheetApi.listSchedules();
+          setSchedules(data);
+        } catch (error) {
+          console.error('Failed to load schedules:', error);
+        } finally {
+          setLoadingSchedules(false);
+        }
+      };
+      loadSchedules();
+    }
   }, [activeTab, fetchDocuments, fetchHistory]);
 
   const handleGenerateBadge = async () => {
@@ -251,6 +277,7 @@ export default function EmployeeDetailPage() {
 
   const tabs = [
     { key: 'overview' as TabKey, label: 'Visão Geral', icon: User },
+    { key: 'timesheet' as TabKey, label: 'Ponto / Jornada', icon: Clock },
     { key: 'documents' as TabKey, label: 'Documentos', icon: FileText },
     { key: 'dependents' as TabKey, label: 'Dependentes', icon: Users },
     { key: 'history' as TabKey, label: 'Histórico', icon: History },
@@ -762,6 +789,71 @@ export default function EmployeeDetailPage() {
                 ))}
               </div>
             )}
+          </CardContent>
+        </Card>
+      )}
+
+      {activeTab === 'timesheet' && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="w-5 h-5 text-[var(--color-primary)]" />
+              Configuração de Jornada de Trabalho
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl flex items-start gap-4">
+              <AlertTriangle className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+              <div className="text-sm text-blue-800">
+                <p className="font-bold">Atenção</p>
+                <p>Vincular uma escala define os horários de entrada, saída e regras de banco de horas para este colaborador.</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label>Escala de Trabalho Atual</Label>
+                <div className="flex gap-2">
+                  <Select
+                    defaultValue={employee.workScheduleId}
+                    onValueChange={async (value) => {
+                      try {
+                        await timesheetApi.assignSchedule(employeeId, value, new Date().toISOString().split('T')[0]);
+                        toast({ title: 'Sucesso', description: 'Escala atribuída com sucesso!' });
+                        fetchEmployee();
+                      } catch (e) {
+                        toast({ title: 'Erro', description: 'Falha ao atribuir escala', variant: 'destructive' });
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Selecione uma escala..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Nenhuma escala</SelectItem>
+                      {loadingSchedules ? (
+                        <SelectItem value="loading">Carregando...</SelectItem>
+                      ) : (
+                        schedules.map(s => (
+                          <SelectItem key={s.id} value={s.id}>{s.name} ({s.weeklyHoursFormatted})</SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Vigência da Escala (Início)</Label>
+                <Input type="date" defaultValue={new Date().toISOString().split('T')[0]} />
+              </div>
+            </div>
+
+            <div className="pt-6 border-t flex justify-end">
+              <Button onClick={() => router.push('/settings/labor')} variant="outline" className="text-xs">
+                Gerenciar Modelos de Escala
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}

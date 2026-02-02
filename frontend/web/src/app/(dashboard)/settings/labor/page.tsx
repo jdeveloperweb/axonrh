@@ -151,7 +151,45 @@ export default function LaborSettingsPage() {
 
         try {
             setSaving(true);
-            const data = currentSchedule as WorkScheduleRequest;
+
+            // Helper para converter HH:mm para minutos
+            const timeToMinutes = (time?: string) => {
+                if (!time) return 0;
+                const [hours, minutes] = time.split(':').map(Number);
+                return (hours || 0) * 60 + (minutes || 0);
+            };
+
+            // Calcula minutes esperados para cada dia
+            const processedDays = (currentSchedule.days || []).map(day => {
+                if (!day.isWorkDay) return { ...day, expectedWorkMinutes: 0 };
+
+                const entry = timeToMinutes(day.entryTime || '08:00');
+                const exit = timeToMinutes(day.exitTime || '18:00');
+                const breakStart = timeToMinutes(day.breakStartTime || '12:00');
+                const breakEnd = timeToMinutes(day.breakEndTime || '13:00');
+
+                let workMinutes = (exit - entry) - (breakEnd - breakStart);
+                if (workMinutes < 0) workMinutes = 0;
+
+                return {
+                    ...day,
+                    expectedWorkMinutes: workMinutes,
+                    entryTime: day.entryTime || '08:00',
+                    exitTime: day.exitTime || '18:00',
+                    breakStartTime: day.breakStartTime || '12:00',
+                    breakEndTime: day.breakEndTime || '13:00'
+                };
+            });
+
+            const data = {
+                ...currentSchedule,
+                days: processedDays,
+                // Garante que campos opcionais tenham valores padrão se vazios
+                toleranceMinutes: currentSchedule.toleranceMinutes || 10,
+                minBreakMinutes: currentSchedule.minBreakMinutes || 60,
+                maxDailyOvertimeMinutes: currentSchedule.maxDailyOvertimeMinutes || 120,
+            } as WorkScheduleRequest;
+
             if (editingId) {
                 await timesheetApi.updateSchedule(editingId, data);
                 toast.success('Escala atualizada com sucesso');
@@ -420,40 +458,67 @@ export default function LaborSettingsPage() {
 
                         <div className="space-y-4">
                             <Label className="text-sm font-bold uppercase tracking-wider">Horários p/ Dia da Semana</Label>
-                            <div className="space-y-2 border rounded-xl p-2 bg-slate-50/50">
+                            <div className="space-y-2 border rounded-xl p-3 bg-slate-50/50">
                                 {['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Dom'].map((label, idx) => {
-                                    const day = currentSchedule.days?.[(idx + 1) % 7] || currentSchedule.days?.[idx];
-                                    // Simplicando para o demo: Segunda-Feira index no array original era 0
-                                    const dayIdx = idx;
-                                    const dayData = currentSchedule.days?.[dayIdx];
+                                    const dayOrder = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
+                                    const dayName = dayOrder[idx];
 
+                                    let dayIdx = (currentSchedule.days || []).findIndex(d => d.dayOfWeek === dayName);
+                                    if (dayIdx === -1) dayIdx = idx;
+
+                                    const dayData = currentSchedule.days?.[dayIdx];
                                     if (!dayData) return null;
 
                                     return (
-                                        <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-white border shadow-sm">
-                                            <div className="w-20 font-medium text-xs">{label}</div>
-                                            <Switch
-                                                checked={dayData.isWorkDay}
-                                                onCheckedChange={(v) => updateDay(dayIdx, 'isWorkDay', v)}
-                                            />
-                                            {dayData.isWorkDay ? (
+                                        <div key={dayName} className="flex flex-col gap-2 p-3 rounded-lg bg-white border shadow-sm">
+                                            <div className="flex items-center justify-between">
+                                                <div className="w-20 font-bold text-xs uppercase text-slate-500">{label}</div>
                                                 <div className="flex items-center gap-2">
-                                                    <Input
-                                                        type="time"
-                                                        className="h-8 w-24 text-xs"
-                                                        value={dayData.entryTime}
-                                                        onChange={(e) => updateDay(dayIdx, 'entryTime', e.target.value)}
-                                                    />
-                                                    <span className="text-slate-300">às</span>
-                                                    <Input
-                                                        type="time"
-                                                        className="h-8 w-24 text-xs"
-                                                        value={dayData.exitTime}
-                                                        onChange={(e) => updateDay(dayIdx, 'exitTime', e.target.value)}
+                                                    <span className="text-[10px] text-slate-400 font-medium">{dayData.isWorkDay ? 'DIA ÚTIL' : 'FOLGA'}</span>
+                                                    <Switch
+                                                        checked={dayData.isWorkDay}
+                                                        onCheckedChange={(v) => updateDay(dayIdx, 'isWorkDay', v)}
                                                     />
                                                 </div>
-                                            ) : (
-                                                <span className="text-xs text-slate-400 italic">Folga / Descanso</span>
+                                            </div>
+
+                                            {dayData.isWorkDay && (
+                                                <div className="grid grid-cols-2 gap-4 mt-1">
+                                                    <div className="space-y-1">
+                                                        <Label className="text-[10px] text-slate-400">Jornada</Label>
+                                                        <div className="flex items-center gap-2">
+                                                            <Input
+                                                                type="time"
+                                                                className="h-8 text-xs bg-slate-50"
+                                                                value={dayData.entryTime || '08:00'}
+                                                                onChange={(e) => updateDay(dayIdx, 'entryTime', e.target.value)}
+                                                            />
+                                                            <Input
+                                                                type="time"
+                                                                className="h-8 text-xs bg-slate-50"
+                                                                value={dayData.exitTime || '18:00'}
+                                                                onChange={(e) => updateDay(dayIdx, 'exitTime', e.target.value)}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <Label className="text-[10px] text-slate-400">Almoço</Label>
+                                                        <div className="flex items-center gap-2">
+                                                            <Input
+                                                                type="time"
+                                                                className="h-8 text-xs bg-orange-50/30"
+                                                                value={dayData.breakStartTime || '12:00'}
+                                                                onChange={(e) => updateDay(dayIdx, 'breakStartTime', e.target.value)}
+                                                            />
+                                                            <Input
+                                                                type="time"
+                                                                className="h-8 text-xs bg-orange-50/30"
+                                                                value={dayData.breakEndTime || '13:00'}
+                                                                onChange={(e) => updateDay(dayIdx, 'breakEndTime', e.target.value)}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             )}
                                         </div>
                                     );
@@ -462,9 +527,9 @@ export default function LaborSettingsPage() {
                         </div>
                     </div>
 
-                    <DialogFooter>
+                    <DialogFooter className="bg-slate-50 p-6 -m-6 mt-6 rounded-b-lg border-t">
                         <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>Cancelar</Button>
-                        <Button onClick={handleSave} disabled={saving} className="btn-primary">
+                        <Button onClick={handleSave} disabled={saving} className="btn-primary min-w-[150px]">
                             {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                             Salvar Escala
                         </Button>

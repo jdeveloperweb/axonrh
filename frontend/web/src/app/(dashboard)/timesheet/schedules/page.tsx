@@ -213,10 +213,28 @@ export default function SchedulesPage() {
     try {
       setSubmitting(true);
 
+      const timeToMinutes = (time?: string) => {
+        if (!time) return 0;
+        const [hours, minutes] = time.split(':').map(Number);
+        return (hours || 0) * 60 + (minutes || 0);
+      };
+
+      const processedDays = formData.days.map(day => {
+        if (!day.isWorkDay) return { ...day, expectedWorkMinutes: 0 };
+        const entry = timeToMinutes(day.entryTime);
+        const exit = timeToMinutes(day.exitTime);
+        const breakStart = timeToMinutes(day.breakStartTime);
+        const breakEnd = timeToMinutes(day.breakEndTime);
+        let workMinutes = (exit - entry) - (breakEnd - breakStart);
+        return { ...day, expectedWorkMinutes: workMinutes > 0 ? workMinutes : 0 };
+      });
+
+      const finalData = { ...formData, days: processedDays };
+
       if (editingSchedule) {
-        await timesheetApi.updateSchedule(editingSchedule.id, formData);
+        await timesheetApi.updateSchedule(editingSchedule.id, finalData);
       } else {
-        await timesheetApi.createSchedule(formData);
+        await timesheetApi.createSchedule(finalData);
       }
 
       setShowDialog(false);

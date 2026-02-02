@@ -59,6 +59,7 @@ export interface Employee {
   dependents?: EmployeeDependent[];
   createdAt: string;
   updatedAt: string;
+  workScheduleId?: string;
 }
 
 export type EmployeeStatus = 'ACTIVE' | 'INACTIVE' | 'ON_LEAVE' | 'TERMINATED' | 'PENDING';

@@ -61,7 +61,7 @@ const settingsItems = [
         title: 'Recursos e Módulos',
         description: 'Ative ou desative funcionalidades conforme sua necessidade.',
         icon: SettingsIcon,
-        href: '/setup',
+        href: '/settings/modules',
         color: 'bg-orange-500',
         adminOnly: true
     }
