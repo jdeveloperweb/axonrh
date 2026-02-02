@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Edit, MoreHorizontal, User, MapPin, Briefcase, FileText, Users, History, Mail, Phone, Calendar, Building2, Camera, Download, DollarSign, Plus, UserX, Copy, ExternalLink, Clock, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Edit, MoreHorizontal, User, MapPin, Briefcase, FileText, Users, History, Mail, Phone, Calendar, Building2, Camera, Download, DollarSign, Plus, UserX, Copy, ExternalLink, Clock, AlertTriangle, MessageCircle, Check } from 'lucide-react';
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ImageCropDialog } from '@/components/ui/image-crop-dialog';
@@ -302,10 +302,11 @@ export default function EmployeeDetailPage() {
     <div className="p-0 space-y-8 animate-fade-in">
       {/* 🚀 New Premium Header Design */}
       <div className="relative mb-24">
-        {/* Banner com gradiente e padrão decorativo */}
-        <div className="h-44 md:h-56 rounded-b-[2.5rem] bg-gradient-to-br from-[var(--color-primary)] via-[var(--color-primary-dark)] to-indigo-900 shadow-2xl relative overflow-hidden">
-          <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '32px 32px' }} />
-          <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -mr-32 -mt-32 animate-pulse" />
+        {/* Banner mais neutro e elegante */}
+        <div className="h-44 md:h-56 rounded-b-[2.5rem] bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
+          <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, currentColor 1px, transparent 0)', backgroundSize: '32px 32px' }} />
+          <div className="absolute -top-24 -right-24 w-96 h-96 bg-[var(--color-primary)]/10 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-indigo-500/5 rounded-full blur-3xl" />
 
           <button
             onClick={() => router.back()}
@@ -433,12 +434,27 @@ export default function EmployeeDetailPage() {
               icon: Calendar,
               color: 'bg-emerald-50 text-emerald-600'
             },
-            { label: 'E-mail', value: employee.email || '-', icon: Mail, color: 'bg-violet-50 text-violet-600' },
+            {
+              label: 'E-mail',
+              value: employee.email || '-',
+              icon: Mail,
+              color: 'bg-violet-50 text-violet-600',
+              action: employee.email ? () => {
+                navigator.clipboard.writeText(employee.email!);
+                toast({ title: 'Copiado', description: 'E-mail copiado para a área de transferência' });
+              } : undefined,
+              actionIcon: Copy
+            },
             {
               label: 'Telefone',
               value: formatPhone(employee.phone || employee.mobile || employee.personalPhone || ''),
               icon: Phone,
-              color: 'bg-amber-50 text-amber-600'
+              color: 'bg-emerald-50 text-emerald-600',
+              action: (employee.phone || employee.mobile || employee.personalPhone) ? () => {
+                const tel = (employee.phone || employee.mobile || employee.personalPhone || '').replace(/\D/g, '');
+                window.open(`https://wa.me/55${tel}`, '_blank');
+              } : undefined,
+              actionIcon: MessageCircle
             },
             { label: 'Contrato', value: employee.employmentType, icon: Building2, color: 'bg-slate-50 text-slate-600' },
           ].map((item, idx) => (
@@ -448,9 +464,22 @@ export default function EmployeeDetailPage() {
                 <div className={`w-8 h-8 rounded-lg ${item.color} flex items-center justify-center mb-1 group-hover:rotate-12 transition-transform`}>
                   <item.icon className="w-4 h-4" />
                 </div>
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">{item.label}</p>
-                  <p className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">{item.value}</p>
+                <div className="flex items-center justify-between">
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">{item.label}</p>
+                    <p className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">{item.value}</p>
+                  </div>
+                  {item.action && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        item.action?.();
+                      }}
+                      className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                    >
+                      {item.actionIcon && <item.actionIcon className="w-3.5 h-3.5" />}
+                    </button>
+                  )}
                 </div>
               </CardContent>
             </Card>
