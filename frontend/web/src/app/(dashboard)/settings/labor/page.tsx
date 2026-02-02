@@ -129,7 +129,7 @@ export default function LaborSettingsPage() {
             maxDailyOvertimeMinutes: schedule.maxDailyOvertimeMinutes,
             overtimeBankEnabled: schedule.overtimeBankEnabled,
             overtimeBankExpirationMonths: schedule.overtimeBankExpirationMonths,
-            workRegime: schedule.workRegime,
+            workRegime: schedule.workRegime || 'PRESENCIAL',
             days: schedule.days.map(d => ({ ...d }))
         });
         setIsEditModalOpen(true);
@@ -286,7 +286,7 @@ export default function LaborSettingsPage() {
                                                 </div>
                                                 <div>
                                                     <CardTitle className="text-lg">{schedule.name}</CardTitle>
-                                                    <CardDescription>{schedule.scheduleTypeLabel} • {schedule.workRegimeLabel || schedule.workRegime}</CardDescription>
+                                                    <CardDescription>{schedule.scheduleTypeLabel} • {schedule.workRegimeLabel || (schedule.workRegime === 'REMOTO' ? 'Remoto' : schedule.workRegime === 'HIBRIDO' ? 'Híbrido' : 'Presencial')}</CardDescription>
                                                 </div>
                                             </div>
                                             <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -320,7 +320,14 @@ export default function LaborSettingsPage() {
                                             </span>
                                             <div className="flex gap-1">
                                                 {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((day, i) => {
-                                                    const isWorkDay = schedule.days[i]?.isWorkDay;
+                                                    // Ajusta o índice para bater com domingo sendo 0 ou 6 dependendo da ordem salva
+                                                    // Na nossa API os dias vêm na ordem MONDAY...SUNDAY
+                                                    // Então: 0-Seg, 1-Ter, 2-Qua, 3-Qui, 4-Sex, 5-Sáb, 6-Dom
+                                                    // O loop 'D S T Q Q S S' quer: Dom, Seg, Ter, Qua, Qui, Sex, Sáb
+                                                    // Então se i=0 (Dom), pegar schedule.days[6]
+                                                    // Se i=1-6 (Seg-Sáb), pegar schedule.days[i-1]
+                                                    const dayIdx = i === 0 ? 6 : i - 1;
+                                                    const isWorkDay = schedule.days[dayIdx]?.isWorkDay;
                                                     return (
                                                         <div key={i} className={`h-6 w-6 rounded-md flex items-center justify-center text-[10px] font-bold ${isWorkDay ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
                                                             {day}
@@ -385,7 +392,7 @@ export default function LaborSettingsPage() {
 
             {/* Modal de Edição/Criação */}
             <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
                     <DialogHeader>
                         <DialogTitle>{editingId ? 'Editar Escala' : 'Nova Escala de Trabalho'}</DialogTitle>
                         <DialogDescription>Preencha os dados abaixo para configurar a jornada de trabalho.</DialogDescription>
@@ -502,19 +509,20 @@ export default function LaborSettingsPage() {
                                             </div>
 
                                             {dayData.isWorkDay && (
-                                                <div className="grid grid-cols-2 gap-4 mt-1">
+                                                <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 mt-1">
                                                     <div className="space-y-1">
                                                         <Label className="text-[10px] text-slate-400">Jornada</Label>
-                                                        <div className="flex items-center gap-2">
+                                                        <div className="flex items-center gap-1.5">
                                                             <Input
                                                                 type="time"
-                                                                className="h-8 text-xs bg-slate-50"
+                                                                className="h-8 text-xs bg-slate-50 px-2 flex-1"
                                                                 value={dayData.entryTime || '08:00'}
                                                                 onChange={(e) => updateDay(dayIdx, 'entryTime', e.target.value)}
                                                             />
+                                                            <span className="text-[10px] text-slate-300">às</span>
                                                             <Input
                                                                 type="time"
-                                                                className="h-8 text-xs bg-slate-50"
+                                                                className="h-8 text-xs bg-slate-50 px-2 flex-1"
                                                                 value={dayData.exitTime || '18:00'}
                                                                 onChange={(e) => updateDay(dayIdx, 'exitTime', e.target.value)}
                                                             />
@@ -522,16 +530,17 @@ export default function LaborSettingsPage() {
                                                     </div>
                                                     <div className="space-y-1">
                                                         <Label className="text-[10px] text-slate-400">Almoço</Label>
-                                                        <div className="flex items-center gap-2">
+                                                        <div className="flex items-center gap-1.5">
                                                             <Input
                                                                 type="time"
-                                                                className="h-8 text-xs bg-orange-50/30"
+                                                                className="h-8 text-xs bg-orange-50/30 px-2 border-orange-100 flex-1"
                                                                 value={dayData.breakStartTime || '12:00'}
                                                                 onChange={(e) => updateDay(dayIdx, 'breakStartTime', e.target.value)}
                                                             />
+                                                            <span className="text-[10px] text-slate-300">às</span>
                                                             <Input
                                                                 type="time"
-                                                                className="h-8 text-xs bg-orange-50/30"
+                                                                className="h-8 text-xs bg-orange-50/30 px-2 border-orange-100 flex-1"
                                                                 value={dayData.breakEndTime || '13:00'}
                                                                 onChange={(e) => updateDay(dayIdx, 'breakEndTime', e.target.value)}
                                                             />
