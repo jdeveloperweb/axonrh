@@ -9,13 +9,16 @@ import com.axonrh.timesheet.entity.enums.RecordStatus;
 import com.axonrh.timesheet.entity.enums.RecordType;
 import com.axonrh.timesheet.repository.DailySummaryRepository;
 import com.axonrh.timesheet.repository.TimeRecordRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -353,6 +356,14 @@ public class DailySummaryService {
         int hours = minutes / 60;
         int mins = minutes % 60;
         return String.format("%02d:%02d", hours, mins);
+    }
+
+    private void publishEvent(String type, DailySummary summary) {
+        try {
+            kafkaTemplate.send("timesheet-events", type, summary);
+        } catch (Exception e) {
+            log.error("Erro ao publicar evento {}: {}", type, e.getMessage());
+        }
     }
 
     public record PeriodTotals(

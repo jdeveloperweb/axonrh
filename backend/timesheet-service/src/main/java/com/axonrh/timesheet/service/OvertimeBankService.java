@@ -15,12 +15,16 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -32,6 +36,7 @@ import java.util.UUID;
 public class OvertimeBankService {
 
     private final OvertimeBankRepository overtimeBankRepository;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @Value("${timesheet.overtime.bank-expiration-months:6}")
     private int defaultExpirationMonths;
