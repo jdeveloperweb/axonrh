@@ -385,14 +385,18 @@ public class TimeAdjustmentService {
     }
 
     private void publishEvent(String eventType, TimeAdjustment adjustment) {
-        Map<String, Object> event = new HashMap<>();
-        event.put("eventType", eventType);
-        event.put("tenantId", adjustment.getTenantId().toString());
-        event.put("adjustmentId", adjustment.getId().toString());
-        event.put("employeeId", adjustment.getEmployeeId().toString());
-        event.put("status", adjustment.getStatus().name());
-        event.put("timestamp", LocalDateTime.now().toString());
+        try {
+            Map<String, Object> event = new HashMap<>();
+            event.put("eventType", eventType);
+            event.put("tenantId", adjustment.getTenantId().toString());
+            event.put("adjustmentId", adjustment.getId().toString());
+            event.put("employeeId", adjustment.getEmployeeId().toString());
+            event.put("status", adjustment.getStatus().name());
+            event.put("timestamp", LocalDateTime.now().toString());
 
-        kafkaTemplate.send("timesheet.domain.events", adjustment.getEmployeeId().toString(), event);
+            kafkaTemplate.send("timesheet.domain.events", adjustment.getEmployeeId().toString(), event);
+        } catch (Exception e) {
+            log.error("Erro ao enviar evento para o Kafka: {}", e.getMessage());
+        }
     }
 }

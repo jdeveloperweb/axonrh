@@ -1,6 +1,7 @@
 package com.axonrh.timesheet.dto;
 
 import com.axonrh.timesheet.entity.enums.ScheduleType;
+import com.axonrh.timesheet.entity.enums.WorkRegime;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -32,6 +33,8 @@ public class WorkScheduleRequest {
 
     @NotNull(message = "Tipo de escala e obrigatorio")
     private ScheduleType scheduleType;
+
+    private WorkRegime workRegime;
 
     @NotNull(message = "Carga horaria semanal e obrigatoria")
     private Integer weeklyHoursMinutes;

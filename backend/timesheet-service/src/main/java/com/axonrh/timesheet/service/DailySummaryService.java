@@ -32,11 +32,26 @@ import java.util.UUID;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class DailySummaryService {
 
     private final DailySummaryRepository dailySummaryRepository;
     private final TimeRecordRepository timeRecordRepository;
+    private final OvertimeBankService overtimeBankService;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final ObjectMapper objectMapper;
+
+    public DailySummaryService(
+            DailySummaryRepository dailySummaryRepository,
+            TimeRecordRepository timeRecordRepository,
+            OvertimeBankService overtimeBankService,
+            @Qualifier("timesheetKafkaTemplate") KafkaTemplate<String, Object> kafkaTemplate,
+            ObjectMapper objectMapper) {
+        this.dailySummaryRepository = dailySummaryRepository;
+        this.timeRecordRepository = timeRecordRepository;
+        this.overtimeBankService = overtimeBankService;
+        this.kafkaTemplate = kafkaTemplate;
+        this.objectMapper = objectMapper;
+    }
 
     @Value("${timesheet.night-shift.start-hour:22}")
     private int nightShiftStartHour;
@@ -49,7 +64,7 @@ public class DailySummaryService {
      */
     @Transactional
     @CacheEvict(value = "timeRecords", key = "#employeeId + '-' + #date")
-    public void updateDailySummary(UUID tenantId, UUID employeeId, LocalDate date) {
+    public DailySummary updateDailySummary(UUID tenantId, UUID employeeId, LocalDate date) {
         // Buscar ou criar resumo
         DailySummary summary = dailySummaryRepository
                 .findByTenantIdAndEmployeeIdAndSummaryDate(tenantId, employeeId, date)
@@ -65,8 +80,31 @@ public class DailySummaryService {
         // Calcular totais
         calculateTotals(summary, records);
 
-        dailySummaryRepository.save(summary);
-        log.debug("Resumo diario atualizado - colaborador: {}, data: {}", employeeId, date);
+        DailySummary saved = dailySummaryRepository.save(summary);
+
+        // Sincronizar com Banco de Horas (se houver horas extras ou deficit)
+        syncWithOvertimeBank(tenantId, employeeId, date, saved);
+
+        publishEvent("DAILY_SUMMARY_UPDATED", saved);
+
+        return saved;
+    }
+
+    private void syncWithOvertimeBank(UUID tenantId, UUID employeeId, LocalDate date, DailySummary summary) {
+        try {
+            // TODO: Verificar se a escala do colaborador permite banco de horas
+            // Por enquanto, sincroniza sempre que houver saldo
+            int balance = 0;
+            if (summary.getOvertimeMinutes() > 0) {
+                balance = summary.getOvertimeMinutes();
+            } else if (summary.getDeficitMinutes() > 0) {
+                balance = -summary.getDeficitMinutes();
+            }
+
+            overtimeBankService.syncDailyBalance(tenantId, employeeId, date, balance);
+        } catch (Exception e) {
+            log.error("Erro ao sincronizar com banco de horas: {}", e.getMessage());
+        }
     }
 
     /**
@@ -80,7 +118,37 @@ public class DailySummaryService {
                 .findByTenantIdAndEmployeeIdAndSummaryDateBetweenOrderBySummaryDateAsc(
                         tenantId, employeeId, startDate, endDate);
 
-        return summaries.stream().map(this::toResponse).toList();
+        java.util.Map<LocalDate, DailySummary> summaryMap = summaries.stream()
+                .collect(java.util.stream.Collectors.toMap(DailySummary::getSummaryDate, s -> s));
+
+        return startDate.datesUntil(endDate.plusDays(1))
+                .map(date -> {
+                    DailySummary summary = summaryMap.get(date);
+                    if (summary != null) {
+                        return toResponse(summary);
+                    } else {
+                        // Criar resumo virtual para dias sem registro
+                        return DailySummaryResponse.builder()
+                                .employeeId(employeeId)
+                                .summaryDate(date)
+                                .dayOfWeek(getDayOfWeekLabel(date.getDayOfWeek()))
+                                .expectedWorkMinutes(480) // Padrao
+                                .expectedWorkFormatted("08:00")
+                                .workedMinutes(0)
+                                .workedFormatted("00:00")
+                                .overtimeMinutes(0)
+                                .overtimeFormatted("00:00")
+                                .deficitMinutes(480)
+                                .deficitFormatted("08:00")
+                                .isAbsent(true) // Considerar falta se nao ha resumo
+                                .hasMissingRecords(true)
+                                .balanceMinutes(-480)
+                                .balanceFormatted("08:00")
+                                .isPositive(false)
+                                .build();
+                    }
+                })
+                .toList();
     }
 
     /**

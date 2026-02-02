@@ -1,6 +1,7 @@
 package com.axonrh.timesheet.entity;
 
 import com.axonrh.timesheet.entity.enums.ScheduleType;
+import com.axonrh.timesheet.entity.enums.WorkRegime;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -46,6 +47,10 @@ public class WorkSchedule {
     @Enumerated(EnumType.STRING)
     @Column(name = "schedule_type", nullable = false, length = 20)
     private ScheduleType scheduleType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "work_regime", length = 30)
+    private WorkRegime workRegime;
 
     // Carga horaria semanal em minutos
     @Column(name = "weekly_hours_minutes", nullable = false)

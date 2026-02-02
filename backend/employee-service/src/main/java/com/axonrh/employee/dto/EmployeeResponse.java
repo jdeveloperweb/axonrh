@@ -63,6 +63,7 @@ public class EmployeeResponse implements Serializable {
     private Integer hybridFrequency;
     private Integer weeklyHours;
     private String shift;
+    private UUID workScheduleId;
     private Integer yearsOfService;
 
     // Salario

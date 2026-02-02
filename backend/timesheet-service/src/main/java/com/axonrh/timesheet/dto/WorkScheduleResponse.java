@@ -1,6 +1,7 @@
 package com.axonrh.timesheet.dto;
 
 import com.axonrh.timesheet.entity.enums.ScheduleType;
+import com.axonrh.timesheet.entity.enums.WorkRegime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -29,6 +30,9 @@ public class WorkScheduleResponse {
 
     private ScheduleType scheduleType;
     private String scheduleTypeLabel;
+
+    private WorkRegime workRegime;
+    private String workRegimeLabel;
 
     private Integer weeklyHoursMinutes;
     private String weeklyHoursFormatted; // "44h00"

@@ -129,6 +129,8 @@ public class EmployeeRequest {
 
     private String shift;
 
+    private UUID workScheduleId;
+
     // ==================== Dados Bancarios ====================
 
     private String bankCode;

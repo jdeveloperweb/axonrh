@@ -23,6 +23,7 @@ import { Label } from '@/components/ui/label';
 import { employeesApi, EmployeeCreateRequest, Department, Position, CostCenter } from '@/lib/api/employees';
 import { managersApi, ManagerDTO } from '@/lib/api/managers';
 import { userApi } from '@/lib/api/users';
+import { timesheetApi } from '@/lib/api/timesheet';
 import { useToast } from '@/hooks/use-toast';
 import { cn, isValidCpf, isValidEmail } from '@/lib/utils';
 import { DocumentsTab } from './DocumentsTab';
@@ -73,6 +74,7 @@ interface FormData {
     allowPlatformAccess: boolean;
     platformPassword?: string;
     platformRoles: string[];
+    workScheduleId: string;
 }
 
 interface EmployeeFormProps {
@@ -127,6 +129,7 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
         allowPlatformAccess: false,
         platformPassword: '',
         platformRoles: ['COLABORADOR'],
+        workScheduleId: '',
     });
 
     const [showPassword, setShowPassword] = useState(false);
@@ -143,6 +146,7 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
     const [positions, setPositions] = useState<Position[]>([]);
     const [costCenters, setCostCenters] = useState<CostCenter[]>([]);
     const [managers, setManagers] = useState<ManagerDTO[]>([]);
+    const [schedules, setSchedules] = useState<any[]>([]);
     const [loadingReferenceData, setLoadingReferenceData] = useState(true);
 
     // Load initial reference data
@@ -150,15 +154,17 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
         const loadData = async () => {
             try {
                 setLoadingReferenceData(true);
-                const [depts, centers, mgrs] = await Promise.all([
+                const [depts, centers, mgrs, scheds] = await Promise.all([
                     employeesApi.getDepartments(),
                     employeesApi.getCostCenters(),
-                    managersApi.list()
+                    managersApi.list(),
+                    timesheetApi.listSchedules()
                 ]);
 
                 setDepartments(depts);
                 setCostCenters(centers);
                 setManagers(mgrs);
+                setSchedules(scheds);
             } catch (error: any) {
                 console.error('❌ Failed to load reference data:', error);
                 if (error.stack) {
@@ -242,7 +248,8 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                     state: initialData.addressState || prev.address.state,
                     zipCode: initialData.addressZipCode || prev.address.zipCode,
                     country: initialData.addressCountry || prev.address.country,
-                }
+                },
+                workScheduleId: initialData.workScheduleId || prev.workScheduleId
             }));
             setErrors({});
         }
@@ -398,6 +405,7 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                 workRegime: formData.workRegime,
                 hybridWorkDays: formData.hybridWorkDays,
                 hybridFrequency: formData.hybridFrequency,
+                workScheduleId: cleanId(formData.workScheduleId),
                 addressStreet: formData.address.street?.trim() || undefined,
                 addressNumber: formData.address.number?.trim() || undefined,
                 addressComplement: formData.address.complement?.trim() || undefined,
@@ -878,14 +886,33 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                             </div>
                             <div>
                                 <label className="block text-sm font-medium mb-1">Carga Horária Semanal</label>
-                                <input type="number" name="workHoursPerWeek" value={formData.workHoursPerWeek} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg" />
+                                <select
+                                    name="workScheduleId"
+                                    value={formData.workScheduleId}
+                                    onChange={(e) => {
+                                        const scheduleId = e.target.value;
+                                        const schedule = schedules.find(s => s.id === scheduleId);
+                                        setFormData(prev => ({
+                                            ...prev,
+                                            workScheduleId: scheduleId,
+                                            workRegime: schedule?.workRegime || prev.workRegime,
+                                            workHoursPerWeek: schedule?.weeklyHoursMinutes ? schedule.weeklyHoursMinutes / 60 : prev.workHoursPerWeek
+                                        }));
+                                    }}
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg"
+                                >
+                                    <option value="">Selecione a Escala</option>
+                                    {schedules.map(s => (
+                                        <option key={s.id} value={s.id}>{s.name} ({s.weeklyHoursFormatted})</option>
+                                    ))}
+                                </select>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium mb-1">Regime de Trabalho</label>
                                 <select name="workRegime" value={formData.workRegime} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg">
                                     <option value="PRESENCIAL">Presencial</option>
-                                    <option value="REMOTE">Home Office (Total)</option>
-                                    <option value="HYBRID">Híbrido</option>
+                                    <option value="REMOTO">Home Office (Total)</option>
+                                    <option value="HIBRIDO">Híbrido</option>
                                 </select>
                             </div>
                         </div>

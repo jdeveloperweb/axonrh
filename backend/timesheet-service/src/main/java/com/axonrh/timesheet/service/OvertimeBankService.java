@@ -206,10 +206,17 @@ public class OvertimeBankService {
 
         Object[] totals = overtimeBankRepository.getTotalsInPeriod(tenantId, employeeId, startDate, endDate);
 
-        int totalCredit = totals[0] != null ? ((Number) totals[0]).intValue() : 0;
-        int totalDebit = totals[1] != null ? ((Number) totals[1]).intValue() : 0;
-        int totalExpired = totals[2] != null ? ((Number) totals[2]).intValue() : 0;
-        int totalPaid = totals[3] != null ? ((Number) totals[3]).intValue() : 0;
+        int totalCredit = 0;
+        int totalDebit = 0;
+        int totalExpired = 0;
+        int totalPaid = 0;
+
+        if (totals != null && totals.length >= 4) {
+            totalCredit = totals[0] != null ? ((Number) totals[0]).intValue() : 0;
+            totalDebit = totals[1] != null ? ((Number) totals[1]).intValue() : 0;
+            totalExpired = totals[2] != null ? ((Number) totals[2]).intValue() : 0;
+            totalPaid = totals[3] != null ? ((Number) totals[3]).intValue() : 0;
+        }
 
         // Horas proximas de expirar (proximo mes)
         List<OvertimeBank> expiringSoon = overtimeBankRepository.findCreditsExpiringSoon(
@@ -270,6 +277,84 @@ public class OvertimeBankService {
         // Marcar horas como expiradas
         // TODO: Implementar logica por tenant
         log.info("Processamento de expiracao concluido");
+    }
+
+    /**
+     * Sincroniza o saldo diario com o banco de horas.
+     * Chamado pelo DailySummaryService.
+     */
+    @Transactional
+    public void syncDailyBalance(UUID tenantId, UUID employeeId, LocalDate date, int minutes) {
+        // Buscar movimentacoes ja existentes para este dia (que nao sejam ajustes manuais ou pagamentos)
+        List<OvertimeBank> existing = overtimeBankRepository
+                .findByTenantIdAndEmployeeIdAndReferenceDateBetweenOrderByReferenceDateAsc(
+                        tenantId, employeeId, date, date)
+                .stream()
+                .filter(ob -> ob.getType() == OvertimeBankType.CREDIT || ob.getType() == OvertimeBankType.DEBIT)
+                .toList();
+
+        if (minutes == 0) {
+            // Se o saldo agora e zero, remover movimentacoes de sistema existentes
+            if (!existing.isEmpty()) {
+                overtimeBankRepository.deleteAll(existing);
+            }
+            return;
+        }
+
+        OvertimeBank movement;
+        if (!existing.isEmpty()) {
+            // Atualizar a primeira movimentacao encontrada
+            movement = existing.get(0);
+            // Se houver mais de uma, remover as outras (limpeza)
+            if (existing.size() > 1) {
+                overtimeBankRepository.deleteAll(existing.subList(1, existing.size()));
+            }
+        } else {
+            // Criar nova movimentacao
+            movement = new OvertimeBank();
+            movement.setTenantId(tenantId);
+            movement.setEmployeeId(employeeId);
+            movement.setReferenceDate(date);
+        }
+
+        movement.setType(minutes > 0 ? OvertimeBankType.CREDIT : OvertimeBankType.DEBIT);
+        movement.setMinutes(minutes);
+        movement.setOriginalMinutes(minutes);
+        movement.setDescription(minutes > 0 ? "Horas extras do dia" : "Debito/Falta do dia");
+        movement.setMultiplier(1.0);
+        
+        // Calcular saldo apos (precisamos do saldo anterior)
+        int balanceBefore = calculateBalanceAtDate(tenantId, employeeId, date.minusDays(1));
+        movement.setBalanceAfter(balanceBefore + minutes);
+
+        overtimeBankRepository.save(movement);
+        
+        publishEvent("OVERTIME_SYNCED", movement);
+    }
+
+    private int calculateBalanceAtDate(UUID tenantId, UUID employeeId, LocalDate date) {
+        // Simplificacao: retorna saldo atual se for para o passado, 
+        // ou calcula somando tudo ate a data.
+        // Como o banco e uma sequencia de movimentos, o ideal e somar.
+        return overtimeBankRepository.calculateCurrentBalance(tenantId, employeeId);
+        // TODO: Melhorar calculo de saldo retroativo se necessario
+    }
+
+    private void publishEvent(String eventType, OvertimeBank movement) {
+        try {
+            Map<String, Object> event = new HashMap<>();
+            event.put("eventType", eventType);
+            event.put("tenantId", movement.getTenantId().toString());
+            event.put("movementId", movement.getId().toString());
+            event.put("employeeId", movement.getEmployeeId().toString());
+            event.put("type", movement.getType().name());
+            event.put("minutes", movement.getMinutes());
+            event.put("timestamp", LocalDateTime.now().toString());
+
+            kafkaTemplate.send("timesheet.domain.events", movement.getEmployeeId().toString(), event);
+        } catch (Exception e) {
+            log.error("Erro ao publicar evento Kafka: {}", e.getMessage());
+        }
     }
 
     private OvertimeBankResponse toResponse(OvertimeBank entry) {

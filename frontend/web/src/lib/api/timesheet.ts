@@ -98,6 +98,8 @@ export interface WorkSchedule {
   description?: string;
   scheduleType: 'FIXED' | 'FLEXIBLE' | 'SHIFT' | 'PART_TIME' | 'INTERMITTENT';
   scheduleTypeLabel: string;
+  workRegime?: 'PRESENCIAL' | 'REMOTO' | 'HIBRIDO';
+  workRegimeLabel?: string;
   weeklyHoursMinutes: number;
   weeklyHoursFormatted: string;
   toleranceMinutes: number;
@@ -218,6 +220,7 @@ export interface WorkScheduleRequest {
   name: string;
   description?: string;
   scheduleType: string;
+  workRegime?: string;
   weeklyHoursMinutes: number;
   toleranceMinutes?: number;
   minBreakMinutes?: number;

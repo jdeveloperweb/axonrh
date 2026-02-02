@@ -394,15 +394,20 @@ public class TimeRecordService {
     }
 
     private void publishEvent(String eventType, TimeRecord record) {
-        Map<String, Object> event = new HashMap<>();
-        event.put("eventType", eventType);
-        event.put("tenantId", record.getTenantId().toString());
-        event.put("recordId", record.getId().toString());
-        event.put("employeeId", record.getEmployeeId().toString());
-        event.put("recordType", record.getRecordType().name());
-        event.put("timestamp", LocalDateTime.now().toString());
+        try {
+            Map<String, Object> event = new HashMap<>();
+            event.put("eventType", eventType);
+            event.put("tenantId", record.getTenantId().toString());
+            event.put("recordId", record.getId().toString());
+            event.put("employeeId", record.getEmployeeId().toString());
+            event.put("recordType", record.getRecordType().name());
+            event.put("recordTime", record.getRecordTime().toString());
+            event.put("timestamp", LocalDateTime.now().toString());
 
-        kafkaTemplate.send("timesheet.domain.events", record.getEmployeeId().toString(), event);
+            kafkaTemplate.send("timesheet.domain.events", record.getEmployeeId().toString(), event);
+        } catch (Exception e) {
+            log.error("Erro ao publicar evento Kafka: {}", e.getMessage());
+        }
     }
 
     public record GeofenceValidationResult(boolean isWithin, UUID geofenceId, String geofenceName) {}

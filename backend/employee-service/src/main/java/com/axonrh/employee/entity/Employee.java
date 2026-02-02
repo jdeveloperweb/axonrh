@@ -233,6 +233,9 @@ public class Employee {
     @Column(name = "shift", length = 50)
     private String shift;
 
+    @Column(name = "work_schedule_id")
+    private UUID workScheduleId;
+
     // ==================== Dados Bancarios ====================
 
     @Column(name = "bank_code", length = 10)

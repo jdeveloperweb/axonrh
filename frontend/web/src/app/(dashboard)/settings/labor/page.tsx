@@ -55,6 +55,7 @@ export default function LaborSettingsPage() {
         name: '',
         description: '',
         scheduleType: 'FIXED',
+        workRegime: 'PRESENCIAL',
         weeklyHoursMinutes: 2640,
         toleranceMinutes: 10,
         minBreakMinutes: 60,
@@ -96,6 +97,7 @@ export default function LaborSettingsPage() {
             name: '',
             description: '',
             scheduleType: 'FIXED',
+            workRegime: 'PRESENCIAL',
             weeklyHoursMinutes: 2640,
             toleranceMinutes: 10,
             minBreakMinutes: 60,
@@ -127,6 +129,7 @@ export default function LaborSettingsPage() {
             maxDailyOvertimeMinutes: schedule.maxDailyOvertimeMinutes,
             overtimeBankEnabled: schedule.overtimeBankEnabled,
             overtimeBankExpirationMonths: schedule.overtimeBankExpirationMonths,
+            workRegime: schedule.workRegime,
             days: schedule.days.map(d => ({ ...d }))
         });
         setIsEditModalOpen(true);
@@ -283,7 +286,7 @@ export default function LaborSettingsPage() {
                                                 </div>
                                                 <div>
                                                     <CardTitle className="text-lg">{schedule.name}</CardTitle>
-                                                    <CardDescription>{schedule.scheduleTypeLabel}</CardDescription>
+                                                    <CardDescription>{schedule.scheduleTypeLabel} • {schedule.workRegimeLabel || schedule.workRegime}</CardDescription>
                                                 </div>
                                             </div>
                                             <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -412,6 +415,22 @@ export default function LaborSettingsPage() {
                                         <SelectItem value="FIXED">Fixo (Entrada/Saída Definidos)</SelectItem>
                                         <SelectItem value="FLEXIBLE">Flexível (Banco de Horas)</SelectItem>
                                         <SelectItem value="SHIFT">Turnos / Revezamento</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="work-regime">Regime de Trabalho</Label>
+                                <Select
+                                    value={currentSchedule.workRegime}
+                                    onValueChange={(v) => setCurrentSchedule({ ...currentSchedule, workRegime: v })}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="PRESENCIAL">Presencial</SelectItem>
+                                        <SelectItem value="REMOTO">Remoto (Home Office)</SelectItem>
+                                        <SelectItem value="HIBRIDO">Híbrido</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>

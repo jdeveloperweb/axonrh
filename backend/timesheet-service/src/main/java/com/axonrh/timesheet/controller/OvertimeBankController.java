@@ -33,10 +33,14 @@ public class OvertimeBankController {
     @GetMapping("/employee/{employeeId}/balance")
     @Operation(summary = "Saldo atual", description = "Retorna o saldo atual do banco de horas")
     @PreAuthorize("hasAnyAuthority('TIMESHEET:READ', 'TIMESHEET:UPDATE', 'ADMIN')")
-    public ResponseEntity<Map<String, Object>> getCurrentBalance(@PathVariable UUID employeeId) {
-        int balance = overtimeBankService.getCurrentBalance(employeeId);
+    public ResponseEntity<Map<String, Object>> getCurrentBalance(
+            @PathVariable String employeeId,
+            @AuthenticationPrincipal Jwt jwt) {
+        
+        UUID resolvedId = resolveEmployeeId(employeeId, jwt);
+        int balance = overtimeBankService.getCurrentBalance(resolvedId);
         return ResponseEntity.ok(Map.of(
-                "employeeId", employeeId,
+                "employeeId", resolvedId,
                 "balanceMinutes", balance,
                 "balanceFormatted", formatMinutes(balance),
                 "isPositive", balance >= 0
@@ -47,11 +51,13 @@ public class OvertimeBankController {
     @Operation(summary = "Resumo do banco de horas", description = "Retorna resumo completo do banco de horas")
     @PreAuthorize("hasAnyAuthority('TIMESHEET:READ', 'TIMESHEET:UPDATE', 'ADMIN')")
     public ResponseEntity<OvertimeBankSummary> getSummary(
-            @PathVariable UUID employeeId,
+            @PathVariable String employeeId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @AuthenticationPrincipal Jwt jwt) {
 
-        OvertimeBankSummary summary = overtimeBankService.getSummary(employeeId, startDate, endDate);
+        UUID resolvedId = resolveEmployeeId(employeeId, jwt);
+        OvertimeBankSummary summary = overtimeBankService.getSummary(resolvedId, startDate, endDate);
         return ResponseEntity.ok(summary);
     }
 
@@ -59,10 +65,12 @@ public class OvertimeBankController {
     @Operation(summary = "Movimentacoes", description = "Lista movimentacoes do banco de horas")
     @PreAuthorize("hasAnyAuthority('TIMESHEET:READ', 'TIMESHEET:UPDATE', 'ADMIN')")
     public ResponseEntity<Page<OvertimeBankResponse>> getMovements(
-            @PathVariable UUID employeeId,
+            @PathVariable String employeeId,
+            @AuthenticationPrincipal Jwt jwt,
             Pageable pageable) {
 
-        Page<OvertimeBankResponse> movements = overtimeBankService.getMovements(employeeId, pageable);
+        UUID resolvedId = resolveEmployeeId(employeeId, jwt);
+        Page<OvertimeBankResponse> movements = overtimeBankService.getMovements(resolvedId, pageable);
         return ResponseEntity.ok(movements);
     }
 
@@ -70,15 +78,16 @@ public class OvertimeBankController {
     @Operation(summary = "Registrar compensacao", description = "Registra compensacao de horas (folga)")
     @PreAuthorize("hasAnyAuthority('TIMESHEET:UPDATE', 'ADMIN')")
     public ResponseEntity<OvertimeBankResponse> addDebit(
-            @PathVariable UUID employeeId,
+            @PathVariable String employeeId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam int minutes,
             @RequestParam(required = false) String description,
             @AuthenticationPrincipal Jwt jwt) {
 
+        UUID resolvedId = resolveEmployeeId(employeeId, jwt);
         UUID userId = UUID.fromString(jwt.getSubject());
         OvertimeBankResponse response = overtimeBankService.addDebit(
-                employeeId, date, minutes, description, userId);
+                resolvedId, date, minutes, description, userId);
         return ResponseEntity.ok(response);
     }
 
@@ -86,15 +95,16 @@ public class OvertimeBankController {
     @Operation(summary = "Ajuste manual", description = "Registra ajuste manual no banco de horas")
     @PreAuthorize("hasAnyAuthority('TIMESHEET:UPDATE', 'ADMIN')")
     public ResponseEntity<OvertimeBankResponse> addAdjustment(
-            @PathVariable UUID employeeId,
+            @PathVariable String employeeId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam int minutes,
             @RequestParam String description,
             @AuthenticationPrincipal Jwt jwt) {
 
+        UUID resolvedId = resolveEmployeeId(employeeId, jwt);
         UUID approverId = UUID.fromString(jwt.getSubject());
         OvertimeBankResponse response = overtimeBankService.addAdjustment(
-                employeeId, date, minutes, description, approverId);
+                resolvedId, date, minutes, description, approverId);
         return ResponseEntity.ok(response);
     }
 
@@ -102,16 +112,24 @@ public class OvertimeBankController {
     @Operation(summary = "Pagamento de horas", description = "Registra pagamento de horas extras em dinheiro")
     @PreAuthorize("hasAnyAuthority('TIMESHEET:UPDATE', 'ADMIN')")
     public ResponseEntity<OvertimeBankResponse> addPayout(
-            @PathVariable UUID employeeId,
+            @PathVariable String employeeId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam int minutes,
             @RequestParam(required = false) String description,
             @AuthenticationPrincipal Jwt jwt) {
 
+        UUID resolvedId = resolveEmployeeId(employeeId, jwt);
         UUID approverId = UUID.fromString(jwt.getSubject());
         OvertimeBankResponse response = overtimeBankService.addPayout(
-                employeeId, date, minutes, description, approverId);
+                resolvedId, date, minutes, description, approverId);
         return ResponseEntity.ok(response);
+    }
+
+    private UUID resolveEmployeeId(String employeeId, Jwt jwt) {
+        if ("me".equalsIgnoreCase(employeeId)) {
+            return UUID.fromString(jwt.getSubject());
+        }
+        return UUID.fromString(employeeId);
     }
 
     private String formatMinutes(int minutes) {

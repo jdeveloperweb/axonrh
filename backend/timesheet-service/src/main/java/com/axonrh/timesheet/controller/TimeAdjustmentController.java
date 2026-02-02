@@ -52,14 +52,28 @@ public class TimeAdjustmentController {
         return ResponseEntity.ok(adjustments);
     }
 
+    @GetMapping("/my")
+    @Operation(summary = "Meus ajustes", description = "Lista ajustes do colaborador logado")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:CREATE', 'ADMIN')")
+    public ResponseEntity<Page<TimeAdjustmentResponse>> getMyAdjustments(
+            @AuthenticationPrincipal Jwt jwt,
+            Pageable pageable) {
+
+        UUID employeeId = UUID.fromString(jwt.getSubject());
+        Page<TimeAdjustmentResponse> adjustments = adjustmentService.getEmployeeAdjustments(employeeId, pageable);
+        return ResponseEntity.ok(adjustments);
+    }
+
     @GetMapping("/employee/{employeeId}")
     @Operation(summary = "Ajustes do colaborador", description = "Lista ajustes de um colaborador")
     @PreAuthorize("hasAnyAuthority('TIMESHEET:READ', 'TIMESHEET:UPDATE', 'ADMIN')")
     public ResponseEntity<Page<TimeAdjustmentResponse>> getEmployeeAdjustments(
-            @PathVariable UUID employeeId,
+            @PathVariable String employeeId,
+            @AuthenticationPrincipal Jwt jwt,
             Pageable pageable) {
 
-        Page<TimeAdjustmentResponse> adjustments = adjustmentService.getEmployeeAdjustments(employeeId, pageable);
+        UUID resolvedId = resolveEmployeeId(employeeId, jwt);
+        Page<TimeAdjustmentResponse> adjustments = adjustmentService.getEmployeeAdjustments(resolvedId, pageable);
         return ResponseEntity.ok(adjustments);
     }
 
@@ -113,5 +127,12 @@ public class TimeAdjustmentController {
     public ResponseEntity<Map<String, Long>> countPendingAdjustments() {
         long count = adjustmentService.countPendingAdjustments();
         return ResponseEntity.ok(Map.of("count", count));
+    }
+
+    private UUID resolveEmployeeId(String employeeId, Jwt jwt) {
+        if ("me".equalsIgnoreCase(employeeId)) {
+            return UUID.fromString(jwt.getSubject());
+        }
+        return UUID.fromString(employeeId);
     }
 }

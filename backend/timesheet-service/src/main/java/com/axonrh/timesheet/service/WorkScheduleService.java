@@ -69,6 +69,7 @@ public class WorkScheduleService {
                 .name(request.getName())
                 .description(request.getDescription())
                 .scheduleType(request.getScheduleType())
+                .workRegime(request.getWorkRegime())
                 .weeklyHoursMinutes(request.getWeeklyHoursMinutes())
                 .toleranceMinutes(request.getToleranceMinutes())
                 .minBreakMinutes(request.getMinBreakMinutes())
@@ -111,6 +112,7 @@ public class WorkScheduleService {
         entity.setName(request.getName());
         entity.setDescription(request.getDescription());
         entity.setScheduleType(request.getScheduleType());
+        entity.setWorkRegime(request.getWorkRegime());
         entity.setWeeklyHoursMinutes(request.getWeeklyHoursMinutes());
         entity.setToleranceMinutes(request.getToleranceMinutes());
         entity.setMinBreakMinutes(request.getMinBreakMinutes());
@@ -171,6 +173,8 @@ public class WorkScheduleService {
                 .name(entity.getName())
                 .description(entity.getDescription())
                 .scheduleType(entity.getScheduleType())
+                .workRegime(entity.getWorkRegime())
+                .workRegimeLabel(entity.getWorkRegime() != null ? entity.getWorkRegime().name() : null)
                 .weeklyHoursMinutes(entity.getWeeklyHoursMinutes())
                 .toleranceMinutes(entity.getToleranceMinutes())
                 .minBreakMinutes(entity.getMinBreakMinutes())

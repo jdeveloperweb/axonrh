@@ -83,11 +83,13 @@ public class TimeRecordController {
     @Operation(summary = "Buscar registros por periodo", description = "Lista registros de ponto de um colaborador")
     @PreAuthorize("hasAnyAuthority('TIMESHEET:READ', 'TIMESHEET:UPDATE', 'ADMIN')")
     public ResponseEntity<List<TimeRecordResponse>> getRecordsByPeriod(
-            @PathVariable UUID employeeId,
+            @PathVariable String employeeId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @AuthenticationPrincipal Jwt jwt) {
 
-        List<TimeRecordResponse> records = timeRecordService.getRecordsByPeriod(employeeId, startDate, endDate);
+        UUID resolvedId = resolveEmployeeId(employeeId, jwt);
+        List<TimeRecordResponse> records = timeRecordService.getRecordsByPeriod(resolvedId, startDate, endDate);
         return ResponseEntity.ok(records);
     }
 
@@ -95,18 +97,24 @@ public class TimeRecordController {
     @Operation(summary = "Buscar registros por data", description = "Lista registros de um dia especifico")
     @PreAuthorize("hasAnyAuthority('TIMESHEET:READ', 'TIMESHEET:UPDATE', 'ADMIN')")
     public ResponseEntity<List<TimeRecordResponse>> getRecordsByDate(
-            @PathVariable UUID employeeId,
-            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+            @PathVariable String employeeId,
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @AuthenticationPrincipal Jwt jwt) {
 
-        List<TimeRecordResponse> records = timeRecordService.getRecordsByDate(employeeId, date);
+        UUID resolvedId = resolveEmployeeId(employeeId, jwt);
+        List<TimeRecordResponse> records = timeRecordService.getRecordsByDate(resolvedId, date);
         return ResponseEntity.ok(records);
     }
 
     @GetMapping("/records/employee/{employeeId}/last")
     @Operation(summary = "Ultimo registro", description = "Retorna o ultimo registro do colaborador")
     @PreAuthorize("hasAnyAuthority('TIMESHEET:READ', 'TIMESHEET:UPDATE', 'ADMIN')")
-    public ResponseEntity<TimeRecordResponse> getLastRecord(@PathVariable UUID employeeId) {
-        return timeRecordService.getLastRecord(employeeId)
+    public ResponseEntity<TimeRecordResponse> getLastRecord(
+            @PathVariable String employeeId,
+            @AuthenticationPrincipal Jwt jwt) {
+        
+        UUID resolvedId = resolveEmployeeId(employeeId, jwt);
+        return timeRecordService.getLastRecord(resolvedId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -123,8 +131,12 @@ public class TimeRecordController {
     @GetMapping("/records/employee/{employeeId}/next-type")
     @Operation(summary = "Proximo tipo esperado", description = "Retorna o proximo tipo de registro esperado")
     @PreAuthorize("hasAnyAuthority('TIMESHEET:READ', 'TIMESHEET:CREATE', 'ADMIN')")
-    public ResponseEntity<Map<String, Object>> getNextExpectedType(@PathVariable UUID employeeId) {
-        RecordType nextType = timeRecordService.getExpectedNextRecordType(employeeId);
+    public ResponseEntity<Map<String, Object>> getNextExpectedType(
+            @PathVariable String employeeId,
+            @AuthenticationPrincipal Jwt jwt) {
+        
+        UUID resolvedId = resolveEmployeeId(employeeId, jwt);
+        RecordType nextType = timeRecordService.getExpectedNextRecordType(resolvedId);
         return ResponseEntity.ok(Map.of(
                 "nextType", nextType,
                 "label", getRecordTypeLabel(nextType)
@@ -181,11 +193,13 @@ public class TimeRecordController {
     @Operation(summary = "Espelho de ponto", description = "Retorna espelho de ponto de um periodo")
     @PreAuthorize("hasAnyAuthority('TIMESHEET:READ', 'TIMESHEET:UPDATE', 'ADMIN')")
     public ResponseEntity<List<DailySummaryResponse>> getTimesheet(
-            @PathVariable UUID employeeId,
+            @PathVariable String employeeId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @AuthenticationPrincipal Jwt jwt) {
 
-        List<DailySummaryResponse> timesheet = dailySummaryService.getTimesheetByPeriod(employeeId, startDate, endDate);
+        UUID resolvedId = resolveEmployeeId(employeeId, jwt);
+        List<DailySummaryResponse> timesheet = dailySummaryService.getTimesheetByPeriod(resolvedId, startDate, endDate);
         return ResponseEntity.ok(timesheet);
     }
 
@@ -193,10 +207,12 @@ public class TimeRecordController {
     @Operation(summary = "Resumo diario", description = "Retorna resumo de um dia especifico")
     @PreAuthorize("hasAnyAuthority('TIMESHEET:READ', 'TIMESHEET:UPDATE', 'ADMIN')")
     public ResponseEntity<DailySummaryResponse> getDailySummary(
-            @PathVariable UUID employeeId,
-            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+            @PathVariable String employeeId,
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @AuthenticationPrincipal Jwt jwt) {
 
-        return dailySummaryService.getDailySummary(employeeId, date)
+        UUID resolvedId = resolveEmployeeId(employeeId, jwt);
+        return dailySummaryService.getDailySummary(resolvedId, date)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -205,11 +221,13 @@ public class TimeRecordController {
     @Operation(summary = "Totais do periodo", description = "Retorna totais de horas de um periodo")
     @PreAuthorize("hasAnyAuthority('TIMESHEET:READ', 'TIMESHEET:UPDATE', 'ADMIN')")
     public ResponseEntity<DailySummaryService.PeriodTotals> getPeriodTotals(
-            @PathVariable UUID employeeId,
+            @PathVariable String employeeId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @AuthenticationPrincipal Jwt jwt) {
 
-        DailySummaryService.PeriodTotals totals = dailySummaryService.getPeriodTotals(employeeId, startDate, endDate);
+        UUID resolvedId = resolveEmployeeId(employeeId, jwt);
+        DailySummaryService.PeriodTotals totals = dailySummaryService.getPeriodTotals(resolvedId, startDate, endDate);
         return ResponseEntity.ok(totals);
     }
 
@@ -219,6 +237,13 @@ public class TimeRecordController {
     public ResponseEntity<Map<String, Long>> getStatistics() {
         Map<String, Long> stats = timeRecordService.getStatistics();
         return ResponseEntity.ok(stats);
+    }
+
+    private UUID resolveEmployeeId(String employeeId, Jwt jwt) {
+        if ("me".equalsIgnoreCase(employeeId)) {
+            return UUID.fromString(jwt.getSubject());
+        }
+        return UUID.fromString(employeeId);
     }
 
     private String getRecordTypeLabel(RecordType type) {
