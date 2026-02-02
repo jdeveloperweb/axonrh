@@ -61,7 +61,13 @@ export const SUPPORTED_FONTS = [
   'Lato',
   'Poppins',
   'Raleway',
-  'Playfair Display'
+  'Playfair Display',
+  'Nunito',
+  'Merriweather',
+  'PT Sans',
+  'Lora',
+  'Oxygen',
+  'Source Sans Pro'
 ] as const;
 
 export type SupportedFont = typeof SUPPORTED_FONTS[number];
@@ -79,6 +85,12 @@ export function getFontVariable(name: string): string {
     case 'Poppins': return 'var(--font-poppins)';
     case 'Raleway': return 'var(--font-raleway)';
     case 'Playfair Display': return 'var(--font-playfair)';
+    case 'Nunito': return 'var(--font-nunito)';
+    case 'Merriweather': return 'var(--font-merriweather)';
+    case 'PT Sans': return 'var(--font-ptsans)';
+    case 'Lora': return 'var(--font-lora)';
+    case 'Oxygen': return 'var(--font-oxygen)';
+    case 'Source Sans Pro': return 'var(--font-sourcesans)';
     default: return 'var(--font-primary)';
   }
 }
@@ -220,12 +232,15 @@ export const useThemeStore = create<ThemeState>()(
           applyFontSize(tenantTheme.baseFontSize);
         }
 
-        // Tenta aplicar a fonte se estiver presente no objeto (estamos passando o config como tenantTheme em alguns lugares)
-        const anyTheme = tenantTheme as any;
-        if (anyTheme.extraSettings?.fontFamily) {
-          applyFontToDocument(anyTheme.extraSettings.fontFamily);
-        } else if (anyTheme.fontFamily) {
-          applyFontToDocument(anyTheme.fontFamily);
+        // Aplica a fonte imediatamente
+        if (tenantTheme.fontFamily) {
+          applyFontToDocument(tenantTheme.fontFamily);
+        } else {
+          // Fallback se estiver passando o config como tenantTheme diretamente
+          const anyTheme = tenantTheme as any;
+          if (anyTheme.extraSettings?.fontFamily) {
+            applyFontToDocument(anyTheme.extraSettings.fontFamily);
+          }
         }
       },
 

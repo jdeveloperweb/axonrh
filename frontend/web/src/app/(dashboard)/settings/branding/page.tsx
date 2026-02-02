@@ -131,7 +131,7 @@ export default function BrandingPage() {
     const updateGlobalTheme = useCallback(() => {
         if (loading) return;
 
-        setTenantTheme({
+        const tenantTheme = {
             tenantId: config.tenantId || '',
             logoUrl: config.logoUrl || '',
             logoWidth: config.extraSettings?.logoWidth || 150,
@@ -148,13 +148,28 @@ export default function BrandingPage() {
             fontFamily: config.extraSettings?.fontFamily || 'Plus Jakarta Sans',
             customCss: config.customCss || '',
             faviconUrl: config.faviconUrl || ''
-        });
+        };
+
+        setTenantTheme(tenantTheme);
     }, [config, loading, setTenantTheme]);
 
     // Sincroniza em tempo real enquanto edita
     useEffect(() => {
         updateGlobalTheme();
-    }, [config.primaryColor, config.secondaryColor, config.accentColor, config.logoUrl, config.extraSettings?.logoWidth, config.extraSettings?.baseFontSize, config.extraSettings?.fontFamily, updateGlobalTheme]);
+    }, [
+        config.primaryColor,
+        config.secondaryColor,
+        config.accentColor,
+        config.backgroundColor,
+        config.surfaceColor,
+        config.textPrimaryColor,
+        config.textSecondaryColor,
+        config.logoUrl,
+        config.extraSettings?.logoWidth,
+        config.extraSettings?.baseFontSize,
+        config.extraSettings?.fontFamily,
+        updateGlobalTheme
+    ]);
 
     const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];

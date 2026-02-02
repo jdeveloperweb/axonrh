@@ -1,5 +1,23 @@
 import type { Metadata } from 'next';
-import { Outfit, Plus_Jakarta_Sans, Inter, Roboto, Open_Sans, Montserrat, Ubuntu, Lato, Poppins, Raleway, Playfair_Display } from 'next/font/google';
+import {
+  Outfit,
+  Plus_Jakarta_Sans,
+  Inter,
+  Roboto,
+  Open_Sans,
+  Montserrat,
+  Ubuntu,
+  Lato,
+  Poppins,
+  Raleway,
+  Playfair_Display,
+  Nunito,
+  Merriweather,
+  PT_Sans,
+  Lora,
+  Oxygen,
+  Source_Sans_3
+} from 'next/font/google';
 import './globals.css';
 
 
@@ -62,6 +80,39 @@ const playfair = Playfair_Display({
   variable: '--font-playfair',
   display: 'swap',
 });
+const nunito = Nunito({
+  subsets: ['latin'],
+  variable: '--font-nunito',
+  display: 'swap',
+});
+const merriweather = Merriweather({
+  weight: ['400', '700'],
+  subsets: ['latin'],
+  variable: '--font-merriweather',
+  display: 'swap',
+});
+const ptSans = PT_Sans({
+  weight: ['400', '700'],
+  subsets: ['latin'],
+  variable: '--font-ptsans',
+  display: 'swap',
+});
+const lora = Lora({
+  subsets: ['latin'],
+  variable: '--font-lora',
+  display: 'swap',
+});
+const oxygen = Oxygen({
+  weight: ['400', '700'],
+  subsets: ['latin'],
+  variable: '--font-oxygen',
+  display: 'swap',
+});
+const sourceSans = Source_Sans_3({
+  subsets: ['latin'],
+  variable: '--font-sourcesans',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'AxonRH - Gestão de RH e DP',
@@ -82,7 +133,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <body className={`${plusJakarta.variable} ${outfit.variable} ${inter.variable} ${roboto.variable} ${openSans.variable} ${montserrat.variable} ${ubuntu.variable} ${lato.variable} ${poppins.variable} ${raleway.variable} ${playfair.variable} font-sans`}>
+      <body className={`${plusJakarta.variable} ${outfit.variable} ${inter.variable} ${roboto.variable} ${openSans.variable} ${montserrat.variable} ${ubuntu.variable} ${lato.variable} ${poppins.variable} ${raleway.variable} ${playfair.variable} ${nunito.variable} ${merriweather.variable} ${ptSans.variable} ${lora.variable} ${oxygen.variable} ${sourceSans.variable} font-sans`}>
         {children}
       </body>
     </html>

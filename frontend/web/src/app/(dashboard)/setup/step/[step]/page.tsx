@@ -1073,7 +1073,18 @@ function Step4Branding({
     'Inter',
     'Roboto',
     'Open Sans',
-    'Montserrat'
+    'Montserrat',
+    'Ubuntu',
+    'Lato',
+    'Poppins',
+    'Raleway',
+    'Playfair Display',
+    'Nunito',
+    'Merriweather',
+    'PT Sans',
+    'Lora',
+    'Oxygen',
+    'Source Sans Pro'
   ];
 
   const getFontFamilyVar = (name: string) => {
@@ -1084,6 +1095,17 @@ function Step4Branding({
       case 'Roboto': return 'var(--font-roboto)';
       case 'Open Sans': return 'var(--font-opensans)';
       case 'Montserrat': return 'var(--font-montserrat)';
+      case 'Ubuntu': return 'var(--font-ubuntu)';
+      case 'Lato': return 'var(--font-lato)';
+      case 'Poppins': return 'var(--font-poppins)';
+      case 'Raleway': return 'var(--font-raleway)';
+      case 'Playfair Display': return 'var(--font-playfair)';
+      case 'Nunito': return 'var(--font-nunito)';
+      case 'Merriweather': return 'var(--font-merriweather)';
+      case 'PT Sans': return 'var(--font-ptsans)';
+      case 'Lora': return 'var(--font-lora)';
+      case 'Oxygen': return 'var(--font-oxygen)';
+      case 'Source Sans Pro': return 'var(--font-sourcesans)';
       default: return 'sans-serif';
     }
   };
