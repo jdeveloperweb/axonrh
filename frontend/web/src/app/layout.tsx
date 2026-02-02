@@ -119,7 +119,10 @@ export const metadata: Metadata = {
   description: 'Sistema Integrado de Gestão de RH e Departamento Pessoal com IA Conversacional',
   keywords: ['RH', 'Departamento Pessoal', 'Gestão de Pessoas', 'IA', 'HRIS'],
   icons: {
-    icon: '/favicon.png',
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.png', type: 'image/png' },
+    ],
     apple: '/favicon.png',
   },
 };
