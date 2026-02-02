@@ -49,27 +49,14 @@ export function Header() {
   return (
     <header className="header">
       {/* Mobile Menu Toggle */}
-      <div className="flex items-center gap-4 flex-1">
-        {/* Mobile Menu Toggle */}
-        <button
-          onClick={toggleMobileMenu}
-          className="p-2 rounded-[var(--radius-md)] hover:bg-[var(--color-surface-variant)] lg:hidden"
-          aria-label="Toggle Menu"
-        >
-          <Menu className="w-6 h-6" />
-        </button>
-
-        {/* Brand Logo in Header for better visibility */}
-        {useThemeStore.getState().tenantTheme?.logoUrl && (
-          <div className="hidden lg:flex items-center h-8">
-            <img
-              src={getPhotoUrl(useThemeStore.getState().tenantTheme?.logoUrl, undefined, 'logo') || ''}
-              alt="Brand"
-              className="h-full w-auto object-contain"
-            />
-          </div>
-        )}
-      </div>
+      {/* Mobile Menu Toggle */}
+      <button
+        onClick={toggleMobileMenu}
+        className="p-2 mr-2 rounded-[var(--radius-md)] hover:bg-[var(--color-surface-variant)] lg:hidden"
+        aria-label="Toggle Menu"
+      >
+        <Menu className="w-6 h-6" />
+      </button>
 
       {/* Search Bar Container */}
       <div className={cn(

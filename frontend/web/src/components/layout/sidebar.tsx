@@ -140,7 +140,7 @@ export function Sidebar() {
                     isSidebarCollapsed ? "min-w-[32px]" : ""
                   )}
                   style={{
-                    maxWidth: isSidebarCollapsed ? '32px' : '180px', // Limite um pouco maior para logos horizontais
+                    maxWidth: isSidebarCollapsed ? '32px' : `${tenantTheme.logoWidth || 150}px`,
                   }}
                 />
               </div>

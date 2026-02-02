@@ -76,7 +76,11 @@ export default function LoginClient() {
 
   // Carrega configuracoes do tenant
   useEffect(() => {
-    const tenantId = process.env.NEXT_PUBLIC_DEFAULT_TENANT_ID;
+    // Tenta pegar o tenantId de várias fontes
+    const tenantId = process.env.NEXT_PUBLIC_DEFAULT_TENANT_ID ||
+      localStorage.getItem('tenantId') ||
+      localStorage.getItem('setup_tenant_id');
+
     if (tenantId) {
       configApi
         .getThemeConfig(tenantId)
@@ -89,19 +93,23 @@ export default function LoginClient() {
             showPoweredBy: config.showPoweredBy,
           });
 
-          // Aplica tema do tenant
+          // Aplica tema do tenant globalmente
           setTenantTheme({
             tenantId: config.tenantId,
             logoUrl: config.logoUrl,
+            logoWidth: (config.extraSettings?.logoWidth as number) || 150,
             colors: {
-              primary: config.primaryColor,
-              secondary: config.secondaryColor,
-              accent: config.accentColor,
-              background: config.backgroundColor,
-              surface: config.surfaceColor,
-              textPrimary: config.textPrimaryColor,
-              textSecondary: config.textSecondaryColor,
+              primary: config.primaryColor || '#1E40AF',
+              secondary: config.secondaryColor || '#1E293B',
+              accent: config.accentColor || '#3B82F6',
+              background: config.backgroundColor || '#F8FAFC',
+              surface: config.surfaceColor || '#FFFFFF',
+              textPrimary: config.textPrimaryColor || '#0F172A',
+              textSecondary: config.textSecondaryColor || '#475569',
             },
+            baseFontSize: (config.extraSettings?.baseFontSize as number) || 16,
+            customCss: config.customCss,
+            faviconUrl: config.faviconUrl
           });
         })
         .catch(() => {
@@ -171,19 +179,24 @@ export default function LoginClient() {
         <div className="flex flex-col gap-4 sm:gap-6 text-center lg:text-left">
           <div className="flex items-center justify-center lg:justify-start gap-3">
             {loginConfig.logoUrl ? (
-              <Image src={getPhotoUrl(loginConfig.logoUrl) || ''} alt="Logo" width={150} height={48} className="h-10 sm:h-12 w-auto" unoptimized />
+              <img
+                src={getPhotoUrl(loginConfig.logoUrl, new Date().getTime().toString(), 'logo') || ''}
+                alt="Logo"
+                className="h-10 sm:h-12 w-auto object-contain"
+                style={{ maxWidth: `${useThemeStore.getState().tenantTheme?.logoWidth || 180}px` }}
+              />
             ) : (
               <h1 className="font-heading text-3xl sm:text-5xl font-extrabold tracking-tight">
-                <span className="text-slate-900">Axon</span>
-                <span className="text-sky-600">RH</span>
+                <span className="text-[var(--color-text-primary)]">Axon</span>
+                <span className="text-[var(--color-primary)]">RH</span>
               </h1>
             )}
           </div>
 
-          <h2 className="font-heading text-2xl sm:text-4xl font-semibold text-slate-900 leading-tight">
+          <h2 className="font-heading text-2xl sm:text-4xl font-semibold text-[var(--color-text-primary)] leading-tight">
             Boas-vindas ao seu acesso inteligente do ecossistema de RH
           </h2>
-          <p className="text-sm sm:text-lg text-slate-600 max-w-xl mx-auto lg:mx-0">
+          <p className="text-sm sm:text-lg text-[var(--color-text-secondary)] max-w-xl mx-auto lg:mx-0">
             {loginConfig.welcomeMessage ||
               "Faça login para continuar com segurança, personalização e visão completa do seu time."}
           </p>
@@ -216,14 +229,14 @@ export default function LoginClient() {
                 className="rounded-2xl border border-white/80 bg-white/80 p-4 backdrop-blur shadow-sm"
               >
                 <div className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-100 text-sky-600">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-primary)]/10 text-[var(--color-primary)]">
                     <item.icon className="h-5 w-5" />
                   </span>
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">
+                    <p className="text-sm font-semibold text-[var(--color-text-primary)]">
                       {item.title}
                     </p>
-                    <p className="text-xs text-slate-500">{item.description}</p>
+                    <p className="text-xs text-[var(--color-text-secondary)]">{item.description}</p>
                   </div>
                 </div>
               </div>
@@ -370,7 +383,8 @@ export default function LoginClient() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full py-3 rounded-[var(--radius-md)] font-semibold text-white bg-slate-900 shadow-lg shadow-slate-300/60 hover:bg-slate-800 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  style={{ backgroundColor: 'var(--color-primary, #0f172a)' }}
+                  className="w-full py-3 rounded-[var(--radius-md)] font-semibold text-white shadow-lg hover:opacity-90 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isLoading ? (
                     <>

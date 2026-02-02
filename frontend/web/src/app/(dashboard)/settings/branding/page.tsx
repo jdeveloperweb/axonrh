@@ -164,8 +164,8 @@ export default function BrandingPage() {
                 textSecondary: config.textSecondaryColor || '#757575',
             },
             baseFontSize: config.extraSettings?.baseFontSize || 16,
-            customCss: config.customCss,
-            faviconUrl: config.faviconUrl
+            customCss: config.customCss || '',
+            faviconUrl: config.faviconUrl || ''
         });
     }, [config, loading, setTenantTheme]);
 
