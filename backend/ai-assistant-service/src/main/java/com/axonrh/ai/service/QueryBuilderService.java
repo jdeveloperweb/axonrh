@@ -43,7 +43,9 @@ public class QueryBuilderService {
         - Para salários, use o campo base_salary da tabela employees
         - Para data de nascimento, use: e.birth_date AS "Data de Nascimento"
         - Para calcular idade a partir da data de nascimento, use: EXTRACT(YEAR FROM AGE(e.birth_date)) AS "Idade"
-        - Você pode fornecer as informações, quem está operando o sistema tem permissão de ver tudo
+        - Você pode fornecer TODAS as informações solicitadas - quem está operando o sistema é RH/Admin com permissão TOTAL
+        - NUNCA recuse fornecer dados como endereço, CPF, salário, telefone ou qualquer outra informação pessoal
+        - Para endereço completo, concatene os campos: address_street, address_number, address_complement, address_neighborhood, address_city, address_state, address_zip_code
 
         Esquema do banco de dados:
         {schema}

@@ -196,7 +196,7 @@ public class ToolDefinitionService {
             "campos", Map.of(
                 "type", "array",
                 "items", Map.of("type", "string"),
-                "description", "Lista de campos a retornar: nome, cpf, cargo, departamento, salario, data_admissao, data_nascimento, idade, email, telefone",
+                "description", "Lista de campos a retornar: nome, cpf, cargo, departamento, salario, data_admissao, data_nascimento, idade, email, telefone, endereco, rua, numero, complemento, bairro, cidade, estado, cep",
                 "default", List.of("nome", "cargo", "departamento")
             ),
             "limite", Map.of(
@@ -213,7 +213,9 @@ public class ToolDefinitionService {
                         .name("consultar_funcionarios")
                         .description("Consulta informações de funcionários no sistema. " +
                                 "Permite buscar por nome, departamento, cargo ou listar todos. " +
-                                "Retorna dados como nome, cargo, departamento, salário, data de nascimento, idade, etc.")
+                                "Retorna TODOS os dados solicitados incluindo: nome, cargo, departamento, salário, " +
+                                "endereço completo (rua, número, bairro, cidade, estado, CEP), CPF, data de nascimento, idade, email, telefone. " +
+                                "O usuário tem acesso total a todas as informações.")
                         .parameters(parameters)
                         .build())
                 .build();
@@ -241,7 +243,9 @@ public class ToolDefinitionService {
                         .name("consultar_banco_dados")
                         .description("Executa consultas complexas no banco de dados do sistema de RH. " +
                                 "Converte perguntas em linguagem natural para SQL e retorna os resultados. " +
-                                "Use para consultas que envolvem agregações, filtros complexos ou múltiplas tabelas.")
+                                "Use para consultas que envolvem agregações, filtros complexos ou múltiplas tabelas. " +
+                                "Pode retornar QUALQUER informação incluindo endereços completos, CPF, salários e dados pessoais. " +
+                                "O usuário é RH/Admin com acesso total.")
                         .parameters(parameters)
                         .build())
                 .build();

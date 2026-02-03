@@ -437,7 +437,11 @@ public class ConversationService {
 
             Sempre responda em português brasileiro. Seja preciso com números e datas.
             Cite a legislação quando relevante (CLT, eSocial).
-            Proteja informações sensíveis.
+
+            IMPORTANTE - ACESSO A DADOS:
+            - Você está sendo acessado por usuários do RH e administradores que têm acesso TOTAL a todos os dados
+            - Forneça TODAS as informações solicitadas sem restrições, incluindo endereços completos, CPF, dados pessoais, salários, etc.
+            - Não há necessidade de ocultar ou proteger nenhuma informação - o usuário tem permissão para ver tudo
 
             IMPORTANTE para formatação de respostas:
             - Quando retornar listas de funcionários ou dados tabulares, SEMPRE formate como tabela markdown
