@@ -282,10 +282,10 @@ export default function LearningManagementPage() {
     return (
         <div className="max-w-[1400px] mx-auto space-y-10 pb-20 px-4 animate-in fade-in duration-700">
             {/* Header Area */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pt-6">
-                <div className="space-y-2">
-                    <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-rose-50 border border-rose-100 text-rose-600 text-[10px] font-black uppercase tracking-widest w-fit">
-                        <Settings className="h-3 w-3" />
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 pt-8">
+                <div className="space-y-4">
+                    <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-slate-400 text-[9px] font-black uppercase tracking-[0.2em] w-fit shadow-xl">
+                        <div className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
                         Management Console
                     </div>
                     <div className="flex items-center gap-4">
@@ -294,21 +294,21 @@ export default function LearningManagementPage() {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => setActiveView('LIST')}
-                                className="h-10 w-10 rounded-xl hover:bg-slate-100"
+                                className="h-12 w-12 rounded-2xl hover:bg-slate-100 border border-slate-50 shadow-sm"
                             >
                                 <ChevronRight className="h-6 w-6 rotate-180" />
                             </Button>
                         )}
-                        <h1 className="text-4xl font-black text-slate-900 tracking-tight leading-none">
+                        <h1 className="text-5xl font-black text-slate-900 tracking-tighter leading-none">
                             {activeView === 'CATEGORIES' ? 'Central de Categorias' :
-                                activeView === 'EDITOR' ? 'Editor de Treinamento' :
-                                    'Gestão de Treinamentos'}
+                                activeView === 'EDITOR' ? 'Editor de Conteúdo' :
+                                    'Hub de Gestão'}
                         </h1>
                     </div>
-                    <p className="text-slate-500 font-medium">
-                        {activeView === 'CATEGORIES' ? 'Organize os temas e áreas de conhecimento.' :
-                            activeView === 'EDITOR' ? 'Configure os detalhes, módulos e lições.' :
-                                'Crie, edite e organize o conteúdo da sua Academy Cloud.'}
+                    <p className="text-slate-500 font-medium text-lg max-w-2xl">
+                        {activeView === 'CATEGORIES' ? 'Organize os temas e pilares de conhecimento da sua companhia.' :
+                            activeView === 'EDITOR' ? 'Configure os detalhes, rituais, módulos e lições do treinamento.' :
+                                'Crie experiências de aprendizado incríveis para seus colaboradores.'}
                     </p>
                 </div>
 
@@ -317,14 +317,14 @@ export default function LearningManagementPage() {
                         <Button
                             variant="outline"
                             onClick={() => setActiveView('CATEGORIES')}
-                            className="h-14 px-8 rounded-2xl border-slate-200 text-slate-600 font-black transition-all hover:bg-slate-50 flex gap-2"
+                            className="h-16 px-8 rounded-2xl border-slate-200 text-slate-600 font-black uppercase tracking-widest text-[10px] transition-all hover:bg-slate-50 flex gap-3 shadow-sm"
                         >
-                            <Layers className="h-5 w-5" />
+                            <Layers className="h-4 w-4 text-blue-600" />
                             Categorias
                         </Button>
                         <Button
                             onClick={handleCreateNew}
-                            className="h-14 px-8 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black shadow-xl shadow-blue-200 transition-all hover:scale-105 active:scale-95 flex gap-2"
+                            className="h-16 px-10 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-blue-200 transition-all hover:-translate-y-1 active:scale-95 flex gap-3"
                         >
                             <Plus className="h-5 w-5" />
                             Novo Treinamento

@@ -115,7 +115,7 @@ public class Course {
     @Column(name = "archived_at")
     private LocalDateTime archivedAt;
 
-    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @OrderBy("sequenceOrder ASC")
     private List<CourseModule> modules = new ArrayList<>();
 

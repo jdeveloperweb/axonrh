@@ -40,4 +40,6 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
 
     @Query("SELECT COUNT(c) FROM Course c WHERE c.tenantId = :tenantId AND c.status = :status")
     long countByTenantAndStatus(@Param("tenantId") UUID tenantId, @Param("status") CourseStatus status);
+
+    boolean existsByCategoryId(UUID categoryId);
 }

@@ -40,7 +40,7 @@ public class CourseModule {
     @Column(name = "is_required")
     private Boolean isRequired = true;
 
-    @OneToMany(mappedBy = "module", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "module", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @OrderBy("sequenceOrder ASC")
     private List<Lesson> lessons = new ArrayList<>();
 
