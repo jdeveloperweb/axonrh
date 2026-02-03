@@ -42,4 +42,7 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
     long countByTenantAndStatus(@Param("tenantId") UUID tenantId, @Param("status") CourseStatus status);
 
     boolean existsByCategoryId(UUID categoryId);
+
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"modules", "modules.lessons"})
+    List<Course> findByCategoryId(UUID categoryId);
 }

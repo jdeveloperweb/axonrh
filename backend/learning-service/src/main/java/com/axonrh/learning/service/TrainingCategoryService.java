@@ -1,5 +1,6 @@
 package com.axonrh.learning.service;
 
+import com.axonrh.learning.entity.Course;
 import com.axonrh.learning.entity.TrainingCategory;
 import com.axonrh.learning.repository.CourseRepository;
 import com.axonrh.learning.repository.TrainingCategoryRepository;
@@ -64,8 +65,12 @@ public class TrainingCategoryService {
     public void delete(UUID tenantId, UUID id) {
         TrainingCategory category = get(tenantId, id);
         
-        if (courseRepository.existsByCategoryId(id)) {
-            throw new RuntimeException("Esta categoria não pode ser excluída pois existem cursos vinculados a ela.");
+        List<Course> courses = courseRepository.findByCategoryId(id);
+        if (!courses.isEmpty()) {
+            String titles = courses.stream()
+                .map(c -> c.getTitle() + " (" + c.getStatus() + ")")
+                .collect(java.util.stream.Collectors.joining(", "));
+            throw new RuntimeException("Esta categoria não pode ser excluída pois existem cursos vinculados a ela: " + titles);
         }
 
         categoryRepository.delete(category);
