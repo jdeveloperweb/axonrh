@@ -24,6 +24,7 @@ public class LessonProgress {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lesson_id", nullable = false)
+    @org.hibernate.annotations.Fetch(org.hibernate.annotations.FetchMode.JOIN)
     private Lesson lesson;
 
     @Column(nullable = false)

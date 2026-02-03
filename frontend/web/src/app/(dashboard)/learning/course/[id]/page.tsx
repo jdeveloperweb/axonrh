@@ -68,7 +68,7 @@ export default function CourseDetails() {
                 employeeId: user.id,
                 employeeName: user.name || 'Usuário'
             });
-            setEnrollment(res.data);
+            setEnrollment(res as any);
             toast.success('Inscrição realizada com sucesso!');
         } catch (error) {
             console.error('Erro ao inscrever:', error);
@@ -83,7 +83,7 @@ export default function CourseDetails() {
         try {
             if (enrollment.status === 'ENROLLED') {
                 const res = await enrollmentsApi.start(enrollment.id);
-                setEnrollment(res.data);
+                setEnrollment(res as any);
             }
             // Redirect to first lesson or last progress
             router.push(`/learning/course/${course?.id}/learn`);
@@ -267,9 +267,9 @@ export default function CourseDetails() {
                         <CardContent className="p-6 space-y-6">
                             {!enrollment ? (
                                 <div className="space-y-4">
-                                    <div className="flex items-baseline justify-between">
+                                    <div className="flex items-baseline gap-2">
                                         <span className="text-3xl font-black text-primary">GRÁTIS</span>
-                                        <span className="text-muted-foreground line-through text-sm">R$ 199,00</span>
+                                        <span className="text-[10px] text-muted-foreground uppercase font-black tracking-widest bg-primary/5 px-2 py-1 rounded">Conteúdo Corporativo</span>
                                     </div>
                                     <Button className="w-full py-6 text-lg font-bold rounded-xl" onClick={handleEnroll} disabled={enrolling}>
                                         {enrolling ? 'Processando...' : 'Inscrever-se Agora'}

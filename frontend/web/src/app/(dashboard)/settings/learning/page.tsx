@@ -177,6 +177,24 @@ export default function LearningManagementPage() {
         }
     };
 
+    const handleDeleteCourse = async () => {
+        if (!selectedCourse?.id) return;
+        if (!confirm('Deseja realmente excluir este treinamento? Esta ação é irreversível e removerá todos os módulos e lições vinculados.')) return;
+
+        try {
+            setIsSaving(true);
+            await coursesApi.delete(selectedCourse.id);
+            toast.success('Treinamento excluído com sucesso');
+            setActiveView('LIST');
+            loadInitialData();
+        } catch (error) {
+            console.error('Erro ao excluir curso:', error);
+            toast.error('Erro ao excluir treinamento');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     // Category Handlers
     const handleSaveCategory = async () => {
         if (!categoryForm.name) return toast.error('Nome da categoria é obrigatório');
@@ -206,8 +224,10 @@ export default function LearningManagementPage() {
             await categoriesApi.delete(id);
             toast.success('Categoria removida!');
             await loadInitialData();
-        } catch (error) {
-            toast.error('Erro ao excluir categoria.');
+        } catch (error: any) {
+            console.error('Erro ao excluir categoria:', error);
+            const message = error.response?.data?.message || 'Esta categoria não pode ser excluída pois existem cursos vinculados a ela.';
+            toast.error(message, { duration: 5000 });
         }
     }
 
@@ -299,10 +319,15 @@ export default function LearningManagementPage() {
                                 <ChevronRight className="h-6 w-6 rotate-180" />
                             </Button>
                         )}
-                        <h1 className="text-5xl font-black text-slate-900 tracking-tighter leading-none">
+                        <h1 className="text-5xl font-black text-slate-900 tracking-tighter leading-none flex items-center gap-4">
                             {activeView === 'CATEGORIES' ? 'Central de Categorias' :
                                 activeView === 'EDITOR' ? 'Editor de Conteúdo' :
                                     'Hub de Gestão'}
+                            {activeView === 'EDITOR' && selectedCourse && (
+                                <Badge className="bg-slate-100 text-slate-400 border-none px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest h-fit">
+                                    ID: {selectedCourse.id.substring(0, 8)}
+                                </Badge>
+                            )}
                         </h1>
                     </div>
                     <p className="text-slate-500 font-medium text-lg max-w-2xl">
@@ -557,23 +582,40 @@ export default function LearningManagementPage() {
                                 </Button>
                                 <Button
                                     variant="ghost"
-                                    className="w-full h-14 rounded-2xl text-slate-400 font-bold hover:bg-slate-50 flex gap-2"
-                                    onClick={() => setActiveView('LIST')}
+                                    className="w-full h-14 rounded-2xl text-slate-400 font-bold hover:bg-slate-50 flex gap-2 transition-all hover:text-slate-600"
+                                    onClick={() => {
+                                        setSelectedCourse(null);
+                                        setActiveView('LIST');
+                                    }}
                                 >
                                     <X className="h-5 w-5" />
-                                    Cancelar
+                                    Voltar para Lista
                                 </Button>
                             </div>
 
                             {selectedCourse && (
-                                <div className="p-6 bg-rose-50 rounded-2xl border border-rose-100 space-y-4">
+                                <div className="p-6 bg-rose-50/50 rounded-2xl border border-rose-100/50 space-y-4 mt-4 transition-all hover:bg-rose-50">
                                     <div className="flex items-center gap-2">
-                                        <Trash2 className="h-4 w-4 text-rose-600" />
-                                        <h4 className="text-xs font-black text-rose-600 uppercase">Zona de Perigo</h4>
+                                        <div className="h-8 w-8 rounded-lg bg-rose-100 flex items-center justify-center">
+                                            <AlertCircle className="h-4 w-4 text-rose-600" />
+                                        </div>
+                                        <div>
+                                            <h4 className="text-[10px] font-black text-rose-600 uppercase tracking-widest">Zona Crítica</h4>
+                                            <p className="text-[9px] text-rose-400 font-bold">Ações irreversíveis</p>
+                                        </div>
                                     </div>
-                                    <Button variant="ghost" className="w-full h-10 rounded-xl text-rose-600 hover:bg-rose-100 text-xs font-black uppercase">
-                                        Excluir Treinamento
+                                    <Button
+                                        variant="outline"
+                                        className="w-full h-12 rounded-xl border-rose-200 text-rose-600 hover:bg-rose-600 hover:text-white hover:border-rose-600 text-[10px] font-black uppercase tracking-widest transition-all shadow-sm active:scale-95 flex gap-2"
+                                        onClick={handleDeleteCourse}
+                                        disabled={isSaving}
+                                    >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                        Excluir este Treinamento
                                     </Button>
+                                    <p className="text-[9px] text-center text-rose-300 font-medium px-2">
+                                        Ao confirmar, todos os dados relacionados a este curso serão removidos permanentemente.
+                                    </p>
                                 </div>
                             )}
                         </div>

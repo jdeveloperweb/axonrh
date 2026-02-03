@@ -24,6 +24,8 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, UUID> {
 
     Page<Enrollment> findByTenantIdAndCourseId(UUID tenantId, UUID courseId, Pageable pageable);
 
+    boolean existsByCourseId(UUID courseId);
+
     boolean existsByTenantIdAndCourseIdAndEmployeeId(UUID tenantId, UUID courseId, UUID employeeId);
 
     @Query("SELECT e FROM Enrollment e WHERE e.tenantId = :tenantId " +

@@ -5,6 +5,7 @@ import com.axonrh.learning.entity.CourseModule;
 import com.axonrh.learning.entity.Lesson;
 import com.axonrh.learning.entity.enums.CourseStatus;
 import com.axonrh.learning.repository.CourseRepository;
+import com.axonrh.learning.repository.EnrollmentRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,9 +20,11 @@ import java.util.UUID;
 public class CourseService {
 
     private final CourseRepository courseRepository;
+    private final EnrollmentRepository enrollmentRepository;
 
-    public CourseService(CourseRepository courseRepository) {
+    public CourseService(CourseRepository courseRepository, EnrollmentRepository enrollmentRepository) {
         this.courseRepository = courseRepository;
+        this.enrollmentRepository = enrollmentRepository;
     }
 
     // ==================== CRUD ====================
@@ -74,9 +77,12 @@ public class CourseService {
 
     public void delete(UUID tenantId, UUID courseId) {
         Course course = get(tenantId, courseId);
-        if (course.getStatus() != CourseStatus.DRAFT) {
-            throw new IllegalStateException("Apenas cursos em rascunho podem ser excluidos");
+        
+        // Verifica se existem matrículas antes de excluir (ser prático mas seguro)
+        if (enrollmentRepository.existsByCourseId(courseId)) {
+            throw new RuntimeException("Este treinamento possui colaboradores matriculados e não pode ser excluído. Sugerimos arquivá-lo para que não apareça mais no catálogo.");
         }
+
         courseRepository.delete(course);
     }
 

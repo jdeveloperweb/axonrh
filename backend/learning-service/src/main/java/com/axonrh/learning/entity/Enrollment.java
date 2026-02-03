@@ -28,6 +28,7 @@ public class Enrollment {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "course_id", nullable = false)
+    @org.hibernate.annotations.Fetch(org.hibernate.annotations.FetchMode.JOIN)
     private Course course;
 
     @Column(name = "employee_id", nullable = false)
@@ -80,6 +81,7 @@ public class Enrollment {
     private String notes;
 
     @OneToMany(mappedBy = "enrollment", cascade = CascadeType.ALL, orphanRemoval = true)
+    @org.hibernate.annotations.Fetch(org.hibernate.annotations.FetchMode.SUBSELECT)
     private List<LessonProgress> lessonProgresses = new ArrayList<>();
 
     @CreationTimestamp

@@ -104,7 +104,7 @@ export default function LearnCourse() {
                 status: 'COMPLETED',
                 timeSpent: currentLesson.durationMinutes || 0
             });
-            setEnrollment(res.data);
+            setEnrollment(res as any);
             toast.success('Lição concluída!');
 
             // Go to next lesson
@@ -120,6 +120,22 @@ export default function LearnCourse() {
             toast.error('Erro ao salvar progresso');
         } finally {
             setCompleting(false);
+        }
+    };
+
+    const handleNextLesson = () => {
+        const allLessons = course?.modules.flatMap(m => m.lessons) || [];
+        const currentIndex = allLessons.findIndex(l => l.id === currentLesson?.id);
+        if (currentIndex < allLessons.length - 1) {
+            setCurrentLesson(allLessons[currentIndex + 1]);
+        }
+    };
+
+    const handlePrevLesson = () => {
+        const allLessons = course?.modules.flatMap(m => m.lessons) || [];
+        const currentIndex = allLessons.findIndex(l => l.id === currentLesson?.id);
+        if (currentIndex > 0) {
+            setCurrentLesson(allLessons[currentIndex - 1]);
         }
     };
 
@@ -283,10 +299,20 @@ export default function LearnCourse() {
                                             ) : completing ? 'Salvando...' : 'Marcar como Concluído'}
                                         </Button>
                                         <div className="flex gap-1">
-                                            <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 h-12 w-12 rounded-xl border border-white/5">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="text-white hover:bg-white/10 h-12 w-12 rounded-xl border border-white/5"
+                                                onClick={handlePrevLesson}
+                                            >
                                                 <ChevronLeft className="h-6 w-6" />
                                             </Button>
-                                            <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 h-12 w-12 rounded-xl border border-white/10">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="text-white hover:bg-white/10 h-12 w-12 rounded-xl border border-white/10"
+                                                onClick={handleNextLesson}
+                                            >
                                                 <ChevronRight className="h-6 w-6" />
                                             </Button>
                                         </div>
