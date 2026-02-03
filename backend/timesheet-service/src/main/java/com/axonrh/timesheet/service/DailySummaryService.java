@@ -115,43 +115,60 @@ public class DailySummaryService {
      */
     @Transactional(readOnly = true)
     public List<DailySummaryResponse> getTimesheetByPeriod(UUID employeeId, LocalDate startDate, LocalDate endDate) {
-        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        String currentTenant = TenantContext.getCurrentTenant();
+        if (currentTenant == null) {
+            log.error("Tentativa de buscar espelho de ponto sem tenant selecionado");
+            return java.util.Collections.emptyList();
+        }
 
-        List<DailySummary> summaries = dailySummaryRepository
-                .findByTenantIdAndEmployeeIdAndSummaryDateBetweenOrderBySummaryDateAsc(
-                        tenantId, employeeId, startDate, endDate);
+        UUID tenantId = UUID.fromString(currentTenant);
 
-        java.util.Map<LocalDate, DailySummary> summaryMap = summaries.stream()
-                .collect(java.util.stream.Collectors.toMap(DailySummary::getSummaryDate, s -> s));
+        try {
+            List<DailySummary> summaries = dailySummaryRepository
+                    .findByTenantIdAndEmployeeIdAndSummaryDateBetweenOrderBySummaryDateAsc(
+                            tenantId, employeeId, startDate, endDate);
 
-        return startDate.datesUntil(endDate.plusDays(1))
-                .map(date -> {
-                    DailySummary summary = summaryMap.get(date);
-                    if (summary != null) {
-                        return toResponse(summary);
-                    } else {
-                        // Criar resumo virtual para dias sem registro
-                        return DailySummaryResponse.builder()
-                                .employeeId(employeeId)
-                                .summaryDate(date)
-                                .dayOfWeek(getDayOfWeekLabel(date.getDayOfWeek()))
-                                .expectedWorkMinutes(480) // Padrao
-                                .expectedWorkFormatted("08:00")
-                                .workedMinutes(0)
-                                .workedFormatted("00:00")
-                                .overtimeMinutes(0)
-                                .overtimeFormatted("00:00")
-                                .deficitMinutes(480)
-                                .deficitFormatted("08:00")
-                                .isAbsent(true) // Considerar falta se nao ha resumo
-                                .hasMissingRecords(true)
-                                .balanceMinutes(-480)
-                                .balanceFormatted("08:00")
-                                .isPositive(false)
-                                .build();
-                    }
-                })
-                .toList();
+            java.util.Map<LocalDate, DailySummary> summaryMap = new java.util.HashMap<>();
+            for (DailySummary s : summaries) {
+                summaryMap.put(s.getSummaryDate(), s);
+            }
+
+            return startDate.datesUntil(endDate.plusDays(1))
+                    .map(date -> {
+                        DailySummary summary = summaryMap.get(date);
+                        if (summary != null) {
+                            return toResponse(summary);
+                        } else {
+                            // Criar resumo virtual para dias sem registro
+                            return createVirtualSummary(employeeId, date);
+                        }
+                    })
+                    .toList();
+        } catch (Exception e) {
+            log.error("Erro ao gerar espelho de ponto para colaborador {}: {}", employeeId, e.getMessage(), e);
+            return java.util.Collections.emptyList();
+        }
+    }
+
+    private DailySummaryResponse createVirtualSummary(UUID employeeId, LocalDate date) {
+        return DailySummaryResponse.builder()
+                .employeeId(employeeId)
+                .summaryDate(date)
+                .dayOfWeek(getDayOfWeekLabel(date.getDayOfWeek()))
+                .expectedWorkMinutes(480) // Padrao
+                .expectedWorkFormatted("08:00")
+                .workedMinutes(0)
+                .workedFormatted("00:00")
+                .overtimeMinutes(0)
+                .overtimeFormatted("00:00")
+                .deficitMinutes(480)
+                .deficitFormatted("08:00")
+                .isAbsent(false) // Nao marcar como falta automaticamente (pode ser folga/fim de semana)
+                .hasMissingRecords(false)
+                .balanceMinutes(-480)
+                .balanceFormatted("08:00")
+                .isPositive(false)
+                .build();
     }
 
     /**
@@ -305,7 +322,9 @@ public class DailySummaryService {
     }
 
     private DailySummaryResponse toResponse(DailySummary summary) {
-        int balance = summary.getOvertimeMinutes() - summary.getDeficitMinutes();
+        int overtime = summary.getOvertimeMinutes() != null ? summary.getOvertimeMinutes() : 0;
+        int deficit = summary.getDeficitMinutes() != null ? summary.getDeficitMinutes() : 0;
+        int balance = overtime - deficit;
 
         return DailySummaryResponse.builder()
                 .id(summary.getId())
