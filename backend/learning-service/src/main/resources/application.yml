@@ -37,7 +37,7 @@ spring:
     schemas: shared
     table: learning_service_schema_history
     out-of-order: true
-    ignore-migration-patterns: "*:ignored"
+    ignore-migration-patterns: "2:ignored"
 
   data:
     redis:

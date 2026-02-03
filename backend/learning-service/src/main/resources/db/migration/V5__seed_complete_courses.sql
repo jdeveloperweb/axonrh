@@ -39,7 +39,7 @@ BEGIN
     ON CONFLICT (tenant_id, name) DO UPDATE SET name = EXCLUDED.name RETURNING id INTO v_cat_seguranca;
 
     -- 2. CURSO: Onboarding Axon (OBRIGATÓRIO)
-    INSERT INTO shared.courses (tenant_id, category_id, title, description, objectives, target_audience, course_type, modality, difficulty_level, status, is_mandatory, duration_minutes, instructor_name, thumbnailUrl)
+    INSERT INTO shared.courses (tenant_id, category_id, title, description, objectives, target_audience, course_type, modality, difficulty_level, status, is_mandatory, duration_minutes, instructor_name, thumbnail_url)
     VALUES (v_tenant_id, v_cat_cultura, 'Bem-vindo à Axon: Guia Definitivo de Imersão', 
             'A jornada completa para entender quem somos, como trabalhamos e para onde estamos indo.', 
             'Integrar novos talentos transmitindo cultura, valores e processos operacionais.', 'Novos Colaboradores', 
@@ -64,7 +64,7 @@ BEGIN
             '# Cuidando de quem cuida da Axon\n\nNosso pacote de benefícios foi desenhado para garantir sua tranquilidade e crescimento.\n\n- **Cartão Flash:** R$ 1.200,00 flexíveis (Refeição, Alimentação, Mobilidade, Educação).\n- **Saúde Bradesco Premium:** Plano nacional sem co-participação.\n- **Home Office:** R$ 250,00 mensais + Verba Setup única de R$ 2.000,00.\n- **Educação:** R$ 8.000,00 anuais para cursos e certificações.\n- **Gympass & ZenApp:** Saúde física e mental em dia.');
 
     -- 3. CURSO: Segurança da Informação (OBRIGATÓRIO)
-    INSERT INTO shared.courses (tenant_id, category_id, title, description, course_type, difficulty_level, status, is_mandatory, duration_minutes, instructor_name, thumbnailUrl)
+    INSERT INTO shared.courses (tenant_id, category_id, title, description, course_type, difficulty_level, status, is_mandatory, duration_minutes, instructor_name, thumbnail_url)
     VALUES (v_tenant_id, v_cat_seguranca, 'Cibersegurança e LGPD: Defesa Prática', 
             'Domine as práticas essenciais para proteger os dados e a infraestrutura da Axon.', 
             'ONLINE', 'INICIANTE', 'PUBLISHED', true, 180, 'Time de Segurança',
@@ -79,7 +79,7 @@ BEGIN
             '# Segurança em Primeiro Lugar\n\n## LGPD (Lei Geral de Proteção de Dados)\nLidamos com informações sensíveis de milhares de colaboradores. Seguir a LGPD não é apenas uma obrigação legal, é um compromisso ético com a privacidade.\n\n## Como identificar Phishing\n1. Verifique o remetente cuidadosamente.\n2. Desconfie de urgência excessiva.\n3. Nunca forneça sua senha ou código MFA.\n4. Na dúvida, reporte no canal #is-security-breach.');
 
     -- 4. CURSO: Liderança Alpha
-    INSERT INTO shared.courses (tenant_id, category_id, title, description, course_type, difficulty_level, status, is_mandatory, duration_minutes, instructor_name, thumbnailUrl)
+    INSERT INTO shared.courses (tenant_id, category_id, title, description, course_type, difficulty_level, status, is_mandatory, duration_minutes, instructor_name, thumbnail_url)
     VALUES (v_tenant_id, v_cat_lideranca, 'Liderança Alpha: Gestão de Times Remotos', 
             'Formação para gestores que buscam alta performance e engajamento em modelos flexíveis.', 
             'ONLINE', 'AVANCADO', 'PUBLISHED', false, 300, 'Dr. Rodrigo Porto',
@@ -94,7 +94,7 @@ BEGIN
             '# Liderando no Remoto\n\nA gestão moderna exige **confiança sobre controle**.\n\n- **1:1s:** O ritual mais importante para ouvir o colaborador.\n- **Sinceridade Radical:** Combine desafio direto com cuidado pessoal.\n- **Feedback SBI:** Seja específico na Situação, Comportamento e Impacto.');
 
     -- 5. CURSO: IA Generativa
-    INSERT INTO shared.courses (tenant_id, category_id, title, description, course_type, difficulty_level, status, is_mandatory, duration_minutes, instructor_name, thumbnailUrl)
+    INSERT INTO shared.courses (tenant_id, category_id, title, description, course_type, difficulty_level, status, is_mandatory, duration_minutes, instructor_name, thumbnail_url)
     VALUES (v_tenant_id, v_cat_tech, 'IA Generativa para Negócios: Do Zero ao Pro', 
             'Aprenda a dominar LLMs e ferramentas de IA para revolucionar sua produtividade.', 
             'ONLINE', 'INTERMEDIARIO', 'PUBLISHED', false, 360, 'Eng. Carlos AI',
@@ -109,7 +109,7 @@ BEGIN
             '# Engenharia de Prompts\n\nAprenda o framework **CO-STAR** para obter resultados incríveis:\n- **C (Context):** Forneça o contexto.\n- **O (Objective):** Defina o objetivo.\n- **S (Style):** Defina o estilo de escrita.\n- **T (Tone):** Defina o tom.\n- **A (Audience):** Defina o público.\n- **R (Response):** Defina o formato da resposta.\n\nSempre peça para a IA "pensar passo a passo" para tarefas complexas.');
 
     -- 6. CURSO: Comunicação Não-Violenta (CNV)
-    INSERT INTO shared.courses (tenant_id, category_id, title, description, course_type, difficulty_level, status, is_mandatory, duration_minutes, instructor_name, thumbnailUrl)
+    INSERT INTO shared.courses (tenant_id, category_id, title, description, course_type, difficulty_level, status, is_mandatory, duration_minutes, instructor_name, thumbnail_url)
     VALUES (v_tenant_id, v_cat_cultura, 'Comunicação Não-Violenta e Empatia', 
             'Transforme conflitos em conexões produtivas através do diálogo empático.', 
             'ONLINE', 'INTERMEDIARIO', 'PUBLISHED', false, 180, 'Ana Clara Reghin',
@@ -124,7 +124,7 @@ BEGIN
             '# Aplicando CNV no Trabalho\n\n1. **Observação:** Descreva o fato sem julgar.\n2. **Sentimento:** Expresse como se sente.\n3. **Necessidade:** Identifique o valor não atendido.\n4. **Pedido:** Faça uma solicitação positiva e concreta.\n\nLembre-se: O objetivo da CNV não é conseguir o que se quer, mas estabelecer uma conexão de qualidade.');
 
     -- 7. CURSO: Vendas de Alta Conversão
-    INSERT INTO shared.courses (tenant_id, category_id, title, description, course_type, difficulty_level, status, is_mandatory, duration_minutes, instructor_name, thumbnailUrl)
+    INSERT INTO shared.courses (tenant_id, category_id, title, description, course_type, difficulty_level, status, is_mandatory, duration_minutes, instructor_name, thumbnail_url)
     VALUES (v_tenant_id, v_cat_tech, 'Vendas de Alta Conversão', 
             'Técnicas modernas de vendas, gatilhos mentais e fechamento.', 
             'ONLINE', 'INTERMEDIARIO', 'PUBLISHED', false, 200, 'Marcos Oliveira',
@@ -139,7 +139,7 @@ BEGIN
             '# O Método SPIN\n- **S (Situação):** Entenda o contexto.\n- **P (Problema):** Descubra a dor.\n- **I (Implicação):** Mostre o custo de não agir.\n- **N (Necessidade):** Ajude o cliente a ver o valor.\n\nVender é ajudar o cliente a resolver um problema que ele muitas vezes ainda não quantificou.');
 
     -- 8. CURSO: Excel para Negócios
-    INSERT INTO shared.courses (tenant_id, category_id, title, description, course_type, difficulty_level, status, is_mandatory, duration_minutes, instructor_name, thumbnailUrl)
+    INSERT INTO shared.courses (tenant_id, category_id, title, description, course_type, difficulty_level, status, is_mandatory, duration_minutes, instructor_name, thumbnail_url)
     VALUES (v_tenant_id, v_cat_tech, 'Excel para Negócios: De Fórmulas a Dashboards', 
             'Domine o Excel e torne-se uma referência em análise de dados.', 
             'ONLINE', 'INICIANTE', 'PUBLISHED', false, 480, 'Beatriz Silva',
