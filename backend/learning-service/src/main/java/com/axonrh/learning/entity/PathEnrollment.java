@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "path_enrollments")
+@Table(name = "path_enrollments", schema = "shared")
 @Getter
 @Setter
 public class PathEnrollment {

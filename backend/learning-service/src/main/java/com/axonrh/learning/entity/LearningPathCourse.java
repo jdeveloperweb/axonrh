@@ -7,7 +7,7 @@ import lombok.Setter;
 import java.util.UUID;
 
 @Entity
-@Table(name = "learning_path_courses")
+@Table(name = "learning_path_courses", schema = "shared")
 @Getter
 @Setter
 public class LearningPathCourse {
