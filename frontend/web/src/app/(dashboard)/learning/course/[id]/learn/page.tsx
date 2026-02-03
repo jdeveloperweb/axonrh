@@ -17,12 +17,17 @@ import {
     X,
     Star,
     Download,
-    Info
+    Info,
+    BrainCircuit,
+    Type,
+    Layers,
+    ExternalLink
 } from 'lucide-react';
-import { coursesApi, enrollmentsApi, Course, Enrollment, Lesson } from '@/lib/api/learning';
+import { coursesApi, enrollmentsApi, Course, Enrollment, Lesson, ContentType } from '@/lib/api/learning';
 import { useAuthStore } from '@/stores/auth-store';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 export default function LearnCourse() {
     const { id } = useParams();
@@ -133,6 +138,21 @@ export default function LearnCourse() {
         return enrollment.lessonProgresses?.some(p => p.lessonId === lessonId && p.status === 'COMPLETED');
     };
 
+    const getEmbedUrl = (url?: string) => {
+        if (!url) return null;
+        if (url.includes('youtube.com/watch?v=')) {
+            return url.replace('watch?v=', 'embed/');
+        }
+        if (url.includes('youtu.be/')) {
+            return url.replace('youtu.be/', 'youtube.com/embed/');
+        }
+        if (url.includes('vimeo.com/')) {
+            const id = url.split('/').pop();
+            return `https://player.vimeo.com/video/${id}`;
+        }
+        return url;
+    };
+
     return (
         <div className="fixed inset-0 bg-background z-50 flex flex-col overflow-hidden">
             {/* Top Header */}
@@ -167,80 +187,109 @@ export default function LearnCourse() {
                     {/* Content Viewer (Video/Text) */}
                     <div className="flex-1 flex flex-col lg:flex-row h-full">
                         <div className="flex-1 flex flex-col">
-                            {currentLesson?.contentType === 'VIDEO' ? (
-                                <div className="relative aspect-video bg-black w-full flex items-center justify-center">
-                                    {/* Mock Video Player */}
-                                    <div className="absolute inset-0 flex items-center justify-center group cursor-pointer bg-gradient-to-tr from-primary/5 to-transparent">
-                                        <div className="h-20 w-20 rounded-full bg-primary/90 flex items-center justify-center group-hover:scale-110 transition-transform shadow-2xl">
-                                            <Play className="h-10 w-10 text-white fill-current ml-1" />
-                                        </div>
-                                        <div className="absolute bottom-8 left-8 right-8 space-y-4">
-                                            <div className="h-1 w-full bg-white/20 rounded-full overflow-hidden">
-                                                <div className="h-full bg-primary w-1/3" />
-                                            </div>
-                                            <div className="flex justify-between text-white/80 text-xs font-mono">
-                                                <span>10:24 / 32:00</span>
-                                                <div className="flex gap-4">
-                                                    <span>1080p</span>
-                                                    <span>HD</span>
+                            <div className="flex-1 flex flex-col bg-[#050505]">
+                                {currentLesson?.contentType === 'VIDEO' ? (
+                                    <div className="relative aspect-video bg-black w-full shadow-2xl overflow-hidden rounded-b-[3rem] lg:rounded-b-none lg:rounded-br-[4rem]">
+                                        {currentLesson.contentUrl ? (
+                                            <iframe
+                                                src={getEmbedUrl(currentLesson.contentUrl)!}
+                                                className="w-full h-full"
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                allowFullScreen
+                                            />
+                                        ) : (
+                                            <div className="absolute inset-0 flex items-center justify-center group cursor-pointer bg-gradient-to-tr from-primary/5 to-transparent">
+                                                <div className="h-20 w-20 rounded-full bg-primary/90 flex items-center justify-center group-hover:scale-110 transition-transform shadow-2xl">
+                                                    <Play className="h-10 w-10 text-white fill-current ml-1" />
                                                 </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="flex-1 p-12 overflow-y-auto">
-                                    <div className="max-w-4xl mx-auto bg-card p-12 rounded-3xl shadow-xl border border-white/5 space-y-8">
-                                        <div className="space-y-4 text-center">
-                                            <Badge variant="outline" className="text-primary border-primary">{currentLesson?.contentType}</Badge>
-                                            <h2 className="text-4xl font-black">{currentLesson?.title}</h2>
-                                            <div className="h-1 w-20 bg-primary mx-auto rounded-full" />
-                                        </div>
-
-                                        <div className="prose prose-slate dark:prose-invert max-w-none text-lg leading-relaxed text-muted-foreground whitespace-pre-wrap">
-                                            {currentLesson?.contentText || currentLesson?.description || 'Conteúdo em desenvolvimento...'}
-                                        </div>
-
-                                        {currentLesson?.isDownloadable && (
-                                            <div className="pt-8 border-t">
-                                                <Button variant="outline" className="w-full h-16 border-dashed gap-3 font-bold text-lg">
-                                                    <Download className="h-5 w-5 text-primary" />
-                                                    Baixar Material Complementar (PDF)
-                                                </Button>
                                             </div>
                                         )}
                                     </div>
-                                </div>
-                            )}
+                                ) : (
+                                    <div className="flex-1 p-6 md:p-12 overflow-y-auto">
+                                        <div className="max-w-4xl mx-auto bg-card p-8 md:p-16 rounded-[3rem] shadow-2xl border border-white/5 space-y-10">
+                                            <div className="space-y-4 text-center">
+                                                <Badge variant="outline" className={cn(
+                                                    "border-2 font-black uppercase text-[10px] tracking-widest px-4 py-1",
+                                                    currentLesson?.contentType === 'QUIZ' ? "border-amber-500 text-amber-500" :
+                                                        currentLesson?.contentType === 'DOCUMENTO' ? "border-rose-500 text-rose-500" :
+                                                            "border-primary text-primary"
+                                                )}>{currentLesson?.contentType}</Badge>
+                                                <h2 className="text-3xl md:text-5xl font-black tracking-tight leading-tight">{currentLesson?.title}</h2>
+                                                <div className="h-1.5 w-24 bg-primary mx-auto rounded-full" />
+                                            </div>
 
-                            {/* Lesson Navigation Footer */}
-                            <div className="p-6 border-t border-white/10 bg-card/50 backdrop-blur-md flex items-center justify-between">
-                                <div className="flex flex-col gap-1">
-                                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Executando</p>
-                                    <p className="font-bold text-white line-clamp-1">{currentLesson?.title}</p>
-                                </div>
+                                            {currentLesson?.contentType === 'QUIZ' ? (
+                                                <div className="py-20 text-center space-y-8 animate-in fade-in zoom-in duration-500">
+                                                    <div className="h-32 w-32 bg-amber-50 rounded-[2.5rem] flex items-center justify-center mx-auto shadow-inner border border-amber-100">
+                                                        <BrainCircuit className="h-16 w-16 text-amber-500" />
+                                                    </div>
+                                                    <div className="space-y-4">
+                                                        <h3 className="text-2xl font-black uppercase tracking-tight">Avaliação de Conhecimento</h3>
+                                                        <p className="text-muted-foreground max-w-md mx-auto font-medium">Este quiz contém perguntas baseadas no conteúdo deste módulo. Pronto para testar seus conhecimentos?</p>
+                                                    </div>
+                                                    <Button className="h-16 px-12 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-black text-lg shadow-xl shadow-amber-200 transition-all active:scale-95">
+                                                        Iniciar Quiz agora
+                                                    </Button>
+                                                </div>
+                                            ) : (
+                                                <div
+                                                    className="prose prose-slate dark:prose-invert max-w-none text-xl leading-relaxed text-muted-foreground/90 whitespace-pre-wrap"
+                                                    dangerouslySetInnerHTML={{ __html: currentLesson?.contentText || currentLesson?.description || 'Conteúdo em desenvolvimento...' }}
+                                                />
+                                            )}
 
-                                <div className="flex gap-3">
-                                    <Button
-                                        variant="secondary"
-                                        size="lg"
-                                        className="font-bold text-xs uppercase rounded-xl"
-                                        onClick={handleCompleteLesson}
-                                        disabled={!!(completing || (currentLesson && isLessonCompleted(currentLesson.id)))}
-                                    >
-                                        {currentLesson && isLessonCompleted(currentLesson.id) ? (
-                                            <span className="flex items-center gap-2 text-green-500">
-                                                <CheckCircle2 className="h-4 w-4" /> Concluído
-                                            </span>
-                                        ) : completing ? 'Salvando...' : 'Marcar como Concluído'}
-                                    </Button>
-                                    <div className="flex gap-1">
-                                        <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 h-12 w-12 rounded-xl border border-white/5">
-                                            <ChevronLeft className="h-6 w-6" />
+                                            {(currentLesson?.isDownloadable || currentLesson?.contentType === 'DOCUMENTO') && currentLesson?.contentUrl && (
+                                                <div className="pt-10 border-t border-white/5">
+                                                    <div className="p-8 rounded-3xl bg-muted/30 border-2 border-dashed border-muted flex flex-col md:flex-row items-center justify-between gap-6 hover:bg-muted/50 transition-all group">
+                                                        <div className="flex gap-4 items-center">
+                                                            <div className="h-14 w-14 rounded-2xl bg-white shadow-xl flex items-center justify-center">
+                                                                <FileText className="h-7 w-7 text-rose-500" />
+                                                            </div>
+                                                            <div>
+                                                                <p className="font-black text-lg">Material de Apoio</p>
+                                                                <p className="text-sm text-muted-foreground font-medium italic">Clique para visualizar ou baixar o conteúdo.</p>
+                                                            </div>
+                                                        </div>
+                                                        <Button onClick={() => window.open(currentLesson.contentUrl, '_blank')} size="lg" className="rounded-xl font-bold gap-2">
+                                                            Acessar Material <ExternalLink className="h-4 w-4" />
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Lesson Navigation Footer */}
+                                <div className="p-6 border-t border-white/10 bg-card/50 backdrop-blur-md flex items-center justify-between">
+                                    <div className="flex flex-col gap-1">
+                                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Executando</p>
+                                        <p className="font-bold text-white line-clamp-1">{currentLesson?.title}</p>
+                                    </div>
+
+                                    <div className="flex gap-3">
+                                        <Button
+                                            variant="secondary"
+                                            size="lg"
+                                            className="font-bold text-xs uppercase rounded-xl"
+                                            onClick={handleCompleteLesson}
+                                            disabled={!!(completing || (currentLesson && isLessonCompleted(currentLesson.id)))}
+                                        >
+                                            {currentLesson && isLessonCompleted(currentLesson.id) ? (
+                                                <span className="flex items-center gap-2 text-green-500">
+                                                    <CheckCircle2 className="h-4 w-4" /> Concluído
+                                                </span>
+                                            ) : completing ? 'Salvando...' : 'Marcar como Concluído'}
                                         </Button>
-                                        <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 h-12 w-12 rounded-xl border border-white/10">
-                                            <ChevronRight className="h-6 w-6" />
-                                        </Button>
+                                        <div className="flex gap-1">
+                                            <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 h-12 w-12 rounded-xl border border-white/5">
+                                                <ChevronLeft className="h-6 w-6" />
+                                            </Button>
+                                            <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 h-12 w-12 rounded-xl border border-white/10">
+                                                <ChevronRight className="h-6 w-6" />
+                                            </Button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -292,7 +341,10 @@ export default function LearnCourse() {
                                                         ) : currentLesson?.id === lesson.id ? (
                                                             <Play className="h-3 w-3 text-primary fill-current" />
                                                         ) : (
-                                                            lesson.contentType === 'VIDEO' ? <Video className="h-3 w-3 text-muted-foreground" /> : <FileText className="h-3 w-3 text-muted-foreground" />
+                                                            lesson.contentType === 'VIDEO' ? <Video className="h-3 w-3 text-muted-foreground" /> :
+                                                                lesson.contentType === 'DOCUMENTO' ? <FileText className="h-3 w-3 text-muted-foreground" /> :
+                                                                    lesson.contentType === 'QUIZ' ? <BrainCircuit className="h-3 w-3 text-muted-foreground" /> :
+                                                                        <Type className="h-3 w-3 text-muted-foreground" />
                                                         )}
                                                     </div>
                                                     <div className="flex-1 min-w-0">

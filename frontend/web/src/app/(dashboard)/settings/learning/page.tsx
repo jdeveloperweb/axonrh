@@ -21,13 +21,35 @@ import {
     GraduationCap,
     Clock,
     Zap,
-    MoreVertical
+    Zap,
+    MoreVertical,
+    FileVideo,
+    Link2,
+    Type,
+    BrainCircuit,
+    ListChecks,
+    Pencil
 } from 'lucide-react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import {
     coursesApi,
     categoriesApi,
@@ -59,6 +81,26 @@ export default function LearningManagementPage() {
         difficultyLevel: 'INICIANTE' as DifficultyLevel,
         status: 'DRAFT' as CourseStatus,
         isMandatory: false,
+    });
+
+    // Dialog & UI states
+    const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
+    const [isModuleDialogOpen, setIsModuleDialogOpen] = useState(false);
+    const [isLessonDialogOpen, setIsLessonDialogOpen] = useState(false);
+    const [selectedModule, setSelectedModule] = useState<CourseModule | null>(null);
+    const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
+
+    // Temp Form States
+    const [categoryForm, setCategoryForm] = useState<Partial<TrainingCategory>>({ name: '', description: '' });
+    const [moduleForm, setModuleForm] = useState<Partial<CourseModule>>({ title: '', description: '', sequenceOrder: 1 });
+    const [lessonForm, setLessonForm] = useState<Partial<Lesson>>({
+        title: '',
+        contentType: 'VIDEO' as ContentType,
+        contentUrl: '',
+        contentText: '',
+        durationMinutes: 10,
+        sequenceOrder: 1,
+        isRequired: true
     });
 
     useEffect(() => {
@@ -106,14 +148,16 @@ export default function LearningManagementPage() {
 
         try {
             setIsSaving(true);
+            let savedCourse: Course;
             if (selectedCourse?.id) {
-                await coursesApi.update(selectedCourse.id, formData as Course);
+                savedCourse = await coursesApi.update(selectedCourse.id, formData as Course) as any;
                 toast.success('Treinamento atualizado com sucesso!');
             } else {
-                await coursesApi.create(formData as Course);
+                savedCourse = await coursesApi.create(formData as Course) as any;
                 toast.success('Treinamento criado com sucesso!');
             }
-            setIsEditing(false);
+            setSelectedCourse(savedCourse);
+            setIsEditing(true); // Keep in edit mode to add modules
             loadInitialData();
         } catch (error) {
             toast.error('Erro ao salvar treinamento');
@@ -121,6 +165,60 @@ export default function LearningManagementPage() {
             setIsSaving(false);
         }
     };
+
+    // Category Handlers
+    const handleSaveCategory = async () => {
+        if (!categoryForm.name) return toast.error('Nome da categoria é obrigatório');
+        try {
+            await categoriesApi.create(categoryForm);
+            toast.success('Categoria criada!');
+            setIsCategoryDialogOpen(false);
+            setCategoryForm({ name: '', description: '' });
+            loadInitialData();
+        } catch (error) { toast.error('Erro ao criar categoria'); }
+    }
+
+    // Module Handlers
+    const handleSaveModule = async () => {
+        if (!selectedCourse?.id || !moduleForm.title) return;
+        try {
+            const updated = await coursesApi.addModule(selectedCourse.id, moduleForm) as any;
+            setSelectedCourse(updated);
+            setIsModuleDialogOpen(false);
+            setModuleForm({ title: '', description: '', sequenceOrder: (selectedCourse.modules?.length || 0) + 1 });
+            toast.success('Módulo adicionado!');
+        } catch (error) { toast.error('Erro ao adicionar módulo'); }
+    }
+
+    // Lesson Handlers
+    const handleSaveLesson = async () => {
+        if (!selectedCourse?.id || !selectedModule?.id || !lessonForm.title) return;
+        try {
+            const updated = await coursesApi.addLesson(selectedCourse.id, selectedModule.id, lessonForm) as any;
+            setSelectedCourse(updated);
+            setIsLessonDialogOpen(false);
+            setLessonForm({ title: '', contentType: 'VIDEO', contentUrl: '', contentText: '', durationMinutes: 10 });
+            toast.success('Lição salva!');
+        } catch (error) { toast.error('Erro ao salvar lição'); }
+    }
+
+    const handleDeleteModule = async (moduleId: string) => {
+        if (!selectedCourse?.id || !confirm('Deseja excluir este módulo?')) return;
+        try {
+            const updated = await coursesApi.removeModule(selectedCourse.id, moduleId) as any;
+            setSelectedCourse(updated);
+            toast.success('Módulo removido');
+        } catch (error) { toast.error('Erro ao remover módulo'); }
+    }
+
+    const handleDeleteLesson = async (moduleId: string, lessonId: string) => {
+        if (!selectedCourse?.id || !confirm('Deseja excluir esta lição?')) return;
+        try {
+            const updated = await coursesApi.removeLesson(selectedCourse.id, moduleId, lessonId) as any;
+            setSelectedCourse(updated);
+            toast.success('Lição removida');
+        } catch (error) { toast.error('Erro ao remover lição'); }
+    }
 
     const filteredCourses = courses.filter(c =>
         c.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -147,13 +245,23 @@ export default function LearningManagementPage() {
                     <h1 className="text-4xl font-black text-slate-900 tracking-tight leading-none">Gestão de Treinamentos</h1>
                     <p className="text-slate-500 font-medium">Crie, edite e organize o conteúdo da sua Academy Cloud.</p>
                 </div>
-                <Button
-                    onClick={handleCreateNew}
-                    className="h-14 px-8 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black shadow-xl shadow-blue-200 transition-all hover:scale-105 active:scale-95 flex gap-2"
-                >
-                    <Plus className="h-5 w-5" />
-                    Novo Treinamento
-                </Button>
+                <div className="flex flex-wrap gap-4">
+                    <Button
+                        variant="outline"
+                        onClick={() => setIsCategoryDialogOpen(true)}
+                        className="h-14 px-8 rounded-2xl border-slate-200 text-slate-600 font-black transition-all hover:bg-slate-50 flex gap-2"
+                    >
+                        <Layers className="h-5 w-5" />
+                        Categorias
+                    </Button>
+                    <Button
+                        onClick={handleCreateNew}
+                        className="h-14 px-8 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black shadow-xl shadow-blue-200 transition-all hover:scale-105 active:scale-95 flex gap-2"
+                    >
+                        <Plus className="h-5 w-5" />
+                        Novo Treinamento
+                    </Button>
+                </div>
             </div>
 
             {isEditing ? (
@@ -249,7 +357,14 @@ export default function LearningManagementPage() {
                                         <CardTitle className="text-2xl font-black">Estrutura de Conteúdo</CardTitle>
                                         <CardDescription>Módulos e Lições do curso.</CardDescription>
                                     </div>
-                                    <Button variant="outline" className="rounded-xl border-slate-200 font-bold gap-2">
+                                    <Button
+                                        variant="outline"
+                                        className="rounded-xl border-slate-200 font-bold gap-2"
+                                        onClick={() => {
+                                            setModuleForm({ title: '', sequenceOrder: (selectedCourse.modules?.length || 0) + 1 });
+                                            setIsModuleDialogOpen(true);
+                                        }}
+                                    >
                                         <Plus className="h-4 w-4" />
                                         Novo Módulo
                                     </Button>
@@ -282,16 +397,34 @@ export default function LearningManagementPage() {
                                                         {module.lessons?.map((lesson, lIdx) => (
                                                             <div key={lesson.id} className="bg-white border border-slate-100 p-4 rounded-xl flex items-center justify-between shadow-sm hover:border-blue-200 transition-all">
                                                                 <div className="flex items-center gap-3">
-                                                                    {lesson.contentType === 'VIDEO' ? <Video className="h-3 w-3 text-blue-500" /> : <FileText className="h-3 w-3 text-emerald-500" />}
+                                                                    {lesson.contentType === 'VIDEO' && <Video className="h-3 w-3 text-blue-500" />}
+                                                                    {lesson.contentType === 'DOCUMENTO' && <FileText className="h-3 w-3 text-rose-500" />}
+                                                                    {lesson.contentType === 'QUIZ' && <BrainCircuit className="h-3 w-3 text-amber-500" />}
+                                                                    {lesson.contentType === 'ARTIGO' && <Type className="h-3 w-3 text-emerald-500" />}
                                                                     <span className="text-sm font-bold text-slate-600">{lesson.title}</span>
                                                                 </div>
                                                                 <div className="flex items-center gap-2">
                                                                     <span className="text-[10px] font-black text-slate-400 uppercase">{lesson.durationMinutes}m</span>
-                                                                    <MoreVertical className="h-4 w-4 text-slate-300 cursor-pointer" />
+                                                                    <Button
+                                                                        size="icon"
+                                                                        variant="ghost"
+                                                                        className="h-8 w-8 text-rose-500"
+                                                                        onClick={() => handleDeleteLesson(module.id, lesson.id)}
+                                                                    >
+                                                                        <Trash2 className="h-3 w-3" />
+                                                                    </Button>
                                                                 </div>
                                                             </div>
                                                         ))}
-                                                        <Button variant="ghost" className="w-fit h-10 px-4 mt-2 rounded-xl text-xs font-black uppercase text-blue-600 hover:bg-blue-50/50 gap-2">
+                                                        <Button
+                                                            variant="ghost"
+                                                            className="w-fit h-10 px-4 mt-2 rounded-xl text-xs font-black uppercase text-blue-600 hover:bg-blue-50/50 gap-2"
+                                                            onClick={() => {
+                                                                setSelectedModule(module);
+                                                                setLessonForm({ title: '', contentType: 'VIDEO', sequenceOrder: (module.lessons?.length || 0) + 1 });
+                                                                setIsLessonDialogOpen(true);
+                                                            }}
+                                                        >
                                                             <Plus className="h-3 w-3" />
                                                             Adicionar Aula
                                                         </Button>
@@ -440,12 +573,187 @@ export default function LearningManagementPage() {
                                     <h3 className="text-xl font-black text-slate-900 uppercase">Nenhum treinamento encontrado</h3>
                                     <p className="text-slate-400 max-w-sm mx-auto font-medium">Você ainda não criou nenhum treinamento ou sua busca não retornou resultados.</p>
                                 </div>
-                                <Button onClick={handleCreateNew} className="h-14 px-10 rounded-2xl bg-slate-900 font-black uppercase tracking-widest text-[10px]">Começar Agora</Button>
+                                <div className="flex justify-center">
+                                    <Button onClick={handleCreateNew} className="h-14 px-10 rounded-2xl bg-slate-900 font-black uppercase tracking-widest text-[10px]">Começar Agora</Button>
+                                </div>
                             </div>
                         )}
                     </div>
                 </div>
             )}
+
+            {/* Category Dialog */}
+            <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
+                <DialogContent className="max-w-md rounded-[2rem] border-slate-100 p-8">
+                    <DialogHeader>
+                        <DialogTitle className="text-2xl font-black tracking-tight">Gerenciar Categorias</DialogTitle>
+                        <DialogDescription className="font-medium">Crie categorias para organizar seus treinamentos.</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-6 pt-6">
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Nome da Categoria</label>
+                            <Input
+                                placeholder="Ex: Liderança, Vendas, Tecnologia"
+                                onChange={e => setCategoryForm({ ...categoryForm, name: e.target.value })}
+                                className="h-12 rounded-xl border-slate-100 font-bold"
+                            />
+                        </div>
+                        <div className="max-h-[200px] overflow-y-auto space-y-2 pr-2">
+                            {categories.map(cat => (
+                                <div key={cat.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+                                    <span className="text-sm font-bold text-slate-700">{cat.name}</span>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-rose-500" onClick={async () => {
+                                        if (confirm('Excluir categoria?')) {
+                                            await categoriesApi.delete(cat.id);
+                                            loadInitialData();
+                                        }
+                                    }}>
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    <DialogFooter className="pt-6">
+                        <Button className="w-full h-12 rounded-xl bg-blue-600 font-black uppercase tracking-widest text-[10px]" onClick={handleSaveCategory}>Criar Categoria</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Module Dialog */}
+            <Dialog open={isModuleDialogOpen} onOpenChange={setIsModuleDialogOpen}>
+                <DialogContent className="max-w-md rounded-[2rem] border-slate-100 p-8">
+                    <DialogHeader>
+                        <DialogTitle className="text-2xl font-black tracking-tight">Novo Módulo</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-6 pt-6">
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Título do Módulo</label>
+                            <Input
+                                placeholder="Ex: Introdução ao CRM"
+                                value={moduleForm.title}
+                                onChange={e => setModuleForm({ ...moduleForm, title: e.target.value })}
+                                className="h-12 rounded-xl border-slate-100 font-bold"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Ordem de Exibição</label>
+                            <Input
+                                type="number"
+                                value={moduleForm.sequenceOrder}
+                                onChange={e => setModuleForm({ ...moduleForm, sequenceOrder: parseInt(e.target.value) })}
+                                className="h-12 rounded-xl border-slate-100 font-bold"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter className="pt-6 gap-2">
+                        <Button variant="ghost" onClick={() => setIsModuleDialogOpen(false)} className="rounded-xl font-bold">Cancelar</Button>
+                        <Button className="rounded-xl bg-slate-900 font-black uppercase tracking-widest text-[10px]" onClick={handleSaveModule}>Salvar Módulo</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Lesson Dialog - The "Robust" Screen */}
+            <Dialog open={isLessonDialogOpen} onOpenChange={setIsLessonDialogOpen}>
+                <DialogContent className="max-w-2xl rounded-[2rem] border-slate-100 p-10 overflow-hidden flex flex-col max-h-[90vh]">
+                    <DialogHeader>
+                        <DialogTitle className="text-3xl font-black tracking-tight">Configurar Lição</DialogTitle>
+                        <DialogDescription className="font-medium italic">"{selectedModule?.title}"</DialogDescription>
+                    </DialogHeader>
+
+                    <div className="flex-1 overflow-y-auto space-y-8 py-8 pr-2">
+                        <div className="space-y-4">
+                            <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Título da Lição</label>
+                            <Input
+                                placeholder="Ex: Aula 01 - Boas Vindas"
+                                value={lessonForm.title}
+                                onChange={e => setLessonForm({ ...lessonForm, title: e.target.value })}
+                                className="h-14 rounded-xl border-slate-100 font-bold text-lg"
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-6">
+                            <div className="space-y-4">
+                                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Tipo de Conteúdo</label>
+                                <Select
+                                    value={lessonForm.contentType}
+                                    onValueChange={val => setLessonForm({ ...lessonForm, contentType: val as ContentType })}
+                                >
+                                    <SelectTrigger className="h-14 rounded-xl border-slate-100 font-bold bg-slate-50">
+                                        <SelectValue placeholder="Selecione o tipo" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-2xl border-slate-100 shadow-2xl">
+                                        <SelectItem value="VIDEO" className="focus:bg-blue-50">Vídeo (Embed/Link)</SelectItem>
+                                        <SelectItem value="DOCUMENTO" className="focus:bg-rose-50">Documento (PDF/URL)</SelectItem>
+                                        <SelectItem value="ARTIGO" className="focus:bg-emerald-50">Texto Interativo</SelectItem>
+                                        <SelectItem value="QUIZ" className="focus:bg-amber-50">Quiz / Avaliação</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-4">
+                                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Duração (minutos)</label>
+                                <Input
+                                    type="number"
+                                    value={lessonForm.durationMinutes}
+                                    onChange={e => setLessonForm({ ...lessonForm, durationMinutes: parseInt(e.target.value) })}
+                                    className="h-14 rounded-xl border-slate-100 font-bold bg-slate-50"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Contextual Fields */}
+                        {(lessonForm.contentType === 'VIDEO' || lessonForm.contentType === 'DOCUMENTO') && (
+                            <div className="space-y-4 animate-in slide-in-from-top-4 duration-300">
+                                <div className="flex items-center gap-2">
+                                    <Link2 className="h-4 w-4 text-blue-600" />
+                                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">URL do Conteúdo</label>
+                                </div>
+                                <Input
+                                    placeholder="https://youtube.com/embed/... ou link do PDF"
+                                    value={lessonForm.contentUrl}
+                                    onChange={e => setLessonForm({ ...lessonForm, contentUrl: e.target.value })}
+                                    className="h-14 rounded-xl border-slate-100 font-bold bg-blue-50/30"
+                                />
+                                <p className="text-[10px] text-slate-400 font-medium italic">Links do YouTube e Vimeo serão convertidos em player automaticamente.</p>
+                            </div>
+                        )}
+
+                        {lessonForm.contentType === 'ARTIGO' && (
+                            <div className="space-y-4 animate-in slide-in-from-top-4 duration-300">
+                                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Conteúdo do Artigo (HTML/Texto)</label>
+                                <textarea
+                                    className="w-full min-h-[300px] p-6 rounded-2xl border border-slate-100 bg-slate-50/50 font-medium text-slate-600 leading-relaxed outline-none focus:ring-2 focus:ring-blue-500/10"
+                                    placeholder="Escreva seu conteúdo aqui..."
+                                    value={lessonForm.contentText}
+                                    onChange={e => setLessonForm({ ...lessonForm, contentText: e.target.value })}
+                                />
+                            </div>
+                        )}
+
+                        {lessonForm.contentType === 'QUIZ' && (
+                            <div className="p-8 bg-amber-50 rounded-3xl border border-amber-100 space-y-6 animate-in slide-in-from-top-4 duration-300">
+                                <div className="flex items-center gap-3">
+                                    <BrainCircuit className="h-6 w-6 text-amber-600" />
+                                    <h4 className="font-black text-amber-900">Configuração de Quiz</h4>
+                                </div>
+                                <p className="text-sm text-amber-700/70 font-medium">Vinculado ao sistema de avaliação automática do Axon Academy.</p>
+                                <Button variant="outline" className="w-full h-12 rounded-xl bg-white border-amber-200 text-amber-700 font-bold gap-2">
+                                    <ListChecks className="h-4 w-4" />
+                                    Configurar Perguntas
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+
+                    <DialogFooter className="pt-8 border-t border-slate-50">
+                        <Button variant="ghost" className="h-14 px-8 rounded-2xl font-bold" onClick={() => setIsLessonDialogOpen(false)}>Cancelar</Button>
+                        <Button className="h-14 px-10 rounded-2xl bg-blue-600 text-white font-black shadow-xl shadow-blue-100 flex gap-2" onClick={handleSaveLesson}>
+                            <Save className="h-5 w-5" />
+                            Finalizar Lição
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
