@@ -196,7 +196,7 @@ public class ToolDefinitionService {
             "campos", Map.of(
                 "type", "array",
                 "items", Map.of("type", "string"),
-                "description", "Lista de campos a retornar: nome, cpf, cargo, departamento, salario, data_admissao, email, telefone",
+                "description", "Lista de campos a retornar: nome, cpf, cargo, departamento, salario, data_admissao, data_nascimento, idade, email, telefone",
                 "default", List.of("nome", "cargo", "departamento")
             ),
             "limite", Map.of(
@@ -213,7 +213,7 @@ public class ToolDefinitionService {
                         .name("consultar_funcionarios")
                         .description("Consulta informações de funcionários no sistema. " +
                                 "Permite buscar por nome, departamento, cargo ou listar todos. " +
-                                "Retorna dados como nome, cargo, departamento, salário, etc.")
+                                "Retorna dados como nome, cargo, departamento, salário, data de nascimento, idade, etc.")
                         .parameters(parameters)
                         .build())
                 .build();
