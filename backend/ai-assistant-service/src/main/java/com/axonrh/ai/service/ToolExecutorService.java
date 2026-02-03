@@ -142,14 +142,15 @@ public class ToolExecutorService {
         String filtro = getString(args, "filtro");
         String status = getString(args, "status", "ACTIVE");
         int limite = getInt(args, "limite", 10);
+        List<String> campos = getStringList(args, "campos", List.of("nome", "cargo", "departamento"));
 
         // Build a natural language query for QueryBuilderService
-        String question = buildEmployeeQuery(filtro, status, limite);
+        String question = buildEmployeeQuery(filtro, status, limite, campos);
 
-        log.debug("Querying employees: filter={}, status={}, limit={}", filtro, status, limite);
+        log.debug("Querying employees: filter={}, status={}, limit={}, campos={}", filtro, status, limite, campos);
 
         QueryBuilderService.QueryResult result = queryBuilderService.buildAndExecuteQuery(
-                question, Map.of("status", status, "limit", limite),
+                question, Map.of("status", status, "limit", limite, "campos", campos),
                 context.tenantId(), List.of());
 
         return formatQueryResult(result);
@@ -186,12 +187,14 @@ public class ToolExecutorService {
 
     // === Helper methods for building queries ===
 
-    private String buildEmployeeQuery(String filtro, String status, int limite) {
+    private String buildEmployeeQuery(String filtro, String status, int limite, List<String> campos) {
+        String camposStr = String.join(", ", campos);
         if ("todos".equalsIgnoreCase(filtro)) {
-            return String.format("Listar funcionários com status %s, limite de %d registros", status, limite);
+            return String.format("Listar funcionários com status %s, retornando os campos: %s, limite de %d registros",
+                    status, camposStr, limite);
         }
-        return String.format("Buscar funcionários onde nome, cargo ou departamento contém '%s', status %s, limite %d",
-                filtro, status, limite);
+        return String.format("Buscar funcionários onde nome, cargo ou departamento contém '%s', status %s, retornando os campos: %s, limite %d",
+                filtro, status, camposStr, limite);
     }
 
     // === Helper methods for extracting arguments ===
@@ -238,6 +241,17 @@ public class ToolExecutorService {
         return args.has(field) ? LocalDate.parse(args.get(field).asText()) : defaultValue;
     }
 
+    private List<String> getStringList(JsonNode args, String field, List<String> defaultValue) {
+        if (!args.has(field) || !args.get(field).isArray()) {
+            return defaultValue;
+        }
+        List<String> result = new ArrayList<>();
+        for (JsonNode item : args.get(field)) {
+            result.add(item.asText());
+        }
+        return result.isEmpty() ? defaultValue : result;
+    }
+
     // === Helper methods for formatting results ===
 
     private String formatCalculationResult(CalculationService.CalculationResult result) throws Exception {
@@ -260,6 +274,9 @@ public class ToolExecutorService {
             formatted.put("total_registros", result.getRowCount());
             formatted.put("explicacao", result.getExplanation());
             formatted.put("dados", result.getData());
+            if (result.getRowCount() > 0) {
+                formatted.put("instrucao_formatacao", "Apresente estes dados em formato de TABELA MARKDOWN para o usuário. Use | para separar colunas.");
+            }
         } else {
             formatted.put("erro", result.getError());
         }
