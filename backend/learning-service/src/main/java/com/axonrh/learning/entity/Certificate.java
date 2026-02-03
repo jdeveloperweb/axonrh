@@ -11,7 +11,7 @@ import java.util.UUID;
  * Certificado emitido apos a conclusao de um curso
  */
 @Entity
-@Table(name = "certificates")
+@Table(name = "certificates", schema = "shared")
 public class Certificate {
 
     @Id

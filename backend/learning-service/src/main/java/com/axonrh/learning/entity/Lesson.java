@@ -11,7 +11,7 @@ import java.util.UUID;
  * Licao/Aula de um modulo.
  */
 @Entity
-@Table(name = "lessons")
+@Table(name = "lessons", schema = "shared")
 public class Lesson {
 
     @Id

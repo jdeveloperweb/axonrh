@@ -11,7 +11,7 @@ import java.util.UUID;
  * Progresso do aluno em uma licao.
  */
 @Entity
-@Table(name = "lesson_progress")
+@Table(name = "lesson_progress", schema = "shared")
 public class LessonProgress {
 
     @Id

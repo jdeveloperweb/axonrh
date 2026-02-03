@@ -18,7 +18,7 @@ import java.util.UUID;
  * Curso/Treinamento.
  */
 @Entity
-@Table(name = "courses")
+@Table(name = "courses", schema = "shared")
 public class Course {
 
     @Id

@@ -13,7 +13,7 @@ import java.util.UUID;
  * Modulo de um curso.
  */
 @Entity
-@Table(name = "course_modules")
+@Table(name = "course_modules", schema = "shared")
 public class CourseModule {
 
     @Id

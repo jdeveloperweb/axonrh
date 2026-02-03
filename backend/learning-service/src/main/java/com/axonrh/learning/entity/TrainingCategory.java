@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "training_categories")
+@Table(name = "training_categories", schema = "shared")
 @Getter
 @Setter
 public class TrainingCategory {

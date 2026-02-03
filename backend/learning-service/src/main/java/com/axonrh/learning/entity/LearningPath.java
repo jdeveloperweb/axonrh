@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "learning_paths")
+@Table(name = "learning_paths", schema = "shared")
 @Getter
 @Setter
 public class LearningPath {

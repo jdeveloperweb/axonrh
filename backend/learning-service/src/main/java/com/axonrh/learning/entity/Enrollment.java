@@ -16,7 +16,7 @@ import java.util.UUID;
  * Matricula de um colaborador em um curso.
  */
 @Entity
-@Table(name = "enrollments")
+@Table(name = "enrollments", schema = "shared")
 public class Enrollment {
 
     @Id
