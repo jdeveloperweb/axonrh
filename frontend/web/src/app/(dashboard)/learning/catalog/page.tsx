@@ -24,6 +24,7 @@ import {
 import Image from "next/image";
 import Link from 'next/link';
 import { coursesApi, categoriesApi, Course, TrainingCategory, CourseType, DifficultyLevel, CourseStatus } from '@/lib/api/learning';
+import { cn } from '@/lib/utils';
 
 // Mock Data for fallback
 const MOCK_COURSES: Course[] = [
