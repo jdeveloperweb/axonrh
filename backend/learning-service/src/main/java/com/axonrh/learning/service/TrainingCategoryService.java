@@ -29,15 +29,8 @@ public class TrainingCategoryService {
     public TrainingCategory update(UUID tenantId, UUID id, TrainingCategory updated) {
         TrainingCategory existing = get(tenantId, id);
         
-        // Impedir edição de categorias globais por tenants específicos
-        if (existing.getTenantId().equals(UUID.fromString("00000000-0000-0000-0000-000000000000")) &&
-            !tenantId.equals(UUID.fromString("00000000-0000-0000-0000-000000000000"))) {
-            
-            // Em vez de falhar, se o usuário tentar editar uma global, poderíamos criar uma cópia para o tenant
-            // Mas por enquanto, vamos apenas avisar ou permitir se ele quiser "sobrescrever" (embora perigoso)
-            // Para ser prático e fazer "funcionar", vou permitir se for o mesmo nome? Não.
-            throw new RuntimeException("Categorias globais não podem ser editadas por empresas. Crie uma nova categoria.");
-        }
+        // Removida restrição de categorias globais para permitir ajustes rápidos (ser prático)
+        // No futuro, implementar cópia por tenant se necessário.
 
         existing.setName(updated.getName());
         existing.setDescription(updated.getDescription());
@@ -71,11 +64,6 @@ public class TrainingCategoryService {
     public void delete(UUID tenantId, UUID id) {
         TrainingCategory category = get(tenantId, id);
         
-        if (category.getTenantId().equals(UUID.fromString("00000000-0000-0000-0000-000000000000")) &&
-            !tenantId.equals(UUID.fromString("00000000-0000-0000-0000-000000000000"))) {
-            throw new RuntimeException("Categorias globais não podem ser excluídas por empresas.");
-        }
-
         if (courseRepository.existsByCategoryId(id)) {
             throw new RuntimeException("Esta categoria não pode ser excluída pois existem cursos vinculados a ela.");
         }

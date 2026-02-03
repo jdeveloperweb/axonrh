@@ -337,7 +337,7 @@ export default function LearningManagementPage() {
                 /* Edit Form Mode - Full Page */
                 <div className="grid lg:grid-cols-12 gap-10">
                     <div className="lg:col-span-8 space-y-10">
-                        <Card className="border-slate-100 shadow-sm rounded-3xl overflow-hidden">
+                        <Card className="border-slate-100 shadow-sm rounded-2xl overflow-hidden">
                             <CardHeader className="border-b border-slate-50 py-8 px-10">
                                 <CardTitle className="text-2xl font-black">{selectedCourse ? 'Editar Treinamento' : 'Novo Treinamento'}</CardTitle>
                                 <CardDescription>Configure as informações principais do curso.</CardDescription>
@@ -425,7 +425,7 @@ export default function LearningManagementPage() {
                         </Card>
 
                         {selectedCourse && (
-                            <Card className="border-slate-100 shadow-sm rounded-3xl overflow-hidden mt-10">
+                            <Card className="border-slate-100 shadow-sm rounded-2xl overflow-hidden mt-10">
                                 <CardHeader className="border-b border-slate-50 py-8 px-10 flex flex-row items-center justify-between">
                                     <div>
                                         <CardTitle className="text-2xl font-black">Estrutura de Conteúdo</CardTitle>
@@ -435,7 +435,7 @@ export default function LearningManagementPage() {
                                         variant="outline"
                                         className="rounded-xl border-slate-200 font-bold gap-2"
                                         onClick={() => {
-                                            setModuleForm({ title: '', sequenceOrder: (selectedCourse.modules?.length || 0) + 1 });
+                                            setModuleForm({ title: '', sequenceOrder: (selectedCourse!.modules?.length || 0) + 1 });
                                             setIsModuleDialogOpen(true);
                                         }}
                                     >
@@ -444,7 +444,7 @@ export default function LearningManagementPage() {
                                     </Button>
                                 </CardHeader>
                                 <CardContent className="p-0">
-                                    {selectedCourse.modules?.length === 0 ? (
+                                    {selectedCourse!.modules?.length === 0 ? (
                                         <div className="p-16 text-center space-y-4">
                                             <div className="h-16 w-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto">
                                                 <Layers className="h-8 w-8 text-slate-300" />
@@ -453,7 +453,7 @@ export default function LearningManagementPage() {
                                         </div>
                                     ) : (
                                         <div className="divide-y divide-slate-50">
-                                            {selectedCourse.modules?.map((module, idx) => (
+                                            {selectedCourse!.modules?.map((module, idx) => (
                                                 <div key={module.id} className={cn(
                                                     "p-8 hover:bg-slate-50/50 transition-all border-l-4",
                                                     selectedModule?.id === module.id ? "border-l-blue-600 bg-blue-50/20" : "border-l-transparent"
@@ -516,7 +516,7 @@ export default function LearningManagementPage() {
                     </div>
 
                     <aside className="lg:col-span-4 space-y-6">
-                        <div className="bg-white border border-slate-100 rounded-3xl p-8 shadow-xl shadow-slate-200/20 space-y-8 sticky top-6">
+                        <div className="bg-white border border-slate-100 rounded-2xl p-8 shadow-xl shadow-slate-200/20 space-y-8 sticky top-6">
                             <div className="space-y-2">
                                 <h3 className="font-black text-lg">Ações e Status</h3>
                                 <p className="text-xs text-slate-500">Controle a visibilidade do conteúdo.</p>
@@ -581,7 +581,7 @@ export default function LearningManagementPage() {
                 </div>
             ) : activeView === 'CATEGORIES' ? (
                 /* Categories View - Inline Section */
-                <div className="bg-white border border-slate-100 rounded-[3rem] overflow-hidden shadow-2xl flex flex-col md:flex-row min-h-[700px] animate-in slide-in-from-bottom-6 duration-700">
+                <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-2xl flex flex-col md:flex-row min-h-[700px] animate-in slide-in-from-bottom-6 duration-700">
                     {/* Form Side */}
                     <div className="w-full md:w-[400px] p-12 bg-slate-50/50 border-r border-slate-100 space-y-10">
                         <div className="space-y-4">
@@ -659,7 +659,7 @@ export default function LearningManagementPage() {
                                         key={cat.id}
                                         onClick={() => setCategoryForm(cat)}
                                         className={cn(
-                                            "group p-6 rounded-[2rem] border transition-all cursor-pointer flex flex-col justify-between gap-6",
+                                            "group p-6 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-6",
                                             categoryForm.id === cat.id
                                                 ? "bg-blue-600 border-blue-600 text-white shadow-2xl shadow-blue-200 -translate-y-1"
                                                 : "bg-white border-slate-100 hover:border-blue-100 hover:shadow-xl hover:-translate-y-1"
@@ -728,7 +728,7 @@ export default function LearningManagementPage() {
 
                     <div className="grid gap-6">
                         {filteredCourses.map(course => (
-                            <div key={course.id} className="bg-white border border-slate-100 rounded-3xl p-8 flex flex-col md:flex-row md:items-center justify-between gap-8 hover:shadow-xl hover:border-blue-200 transition-all group cursor-pointer shadow-sm">
+                            <div key={course.id} className="bg-white border border-slate-100 rounded-2xl p-8 flex flex-col md:flex-row md:items-center justify-between gap-8 hover:shadow-xl hover:border-blue-200 transition-all group cursor-pointer shadow-sm">
                                 <div className="flex items-center gap-6">
                                     <div className="h-24 w-24 rounded-2xl bg-slate-900 relative overflow-hidden shrink-0 shadow-lg">
                                         <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-purple-600 opacity-60" />
@@ -779,8 +779,8 @@ export default function LearningManagementPage() {
                         ))}
 
                         {filteredCourses.length === 0 && (
-                            <div className="py-24 text-center space-y-6 bg-slate-50 rounded-[4rem] border border-dashed border-slate-200">
-                                <div className="h-20 w-20 bg-white rounded-[2rem] flex items-center justify-center mx-auto shadow-sm">
+                            <div className="py-24 text-center space-y-6 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                                <div className="h-20 w-20 bg-white rounded-2xl flex items-center justify-center mx-auto shadow-sm">
                                     <BookOpen className="h-8 w-8 text-slate-200" />
                                 </div>
                                 <div className="space-y-2">

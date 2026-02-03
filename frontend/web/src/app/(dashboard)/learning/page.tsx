@@ -168,7 +168,7 @@ export default function LearningDashboard() {
       {/* --- HERO SECTION --- */}
       <section className="grid lg:grid-cols-12 gap-8 pt-8 items-stretch">
         {/* Main Welcome Banner */}
-        <div className="lg:col-span-8 relative overflow-hidden rounded-[2.5rem] bg-white border border-slate-100 p-10 md:p-16 flex flex-col justify-center min-h-[420px] shadow-2xl shadow-slate-200/40 transition-all hover:border-blue-100/50">
+        <div className="lg:col-span-8 relative overflow-hidden rounded-2xl bg-white border border-slate-100 p-10 md:p-16 flex flex-col justify-center min-h-[420px] shadow-2xl shadow-slate-200/40 transition-all hover:border-blue-100/50">
 
           {/* Enhanced Accent Gradients */}
           <div className="absolute inset-0 pointer-events-none">
@@ -234,7 +234,7 @@ export default function LearningDashboard() {
         {/* Stats Column */}
         <div className="lg:col-span-4 grid sm:grid-cols-2 lg:grid-cols-1 gap-6">
           {/* Progress Card */}
-          <div className="bg-slate-950 rounded-[2.5rem] p-10 text-white relative overflow-hidden group shadow-2xl transition-all hover:scale-[1.02] hover:shadow-blue-500/10">
+          <div className="bg-slate-950 rounded-2xl p-10 text-white relative overflow-hidden group shadow-2xl transition-all hover:scale-[1.02] hover:shadow-blue-500/10">
             <div className="absolute -right-6 -top-6 opacity-10 group-hover:scale-125 group-hover:rotate-12 transition-transform duration-1000">
               <Trophy className="h-48 w-48 text-blue-500" />
             </div>
@@ -268,9 +268,9 @@ export default function LearningDashboard() {
           </div>
 
           {/* Activity Card */}
-          <div className="bg-white border border-slate-100 rounded-[2.5rem] p-10 flex flex-col justify-between relative overflow-hidden group shadow-xl transition-all hover:border-indigo-100">
+          <div className="bg-white border border-slate-100 rounded-2xl p-10 flex flex-col justify-between relative overflow-hidden group shadow-xl transition-all hover:border-indigo-100">
             <div className="absolute top-0 right-0 p-8">
-              <div className="h-16 w-16 rounded-[1.5rem] bg-indigo-50 border border-indigo-100 flex items-center justify-center group-hover:rotate-6 transition-transform shadow-sm">
+              <div className="h-16 w-16 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center group-hover:rotate-6 transition-transform shadow-sm">
                 <TrendingUp className="h-8 w-8 text-indigo-600" />
               </div>
             </div>
@@ -351,7 +351,7 @@ export default function LearningDashboard() {
           </div>
 
           {/* Achievements Highlight */}
-          <div className="relative overflow-hidden p-8 rounded-[2rem] bg-gradient-to-br from-indigo-600 to-blue-700 text-white shadow-2xl">
+          <div className="relative overflow-hidden p-8 rounded-2xl bg-gradient-to-br from-indigo-600 to-blue-700 text-white shadow-2xl">
             <div className="absolute -right-4 -bottom-4 opacity-10">
               <Star className="h-24 w-24 fill-white" />
             </div>
@@ -410,7 +410,7 @@ export default function LearningDashboard() {
               <div className="grid md:grid-cols-2 gap-8">
                 {myEnrollments.slice(0, 2).map((enrollment) => (
                   <Link key={enrollment.id} href={`/learning/course/${enrollment.courseId}`}>
-                    <div className="group relative bg-white border border-slate-100 rounded-[2rem] p-8 flex items-center gap-8 hover:shadow-2xl transition-all duration-500 cursor-pointer overflow-hidden shadow-sm hover:border-blue-100">
+                    <div className="group relative bg-white border border-slate-100 rounded-2xl p-8 flex items-center gap-8 hover:shadow-2xl transition-all duration-500 cursor-pointer overflow-hidden shadow-sm hover:border-blue-100">
                       <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 opacity-0 group-hover:opacity-100 transition-opacity" />
 
                       <div className="h-24 w-24 rounded-3xl bg-slate-950 relative flex items-center justify-center shrink-0 shadow-xl group-hover:scale-105 transition-transform duration-700">
@@ -459,8 +459,8 @@ export default function LearningDashboard() {
             </div>
 
             {filteredCourses.length === 0 && (
-              <div className="py-32 text-center space-y-8 bg-slate-50 rounded-[4rem] border-2 border-dashed border-slate-200 animate-in fade-in duration-700">
-                <div className="h-24 w-24 bg-white rounded-[2rem] flex items-center justify-center mx-auto shadow-xl">
+              <div className="py-32 text-center space-y-8 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 animate-in fade-in duration-700">
+                <div className="h-24 w-24 bg-white rounded-2xl flex items-center justify-center mx-auto shadow-xl">
                   <BookOpen className="h-10 w-10 text-slate-200" />
                 </div>
                 <div className="space-y-2">
@@ -505,7 +505,7 @@ function CourseCardSimple({ course }: { course: any }) {
 
   return (
     <Link href={`/learning/course/${course.id}`}>
-      <div className="group flex flex-col h-full bg-white border border-slate-100 rounded-[2.5rem] overflow-hidden hover:shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] transition-all duration-700 cursor-pointer shadow-sm hover:-translate-y-2 border-b-4 hover:border-b-blue-600">
+      <div className="group flex flex-col h-full bg-white border border-slate-100 rounded-2xl overflow-hidden hover:shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] transition-all duration-700 cursor-pointer shadow-sm hover:-translate-y-2 border-b-4 hover:border-b-blue-600">
 
         {/* Course Thumbnail Header */}
         <div className="h-56 relative overflow-hidden bg-slate-900">
@@ -518,7 +518,7 @@ function CourseCardSimple({ course }: { course: any }) {
 
           {/* Floating Icon Center */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="h-20 w-20 rounded-[1.75rem] bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center group-hover:scale-110 group-hover:rotate-12 transition-all duration-700 shadow-2xl">
+            <div className="h-20 w-20 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center group-hover:scale-110 group-hover:rotate-12 transition-all duration-700 shadow-2xl">
               <Zap className="h-8 w-8 text-white fill-white/20" />
             </div>
           </div>
