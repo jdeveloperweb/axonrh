@@ -26,7 +26,8 @@ import {
   categoriesApi,
 } from '@/lib/api/learning';
 import { useAuthStore } from '@/stores/auth-store';
-import { cn } from '@/lib/utils';
+import { useThemeStore } from '@/stores/theme-store';
+import { cn, getPhotoUrl } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -85,6 +86,7 @@ const MOCK_CATEGORIES: TrainingCategory[] = [
 
 export default function LearningDashboard() {
   const { user } = useAuthStore();
+  const { tenantTheme } = useThemeStore();
   const [publishedCourses, setPublishedCourses] = useState<any[]>([]);
   const [categories, setCategories] = useState<TrainingCategory[]>([]);
   const [myEnrollments, setMyEnrollments] = useState<Enrollment[]>([]);
@@ -156,9 +158,18 @@ export default function LearningDashboard() {
           </div>
 
           <div className="relative z-10 space-y-8">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-blue-600/5 border border-blue-600/10 text-blue-600 text-[10px] font-black uppercase tracking-[0.2em]">
-              <Sparkles className="h-3 w-3" />
-              <span>Nome da Empresa ACADEMY CLOUD</span>
+            <div className="inline-flex items-center gap-3 px-3 py-1.5 rounded-xl bg-white border border-slate-100 shadow-sm transition-all hover:shadow-md">
+              {tenantTheme?.logoUrl ? (
+                <img
+                  src={getPhotoUrl(tenantTheme.logoUrl, '', 'logo') || ''}
+                  alt="Logo"
+                  className="h-5 w-auto object-contain"
+                />
+              ) : (
+                <Sparkles className="h-3.5 w-3.5 text-blue-600" />
+              )}
+              <div className="h-3 w-[1px] bg-slate-200 mx-1" />
+              <span className="text-slate-600 text-[10px] font-black uppercase tracking-[0.2em]">Academy Cloud</span>
             </div>
 
             <div className="space-y-4">
