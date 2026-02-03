@@ -102,14 +102,43 @@ public class LlmService {
             JsonNode choice = response.get("choices").get(0);
             JsonNode message = choice.get("message");
             JsonNode usage = response.get("usage");
+            String finishReason = choice.get("finish_reason").asText();
+
+            // Extract content (may be null if tool_calls are present)
+            String content = message.has("content") && !message.get("content").isNull()
+                    ? message.get("content").asText()
+                    : null;
+
+            // Extract tool calls if present
+            List<ChatMessage.ToolCall> toolCalls = null;
+            if (message.has("tool_calls") && message.get("tool_calls").isArray()) {
+                toolCalls = new ArrayList<>();
+                for (JsonNode tcNode : message.get("tool_calls")) {
+                    ChatMessage.ToolCall.Function function = ChatMessage.ToolCall.Function.builder()
+                            .name(tcNode.get("function").get("name").asText())
+                            .arguments(tcNode.get("function").get("arguments").asText())
+                            .build();
+
+                    ChatMessage.ToolCall toolCall = ChatMessage.ToolCall.builder()
+                            .id(tcNode.get("id").asText())
+                            .type(tcNode.get("type").asText())
+                            .function(function)
+                            .build();
+
+                    toolCalls.add(toolCall);
+                }
+                log.info("OpenAI requested {} tool call(s): {}", toolCalls.size(),
+                        toolCalls.stream().map(tc -> tc.getFunction().getName()).collect(Collectors.joining(", ")));
+            }
 
             return ChatResponse.builder()
                     .id(response.get("id").asText())
-                    .content(message.get("content").asText())
+                    .content(content)
                     .role(ChatMessage.Role.ASSISTANT)
                     .provider("openai")
                     .model(response.get("model").asText())
-                    .finishReason(choice.get("finish_reason").asText())
+                    .finishReason(finishReason)
+                    .toolCalls(toolCalls)
                     .usage(ChatResponse.Usage.builder()
                             .promptTokens(usage.get("prompt_tokens").asInt())
                             .completionTokens(usage.get("completion_tokens").asInt())
@@ -335,10 +364,35 @@ public class LlmService {
     }
 
     private Map<String, Object> buildOpenAiBody(ChatRequest request, boolean stream) {
-        List<Map<String, String>> messages = request.getMessages().stream()
-                .map(m -> Map.of(
-                        "role", m.getRole().name().toLowerCase(),
-                        "content", m.getContent()))
+        List<Map<String, Object>> messages = request.getMessages().stream()
+                .map(m -> {
+                    Map<String, Object> msg = new java.util.HashMap<>();
+                    msg.put("role", m.getRole().name().toLowerCase());
+
+                    // Handle tool response messages
+                    if (m.getRole() == ChatMessage.Role.TOOL) {
+                        msg.put("content", m.getContent());
+                        msg.put("tool_call_id", m.getToolCallId());
+                    } else if (m.getRole() == ChatMessage.Role.ASSISTANT && m.getToolCalls() != null && !m.getToolCalls().isEmpty()) {
+                        // Assistant message with tool calls - content can be null
+                        msg.put("content", m.getContent());
+                        List<Map<String, Object>> toolCalls = m.getToolCalls().stream()
+                                .map(tc -> Map.<String, Object>of(
+                                        "id", tc.getId(),
+                                        "type", "function",
+                                        "function", Map.of(
+                                                "name", tc.getFunction().getName(),
+                                                "arguments", tc.getFunction().getArguments()
+                                        )
+                                ))
+                                .collect(Collectors.toList());
+                        msg.put("tool_calls", toolCalls);
+                    } else {
+                        msg.put("content", m.getContent());
+                    }
+
+                    return msg;
+                })
                 .collect(Collectors.toList());
 
         Map<String, Object> body = new java.util.HashMap<>();
@@ -347,6 +401,23 @@ public class LlmService {
         body.put("max_tokens", request.getMaxTokens() != null ? request.getMaxTokens() : openAiMaxTokens);
         body.put("temperature", request.getTemperature() != null ? request.getTemperature() : openAiTemperature);
         body.put("stream", stream);
+
+        // Add tools if present
+        if (request.getTools() != null && !request.getTools().isEmpty()) {
+            List<Map<String, Object>> tools = request.getTools().stream()
+                    .map(tool -> Map.<String, Object>of(
+                            "type", tool.getType(),
+                            "function", Map.of(
+                                    "name", tool.getFunction().getName(),
+                                    "description", tool.getFunction().getDescription(),
+                                    "parameters", tool.getFunction().getParameters()
+                            )
+                    ))
+                    .collect(Collectors.toList());
+            body.put("tools", tools);
+            body.put("tool_choice", "auto"); // Let the model decide when to use tools
+        }
+
         return body;
     }
 

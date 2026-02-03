@@ -42,6 +42,7 @@ public class ConversationService {
     private final QueryBuilderService queryBuilderService;
     private final CalculationService calculationService;
     private final KnowledgeService knowledgeService;
+    private final FunctionCallingService functionCallingService;
     private final ObjectMapper objectMapper;
 
     @Value("${assistant.conversation.context-window:10}")
@@ -49,6 +50,9 @@ public class ConversationService {
 
     @Value("${assistant.conversation.auto-summarize-after:20}")
     private int autoSummarizeAfter;
+
+    @Value("${ai.function-calling.enabled:true}")
+    private boolean functionCallingEnabled;
 
     public Conversation createConversation(UUID tenantId, UUID userId, ConversationContext context) {
         Conversation conversation = Conversation.builder()
@@ -87,38 +91,24 @@ public class ConversationService {
                 .build();
         conversation.addMessage(userMsg);
 
-        // Analysis intent
-        NluService.NluResult nluResult = nluService.analyze(userMessage, tenantId, conversation.getMetadata().getLastIntent());
-        log.debug("NLU Result: intent={}, confidence={}", nluResult.getIntent(), nluResult.getConfidence());
-
         // Auto-generate title if it's the first user message
         if (conversation.getTitle() == null || conversation.getTitle().isEmpty() || conversation.getTitle().equals("Nova conversa")) {
             String newTitle = userMessage.length() > 30 ? userMessage.substring(0, 30) + "..." : userMessage;
             conversation.setTitle(newTitle);
-            conversationRepository.save(conversation);
         }
 
-        // Process based on intent
         String response;
         Message.MessageType responseType = Message.MessageType.TEXT;
+        Map<String, Object> messageMetadata = new HashMap<>();
 
         try {
-            response = switch (nluResult.getActionType()) {
-                case DATABASE_QUERY -> handleDatabaseQuery(userMessage, nluResult, tenantId, userId);
-                case CALCULATION -> handleCalculation(nluResult);
-                case KNOWLEDGE_SEARCH -> handleKnowledgeSearch(conversation, userMessage, nluResult, tenantId);
-                case ACTION_CONFIRMATION -> handleActionConfirmation(nluResult);
-                default -> handleGeneralChat(conversation, userMessage, nluResult);
-            };
-
-            if (nluResult.getActionType() == AiIntent.ActionType.DATABASE_QUERY) {
-                responseType = Message.MessageType.QUERY_RESULT;
-            } else if (nluResult.getActionType() == AiIntent.ActionType.CALCULATION) {
-                responseType = Message.MessageType.CALCULATION;
-            } else if (nluResult.getActionType() == AiIntent.ActionType.ACTION_CONFIRMATION) {
-                responseType = Message.MessageType.ACTION_CONFIRMATION;
-            } else if (nluResult.getIntent() != null && nluResult.getIntent().startsWith("execute_")) {
-                responseType = Message.MessageType.TEXT;
+            if (functionCallingEnabled) {
+                // Use Function Calling flow - LLM decides which tools to use
+                response = chatWithFunctionCalling(conversation, tenantId, userId, messageMetadata);
+            } else {
+                // Legacy NLU-based flow
+                response = chatWithNlu(conversation, userMessage, tenantId, userId, messageMetadata);
+                responseType = determineResponseType(messageMetadata);
             }
         } catch (Exception e) {
             log.error("Error processing message: {}", e.getMessage(), e);
@@ -132,13 +122,10 @@ public class ConversationService {
                 .role(Message.MessageRole.ASSISTANT)
                 .content(response)
                 .type(responseType)
-                .metadata(Map.of("intent", nluResult.getIntent(), "confidence", nluResult.getConfidence()))
+                .metadata(messageMetadata)
                 .timestamp(Instant.now())
                 .build();
         conversation.addMessage(assistantMsg);
-
-        // Update metadata
-        conversation.getMetadata().setLastIntent(nluResult.getIntent());
 
         // Auto-summarize if needed
         if (conversation.getMessages().size() > autoSummarizeAfter) {
@@ -156,6 +143,75 @@ public class ConversationService {
                 .build();
     }
 
+    /**
+     * Process chat using Function Calling - LLM decides which tools to use.
+     */
+    private String chatWithFunctionCalling(Conversation conversation, UUID tenantId, UUID userId,
+                                            Map<String, Object> metadata) {
+        List<ChatMessage> messages = buildChatMessages(conversation);
+
+        FunctionCallingService.FunctionCallingResult result = functionCallingService.chat(
+                messages, tenantId, userId);
+
+        // Record metadata about tool usage
+        metadata.put("function_calling", true);
+        metadata.put("iterations", result.iterations());
+        metadata.put("tools_used", result.toolExecutions().stream()
+                .map(FunctionCallingService.ToolExecutionRecord::toolName)
+                .distinct()
+                .toList());
+
+        if (result.usage() != null) {
+            metadata.put("tokens", Map.of(
+                    "prompt", result.usage().getPromptTokens(),
+                    "completion", result.usage().getCompletionTokens(),
+                    "total", result.usage().getTotalTokens()
+            ));
+        }
+
+        log.info("Function calling completed: {} iteration(s), {} tool(s) used",
+                result.iterations(),
+                result.toolExecutions().size());
+
+        return result.content();
+    }
+
+    /**
+     * Legacy NLU-based chat flow.
+     */
+    private String chatWithNlu(Conversation conversation, String userMessage, UUID tenantId, UUID userId,
+                               Map<String, Object> metadata) {
+        NluService.NluResult nluResult = nluService.analyze(
+                userMessage, tenantId, conversation.getMetadata().getLastIntent());
+        log.debug("NLU Result: intent={}, confidence={}", nluResult.getIntent(), nluResult.getConfidence());
+
+        metadata.put("intent", nluResult.getIntent());
+        metadata.put("confidence", nluResult.getConfidence());
+        metadata.put("action_type", nluResult.getActionType().name());
+
+        conversation.getMetadata().setLastIntent(nluResult.getIntent());
+
+        return switch (nluResult.getActionType()) {
+            case DATABASE_QUERY -> handleDatabaseQuery(userMessage, nluResult, tenantId, userId);
+            case CALCULATION -> handleCalculation(nluResult);
+            case KNOWLEDGE_SEARCH -> handleKnowledgeSearch(conversation, userMessage, nluResult, tenantId);
+            case ACTION_CONFIRMATION -> handleActionConfirmation(nluResult);
+            default -> handleGeneralChat(conversation, userMessage, nluResult);
+        };
+    }
+
+    private Message.MessageType determineResponseType(Map<String, Object> metadata) {
+        String actionType = (String) metadata.get("action_type");
+        if (actionType == null) return Message.MessageType.TEXT;
+
+        return switch (actionType) {
+            case "DATABASE_QUERY" -> Message.MessageType.QUERY_RESULT;
+            case "CALCULATION" -> Message.MessageType.CALCULATION;
+            case "ACTION_CONFIRMATION" -> Message.MessageType.ACTION_CONFIRMATION;
+            default -> Message.MessageType.TEXT;
+        };
+    }
+
     public Flux<StreamChunk> streamChat(String conversationId, String userMessage, UUID tenantId, UUID userId) {
         return Mono.fromCallable(() -> {
             Conversation conversation = getOrCreateConversation(conversationId, tenantId, userId);
@@ -169,21 +225,69 @@ public class ConversationService {
                     .timestamp(Instant.now())
                     .build();
             conversation.addMessage(userMsg);
+
+            // Auto-generate title
+            if (conversation.getTitle() == null || conversation.getTitle().isEmpty() || conversation.getTitle().equals("Nova conversa")) {
+                String newTitle = userMessage.length() > 30 ? userMessage.substring(0, 30) + "..." : userMessage;
+                conversation.setTitle(newTitle);
+            }
+
             return conversationRepository.save(conversation);
         }).flatMapMany(conversation -> {
-            // Analyze intent reativelly
+            if (functionCallingEnabled) {
+                // Use Function Calling - execute synchronously and stream result
+                return Mono.fromCallable(() -> {
+                    List<ChatMessage> messages = buildChatMessages(conversation);
+                    FunctionCallingService.FunctionCallingResult result = functionCallingService.chat(
+                            messages, tenantId, userId);
+
+                    // Save assistant response
+                    Message assistantMsg = Message.builder()
+                            .id(UUID.randomUUID().toString())
+                            .role(Message.MessageRole.ASSISTANT)
+                            .content(result.content())
+                            .type(Message.MessageType.TEXT)
+                            .metadata(Map.of(
+                                    "function_calling", true,
+                                    "iterations", result.iterations(),
+                                    "tools_used", result.toolExecutions().stream()
+                                            .map(FunctionCallingService.ToolExecutionRecord::toolName)
+                                            .distinct()
+                                            .toList()
+                            ))
+                            .timestamp(Instant.now())
+                            .build();
+                    conversation.addMessage(assistantMsg);
+                    conversationRepository.save(conversation);
+
+                    return result.content();
+                })
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMapMany(responseStr -> Flux.just(
+                        StreamChunk.builder()
+                                .content(responseStr)
+                                .type(Message.MessageType.TEXT.name())
+                                .done(false)
+                                .build(),
+                        StreamChunk.builder()
+                                .done(true)
+                                .build()
+                ))
+                .onErrorResume(e -> {
+                    log.error("Error in function calling stream: {}", e.getMessage(), e);
+                    return Flux.just(StreamChunk.builder()
+                            .content("Desculpe, ocorreu um erro ao processar sua solicitação.")
+                            .done(true)
+                            .build());
+                });
+            }
+
+            // Legacy NLU-based flow
             return Mono.fromCallable(() -> nluService.analyze(userMessage, tenantId, conversation.getMetadata().getLastIntent()))
                 .flatMapMany(nluResult -> {
                     log.debug("Stream NLU Result: intent={}, actionType={}", nluResult.getIntent(), nluResult.getActionType());
 
-                    // Auto-generate title if it's the first user message
-                    if (conversation.getTitle() == null || conversation.getTitle().isEmpty() || conversation.getTitle().equals("Nova conversa")) {
-                        String newTitle = userMessage.length() > 30 ? userMessage.substring(0, 30) + "..." : userMessage;
-                        conversation.setTitle(newTitle);
-                        conversationRepository.save(conversation);
-                    }
-
-                    // For non-INFORMATION actions, handle synchronouly but return as Flux
+                    // For non-INFORMATION actions, handle synchronously but return as Flux
                     if (nluResult.getActionType() != AiIntent.ActionType.INFORMATION) {
                         return Mono.fromCallable(() -> {
                             log.debug("Processing specialized action: {}", nluResult.getActionType());
@@ -228,7 +332,7 @@ public class ConversationService {
                                 log.warn("Finished processing action with null response");
                                 return Flux.empty();
                             }
-                            
+
                             Message.MessageType streamResponseType = Message.MessageType.TEXT;
                             if (nluResult.getActionType() == AiIntent.ActionType.DATABASE_QUERY) {
                                 streamResponseType = Message.MessageType.QUERY_RESULT;
@@ -238,10 +342,6 @@ public class ConversationService {
                                 streamResponseType = Message.MessageType.ACTION_CONFIRMATION;
                             }
 
-                            log.debug("Emitting chunks for action result. Type: {} Content length: {}", streamResponseType, responseStr != null ? responseStr.length() : "null");
-                            if (responseStr != null && responseStr.length() < 100) {
-                                log.debug("Content preview: {}", responseStr);
-                            }
                             return Flux.just(
                                     StreamChunk.builder()
                                             .content(responseStr)
