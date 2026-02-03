@@ -75,7 +75,6 @@ export default function LearningManagementPage() {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
-    const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
     // Form states
@@ -88,15 +87,8 @@ export default function LearningManagementPage() {
         isMandatory: false,
     });
 
-    // Dialog & UI states
-    const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
-    const [isModuleDialogOpen, setIsModuleDialogOpen] = useState(false);
-    const [isLessonDialogOpen, setIsLessonDialogOpen] = useState(false);
-    const [selectedModule, setSelectedModule] = useState<CourseModule | null>(null);
-    const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
-    const [lessonTab, setLessonTab] = useState<'edit' | 'preview'>('edit');
-
-    // Temp Form States
+    // Navigation state
+    const [activeView, setActiveView] = useState<'LIST' | 'CATEGORIES' | 'EDITOR'>('LIST');
     const [categoryForm, setCategoryForm] = useState<Partial<TrainingCategory>>({ name: '', description: '' });
     const [moduleForm, setModuleForm] = useState<Partial<CourseModule>>({ title: '', description: '', sequenceOrder: 1 });
     const [lessonForm, setLessonForm] = useState<Partial<Lesson>>({
@@ -108,6 +100,13 @@ export default function LearningManagementPage() {
         sequenceOrder: 1,
         isRequired: true
     });
+
+    // Dialog states
+    const [isModuleDialogOpen, setIsModuleDialogOpen] = useState(false);
+    const [isLessonDialogOpen, setIsLessonDialogOpen] = useState(false);
+    const [selectedModule, setSelectedModule] = useState<CourseModule | null>(null);
+    const [lessonTab, setLessonTab] = useState<'edit' | 'preview'>('edit');
+
 
     useEffect(() => {
         loadInitialData();
@@ -148,13 +147,13 @@ export default function LearningManagementPage() {
             isMandatory: false,
         });
         setSelectedCourse(null);
-        setIsEditing(true);
+        setActiveView('EDITOR');
     };
 
     const handleEdit = (course: Course) => {
         setFormData(course);
         setSelectedCourse(course);
-        setIsEditing(true);
+        setActiveView('EDITOR');
     };
 
     const handleSave = async () => {
@@ -170,8 +169,6 @@ export default function LearningManagementPage() {
                 savedCourse = await coursesApi.create(formData as Course) as any;
                 toast.success('Treinamento criado com sucesso!');
             }
-            setSelectedCourse(savedCourse);
-            setIsEditing(true); // Keep in edit mode to add modules
             loadInitialData();
         } catch (error) {
             toast.error('Erro ao salvar treinamento');
@@ -184,19 +181,33 @@ export default function LearningManagementPage() {
     const handleSaveCategory = async () => {
         if (!categoryForm.name) return toast.error('Nome da categoria é obrigatório');
         try {
+            setIsSaving(true);
             if (categoryForm.id) {
                 await categoriesApi.update(categoryForm.id, categoryForm);
-                toast.success('Categoria atualizada!');
+                toast.success('Categoria atualizada com sucesso!');
             } else {
                 await categoriesApi.create(categoryForm);
-                toast.success('Categoria criada!');
+                toast.success('Categoria criada com sucesso!');
             }
-            setIsCategoryDialogOpen(false);
+            // Limpa o form e recarrega
             setCategoryForm({ name: '', description: '' });
-            loadInitialData();
+            await loadInitialData();
         } catch (error) {
             console.error('Erro ao salvar categoria:', error);
-            toast.error('Erro ao salvar categoria.');
+            toast.error('Erro ao salvar categoria. Verifique se o nome já existe.');
+        } finally {
+            setIsSaving(false);
+        }
+    }
+
+    const handleDeleteCategory = async (id: string) => {
+        if (!confirm('Deseja realmente excluir esta categoria? Isso pode afetar os cursos vinculados.')) return;
+        try {
+            await categoriesApi.delete(id);
+            toast.success('Categoria removida!');
+            await loadInitialData();
+        } catch (error) {
+            toast.error('Erro ao excluir categoria.');
         }
     }
 
@@ -273,34 +284,57 @@ export default function LearningManagementPage() {
             {/* Header Area */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pt-6">
                 <div className="space-y-2">
-                    <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-rose-50 border border-rose-100 text-rose-600 text-[10px] font-black uppercase tracking-widest">
+                    <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-rose-50 border border-rose-100 text-rose-600 text-[10px] font-black uppercase tracking-widest w-fit">
                         <Settings className="h-3 w-3" />
                         Management Console
                     </div>
-                    <h1 className="text-4xl font-black text-slate-900 tracking-tight leading-none">Gestão de Treinamentos</h1>
-                    <p className="text-slate-500 font-medium">Crie, edite e organize o conteúdo da sua Academy Cloud.</p>
+                    <div className="flex items-center gap-4">
+                        {activeView !== 'LIST' && (
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setActiveView('LIST')}
+                                className="h-10 w-10 rounded-xl hover:bg-slate-100"
+                            >
+                                <ChevronRight className="h-6 w-6 rotate-180" />
+                            </Button>
+                        )}
+                        <h1 className="text-4xl font-black text-slate-900 tracking-tight leading-none">
+                            {activeView === 'CATEGORIES' ? 'Central de Categorias' :
+                                activeView === 'EDITOR' ? 'Editor de Treinamento' :
+                                    'Gestão de Treinamentos'}
+                        </h1>
+                    </div>
+                    <p className="text-slate-500 font-medium">
+                        {activeView === 'CATEGORIES' ? 'Organize os temas e áreas de conhecimento.' :
+                            activeView === 'EDITOR' ? 'Configure os detalhes, módulos e lições.' :
+                                'Crie, edite e organize o conteúdo da sua Academy Cloud.'}
+                    </p>
                 </div>
-                <div className="flex flex-wrap gap-4">
-                    <Button
-                        variant="outline"
-                        onClick={() => setIsCategoryDialogOpen(true)}
-                        className="h-14 px-8 rounded-2xl border-slate-200 text-slate-600 font-black transition-all hover:bg-slate-50 flex gap-2"
-                    >
-                        <Layers className="h-5 w-5" />
-                        Categorias
-                    </Button>
-                    <Button
-                        onClick={handleCreateNew}
-                        className="h-14 px-8 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black shadow-xl shadow-blue-200 transition-all hover:scale-105 active:scale-95 flex gap-2"
-                    >
-                        <Plus className="h-5 w-5" />
-                        Novo Treinamento
-                    </Button>
-                </div>
+
+                {activeView === 'LIST' && (
+                    <div className="flex flex-wrap gap-4">
+                        <Button
+                            variant="outline"
+                            onClick={() => setActiveView('CATEGORIES')}
+                            className="h-14 px-8 rounded-2xl border-slate-200 text-slate-600 font-black transition-all hover:bg-slate-50 flex gap-2"
+                        >
+                            <Layers className="h-5 w-5" />
+                            Categorias
+                        </Button>
+                        <Button
+                            onClick={handleCreateNew}
+                            className="h-14 px-8 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black shadow-xl shadow-blue-200 transition-all hover:scale-105 active:scale-95 flex gap-2"
+                        >
+                            <Plus className="h-5 w-5" />
+                            Novo Treinamento
+                        </Button>
+                    </div>
+                )}
             </div>
 
-            {isEditing ? (
-                /* Edit Form Mode */
+            {activeView === 'EDITOR' ? (
+                /* Edit Form Mode - Full Page */
                 <div className="grid lg:grid-cols-12 gap-10">
                     <div className="lg:col-span-8 space-y-10">
                         <Card className="border-slate-100 shadow-sm rounded-3xl overflow-hidden">
@@ -322,16 +356,21 @@ export default function LearningManagementPage() {
                                 <div className="grid md:grid-cols-2 gap-8">
                                     <div className="space-y-4">
                                         <label className="text-xs font-black uppercase text-slate-400 tracking-widest">Categoria</label>
-                                        <select
-                                            className="w-full h-14 rounded-xl border border-slate-100 bg-slate-50/50 px-4 font-bold text-slate-700"
-                                            value={formData.categoryId || ''}
-                                            onChange={e => setFormData({ ...formData, categoryId: e.target.value as any })}
-                                        >
-                                            <option value="">Selecione uma categoria</option>
-                                            {categories.map(cat => (
-                                                <option key={cat.id} value={cat.id}>{cat.name}</option>
-                                            ))}
-                                        </select>
+                                        <div className="relative">
+                                            <select
+                                                className="w-full h-14 rounded-xl border border-slate-100 bg-slate-50/50 px-4 font-bold text-slate-700 appearance-none outline-none focus:ring-2 focus:ring-blue-500/10 transition-all cursor-pointer"
+                                                value={formData.categoryId || ''}
+                                                onChange={e => setFormData({ ...formData, categoryId: e.target.value as any })}
+                                            >
+                                                <option value="">Sem categoria definida</option>
+                                                {categories.map(cat => (
+                                                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                                ))}
+                                            </select>
+                                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                                <ChevronRight className="h-5 w-5 rotate-90" />
+                                            </div>
+                                        </div>
                                     </div>
                                     <div className="space-y-4">
                                         <label className="text-xs font-black uppercase text-slate-400 tracking-widest">Nível de Dificuldade</label>
@@ -415,7 +454,10 @@ export default function LearningManagementPage() {
                                     ) : (
                                         <div className="divide-y divide-slate-50">
                                             {selectedCourse.modules?.map((module, idx) => (
-                                                <div key={module.id} className="p-8 hover:bg-slate-50/50 transition-colors">
+                                                <div key={module.id} className={cn(
+                                                    "p-8 hover:bg-slate-50/50 transition-all border-l-4",
+                                                    selectedModule?.id === module.id ? "border-l-blue-600 bg-blue-50/20" : "border-l-transparent"
+                                                )}>
                                                     <div className="flex items-center justify-between mb-6">
                                                         <div className="flex items-center gap-4">
                                                             <div className="h-8 w-8 rounded-lg bg-slate-900 flex items-center justify-center text-[10px] font-black text-white">
@@ -516,7 +558,7 @@ export default function LearningManagementPage() {
                                 <Button
                                     variant="ghost"
                                     className="w-full h-14 rounded-2xl text-slate-400 font-bold hover:bg-slate-50 flex gap-2"
-                                    onClick={() => setIsEditing(false)}
+                                    onClick={() => setActiveView('LIST')}
                                 >
                                     <X className="h-5 w-5" />
                                     Cancelar
@@ -537,8 +579,140 @@ export default function LearningManagementPage() {
                         </div>
                     </aside>
                 </div>
+            ) : activeView === 'CATEGORIES' ? (
+                /* Categories View - Inline Section */
+                <div className="bg-white border border-slate-100 rounded-[3rem] overflow-hidden shadow-2xl flex flex-col md:flex-row min-h-[700px] animate-in slide-in-from-bottom-6 duration-700">
+                    {/* Form Side */}
+                    <div className="w-full md:w-[400px] p-12 bg-slate-50/50 border-r border-slate-100 space-y-10">
+                        <div className="space-y-4">
+                            <label className="text-[10px] font-black uppercase text-blue-600 tracking-widest flex items-center gap-2">
+                                <div className="h-2 w-2 rounded-full bg-blue-600 animate-pulse" />
+                                {categoryForm.id ? "Modo Edição" : "Configuração de Tema"}
+                            </label>
+                            <h2 className="text-3xl font-black text-slate-900">
+                                {categoryForm.id ? "Editar Categoria" : "Nova Categoria"}
+                            </h2>
+                        </div>
+
+                        <div className="space-y-8">
+                            <div className="space-y-3">
+                                <label className="text-xs font-black text-slate-400 uppercase tracking-tight">Nome da Categoria</label>
+                                <Input
+                                    placeholder="Ex: Recursos Humanos, TI..."
+                                    value={categoryForm.name}
+                                    onChange={e => setCategoryForm({ ...categoryForm, name: e.target.value })}
+                                    className="h-14 rounded-2xl border-slate-200 bg-white font-bold text-lg shadow-sm"
+                                />
+                            </div>
+
+                            <div className="space-y-3">
+                                <label className="text-xs font-black text-slate-400 uppercase tracking-tight">Descrição Detalhada</label>
+                                <textarea
+                                    placeholder="Explique o propósito desta categoria..."
+                                    value={categoryForm.description || ''}
+                                    onChange={e => setCategoryForm({ ...categoryForm, description: e.target.value })}
+                                    className="w-full min-h-[160px] p-6 rounded-2xl border border-slate-200 bg-white font-medium text-slate-600 outline-none focus:ring-4 focus:ring-blue-500/5 transition-all"
+                                />
+                            </div>
+
+                            <div className="pt-6 flex gap-4">
+                                <Button
+                                    onClick={handleSaveCategory}
+                                    disabled={isSaving}
+                                    className="flex-1 h-16 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-sm uppercase tracking-widest shadow-xl shadow-blue-200 transition-all active:scale-95"
+                                >
+                                    {isSaving ? "Processando..." : categoryForm.id ? "Salvar Alterações" : "Criar Agora"}
+                                </Button>
+                                {categoryForm.id && (
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => setCategoryForm({ name: '', description: '' })}
+                                        className="h-16 w-16 rounded-2xl border-slate-200 text-slate-400 hover:bg-slate-100"
+                                    >
+                                        <X className="h-6 w-6" />
+                                    </Button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* List Side */}
+                    <div className="flex-1 p-12 space-y-8">
+                        <div className="flex items-center justify-between">
+                            <label className="text-xs font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
+                                <Layers className="h-4 w-4" />
+                                Categorias Ativas ({categories.length})
+                            </label>
+                        </div>
+
+                        <div className="grid sm:grid-cols-2 gap-4">
+                            {categories.length === 0 ? (
+                                <div className="col-span-full py-32 text-center space-y-4">
+                                    <div className="h-20 w-20 bg-slate-50 rounded-[2rem] flex items-center justify-center mx-auto">
+                                        <Layers className="h-8 w-8 text-slate-200" />
+                                    </div>
+                                    <p className="text-sm font-bold text-slate-300 uppercase tracking-widest">Nenhuma categoria encontrada.</p>
+                                </div>
+                            ) : (
+                                categories.map(cat => (
+                                    <div
+                                        key={cat.id}
+                                        onClick={() => setCategoryForm(cat)}
+                                        className={cn(
+                                            "group p-6 rounded-[2rem] border transition-all cursor-pointer flex flex-col justify-between gap-6",
+                                            categoryForm.id === cat.id
+                                                ? "bg-blue-600 border-blue-600 text-white shadow-2xl shadow-blue-200 -translate-y-1"
+                                                : "bg-white border-slate-100 hover:border-blue-100 hover:shadow-xl hover:-translate-y-1"
+                                        )}
+                                    >
+                                        <div className="space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <div className={cn(
+                                                    "h-10 w-10 rounded-xl flex items-center justify-center transition-colors",
+                                                    categoryForm.id === cat.id ? "bg-white/20" : "bg-slate-50"
+                                                )}>
+                                                    <Layers className={cn(
+                                                        "h-5 w-5",
+                                                        categoryForm.id === cat.id ? "text-white" : "text-blue-600"
+                                                    )} />
+                                                </div>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className={cn(
+                                                        "h-10 w-10 rounded-xl opacity-0 group-hover:opacity-100 transition-all",
+                                                        categoryForm.id === cat.id ? "text-white hover:bg-white/10" : "text-rose-500 hover:bg-rose-50"
+                                                    )}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleDeleteCategory(cat.id);
+                                                    }}
+                                                >
+                                                    <Trash2 className="h-5 w-5" />
+                                                </Button>
+                                            </div>
+                                            <h3 className="font-black text-xl tracking-tight">{cat.name}</h3>
+                                            <p className={cn(
+                                                "text-xs font-medium line-clamp-2",
+                                                categoryForm.id === cat.id ? "text-blue-100" : "text-slate-400"
+                                            )}>
+                                                {cat.description || "Sem descrição definida para este tema."}
+                                            </p>
+                                        </div>
+                                        <div className={cn(
+                                            "flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest",
+                                            categoryForm.id === cat.id ? "text-white" : "text-slate-300"
+                                        )}>
+                                            <div className="h-1 w-1 rounded-full bg-current" />
+                                            {courses.filter(c => c.categoryId === cat.id).length} Treinamentos
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                </div>
             ) : (
-                /* List View Mode */
                 <div className="space-y-10">
                     <div className="flex flex-col md:flex-row gap-4">
                         <div className="relative flex-1">
@@ -566,6 +740,11 @@ export default function LearningManagementPage() {
                                         <div className="flex items-center gap-3">
                                             <h3 className="text-2xl font-black text-slate-900 group-hover:text-blue-600 transition-colors uppercase tracking-tight">{course.title}</h3>
                                             {course.isMandatory && <Badge className="bg-rose-50 text-rose-600 border-none px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest">Obrigatório</Badge>}
+                                            {course.categoryId && (
+                                                <Badge variant="outline" className="border-slate-100 text-slate-400 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest">
+                                                    {categories.find(c => c.id === course.categoryId)?.name || 'Categoria'}
+                                                </Badge>
+                                            )}
                                         </div>
                                         <p className="text-slate-400 font-medium text-sm line-clamp-1">{course.description || 'Sem descrição definida.'}</p>
                                         <div className="flex flex-wrap items-center gap-4 pt-2">
@@ -617,96 +796,7 @@ export default function LearningManagementPage() {
                 </div>
             )}
 
-            {/* Category Dialog - Refined for better management */}
-            <Dialog open={isCategoryDialogOpen} onOpenChange={(open) => {
-                setIsCategoryDialogOpen(open);
-                if (!open) setCategoryForm({ name: '', description: '' });
-            }}>
-                <DialogContent className="max-w-md rounded-[2.5rem] border-slate-100 p-10 overflow-hidden shadow-2xl">
-                    <DialogHeader className="space-y-4">
-                        <div className="h-14 w-14 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600">
-                            <Layers className="h-7 w-7" />
-                        </div>
-                        <div>
-                            <DialogTitle className="text-3xl font-black tracking-tight">Categorias</DialogTitle>
-                            <DialogDescription className="font-medium">Organize seus conteúdos por áreas ou temas.</DialogDescription>
-                        </div>
-                    </DialogHeader>
 
-                    <div className="space-y-8 pt-6">
-                        {/* Action Area (Create/Edit) */}
-                        <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 space-y-4">
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                                    {categoryForm.id ? "Editando Categoria" : "Nova Categoria"}
-                                </label>
-                                <div className="flex gap-2">
-                                    <Input
-                                        placeholder="Ex: Tecnologia, RH..."
-                                        value={categoryForm.name}
-                                        onChange={e => setCategoryForm({ ...categoryForm, name: e.target.value })}
-                                        className="h-12 rounded-xl border-slate-200 bg-white font-bold"
-                                    />
-                                    <Button
-                                        onClick={handleSaveCategory}
-                                        className="h-12 px-6 rounded-xl bg-blue-600 text-white font-black text-xs uppercase tracking-widest"
-                                    >
-                                        {categoryForm.id ? "Salvar" : <Plus className="h-5 w-5" />}
-                                    </Button>
-                                    {categoryForm.id && (
-                                        <Button
-                                            variant="ghost"
-                                            onClick={() => setCategoryForm({ name: '', description: '' })}
-                                            className="h-12 w-12 rounded-xl text-slate-400"
-                                        >
-                                            <X className="h-5 w-5" />
-                                        </Button>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* List Area */}
-                        <div className="space-y-4">
-                            <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Categorias Existentes</label>
-                            <div className="max-h-[250px] overflow-y-auto space-y-2 pr-2 custom-scrollbar">
-                                {categories.length === 0 ? (
-                                    <p className="text-center py-10 text-slate-300 font-bold italic text-sm">Nenhuma categoria cadastrada.</p>
-                                ) : (
-                                    categories.map(cat => (
-                                        <div key={cat.id} className="group flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl hover:border-blue-200 hover:shadow-sm transition-all">
-                                            <span className="text-sm font-bold text-slate-700">{cat.name}</span>
-                                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-9 w-9 text-blue-600 hover:bg-blue-50 rounded-lg"
-                                                    onClick={() => setCategoryForm(cat)}
-                                                >
-                                                    <Pencil className="h-4 w-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-9 w-9 text-rose-500 hover:bg-rose-50 rounded-lg"
-                                                    onClick={async () => {
-                                                        if (confirm('Deseja realmente excluir esta categoria?')) {
-                                                            await categoriesApi.delete(cat.id);
-                                                            loadInitialData();
-                                                        }
-                                                    }}
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </DialogContent>
-            </Dialog>
 
             {/* Module Dialog */}
             <Dialog open={isModuleDialogOpen} onOpenChange={setIsModuleDialogOpen}>
@@ -916,6 +1006,6 @@ export default function LearningManagementPage() {
                     </div>
                 </DialogContent>
             </Dialog>
-        </div>
+        </div >
     );
 }
