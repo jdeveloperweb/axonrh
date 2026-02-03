@@ -1,5 +1,7 @@
 package com.axonrh.kafka.event;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -17,6 +19,7 @@ import java.util.UUID;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
 public abstract class DomainEvent {
 
@@ -96,5 +99,6 @@ public abstract class DomainEvent {
     /**
      * Retorna o nome do topic Kafka para este evento.
      */
+    @JsonIgnore
     public abstract String getTopicName();
 }

@@ -114,20 +114,28 @@ export default function LearningManagementPage() {
     }, []);
 
     const loadInitialData = async () => {
+        setLoading(true);
+
+        // Load Categories
         try {
-            setLoading(true);
-            const [coursesRes, catsRes] = await Promise.all([
-                coursesApi.listPublished(), // We might need a listAll endpoint later
-                categoriesApi.list()
-            ]);
-            setCourses((coursesRes as any) || []);
+            const catsRes = await categoriesApi.list();
             setCategories((catsRes as any) || []);
         } catch (error) {
-            console.error('Error loading management data:', error);
-            toast.error('Erro ao carregar dados do catálogo');
-        } finally {
-            setLoading(false);
+            console.error('Error loading categories:', error);
+            toast.error('Erro ao carregar categorias');
         }
+
+        // Load Courses
+        try {
+            const coursesRes = await coursesApi.listPublished();
+            setCourses((coursesRes as any) || []);
+        } catch (error) {
+            console.error('Error loading courses:', error);
+            // Don't toast here if it's a known issue, or toast specifically
+            toast.error('Erro ao carregar treinamentos');
+        }
+
+        setLoading(false);
     };
 
     const handleCreateNew = () => {
