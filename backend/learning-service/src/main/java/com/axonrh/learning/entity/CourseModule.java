@@ -42,6 +42,7 @@ public class CourseModule {
 
     @OneToMany(mappedBy = "module", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @OrderBy("sequenceOrder ASC")
+    @org.hibernate.annotations.Fetch(org.hibernate.annotations.FetchMode.SUBSELECT)
     private List<Lesson> lessons = new ArrayList<>();
 
     @CreationTimestamp
