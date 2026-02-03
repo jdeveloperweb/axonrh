@@ -36,6 +36,8 @@ spring:
     baseline-version: 0
     schemas: shared
     table: learning_service_schema_history
+    out-of-order: true
+    ignore-migration-patterns: "*:ignored"
 
   data:
     redis:
