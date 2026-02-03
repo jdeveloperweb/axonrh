@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -14,27 +14,20 @@ import {
   Play,
   CheckCircle2,
   Search,
-  Filter,
-  Star,
-  Video,
-  FileText,
-  ArrowRight,
-  TrendingUp,
+  Sparkles,
+  Zap,
   LayoutGrid,
   List,
   Flame,
-  User,
-  Zap,
+  ArrowRight,
+  TrendingUp,
 } from 'lucide-react';
-import Image from "next/image";
 import Link from 'next/link';
 import {
   coursesApi,
   enrollmentsApi,
-  certificatesApi,
   Course,
   Enrollment,
-  Certificate,
   EnrollmentStatistics,
   TrainingCategory,
   categoriesApi,
@@ -42,735 +35,367 @@ import {
 import { useAuthStore } from '@/stores/auth-store';
 import { cn } from '@/lib/utils';
 
-// Mock Courses to fill the screen
-const MOCK_COURSES: Course[] = [
+// --- MOCK DATA FOR FALLBACK ---
+const MOCK_COURSES = [
   {
-    id: 'course-1',
-    title: 'Liderança de Alta Performance',
-    description: 'Desenvolva habilidades essenciais para liderar equipes em ambientes dinâmicos e desafiadores.',
+    id: 'c1',
+    title: 'Liderança Alpha: O Guia Estratégico',
+    description: 'Domine rituais de gestão, feedback e cultura para times remotos de alta performance.',
     courseType: 'ONLINE',
     difficultyLevel: 'AVANCADO',
     status: 'PUBLISHED',
     isMandatory: true,
-    price: 0,
-    durationMinutes: 480,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=800&auto=format&fit=crop',
-    instructorName: 'Mariana Silva',
-    modules: [
-      { id: 'm1', courseId: 'course-1', title: 'Fundamentos', sequenceOrder: 1, isRequired: true, lessons: [{ id: 'l1', moduleId: 'm1', title: 'Introdução', contentType: 'VIDEO', sequenceOrder: 1, isRequired: true, isDownloadable: false }] }
-    ],
-    createdAt: new Date().toISOString(),
-    requiresApproval: false,
-    passingScore: 70,
-    allowRetake: true,
-    maxRetakes: 3,
+    durationMinutes: 320,
     categoryName: 'Liderança',
-  } as Course,
+    instructorName: 'Rodrigo Porto',
+    modules: [],
+    createdAt: new Date().toISOString(),
+  },
   {
-    id: 'course-2',
-    title: 'Comunicação Não-Violenta no Trabalho',
-    description: 'Aprenda as técnicas de CNV para melhorar o clima organizacional e resolver conflitos de forma produtiva.',
+    id: 'c2',
+    title: 'IA Generativa: Do Zero ao Prompt Pro',
+    description: 'Transforme sua produtividade usando LLMs e frameworks avançados de engenharia de prompts.',
     courseType: 'ONLINE',
     difficultyLevel: 'INTERMEDIARIO',
     status: 'PUBLISHED',
     isMandatory: false,
-    price: 0,
+    durationMinutes: 480,
+    categoryName: 'Tecnologia',
+    instructorName: 'Carlos Silveira',
+    modules: [],
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'c3',
+    title: 'Cultura Axon: Onboarding Definitivo',
+    description: 'Nossa história, visão de futuro e guia completo de benefícios e imersão.',
+    courseType: 'ONLINE',
+    difficultyLevel: 'INICIANTE',
+    status: 'PUBLISHED',
+    isMandatory: true,
     durationMinutes: 120,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?q=80&w=800&auto=format&fit=crop',
-    instructorName: 'Roberto Almeida',
-    modules: [],
-    createdAt: new Date().toISOString(),
-    requiresApproval: false,
-    passingScore: 70,
-    allowRetake: true,
-    maxRetakes: 3,
-    categoryName: 'Soft Skills',
-  } as Course,
-  {
-    id: 'course-3',
-    title: 'Excel Avançado para RH',
-    description: 'Domine tabelas dinâmicas, PROCV e automações voltadas para gestão de pessoas e indicadores.',
-    courseType: 'ONLINE',
-    difficultyLevel: 'AVANCADO',
-    status: 'PUBLISHED',
-    isMandatory: false,
-    price: 0,
-    durationMinutes: 600,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=800&auto=format&fit=crop',
-    instructorName: 'Carlos Ferreira',
-    modules: [],
-    createdAt: new Date().toISOString(),
-    requiresApproval: false,
-    passingScore: 70,
-    allowRetake: true,
-    maxRetakes: 3,
-    categoryName: 'Tecnologia',
-  } as Course,
-  {
-    id: 'course-4',
-    title: 'Diversidade e Inclusão na Prática',
-    description: 'Como construir uma cultura inclusiva e diversa que gere valor real para a organização.',
-    courseType: 'ONLINE',
-    difficultyLevel: 'INICIANTE',
-    status: 'PUBLISHED',
-    isMandatory: true,
-    price: 0,
-    durationMinutes: 180,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1573497620053-ea5300f94f21?q=80&w=800&auto=format&fit=crop',
-    instructorName: 'Ana Paula Santos',
-    modules: [],
-    createdAt: new Date().toISOString(),
-    requiresApproval: false,
-    passingScore: 70,
-    allowRetake: true,
-    maxRetakes: 3,
     categoryName: 'Cultura',
-  } as Course,
-  {
-    id: 'course-5',
-    title: 'Gestão de Tempo e Produtividade',
-    description: 'Técnicas modernas de organização pessoal para otimizar resultados e evitar o burnout.',
-    courseType: 'ONLINE',
-    difficultyLevel: 'INICIANTE',
-    status: 'PUBLISHED',
-    isMandatory: false,
-    price: 0,
-    durationMinutes: 90,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1495364141860-b0d03eccd065?q=80&w=800&auto=format&fit=crop',
-    instructorName: 'Juliana Mendes',
+    instructorName: 'Time de Gente',
     modules: [],
     createdAt: new Date().toISOString(),
-    requiresApproval: false,
-    passingScore: 70,
-    allowRetake: true,
-    maxRetakes: 3,
-    categoryName: 'Produtividade',
-  } as Course,
-  {
-    id: 'course-6',
-    title: 'People Analytics: O Guia Completo',
-    description: 'Transforme dados em decisões estratégicas utilizando ferramentas modernas de análise.',
-    courseType: 'ONLINE',
-    difficultyLevel: 'AVANCADO',
-    status: 'PUBLISHED',
-    isMandatory: false,
-    price: 0,
-    durationMinutes: 720,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1551288049-bbda38a5f452?q=80&w=800&auto=format&fit=crop',
-    instructorName: 'Fernando Costa',
-    modules: [],
-    createdAt: new Date().toISOString(),
-    requiresApproval: false,
-    passingScore: 70,
-    allowRetake: true,
-    maxRetakes: 3,
-    categoryName: 'Tecnologia',
-  } as Course,
-  {
-    id: 'course-7',
-    title: 'Saúde Mental no Trabalho',
-    description: 'Como identificar sinais de estresse e promover o bem-estar psicológico na sua rotina.',
-    courseType: 'ONLINE',
-    difficultyLevel: 'INICIANTE',
-    status: 'PUBLISHED',
-    isMandatory: false,
-    price: 0,
-    durationMinutes: 150,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?q=80&w=800&auto=format&fit=crop',
-    instructorName: 'Dra. Luana Braga',
-    modules: [],
-    createdAt: new Date().toISOString(),
-    requiresApproval: false,
-    passingScore: 70,
-    allowRetake: true,
-    maxRetakes: 3,
-    categoryName: 'Soft Skills',
-  } as Course,
-  {
-    id: 'course-8',
-    title: 'Cybersecurity: Proteção de Dados',
-    description: 'Fundamentos de segurança da informação para proteger sua empresa e dados pessoais.',
-    courseType: 'ONLINE',
-    difficultyLevel: 'INTERMEDIARIO',
-    status: 'PUBLISHED',
-    isMandatory: true,
-    price: 0,
-    durationMinutes: 240,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=800&auto=format&fit=crop',
-    instructorName: 'Mateus Oliveira',
-    modules: [],
-    createdAt: new Date().toISOString(),
-    requiresApproval: false,
-    passingScore: 80,
-    allowRetake: true,
-    maxRetakes: 5,
-    categoryName: 'Tecnologia',
-  } as Course,
-  {
-    id: 'course-9',
-    title: 'Vendas Consultivas B2B',
-    description: 'Maximize seus resultados comerciais com técnicas avançadas de negociação e fechamento.',
-    courseType: 'ONLINE',
-    difficultyLevel: 'INTERMEDIARIO',
-    status: 'PUBLISHED',
-    isMandatory: false,
-    price: 0,
-    durationMinutes: 450,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1552581234-26160f608093?q=80&w=800&auto=format&fit=crop',
-    instructorName: 'Ricardo Sales',
-    modules: [],
-    createdAt: new Date().toISOString(),
-    requiresApproval: false,
-    passingScore: 70,
-    allowRetake: true,
-    maxRetakes: 3,
-    categoryName: 'Vendas',
-  } as Course,
-  {
-    id: 'course-10',
-    title: 'Inteligência Artificial no Dia a Dia',
-    description: 'Como utilizar ferramentas de IA generativa para aumentar sua produtividade em 2x.',
-    courseType: 'ONLINE',
-    difficultyLevel: 'INICIANTE',
-    status: 'PUBLISHED',
-    isMandatory: false,
-    price: 0,
-    durationMinutes: 300,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?q=80&w=800&auto=format&fit=crop',
-    instructorName: 'Tiago Souza',
-    modules: [],
-    createdAt: new Date().toISOString(),
-    requiresApproval: false,
-    passingScore: 70,
-    allowRetake: true,
-    maxRetakes: 3,
-    categoryName: 'Tecnologia',
-  } as Course,
-  {
-    id: 'course-11',
-    title: 'Design Thinking para Inovação',
-    description: 'Uma metodologia prática para resolver problemas complexos e criar soluções centradas no humano.',
-    courseType: 'ONLINE',
-    difficultyLevel: 'INTERMEDIARIO',
-    status: 'PUBLISHED',
-    isMandatory: false,
-    price: 0,
-    durationMinutes: 360,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?q=80&w=800&auto=format&fit=crop',
-    instructorName: 'Beatriz Martins',
-    modules: [],
-    createdAt: new Date().toISOString(),
-    requiresApproval: false,
-    passingScore: 70,
-    allowRetake: true,
-    maxRetakes: 3,
-    categoryName: 'Cultura',
-  } as Course,
-  {
-    id: 'course-12',
-    title: 'Finanças Pessoais e Investimentos',
-    description: 'Aprenda a gerir seu dinheiro e comece a investir no mercado financeiro de forma inteligente.',
-    courseType: 'ONLINE',
-    difficultyLevel: 'INICIANTE',
-    status: 'PUBLISHED',
-    isMandatory: false,
-    price: 0,
-    durationMinutes: 520,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1579621970795-87f957f60017?q=80&w=800&auto=format&fit=crop',
-    instructorName: 'Paulo Guedes',
-    modules: [],
-    createdAt: new Date().toISOString(),
-    requiresApproval: false,
-    passingScore: 70,
-    allowRetake: true,
-    maxRetakes: 3,
-    categoryName: 'Geral',
-  } as Course,
+  }
 ];
 
 const MOCK_CATEGORIES: TrainingCategory[] = [
-  { id: 'cat-1', name: 'Liderança', icon: 'User', color: '#3b82f6', isActive: true },
-  { id: 'cat-2', name: 'Soft Skills', icon: 'Zap', color: '#f59e0b', isActive: true },
-  { id: 'cat-3', name: 'Tecnologia', icon: 'LayoutGrid', color: '#10b981', isActive: true },
-  { id: 'cat-4', name: 'Cultura', icon: 'GraduationCap', color: '#8b5cf6', isActive: true },
-  { id: 'cat-5', name: 'Produtividade', icon: 'Clock', color: '#ef4444', isActive: true },
-  { id: 'cat-6', name: 'Vendas', icon: 'TrendingUp', color: '#ec4899', isActive: true },
+  { id: 'cat1', name: 'Liderança', icon: 'User', color: '#3b82f6', isActive: true },
+  { id: 'cat2', name: 'Tecnologia', icon: 'Zap', color: '#10b981', isActive: true },
+  { id: 'cat3', name: 'Cultura', icon: 'GraduationCap', color: '#8b5cf6', isActive: true },
 ];
 
 export default function LearningDashboard() {
   const { user } = useAuthStore();
-  const [publishedCourses, setPublishedCourses] = useState<Course[]>([]);
+  const [publishedCourses, setPublishedCourses] = useState<any[]>([]);
   const [categories, setCategories] = useState<TrainingCategory[]>([]);
   const [myEnrollments, setMyEnrollments] = useState<Enrollment[]>([]);
-  const [myCertificates, setMyCertificates] = useState<Certificate[]>([]);
   const [stats, setStats] = useState<EnrollmentStatistics | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
-  const [viewType, setViewType] = useState<'grid' | 'list'>('grid');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadData = async () => {
       if (!user?.id) return;
-
       try {
         setLoading(true);
-        const [coursesRes, enrollmentsRes, certificatesRes, statisticsRes, categoriesRes] = await Promise.all([
+        const [coursesRes, enrollmentsRes, statisticsRes, categoriesRes] = await Promise.all([
           coursesApi.listPublished().catch(() => ({ data: [] })),
           enrollmentsApi.getActiveByEmployee(user.id).catch(() => ({ data: [] })),
-          certificatesApi.getByEmployee(user.id).catch(() => ({ data: [] })),
           enrollmentsApi.getStatistics(user.id).catch(() => ({ data: null })),
           categoriesApi.list().catch(() => ({ data: [] })),
         ]);
 
-        // Merge real data with mock data if real data is empty or few
-        const fetchedCourses = coursesRes.data || [];
-        if (fetchedCourses.length < 3) {
-          setPublishedCourses([...fetchedCourses, ...MOCK_COURSES]);
-        } else {
-          setPublishedCourses(fetchedCourses);
-        }
+        const fetchedCourses = (coursesRes.data as any[]) || [];
+        setPublishedCourses(fetchedCourses.length > 0 ? fetchedCourses : MOCK_COURSES);
 
-        const fetchedCategories = categoriesRes.data || [];
-        if (fetchedCategories.length === 0) {
-          setCategories(MOCK_CATEGORIES);
-        } else {
-          setCategories(fetchedCategories);
-        }
+        const fetchedCategories = (categoriesRes.data as any[]) || [];
+        setCategories(fetchedCategories.length > 0 ? fetchedCategories : MOCK_CATEGORIES);
 
         setMyEnrollments(enrollmentsRes.data || []);
-        setMyCertificates(certificatesRes.data || []);
         setStats(statisticsRes.data);
       } catch (error) {
-        console.error('Erro ao carregar dados:', error);
+        console.error('Erro ao carregar dashboard:', error);
       } finally {
         setLoading(false);
       }
     };
-
-    if (user?.id) {
-      loadData();
-    }
+    loadData();
   }, [user?.id]);
 
   const filteredCourses = useMemo(() => {
     return publishedCourses.filter((course) => {
-      const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        course.description?.toLowerCase().includes(searchQuery.toLowerCase());
-
-      const matchesCategory = !selectedCategory || course.categoryName === selectedCategory || course.categoryId === selectedCategory;
-      const matchesLevel = !selectedLevel || course.difficultyLevel === selectedLevel;
-
-      return matchesSearch && matchesCategory && matchesLevel;
+      const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = !selectedCategory || course.categoryName === selectedCategory;
+      return matchesSearch && matchesCategory;
     });
-  }, [publishedCourses, searchQuery, selectedCategory, selectedLevel]);
+  }, [publishedCourses, searchQuery, selectedCategory]);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
+        <div className="relative h-12 w-12">
+          <div className="absolute inset-0 rounded-full border-2 border-blue-500/20" />
+          <div className="absolute inset-0 rounded-full border-2 border-t-blue-500 animate-spin" />
+        </div>
+        <p className="text-xs font-bold uppercase tracking-widest text-slate-400 animate-pulse">Sincronizando Ecossistema...</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden rounded-3xl bg-[#030712] text-white p-8 md:p-12 min-h-[400px] flex flex-col md:flex-row items-center justify-between border border-white/10">
-        <div className="relative z-10 max-w-xl space-y-6">
-          <Badge className="bg-white/10 hover:bg-white/20 text-blue-400 border-none px-4 py-1 text-xs backdrop-blur-md">
-            Plataforma Axon Academy
-          </Badge>
-          <h1 className="text-5xl md:text-6xl font-bold tracking-tight">
-            Explore seu <br />
-            <span className="bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">potencial</span>
-          </h1>
-          <p className="text-gray-400 text-lg">
-            Mergulhe em trilhas de conhecimento exclusivas, desenhadas por especialistas para acelerar seu crescimento profissional na Axon.
-          </p>
-          <div className="flex flex-wrap items-center gap-4 pt-4">
-            <Button size="lg" className="rounded-full px-8 bg-white text-black hover:bg-white/90 font-semibold h-12">
-              Iniciar Jornada
-            </Button>
-            <div className="flex items-center -space-x-3 overflow-hidden ml-2">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="inline-block h-8 w-8 rounded-full ring-2 ring-[#030712] relative overflow-hidden bg-gray-600">
-                  <Image src={`https://i.pravatar.cc/150?u=${i + 10}`} fill alt="User avatar" />
-                </div>
-              ))}
-              <div className="flex h-8 w-12 items-center justify-center rounded-full bg-white/10 text-[10px] font-medium text-white ring-2 ring-[#030712] backdrop-blur-md">
-                +12k
-              </div>
-            </div>
-            <span className="text-xs text-blue-400 font-medium">alunos ativos</span>
-          </div>
+    <div className="max-w-[1400px] mx-auto space-y-10 pb-20 px-4">
+
+      {/* --- SURREAL HERO --- */}
+      <section className="relative overflow-hidden rounded-[3rem] bg-slate-950 border border-white/5 p-8 md:p-16">
+        {/* Mesh Gradient Background */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute -top-[20%] -left-[10%] w-[60%] h-[60%] bg-blue-600/20 rounded-full blur-[120px]" />
+          <div className="absolute -bottom-[20%] -right-[10%] w-[50%] h-[50%] bg-purple-600/10 rounded-full blur-[100px]" />
         </div>
 
-        {/* Hero Decorative Elements */}
-        <div className="hidden lg:block relative w-[450px] h-[350px]">
-          <div className="absolute inset-0 bg-blue-500/10 blur-[100px] rounded-full"></div>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full">
-            <div className="relative w-full h-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl border border-white/10 backdrop-blur-xl overflow-hidden shadow-2xl">
-              <Image
-                src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=800&auto=format&fit=crop"
-                fill
-                alt="Learning Illustration"
-                className="object-cover opacity-60 mix-blend-overlay"
-              />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="grid grid-cols-2 gap-4 p-8">
-                  <div className="bg-white/5 backdrop-blur-md p-4 rounded-xl border border-white/10 transform -rotate-3 hover:rotate-0 transition-transform duration-500">
-                    <Trophy className="h-8 w-8 text-amber-500 mb-2" />
-                    <div className="text-xs font-medium text-white/60">CONQUISTAS</div>
-                    <div className="text-xl font-bold">15.4k+</div>
-                  </div>
-                  <div className="bg-white/5 backdrop-blur-md p-4 rounded-xl border border-white/10 transform rotate-6 translate-y-8 hover:rotate-0 transition-transform duration-500">
-                    <TrendingUp className="h-8 w-8 text-green-500 mb-2" />
-                    <div className="text-xs font-medium text-white/60">PROGRESSO</div>
-                    <div className="text-xl font-bold">84%</div>
-                  </div>
-                </div>
-              </div>
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-12">
+          <div className="max-w-2xl space-y-8 text-center md:text-left">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-[0.2em]">
+              <Sparkles className="h-3 w-3" />
+              <span>Axon Academy Cloud</span>
             </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Categories & Search */}
-      <div className="space-y-6">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-          <div className="space-y-3 flex-1">
-            <h2 className="text-xl font-bold flex items-center gap-2">
-              <span className="w-1.5 h-6 bg-blue-600 rounded-full"></span>
-              Categorias
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant={selectedCategory === null ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSelectedCategory(null)}
-                className="rounded-full"
-              >
-                Todas
-              </Button>
-              {categories.map((cat) => (
-                <Button
-                  key={cat.id}
-                  variant={selectedCategory === cat.name ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSelectedCategory(selectedCategory === cat.name ? null : cat.name)}
-                  className="rounded-full flex items-center gap-2"
-                >
-                  <span className="text-xs">{cat.name}</span>
-                </Button>
-              ))}
-            </div>
-          </div>
+            <h1 className="text-4xl md:text-6xl font-black text-white leading-tight tracking-tighter">
+              Eleve sua <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400">
+                Experiência
+              </span>
+            </h1>
 
-          <div className="flex items-center gap-3">
-            <div className="relative flex-1 md:w-80">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="O que você quer aprender hoje?"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 h-11 bg-muted/30 border-none rounded-xl focus-visible:ring-1 focus-visible:ring-blue-500/50"
-              />
-            </div>
-            <div className="flex items-center bg-muted/30 p-1 rounded-xl">
-              <Button
-                variant={viewType === 'grid' ? 'secondary' : 'ghost'}
-                size="icon"
-                className="h-9 w-9 rounded-lg"
-                onClick={() => setViewType('grid')}
-              >
-                <LayoutGrid className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewType === 'list' ? 'secondary' : 'ghost'}
-                size="icon"
-                className="h-9 w-9 rounded-lg"
-                onClick={() => setViewType('list')}
-              >
-                <List className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Levels Filter */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
-          <span className="text-sm font-medium text-muted-foreground mr-2">Nível:</span>
-          {['INICIANTE', 'INTERMEDIARIO', 'AVANCADO'].map((level) => (
-            <button
-              key={level}
-              onClick={() => setSelectedLevel(selectedLevel === level ? null : level)}
-              className={cn(
-                "px-4 py-1.5 rounded-lg text-sm transition-all whitespace-nowrap",
-                selectedLevel === level
-                  ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
-                  : "bg-muted/50 text-muted-foreground hover:bg-muted"
-              )}
-            >
-              {level === 'INICIANTE' ? '💡 Iniciante' :
-                level === 'INTERMEDIARIO' ? '⚡ Intermediário' : '🔥 Avançado'}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Continue Learning */}
-      {myEnrollments.length > 0 && (
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold flex items-center gap-2">
-              <Flame className="h-5 w-5 text-orange-500 fill-orange-500" />
-              Continuar Aprendendo
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {myEnrollments.slice(0, 3).map((enrollment) => (
-              <EnrollmentCard key={enrollment.id} enrollment={enrollment} />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Course Catalog */}
-      <section className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold flex items-center gap-2">
-            <LayoutGrid className="h-5 w-5 text-blue-500" />
-            Catálogo de Cursos
-          </h2>
-          <span className="text-sm text-muted-foreground font-medium">
-            {filteredCourses.length} cursos encontrados
-          </span>
-        </div>
-
-        {filteredCourses.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 bg-muted/20 rounded-3xl border border-dashed border-muted">
-            <div className="h-16 w-16 bg-muted rounded-2xl flex items-center justify-center mb-4">
-              <Search className="h-8 w-8 text-muted-foreground" />
-            </div>
-            <h3 className="text-lg font-semibold">Nenhum curso encontrado</h3>
-            <p className="text-muted-foreground max-w-xs text-center mt-2">
-              Tente ajustar seus filtros ou busca para encontrar o que procura.
+            <p className="text-slate-400 text-base md:text-lg leading-relaxed font-medium max-w-lg">
+              Acesse trilhas de conhecimento desenhadas para transformar sua carreira através da tecnologia e liderança.
             </p>
-            <Button variant="link" onClick={() => { setSearchQuery(''); setSelectedCategory(null); setSelectedLevel(null); }} className="mt-2 text-blue-600">
-              Limpar filtros
-            </Button>
-          </div>
-        ) : (
-          <div className={cn(
-            "grid gap-6",
-            viewType === 'grid' ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "grid-cols-1"
-          )}>
-            {filteredCourses.map((course) => (
-              <CourseCard key={course.id} course={course} viewType={viewType} />
-            ))}
-          </div>
-        )}
 
-        <div className="flex justify-center pt-8">
-          <Link href="/learning/catalog">
-            <Button variant="outline" className="rounded-xl px-12 h-12 hover:bg-blue-600 hover:text-white transition-all group">
-              Explorar Catálogo Completo
-              <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-            </Button>
-          </Link>
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
+              <Button size="lg" className="h-12 px-8 rounded-xl bg-white text-black hover:bg-slate-100 font-bold transition-all hover:scale-105 active:scale-95">
+                Começar Jornada
+              </Button>
+              <div className="flex -space-x-2">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="h-8 w-8 rounded-full bg-slate-800 border-2 border-slate-950" />
+                ))}
+                <div className="h-8 w-8 rounded-full bg-blue-600 border-2 border-slate-950 flex items-center justify-center text-[10px] font-bold text-white uppercase">+12k</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Surreal Stat Card */}
+          <div className="relative hidden xl:block">
+            <div className="bg-white/5 backdrop-blur-2xl border border-white/10 p-8 rounded-[2.5rem] shadow-2xl space-y-6 rotate-3 hover:rotate-0 transition-transform duration-700">
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-2xl bg-blue-500/20 flex items-center justify-center">
+                  <TrendingUp className="h-6 w-6 text-blue-500" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest">Seu Progresso</h4>
+                  <p className="text-2xl font-black text-white">84%</p>
+                </div>
+              </div>
+              <div className="w-48 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                <div className="h-full w-[84%] bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+              </div>
+              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Top 5% da Empresa</p>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* Features / Quick Access */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8">
-        <QuickCard
-          icon={<GraduationCap className="h-6 w-6" />}
-          title="Trilhas de Aprendizagem"
-          description="Caminhos estruturados para o seu desenvolvimento profissional."
-          href="/learning/paths"
-          color="bg-purple-500/10 text-purple-600"
-        />
-        <QuickCard
-          icon={<CheckCircle2 className="h-6 w-6" />}
-          title="Treinamentos Obrigatórios"
-          description="Fique em dia com as certificações exigidas para sua função."
-          href="/learning/mandatory"
-          color="bg-blue-500/10 text-blue-600"
-        />
-        <QuickCard
-          icon={<Trophy className="h-6 w-6" />}
-          title="Minhas Conquistas"
-          description="Veja seus certificados e badges conquistados até agora."
-          href="/learning/certificates"
-          color="bg-amber-500/10 text-amber-600"
-        />
+      {/* --- CONTENT GRID --- */}
+      <div className="grid lg:grid-cols-12 gap-10">
+
+        {/* Sidebar Mini */}
+        <aside className="lg:col-span-3 space-y-8">
+          <div className="space-y-4">
+            <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 ml-2">Filtros</h3>
+            <div className="grid gap-2">
+              <button
+                onClick={() => setSelectedCategory(null)}
+                className={cn(
+                  "flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all text-sm font-bold",
+                  selectedCategory === null ? "bg-blue-600 border-blue-600 text-white shadow-xl shadow-blue-500/20" : "bg-white border-slate-100 hover:bg-slate-50 text-slate-600"
+                )}
+              >
+                <LayoutGrid className="h-4 w-4" />
+                Todos
+              </button>
+              {categories.map(cat => (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedCategory(cat.name)}
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all text-sm font-bold",
+                    selectedCategory === cat.name ? "bg-blue-600 border-blue-600 text-white shadow-xl shadow-blue-500/20" : "bg-white border-slate-100 hover:bg-slate-50 text-slate-600"
+                  )}
+                >
+                  <Zap className="h-4 w-4" />
+                  {cat.name}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-200/50 space-y-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Trophy className="h-4 w-4 text-amber-500" />
+              <h4 className="text-xs font-black uppercase tracking-widest">Última Conquista</h4>
+            </div>
+            <p className="text-xs font-bold text-slate-400 uppercase">Onboarding Master</p>
+            <div className="text-[10px] text-blue-600 font-black uppercase cursor-pointer hover:underline flex items-center gap-1">
+              Ver todos os certificados <ArrowRight className="h-3 w-3" />
+            </div>
+          </div>
+        </aside>
+
+        {/* Main Body */}
+        <main className="lg:col-span-9 space-y-12">
+
+          {/* Top Search Bar */}
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Input
+                placeholder="O que vamos aprender hoje?"
+                className="h-14 pl-12 bg-white/50 border-slate-100 rounded-2xl text-sm font-medium focus-visible:ring-blue-500/20"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" className="h-14 w-14 rounded-2xl border-slate-100"><List className="h-4 w-4" /></Button>
+              <Button className="h-14 px-8 rounded-2xl bg-slate-950 font-bold uppercase tracking-widest text-[10px]">Filtrar</Button>
+            </div>
+          </div>
+
+          {/* Continued Learning (Horizontal Surreal Cards) */}
+          {myEnrollments.length > 0 && (
+            <div className="space-y-6">
+              <h2 className="text-xl font-black tracking-tighter uppercase flex items-center gap-2">
+                <Flame className="h-5 w-5 text-orange-500" />
+                No seu Radar
+              </h2>
+              <div className="grid md:grid-cols-2 gap-6">
+                {myEnrollments.slice(0, 2).map((enrollment) => (
+                  <Link key={enrollment.id} href={`/learning/course/${enrollment.courseId}`}>
+                    <div className="group relative bg-white border border-slate-100 rounded-[2rem] p-6 flex gap-6 hover:shadow-2xl transition-all cursor-pointer overflow-hidden text-left">
+                      <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-indigo-600 to-blue-600 flex items-center justify-center shrink-0 shadow-lg group-hover:scale-105 transition-transform">
+                        <Play className="h-8 w-8 text-white fill-white" />
+                      </div>
+                      <div className="flex-1 min-w-0 flex flex-col justify-center gap-2">
+                        <h3 className="font-black text-sm uppercase tracking-tight truncate group-hover:text-blue-600 transition-colors">{enrollment.courseName}</h3>
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-[9px] font-black uppercase text-slate-400">
+                            <span>Progresso</span>
+                            <span className="text-blue-600">{enrollment.progressPercentage.toFixed(0)}%</span>
+                          </div>
+                          <Progress value={enrollment.progressPercentage} className="h-1.5 bg-slate-100" />
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Catalog Section */}
+          <div className="space-y-8">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-black tracking-tighter uppercase">Explorar Catálogo</h2>
+              <Link href="/learning/catalog" className="text-[10px] font-black uppercase text-blue-600 hover:underline">Ver Tabela Completa</Link>
+            </div>
+
+            <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-8">
+              {filteredCourses.map((course) => (
+                <CourseCardSurreal key={course.id} course={course} />
+              ))}
+            </div>
+
+            {filteredCourses.length === 0 && (
+              <div className="py-20 text-center space-y-4 bg-slate-50 rounded-[3rem] border border-dashed border-slate-200">
+                <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Nenhum curso encontrado para este filtro.</p>
+                <Button variant="link" onClick={() => { setSearchQuery(''); setSelectedCategory(null); }} className="font-black text-[10px] uppercase">Limpar Busca</Button>
+              </div>
+            )}
+          </div>
+        </main>
       </div>
     </div>
   );
 }
 
-// Enrollment Card (In Progress)
-function EnrollmentCard({ enrollment }: { enrollment: Enrollment }) {
-  return (
-    <Link href={`/learning/course/${enrollment.courseId}`}>
-      <Card className="group overflow-hidden border-none bg-muted/30 hover:bg-muted/50 transition-all duration-300">
-        <CardContent className="p-0">
-          <div className="flex p-4 gap-4">
-            <div className="h-20 w-20 rounded-xl bg-blue-600/10 flex-shrink-0 relative overflow-hidden">
-              {enrollment.courseThumbnail ? (
-                <Image src={enrollment.courseThumbnail} fill className="object-cover" alt="" />
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Play className="h-8 w-8 text-blue-600 fill-blue-600/20" />
-                </div>
-              )}
-            </div>
-            <div className="flex-1 space-y-2 min-w-0">
-              <h3 className="font-bold text-sm line-clamp-1 group-hover:text-blue-600 transition-colors uppercase tracking-tight">
-                {enrollment.courseName}
-              </h3>
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-[11px] font-semibold text-muted-foreground uppercase">
-                  <span>Progresso</span>
-                  <span className="text-blue-600">{enrollment.progressPercentage.toFixed(0)}%</span>
-                </div>
-                <Progress value={enrollment.progressPercentage} className="h-1.5" />
-              </div>
-              <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                Retomar aula 4 de 12
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </Link>
-  );
-}
+// --- SURREAL COMPONENTS ---
 
-// Course Card
-function CourseCard({ course, viewType }: { course: Course; viewType: 'grid' | 'list' }) {
-  const formatDuration = (minutes?: number) => {
-    if (!minutes) return '-';
-    if (minutes < 60) return `${minutes}min`;
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
+function CourseCardSurreal({ course }: { course: any }) {
+  const getDifficultyStyles = (lvl?: string) => {
+    switch (lvl) {
+      case 'AVANCADO': return 'bg-purple-100 text-purple-700';
+      case 'INTERMEDIARIO': return 'bg-blue-100 text-blue-700';
+      default: return 'bg-slate-100 text-slate-600';
+    }
   };
 
-  const getDifficultyColor = (level?: string) => {
-    const colors: Record<string, string> = {
-      INICIANTE: 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400',
-      INTERMEDIARIO: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-400',
-      AVANCADO: 'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400',
-    };
-    return colors[level || ''] || 'bg-gray-100 text-gray-700';
-  };
-
-  if (viewType === 'list') {
-    return (
-      <Link href={`/learning/course/${course.id}`}>
-        <div className="flex gap-6 p-4 rounded-2xl border hover:border-blue-500/50 hover:bg-muted/10 transition-all group">
-          <div className="h-24 w-40 rounded-xl overflow-hidden relative flex-shrink-0 bg-muted">
-            {course.thumbnailUrl ? (
-              <Image src={course.thumbnailUrl} fill className="object-cover group-hover:scale-110 transition-transform duration-500" alt={course.title} />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <BookOpen className="h-8 w-8 text-primary/30" />
-              </div>
-            )}
-          </div>
-          <div className="flex-1 space-y-2">
-            <div className="flex items-center gap-2">
-              <h3 className="font-bold text-lg group-hover:text-blue-600 transition-colors uppercase tracking-tight">{course.title}</h3>
-              {course.isMandatory && <Badge variant="destructive" className="h-5 text-[10px] uppercase">Obrigatório</Badge>}
-            </div>
-            <p className="text-sm text-muted-foreground line-clamp-1">{course.description}</p>
-            <div className="flex items-center gap-4 text-xs font-medium text-muted-foreground">
-              <span className={cn("px-2 py-0.5 rounded-md", getDifficultyColor(course.difficultyLevel))}>
-                {course.difficultyLevel}
-              </span>
-              <span className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" />{formatDuration(course.durationMinutes)}</span>
-              <span className="flex items-center gap-1.5"><Video className="h-3.5 w-3.5" />{course.modules?.length || 0} módulos</span>
-              <span className="flex items-center gap-1.5"><Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />4.8</span>
-            </div>
-          </div>
-          <div className="flex items-center">
-            <Button size="icon" variant="ghost" className="rounded-full group-hover:bg-blue-600 group-hover:text-white transition-all">
-              <ArrowRight className="h-5 w-5" />
-            </Button>
-          </div>
-        </div>
-      </Link>
-    );
-  }
+  const seed = course.id.length % 4;
+  const gradients = [
+    'from-blue-600 via-indigo-600 to-purple-600',
+    'from-teal-500 via-blue-600 to-indigo-700',
+    'from-orange-500 via-rose-600 to-purple-600',
+    'from-slate-900 via-slate-800 to-blue-900',
+  ];
 
   return (
     <Link href={`/learning/course/${course.id}`}>
-      <div className="flex flex-col h-full rounded-2xl border overflow-hidden hover:shadow-xl hover:shadow-blue-500/10 hover:border-blue-500/50 transition-all duration-300 group bg-card">
-        <div className="h-44 relative bg-muted animate-pulse-slow">
-          {course.thumbnailUrl ? (
-            <Image src={course.thumbnailUrl} fill className="object-cover group-hover:scale-105 transition-transform duration-500" alt={course.title} />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <BookOpen className="h-12 w-12 text-primary/30" />
+      <div className="group flex flex-col h-full bg-white border border-slate-100 rounded-[2.5rem] overflow-hidden hover:shadow-2xl transition-all duration-500 cursor-pointer">
+        {/* Abstract Abstract Header */}
+        <div className="h-44 relative overflow-hidden bg-slate-900">
+          <div className={cn("absolute inset-0 bg-gradient-to-br opacity-90 transition-transform duration-700 group-hover:scale-110", gradients[seed])} />
+
+          {/* Subtle noise pattern overlay */}
+          <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
+
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="h-16 w-16 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center group-hover:rotate-12 group-hover:scale-110 transition-all">
+              <Zap className="h-8 w-8 text-white fill-white/20" />
             </div>
-          )}
-          <div className="absolute top-3 left-3 flex flex-col gap-2">
-            {course.isMandatory && <Badge variant="destructive" className="shadow-lg uppercase text-[10px]">Obrigatório</Badge>}
-            <Badge variant="outline" className="bg-white/80 dark:bg-black/80 backdrop-blur-md shadow-sm border-none text-[10px] uppercase">
-              {course.categoryName || 'Geral'}
-            </Badge>
           </div>
-          <div className="absolute bottom-3 right-3">
-            <div className="bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-md flex items-center gap-1">
-              <Clock className="h-3 w-3" />
-              {formatDuration(course.durationMinutes)}
+
+          <div className="absolute top-5 left-5">
+            <div className="px-2 py-1 rounded-lg bg-black/20 backdrop-blur-md border border-white/10 text-[9px] font-black text-white uppercase tracking-widest">
+              {course.categoryName || 'General'}
             </div>
           </div>
         </div>
 
-        <div className="p-5 flex-1 flex flex-col space-y-3">
-          <h3 className="font-bold text-base leading-tight group-hover:text-blue-600 transition-colors uppercase tracking-tight flex-1">
-            {course.title}
-          </h3>
+        {/* Info */}
+        <div className="p-7 flex flex-col flex-1 space-y-4">
+          <div className="space-y-2 flex-1">
+            <h3 className="text-base font-black uppercase tracking-tight leading-tight group-hover:text-blue-600 transition-colors line-clamp-2">{course.title}</h3>
+            <p className="text-[11px] text-slate-500 font-medium line-clamp-2 leading-relaxed italic">{course.description}</p>
+          </div>
 
-          <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-            {course.description}
-          </p>
-
-          <div className="flex items-center justify-between pt-2 border-t border-muted">
-            <div className="flex items-center gap-1.5">
-              <div className="h-6 w-6 rounded-full bg-blue-600/10 flex items-center justify-center">
-                <User className="h-3 w-3 text-blue-600" />
-              </div>
-              <span className="text-[10px] font-semibold text-muted-foreground uppercase">{course.instructorName || 'Instutor Axon'}</span>
+          <div className="pt-4 border-t border-slate-50 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="flex items-center gap-1 text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                <Clock className="h-3 w-3" /> {course.durationMinutes || '45'}m
+              </span>
+              <span className={cn("px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest", getDifficultyStyles(course.difficultyLevel))}>
+                {course.difficultyLevel || 'Beginner'}
+              </span>
             </div>
-            <div className={cn("text-[9px] font-bold px-2 py-0.5 rounded-full uppercase", getDifficultyColor(course.difficultyLevel))}>
-              {course.difficultyLevel}
+            <div className="h-8 w-8 rounded-xl bg-slate-50 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all">
+              <ArrowRight className="h-4 w-4" />
             </div>
           </div>
         </div>
       </div>
-    </Link>
-  );
-}
-
-// Quick Access Card
-function QuickCard({ icon, title, description, href, color }: { icon: React.ReactNode; title: string; description: string; href: string; color: string }) {
-  return (
-    <Link href={href}>
-      <Card className="hover:shadow-lg hover:border-blue-500/30 transition-all duration-300 group cursor-pointer h-full">
-        <CardHeader>
-          <div className={cn("p-3 rounded-2xl w-fit mb-2 group-hover:scale-110 transition-transform duration-300", color)}>
-            {icon}
-          </div>
-          <CardTitle className="text-lg uppercase tracking-tight">{title}</CardTitle>
-          <CardDescription className="text-xs leading-relaxed">{description}</CardDescription>
-        </CardHeader>
-      </Card>
     </Link>
   );
 }
