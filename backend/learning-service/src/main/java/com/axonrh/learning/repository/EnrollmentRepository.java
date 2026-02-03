@@ -28,6 +28,8 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, UUID> {
 
     boolean existsByTenantIdAndCourseIdAndEmployeeId(UUID tenantId, UUID courseId, UUID employeeId);
 
+    Optional<Enrollment> findByTenantIdAndCourseIdAndEmployeeId(UUID tenantId, UUID courseId, UUID employeeId);
+
     @Query("SELECT e FROM Enrollment e WHERE e.tenantId = :tenantId " +
            "AND e.employeeId = :employeeId " +
            "AND e.status IN ('ENROLLED', 'IN_PROGRESS')")

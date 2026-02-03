@@ -40,7 +40,7 @@ import { Badge } from '@/components/ui/badge';
 // --- MOCK DATA MATCHING DB TITLES ---
 const MOCK_COURSES = [
   {
-    id: 'c1',
+    id: '11111111-1111-1111-1111-111111111111',
     title: 'Liderança Alpha: Gestão de Times Remotos',
     description: 'Transforme sua gestão com rituais de feedback, cultura e produtividade para times distribuídos.',
     courseType: 'ONLINE',
@@ -54,7 +54,7 @@ const MOCK_COURSES = [
     createdAt: new Date().toISOString(),
   },
   {
-    id: 'c2',
+    id: '22222222-2222-2222-2222-222222222222',
     title: 'IA Generativa para Negócios: Do Zero ao Pro',
     description: 'A revolução da produtividade: domine LLMs, prompt engineering e automação de fluxos de trabalho.',
     courseType: 'ONLINE',
@@ -68,7 +68,7 @@ const MOCK_COURSES = [
     createdAt: new Date().toISOString(),
   },
   {
-    id: 'c3',
+    id: '33333333-3333-3333-3333-333333333333',
     title: 'Bem-vindo à Axon: Guia Definitivo de Imersão',
     description: 'Sua jornada começa aqui. Entenda nossa cultura, valores e como construímos o futuro do RH.',
     courseType: 'ONLINE',

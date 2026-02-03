@@ -47,7 +47,7 @@ export default function CourseDetails() {
                 setCourse(courseRes as any);
 
                 const enrollmentsRes = await enrollmentsApi.getByEmployee(user.id);
-                const myEnrollment = ((enrollmentsRes as any) || []).find((e: any) => e.courseId === id);
+                const myEnrollment = ((enrollmentsRes as any) || []).find((e: any) => (e.course?.id || e.courseId) === id);
                 setEnrollment(myEnrollment || null);
             } catch (error) {
                 console.error('Erro ao buscar curso:', error);
@@ -70,9 +70,10 @@ export default function CourseDetails() {
             });
             setEnrollment(res as any);
             toast.success('Inscrição realizada com sucesso!');
-        } catch (error) {
+        } catch (error: any) {
             console.error('Erro ao inscrever:', error);
-            toast.error('Erro ao realizar inscrição');
+            const message = error.response?.data?.message || error.message || 'Erro ao realizar inscrição';
+            toast.error(message);
         } finally {
             setEnrolling(false);
         }
@@ -267,9 +268,9 @@ export default function CourseDetails() {
                         <CardContent className="p-6 space-y-6">
                             {!enrollment ? (
                                 <div className="space-y-4">
-                                    <div className="flex items-baseline gap-2">
-                                        <span className="text-3xl font-black text-primary">GRÁTIS</span>
-                                        <span className="text-[10px] text-muted-foreground uppercase font-black tracking-widest bg-primary/5 px-2 py-1 rounded">Conteúdo Corporativo</span>
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] font-black text-primary uppercase tracking-widest">Treinamento Corporativo</p>
+                                        <h3 className="text-xl font-black text-slate-900 tracking-tight">Disponível para sua trilha</h3>
                                     </div>
                                     <Button className="w-full py-6 text-lg font-bold rounded-xl" onClick={handleEnroll} disabled={enrolling}>
                                         {enrolling ? 'Processando...' : 'Inscrever-se Agora'}

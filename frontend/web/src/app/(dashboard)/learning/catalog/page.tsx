@@ -29,7 +29,7 @@ import { cn } from '@/lib/utils';
 // Mock Data matching Consolidated DB Titles
 const MOCK_COURSES: Course[] = [
     {
-        id: 'c1',
+        id: '11111111-1111-1111-1111-111111111111',
         title: 'Liderança Alpha: Gestão de Times Remotos',
         description: 'Desenvolva as soft skills necessárias para liderar times de alto impacto no modelo remoto.',
         courseType: 'ONLINE' as CourseType,
@@ -48,7 +48,7 @@ const MOCK_COURSES: Course[] = [
         createdAt: new Date().toISOString()
     },
     {
-        id: 'c2',
+        id: '22222222-2222-2222-2222-222222222222',
         title: 'Bem-vindo à Axon: Guia Definitivo de Imersão',
         description: 'Tudo o que você precisa saber sobre nossa cultura, benefícios e pilares fundamentais.',
         courseType: 'ONLINE' as CourseType,
@@ -67,7 +67,7 @@ const MOCK_COURSES: Course[] = [
         createdAt: new Date().toISOString()
     },
     {
-        id: 'c3',
+        id: '33333333-3333-3333-3333-333333333333',
         title: 'IA Generativa para Negócios: Do Zero ao Pro',
         description: 'Como usar ChatGPT e Claude para dobrar sua velocidade de entrega no dia a dia.',
         courseType: 'ONLINE' as CourseType,

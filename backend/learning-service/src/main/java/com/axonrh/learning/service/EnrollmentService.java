@@ -48,9 +48,10 @@ public class EnrollmentService {
     // ==================== Enrollment ====================
 
     public Enrollment enroll(UUID tenantId, UUID courseId, UUID employeeId, String employeeName, LocalDate dueDate) {
-        // Verificar se ja esta matriculado
-        if (enrollmentRepository.existsByTenantIdAndCourseIdAndEmployeeId(tenantId, courseId, employeeId)) {
-            throw new IllegalStateException("Colaborador ja esta matriculado neste curso");
+        // Se ja existe, retorna ela (ser prático)
+        Optional<Enrollment> existing = enrollmentRepository.findByTenantIdAndCourseIdAndEmployeeId(tenantId, courseId, employeeId);
+        if (existing.isPresent()) {
+            return existing.get();
         }
 
         Course course = courseRepository.findByTenantIdAndId(tenantId, courseId)
