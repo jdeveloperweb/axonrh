@@ -32,14 +32,20 @@ ai:
     max-tokens: ${OPENAI_MAX_TOKENS:4096}
     temperature: ${OPENAI_TEMPERATURE:0.7}
     timeout-seconds: ${AI_TIMEOUT_SECONDS:120}
-  
+
   anthropic:
     api-key: ${ANTHROPIC_API_KEY:}
     model: ${ANTHROPIC_MODEL:claude-3-sonnet-20240229}
     max-tokens: ${ANTHROPIC_MAX_TOKENS:4096}
-  
+
   default-provider: ${AI_DEFAULT_PROVIDER:openai}
-  
+
+  # Function Calling Configuration
+  # When enabled, the LLM decides which tools to use instead of rule-based NLU
+  function-calling:
+    enabled: ${AI_FUNCTION_CALLING_ENABLED:true}
+    max-iterations: ${AI_FUNCTION_CALLING_MAX_ITERATIONS:5}
+
   embeddings:
     dimensions: 1536
 

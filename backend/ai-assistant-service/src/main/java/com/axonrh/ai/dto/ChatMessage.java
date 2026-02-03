@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
-import java.util.Map;
 
 @Data
 @Builder
@@ -41,7 +40,7 @@ public class ChatMessage {
         @AllArgsConstructor
         public static class Function {
             private String name;
-            private Map<String, Object> arguments;
+            private String arguments; // JSON string from OpenAI
         }
     }
 }
