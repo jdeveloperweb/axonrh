@@ -41,7 +41,17 @@ public class TrainingCategoryService {
     }
 
     public List<TrainingCategory> list(UUID tenantId) {
-        return categoryRepository.findByTenantId(tenantId);
+        List<TrainingCategory> all = categoryRepository.findByTenantId(tenantId);
+        // De-duplicate by name, prioritizing current tenant
+        java.util.Map<String, TrainingCategory> distinct = new java.util.LinkedHashMap<>();
+        for (TrainingCategory cat : all) {
+            boolean isGlobal = cat.getTenantId().equals(UUID.fromString("00000000-0000-0000-0000-000000000000"));
+            String key = cat.getName().toLowerCase();
+            if (!distinct.containsKey(key) || !isGlobal) {
+                distinct.put(key, cat);
+            }
+        }
+        return new java.util.ArrayList<>(distinct.values());
     }
 
     public void delete(UUID tenantId, UUID id) {

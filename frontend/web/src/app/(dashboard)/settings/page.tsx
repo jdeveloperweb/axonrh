@@ -11,7 +11,8 @@ import {
     Building2,
     Network,
     Gavel,
-    Lock
+    Lock,
+    GraduationCap
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuthStore } from '@/stores/auth-store';
@@ -63,6 +64,14 @@ const settingsItems = [
         icon: SettingsIcon,
         href: '/settings/modules',
         color: 'bg-orange-500',
+        adminOnly: true
+    },
+    {
+        title: 'Treinamentos e Academy',
+        description: 'Gerencie o catálogo de cursos, módulos e lições da Axon Academy.',
+        icon: GraduationCap,
+        href: '/settings/learning',
+        color: 'bg-rose-500',
         adminOnly: true
     }
 ];
