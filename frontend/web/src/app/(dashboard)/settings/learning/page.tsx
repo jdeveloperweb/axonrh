@@ -23,6 +23,7 @@ import {
     Zap,
     MoreVertical
 } from 'lucide-react';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,7 +39,7 @@ import {
     DifficultyLevel,
     CourseStatus
 } from '@/lib/api/learning';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 export default function LearningManagementPage() {
