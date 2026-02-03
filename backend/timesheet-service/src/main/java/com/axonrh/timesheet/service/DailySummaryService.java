@@ -115,37 +115,42 @@ public class DailySummaryService {
      */
     @Transactional(readOnly = true)
     public List<DailySummaryResponse> getTimesheetByPeriod(UUID employeeId, LocalDate startDate, LocalDate endDate) {
+        log.info("Solicitação de espelho de ponto: colaborador={}, inicio={}, fim={}", employeeId, startDate, endDate);
+        
         String currentTenant = TenantContext.getCurrentTenant();
-        if (currentTenant == null) {
-            log.error("Tentativa de buscar espelho de ponto sem tenant selecionado");
-            return java.util.Collections.emptyList();
+        java.util.Map<LocalDate, DailySummary> summaryMap = new java.util.HashMap<>();
+
+        if (currentTenant != null) {
+            try {
+                UUID tenantId = UUID.fromString(currentTenant);
+                List<DailySummary> summaries = dailySummaryRepository
+                        .findByTenantIdAndEmployeeIdAndSummaryDateBetweenOrderBySummaryDateAsc(
+                                tenantId, employeeId, startDate, endDate);
+
+                for (DailySummary s : summaries) {
+                    summaryMap.put(s.getSummaryDate(), s);
+                }
+                log.info("Encontrados {} registros de sumário para o período", summaries.size());
+            } catch (Exception e) {
+                log.error("Erro ao buscar sumários no banco para colaborador {}: {}", employeeId, e.getMessage());
+            }
+        } else {
+            log.warn("Iniciando geração de espelho sem Tenant ID no contexto");
         }
 
-        UUID tenantId = UUID.fromString(currentTenant);
-
         try {
-            List<DailySummary> summaries = dailySummaryRepository
-                    .findByTenantIdAndEmployeeIdAndSummaryDateBetweenOrderBySummaryDateAsc(
-                            tenantId, employeeId, startDate, endDate);
-
-            java.util.Map<LocalDate, DailySummary> summaryMap = new java.util.HashMap<>();
-            for (DailySummary s : summaries) {
-                summaryMap.put(s.getSummaryDate(), s);
-            }
-
             return startDate.datesUntil(endDate.plusDays(1))
                     .map(date -> {
                         DailySummary summary = summaryMap.get(date);
                         if (summary != null) {
                             return toResponse(summary);
                         } else {
-                            // Criar resumo virtual para dias sem registro
                             return createVirtualSummary(employeeId, date);
                         }
                     })
                     .toList();
         } catch (Exception e) {
-            log.error("Erro ao gerar espelho de ponto para colaborador {}: {}", employeeId, e.getMessage(), e);
+            log.error("Falha crítica ao gerar stream de datas para o espelho: {}", e.getMessage(), e);
             return java.util.Collections.emptyList();
         }
     }

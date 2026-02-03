@@ -199,6 +199,7 @@ public class TimeRecordController {
             @AuthenticationPrincipal Jwt jwt) {
 
         UUID resolvedId = resolveEmployeeId(employeeId, jwt);
+        log.info("Buscando espelho para employeeId resolvido: {} (original: {})", resolvedId, employeeId);
         List<DailySummaryResponse> timesheet = dailySummaryService.getTimesheetByPeriod(resolvedId, startDate, endDate);
         return ResponseEntity.ok(timesheet);
     }
