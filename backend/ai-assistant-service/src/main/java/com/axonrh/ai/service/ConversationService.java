@@ -439,6 +439,13 @@ public class ConversationService {
             Cite a legislação quando relevante (CLT, eSocial).
             Proteja informações sensíveis.
 
+            IMPORTANTE para formatação de respostas:
+            - Quando retornar listas de funcionários ou dados tabulares, SEMPRE formate como tabela markdown
+            - Use o formato: | Coluna1 | Coluna2 | seguido de |---|---| e depois as linhas de dados
+            - Valores monetários devem usar formato brasileiro: R$ 1.234,56
+            - Datas devem usar formato brasileiro: DD/MM/YYYY
+            - Você TEM acesso a dados como data de nascimento e idade dos funcionários através das ferramentas disponíveis
+
             Data atual: {current_date}
             Empresa: {company_context}
             Usuário: {user_context}
