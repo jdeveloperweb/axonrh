@@ -21,14 +21,18 @@ import {
     GraduationCap,
     Clock,
     Zap,
-    Zap,
     MoreVertical,
     FileVideo,
     Link2,
     Type,
+    Pencil,
     BrainCircuit,
     ListChecks,
-    Pencil
+    Code,
+    Image as ImageIcon,
+    List,
+    Heading1,
+    AlertCircle
 } from 'lucide-react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -59,7 +63,8 @@ import {
     TrainingCategory,
     CourseType,
     DifficultyLevel,
-    CourseStatus
+    CourseStatus,
+    ContentType
 } from '@/lib/api/learning';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -89,6 +94,7 @@ export default function LearningManagementPage() {
     const [isLessonDialogOpen, setIsLessonDialogOpen] = useState(false);
     const [selectedModule, setSelectedModule] = useState<CourseModule | null>(null);
     const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
+    const [lessonTab, setLessonTab] = useState<'edit' | 'preview'>('edit');
 
     // Temp Form States
     const [categoryForm, setCategoryForm] = useState<Partial<TrainingCategory>>({ name: '', description: '' });
@@ -170,12 +176,20 @@ export default function LearningManagementPage() {
     const handleSaveCategory = async () => {
         if (!categoryForm.name) return toast.error('Nome da categoria é obrigatório');
         try {
-            await categoriesApi.create(categoryForm);
-            toast.success('Categoria criada!');
+            if (categoryForm.id) {
+                await categoriesApi.update(categoryForm.id, categoryForm);
+                toast.success('Categoria atualizada!');
+            } else {
+                await categoriesApi.create(categoryForm);
+                toast.success('Categoria criada!');
+            }
             setIsCategoryDialogOpen(false);
             setCategoryForm({ name: '', description: '' });
             loadInitialData();
-        } catch (error) { toast.error('Erro ao criar categoria'); }
+        } catch (error) {
+            console.error('Erro ao salvar categoria:', error);
+            toast.error('Erro ao salvar categoria.');
+        }
     }
 
     // Module Handlers
@@ -210,6 +224,19 @@ export default function LearningManagementPage() {
             toast.success('Módulo removido');
         } catch (error) { toast.error('Erro ao remover módulo'); }
     }
+
+    const insertText = (before: string, after: string = '') => {
+        const textarea = document.getElementById('lesson-editor') as HTMLTextAreaElement;
+        if (!textarea) return;
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const text = textarea.value;
+        const beforeText = text.substring(0, start);
+        const afterText = text.substring(end);
+        const selectedText = text.substring(start, end);
+        const newText = beforeText + before + selectedText + after + afterText;
+        setLessonForm({ ...lessonForm, contentText: newText });
+    };
 
     const handleDeleteLesson = async (moduleId: string, lessonId: string) => {
         if (!selectedCourse?.id || !confirm('Deseja excluir esta lição?')) return;
@@ -582,41 +609,94 @@ export default function LearningManagementPage() {
                 </div>
             )}
 
-            {/* Category Dialog */}
-            <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
-                <DialogContent className="max-w-md rounded-[2rem] border-slate-100 p-8">
-                    <DialogHeader>
-                        <DialogTitle className="text-2xl font-black tracking-tight">Gerenciar Categorias</DialogTitle>
-                        <DialogDescription className="font-medium">Crie categorias para organizar seus treinamentos.</DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-6 pt-6">
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Nome da Categoria</label>
-                            <Input
-                                placeholder="Ex: Liderança, Vendas, Tecnologia"
-                                onChange={e => setCategoryForm({ ...categoryForm, name: e.target.value })}
-                                className="h-12 rounded-xl border-slate-100 font-bold"
-                            />
+            {/* Category Dialog - Refined for better management */}
+            <Dialog open={isCategoryDialogOpen} onOpenChange={(open) => {
+                setIsCategoryDialogOpen(open);
+                if (!open) setCategoryForm({ name: '', description: '' });
+            }}>
+                <DialogContent className="max-w-md rounded-[2.5rem] border-slate-100 p-10 overflow-hidden shadow-2xl">
+                    <DialogHeader className="space-y-4">
+                        <div className="h-14 w-14 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600">
+                            <Layers className="h-7 w-7" />
                         </div>
-                        <div className="max-h-[200px] overflow-y-auto space-y-2 pr-2">
-                            {categories.map(cat => (
-                                <div key={cat.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
-                                    <span className="text-sm font-bold text-slate-700">{cat.name}</span>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-rose-500" onClick={async () => {
-                                        if (confirm('Excluir categoria?')) {
-                                            await categoriesApi.delete(cat.id);
-                                            loadInitialData();
-                                        }
-                                    }}>
-                                        <Trash2 className="h-4 w-4" />
+                        <div>
+                            <DialogTitle className="text-3xl font-black tracking-tight">Categorias</DialogTitle>
+                            <DialogDescription className="font-medium">Organize seus conteúdos por áreas ou temas.</DialogDescription>
+                        </div>
+                    </DialogHeader>
+
+                    <div className="space-y-8 pt-6">
+                        {/* Action Area (Create/Edit) */}
+                        <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                    {categoryForm.id ? "Editando Categoria" : "Nova Categoria"}
+                                </label>
+                                <div className="flex gap-2">
+                                    <Input
+                                        placeholder="Ex: Tecnologia, RH..."
+                                        value={categoryForm.name}
+                                        onChange={e => setCategoryForm({ ...categoryForm, name: e.target.value })}
+                                        className="h-12 rounded-xl border-slate-200 bg-white font-bold"
+                                    />
+                                    <Button
+                                        onClick={handleSaveCategory}
+                                        className="h-12 px-6 rounded-xl bg-blue-600 text-white font-black text-xs uppercase tracking-widest"
+                                    >
+                                        {categoryForm.id ? "Salvar" : <Plus className="h-5 w-5" />}
                                     </Button>
+                                    {categoryForm.id && (
+                                        <Button
+                                            variant="ghost"
+                                            onClick={() => setCategoryForm({ name: '', description: '' })}
+                                            className="h-12 w-12 rounded-xl text-slate-400"
+                                        >
+                                            <X className="h-5 w-5" />
+                                        </Button>
+                                    )}
                                 </div>
-                            ))}
+                            </div>
+                        </div>
+
+                        {/* List Area */}
+                        <div className="space-y-4">
+                            <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Categorias Existentes</label>
+                            <div className="max-h-[250px] overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+                                {categories.length === 0 ? (
+                                    <p className="text-center py-10 text-slate-300 font-bold italic text-sm">Nenhuma categoria cadastrada.</p>
+                                ) : (
+                                    categories.map(cat => (
+                                        <div key={cat.id} className="group flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl hover:border-blue-200 hover:shadow-sm transition-all">
+                                            <span className="text-sm font-bold text-slate-700">{cat.name}</span>
+                                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-9 w-9 text-blue-600 hover:bg-blue-50 rounded-lg"
+                                                    onClick={() => setCategoryForm(cat)}
+                                                >
+                                                    <Pencil className="h-4 w-4" />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-9 w-9 text-rose-500 hover:bg-rose-50 rounded-lg"
+                                                    onClick={async () => {
+                                                        if (confirm('Deseja realmente excluir esta categoria?')) {
+                                                            await categoriesApi.delete(cat.id);
+                                                            loadInitialData();
+                                                        }
+                                                    }}
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
                         </div>
                     </div>
-                    <DialogFooter className="pt-6">
-                        <Button className="w-full h-12 rounded-xl bg-blue-600 font-black uppercase tracking-widest text-[10px]" onClick={handleSaveCategory}>Criar Categoria</Button>
-                    </DialogFooter>
                 </DialogContent>
             </Dialog>
 
@@ -653,105 +733,179 @@ export default function LearningManagementPage() {
                 </DialogContent>
             </Dialog>
 
-            {/* Lesson Dialog - The "Robust" Screen */}
+            {/* Lesson Dialog - The "Robust" Content Builder */}
             <Dialog open={isLessonDialogOpen} onOpenChange={setIsLessonDialogOpen}>
-                <DialogContent className="max-w-2xl rounded-[2rem] border-slate-100 p-10 overflow-hidden flex flex-col max-h-[90vh]">
-                    <DialogHeader>
-                        <DialogTitle className="text-3xl font-black tracking-tight">Configurar Lição</DialogTitle>
-                        <DialogDescription className="font-medium italic">"{selectedModule?.title}"</DialogDescription>
-                    </DialogHeader>
-
-                    <div className="flex-1 overflow-y-auto space-y-8 py-8 pr-2">
-                        <div className="space-y-4">
-                            <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Título da Lição</label>
-                            <Input
-                                placeholder="Ex: Aula 01 - Boas Vindas"
-                                value={lessonForm.title}
-                                onChange={e => setLessonForm({ ...lessonForm, title: e.target.value })}
-                                className="h-14 rounded-xl border-slate-100 font-bold text-lg"
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-6">
-                            <div className="space-y-4">
-                                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Tipo de Conteúdo</label>
-                                <Select
-                                    value={lessonForm.contentType}
-                                    onValueChange={val => setLessonForm({ ...lessonForm, contentType: val as ContentType })}
-                                >
-                                    <SelectTrigger className="h-14 rounded-xl border-slate-100 font-bold bg-slate-50">
-                                        <SelectValue placeholder="Selecione o tipo" />
-                                    </SelectTrigger>
-                                    <SelectContent className="rounded-2xl border-slate-100 shadow-2xl">
-                                        <SelectItem value="VIDEO" className="focus:bg-blue-50">Vídeo (Embed/Link)</SelectItem>
-                                        <SelectItem value="DOCUMENTO" className="focus:bg-rose-50">Documento (PDF/URL)</SelectItem>
-                                        <SelectItem value="ARTIGO" className="focus:bg-emerald-50">Texto Interativo</SelectItem>
-                                        <SelectItem value="QUIZ" className="focus:bg-amber-50">Quiz / Avaliação</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                <DialogContent className="max-w-5xl w-[95vw] rounded-[2rem] border-slate-100 p-0 overflow-hidden flex flex-col h-[90vh]">
+                    <div className="bg-slate-900 p-6 flex items-center justify-between text-white">
+                        <div className="flex items-center gap-4">
+                            <div className="h-10 w-10 rounded-xl bg-blue-600 flex items-center justify-center">
+                                {lessonForm.contentType === 'VIDEO' ? <Video className="h-5 w-5" /> : <FileText className="h-5 w-5" />}
                             </div>
-                            <div className="space-y-4">
-                                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Duração (minutos)</label>
-                                <Input
-                                    type="number"
-                                    value={lessonForm.durationMinutes}
-                                    onChange={e => setLessonForm({ ...lessonForm, durationMinutes: parseInt(e.target.value) })}
-                                    className="h-14 rounded-xl border-slate-100 font-bold bg-slate-50"
-                                />
+                            <div>
+                                <h3 className="font-black text-lg tracking-tight">Studio de Conteúdo</h3>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Montando material para: {selectedModule?.title}</p>
                             </div>
                         </div>
-
-                        {/* Contextual Fields */}
-                        {(lessonForm.contentType === 'VIDEO' || lessonForm.contentType === 'DOCUMENTO') && (
-                            <div className="space-y-4 animate-in slide-in-from-top-4 duration-300">
-                                <div className="flex items-center gap-2">
-                                    <Link2 className="h-4 w-4 text-blue-600" />
-                                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">URL do Conteúdo</label>
-                                </div>
-                                <Input
-                                    placeholder="https://youtube.com/embed/... ou link do PDF"
-                                    value={lessonForm.contentUrl}
-                                    onChange={e => setLessonForm({ ...lessonForm, contentUrl: e.target.value })}
-                                    className="h-14 rounded-xl border-slate-100 font-bold bg-blue-50/30"
-                                />
-                                <p className="text-[10px] text-slate-400 font-medium italic">Links do YouTube e Vimeo serão convertidos em player automaticamente.</p>
-                            </div>
-                        )}
-
-                        {lessonForm.contentType === 'ARTIGO' && (
-                            <div className="space-y-4 animate-in slide-in-from-top-4 duration-300">
-                                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Conteúdo do Artigo (HTML/Texto)</label>
-                                <textarea
-                                    className="w-full min-h-[300px] p-6 rounded-2xl border border-slate-100 bg-slate-50/50 font-medium text-slate-600 leading-relaxed outline-none focus:ring-2 focus:ring-blue-500/10"
-                                    placeholder="Escreva seu conteúdo aqui..."
-                                    value={lessonForm.contentText}
-                                    onChange={e => setLessonForm({ ...lessonForm, contentText: e.target.value })}
-                                />
-                            </div>
-                        )}
-
-                        {lessonForm.contentType === 'QUIZ' && (
-                            <div className="p-8 bg-amber-50 rounded-3xl border border-amber-100 space-y-6 animate-in slide-in-from-top-4 duration-300">
-                                <div className="flex items-center gap-3">
-                                    <BrainCircuit className="h-6 w-6 text-amber-600" />
-                                    <h4 className="font-black text-amber-900">Configuração de Quiz</h4>
-                                </div>
-                                <p className="text-sm text-amber-700/70 font-medium">Vinculado ao sistema de avaliação automática do Axon Academy.</p>
-                                <Button variant="outline" className="w-full h-12 rounded-xl bg-white border-amber-200 text-amber-700 font-bold gap-2">
-                                    <ListChecks className="h-4 w-4" />
-                                    Configurar Perguntas
-                                </Button>
-                            </div>
-                        )}
+                        <div className="flex bg-slate-800 rounded-xl p-1 gap-1">
+                            <button
+                                onClick={() => setLessonTab('edit')}
+                                className={cn("px-4 py-2 rounded-lg text-xs font-black transition-all flex items-center gap-2", lessonTab === 'edit' ? "bg-slate-700 text-white" : "text-slate-500 hover:text-slate-300")}
+                            >
+                                <Code className="h-3 w-3" /> EDITOR
+                            </button>
+                            <button
+                                onClick={() => setLessonTab('preview')}
+                                className={cn("px-4 py-2 rounded-lg text-xs font-black transition-all flex items-center gap-2", lessonTab === 'preview' ? "bg-slate-700 text-white" : "text-slate-500 hover:text-slate-300")}
+                            >
+                                <Eye className="h-3 w-3" /> PREVIEW
+                            </button>
+                        </div>
                     </div>
 
-                    <DialogFooter className="pt-8 border-t border-slate-50">
-                        <Button variant="ghost" className="h-14 px-8 rounded-2xl font-bold" onClick={() => setIsLessonDialogOpen(false)}>Cancelar</Button>
-                        <Button className="h-14 px-10 rounded-2xl bg-blue-600 text-white font-black shadow-xl shadow-blue-100 flex gap-2" onClick={handleSaveLesson}>
-                            <Save className="h-5 w-5" />
-                            Finalizar Lição
-                        </Button>
-                    </DialogFooter>
+                    <div className="flex-1 overflow-hidden flex">
+                        {/* Sidebar Configs */}
+                        <div className="w-80 border-r border-slate-100 bg-slate-50/50 p-8 space-y-8 overflow-y-auto">
+                            <div className="space-y-4">
+                                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Configurações Gerais</label>
+                                <div className="space-y-4">
+                                    <div className="space-y-2">
+                                        <span className="text-[10px] font-bold text-slate-500">Título da Aula</span>
+                                        <Input
+                                            value={lessonForm.title}
+                                            onChange={e => setLessonForm({ ...lessonForm, title: e.target.value })}
+                                            className="h-10 rounded-xl border-slate-200 bg-white font-bold text-sm"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <span className="text-[10px] font-bold text-slate-500">Tipo de Conteúdo</span>
+                                        <Select
+                                            value={lessonForm.contentType}
+                                            onValueChange={val => setLessonForm({ ...lessonForm, contentType: val as ContentType })}
+                                        >
+                                            <SelectTrigger className="h-10 rounded-xl border-slate-200 bg-white font-bold">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent className="rounded-xl">
+                                                <SelectItem value="VIDEO">Vídeo</SelectItem>
+                                                <SelectItem value="ARTIGO">Artigo / Texto</SelectItem>
+                                                <SelectItem value="DOCUMENTO">Documento</SelectItem>
+                                                <SelectItem value="QUIZ">Quiz</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <span className="text-[10px] font-bold text-slate-500">Duração (min)</span>
+                                        <Input
+                                            type="number"
+                                            value={lessonForm.durationMinutes}
+                                            onChange={e => setLessonForm({ ...lessonForm, durationMinutes: parseInt(e.target.value) })}
+                                            className="h-10 rounded-xl border-slate-200 bg-white font-bold"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="pt-6 border-t border-slate-200 space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Obrigatória</span>
+                                    <button
+                                        onClick={() => setLessonForm({ ...lessonForm, isRequired: !lessonForm.isRequired })}
+                                        className={cn("w-10 h-5 rounded-full relative transition-all", lessonForm.isRequired ? "bg-blue-600" : "bg-slate-300")}
+                                    >
+                                        <div className={cn("absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all", lessonForm.isRequired ? "left-[22px]" : "left-0.5")} />
+                                    </button>
+                                </div>
+                            </div>
+
+                            {lessonForm.contentType === 'ARTIGO' && (
+                                <div className="pt-6 border-t border-slate-200 space-y-4">
+                                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Atalhos de Conteúdo</label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <Button variant="outline" size="sm" className="h-10 rounded-lg text-[10px] font-bold gap-2" onClick={() => insertText('<h2 class="text-2xl font-black mb-4">', '</h2>')}>
+                                            <Heading1 className="h-3 w-3" /> Título
+                                        </Button>
+                                        <Button variant="outline" size="sm" className="h-10 rounded-lg text-[10px] font-bold gap-2" onClick={() => insertText('<p class="text-slate-600 mb-4">', '</p>')}>
+                                            <Type className="h-3 w-3" /> Parágrafo
+                                        </Button>
+                                        <Button variant="outline" size="sm" className="h-10 rounded-lg text-[10px] font-bold gap-2" onClick={() => insertText('<div class="p-6 bg-blue-50 border-l-4 border-blue-500 rounded-r-xl mb-4">\n  ', '\n</div>')}>
+                                            <AlertCircle className="h-3 w-3 text-blue-500" /> Alerta
+                                        </Button>
+                                        <Button variant="outline" size="sm" className="h-10 rounded-lg text-[10px] font-bold gap-2" onClick={() => insertText('<img src="', '" class="w-full rounded-3xl shadow-xl mb-6" />')}>
+                                            <ImageIcon className="h-3 w-3" /> Imagem
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Main Interaction Area */}
+                        <div className="flex-1 overflow-y-auto bg-white p-12">
+                            {lessonTab === 'edit' ? (
+                                <div className="max-w-3xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                    {lessonForm.contentType === 'ARTIGO' ? (
+                                        <div className="space-y-4">
+                                            <h4 className="text-xl font-black flex items-center gap-2">
+                                                <Pencil className="h-5 w-5 text-blue-600" />
+                                                Corpo do Material de Estudo
+                                            </h4>
+                                            <textarea
+                                                id="lesson-editor"
+                                                className="w-full min-h-[500px] p-8 rounded-[2rem] border-2 border-slate-100 bg-slate-50/30 font-mono text-sm leading-relaxed outline-none focus:border-blue-500/20 transition-all"
+                                                placeholder="Escreva seu material usando HTML básico ou texto puro..."
+                                                value={lessonForm.contentText}
+                                                onChange={e => setLessonForm({ ...lessonForm, contentText: e.target.value })}
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-8 py-20 text-center">
+                                            <div className="h-24 w-24 bg-blue-50 rounded-[2rem] flex items-center justify-center mx-auto text-blue-600">
+                                                {lessonForm.contentType === 'VIDEO' ? <Video className="h-12 w-12" /> : <Link2 className="h-12 w-12" />}
+                                            </div>
+                                            <div className="space-y-4">
+                                                <h3 className="text-2xl font-black">Link do Conteúdo Externo</h3>
+                                                <p className="text-slate-400 font-medium">Insira a URL do vídeo (YouTube/Vimeo) ou do documento (PDF/Drive).</p>
+                                                <Input
+                                                    placeholder="https://..."
+                                                    value={lessonForm.contentUrl}
+                                                    onChange={e => setLessonForm({ ...lessonForm, contentUrl: e.target.value })}
+                                                    className="h-16 rounded-2xl border-slate-100 bg-slate-50/50 font-bold text-lg text-center max-w-xl mx-auto"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="max-w-3xl mx-auto p-12 rounded-[3rem] border border-slate-100 shadow-sm space-y-10 animate-in fade-in zoom-in-95 duration-500">
+                                    <div className="space-y-4 text-center">
+                                        <Badge variant="outline" className="text-blue-600 border-blue-100 font-black uppercase text-[10px] tracking-widest px-4 py-1">{lessonForm.contentType}</Badge>
+                                        <h2 className="text-4xl font-black tracking-tight">{lessonForm.title || 'Sem título'}</h2>
+                                        <div className="h-1.5 w-24 bg-blue-600 mx-auto rounded-full" />
+                                    </div>
+
+                                    {lessonForm.contentType === 'VIDEO' && lessonForm.contentUrl ? (
+                                        <div className="aspect-video bg-slate-900 rounded-3xl overflow-hidden shadow-2xl">
+                                            <div className="flex items-center justify-center h-full text-white/20 font-black italic">VIDEO PREVIEW MODE</div>
+                                        </div>
+                                    ) : (
+                                        <div
+                                            className="prose prose-slate max-w-none text-lg leading-relaxed text-slate-600"
+                                            dangerouslySetInnerHTML={{ __html: lessonForm.contentText || '<p class="text-center italic text-slate-300">Nenhum conteúdo escrito ainda...</p>' }}
+                                        />
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="bg-slate-50 p-6 border-t border-slate-200 flex items-center justify-between">
+                        <Button variant="ghost" className="h-12 px-6 rounded-xl font-bold" onClick={() => setIsLessonDialogOpen(false)}>Fechar sem salvar</Button>
+                        <div className="flex gap-4">
+                            <Button className="h-12 px-10 rounded-xl bg-blue-600 text-white font-black shadow-xl shadow-blue-200 flex gap-2 active:scale-95 transition-all" onClick={handleSaveLesson}>
+                                <Save className="h-5 w-5" />
+                                Salvar e Publicar Aula
+                            </Button>
+                        </div>
+                    </div>
                 </DialogContent>
             </Dialog>
         </div>
