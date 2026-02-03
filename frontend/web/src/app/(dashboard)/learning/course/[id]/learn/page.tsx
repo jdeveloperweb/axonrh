@@ -46,8 +46,8 @@ export default function LearnCourse() {
                     enrollmentsApi.getByEmployee(user.id)
                 ]);
 
-                const c = courseRes.data;
-                const e = (enrollmentsRes.data || []).find(enroll => enroll.courseId === id);
+                const c = courseRes as any;
+                const e = ((enrollmentsRes as any) || []).find((enroll: any) => enroll.courseId === id);
 
                 if (!e) {
                     toast.error('Você não está inscrito neste curso');
@@ -59,15 +59,15 @@ export default function LearnCourse() {
                 setEnrollment(e);
 
                 // Find last progress or first lesson
-                const lastProgress = e.lessonProgresses
-                    ?.filter(p => p.status === 'IN_PROGRESS')
-                    .sort((a, b) => new Date(b.startedAt || 0).getTime() - new Date(a.startedAt || 0).getTime())[0];
+                const lastProgress = (e as any).lessonProgresses
+                    ?.filter((p: any) => p.status === 'IN_PROGRESS')
+                    .sort((a: any, b: any) => new Date(b.startedAt || 0).getTime() - new Date(a.startedAt || 0).getTime())[0];
 
-                let initialLesson: Lesson | null = null;
+                let initialLesson: any | null = null;
                 if (lastProgress) {
-                    initialLesson = c.modules
-                        .flatMap(m => m.lessons)
-                        .find(l => l.id === lastProgress.lessonId) || null;
+                    initialLesson = (c as any).modules
+                        .flatMap((m: any) => m.lessons)
+                        .find((l: any) => l.id === lastProgress.lessonId) || null;
                 }
 
                 if (!initialLesson) {

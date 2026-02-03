@@ -103,20 +103,20 @@ export default function LearningDashboard() {
       try {
         setLoading(true);
         const [coursesRes, enrollmentsRes, statisticsRes, categoriesRes] = await Promise.all([
-          coursesApi.listPublished().catch(() => ({ data: [] })),
-          enrollmentsApi.getActiveByEmployee(user.id).catch(() => ({ data: [] })),
-          enrollmentsApi.getStatistics(user.id).catch(() => ({ data: null })),
-          categoriesApi.list().catch(() => ({ data: [] })),
+          coursesApi.listPublished().catch(() => []),
+          enrollmentsApi.getActiveByEmployee(user.id).catch(() => []),
+          enrollmentsApi.getStatistics(user.id).catch(() => null),
+          categoriesApi.list().catch(() => []),
         ]);
 
-        const fetchedCourses = (coursesRes.data as any[]) || [];
+        const fetchedCourses = (coursesRes as any[]) || [];
         setPublishedCourses(fetchedCourses.length > 0 ? fetchedCourses : MOCK_COURSES);
 
-        const fetchedCategories = (categoriesRes.data as any[]) || [];
+        const fetchedCategories = (categoriesRes as any[]) || [];
         setCategories(fetchedCategories.length > 0 ? fetchedCategories : MOCK_CATEGORIES);
 
-        setMyEnrollments(enrollmentsRes.data || []);
-        setStats(statisticsRes.data);
+        setMyEnrollments((enrollmentsRes as any) || []);
+        setStats(statisticsRes as any);
       } catch (error) {
         console.error('Erro ao carregar dashboard:', error);
       } finally {
@@ -149,33 +149,35 @@ export default function LearningDashboard() {
   return (
     <div className="max-w-[1400px] mx-auto space-y-10 pb-20 px-4">
 
-      {/* --- SURREAL HERO --- */}
-      <section className="relative overflow-hidden rounded-[3rem] bg-slate-950 border border-white/5 p-8 md:p-16">
-        {/* Mesh Gradient Background */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute -top-[20%] -left-[10%] w-[60%] h-[60%] bg-blue-600/20 rounded-full blur-[120px]" />
-          <div className="absolute -bottom-[20%] -right-[10%] w-[50%] h-[50%] bg-purple-600/10 rounded-full blur-[100px]" />
-        </div>
+      {/* --- DASHBOARD HEADER --- */}
+      <section className="grid lg:grid-cols-12 gap-6 pt-4">
+        {/* Main Welcome Banner */}
+        <div className="lg:col-span-8 relative overflow-hidden rounded-[2.5rem] bg-slate-950 border border-white/5 p-8 md:p-12 flex flex-col justify-center min-h-[340px]">
+          {/* Mesh Gradient Background */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute -top-[20%] -left-[10%] w-[60%] h-[60%] bg-blue-600/20 rounded-full blur-[120px]" />
+            <div className="absolute -bottom-[20%] -right-[10%] w-[50%] h-[50%] bg-purple-600/10 rounded-full blur-[100px]" />
+          </div>
 
-        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-12">
-          <div className="max-w-2xl space-y-8 text-center md:text-left">
+          <div className="relative z-10 space-y-8">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-[0.2em]">
               <Sparkles className="h-3 w-3" />
               <span>Axon Academy Cloud</span>
             </div>
 
-            <h1 className="text-4xl md:text-6xl font-black text-white leading-tight tracking-tighter">
-              Eleve sua <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400">
-                Experiência
-              </span>
-            </h1>
+            <div className="space-y-4">
+              <h1 className="text-4xl md:text-5xl font-black text-white leading-tight tracking-tighter">
+                Olá, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400">
+                  {user?.name?.split(' ')[0] || 'Explorador'}
+                </span>!<br />
+                Pronto para evoluir?
+              </h1>
+              <p className="text-slate-400 text-sm md:text-base leading-relaxed font-medium max-w-lg">
+                Continue sua jornada de conhecimento com trilhas desenhadas para transformar sua carreira através da tecnologia e liderança.
+              </p>
+            </div>
 
-            <p className="text-slate-400 text-base md:text-lg leading-relaxed font-medium max-w-lg">
-              Acesse trilhas de conhecimento desenhadas para transformar sua carreira através da tecnologia e liderança.
-            </p>
-
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
+            <div className="flex flex-wrap items-center gap-4">
               <Button size="lg" className="h-12 px-8 rounded-xl bg-white text-black hover:bg-slate-100 font-bold transition-all hover:scale-105 active:scale-95">
                 Começar Jornada
               </Button>
@@ -187,23 +189,61 @@ export default function LearningDashboard() {
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Surreal Stat Card */}
-          <div className="relative hidden xl:block">
-            <div className="bg-white/5 backdrop-blur-2xl border border-white/10 p-8 rounded-[2.5rem] shadow-2xl space-y-6 rotate-3 hover:rotate-0 transition-transform duration-700">
-              <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-2xl bg-blue-500/20 flex items-center justify-center">
-                  <TrendingUp className="h-6 w-6 text-blue-500" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest">Seu Progresso</h4>
-                  <p className="text-2xl font-black text-white">84%</p>
-                </div>
+        {/* Stats Column */}
+        <div className="lg:col-span-4 grid grid-rows-2 gap-6">
+          {/* Progress Card */}
+          <div className="bg-blue-600 rounded-[2.5rem] p-8 text-white relative overflow-hidden group">
+            <div className="absolute -right-6 -top-6 opacity-10 group-hover:scale-110 transition-transform duration-700">
+              <Trophy className="h-40 w-40" />
+            </div>
+
+            <div className="relative z-10 h-full flex flex-col justify-between">
+              <div className="space-y-1">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80">Seu Progresso Médio</p>
+                <h3 className="text-4xl font-black">{(stats?.averageProgress || 84).toFixed(0)}%</h3>
               </div>
-              <div className="w-48 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                <div className="h-full w-[84%] bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+
+              <div className="space-y-3">
+                <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-white shadow-[0_0_15px_rgba(255,255,255,0.5)] transition-all duration-1000"
+                    style={{ width: `${stats?.averageProgress || 84}%` }}
+                  />
+                </div>
+                <p className="text-[10px] font-bold uppercase tracking-widest opacity-80">
+                  {stats?.completed || 0} de {stats?.total || 3} cursos concluídos
+                </p>
               </div>
-              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Top 5% da Empresa</p>
+            </div>
+          </div>
+
+          {/* Activity / Rank Card */}
+          <div className="bg-white border border-slate-100 rounded-[2.5rem] p-8 flex flex-col justify-between relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-6">
+              <div className="h-12 w-12 rounded-2xl bg-blue-50 flex items-center justify-center group-hover:rotate-12 transition-transform">
+                <TrendingUp className="h-6 w-6 text-blue-600" />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Status Global</p>
+              <h4 className="text-xl font-black text-slate-950">Top 5% da Empresa</h4>
+            </div>
+
+            <div className="space-y-4">
+              <p className="text-xs font-bold text-slate-500 leading-relaxed">
+                Você manteve uma constância incrível! Continue assim para atingir o nível Platinum.
+              </p>
+              <div className="flex items-center gap-2">
+                <div className="flex -space-x-1.5">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="h-5 w-5 rounded-full bg-slate-200 border border-white" />
+                  ))}
+                </div>
+                <span className="text-[9px] font-black text-blue-600 uppercase">Ver Ranking</span>
+              </div>
             </div>
           </div>
         </div>

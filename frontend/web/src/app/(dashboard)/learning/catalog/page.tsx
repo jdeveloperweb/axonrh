@@ -111,8 +111,8 @@ export default function CourseCatalog() {
                     categoriesApi.list()
                 ]);
                 // Fallback robusto para garantir que a tela NUNCA fique vazia
-                const fetchedCourses = coursesRes.data || [];
-                const fetchedCategories = categoriesRes.data || [];
+                const fetchedCourses = (coursesRes as any) || [];
+                const fetchedCategories = (categoriesRes as any) || [];
 
                 if (fetchedCourses.length === 0) {
                     setCourses(MOCK_COURSES);
