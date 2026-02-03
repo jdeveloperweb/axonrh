@@ -21,7 +21,8 @@ import {
     FileText,
     MessageSquare,
     Share2,
-    ArrowLeft
+    ArrowLeft,
+    Video
 } from 'lucide-react';
 import Image from "next/image";
 import { coursesApi, enrollmentsApi, Course, Enrollment } from '@/lib/api/learning';
@@ -42,13 +43,10 @@ export default function CourseDetails() {
             if (!id || !user?.id) return;
             try {
                 setLoading(true);
-                const [courseRes, enrollmentsRes] = await Promise.all([
-                    coursesApi.get(id as string),
-                    enrollmentsApi.getByEmployee(user.id)
-                ]);
-
+                const courseRes = await coursesApi.get(id as string);
                 setCourse(courseRes.data);
 
+                const enrollmentsRes = await enrollmentsApi.getByEmployee(user.id);
                 const myEnrollment = (enrollmentsRes.data || []).find(e => e.courseId === id);
                 setEnrollment(myEnrollment || null);
             } catch (error) {
@@ -68,7 +66,7 @@ export default function CourseDetails() {
             setEnrolling(true);
             const res = await enrollmentsApi.enroll(course.id, {
                 employeeId: user.id,
-                employeeName: `${user.firstName} ${user.lastName}`
+                employeeName: user.name || 'Usuário'
             });
             setEnrollment(res.data);
             toast.success('Inscrição realizada com sucesso!');
@@ -343,7 +341,7 @@ export default function CourseDetails() {
                             <p className="text-xs text-muted-foreground leading-relaxed">
                                 Tem alguma dúvida sobre este treinamento? Fale com nosso suporte pedagógico pelo chat ou abra um chamado.
                             </p>
-                            <Button variant="link" size="sm" className="px-0 text-primary font-bold text-xs mt-2">Falar com suporte →</Button>
+                            <Button variant="ghost" size="sm" className="px-0 text-primary font-bold text-xs mt-2 hover:bg-transparent">Falar com suporte →</Button>
                         </CardContent>
                     </Card>
                 </div>

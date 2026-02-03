@@ -322,7 +322,7 @@ export default function LearningDashboard() {
             {filteredCourses.length === 0 && (
               <div className="py-20 text-center space-y-4 bg-slate-50 rounded-[3rem] border border-dashed border-slate-200">
                 <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Nenhum curso encontrado para este filtro.</p>
-                <Button variant="link" onClick={() => { setSearchQuery(''); setSelectedCategory(null); }} className="font-black text-[10px] uppercase">Limpar Busca</Button>
+                <Button variant="ghost" onClick={() => { setSearchQuery(''); setSelectedCategory(null); }} className="font-black text-[10px] uppercase">Limpar Busca</Button>
               </div>
             )}
           </div>

@@ -263,7 +263,7 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                     zipCode: initialData.addressZipCode || prev.address.zipCode,
                     country: initialData.addressCountry || prev.address.country,
                 },
-                workScheduleId: initialData.workScheduleId || prev.workScheduleId
+                workScheduleId: (initialData as any).workScheduleId || prev.workScheduleId
             }));
             setErrors({});
         }

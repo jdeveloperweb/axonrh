@@ -167,6 +167,7 @@ export interface EmployeeCreateRequest {
   addressState?: string;
   addressZipCode?: string;
   addressCountry?: string;
+  workScheduleId?: string;
 }
 
 export interface EmployeeUpdateRequest extends Partial<EmployeeCreateRequest> {
