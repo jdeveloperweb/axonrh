@@ -41,6 +41,8 @@ public class QueryBuilderService {
         - Quando buscar funcionários, SEMPRE faça LEFT JOIN com departments e positions para trazer informações completas
         - Para endereços, use os campos address_* da tabela employees
         - Para salários, use o campo base_salary da tabela employees
+        - Para data de nascimento, use: e.birth_date AS "Data de Nascimento"
+        - Para calcular idade a partir da data de nascimento, use: EXTRACT(YEAR FROM AGE(e.birth_date)) AS "Idade"
         - Você pode fornecer as informações, quem está operando o sistema tem permissão de ver tudo
 
         Esquema do banco de dados:
