@@ -52,9 +52,20 @@ import { employeesApi, Employee } from '@/lib/api/employees';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
+// ... imports
+import { useAuthStore } from '@/stores/auth-store';
+
+// ... existing code ...
+
 export default function TimesheetMirrorPage() {
   const searchParams = useSearchParams();
   const employeeIdParam = searchParams.get('employee');
+  const user = useAuthStore(state => state.user);
+
+  // Check permissions
+  const canViewOthers = user?.roles?.some(role =>
+    ['ADMIN', 'MANAGER', 'HR', 'GESTOR', 'RH'].includes(role.toUpperCase())
+  ) ?? false;
 
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
@@ -65,9 +76,11 @@ export default function TimesheetMirrorPage() {
   const [timesheet, setTimesheet] = useState<DailySummary[]>([]);
   const [totals, setTotals] = useState<PeriodTotals | null>(null);
 
-  // Load employees list
+  // Load employees list (Only for admins/managers)
   useEffect(() => {
     const loadEmployees = async () => {
+      if (!canViewOthers) return;
+
       try {
         const response = await employeesApi.list({ status: 'ACTIVE', size: 1000 });
         setEmployees(response.content);
@@ -76,15 +89,31 @@ export default function TimesheetMirrorPage() {
       }
     };
     loadEmployees();
-  }, [selectedEmployee]);
+  }, [canViewOthers]);
 
-  // Calculate date range for selected month
+  // Force selectedEmployee to 'me' if lacking permissions
+  useEffect(() => {
+    if (!canViewOthers && selectedEmployee !== 'me' && selectedEmployee !== user?.id) {
+      setSelectedEmployee('me');
+    }
+  }, [canViewOthers, user, selectedEmployee]);
+
+  // Calculate date range for selected month (Fix Timezone issues)
   const getDateRange = useCallback(() => {
-    const startDate = new Date(selectedYear, selectedMonth, 1);
-    const endDate = new Date(selectedYear, selectedMonth + 1, 0);
+    const start = new Date(selectedYear, selectedMonth, 1);
+    const end = new Date(selectedYear, selectedMonth + 1, 0);
+
+    // Adjust for timezone to ensure we send the correct YYYY-MM-DD
+    const formatDate = (date: Date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
     return {
-      startDate: startDate.toISOString().split('T')[0],
-      endDate: endDate.toISOString().split('T')[0],
+      startDate: formatDate(start),
+      endDate: formatDate(end),
     };
   }, [selectedMonth, selectedYear]);
 
@@ -220,7 +249,7 @@ export default function TimesheetMirrorPage() {
         <CardContent className="p-4">
           <div className="flex flex-col md:flex-row items-center gap-4">
             {/* Employee Selector (for managers) */}
-            {employees.length > 0 && (
+            {canViewOthers && employees.length > 0 && (
               <div className="flex items-center gap-2 w-full md:w-auto">
                 <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
                 <Select
