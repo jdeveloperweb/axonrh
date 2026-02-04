@@ -43,6 +43,8 @@ import { useAuthStore } from '@/stores/auth-store';
 import { formatTime } from '@/lib/utils';
 import dynamic from 'next/dynamic';
 import { toast } from 'sonner';
+import { wellbeingApi } from '@/lib/api/wellbeing';
+import { Frown, Meh, Smile, Laugh, HeartCrack, HeartHandshake } from 'lucide-react';
 
 const GeofenceMap = dynamic(() => import('@/components/timesheet/GeofenceMap'), {
   ssr: false,
@@ -71,7 +73,15 @@ export default function TimeRecordPage() {
   const [notes, setNotes] = useState('');
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [photoBase64, setPhotoBase64] = useState<string | null>(null);
-  const [showMap, setShowMap] = useState(false);
+
+  // Mood / Wellbeing State
+  const [showMoodDialog, setShowMoodDialog] = useState(false);
+  const [moodScore, setMoodScore] = useState<number | null>(null);
+  const [moodText, setMoodText] = useState('');
+  const [wantsEap, setWantsEap] = useState(false);
+  const [submittingMood, setSubmittingMood] = useState(false);
+  // Map always visible, no toggle needed
+
 
   const [location, setLocation] = useState<LocationState>({
     latitude: null,
@@ -266,6 +276,9 @@ export default function TimeRecordPage() {
       setNotes('');
       setPhotoBase64(null);
 
+      // Open Mood Dialog
+      setShowMoodDialog(true);
+
       await loadTodayRecords();
     } catch (error: any) {
       console.error('Erro ao registrar ponto:', error);
@@ -273,6 +286,33 @@ export default function TimeRecordPage() {
       toast.error(message);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleMoodSubmit = async () => {
+    if (!moodScore) return;
+
+    try {
+      setSubmittingMood(true);
+      await wellbeingApi.checkIn({
+        employeeId: user?.id || '',
+        score: moodScore,
+        notes: moodText,
+        wantsEapContact: wantsEap,
+        source: 'WEB'
+      });
+      toast.success('Obrigado pelo seu feedback!');
+      setShowMoodDialog(false);
+      // Reset mood state
+      setMoodScore(null);
+      setMoodText('');
+      setWantsEap(false);
+    } catch (error) {
+      console.error('Erro ao registrar sentimento:', error);
+      // Don't block the user, just close
+      setShowMoodDialog(false);
+    } finally {
+      setSubmittingMood(false);
     }
   };
 
@@ -286,98 +326,101 @@ export default function TimeRecordPage() {
   };
 
   return (
-    <div className="container max-w-5xl mx-auto py-8 px-4 space-y-8 animate-in fade-in duration-500">
+    <div className="container max-w-6xl mx-auto py-8 px-4 space-y-8 animate-in fade-in duration-700">
 
       {/* Top Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">
-            {getGreeting()}, {user?.firstName || 'Colaborador'}
+          <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white">
+            {getGreeting()}, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">{user?.name?.split(' ')[0] || 'Colaborador'}</span>
           </h1>
-          <p className="text-muted-foreground flex items-center gap-2 mt-1">
-            <CalendarIcon className="w-4 h-4" />
-            {currentTime.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+          <p className="text-muted-foreground flex items-center gap-2 mt-2 text-lg">
+            <CalendarIcon className="w-5 h-5 text-purple-500" />
+            <span className="capitalize">{currentTime.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
           </p>
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto">
-          <Button variant="outline" size="sm" onClick={() => router.push('/timesheet/mirror')} className="flex-1 md:flex-none">
+          <Button variant="outline" size="sm" onClick={() => router.push('/timesheet/mirror')} className="flex-1 md:flex-none border-gray-200 hover:bg-white hover:text-purple-600 hover:border-purple-200 shadow-sm transition-all">
             <History className="mr-2 h-4 w-4" />
-            Histórico
+            Histórico Completo
           </Button>
-          <Button variant="ghost" size="icon" onClick={loadTodayRecords} disabled={loading} className="shrink-0">
-            <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+          <Button variant="ghost" size="icon" onClick={loadTodayRecords} disabled={loading} className="shrink-0 hover:bg-gray-100 rounded-full">
+            <RefreshCw className={cn("h-5 w-5 text-gray-500", loading && "animate-spin")} />
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-        {/* Left Column: Clock & Actions */}
-        <div className="lg:col-span-2 space-y-6">
+        {/* Left Column: Clock, Map & Actions (8 cols) */}
+        <div className="lg:col-span-8 space-y-8">
 
           {/* Hero Clock Card */}
-          <Card className="border-none shadow-md bg-gradient-to-br from-primary/5 via-background to-background relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-3 opacity-10">
-              <Clock className="w-32 h-32" />
+          <div className="relative overflow-hidden rounded-3xl shadow-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 text-white border border-white/10 group">
+            <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity duration-700">
+              <Clock className="w-64 h-64 rotate-12" />
             </div>
-            <CardContent className="p-8 text-center relative z-10">
-              <div className="text-7xl font-bold tracking-tighter text-primary font-mono tabular-nums">
-                {currentTime.toLocaleTimeString('pt-BR')}
+
+            <div className="relative z-10 p-8 md:p-12 flex flex-col items-center justify-center text-center space-y-6">
+              <div className="flex flex-col items-center">
+                <span className="text-sm font-medium uppercase tracking-[0.2em] text-white/70 mb-2">Horário Atual</span>
+                <div className="text-7xl md:text-9xl font-bold tracking-tighter font-mono tabular-nums leading-none drop-shadow-lg">
+                  {currentTime.toLocaleTimeString('pt-BR')}
+                </div>
               </div>
-              <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-sm">
-                {/* Location Status Pill */}
-                <div className={cn(
-                  "flex items-center gap-2 px-3 py-1.5 rounded-full border transition-colors cursor-pointer hover:bg-muted/50",
-                  location.error ? "bg-destructive/10 text-destructive border-destructive/20" :
-                    location.loading ? "bg-muted text-muted-foreground" :
-                      "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900"
-                )}
-                  onClick={() => setShowMap(!showMap)}
-                >
-                  {location.loading ? <Loader2 className="w-3 h-3 animate-spin" /> :
-                    location.error ? <XCircle className="w-3 h-3" /> :
-                      <MapPin className="w-3 h-3" />
+
+              {/* Location Status Pill */}
+              <div className={cn(
+                "flex items-center gap-2 px-4 py-2 rounded-full border backdrop-blur-md transition-all shadow-lg",
+                location.error ? "bg-red-500/20 border-red-200/30 text-red-100" :
+                  location.loading ? "bg-white/10 border-white/20 text-white/70" :
+                    "bg-emerald-500/20 border-emerald-200/30 text-emerald-50"
+              )}>
+                {location.loading ? <Loader2 className="w-4 h-4 animate-spin" /> :
+                  location.error ? <XCircle className="w-4 h-4" /> :
+                    <MapPin className="w-4 h-4" />
+                }
+                <span className="font-semibold text-sm">
+                  {location.loading ? "Identificando local..." :
+                    location.error ? "Sem sinal GPS" :
+                      `Precisão GPS: ${location.accuracy?.toFixed(0)}m`
                   }
-                  <span className="font-medium">
-                    {location.loading ? "Localizando..." :
-                      location.error ? "Sem localização" :
-                        `Localização: ${location.accuracy?.toFixed(0)}m`
-                    }
+                </span>
+                {geofences.length > 0 && !location.loading && (
+                  <span className={cn(
+                    "ml-2 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wide shadow-sm",
+                    isInsideGeofence ? "bg-emerald-400 text-emerald-950" : "bg-rose-400 text-rose-950"
+                  )}>
+                    {isInsideGeofence ? "Em Área" : "Fora da Área"}
                   </span>
-                  {geofences.length > 0 && (
-                    <span className={cn(
-                      "ml-1 text-xs font-bold px-1.5 py-0.5 rounded",
-                      isInsideGeofence ? "bg-green-200 text-green-800 dark:bg-green-900 dark:text-green-200" : "bg-red-200 text-red-800 dark:bg-red-900 dark:text-red-200"
-                    )}>
-                      {isInsideGeofence ? "EM ÁREA" : "FORA DÁ ÁREA"}
-                    </span>
-                  )}
-                </div>
+                )}
               </div>
+            </div>
+          </div>
 
-              {showMap && (
-                <div className="mt-6 animate-in slide-in-from-top-4 fade-in duration-300">
-                  <div className="rounded-lg overflow-hidden border shadow-inner">
-                    <GeofenceMap
-                      userLocation={{
-                        latitude: location.latitude,
-                        longitude: location.longitude,
-                        accuracy: location.accuracy
-                      }}
-                      geofences={geofences}
-                      height="200px"
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    {geofences.length > 0 ? "Você deve estar dentro de uma das áreas marcadas." : "Nenhuma cerca eletrônica configurada."}
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          {/* Interactive Map Section - Always Visible */}
+          <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <div className="p-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex items-center justify-between">
+              <h3 className="font-bold text-gray-700 dark:text-gray-200 flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-purple-500" /> Localização em Tempo Real
+              </h3>
+              <span className="text-xs text-gray-400">Atualizado agora</span>
+            </div>
+            <div className="h-[250px] w-full relative">
+              <GeofenceMap
+                userLocation={{
+                  latitude: location.latitude,
+                  longitude: location.longitude,
+                  accuracy: location.accuracy
+                }}
+                geofences={geofences}
+                height="100%"
+              />
+            </div>
+          </div>
 
-          {/* Main Action Buttons */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* Main Action Buttons Grid */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {(['ENTRY', 'BREAK_START', 'BREAK_END', 'EXIT'] as RecordType[]).map((type) => {
               const config = getRecordTypeConfig(type);
               const isExpected = type === nextExpected;
@@ -386,116 +429,137 @@ export default function TimeRecordPage() {
               return (
                 <Button
                   key={type}
-                  variant={isExpected ? "default" : "outline"}
+                  variant={isExpected ? "primary" : "outline"}
                   className={cn(
-                    "h-auto py-6 flex flex-col items-center justify-center gap-3 transition-all duration-300 border",
+                    "h-32 flex flex-col items-center justify-center gap-3 transition-all duration-300 rounded-2xl border-2 relative overflow-hidden group",
                     isExpected
-                      ? `col-span-2 sm:col-span-1 ring-4 ring-offset-2 ring-primary/20 ${config.buttonColor} border-transparent scale-[1.02] hover:scale-[1.03]`
-                      : "hover:bg-muted bg-card hover:border-primary/50 text-muted-foreground hover:text-foreground"
+                      ? `ring-4 ring-offset-4 ring-offset-gray-50 dark:ring-offset-gray-900 ${config.buttonColor} border-transparent scale-[1.02] shadow-xl`
+                      : "hover:bg-gray-50 bg-white border-gray-100 text-gray-400 hover:text-gray-600 hover:border-gray-200 shadow-sm"
                   )}
                   onClick={() => handleTypeSelect(type)}
                   disabled={submitting}
                 >
-                  <Icon className={cn("w-8 h-8", isExpected ? "animate-pulse" : "opacity-70")} />
-                  <div className="flex flex-col items-center">
-                    <span className="text-lg font-bold uppercase tracking-wide">{config.label}</span>
-                    {isExpected && <span className="text-xs opacity-90 font-medium mt-1">Sugerido agora</span>}
+                  {isExpected && (
+                    <div className="absolute top-0 inset-x-0 h-1 bg-white/30 animate-pulse" />
+                  )}
+                  <Icon className={cn("w-8 h-8 transition-transform duration-300 group-hover:scale-110", isExpected ? "opacity-100" : "opacity-50 grayscale group-hover:grayscale-0")} />
+                  <div className="flex flex-col items-center z-10">
+                    <span className="text-base font-bold uppercase tracking-wide">{config.label}</span>
+                    {isExpected && <span className="text-[10px] font-black uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded text-white mt-1">Sugerido</span>}
                   </div>
                 </Button>
               );
             })}
           </div>
 
-          {/* Notes/Warnings Section */}
-          {todayRecords.length === 0 && (
-            <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900 rounded-lg p-4 flex items-start gap-3">
-              <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
-              <div className="space-y-1">
-                <p className="font-medium text-blue-900 dark:text-blue-200">Começando o dia?</p>
-                <p className="text-sm text-blue-700 dark:text-blue-300">Não esqueça de registrar seu ponto de entrada para iniciar a contagem de horas.</p>
-              </div>
+          {/* Assistant / Help Banner */}
+          <div className="bg-blue-50 dark:bg-blue-900/10 rounded-2xl p-6 border border-blue-100 dark:border-blue-900/30 flex items-start gap-4">
+            <div className="p-3 bg-blue-100 dark:bg-blue-800/30 rounded-xl">
+              <Info className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             </div>
-          )}
+            <div>
+              <h4 className="font-bold text-blue-900 dark:text-blue-100">Precisa de ajuda com o ponto?</h4>
+              <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                Se houver divergências ou esquecimentos, utilize  o menu "Ajustes" ou contate seu gestor. Mantenha seus registros sempre atualizados.
+              </p>
+            </div>
+          </div>
         </div>
 
-        {/* Right Column: Timeline */}
-        <div className="lg:col-span-1">
-          <Card className="h-full flex flex-col border-none shadow-md bg-card/50 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <History className="w-5 h-5 text-primary" />
+        {/* Right Column: Timeline (4 cols) */}
+        <div className="lg:col-span-4">
+          <div className="bg-white/80 dark:bg-gray-800/50 backdrop-blur-xl rounded-3xl shadow-xl border border-gray-100 dark:border-gray-700 h-full flex flex-col overflow-hidden">
+            <div className="p-6 border-b border-gray-100 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-800/80">
+              <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                <History className="w-5 h-5 text-indigo-500" />
                 Linha do Tempo
-              </CardTitle>
-              <CardDescription>Seus registros de hoje</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 overflow-auto pr-2">
+              </h2>
+              <p className="text-sm text-gray-500 mt-1">Seus registros de hoje</p>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 space-y-1 relative">
+              {/* Vertical Trace Line */}
+              <div className="absolute left-[39px] top-6 bottom-6 w-0.5 bg-gray-200 dark:bg-gray-700 z-0" />
+
               {loading ? (
-                <div className="flex flex-col items-center justify-center h-40 space-y-2">
-                  <Loader2 className="w-8 h-8 animate-spin text-primary/50" />
-                  <p className="text-sm text-muted-foreground">Carregando...</p>
+                <div className="flex flex-col items-center justify-center h-40 space-y-4">
+                  <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+                  <p className="text-sm text-gray-400 font-medium">Sincronizando...</p>
                 </div>
               ) : todayRecords.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-40 text-center p-4 border-2 border-dashed rounded-lg border-muted">
-                  <Clock className="w-8 h-8 text-muted-foreground/30 mb-2" />
-                  <p className="text-sm text-muted-foreground">Nenhum registro hoje.<br />Seu dia começa agora!</p>
+                <div className="flex flex-col items-center justify-center h-64 text-center p-4">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                    <Clock className="w-8 h-8 text-gray-300" />
+                  </div>
+                  <h3 className="font-bold text-gray-900">Dia não iniciado</h3>
+                  <p className="text-sm text-gray-500 mt-2 max-w-[200px]">Seu primeiro registro do dia aparecerá aqui.</p>
                 </div>
               ) : (
-                <div className="relative pl-4 space-y-0 border-l-2 border-muted ml-2">
-                  {todayRecords.map((record, index) => {
-                    const config = getRecordTypeConfig(record.recordType);
-                    const isLast = index === todayRecords.length - 1;
+                todayRecords.map((record, index) => {
+                  const config = getRecordTypeConfig(record.recordType);
+                  const isLast = index === todayRecords.length - 1;
 
-                    return (
-                      <div key={record.id} className="pb-8 relative group">
-                        {/* Dot */}
-                        <div className={cn(
-                          "absolute -left-[21px] top-1 w-4 h-4 rounded-full border-2 transition-all duration-300",
-                          "bg-background border-muted-foreground/30 group-hover:border-primary group-hover:scale-110",
-                          isLast ? "bg-primary border-primary ring-4 ring-primary/20" : ""
-                        )}>
-                          <div className={cn("w-full h-full rounded-full opacity-20", config.bg)} />
-                        </div>
-
-                        {/* Content */}
-                        <div className="flex flex-col gap-1 -mt-1 hover:bg-muted/50 p-2 rounded-lg transition-colors -ml-2">
-                          <div className="flex items-center justify-between">
-                            <span className={cn("font-bold text-sm", config.color)}>
-                              {config.label}
-                            </span>
-                            <Badge variant="outline" className={cn("font-mono text-xs",
-                              record.status === 'VALID' ? "border-green-200 text-green-700 bg-green-50" :
-                                "border-yellow-200 text-yellow-700 bg-yellow-50"
-                            )}>
-                              {formatTime(record.recordTime)}
-                            </Badge>
-                          </div>
-                          <div className="text-xs text-muted-foreground flex items-center gap-1">
-                            {record.sourceLabel}
-                            {record.withinGeofence !== undefined && (
-                              isInsideGeofence ?
-                                <CheckCircle2 className="w-3 h-3 text-emerald-500" /> :
-                                <AlertTriangle className="w-3 h-3 text-amber-500" />
-                            )}
-                          </div>
-                        </div>
+                  return (
+                    <div key={record.id} className="relative z-10 flex gap-4 group animate-in slide-in-from-right-4 duration-500" style={{ animationDelay: `${index * 100}ms` }}>
+                      {/* Time Bubble */}
+                      <div className={cn(
+                        "w-16 flex-none flex flex-col items-center justify-center py-2 rounded-xl border-2 bg-white transition-all duration-300",
+                        isLast ? "border-indigo-500 shadow-indigo-100 shadow-lg scale-110" : "border-gray-200 opacity-70 group-hover:opacity-100"
+                      )}>
+                        <span className={cn("text-xs font-bold", isLast ? "text-indigo-600" : "text-gray-500")}>
+                          {formatTime(record.recordTime)}
+                        </span>
                       </div>
-                    );
-                  })}
-                </div>
+
+                      {/* Content Card */}
+                      <div className={cn(
+                        "flex-1 p-4 rounded-xl border transition-all duration-300 mb-4",
+                        isLast
+                          ? "bg-white border-indigo-100 shadow-md transform translate-x-1"
+                          : "bg-gray-50 border-transparent hover:bg-white hover:border-gray-200 hover:shadow-sm"
+                      )}>
+                        <div className="flex justify-between items-start mb-1">
+                          <span className={cn("font-bold text-sm uppercase tracking-wide", config.color)}>
+                            {config.label}
+                          </span>
+                          {record.withinGeofence !== undefined && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  {isInsideGeofence ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <AlertTriangle className="w-4 h-4 text-amber-500" />}
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>{isInsideGeofence ? "Validado por GPS" : "Fora da cerca virtual"}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-400 font-medium">
+                          Via {record.sourceLabel}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })
               )}
-            </CardContent>
+            </div>
+
             {todayRecords.length > 0 && (
-              <CardFooter className="pt-2 border-t bg-muted/20">
-                <div className="flex justify-between w-full text-xs text-muted-foreground font-medium">
-                  <span>Total registros: {todayRecords.length}</span>
+              <div className="p-4 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-700">
+                <div className="flex justify-between items-center text-xs font-bold text-gray-500 uppercase tracking-widest">
+                  <span>Total</span>
+                  <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded">{todayRecords.length} Registros</span>
                 </div>
-              </CardFooter>
+              </div>
             )}
-          </Card>
+          </div>
         </div>
+
       </div>
 
       {/* Confirmation Dialog */}
+
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -558,6 +622,133 @@ export default function TimeRecordPage() {
                 </>
               ) : (
                 'Confirmar'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Mood / Wellbeing Dialog */}
+      <Dialog open={showMoodDialog} onOpenChange={(open) => {
+        if (!submittingMood && !open) setShowMoodDialog(false);
+      }}>
+        <DialogContent className="sm:max-w-lg bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-950 border-none shadow-2xl">
+          <DialogHeader className="text-center pb-2">
+            <div className="mx-auto w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mb-4 text-4xl shadow-inner">
+              👋
+            </div>
+            <DialogTitle className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
+              Como você está hoje?
+            </DialogTitle>
+            <DialogDescription className="text-base text-gray-600 dark:text-gray-300 mt-2">
+              Sua saúde mental é importante para nós. Isso ajuda a calibrar nosso clima organizacional.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-8 py-4">
+            {/* Mood Icons */}
+            <div className="flex justify-between items-center gap-2 px-2">
+              {[
+                { score: 1, icon: HeartCrack, color: 'hover:text-red-500 text-gray-300', activeColor: 'text-red-500 scale-125', label: 'Péssimo' },
+                { score: 2, icon: Frown, color: 'hover:text-orange-500 text-gray-300', activeColor: 'text-orange-500 scale-125', label: 'Ruim' },
+                { score: 3, icon: Meh, color: 'hover:text-yellow-500 text-gray-300', activeColor: 'text-yellow-500 scale-125', label: 'Normal' },
+                { score: 4, icon: Smile, color: 'hover:text-emerald-500 text-gray-300', activeColor: 'text-emerald-500 scale-125', label: 'Bem' },
+                { score: 5, icon: Laugh, color: 'hover:text-blue-500 text-gray-300', activeColor: 'text-blue-500 scale-125', label: 'Ótimo' },
+              ].map((item) => (
+                <button
+                  key={item.score}
+                  onClick={() => setMoodScore(item.score)}
+                  className={cn(
+                    "flex flex-col items-center gap-2 transition-all duration-300 group",
+                    moodScore === item.score ? "transform -translate-y-2" : "hover:-translate-y-1"
+                  )}
+                >
+                  <item.icon
+                    className={cn(
+                      "w-12 h-12 transition-all duration-300 drop-shadow-sm",
+                      moodScore === item.score ? item.activeColor : item.color
+                    )}
+                    strokeWidth={1.5}
+                  />
+                  <span className={cn(
+                    "text-xs font-bold uppercase tracking-wider transition-colors",
+                    moodScore === item.score ? "text-gray-900 dark:text-white" : "text-gray-400 group-hover:text-gray-600"
+                  )}>
+                    {item.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {/* Note Area */}
+            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
+              <div className="relative">
+                <Textarea
+                  placeholder={moodScore && moodScore <= 2 ? "O que houve? Pode desabafar..." : "Quer compartilhar algo positivo ou alguma sugestão?"}
+                  value={moodText}
+                  onChange={(e) => setMoodText(e.target.value)}
+                  className="min-h-[100px] resize-none bg-white/50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 focus:ring-blue-500/20 text-base"
+                />
+                <div className="absolute right-3 bottom-3 text-[10px] text-gray-400 font-medium bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full">
+                  IA Analisando
+                </div>
+              </div>
+
+              {/* EAP Offer for Low Scores */}
+              {moodScore && moodScore <= 2 && (
+                <div className="bg-orange-50 dark:bg-orange-950/20 border border-orange-100 dark:border-orange-900/30 rounded-xl p-4 flex items-start gap-3 animate-in fade-in duration-300">
+                  <div className="p-2 bg-orange-100 dark:bg-orange-900/40 rounded-lg shrink-0">
+                    <HeartHandshake className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+                  </div>
+                  <div className="space-y-3">
+                    <div>
+                      <h4 className="font-bold text-orange-900 dark:text-orange-100">Podemos ajudar?</h4>
+                      <p className="text-sm text-orange-700 dark:text-orange-300 mt-0.5">
+                        Entendemos que dias difíceis acontecem. Gostaria que nossa equipe do <strong>Programa de Apoio (EAP)</strong> entrasse em contato com você?
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-4 pt-1">
+                      <label className="flex items-center gap-2 cursor-pointer group">
+                        <div className={cn(
+                          "w-5 h-5 rounded border flex items-center justify-center transition-colors",
+                          wantsEap ? "bg-orange-500 border-orange-500 text-white" : "border-orange-300 bg-white"
+                        )}>
+                          {wantsEap && <CheckCircle2 className="w-3.5 h-3.5" />}
+                        </div>
+                        <input type="checkbox" className="hidden" checked={wantsEap} onChange={(e) => setWantsEap(e.target.checked)} />
+                        <span className={cn("text-sm font-medium", wantsEap ? "text-orange-800" : "text-gray-600")}>Sim, gostaria de apoio</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter className="sm:justify-between items-center gap-4 pt-2">
+            <Button
+              variant="ghost"
+              onClick={() => setShowMoodDialog(false)}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              Pular
+            </Button>
+            <Button
+              onClick={handleMoodSubmit}
+              disabled={!moodScore || submittingMood}
+              className={cn(
+                "px-8 rounded-full shadow-lg transition-all transform hover:scale-105 active:scale-95",
+                moodScore && moodScore <= 2 ? "bg-orange-500 hover:bg-orange-600 text-white shadow-orange-200" :
+                  "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-blue-200"
+              )}
+            >
+              {submittingMood ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Registrando...
+                </>
+              ) : (
+                'Enviar Registro'
               )}
             </Button>
           </DialogFooter>

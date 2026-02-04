@@ -307,12 +307,18 @@ export default function LearningManagementPage() {
     const handleSaveModule = async () => {
         if (!selectedCourse?.id || !moduleForm.title) return;
         try {
-            const updated = await coursesApi.addModule(selectedCourse.id, moduleForm) as any;
+            let updated;
+            if (moduleForm.id) {
+                updated = await coursesApi.updateModule(selectedCourse.id, moduleForm.id, moduleForm) as any;
+                toast.success('Módulo atualizado!');
+            } else {
+                updated = await coursesApi.addModule(selectedCourse.id, moduleForm) as any;
+                toast.success('Módulo adicionado!');
+            }
             setSelectedCourse(updated);
             setIsModuleDialogOpen(false);
             setModuleForm({ title: '', description: '', sequenceOrder: (selectedCourse.modules?.length || 0) + 1 });
-            toast.success('Módulo adicionado!');
-        } catch (error) { toast.error('Erro ao adicionar módulo'); }
+        } catch (error) { toast.error('Erro ao salvar módulo'); }
     }
 
     // Lesson Handlers
@@ -451,7 +457,7 @@ export default function LearningManagementPage() {
                                 <div className="space-y-4">
                                     <label className="text-xs font-black uppercase text-slate-400 tracking-widest">Título do Curso</label>
                                     <Input
-                                        className="h-14 rounded-xl border-slate-100 bg-slate-50/50 font-bold text-lg"
+                                        className="h-14 rounded-xl border-slate-200 bg-white font-bold text-lg shadow-sm focus-visible:ring-blue-500/20 focus-visible:border-blue-500 transition-all"
                                         placeholder="Ex: Liderança para Novos Gerentes"
                                         value={formData.title}
                                         onChange={e => setFormData({ ...formData, title: e.target.value })}
@@ -463,7 +469,7 @@ export default function LearningManagementPage() {
                                         <label className="text-xs font-black uppercase text-slate-400 tracking-widest">Categoria</label>
                                         <div className="relative">
                                             <select
-                                                className="w-full h-14 rounded-xl border border-slate-100 bg-slate-50/50 px-4 font-bold text-slate-700 appearance-none outline-none focus:ring-2 focus:ring-blue-500/10 transition-all cursor-pointer"
+                                                className="w-full h-14 rounded-xl border border-slate-200 bg-white px-4 font-bold text-slate-700 appearance-none outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all cursor-pointer shadow-sm"
                                                 value={formData.categoryId || ''}
                                                 onChange={e => setFormData({ ...formData, categoryId: e.target.value as any })}
                                             >
@@ -487,8 +493,8 @@ export default function LearningManagementPage() {
                                                     className={cn(
                                                         "h-12 rounded-xl border text-[10px] font-black transition-all",
                                                         formData.difficultyLevel === lvl
-                                                            ? "bg-blue-600 border-blue-600 text-white shadow-lg"
-                                                            : "border-slate-100 text-slate-400 hover:bg-slate-50"
+                                                            ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/30"
+                                                            : "bg-white border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700"
                                                     )}
                                                 >
                                                     {lvl}
@@ -501,7 +507,7 @@ export default function LearningManagementPage() {
                                 <div className="space-y-4">
                                     <label className="text-xs font-black uppercase text-slate-400 tracking-widest">Descrição Completa</label>
                                     <textarea
-                                        className="w-full min-h-[150px] p-6 rounded-2xl border border-slate-100 bg-slate-50/50 font-medium text-slate-600 leading-relaxed outline-none focus:ring-2 focus:ring-blue-500/10"
+                                        className="w-full min-h-[150px] p-6 rounded-2xl border border-slate-200 bg-white font-medium text-slate-600 leading-relaxed outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm"
                                         placeholder="Descreva o que os alunos aprenderão neste curso..."
                                         value={formData.description}
                                         onChange={e => setFormData({ ...formData, description: e.target.value })}
@@ -571,8 +577,11 @@ export default function LearningManagementPage() {
                                                             <h4 className="font-black text-lg">{module.title}</h4>
                                                         </div>
                                                         <div className="flex items-center gap-2">
-                                                            <Button size="icon" variant="ghost" className="h-10 w-10"><Edit2 className="h-4 w-4" /></Button>
-                                                            <Button size="icon" variant="ghost" className="h-10 w-10 text-rose-500"><Trash2 className="h-4 w-4" /></Button>
+                                                            <Button size="icon" variant="ghost" className="h-10 w-10" onClick={() => {
+                                                                setModuleForm(module);
+                                                                setIsModuleDialogOpen(true);
+                                                            }}><Edit2 className="h-4 w-4" /></Button>
+                                                            <Button size="icon" variant="ghost" className="h-10 w-10 text-rose-500" onClick={() => handleDeleteModule(module.id)}><Trash2 className="h-4 w-4" /></Button>
                                                         </div>
                                                     </div>
                                                     <div className="pl-12 grid gap-3">
@@ -851,7 +860,9 @@ export default function LearningManagementPage() {
                                             onValueChange={(val) => setAssignmentData({ ...assignmentData, employeeId: val })}
                                         >
                                             <SelectTrigger className="h-12 w-64 rounded-xl border-slate-200 bg-white font-bold shadow-sm hover:border-blue-300 transition-colors">
-                                                <SelectValue placeholder="Selecione um colaborador" />
+                                                <SelectValue placeholder="Selecione um colaborador">
+                                                    {employees.find(emp => emp.id === assignmentData.employeeId)?.fullName}
+                                                </SelectValue>
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {employees.map(emp => (
@@ -867,7 +878,9 @@ export default function LearningManagementPage() {
                                             onValueChange={(val) => setAssignmentData({ ...assignmentData, courseId: val })}
                                         >
                                             <SelectTrigger className="h-12 w-64 rounded-xl border-slate-200 bg-white font-bold shadow-sm hover:border-blue-300 transition-colors">
-                                                <SelectValue placeholder="Selecione o treinamento" />
+                                                <SelectValue placeholder="Selecione o treinamento">
+                                                    {courses.find(course => course.id === assignmentData.courseId)?.title}
+                                                </SelectValue>
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {courses.map(course => (
@@ -1080,7 +1093,7 @@ export default function LearningManagementPage() {
             <Dialog open={isModuleDialogOpen} onOpenChange={setIsModuleDialogOpen}>
                 <DialogContent className="max-w-md rounded-[2rem] border-slate-100 p-8">
                     <DialogHeader>
-                        <DialogTitle className="text-2xl font-black tracking-tight">Novo Módulo</DialogTitle>
+                        <DialogTitle className="text-2xl font-black tracking-tight">{moduleForm.id ? "Editar Módulo" : "Novo Módulo"}</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-6 pt-6">
                         <div className="space-y-2">
@@ -1089,7 +1102,7 @@ export default function LearningManagementPage() {
                                 placeholder="Ex: Introdução ao CRM"
                                 value={moduleForm.title}
                                 onChange={e => setModuleForm({ ...moduleForm, title: e.target.value })}
-                                className="h-12 rounded-xl border-slate-100 font-bold"
+                                className="h-12 rounded-xl border-slate-200 bg-white font-bold shadow-sm"
                             />
                         </div>
                         <div className="space-y-2">
@@ -1098,7 +1111,7 @@ export default function LearningManagementPage() {
                                 type="number"
                                 value={moduleForm.sequenceOrder}
                                 onChange={e => setModuleForm({ ...moduleForm, sequenceOrder: parseInt(e.target.value) })}
-                                className="h-12 rounded-xl border-slate-100 font-bold"
+                                className="h-12 rounded-xl border-slate-200 bg-white font-bold shadow-sm"
                             />
                         </div>
                     </div>
@@ -1226,7 +1239,7 @@ export default function LearningManagementPage() {
                                             </h4>
                                             <textarea
                                                 id="lesson-editor"
-                                                className="w-full min-h-[500px] p-8 rounded-[2rem] border-2 border-slate-100 bg-slate-50/30 font-mono text-sm leading-relaxed outline-none focus:border-blue-500/20 transition-all"
+                                                className="w-full min-h-[500px] p-8 rounded-[2rem] border-2 border-slate-200 bg-white font-mono text-sm leading-relaxed outline-none focus:border-blue-500/20 transition-all shadow-sm"
                                                 placeholder="Escreva seu material usando HTML básico ou texto puro..."
                                                 value={lessonForm.contentText}
                                                 onChange={e => setLessonForm({ ...lessonForm, contentText: e.target.value })}
@@ -1244,7 +1257,7 @@ export default function LearningManagementPage() {
                                                     placeholder="https://..."
                                                     value={lessonForm.contentUrl}
                                                     onChange={e => setLessonForm({ ...lessonForm, contentUrl: e.target.value })}
-                                                    className="h-16 rounded-2xl border-slate-100 bg-slate-50/50 font-bold text-lg text-center max-w-xl mx-auto"
+                                                    className="h-16 rounded-2xl border-slate-200 bg-white font-bold text-lg text-center max-w-xl mx-auto shadow-sm focus-visible:ring-blue-500/20 focus-visible:border-blue-500 transition-all"
                                                 />
                                             </div>
                                         </div>
