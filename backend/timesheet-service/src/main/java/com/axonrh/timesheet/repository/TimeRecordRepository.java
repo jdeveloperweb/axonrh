@@ -101,7 +101,7 @@ public interface TimeRecordRepository extends JpaRepository<TimeRecord, UUID> {
         WHERE tr.tenantId = :tenantId
         AND tr.employeeId = :employeeId
         AND tr.recordDate = :date
-        AND tr.status IN ('VALID', 'APPROVED', 'ADJUSTED')
+        AND tr.status IN ('VALID', 'APPROVED', 'ADJUSTED', 'PENDING_APPROVAL')
         ORDER BY tr.recordTime ASC
         """)
     List<TimeRecord> findValidRecordsForDate(

@@ -144,10 +144,15 @@ public class DailySummaryService {
         try {
             return startDate.datesUntil(endDate.plusDays(1))
                     .map(date -> {
-                        DailySummary summary = summaryMap.get(date);
-                        if (summary != null) {
-                            return toResponse(summary);
-                        } else {
+                        try {
+                            DailySummary summary = summaryMap.get(date);
+                            if (summary != null) {
+                                return toResponse(summary);
+                            } else {
+                                return createVirtualSummary(employeeId, date);
+                            }
+                        } catch (Exception e) {
+                            log.error("Erro ao converter resumo do dia {}: {}", date, e.getMessage());
                             return createVirtualSummary(employeeId, date);
                         }
                     })
