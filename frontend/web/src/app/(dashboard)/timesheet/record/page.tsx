@@ -483,71 +483,80 @@ export default function TimeRecordPage() {
               <p className="text-sm text-gray-500 mt-1">Seus registros de hoje</p>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-1 relative">
-              {/* Vertical Trace Line */}
-              <div className="absolute left-[39px] top-6 bottom-6 w-0.5 bg-gray-200 dark:bg-gray-700 z-0" />
-
+            <div className="flex-1 overflow-y-auto p-6 scrollbar-hide">
               {loading ? (
-                <div className="flex flex-col items-center justify-center h-40 space-y-4">
+                <div className="flex flex-col items-center justify-center h-full space-y-4">
                   <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
                   <p className="text-sm text-gray-400 font-medium">Sincronizando...</p>
                 </div>
               ) : todayRecords.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-64 text-center p-4">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                    <Clock className="w-8 h-8 text-gray-300" />
+                <div className="flex flex-col items-center justify-center h-full text-center p-4">
+                  <div className="w-16 h-16 bg-gray-50 dark:bg-gray-800/50 rounded-2xl flex items-center justify-center mb-4 border border-gray-100 dark:border-gray-700">
+                    <History className="w-8 h-8 text-gray-300" />
                   </div>
-                  <h3 className="font-bold text-gray-900">Dia não iniciado</h3>
-                  <p className="text-sm text-gray-500 mt-2 max-w-[200px]">Seu primeiro registro do dia aparecerá aqui.</p>
+                  <h3 className="font-bold text-gray-900 dark:text-gray-100">Dia não iniciado</h3>
+                  <p className="text-xs text-gray-500 mt-2 max-w-[200px]">Seu primeiro registro do dia aparecerá aqui.</p>
                 </div>
               ) : (
-                todayRecords.map((record, index) => {
-                  const config = getRecordTypeConfig(record.recordType);
-                  const isLast = index === todayRecords.length - 1;
+                <div className="relative min-h-full pb-4 space-y-6">
+                  {/* Vertical Trace Line - Now Centered and aligned */}
+                  <div className="absolute left-[31px] top-4 bottom-4 w-[2px] bg-gradient-to-b from-gray-200 via-gray-300 to-gray-200 dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 z-0 rounded-full opacity-60" />
 
-                  return (
-                    <div key={record.id} className="relative z-10 flex gap-4 group animate-in slide-in-from-right-4 duration-500" style={{ animationDelay: `${index * 100}ms` }}>
-                      {/* Time Bubble */}
-                      <div className={cn(
-                        "w-16 flex-none flex flex-col items-center justify-center py-2 rounded-xl border-2 bg-white transition-all duration-300",
-                        isLast ? "border-indigo-500 shadow-indigo-100 shadow-lg scale-110" : "border-gray-200 opacity-70 group-hover:opacity-100"
-                      )}>
-                        <span className={cn("text-xs font-bold", isLast ? "text-indigo-600" : "text-gray-500")}>
-                          {formatTime(record.recordTime)}
-                        </span>
-                      </div>
+                  {todayRecords.map((record, index) => {
+                    const config = getRecordTypeConfig(record.recordType);
+                    const isLast = index === todayRecords.length - 1;
 
-                      {/* Content Card */}
-                      <div className={cn(
-                        "flex-1 p-4 rounded-xl border transition-all duration-300 mb-4",
-                        isLast
-                          ? "bg-white border-indigo-100 shadow-md transform translate-x-1"
-                          : "bg-gray-50 border-transparent hover:bg-white hover:border-gray-200 hover:shadow-sm"
-                      )}>
-                        <div className="flex justify-between items-start mb-1">
-                          <span className={cn("font-bold text-sm uppercase tracking-wide", config.color)}>
-                            {config.label}
+                    return (
+                      <div key={record.id} className="relative z-10 flex gap-6 group animate-in slide-in-from-bottom-2 duration-500" style={{ animationDelay: `${index * 100}ms` }}>
+                        {/* Time Bubble */}
+                        <div className={cn(
+                          "w-16 h-16 flex-none flex flex-col items-center justify-center rounded-2xl border-2 bg-white dark:bg-gray-900 transition-all duration-300 shadow-sm z-10",
+                          isLast
+                            ? "border-indigo-600 dark:border-indigo-500 shadow-indigo-100 dark:shadow-indigo-900/20 shadow-lg scale-105 ring-4 ring-indigo-50 dark:ring-indigo-950/50"
+                            : "border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500 hover:border-gray-300 dark:hover:border-gray-600 grayscale hover:grayscale-0"
+                        )}>
+                          <span className={cn(
+                            "text-sm font-bold tracking-tight",
+                            isLast ? "text-indigo-700 dark:text-indigo-400" : "text-gray-500 dark:text-gray-400"
+                          )}>
+                            {formatTime(record.recordTime)}
                           </span>
-                          {record.withinGeofence !== undefined && (
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger>
-                                  {isInsideGeofence ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <AlertTriangle className="w-4 h-4 text-amber-500" />}
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>{isInsideGeofence ? "Validado por GPS" : "Fora da cerca virtual"}</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          )}
                         </div>
-                        <p className="text-xs text-gray-400 font-medium">
-                          Via {record.sourceLabel}
-                        </p>
+
+                        {/* Content Card */}
+                        <div className={cn(
+                          "flex-1 p-4 rounded-2xl border transition-all duration-300 flex flex-col justify-center",
+                          isLast
+                            ? "bg-white dark:bg-gray-800 border-indigo-100 dark:border-indigo-900/50 shadow-md translate-y-[-2px]"
+                            : "bg-gray-50 dark:bg-gray-800/50 border-transparent hover:bg-white dark:hover:bg-gray-800 hover:border-gray-200 dark:hover:border-gray-700"
+                        )}>
+                          <div className="flex justify-between items-center">
+                            <span className={cn("font-bold text-sm uppercase tracking-wide flex items-center gap-2", config.color)}>
+                              {config.label}
+                            </span>
+                            {record.withinGeofence !== undefined && (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div className="cursor-help">
+                                      {record.withinGeofence ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <AlertTriangle className="w-4 h-4 text-amber-500" />}
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>{record.withinGeofence ? "Validado por GPS" : "Fora da cerca virtual"}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-gray-400 font-medium mt-1 flex items-center gap-1">
+                            via {record.sourceLabel || 'Web'}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })
+                    );
+                  })}
+                </div>
               )}
             </div>
 
