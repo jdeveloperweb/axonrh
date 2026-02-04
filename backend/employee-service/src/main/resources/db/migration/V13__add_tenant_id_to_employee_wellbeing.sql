@@ -10,6 +10,10 @@ SET tenant_id = (
 )
 WHERE ew.tenant_id IS NULL;
 
+-- Remove registros orfãos que não conseguiram obter um tenant_id (pois não tem employee associado)
+-- Isso evita erro ao adicionar a constraint NOT NULL
+DELETE FROM employee_wellbeing WHERE tenant_id IS NULL;
+
 -- Torna a coluna obrigatória
 ALTER TABLE employee_wellbeing ALTER COLUMN tenant_id SET NOT NULL;
 
