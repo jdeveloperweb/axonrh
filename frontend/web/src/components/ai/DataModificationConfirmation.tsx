@@ -190,19 +190,11 @@ export function DataModificationConfirmation({
                         <Shield className="w-3 h-3 inline mr-1" />
                         {riskLabels[data.riskLevel]}
                     </span>
-
-                    {/* Expiration */}
-                    {expiresIn !== null && expiresIn <= 30 && (
-                        <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
-                            <Clock className="w-3 h-3 inline mr-1" />
-                            {expiresIn}min
-                        </span>
-                    )}
                 </div>
             </div>
 
             {/* Warning Message */}
-            {data.warningMessage && (
+            {data.warningMessage && data.warningMessage !== 'null' && (
                 <div className="px-5 py-3 bg-amber-50 border-b border-amber-100 flex items-start gap-2">
                     <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
                     <p className="text-sm text-amber-800">{data.warningMessage}</p>

@@ -303,14 +303,23 @@ export default function ChatWidget({
               if (operationId) {
                 try {
                   const response = await dataOperationsApi.confirmOperation(operationId);
-                  setMessages(prev => [...prev, {
-                    id: Date.now().toString(),
-                    role: 'assistant',
-                    content: response.success
-                      ? `✅ ${response.message}`
-                      : `❌ ${response.message}`,
-                    timestamp: new Date().toISOString()
-                  }]);
+
+                  setMessages(prev => {
+                    const updatedHistory = prev.map(m =>
+                      m.id === message.id
+                        ? { ...m, type: 'TEXT', content: '**✅ Ação confirmada**' } as ChatMessage
+                        : m
+                    );
+
+                    return [...updatedHistory, {
+                      id: Date.now().toString(),
+                      role: 'assistant',
+                      content: response.success
+                        ? `✅ ${response.message}`
+                        : `❌ ${response.message}`,
+                      timestamp: new Date().toISOString()
+                    }];
+                  });
                 } catch (error) {
                   console.error('Failed to confirm operation:', error);
                   setMessages(prev => [...prev, {
@@ -329,12 +338,21 @@ export default function ChatWidget({
               if (operationId) {
                 try {
                   const response = await dataOperationsApi.rejectOperation(operationId, reason);
-                  setMessages(prev => [...prev, {
-                    id: Date.now().toString(),
-                    role: 'assistant',
-                    content: `A operação foi cancelada. ${reason ? `Motivo: ${reason}` : ''}`,
-                    timestamp: new Date().toISOString()
-                  }]);
+
+                  setMessages(prev => {
+                    const updatedHistory = prev.map(m =>
+                      m.id === message.id
+                        ? { ...m, type: 'TEXT', content: '**❌ Ação cancelada**' } as ChatMessage
+                        : m
+                    );
+
+                    return [...updatedHistory, {
+                      id: Date.now().toString(),
+                      role: 'assistant',
+                      content: `A operação foi cancelada. ${reason ? `Motivo: ${reason}` : ''}`,
+                      timestamp: new Date().toISOString()
+                    }];
+                  });
                 } catch (error) {
                   console.error('Failed to reject operation:', error);
                 }
