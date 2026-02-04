@@ -15,6 +15,8 @@ import java.util.List;
 import com.axonrh.employee.config.TenantContext;
 import com.axonrh.employee.dto.EapRequestDTO;
 import com.axonrh.employee.dto.WellbeingStats;
+import com.axonrh.employee.repository.EmployeeRepository;
+
 import java.util.UUID;
 
 @Slf4j
@@ -23,10 +25,15 @@ import java.util.UUID;
 public class WellbeingService {
 
     private final EmployeeWellbeingRepository repository;
+    private final EmployeeRepository employeeRepository;
     private final AiAssistantClient aiClient;
 
     public void processCheckIn(WellbeingCheckInRequest request) {
-        UUID tenantId = getTenantId();
+        // Obtem o colaborador para garantir existência e consistência do tenant
+        com.axonrh.employee.entity.Employee employee = employeeRepository.findById(request.getEmployeeId())
+                .orElseThrow(() -> new IllegalArgumentException("Colaborador não encontrado: " + request.getEmployeeId()));
+        
+        UUID tenantId = employee.getTenantId();
 
         EmployeeWellbeing.EmployeeWellbeingBuilder builder = EmployeeWellbeing.builder()
                 .tenantId(tenantId)

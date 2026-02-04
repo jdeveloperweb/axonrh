@@ -309,10 +309,10 @@ export default function TimeRecordPage() {
       setMoodScore(null);
       setMoodText('');
       setWantsEap(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao registrar sentimento:', error);
-      // Don't block the user, just close
-      setShowMoodDialog(false);
+      const message = error.response?.data?.message || 'Erro ao registrar check-in.';
+      toast.error(message);
     } finally {
       setSubmittingMood(false);
     }
