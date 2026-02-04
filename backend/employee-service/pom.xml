@@ -89,6 +89,12 @@
             <version>8.5.7</version>
         </dependency>
 
+        <!-- OpenFeign -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+        </dependency>
+
         <!-- OpenAPI -->
         <dependency>
             <groupId>org.springdoc</groupId>

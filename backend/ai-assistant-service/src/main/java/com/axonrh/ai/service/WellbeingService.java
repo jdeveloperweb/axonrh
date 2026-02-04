@@ -10,7 +10,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.axonrh.ai.dto.WellbeingAnalysisRequest;
+import com.axonrh.ai.dto.WellbeingAnalysisResponse;
 import com.axonrh.ai.dto.WellbeingStats;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
