@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import {
   Clock,
   MapPin,
-  CheckCircle,
+  CheckCircle2,
   XCircle,
   AlertTriangle,
   Coffee,
@@ -13,12 +13,15 @@ import {
   LogOut,
   RefreshCw,
   Loader2,
+  Calendar as CalendarIcon,
+  ChevronRight,
+  History,
+  Info
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import {
@@ -29,14 +32,21 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { timesheetApi, TimeRecord, TimeRecordRequest, Geofence } from '@/lib/api/timesheet';
 import { useAuthStore } from '@/stores/auth-store';
 import { formatTime } from '@/lib/utils';
 import dynamic from 'next/dynamic';
+import { toast } from 'sonner';
 
 const GeofenceMap = dynamic(() => import('@/components/timesheet/GeofenceMap'), {
   ssr: false,
-  loading: () => <div className="h-[350px] w-full bg-muted animate-pulse rounded-lg flex items-center justify-center text-muted-foreground">Carregando mapa...</div>
+  loading: () => <div className="h-[200px] w-full bg-muted/50 animate-pulse rounded-lg flex items-center justify-center text-muted-foreground text-sm">Carregando mapa...</div>
 });
 
 type RecordType = 'ENTRY' | 'EXIT' | 'BREAK_START' | 'BREAK_END';
@@ -61,6 +71,7 @@ export default function TimeRecordPage() {
   const [notes, setNotes] = useState('');
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [photoBase64, setPhotoBase64] = useState<string | null>(null);
+  const [showMap, setShowMap] = useState(false);
 
   const [location, setLocation] = useState<LocationState>({
     latitude: null,
@@ -148,6 +159,7 @@ export default function TimeRecordPage() {
       setGeofences(myGeofences);
     } catch (error) {
       console.error('Erro ao carregar registros:', error);
+      toast.error('Erro ao carregar registros de hoje.');
     } finally {
       setLoading(false);
     }
@@ -160,31 +172,25 @@ export default function TimeRecordPage() {
   const getLocationErrorMessage = (error: GeolocationPositionError): string => {
     switch (error.code) {
       case error.PERMISSION_DENIED:
-        return 'Permissão de localização negada. Habilite nas configurações do navegador.';
+        return 'Permissão negada.';
       case error.POSITION_UNAVAILABLE:
-        return 'Localização indisponível no momento.';
+        return 'Localização indisponível.';
       case error.TIMEOUT:
-        return 'Tempo esgotado ao obter localização.';
+        return 'Tempo esgotado.';
       default:
-        return 'Erro ao obter localização.';
+        return 'Erro de localização.';
     }
   };
 
   const getNextExpectedType = (): RecordType => {
     if (todayRecords.length === 0) return 'ENTRY';
-
     const lastRecord = todayRecords[todayRecords.length - 1];
     switch (lastRecord.recordType) {
-      case 'ENTRY':
-        return 'BREAK_START';
-      case 'BREAK_START':
-        return 'BREAK_END';
-      case 'BREAK_END':
-        return 'EXIT';
-      case 'EXIT':
-        return 'ENTRY';
-      default:
-        return 'ENTRY';
+      case 'ENTRY': return 'BREAK_START';
+      case 'BREAK_START': return 'BREAK_END';
+      case 'BREAK_END': return 'EXIT';
+      case 'EXIT': return 'ENTRY';
+      default: return 'ENTRY';
     }
   };
 
@@ -193,26 +199,38 @@ export default function TimeRecordPage() {
       ENTRY: {
         label: 'Entrada',
         icon: LogIn,
-        color: 'bg-emerald-500 hover:bg-emerald-600',
-        description: 'Registrar início da jornada',
+        color: 'text-emerald-600 dark:text-emerald-400',
+        bg: 'bg-emerald-100 dark:bg-emerald-950/30',
+        hoverBg: 'hover:bg-emerald-50 dark:hover:bg-emerald-900/20',
+        buttonColor: 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-200 dark:shadow-emerald-900',
+        description: 'Iniciar jornada de trabalho',
       },
       EXIT: {
         label: 'Saída',
         icon: LogOut,
-        color: 'bg-rose-500 hover:bg-rose-600',
-        description: 'Registrar fim da jornada',
+        color: 'text-rose-600 dark:text-rose-400',
+        bg: 'bg-rose-100 dark:bg-rose-950/30',
+        hoverBg: 'hover:bg-rose-50 dark:hover:bg-rose-900/20',
+        buttonColor: 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-200 dark:shadow-rose-900',
+        description: 'Encerrar jornada de trabalho',
       },
       BREAK_START: {
-        label: 'Início Intervalo',
+        label: 'Início Pausa',
         icon: Coffee,
-        color: 'bg-amber-500 hover:bg-amber-600',
-        description: 'Registrar início do intervalo',
+        color: 'text-amber-600 dark:text-amber-400',
+        bg: 'bg-amber-100 dark:bg-amber-950/30',
+        hoverBg: 'hover:bg-amber-50 dark:hover:bg-amber-900/20',
+        buttonColor: 'bg-amber-500 hover:bg-amber-600 text-white shadow-amber-200 dark:shadow-amber-900',
+        description: 'Sair para intervalo',
       },
       BREAK_END: {
-        label: 'Fim Intervalo',
+        label: 'Volta Pausa',
         icon: Coffee,
-        color: 'bg-orange-500 hover:bg-orange-600',
-        description: 'Registrar fim do intervalo',
+        color: 'text-orange-600 dark:text-orange-400',
+        bg: 'bg-orange-100 dark:bg-orange-950/30',
+        hoverBg: 'hover:bg-orange-50 dark:hover:bg-orange-900/20',
+        buttonColor: 'bg-orange-500 hover:bg-orange-600 text-white shadow-orange-200 dark:shadow-orange-900',
+        description: 'Retornar do intervalo',
       },
     };
     return configs[type] || configs.ENTRY;
@@ -228,7 +246,6 @@ export default function TimeRecordPage() {
 
     try {
       setSubmitting(true);
-
       const request: TimeRecordRequest = {
         employeeId: user?.id || '',
         recordType: selectedType,
@@ -242,348 +259,305 @@ export default function TimeRecordPage() {
 
       await timesheetApi.registerTimeRecord(request);
 
+      toast.success('Ponto registrado com sucesso!');
+
       setShowConfirmDialog(false);
       setSelectedType(null);
       setNotes('');
       setPhotoBase64(null);
 
       await loadTodayRecords();
-    } catch (error: unknown) {
+    } catch (error: any) {
       console.error('Erro ao registrar ponto:', error);
-      const err = error as { response?: { data?: { message?: string } } };
-      alert(err.response?.data?.message || 'Erro ao registrar ponto');
+      const message = error.response?.data?.message || 'Não foi possível registrar o ponto.';
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }
   };
 
-  const formatCurrentTime = () => {
-    return currentTime.toLocaleTimeString('pt-BR', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    });
-  };
-
-  const formatCurrentDate = () => {
-    return currentTime.toLocaleDateString('pt-BR', {
-      weekday: 'long',
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric',
-    });
-  };
-
-  const getStatusBadge = (status: TimeRecord['status']) => {
-    const statusConfig = {
-      VALID: { label: 'Válido', variant: 'success' as const },
-      PENDING_APPROVAL: { label: 'Pendente', variant: 'warning' as const },
-      APPROVED: { label: 'Aprovado', variant: 'success' as const },
-      REJECTED: { label: 'Rejeitado', variant: 'destructive-soft' as const },
-      ADJUSTED: { label: 'Ajustado', variant: 'info' as const },
-    };
-    const config = statusConfig[status] || statusConfig.VALID;
-    return <Badge variant={config.variant}>{config.label}</Badge>;
-  };
-
   const nextExpected = getNextExpectedType();
 
+  const getGreeting = () => {
+    const hour = currentTime.getHours();
+    if (hour < 12) return 'Bom dia';
+    if (hour < 18) return 'Boa tarde';
+    return 'Boa noite';
+  };
+
   return (
-    <div className="container mx-auto py-4 sm:py-6 space-y-4 sm:space-y-6 px-4">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="container max-w-5xl mx-auto py-8 px-4 space-y-8 animate-in fade-in duration-500">
+
+      {/* Top Header Section */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Registro de Ponto</h1>
-          <p className="text-sm sm:text-base text-muted-foreground capitalize">{formatCurrentDate()}</p>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">
+            {getGreeting()}, {user?.firstName || 'Colaborador'}
+          </h1>
+          <p className="text-muted-foreground flex items-center gap-2 mt-1">
+            <CalendarIcon className="w-4 h-4" />
+            {currentTime.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+          </p>
         </div>
-        <Button variant="outline" size="sm" onClick={loadTodayRecords} disabled={loading} className="w-full sm:w-auto">
-          <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          Atualizar
-        </Button>
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <Button variant="outline" size="sm" onClick={() => router.push('/timesheet/mirror')} className="flex-1 md:flex-none">
+            <History className="mr-2 h-4 w-4" />
+            Histórico
+          </Button>
+          <Button variant="ghost" size="icon" onClick={loadTodayRecords} disabled={loading} className="shrink-0">
+            <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+          </Button>
+        </div>
       </div>
 
-      {/* Clock Card */}
-      <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-none shadow-sm">
-        <CardContent className="pt-6">
-          <div className="text-center">
-            <div className="text-4xl sm:text-6xl font-mono font-bold tracking-wider text-primary">
-              {formatCurrentTime()}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+        {/* Left Column: Clock & Actions */}
+        <div className="lg:col-span-2 space-y-6">
+
+          {/* Hero Clock Card */}
+          <Card className="border-none shadow-md bg-gradient-to-br from-primary/5 via-background to-background relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-3 opacity-10">
+              <Clock className="w-32 h-32" />
             </div>
-            <div className="mt-4 flex items-center justify-center gap-2 text-muted-foreground">
-              {location.loading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Obtendo localização...</span>
-                </>
-              ) : location.error ? (
-                <>
-                  <XCircle className="h-4 w-4 text-destructive" />
-                  <span className="text-destructive">{location.error}</span>
-                </>
-              ) : (
-                <>
-                  <MapPin className="h-4 w-4 text-green-500" />
-                  <span>
-                    Localização capturada (precisão: {location.accuracy?.toFixed(0)}m)
+            <CardContent className="p-8 text-center relative z-10">
+              <div className="text-7xl font-bold tracking-tighter text-primary font-mono tabular-nums">
+                {currentTime.toLocaleTimeString('pt-BR')}
+              </div>
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-sm">
+                {/* Location Status Pill */}
+                <div className={cn(
+                  "flex items-center gap-2 px-3 py-1.5 rounded-full border transition-colors cursor-pointer hover:bg-muted/50",
+                  location.error ? "bg-destructive/10 text-destructive border-destructive/20" :
+                    location.loading ? "bg-muted text-muted-foreground" :
+                      "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900"
+                )}
+                  onClick={() => setShowMap(!showMap)}
+                >
+                  {location.loading ? <Loader2 className="w-3 h-3 animate-spin" /> :
+                    location.error ? <XCircle className="w-3 h-3" /> :
+                      <MapPin className="w-3 h-3" />
+                  }
+                  <span className="font-medium">
+                    {location.loading ? "Localizando..." :
+                      location.error ? "Sem localização" :
+                        `Localização: ${location.accuracy?.toFixed(0)}m`
+                    }
                   </span>
                   {geofences.length > 0 && (
-                    <Badge variant={isInsideGeofence ? "success" : "destructive"} className="ml-2">
-                      {isInsideGeofence ? "Área Autorizada" : "Fora da Área"}
-                    </Badge>
+                    <span className={cn(
+                      "ml-1 text-xs font-bold px-1.5 py-0.5 rounded",
+                      isInsideGeofence ? "bg-green-200 text-green-800 dark:bg-green-900 dark:text-green-200" : "bg-red-200 text-red-800 dark:bg-red-900 dark:text-red-200"
+                    )}>
+                      {isInsideGeofence ? "EM ÁREA" : "FORA DÁ ÁREA"}
+                    </span>
                   )}
-                </>
+                </div>
+              </div>
+
+              {showMap && (
+                <div className="mt-6 animate-in slide-in-from-top-4 fade-in duration-300">
+                  <div className="rounded-lg overflow-hidden border shadow-inner">
+                    <GeofenceMap
+                      userLocation={{
+                        latitude: location.latitude,
+                        longitude: location.longitude,
+                        accuracy: location.accuracy
+                      }}
+                      geofences={geofences}
+                      height="200px"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {geofences.length > 0 ? "Você deve estar dentro de uma das áreas marcadas." : "Nenhuma cerca eletrônica configurada."}
+                  </p>
+                </div>
               )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
 
-      {/* Map Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MapPin className="h-5 w-5" />
-            Mapa de Cercas Digitais
-          </CardTitle>
-          <CardDescription>
-            Verifique se você está dentro da área permitida para registro.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <GeofenceMap
-            userLocation={{
-              latitude: location.latitude,
-              longitude: location.longitude,
-              accuracy: location.accuracy
-            }}
-            geofences={geofences}
-            height="350px"
-          />
-          <div className="mt-4 flex gap-4 text-sm">
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded-full bg-green-500/20 border border-green-500"></div>
-              <span>Dentro da Cerca</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded-full bg-red-500/20 border border-red-500"></div>
-              <span>Fora da Cerca</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <MapPin className="h-3 w-3 text-blue-500" />
-              <span>Sua Posição</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Record Buttons */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Registrar Ponto</CardTitle>
-          <CardDescription>
-            Próximo registro esperado: <strong>{getRecordTypeConfig(nextExpected).label}</strong>
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {/* Main Action Buttons */}
+          <div className="grid grid-cols-2 gap-4">
             {(['ENTRY', 'BREAK_START', 'BREAK_END', 'EXIT'] as RecordType[]).map((type) => {
               const config = getRecordTypeConfig(type);
-              const Icon = config.icon;
               const isExpected = type === nextExpected;
+              const Icon = config.icon;
 
               return (
                 <Button
                   key={type}
+                  variant={isExpected ? "default" : "outline"}
                   className={cn(
-                    "h-24 sm:h-28 flex-col gap-2 transition-all active:scale-95",
-                    config.color,
-                    isExpected ? 'ring-2 ring-offset-2 ring-primary shadow-lg' : 'shadow-sm'
+                    "h-auto py-6 flex flex-col items-center justify-center gap-3 transition-all duration-300 border",
+                    isExpected
+                      ? `col-span-2 sm:col-span-1 ring-4 ring-offset-2 ring-primary/20 ${config.buttonColor} border-transparent scale-[1.02] hover:scale-[1.03]`
+                      : "hover:bg-muted bg-card hover:border-primary/50 text-muted-foreground hover:text-foreground"
                   )}
                   onClick={() => handleTypeSelect(type)}
                   disabled={submitting}
                 >
-                  <Icon className="h-7 w-7 sm:h-8 sm:w-8" />
-                  <span className="text-[10px] sm:text-sm font-bold uppercase tracking-tight text-center leading-tight px-1">
-                    {config.label}
-                  </span>
-                  {isExpected && (
-                    <Badge variant="secondary" className="text-[9px] sm:text-xs py-0 h-4 sm:h-5 bg-white/20 text-white border-none">
-                      Esperado
-                    </Badge>
-                  )}
+                  <Icon className={cn("w-8 h-8", isExpected ? "animate-pulse" : "opacity-70")} />
+                  <div className="flex flex-col items-center">
+                    <span className="text-lg font-bold uppercase tracking-wide">{config.label}</span>
+                    {isExpected && <span className="text-xs opacity-90 font-medium mt-1">Sugerido agora</span>}
+                  </div>
                 </Button>
               );
             })}
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Today's Records */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            Registros de Hoje
-          </CardTitle>
-          <CardDescription>
-            {todayRecords.length} registro(s) realizado(s)
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          ) : todayRecords.length === 0 ? (
-            <Alert>
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
-                Nenhum registro de ponto realizado hoje. Clique em &quot;Entrada&quot; para começar.
-              </AlertDescription>
-            </Alert>
-          ) : (
-            <div className="space-y-3">
-              {todayRecords.filter(r => r).map((record) => {
-                const config = getRecordTypeConfig(record.recordType);
-                const Icon = config.icon || Clock;
-
-                return (
-                  <div
-                    key={record.id}
-                    className="flex items-center justify-between p-4 rounded-lg border bg-card"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div
-                        className={`p-2 rounded-full ${config.color.replace('hover:', '')}`}
-                      >
-                        <Icon className="h-5 w-5 text-white" />
-                      </div>
-                      <div>
-                        <div className="font-medium">{config.label}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {record.sourceLabel}
-                          {record.withinGeofence !== undefined && (
-                            <span className="ml-2">
-                              {record.withinGeofence ? (
-                                <CheckCircle className="inline h-3 w-3 text-green-500" />
-                              ) : (
-                                <XCircle className="inline h-3 w-3 text-red-500" />
-                              )}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-mono font-bold">
-                        {formatTime(record.recordTime)}
-                      </div>
-                      <div className="mt-1">{getStatusBadge(record.status)}</div>
-                    </div>
-                  </div>
-                );
-              })}
+          {/* Notes/Warnings Section */}
+          {todayRecords.length === 0 && (
+            <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900 rounded-lg p-4 flex items-start gap-3">
+              <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+              <div className="space-y-1">
+                <p className="font-medium text-blue-900 dark:text-blue-200">Começando o dia?</p>
+                <p className="text-sm text-blue-700 dark:text-blue-300">Não esqueça de registrar seu ponto de entrada para iniciar a contagem de horas.</p>
+              </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Quick Links */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card
-          className="cursor-pointer hover:bg-accent transition-colors"
-          onClick={() => router.push('/timesheet/mirror')}
-        >
-          <CardContent className="pt-6 text-center">
-            <Clock className="h-8 w-8 mx-auto mb-2 text-primary" />
-            <h3 className="font-medium">Espelho de Ponto</h3>
-            <p className="text-sm text-muted-foreground">Ver histórico completo</p>
-          </CardContent>
-        </Card>
+        {/* Right Column: Timeline */}
+        <div className="lg:col-span-1">
+          <Card className="h-full flex flex-col border-none shadow-md bg-card/50 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <History className="w-5 h-5 text-primary" />
+                Linha do Tempo
+              </CardTitle>
+              <CardDescription>Seus registros de hoje</CardDescription>
+            </CardHeader>
+            <CardContent className="flex-1 overflow-auto pr-2">
+              {loading ? (
+                <div className="flex flex-col items-center justify-center h-40 space-y-2">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary/50" />
+                  <p className="text-sm text-muted-foreground">Carregando...</p>
+                </div>
+              ) : todayRecords.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-40 text-center p-4 border-2 border-dashed rounded-lg border-muted">
+                  <Clock className="w-8 h-8 text-muted-foreground/30 mb-2" />
+                  <p className="text-sm text-muted-foreground">Nenhum registro hoje.<br />Seu dia começa agora!</p>
+                </div>
+              ) : (
+                <div className="relative pl-4 space-y-0 border-l-2 border-muted ml-2">
+                  {todayRecords.map((record, index) => {
+                    const config = getRecordTypeConfig(record.recordType);
+                    const isLast = index === todayRecords.length - 1;
 
-        <Card
-          className="cursor-pointer hover:bg-accent transition-colors"
-          onClick={() => router.push('/timesheet/adjustments')}
-        >
-          <CardContent className="pt-6 text-center">
-            <AlertTriangle className="h-8 w-8 mx-auto mb-2 text-yellow-500" />
-            <h3 className="font-medium">Solicitar Ajuste</h3>
-            <p className="text-sm text-muted-foreground">Corrigir marcações</p>
-          </CardContent>
-        </Card>
+                    return (
+                      <div key={record.id} className="pb-8 relative group">
+                        {/* Dot */}
+                        <div className={cn(
+                          "absolute -left-[21px] top-1 w-4 h-4 rounded-full border-2 transition-all duration-300",
+                          "bg-background border-muted-foreground/30 group-hover:border-primary group-hover:scale-110",
+                          isLast ? "bg-primary border-primary ring-4 ring-primary/20" : ""
+                        )}>
+                          <div className={cn("w-full h-full rounded-full opacity-20", config.bg)} />
+                        </div>
 
-        <Card
-          className="cursor-pointer hover:bg-accent transition-colors"
-          onClick={() => router.push('/timesheet/overtime')}
-        >
-          <CardContent className="pt-6 text-center">
-            <Clock className="h-8 w-8 mx-auto mb-2 text-blue-500" />
-            <h3 className="font-medium">Banco de Horas</h3>
-            <p className="text-sm text-muted-foreground">Ver saldo atual</p>
-          </CardContent>
-        </Card>
+                        {/* Content */}
+                        <div className="flex flex-col gap-1 -mt-1 hover:bg-muted/50 p-2 rounded-lg transition-colors -ml-2">
+                          <div className="flex items-center justify-between">
+                            <span className={cn("font-bold text-sm", config.color)}>
+                              {config.label}
+                            </span>
+                            <Badge variant="outline" className={cn("font-mono text-xs",
+                              record.status === 'VALID' ? "border-green-200 text-green-700 bg-green-50" :
+                                "border-yellow-200 text-yellow-700 bg-yellow-50"
+                            )}>
+                              {formatTime(record.recordTime)}
+                            </Badge>
+                          </div>
+                          <div className="text-xs text-muted-foreground flex items-center gap-1">
+                            {record.sourceLabel}
+                            {record.withinGeofence !== undefined && (
+                              isInsideGeofence ?
+                                <CheckCircle2 className="w-3 h-3 text-emerald-500" /> :
+                                <AlertTriangle className="w-3 h-3 text-amber-500" />
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+            {todayRecords.length > 0 && (
+              <CardFooter className="pt-2 border-t bg-muted/20">
+                <div className="flex justify-between w-full text-xs text-muted-foreground font-medium">
+                  <span>Total registros: {todayRecords.length}</span>
+                </div>
+              </CardFooter>
+            )}
+          </Card>
+        </div>
       </div>
 
       {/* Confirmation Dialog */}
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Confirmar Registro</DialogTitle>
+            <DialogTitle>Confirmar {selectedType && getRecordTypeConfig(selectedType).label}</DialogTitle>
             <DialogDescription>
-              Você está prestes a registrar{' '}
-              <strong>{selectedType && getRecordTypeConfig(selectedType).label}</strong> às{' '}
-              <strong>{formatCurrentTime()}</strong>
+              Registrar ponto às <span className="font-bold text-foreground">{formatTime(currentTime.toISOString())}</span>?
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
-            {/* Location Status */}
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-muted">
-              {location.latitude && location.longitude ? (
-                <>
-                  <CheckCircle className="h-5 w-5 text-green-500" />
-                  <span>Localização capturada com sucesso</span>
-                </>
+          <div className="space-y-4 py-2">
+            <div className={cn("flex items-center gap-3 p-3 rounded-lg border",
+              location.error ? "bg-red-50 border-red-100 dark:bg-red-900/10 dark:border-red-900/30" : "bg-emerald-50 border-emerald-100 dark:bg-emerald-900/10 dark:border-emerald-900/30"
+            )}>
+              {location.error ? (
+                <AlertTriangle className="h-5 w-5 text-red-600" />
               ) : (
-                <>
-                  <AlertTriangle className="h-5 w-5 text-yellow-500" />
-                  <span>Localização não disponível</span>
-                </>
+                <MapPin className="h-5 w-5 text-emerald-600" />
               )}
+              <div className="flex-1">
+                <p className={cn("text-sm font-medium", location.error ? "text-red-900 dark:text-red-200" : "text-emerald-900 dark:text-emerald-200")}>
+                  {location.error ? "Atenção: Sem localização" : "Localização capturada"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {location.error || `Precisão: ${location.accuracy?.toFixed(0)}m`}
+                </p>
+              </div>
             </div>
 
-            {/* Notes */}
             <div className="space-y-2">
               <Label htmlFor="notes">Observações (opcional)</Label>
               <Textarea
                 id="notes"
-                placeholder="Adicione uma observação se necessário..."
+                placeholder="Ex: Esqueci de bater na hora certa..."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
+                className="resize-none"
                 rows={3}
               />
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="flex-row gap-2 justify-end sm:justify-end">
             <Button
               variant="outline"
               onClick={() => setShowConfirmDialog(false)}
               disabled={submitting}
+              className="mt-0"
             >
               Cancelar
             </Button>
-            <Button onClick={handleConfirmRecord} disabled={submitting}>
+            <Button
+              onClick={handleConfirmRecord}
+              disabled={submitting}
+              className={selectedType ? getRecordTypeConfig(selectedType).buttonColor : ""}
+            >
               {submitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Registrando...
                 </>
               ) : (
-                <>
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  Confirmar Registro
-                </>
+                'Confirmar'
               )}
             </Button>
           </DialogFooter>

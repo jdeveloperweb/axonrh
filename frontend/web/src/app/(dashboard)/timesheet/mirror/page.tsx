@@ -3,12 +3,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
-  Calendar,
+  Calendar as CalendarIcon,
   Download,
   ChevronLeft,
   ChevronRight,
   AlertTriangle,
-  CheckCircle,
+  CheckCircle2,
   XCircle,
   Loader2,
   Sun,
@@ -18,6 +18,9 @@ import {
   Minus,
   FileText,
   Filter,
+  Clock,
+  Briefcase,
+  Hourglass
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -43,8 +46,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { Badge } from '@/components/ui/badge';
 import { timesheetApi, DailySummary, PeriodTotals } from '@/lib/api/timesheet';
 import { employeesApi, Employee } from '@/lib/api/employees';
+import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 export default function TimesheetMirrorPage() {
   const searchParams = useSearchParams();
@@ -65,10 +71,6 @@ export default function TimesheetMirrorPage() {
       try {
         const response = await employeesApi.list({ status: 'ACTIVE', size: 1000 });
         setEmployees(response.content);
-        if (!selectedEmployee && response.content.length > 0) {
-          // If no employee selected and user is a manager, select first employee
-          // Otherwise, API will return current user's data
-        }
       } catch (error) {
         console.error('Erro ao carregar colaboradores:', error);
       }
@@ -91,8 +93,6 @@ export default function TimesheetMirrorPage() {
     try {
       setLoading(true);
       const { startDate, endDate } = getDateRange();
-
-      // If no employee selected, API returns current user's timesheet
       const employeeId = selectedEmployee || 'me';
 
       const [timesheetData, totalsData] = await Promise.all([
@@ -104,6 +104,7 @@ export default function TimesheetMirrorPage() {
       setTotals(totalsData);
     } catch (error) {
       console.error('Erro ao carregar espelho de ponto:', error);
+      toast.error('Erro ao carregar dados do espelho.');
     } finally {
       setLoading(false);
     }
@@ -137,7 +138,6 @@ export default function TimesheetMirrorPage() {
       const { startDate, endDate } = getDateRange();
       const employeeId = selectedEmployee || 'me';
 
-      // Call export endpoint
       const response = await fetch(
         `/api/v1/timesheet/timesheet/employee/${employeeId}/export?startDate=${startDate}&endDate=${endDate}&format=${format}`,
         { headers: { Accept: format === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' } }
@@ -153,9 +153,13 @@ export default function TimesheetMirrorPage() {
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
+        toast.success(`Exportação ${format.toUpperCase()} concluída.`);
+      } else {
+        toast.error("Falha na exportação.");
       }
     } catch (error) {
       console.error('Erro ao exportar:', error);
+      toast.error("Erro ao realizar exportação.");
     } finally {
       setExporting(false);
     }
@@ -165,30 +169,18 @@ export default function TimesheetMirrorPage() {
     return new Date(2000, month, 1).toLocaleDateString('pt-BR', { month: 'long' });
   };
 
-
-
   const getBalanceIcon = (balance: number) => {
-    if (balance > 0) return <TrendingUp className="h-4 w-4 text-green-500" />;
-    if (balance < 0) return <TrendingDown className="h-4 w-4 text-red-500" />;
+    if (balance > 0) return <TrendingUp className="h-4 w-4 text-emerald-500" />;
+    if (balance < 0) return <TrendingDown className="h-4 w-4 text-rose-500" />;
     return <Minus className="h-4 w-4 text-muted-foreground" />;
   };
 
   const getDayStatusIcon = (day: DailySummary) => {
-    if (day.isHoliday) {
-      return <Sun className="h-4 w-4 text-yellow-500" />;
-    }
-    if (day.isAbsent) {
-      return <XCircle className="h-4 w-4 text-red-500" />;
-    }
-    if (day.hasPendingRecords) {
-      return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
-    }
-    if (day.hasMissingRecords) {
-      return <AlertTriangle className="h-4 w-4 text-orange-500" />;
-    }
-    if (day.workedMinutes > 0) {
-      return <CheckCircle className="h-4 w-4 text-green-500" />;
-    }
+    if (day.isHoliday) return <Sun className="h-4 w-4 text-amber-500" />;
+    if (day.isAbsent) return <XCircle className="h-4 w-4 text-rose-500" />;
+    if (day.hasPendingRecords) return <AlertTriangle className="h-4 w-4 text-amber-500" />;
+    if (day.hasMissingRecords) return <AlertTriangle className="h-4 w-4 text-orange-500" />;
+    if (day.workedMinutes > 0) return <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
     return null;
   };
 
@@ -199,40 +191,43 @@ export default function TimesheetMirrorPage() {
   };
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="container max-w-7xl mx-auto py-8 space-y-8 animate-in fade-in duration-500 px-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Espelho de Ponto</h1>
-          <p className="text-muted-foreground">
-            Visualize e exporte seu histórico de marcações
-          </p>
+          <div className="flex items-center gap-2 mt-1">
+            <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+            <p className="text-muted-foreground capitalize">
+              {getMonthName(selectedMonth)} de {selectedYear}
+            </p>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => handleExport('excel')} disabled={exporting}>
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <Button variant="outline" size="sm" onClick={() => handleExport('excel')} disabled={exporting} className="flex-1 md:flex-none">
             <Download className="mr-2 h-4 w-4" />
             Excel
           </Button>
-          <Button variant="outline" onClick={() => handleExport('pdf')} disabled={exporting}>
+          <Button variant="outline" size="sm" onClick={() => handleExport('pdf')} disabled={exporting} className="flex-1 md:flex-none">
             <FileText className="mr-2 h-4 w-4" />
             PDF
           </Button>
         </div>
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-wrap items-center gap-4">
+      {/* Filters & Navigation */}
+      <Card className="border-none shadow-sm bg-muted/30">
+        <CardContent className="p-4">
+          <div className="flex flex-col md:flex-row items-center gap-4">
             {/* Employee Selector (for managers) */}
             {employees.length > 0 && (
-              <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-muted-foreground" />
+              <div className="flex items-center gap-2 w-full md:w-auto">
+                <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
                 <Select
                   value={selectedEmployee || 'me'}
                   onValueChange={(value) => setSelectedEmployee(value === 'me' ? null : value)}
                 >
-                  <SelectTrigger className="w-[250px]">
+                  <SelectTrigger className="w-full md:w-[280px] bg-background">
                     <SelectValue placeholder="Selecione o colaborador" />
                   </SelectTrigger>
                   <SelectContent>
@@ -248,18 +243,17 @@ export default function TimesheetMirrorPage() {
             )}
 
             {/* Month Navigation */}
-            <div className="flex items-center gap-2 ml-auto">
-              <Button variant="outline" size="icon" onClick={handlePreviousMonth}>
+            <div className="flex items-center gap-2 w-full md:w-auto md:ml-auto justify-between md:justify-end bg-background p-1 rounded-lg border shadow-sm">
+              <Button variant="ghost" size="icon" onClick={handlePreviousMonth}>
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <div className="flex items-center gap-2 px-4 py-2 bg-muted rounded-md min-w-[180px] justify-center">
-                <Calendar className="h-4 w-4" />
-                <span className="font-medium capitalize">
+              <div className="flex items-center gap-2 px-4">
+                <span className="font-semibold capitalize min-w-[140px] text-center">
                   {getMonthName(selectedMonth)} {selectedYear}
                 </span>
               </div>
               <Button
-                variant="outline"
+                variant="ghost"
                 size="icon"
                 onClick={handleNextMonth}
                 disabled={
@@ -276,90 +270,85 @@ export default function TimesheetMirrorPage() {
 
       {/* Summary Cards */}
       {totals && (
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          <Card>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
             <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium text-muted-foreground">Trabalhado</p>
+                <Briefcase className="h-4 w-4 text-primary" />
+              </div>
               <div className="text-2xl font-bold">{totals.workedFormatted}</div>
-              <p className="text-xs text-muted-foreground">Horas Trabalhadas</p>
             </CardContent>
           </Card>
-          <Card>
+
+          <Card className="border-l-4 border-l-emerald-500 shadow-sm hover:shadow-md transition-shadow">
             <CardContent className="pt-6">
-              <div className="text-2xl font-bold text-green-600">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium text-muted-foreground">Horas Extras</p>
+                <TrendingUp className="h-4 w-4 text-emerald-500" />
+              </div>
+              <div className="text-2xl font-bold text-emerald-600">
                 +{totals.overtimeFormatted}
               </div>
-              <p className="text-xs text-muted-foreground">Horas Extras</p>
             </CardContent>
           </Card>
-          <Card>
+
+          <Card className="border-l-4 border-l-rose-500 shadow-sm hover:shadow-md transition-shadow">
             <CardContent className="pt-6">
-              <div className="text-2xl font-bold text-red-600">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium text-muted-foreground">Horas Devidas</p>
+                <TrendingDown className="h-4 w-4 text-rose-500" />
+              </div>
+              <div className="text-2xl font-bold text-rose-600">
                 -{totals.deficitFormatted}
               </div>
-              <p className="text-xs text-muted-foreground">Horas Devidas</p>
             </CardContent>
           </Card>
-          <Card>
+
+          <Card className="border-l-4 border-l-purple-500 shadow-sm hover:shadow-md transition-shadow">
             <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium text-muted-foreground">Noturno</p>
+                <Moon className="h-4 w-4 text-purple-500" />
+              </div>
               <div className="text-2xl font-bold text-purple-600">
                 {totals.nightShiftFormatted}
               </div>
-              <p className="text-xs text-muted-foreground flex items-center gap-1">
-                <Moon className="h-3 w-3" /> Adicional Noturno
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-2xl font-bold text-yellow-600">
-                {totals.lateArrivalFormatted}
-              </div>
-              <p className="text-xs text-muted-foreground">Atrasos</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-2xl font-bold text-red-600">{totals.absences}</div>
-              <p className="text-xs text-muted-foreground">Faltas</p>
             </CardContent>
           </Card>
         </div>
       )}
 
       {/* Timesheet Table */}
-      <Card>
-        <CardHeader>
+      <Card className="border shadow-md overflow-hidden">
+        <CardHeader className="bg-muted/30 pb-4 border-b">
           <CardTitle>Detalhamento Diário</CardTitle>
           <CardDescription>
-            Clique em um dia para ver os registros detalhados
+            Histórico detalhado de entradas e saídas
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
           ) : timesheet.length === 0 ? (
-            <Alert>
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
-                Nenhum registro encontrado para o período selecionado.
-              </AlertDescription>
-            </Alert>
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <AlertTriangle className="h-10 w-10 text-muted-foreground/30 mb-2" />
+              <p className="text-muted-foreground">Nenhum registro encontrado para este período.</p>
+            </div>
           ) : (
-            <div className="rounded-md border overflow-x-auto">
+            <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[100px]">Data</TableHead>
-                    <TableHead className="w-[100px]">Dia</TableHead>
-                    <TableHead className="text-center">Entrada</TableHead>
-                    <TableHead className="text-center">Início Int.</TableHead>
-                    <TableHead className="text-center">Fim Int.</TableHead>
-                    <TableHead className="text-center">Saída</TableHead>
-                    <TableHead className="text-center">Trabalhado</TableHead>
-                    <TableHead className="text-center">Extra/Devida</TableHead>
-                    <TableHead className="text-center">Status</TableHead>
+                  <TableRow className="bg-muted/50 hover:bg-muted/50">
+                    <TableHead className="w-[100px] font-semibold">Data</TableHead>
+                    <TableHead className="w-[80px] font-semibold">Dia</TableHead>
+                    <TableHead className="text-center font-semibold">1ª Entrada</TableHead>
+                    <TableHead className="text-center font-semibold text-muted-foreground/50">Intervalo</TableHead>
+                    <TableHead className="text-center font-semibold">1ª Saída</TableHead>
+                    <TableHead className="text-center font-semibold text-primary">Saldo</TableHead>
+                    <TableHead className="text-center font-semibold">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -371,12 +360,11 @@ export default function TimesheetMirrorPage() {
                       return (
                         <TableRow
                           key={day.id}
-                          className={`
-                            cursor-pointer hover:bg-muted/50
-                            ${weekend ? 'bg-muted/30' : ''}
-                            ${day.isHoliday ? 'bg-yellow-50 dark:bg-yellow-950/20' : ''}
-                            ${day.isAbsent ? 'bg-red-50 dark:bg-red-950/20' : ''}
-                          `}
+                          className={cn(
+                            "transition-colors",
+                            weekend ? 'bg-muted/20 hover:bg-muted/40' : 'hover:bg-muted/30',
+                            (day.isHoliday || day.isAbsent) && "bg-muted/30"
+                          )}
                         >
                           <TableCell className="font-medium">
                             {new Date(day.summaryDate + 'T00:00:00').toLocaleDateString('pt-BR', {
@@ -384,34 +372,30 @@ export default function TimesheetMirrorPage() {
                               month: '2-digit',
                             })}
                           </TableCell>
-                          <TableCell className="capitalize text-muted-foreground">
+                          <TableCell className="capitalize text-muted-foreground text-xs">
                             {day.dayOfWeek.substring(0, 3)}
                           </TableCell>
                           <TableCell className="text-center font-mono">
                             {day.firstEntry || '-'}
                           </TableCell>
-                          <TableCell className="text-center font-mono">
-                            {day.breakStart || '-'}
-                          </TableCell>
-                          <TableCell className="text-center font-mono">
-                            {day.breakEnd || '-'}
+                          <TableCell className="text-center">
+                            {day.breakStart && day.breakEnd ? (
+                              <span className="font-mono text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+                                {day.breakStart} - {day.breakEnd}
+                              </span>
+                            ) : '-'}
                           </TableCell>
                           <TableCell className="text-center font-mono">
                             {day.lastExit || '-'}
                           </TableCell>
-                          <TableCell className="text-center font-mono font-medium">
-                            {day.workedFormatted}
-                          </TableCell>
                           <TableCell className="text-center">
-                            <div className="flex items-center justify-center gap-1">
+                            <div className="flex items-center justify-center gap-1 font-mono font-medium">
                               {getBalanceIcon(balance)}
                               <span
-                                className={`font-mono ${balance > 0
-                                  ? 'text-green-600'
-                                  : balance < 0
-                                    ? 'text-red-600'
-                                    : ''
-                                  }`}
+                                className={cn(
+                                  balance > 0 ? "text-emerald-600" :
+                                    balance < 0 ? "text-rose-600" : "text-muted-foreground"
+                                )}
                               >
                                 {day.balanceFormatted}
                               </span>
@@ -419,8 +403,10 @@ export default function TimesheetMirrorPage() {
                           </TableCell>
                           <TableCell className="text-center">
                             <Tooltip>
-                              <TooltipTrigger>
-                                {getDayStatusIcon(day)}
+                              <TooltipTrigger asChild>
+                                <div className="flex justify-center cursor-pointer hover:bg-muted p-1 rounded-full w-8 h-8 items-center mx-auto transition-colors">
+                                  {getDayStatusIcon(day)}
+                                </div>
                               </TooltipTrigger>
                               <TooltipContent>
                                 {day.isHoliday && day.holidayName}
@@ -448,32 +434,24 @@ export default function TimesheetMirrorPage() {
       </Card>
 
       {/* Legend */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-wrap items-center gap-6 text-sm">
+      <Card className="border-none shadow-sm bg-muted/20">
+        <CardContent className="p-4">
+          <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-500" />
-              <span>Dia OK</span>
+              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+              <span>Dia Completo</span>
             </div>
             <div className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-yellow-500" />
-              <span>Pendente</span>
+              <AlertTriangle className="h-4 w-4 text-amber-500" />
+              <span>Pendente/Ajuste</span>
             </div>
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-orange-500" />
               <span>Incompleto</span>
             </div>
             <div className="flex items-center gap-2">
-              <XCircle className="h-4 w-4 text-red-500" />
+              <XCircle className="h-4 w-4 text-rose-500" />
               <span>Falta</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Sun className="h-4 w-4 text-yellow-500" />
-              <span>Feriado</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-muted/30 rounded" />
-              <span>Final de semana</span>
             </div>
           </div>
         </CardContent>

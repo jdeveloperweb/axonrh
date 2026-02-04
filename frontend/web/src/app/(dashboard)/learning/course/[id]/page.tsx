@@ -48,7 +48,10 @@ export default function CourseDetails() {
                 setCourse(courseRes as any);
 
                 const enrollmentsRes = await enrollmentsApi.getByEmployee(user.id);
-                const myEnrollment = ((enrollmentsRes as any) || []).find((e: any) => (e.course?.id || e.courseId) === id);
+                const myEnrollment = ((enrollmentsRes as any) || []).find((e: any) => {
+                    const cId = e.course?.id || e.courseId || e.idCourse;
+                    return cId === id;
+                });
                 setEnrollment(myEnrollment || null);
             } catch (error) {
                 console.error('Erro ao buscar curso:', error);

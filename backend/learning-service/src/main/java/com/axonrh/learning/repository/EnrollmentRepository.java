@@ -22,11 +22,13 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, UUID> {
     @org.springframework.data.jpa.repository.Query("DELETE FROM Enrollment e WHERE e.course.id = :courseId")
     void deleteByCourseId(@Param("courseId") UUID courseId);
 
-    Optional<Enrollment> findByTenantIdAndId(UUID tenantId, UUID id);
+    @Query("SELECT e FROM Enrollment e JOIN FETCH e.course WHERE e.tenantId = :tenantId AND e.id = :id")
+    Optional<Enrollment> findByTenantIdAndId(@Param("tenantId") UUID tenantId, @Param("id") UUID id);
     
     Page<Enrollment> findByTenantId(UUID tenantId, Pageable pageable);
 
-    List<Enrollment> findByTenantIdAndEmployeeId(UUID tenantId, UUID employeeId);
+    @Query("SELECT e FROM Enrollment e JOIN FETCH e.course WHERE e.tenantId = :tenantId AND e.employeeId = :employeeId")
+    List<Enrollment> findByTenantIdAndEmployeeId(@Param("tenantId") UUID tenantId, @Param("employeeId") UUID employeeId);
 
     Page<Enrollment> findByTenantIdAndCourseId(UUID tenantId, UUID courseId, Pageable pageable);
 
@@ -34,9 +36,10 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, UUID> {
 
     boolean existsByTenantIdAndCourseIdAndEmployeeId(UUID tenantId, UUID courseId, UUID employeeId);
 
-    Optional<Enrollment> findByTenantIdAndCourseIdAndEmployeeId(UUID tenantId, UUID courseId, UUID employeeId);
+    @Query("SELECT e FROM Enrollment e JOIN FETCH e.course WHERE e.tenantId = :tenantId AND e.course.id = :courseId AND e.employeeId = :employeeId")
+    Optional<Enrollment> findByTenantIdAndCourseIdAndEmployeeId(@Param("tenantId") UUID tenantId, @Param("courseId") UUID courseId, @Param("employeeId") UUID employeeId);
 
-    @Query("SELECT e FROM Enrollment e WHERE e.tenantId = :tenantId " +
+    @Query("SELECT e FROM Enrollment e JOIN FETCH e.course WHERE e.tenantId = :tenantId " +
            "AND e.employeeId = :employeeId " +
            "AND e.status IN ('ENROLLED', 'IN_PROGRESS')")
     List<Enrollment> findActiveByEmployee(@Param("tenantId") UUID tenantId,

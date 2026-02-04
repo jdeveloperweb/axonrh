@@ -128,14 +128,17 @@ public class DailySummaryService {
                                 tenantId, employeeId, startDate, endDate);
 
                 for (DailySummary s : summaries) {
-                    summaryMap.put(s.getSummaryDate(), s);
+                    if (s.getSummaryDate() != null) {
+                        summaryMap.put(s.getSummaryDate(), s);
+                    }
                 }
-                log.info("Encontrados {} registros de sumário para o período", summaries.size());
+                log.info("Encontrados {} registros de sumário no banco para o período", summaries.size());
             } catch (Exception e) {
-                log.error("Erro ao buscar sumários no banco para colaborador {}: {}", employeeId, e.getMessage());
+                log.error("Erro ao buscar sumários no banco para colaborador {} no tenant {}: {}", 
+                        employeeId, currentTenant, e.getMessage());
             }
         } else {
-            log.warn("Iniciando geração de espelho sem Tenant ID no contexto");
+            log.warn("Solicitação de espelho de ponto sem Tenant ID no contexto (employeeId={})", employeeId);
         }
 
         try {
@@ -150,7 +153,7 @@ public class DailySummaryService {
                     })
                     .toList();
         } catch (Exception e) {
-            log.error("Falha crítica ao gerar stream de datas para o espelho: {}", e.getMessage(), e);
+            log.error("Falha crítica ao gerar stream de datas para o espelho do colaborador {}: {}", employeeId, e.getMessage(), e);
             return java.util.Collections.emptyList();
         }
     }
@@ -182,7 +185,10 @@ public class DailySummaryService {
     @Transactional(readOnly = true)
     @Cacheable(value = "timeRecords", key = "#employeeId + '-' + #date")
     public Optional<DailySummaryResponse> getDailySummary(UUID employeeId, LocalDate date) {
-        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        String tenantStr = TenantContext.getCurrentTenant();
+        if (tenantStr == null) return Optional.empty();
+        
+        UUID tenantId = UUID.fromString(tenantStr);
 
         return dailySummaryRepository
                 .findByTenantIdAndEmployeeIdAndSummaryDate(tenantId, employeeId, date)
@@ -194,11 +200,17 @@ public class DailySummaryService {
      */
     @Transactional(readOnly = true)
     public PeriodTotals getPeriodTotals(UUID employeeId, LocalDate startDate, LocalDate endDate) {
-        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        String tenantStr = TenantContext.getCurrentTenant();
+        if (tenantStr == null) {
+            log.warn("getPeriodTotals chamado sem Tenant ID no contexto");
+            return new PeriodTotals(0, 0, 0, 0, 0, 0);
+        }
+        
+        UUID tenantId = UUID.fromString(tenantStr);
 
         Object[] totals = dailySummaryRepository.getTotalsInPeriod(tenantId, employeeId, startDate, endDate);
 
-        if (totals == null || totals[0] == null) {
+        if (totals == null || totals.length == 0 || totals[0] == null) {
             return new PeriodTotals(0, 0, 0, 0, 0, 0);
         }
 
