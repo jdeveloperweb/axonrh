@@ -44,7 +44,7 @@ export const wellbeingApi = {
     },
 
     getStats: async (): Promise<WellbeingStats> => {
-        const response = await api.get('/ai/wellbeing/stats');
+        const response = await api.get('/employees/wellbeing/stats');
         return response.data;
     }
 };

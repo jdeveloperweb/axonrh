@@ -27,4 +27,9 @@ public class WellbeingController {
     public ResponseEntity<List<EmployeeWellbeing>> getHistory(@PathVariable UUID employeeId) {
         return ResponseEntity.ok(wellbeingService.getHistory(employeeId));
     }
+
+    @GetMapping("/stats")
+    public ResponseEntity<com.axonrh.employee.dto.WellbeingStats> getStats() {
+        return ResponseEntity.ok(wellbeingService.getStats());
+    }
 }
