@@ -173,6 +173,28 @@ public class ConversationService {
                 result.iterations(),
                 result.toolExecutions().size());
 
+        // Check if we need to switch type for Data Modification Confirmation
+        // If the last tool execution was modifying data and requires confirmation,
+        // we send the tool result as the message content with type ACTION_CONFIRMATION
+        Optional<FunctionCallingService.ToolExecutionRecord> modTool = result.toolExecutions().stream()
+                .filter(t -> t.toolName().equals("modificar_dados") || t.toolName().equals("modify_data"))
+                .reduce((first, second) -> second);
+
+        if (modTool.isPresent()) {
+            try {
+                com.fasterxml.jackson.databind.JsonNode toolResult = objectMapper.readTree(modTool.get().result());
+                if (toolResult.has("requer_confirmacao") && toolResult.get("requer_confirmacao").asBoolean()) {
+                    log.info("Detected data modification requiring confirmation. Switching response type.");
+                    metadata.put("action_type", "DATA_MODIFICATION");
+                    // Return the JSON content directly so frontend can parse it
+                    // The Frontend ActionConfirmation expects the JSON data
+                    return modTool.get().result();
+                }
+            } catch (Exception e) {
+                log.warn("Failed to parse tool result for modification check", e);
+            }
+        }
+
         return result.content();
     }
 
@@ -207,7 +229,7 @@ public class ConversationService {
         return switch (actionType) {
             case "DATABASE_QUERY" -> Message.MessageType.QUERY_RESULT;
             case "CALCULATION" -> Message.MessageType.CALCULATION;
-            case "ACTION_CONFIRMATION" -> Message.MessageType.ACTION_CONFIRMATION;
+            case "ACTION_CONFIRMATION", "DATA_MODIFICATION" -> Message.MessageType.ACTION_CONFIRMATION;
             default -> Message.MessageType.TEXT;
         };
     }
@@ -241,12 +263,32 @@ public class ConversationService {
                     FunctionCallingService.FunctionCallingResult result = functionCallingService.chat(
                             messages, tenantId, userId, conversation.getId());
 
+                    String finalContent = result.content();
+                    Message.MessageType finalType = Message.MessageType.TEXT;
+
+                    // Check logic for confirmation
+                    Optional<FunctionCallingService.ToolExecutionRecord> modTool = result.toolExecutions().stream()
+                            .filter(t -> t.toolName().equals("modificar_dados") || t.toolName().equals("modify_data"))
+                            .reduce((first, second) -> second);
+
+                    if (modTool.isPresent()) {
+                         try {
+                            com.fasterxml.jackson.databind.JsonNode toolResult = objectMapper.readTree(modTool.get().result());
+                            if (toolResult.has("requer_confirmacao") && toolResult.get("requer_confirmacao").asBoolean()) {
+                                finalType = Message.MessageType.ACTION_CONFIRMATION;
+                                finalContent = modTool.get().result();
+                            }
+                        } catch (Exception e) {
+                            log.warn("Failed to parse tool result in stream", e);
+                        }
+                    }
+
                     // Save assistant response
                     Message assistantMsg = Message.builder()
                             .id(UUID.randomUUID().toString())
                             .role(Message.MessageRole.ASSISTANT)
-                            .content(result.content())
-                            .type(Message.MessageType.TEXT)
+                            .content(finalContent)
+                            .type(finalType)
                             .metadata(Map.of(
                                     "function_calling", true,
                                     "iterations", result.iterations(),
@@ -259,14 +301,15 @@ public class ConversationService {
                             .build();
                     conversation.addMessage(assistantMsg);
                     conversationRepository.save(conversation);
-
-                    return result.content();
+                    
+                    // Return helper object to pass to flatMapMany
+                    return new AbstractMap.SimpleEntry<>(finalContent, finalType);
                 })
                 .subscribeOn(Schedulers.boundedElastic())
-                .flatMapMany(responseStr -> Flux.just(
+                .flatMapMany(entry -> Flux.just(
                         StreamChunk.builder()
-                                .content(responseStr)
-                                .type(Message.MessageType.TEXT.name())
+                                .content(entry.getKey())
+                                .type(entry.getValue().name())
                                 .done(false)
                                 .build(),
                         StreamChunk.builder()

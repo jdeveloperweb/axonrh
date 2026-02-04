@@ -213,11 +213,13 @@ public class DailySummaryService {
         
         UUID tenantId = UUID.fromString(tenantStr);
 
-        Object[] totals = dailySummaryRepository.getTotalsInPeriod(tenantId, employeeId, startDate, endDate);
+        List<Object[]> results = dailySummaryRepository.getTotalsInPeriod(tenantId, employeeId, startDate, endDate);
 
-        if (totals == null || totals.length == 0) {
+        if (results == null || results.isEmpty()) {
             return new PeriodTotals(0, 0, 0, 0, 0, 0);
         }
+
+        Object[] totals = results.get(0);
 
         return new PeriodTotals(
                 safeInt(totals[0]), // workedMinutes

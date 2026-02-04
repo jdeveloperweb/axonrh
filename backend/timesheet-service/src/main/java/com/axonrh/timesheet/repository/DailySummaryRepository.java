@@ -76,7 +76,7 @@ public interface DailySummaryRepository extends JpaRepository<DailySummary, UUID
         AND ds.employeeId = :employeeId
         AND ds.summaryDate BETWEEN :startDate AND :endDate
         """)
-    Object[] getTotalsInPeriod(
+    List<Object[]> getTotalsInPeriod(
             @Param("tenantId") UUID tenantId,
             @Param("employeeId") UUID employeeId,
             @Param("startDate") LocalDate startDate,
