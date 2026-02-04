@@ -215,18 +215,25 @@ public class DailySummaryService {
 
         Object[] totals = dailySummaryRepository.getTotalsInPeriod(tenantId, employeeId, startDate, endDate);
 
-        if (totals == null || totals.length == 0 || totals[0] == null) {
+        if (totals == null || totals.length == 0) {
             return new PeriodTotals(0, 0, 0, 0, 0, 0);
         }
 
         return new PeriodTotals(
-                ((Number) totals[0]).intValue(), // workedMinutes
-                ((Number) totals[1]).intValue(), // overtimeMinutes
-                ((Number) totals[2]).intValue(), // deficitMinutes
-                ((Number) totals[3]).intValue(), // nightShiftMinutes
-                ((Number) totals[4]).intValue(), // lateArrivalMinutes
-                ((Number) totals[5]).intValue()  // absences
+                safeInt(totals[0]), // workedMinutes
+                safeInt(totals[1]), // overtimeMinutes
+                safeInt(totals[2]), // deficitMinutes
+                safeInt(totals[3]), // nightShiftMinutes
+                safeInt(totals[4]), // lateArrivalMinutes
+                safeInt(totals[5])  // absences
         );
+    }
+
+    private int safeInt(Object value) {
+        if (value instanceof Number) {
+            return ((Number) value).intValue();
+        }
+        return 0;
     }
 
     /**
