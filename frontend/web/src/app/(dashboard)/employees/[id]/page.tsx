@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Edit, MoreHorizontal, User, MapPin, Briefcase, FileText, Users, History, Mail, Phone, Calendar, Building2, Camera, Download, DollarSign, Plus, UserX, Copy, ExternalLink, Clock, AlertTriangle, MessageCircle, Check } from 'lucide-react';
+import { ArrowLeft, Edit, MoreHorizontal, User, MapPin, Briefcase, FileText, Users, History, Mail, Phone, Calendar, Building2, Camera, Download, DollarSign, Plus, UserX, Copy, ExternalLink, Clock, AlertTriangle, MessageCircle, Check, HeartHandshake } from 'lucide-react';
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ImageCropDialog } from '@/components/ui/image-crop-dialog';
@@ -25,12 +25,13 @@ import {
 import { DependentsTab } from '@/components/employees/DependentsTab';
 import { ShieldCheck, ShieldAlert, Key, CreditCard } from 'lucide-react';
 import { EmployeeBadge } from '@/components/employees/EmployeeBadge';
+import { WellbeingTab } from '@/components/employees/WellbeingTab';
 import { useThemeStore } from '@/stores/theme-store';
 import { useAuthStore } from '@/stores/auth-store';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
-type TabKey = 'overview' | 'documents' | 'dependents' | 'timesheet' | 'history';
+type TabKey = 'overview' | 'documents' | 'dependents' | 'timesheet' | 'history' | 'wellbeing';
 
 const statusColors = {
   ACTIVE: { bg: 'bg-emerald-50 border-emerald-100', text: 'text-emerald-700', label: 'Ativo' },
@@ -283,6 +284,7 @@ export default function EmployeeDetailPage() {
     { key: 'documents' as TabKey, label: 'Documentos', icon: FileText },
     { key: 'dependents' as TabKey, label: 'Dependentes', icon: Users },
     { key: 'history' as TabKey, label: 'Histórico', icon: History },
+    { key: 'wellbeing' as TabKey, label: 'Bem-Estar (RH)', icon: HeartHandshake },
   ];
 
   if (loading) {
@@ -803,13 +805,12 @@ export default function EmployeeDetailPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        {doc.fileUrl && (
-                          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                            <Download className="w-4 h-4 text-[var(--color-text-secondary)]" />
-                          </button>
-                        )}
-                        <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                          <MoreHorizontal className="w-4 h-4 text-[var(--color-text-secondary)]" />
+                        <button
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Excluir"
+                          onClick={() => {/* Implement delete */ }}
+                        >
+                          <UserX className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
@@ -820,99 +821,8 @@ export default function EmployeeDetailPage() {
           </Card>
         )}
 
-        {activeTab === 'timesheet' && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="w-5 h-5 text-[var(--color-primary)]" />
-                Configuração de Jornada de Trabalho
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Only show configuration for Admins or RH */}
-              {user?.roles?.some((role: string) => ['ADMIN', 'RH'].includes(role)) ? (
-                <>
-                  <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl flex items-start gap-4">
-                    <AlertTriangle className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
-                    <div className="text-sm text-blue-800">
-                      <p className="font-bold">Atenção</p>
-                      <p>Vincular uma escala define os horários de entrada, saída e regras de banco de horas para este colaborador.</p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label>Escala de Trabalho Atual</Label>
-                      <div className="flex gap-2">
-                        <Select
-                          value={employee.workScheduleId || 'none'}
-                          onValueChange={async (value) => {
-                            try {
-                              await timesheetApi.assignSchedule(employeeId, value === 'none' ? '' : value, new Date().toISOString().split('T')[0]);
-                              toast({ title: 'Sucesso', description: 'Escala atribuída com sucesso!' });
-                              fetchEmployee();
-                            } catch (e) {
-                              toast({ title: 'Erro', description: 'Falha ao atribuir escala', variant: 'destructive' });
-                            }
-                          }}
-                        >
-                          <SelectTrigger className="flex-1">
-                            <SelectValue placeholder="Selecione uma escala...">
-                              {employee.workScheduleId && schedules.length > 0 ? (
-                                schedules.find(s => s.id === employee.workScheduleId)?.name || 'Escala não encontrada'
-                              ) : employee.workScheduleId ? (
-                                'Carregando escala...'
-                              ) : (
-                                'Nenhuma escala'
-                              )}
-                            </SelectValue>
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">Nenhuma escala</SelectItem>
-                            {loadingSchedules ? (
-                              <div className="p-2 text-sm text-center text-slate-500">Carregando escalas...</div>
-                            ) : (
-                              schedules.map(s => (
-                                <SelectItem key={s.id} value={s.id}>{s.name} ({s.weeklyHoursFormatted})</SelectItem>
-                              ))
-                            )}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Vigência da Escala (Início)</Label>
-                      <Input type="date" defaultValue={new Date().toISOString().split('T')[0]} />
-                    </div>
-                  </div>
-
-                  <div className="pt-6 border-t flex justify-end">
-                    <Button onClick={() => router.push('/settings/labor')} variant="outline" className="text-xs">
-                      Gerenciar Modelos de Escala
-                    </Button>
-                  </div>
-                </>
-              ) : (
-                <div className="p-12 text-center space-y-4">
-                  <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-400">
-                    <Clock className="w-8 h-8" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">Escala do Colaborador</h3>
-                    <p className="text-slate-500 max-w-sm mx-auto mt-1">
-                      Você pode visualizar os registros de ponto do colaborador, mas a alteração de escala é restrita ao RH ou Administradores.
-                    </p>
-                  </div>
-                  {/* TODO: Adicionar visualização dos horários da escala atual sem permitir edição */}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {activeTab === 'dependents' && (
-          <DependentsTab employeeId={employeeId} />
+        {activeTab === 'wellbeing' && (
+          <WellbeingTab employeeId={employeeId} />
         )}
 
         {activeTab === 'history' && (
@@ -923,24 +833,21 @@ export default function EmployeeDetailPage() {
             <CardContent>
               {history.length === 0 ? (
                 <div className="text-center py-12">
-                  <History className="w-12 h-12 mx-auto mb-4 text-[var(--color-text-secondary)] opacity-50" />
-                  <p className="text-[var(--color-text-secondary)]">Nenhuma alteração registrada</p>
+                  <History className="w-12 h-12 mx-auto mb-4 text-slate-300" />
+                  <p className="text-slate-500">Nenhum histórico disponível</p>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {history.map((entry, index) => (
-                    <div key={index} className="flex gap-4">
-                      <div className="flex flex-col items-center">
-                        <div className="w-3 h-3 bg-[var(--color-primary)] rounded-full" />
-                        {index < history.length - 1 && (
-                          <div className="w-0.5 flex-1 bg-gray-200 mt-2" />
-                        )}
+                  {history.map((entry, idx) => (
+                    <div key={idx} className="flex gap-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                      <div className="mt-1">
+                        <div className="w-2 h-2 rounded-full bg-blue-500" />
                       </div>
-                      <div className="flex-1 pb-4">
-                        <p className="font-medium text-[var(--color-text)]">{entry.action}</p>
-                        <p className="text-sm text-[var(--color-text-secondary)]">{entry.description}</p>
-                        <p className="text-xs text-[var(--color-text-secondary)] mt-1">
-                          {formatRelativeTime(entry.createdAt)} por {entry.createdBy}
+                      <div>
+                        <p className="font-bold">{entry.action}</p>
+                        <p className="text-sm text-slate-600 dark:text-slate-300">{entry.description}</p>
+                        <p className="text-xs text-slate-400 mt-1">
+                          {formatDate(entry.createdAt)} por {entry.createdBy}
                         </p>
                       </div>
                     </div>
@@ -951,15 +858,154 @@ export default function EmployeeDetailPage() {
           </Card>
         )}
 
+        {
+          activeTab === 'timesheet' && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-[var(--color-primary)]" />
+                  Configuração de Jornada de Trabalho
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Only show configuration for Admins or RH */}
+                {user?.roles?.some((role: string) => ['ADMIN', 'RH'].includes(role)) ? (
+                  <>
+                    <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl flex items-start gap-4">
+                      <AlertTriangle className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                      <div className="text-sm text-blue-800">
+                        <p className="font-bold">Atenção</p>
+                        <p>Vincular uma escala define os horários de entrada, saída e regras de banco de horas para este colaborador.</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label>Escala de Trabalho Atual</Label>
+                        <div className="flex gap-2">
+                          <Select
+                            value={employee.workScheduleId || 'none'}
+                            onValueChange={async (value) => {
+                              try {
+                                await timesheetApi.assignSchedule(employeeId, value === 'none' ? '' : value, new Date().toISOString().split('T')[0]);
+                                toast({ title: 'Sucesso', description: 'Escala atribuída com sucesso!' });
+                                fetchEmployee();
+                              } catch (e) {
+                                toast({ title: 'Erro', description: 'Falha ao atribuir escala', variant: 'destructive' });
+                              }
+                            }}
+                          >
+                            <SelectTrigger className="flex-1">
+                              <SelectValue placeholder="Selecione uma escala...">
+                                {employee.workScheduleId && schedules.length > 0 ? (
+                                  schedules.find(s => s.id === employee.workScheduleId)?.name || 'Escala não encontrada'
+                                ) : employee.workScheduleId ? (
+                                  'Carregando escala...'
+                                ) : (
+                                  'Nenhuma escala'
+                                )}
+                              </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">Nenhuma escala</SelectItem>
+                              {loadingSchedules ? (
+                                <div className="p-2 text-sm text-center text-slate-500">Carregando escalas...</div>
+                              ) : (
+                                schedules.map(s => (
+                                  <SelectItem key={s.id} value={s.id}>{s.name} ({s.weeklyHoursFormatted})</SelectItem>
+                                ))
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Vigência da Escala (Início)</Label>
+                        <Input type="date" defaultValue={new Date().toISOString().split('T')[0]} />
+                      </div>
+                    </div>
+
+                    <div className="pt-6 border-t flex justify-end">
+                      <Button onClick={() => router.push('/settings/labor')} variant="outline" className="text-xs">
+                        Gerenciar Modelos de Escala
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="p-12 text-center space-y-4">
+                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-400">
+                      <Clock className="w-8 h-8" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-900 dark:text-white">Escala do Colaborador</h3>
+                      <p className="text-slate-500 max-w-sm mx-auto mt-1">
+                        Você pode visualizar os registros de ponto do colaborador, mas a alteração de escala é restrita ao RH ou Administradores.
+                      </p>
+                    </div>
+                    {/* TODO: Adicionar visualização dos horários da escala atual sem permitir edição */}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )
+        }
+
+        {
+          activeTab === 'dependents' && (
+            <DependentsTab employeeId={employeeId} />
+          )
+        }
+
+        {
+          activeTab === 'history' && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Histórico de Alterações</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {history.length === 0 ? (
+                  <div className="text-center py-12">
+                    <History className="w-12 h-12 mx-auto mb-4 text-[var(--color-text-secondary)] opacity-50" />
+                    <p className="text-[var(--color-text-secondary)]">Nenhuma alteração registrada</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {history.map((entry, index) => (
+                      <div key={index} className="flex gap-4">
+                        <div className="flex flex-col items-center">
+                          <div className="w-3 h-3 bg-[var(--color-primary)] rounded-full" />
+                          {index < history.length - 1 && (
+                            <div className="w-0.5 flex-1 bg-gray-200 mt-2" />
+                          )}
+                        </div>
+                        <div className="flex-1 pb-4">
+                          <p className="font-medium text-[var(--color-text)]">{entry.action}</p>
+                          <p className="text-sm text-[var(--color-text-secondary)]">{entry.description}</p>
+                          <p className="text-xs text-[var(--color-text-secondary)] mt-1">
+                            {formatRelativeTime(entry.createdAt)} por {entry.createdBy}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )
+        }
+
         {/* Image Crop Dialog */}
-        {showCropDialog && selectedImage && (
-          <ImageCropDialog
-            image={selectedImage}
-            onComplete={handleCropComplete}
-            onCancel={handleCropCancel}
-            aspectRatio={1}
-          />
-        )}
+        {
+          showCropDialog && selectedImage && (
+            <ImageCropDialog
+              image={selectedImage}
+              onComplete={handleCropComplete}
+              onCancel={handleCropCancel}
+              aspectRatio={1}
+            />
+          )
+        }
 
         {/* Termination Modal */}
         <TerminationModal
@@ -984,7 +1030,7 @@ export default function EmployeeDetailPage() {
             />
           </div>
         </div>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 }

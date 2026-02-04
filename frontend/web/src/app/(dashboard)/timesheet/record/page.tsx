@@ -277,7 +277,9 @@ export default function TimeRecordPage() {
       setPhotoBase64(null);
 
       // Open Mood Dialog
-      setShowMoodDialog(true);
+      if (selectedType === 'ENTRY') {
+        setShowMoodDialog(true);
+      }
 
       await loadTodayRecords();
     } catch (error: any) {

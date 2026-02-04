@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils"
 interface ProgressProps extends React.HTMLAttributes<HTMLDivElement> {
   value?: number
   max?: number
+  indicatorClassName?: string
 }
 
 const Progress = React.forwardRef<HTMLDivElement, ProgressProps>(
@@ -27,7 +28,7 @@ const Progress = React.forwardRef<HTMLDivElement, ProgressProps>(
         {...props}
       >
         <div
-          className="h-full w-full flex-1 bg-primary transition-all"
+          className={cn("h-full w-full flex-1 bg-primary transition-all", (props as any).indicatorClassName)}
           style={{ transform: `translateX(-${100 - percentage}%)` }}
         />
       </div>

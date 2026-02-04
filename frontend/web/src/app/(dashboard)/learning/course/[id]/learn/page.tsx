@@ -200,7 +200,7 @@ export default function LearnCourse() {
 
             <div className="flex flex-1 overflow-hidden relative">
                 {/* Main Content Area */}
-                <main className="flex-1 overflow-y-auto bg-[#050505] flex flex-col relative group">
+                <main className="flex-1 overflow-y-auto bg-background flex flex-col relative group">
                     {/* Ambient Background Effects */}
                     <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
                     <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none opacity-50" />
@@ -234,8 +234,8 @@ export default function LearnCourse() {
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="flex-1 p-6 md:p-12 overflow-y-auto bg-gradient-to-b from-slate-950 to-black">
-                                        <div className="max-w-4xl mx-auto bg-card/40 backdrop-blur-2xl p-8 md:p-16 rounded-[3rem] shadow-2xl border border-white/5 space-y-10 relative overflow-hidden">
+                                    <div className="flex-1 p-6 md:p-12 overflow-y-auto bg-background">
+                                        <div className="max-w-4xl mx-auto bg-card/40 backdrop-blur-2xl p-8 md:p-16 rounded-[3rem] shadow-2xl border border-border/10 space-y-10 relative overflow-hidden">
                                             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-20" />
 
                                             <div className="space-y-6 text-center">
@@ -245,7 +245,7 @@ export default function LearnCourse() {
                                                         currentLesson?.contentType === 'DOCUMENTO' ? "border-rose-500/50 text-rose-400 bg-rose-500/10" :
                                                             "border-primary/50 text-primary bg-primary/10"
                                                 )}>{currentLesson?.contentType}</Badge>
-                                                <h2 className="text-3xl md:text-5xl font-black tracking-tight leading-tight bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60">{currentLesson?.title}</h2>
+                                                <h2 className="text-3xl md:text-5xl font-black tracking-tight leading-tight text-foreground">{currentLesson?.title}</h2>
                                                 <div className="h-1.5 w-24 bg-gradient-to-r from-primary/50 to-primary mx-auto rounded-full" />
                                             </div>
 
@@ -264,16 +264,16 @@ export default function LearnCourse() {
                                                     </Button>
                                                 </div>
                                             ) : (
-                                                <div className="prose prose-lg prose-invert max-w-none text-muted-foreground/90 leading-relaxed">
+                                                <div className="prose prose-lg max-w-none text-muted-foreground leading-relaxed">
                                                     <div dangerouslySetInnerHTML={{ __html: currentLesson?.contentText || currentLesson?.description || 'Conteúdo em desenvolvimento...' }} />
                                                 </div>
                                             )}
 
                                             {(currentLesson?.isDownloadable || currentLesson?.contentType === 'DOCUMENTO') && currentLesson?.contentUrl && (
-                                                <div className="pt-10 border-t border-white/5">
-                                                    <div className="p-8 rounded-3xl bg-white/5 border border-white/10 flex flex-col md:flex-row items-center justify-between gap-6 hover:bg-white/10 transition-all group cursor-pointer" onClick={() => window.open(currentLesson.contentUrl, '_blank')}>
+                                                <div className="pt-10 border-t border-border/10">
+                                                    <div className="p-8 rounded-3xl bg-muted/30 border border-border/10 flex flex-col md:flex-row items-center justify-between gap-6 hover:bg-muted/50 transition-all group cursor-pointer" onClick={() => window.open(currentLesson.contentUrl, '_blank')}>
                                                         <div className="flex gap-5 items-center">
-                                                            <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 shadow-inner flex items-center justify-center border border-white/10 group-hover:scale-110 transition-transform">
+                                                            <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 shadow-inner flex items-center justify-center border border-border/10 group-hover:scale-110 transition-transform">
                                                                 <FileText className="h-8 w-8 text-rose-400" />
                                                             </div>
                                                             <div>
@@ -281,7 +281,7 @@ export default function LearnCourse() {
                                                                 <p className="text-sm text-muted-foreground font-medium">Clique para visualizar ou baixar o conteúdo.</p>
                                                             </div>
                                                         </div>
-                                                        <Button variant="outline" size="lg" className="rounded-xl font-bold gap-3 border-white/10 hover:bg-rose-500 hover:text-white hover:border-rose-500 transition-all">
+                                                        <Button variant="outline" size="lg" className="rounded-xl font-bold gap-3 hover:bg-rose-500 hover:text-white hover:border-rose-500 transition-all">
                                                             Acessar Material <ExternalLink className="h-4 w-4" />
                                                         </Button>
                                                     </div>
@@ -292,18 +292,18 @@ export default function LearnCourse() {
                                 )}
 
                                 {/* Lesson Navigation Footer - Adjusted for Visibility */}
-                                <div className="p-6 border-t border-white/10 bg-[#0a0a0a]/90 backdrop-blur-xl flex items-center justify-between z-20">
+                                <div className="p-6 border-t border-border/10 bg-background/90 backdrop-blur-xl flex items-center justify-between z-20">
                                     <div className="flex flex-col gap-1">
                                         <p className="text-[10px] font-bold text-primary/80 uppercase tracking-widest flex items-center gap-2">
                                             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                                             Executando Aula
                                         </p>
-                                        <p className="font-bold text-white text-lg line-clamp-1">{currentLesson?.title}</p>
+                                        <p className="font-bold text-foreground text-lg line-clamp-1">{currentLesson?.title}</p>
                                     </div>
 
                                     <div className="flex gap-3">
                                         <Button
-                                            variant={currentLesson && isLessonCompleted(currentLesson.id) ? "outline" : "default"}
+                                            variant={currentLesson && isLessonCompleted(currentLesson.id) ? "outline" : "primary"}
                                             size="lg"
                                             className={cn(
                                                 "font-bold text-xs uppercase rounded-xl min-w-[160px] transition-all duration-300",
@@ -320,12 +320,12 @@ export default function LearnCourse() {
                                                 </span>
                                             ) : completing ? 'Salvando...' : 'Marcar como Concluído'}
                                         </Button>
-                                        <div className="h-10 w-px bg-white/10 mx-2" />
+                                        <div className="h-10 w-px bg-border/20 mx-2" />
                                         <div className="flex gap-2">
                                             <Button
                                                 variant="outline"
                                                 size="icon"
-                                                className="bg-transparent border-white/10 text-white hover:bg-white/10 h-10 w-10 rounded-xl"
+                                                className="h-10 w-10 rounded-xl"
                                                 onClick={handlePrevLesson}
                                                 disabled={!course?.modules.flatMap(m => m.lessons).findIndex(l => l.id === currentLesson?.id)}
                                             >
@@ -334,7 +334,7 @@ export default function LearnCourse() {
                                             <Button
                                                 variant="outline"
                                                 size="icon"
-                                                className="bg-transparent border-white/10 text-white hover:bg-white/10 h-10 w-10 rounded-xl"
+                                                className="h-10 w-10 rounded-xl"
                                                 onClick={handleNextLesson}
                                             >
                                                 <ChevronRight className="h-5 w-5" />

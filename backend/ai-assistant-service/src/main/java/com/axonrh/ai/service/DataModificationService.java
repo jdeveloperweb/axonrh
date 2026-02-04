@@ -295,6 +295,23 @@ public class DataModificationService {
                 });
             }
 
+            // Fallback: Ensure search_value is available if referenced in query but missing in params
+            if (!validationParams.containsKey("search_value") && analysis.has("entity_identifier")) {
+                JsonNode identifier = analysis.get("entity_identifier");
+                if (identifier.has("search_value")) {
+                    String value = identifier.get("search_value").asText();
+                    String type = identifier.path("search_type").asText("CONTAINS");
+
+                    if ("CONTAINS".equalsIgnoreCase(type) && !value.contains("%")) {
+                        value = "%" + value + "%";
+                    } else if ("STARTS_WITH".equalsIgnoreCase(type) && !value.endsWith("%")) {
+                        value = value + "%";
+                    }
+
+                    validationParams.put("search_value", value);
+                }
+            }
+
             log.debug("Executing validation query: {} with params: {}", validationQuery, validationParams);
 
             List<Map<String, Object>> results = jdbcTemplate.queryForList(validationQuery, validationParams);
