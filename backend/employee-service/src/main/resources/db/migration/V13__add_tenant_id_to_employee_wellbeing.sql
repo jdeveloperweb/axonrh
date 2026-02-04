@@ -8,7 +8,11 @@ UPDATE employee_wellbeing ew
 SET tenant_id = (
     SELECT e.tenant_id FROM shared.employees e WHERE e.id = ew.employee_id LIMIT 1
 )
-WHERE ew.tenant_id IS NULL;
+WHERE ew.tenant_id IS NULL
+  AND EXISTS (SELECT 1 FROM shared.employees e WHERE e.id = ew.employee_id);
+
+-- Remove registros órfãos (sem employee correspondente) que não podem ter tenant_id
+DELETE FROM employee_wellbeing WHERE tenant_id IS NULL;
 
 -- Torna a coluna obrigatória
 ALTER TABLE employee_wellbeing ALTER COLUMN tenant_id SET NOT NULL;
