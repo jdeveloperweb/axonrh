@@ -422,3 +422,174 @@ export const TERMINATION_TYPES = [
   { value: 'PEDIDO_DEMISSAO', label: 'Pedido de Demissão' },
   { value: 'ACORDO', label: 'Demissão por Acordo' },
 ] as const;
+
+// ==================== Data Modification Types ====================
+
+export type OperationType = 'INSERT' | 'UPDATE' | 'DELETE' | 'BULK_UPDATE' | 'BULK_DELETE';
+export type OperationStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXECUTED' | 'FAILED' | 'EXPIRED' | 'ROLLED_BACK' | 'CANCELLED';
+export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+
+export interface DataChange {
+  fieldName: string;
+  fieldLabel: string;
+  oldValue: string | null;
+  newValue: string | null;
+  changeType: string;
+  isSensitive?: boolean;
+}
+
+export interface DataModificationResponse {
+  operationId: string;
+  operationType: OperationType;
+  status: OperationStatus;
+  riskLevel: RiskLevel;
+  targetTable: string;
+  targetEntity: string;
+  targetEntityName: string;
+  targetId: string;
+  description: string;
+  confirmationMessage?: string;
+  warningMessage?: string;
+  changes: DataChange[];
+  affectedRecordsCount: number;
+  expiresAt?: string;
+  createdAt?: string;
+  requiresConfirmation: boolean;
+}
+
+export interface OperationConfirmationResponse {
+  operationId: string;
+  operationType?: OperationType;
+  status: OperationStatus;
+  success: boolean;
+  message: string;
+  targetEntity?: string;
+  targetEntityName?: string;
+  targetId?: string;
+  affectedRecordsCount?: number;
+  executedAt?: string;
+  canRollback?: boolean;
+  rollbackDeadline?: string;
+}
+
+// ==================== Data Operations API ====================
+
+export const dataOperationsApi = {
+  /**
+   * Process a natural language command for data modification.
+   * Creates a pending operation that requires confirmation.
+   */
+  processCommand: (command: string, conversationId?: string, context?: Record<string, unknown>) =>
+    api.post<DataModificationResponse>('/ai/data-operations/process', {
+      command,
+      conversationId,
+      context,
+    }),
+
+  /**
+   * Confirm a pending operation.
+   */
+  confirmOperation: (operationId: string) =>
+    api.post<OperationConfirmationResponse>(`/ai/data-operations/quick-confirm/${operationId}`),
+
+  /**
+   * Reject a pending operation.
+   */
+  rejectOperation: (operationId: string, reason?: string) =>
+    api.post<OperationConfirmationResponse>(`/ai/data-operations/quick-reject/${operationId}`, null, {
+      params: reason ? { reason } : undefined,
+    }),
+
+  /**
+   * Rollback an executed operation.
+   */
+  rollbackOperation: (operationId: string) =>
+    api.post<OperationConfirmationResponse>(`/ai/data-operations/${operationId}/rollback`),
+
+  /**
+   * Get a specific operation by ID.
+   */
+  getOperation: (operationId: string) =>
+    api.get<DataModificationResponse>(`/ai/data-operations/${operationId}`),
+
+  /**
+   * List pending operations for the current user.
+   */
+  listPendingOperations: (page = 0, size = 20) =>
+    api.get<{ content: DataModificationResponse[]; totalElements: number }>(
+      `/ai/data-operations/pending?page=${page}&size=${size}`
+    ),
+
+  /**
+   * List operations for a specific conversation.
+   */
+  listConversationOperations: (conversationId: string) =>
+    api.get<DataModificationResponse[]>(`/ai/data-operations/conversation/${conversationId}`),
+
+  /**
+   * Get pending operations count.
+   */
+  countPendingOperations: () =>
+    api.get<{ count: number }>('/ai/data-operations/pending/count'),
+
+  /**
+   * Cancel all pending operations for a conversation.
+   */
+  cancelConversationOperations: (conversationId: string) =>
+    api.post<{ success: boolean; cancelled: number; message: string }>(
+      `/ai/data-operations/conversation/${conversationId}/cancel`
+    ),
+
+  /**
+   * Get operation statistics.
+   */
+  getStats: () =>
+    api.get<{ byStatus: Record<string, number>; total: number }>('/ai/data-operations/stats'),
+};
+
+// ==================== Risk Level Helpers ====================
+
+export function getRiskLevelLabel(level: RiskLevel): string {
+  const labels: Record<RiskLevel, string> = {
+    LOW: 'Baixo',
+    MEDIUM: 'Médio',
+    HIGH: 'Alto',
+    CRITICAL: 'Crítico',
+  };
+  return labels[level] || level;
+}
+
+export function getRiskLevelColor(level: RiskLevel): { bg: string; text: string; border: string } {
+  const colors: Record<RiskLevel, { bg: string; text: string; border: string }> = {
+    LOW: { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200' },
+    MEDIUM: { bg: 'bg-yellow-50', text: 'text-yellow-700', border: 'border-yellow-200' },
+    HIGH: { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' },
+    CRITICAL: { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200' },
+  };
+  return colors[level] || colors.LOW;
+}
+
+export function getOperationTypeLabel(type: OperationType): string {
+  const labels: Record<OperationType, string> = {
+    INSERT: 'Criar',
+    UPDATE: 'Atualizar',
+    DELETE: 'Excluir',
+    BULK_UPDATE: 'Atualização em Massa',
+    BULK_DELETE: 'Exclusão em Massa',
+  };
+  return labels[type] || type;
+}
+
+export function getOperationStatusLabel(status: OperationStatus): string {
+  const labels: Record<OperationStatus, string> = {
+    PENDING: 'Pendente',
+    APPROVED: 'Aprovado',
+    REJECTED: 'Rejeitado',
+    EXECUTED: 'Executado',
+    FAILED: 'Falhou',
+    EXPIRED: 'Expirado',
+    ROLLED_BACK: 'Revertido',
+    CANCELLED: 'Cancelado',
+  };
+  return labels[status] || status;
+}

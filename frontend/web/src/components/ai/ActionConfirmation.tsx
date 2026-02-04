@@ -1,9 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import { ChatIcons } from './ChatIcons';
 import { Check, AlertCircle, XCircle } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { DataModificationConfirmation, parseDataModificationContent, DataModificationData } from './DataModificationConfirmation';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -11,11 +13,13 @@ function cn(...inputs: ClassValue[]) {
 
 interface ActionConfirmationProps {
     content: string;
-    onConfirm: () => void;
-    onCancel: () => void;
+    onConfirm: (operationId?: string) => void;
+    onCancel: (operationId?: string, reason?: string) => void;
 }
 
 export function ActionConfirmation({ content, onConfirm, onCancel }: ActionConfirmationProps) {
+    const [isProcessing, setIsProcessing] = useState(false);
+
     let data: any = {};
     try {
         data = JSON.parse(content);
@@ -24,12 +28,34 @@ export function ActionConfirmation({ content, onConfirm, onCancel }: ActionConfi
         return <div className="text-red-500">Erro ao carregar confirmação de ação.</div>;
     }
 
+    // Check if this is a data modification confirmation
+    const modificationData = parseDataModificationContent(content);
+    if (modificationData) {
+        return (
+            <DataModificationConfirmation
+                data={modificationData}
+                onConfirm={(opId) => {
+                    setIsProcessing(true);
+                    onConfirm(opId);
+                }}
+                onReject={(opId, reason) => {
+                    setIsProcessing(true);
+                    onCancel(opId, reason);
+                }}
+                isProcessing={isProcessing}
+            />
+        );
+    }
+
     const getActionTitle = (action: string) => {
         switch (action) {
             case 'propose_vacation_approval':
                 return 'Aprovação de Férias';
             case 'propose_termination':
                 return 'Início de Desligamento';
+            case 'modify_data':
+            case 'data_modification':
+                return 'Confirmação de Alteração';
             default:
                 return 'Confirmação de Ação';
         }
@@ -41,6 +67,9 @@ export function ActionConfirmation({ content, onConfirm, onCancel }: ActionConfi
                 return `Deseja aprovar as férias de **${data.employeeName || 'colaborador'}**?`;
             case 'propose_termination':
                 return `Deseja iniciar o processo de desligamento de **${data.employeeName || 'colaborador'}**?`;
+            case 'modify_data':
+            case 'data_modification':
+                return data.description || 'Deseja confirmar esta modificação?';
             default:
                 return 'Deseja executar esta ação?';
         }
@@ -82,15 +111,30 @@ export function ActionConfirmation({ content, onConfirm, onCancel }: ActionConfi
 
             <div className="flex gap-3">
                 <button
-                    onClick={onConfirm}
-                    className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-primary text-white rounded-xl text-sm font-black hover:bg-primary-700 transition-all active:scale-95 shadow-lg shadow-primary/20"
+                    onClick={() => onConfirm(data.operationId)}
+                    disabled={isProcessing}
+                    className={cn(
+                        "flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-primary text-white rounded-xl text-sm font-black hover:bg-primary-700 transition-all active:scale-95 shadow-lg shadow-primary/20",
+                        isProcessing && "opacity-50 cursor-not-allowed"
+                    )}
                 >
-                    <Check className="w-4 h-4" />
+                    {isProcessing ? (
+                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                    ) : (
+                        <Check className="w-4 h-4" />
+                    )}
                     Confirmar
                 </button>
                 <button
-                    onClick={onCancel}
-                    className="px-5 py-3 bg-gray-50 text-gray-600 border border-gray-100 rounded-xl text-sm font-bold hover:bg-gray-100 hover:text-gray-900 transition-all active:scale-95"
+                    onClick={() => onCancel(data.operationId)}
+                    disabled={isProcessing}
+                    className={cn(
+                        "px-5 py-3 bg-gray-50 text-gray-600 border border-gray-100 rounded-xl text-sm font-bold hover:bg-gray-100 hover:text-gray-900 transition-all active:scale-95",
+                        isProcessing && "opacity-50 cursor-not-allowed"
+                    )}
                 >
                     Ignorar
                 </button>
