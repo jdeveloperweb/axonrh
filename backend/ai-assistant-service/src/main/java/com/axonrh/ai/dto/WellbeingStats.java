@@ -16,4 +16,6 @@ public class WellbeingStats {
     private double averageScore;
     private Map<String, Long> sentimentDistribution;
     private long highRiskCount;
+    private long totalEapRequests;
+    private java.util.List<EapRequestDTO> eapRequests;
 }

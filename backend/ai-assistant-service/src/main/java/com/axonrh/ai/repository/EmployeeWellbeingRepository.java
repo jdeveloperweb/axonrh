@@ -10,4 +10,5 @@ import java.util.UUID;
 @Repository
 public interface EmployeeWellbeingRepository extends JpaRepository<EmployeeWellbeing, UUID> {
     List<EmployeeWellbeing> findByEmployeeId(UUID employeeId);
+    List<EmployeeWellbeing> findByWantsEapContactTrueOrderByCreatedAtDesc();
 }

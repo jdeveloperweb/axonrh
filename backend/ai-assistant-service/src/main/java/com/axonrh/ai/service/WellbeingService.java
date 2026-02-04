@@ -16,11 +16,13 @@ import com.axonrh.ai.dto.WellbeingStats;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import com.axonrh.ai.dto.EapRequestDTO;
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class WellbeingService {
 
+    private final EmployeeWellbeingRepository employeeWellbeingRepository;
     private final LlmService llmService;
     private final ObjectMapper objectMapper;
 
@@ -78,6 +80,53 @@ public class WellbeingService {
                 .sentiment(sentiment)
                 .riskLevel(riskLevel)
                 .keywords(keywords)
+                .build();
+    }
+
+    public WellbeingStats getStats() {
+        List<EmployeeWellbeing> all = employeeWellbeingRepository.findAll();
+        
+        if (all.isEmpty()) {
+            return WellbeingStats.builder()
+                    .totalCheckins(0)
+                    .averageScore(0.0)
+                    .sentimentDistribution(java.util.Collections.emptyMap())
+                    .highRiskCount(0)
+                    .totalEapRequests(0)
+                    .eapRequests(java.util.Collections.emptyList())
+                    .build();
+        }
+
+        double averageScore = all.stream()
+                .mapToInt(EmployeeWellbeing::getScore)
+                .average()
+                .orElse(0.0);
+
+        java.util.Map<String, Long> sentimentMap = all.stream()
+                .filter(w -> w.getSentiment() != null)
+                .collect(java.util.stream.Collectors.groupingBy(EmployeeWellbeing::getSentiment, java.util.stream.Collectors.counting()));
+
+        long highRiskCount = all.stream()
+                .filter(w -> "HIGH".equalsIgnoreCase(w.getRiskLevel()))
+                .count();
+
+        List<EapRequestDTO> eapRequests = employeeWellbeingRepository.findByWantsEapContactTrueOrderByCreatedAtDesc().stream()
+                .map(w -> EapRequestDTO.builder()
+                        .employeeId(w.getEmployeeId())
+                        .score(w.getScore())
+                        .notes(w.getNotes())
+                        .riskLevel(w.getRiskLevel())
+                        .createdAt(w.getCreatedAt())
+                        .build())
+                .collect(java.util.stream.Collectors.toList());
+
+        return WellbeingStats.builder()
+                .totalCheckins(all.size())
+                .averageScore(averageScore)
+                .sentimentDistribution(sentimentMap)
+                .highRiskCount(highRiskCount)
+                .totalEapRequests(eapRequests.size())
+                .eapRequests(eapRequests)
                 .build();
     }
 }
