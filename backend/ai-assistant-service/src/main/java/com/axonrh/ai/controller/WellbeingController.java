@@ -21,4 +21,9 @@ public class WellbeingController {
     public ResponseEntity<com.axonrh.ai.dto.WellbeingAnalysisResponse> analyze(@RequestBody com.axonrh.ai.dto.WellbeingAnalysisRequest request) {
         return ResponseEntity.ok(wellbeingService.analyze(request));
     }
+
+    @GetMapping("/stats")
+    public ResponseEntity<com.axonrh.ai.dto.WellbeingStats> getStats() {
+        return ResponseEntity.ok(wellbeingService.getStats());
+    }
 }

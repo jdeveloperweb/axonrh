@@ -23,6 +23,7 @@ import {
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { useAuthStore } from '@/stores/auth-store';
 import { dashboardApi, DashboardStats, LearningStats } from '@/lib/api/dashboard';
+import { wellbeingApi, WellbeingStats } from '@/lib/api/wellbeing';
 import { CollaboratorDashboard } from '@/components/dashboard/CollaboratorDashboard';
 
 // ==================== Types ====================
@@ -64,6 +65,7 @@ export default function DashboardPage() {
   const { user } = useAuthStore();
   const [statsData, setStatsData] = useState<DashboardStats | null>(null);
   const [learningStats, setLearningStats] = useState<LearningStats | null>(null);
+  const [wellbeingStats, setWellbeingStats] = useState<WellbeingStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('geral');
 
@@ -75,12 +77,14 @@ export default function DashboardPage() {
 
     async function loadStats() {
       try {
-        const [dashboardData, learningData] = await Promise.all([
+        const [dashboardData, learningData, wellbeingData] = await Promise.all([
           dashboardApi.getStats(),
-          dashboardApi.getLearningStats().catch(() => null)
+          dashboardApi.getLearningStats().catch(() => null),
+          wellbeingApi.getStats().catch(() => null)
         ]);
         setStatsData(dashboardData);
         setLearningStats(learningData);
+        setWellbeingStats(wellbeingData);
       } catch (error) {
         console.error('Error loading dashboard stats:', error);
       } finally {
@@ -539,6 +543,143 @@ export default function DashboardPage() {
     );
   };
 
+  const renderWellbeingTab = () => {
+    // Transform Sentiment Data
+    const sentimentData = wellbeingStats?.sentimentDistribution
+      ? Object.entries(wellbeingStats.sentimentDistribution).map(([name, value]) => ({
+        name: name === 'POSITIVE' ? 'Positivo' : name === 'NEGATIVE' ? 'Negativo' : 'Neutro',
+        value
+      }))
+      : [];
+
+    const sentimentColors: Record<string, string> = {
+      'Positivo': '#16A34A', // Green
+      'Neutro': '#9CA3AF',   // Gray
+      'Negativo': '#DC2626'  // Red
+    };
+
+    const stats: StatCard[] = [
+      {
+        title: 'Check-ins Totais',
+        value: wellbeingStats?.totalCheckins || 0,
+        subtext: 'Registros de humor',
+        icon: UserCheck,
+        color: '#2563EB',
+      },
+      {
+        title: 'Média de Humor',
+        value: wellbeingStats?.averageScore ? wellbeingStats.averageScore.toFixed(1) : 'N/A',
+        subtext: 'Escala 1-5',
+        icon: TrendingUp,
+        color: wellbeingStats && wellbeingStats.averageScore >= 4 ? '#16A34A' : wellbeingStats && wellbeingStats.averageScore <= 2 ? '#DC2626' : '#CA8A04',
+      },
+      {
+        title: 'Alto Risco',
+        value: wellbeingStats?.highRiskCount || 0,
+        subtext: 'Colaboradores em alerta',
+        icon: AlertCircle,
+        color: '#DC2626',
+      },
+      {
+        title: 'Solicitações EAP',
+        value: wellbeingStats?.totalEapRequests || 0,
+        subtext: 'Pedidos de ajuda',
+        icon: Users,
+        color: '#8B5CF6',
+      },
+    ];
+
+    return (
+      <div className="space-y-6 animate-in fade-in duration-500">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {stats.map((stat) => {
+            const Icon = stat.icon;
+            return (
+              <Card key={stat.title} className="hover:shadow-md transition-all border-none shadow-sm bg-white">
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-500 mb-1">{stat.title}</p>
+                      <h3 className="text-3xl font-bold text-gray-900">{stat.value}</h3>
+                      <p className="text-xs text-gray-400 mt-1">{stat.subtext}</p>
+                    </div>
+                    <div className="p-3 rounded-xl bg-opacity-10" style={{ backgroundColor: `${stat.color}15` }}>
+                      <Icon className="w-6 h-6" style={{ color: stat.color }} />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="border-none shadow-sm h-[400px]">
+            <CardHeader>
+              <CardTitle>Mapa de Sentimentos</CardTitle>
+              <p className="text-sm text-gray-500">Distribuição geral dos check-ins</p>
+            </CardHeader>
+            <CardContent className="h-[320px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={sentimentData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={80}
+                    outerRadius={110}
+                    paddingAngle={5}
+                    dataKey="value"
+                    label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                  >
+                    {sentimentData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={sentimentColors[entry.name] || COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend verticalAlign="bottom" height={36} />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          <Card className="border-none shadow-sm h-[400px] overflow-hidden">
+            <CardHeader>
+              <CardTitle>Solicitações de Ajuda (EAP)</CardTitle>
+              <p className="text-sm text-gray-500">Pedidos de contato recentes</p>
+            </CardHeader>
+            <CardContent className="h-[320px] overflow-y-auto pr-2">
+              {wellbeingStats?.eapRequests && wellbeingStats.eapRequests.length > 0 ? (
+                <div className="space-y-4">
+                  {wellbeingStats.eapRequests.map((req, idx) => (
+                    <div key={idx} className="flex items-start p-3 bg-gray-50 rounded-lg">
+                      <div className="p-2 bg-purple-100 rounded-full mr-3">
+                        <Users className="w-4 h-4 text-purple-600" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex justify-between">
+                          <p className="font-medium text-gray-900">Colaborador ID: {req.employeeId.substring(0, 8)}...</p>
+                          <span className="text-xs text-gray-500">{new Date(req.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <p className="text-sm text-gray-600 mt-1">Score: {req.score} | Risco: {translate(req.riskLevel)}</p>
+                        {req.notes && <p className="text-xs text-gray-500 italic mt-1">"{req.notes}"</p>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                  <CheckCircle className="w-12 h-12 mb-2 text-green-500" />
+                  <p>Nenhuma solicitação pendente.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  };
+
   if (loading && isManagement) {
     return <div className="flex h-96 items-center justify-center text-gray-400">Carregando painel de gestão...</div>;
   }
@@ -567,7 +708,8 @@ export default function DashboardPage() {
           { id: 'geral', label: 'Geral', icon: BarChart3 },
           { id: 'hiring', label: 'Contratação & Retenção', icon: Users },
           { id: 'diversity', label: 'Diversidade', icon: Brain },
-          { id: 'learning', label: 'Aprendizagem', icon: GraduationCap }
+          { id: 'learning', label: 'Aprendizagem', icon: GraduationCap },
+          { id: 'wellbeing', label: 'Bem-estar', icon: CheckCircle }
         ].map((tab) => {
           const Icon = tab.icon;
           return (
@@ -593,6 +735,7 @@ export default function DashboardPage() {
         {activeTab === 'hiring' && renderHiringTab()}
         {activeTab === 'diversity' && renderDiversityTab()}
         {activeTab === 'learning' && renderLearningTab()}
+        {activeTab === 'wellbeing' && renderWellbeingTab()}
       </div>
     </div>
   );

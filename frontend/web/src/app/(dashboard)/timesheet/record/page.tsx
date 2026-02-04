@@ -356,7 +356,7 @@ export default function TimeRecordPage() {
         <div className="lg:col-span-8 space-y-8">
 
           {/* Hero Clock Card */}
-          <div className="relative overflow-hidden rounded-3xl shadow-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 text-white border border-white/10 group">
+          <div className="relative overflow-hidden rounded-3xl shadow-xl bg-gradient-to-br from-blue-600 to-blue-800 text-white border border-white/10 group">
             <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity duration-700">
               <Clock className="w-64 h-64 rotate-12" />
             </div>
@@ -416,6 +416,12 @@ export default function TimeRecordPage() {
                 geofences={geofences}
                 height="100%"
               />
+            </div>
+            <div className="p-3 bg-blue-50/50 dark:bg-blue-900/10 border-t border-blue-100 dark:border-blue-900/30 flex items-start gap-2">
+              <Info className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+              <p className="text-[11px] text-blue-600 dark:text-blue-400 leading-tight">
+                Não monitoramos sua localização continuamente. O mapa acima serve apenas para que você confirme sua posição exata no momento do registro do ponto.
+              </p>
             </div>
           </div>
 
