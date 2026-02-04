@@ -1,5 +1,7 @@
 package com.axonrh.learning.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -12,6 +14,7 @@ import java.util.UUID;
  */
 @Entity
 @Table(name = "lessons", schema = "shared")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Lesson {
 
     @Id

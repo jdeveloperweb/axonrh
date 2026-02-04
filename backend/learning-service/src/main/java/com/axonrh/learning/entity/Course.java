@@ -1,5 +1,6 @@
 package com.axonrh.learning.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.axonrh.learning.entity.enums.CourseStatus;
 import com.axonrh.learning.entity.enums.CourseType;
 import com.axonrh.learning.entity.enums.DifficultyLevel;
@@ -19,6 +20,7 @@ import java.util.UUID;
  */
 @Entity
 @Table(name = "courses", schema = "shared")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Course {
 
     @Id
