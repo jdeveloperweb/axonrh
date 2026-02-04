@@ -10,4 +10,8 @@ import java.util.UUID;
 @Repository
 public interface EmployeeWellbeingRepository extends JpaRepository<EmployeeWellbeing, UUID> {
     List<EmployeeWellbeing> findByEmployeeIdOrderByCreatedAtDesc(UUID employeeId);
+
+    List<EmployeeWellbeing> findByTenantId(UUID tenantId);
+
+    List<EmployeeWellbeing> findByTenantIdAndEmployeeIdOrderByCreatedAtDesc(UUID tenantId, UUID employeeId);
 }
