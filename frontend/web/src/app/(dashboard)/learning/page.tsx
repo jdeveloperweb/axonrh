@@ -423,40 +423,77 @@ export default function LearningDashboard() {
               <div className="grid md:grid-cols-2 gap-8">
                 {myEnrollments.map((enrollment) => (
                   <Link key={enrollment.id} href={`/learning/course/${enrollment.courseId || (enrollment.course as any)?.id}`}>
-                    <div className="group relative bg-white border border-slate-100 rounded-2xl p-8 flex items-center gap-8 hover:shadow-2xl transition-all duration-500 cursor-pointer overflow-hidden shadow-sm hover:border-blue-100">
-                      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="group relative bg-white border border-slate-100 rounded-3xl p-6 flex items-center gap-6 hover:shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] transition-all duration-700 cursor-pointer overflow-hidden shadow-sm hover:border-blue-100/50">
 
-                      <div className="h-24 w-24 rounded-3xl bg-slate-950 relative flex items-center justify-center shrink-0 shadow-xl group-hover:scale-105 transition-transform duration-700">
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-indigo-700 opacity-80" />
-                        <Play className="h-10 w-10 text-white fill-white relative z-10" />
+                      {/* Interactive Background Glow */}
+                      <div className="absolute -right-20 -top-20 w-64 h-64 bg-blue-100/30 rounded-full blur-[100px] opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+
+                      {/* Course Identity Thumbnail */}
+                      <div className="h-24 w-24 rounded-2xl relative overflow-hidden shrink-0 shadow-xl group-hover:scale-110 transition-all duration-700 group-hover:rotate-2">
+                        {enrollment.courseThumbnail ? (
+                          <img
+                            src={getPhotoUrl(enrollment.courseThumbnail, undefined, 'logo') || enrollment.courseThumbnail}
+                            alt={enrollment.courseName}
+                            className="absolute inset-0 w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950" />
+                        )}
+
+                        {/* Overlay with glass effect and play icon */}
+                        <div className="absolute inset-0 bg-black/10 group-hover:bg-blue-600/40 transition-all duration-500 flex items-center justify-center backdrop-blur-[1px] group-hover:backdrop-blur-none">
+                          <div className="h-10 w-10 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center scale-90 group-hover:scale-100 transition-transform">
+                            <Play className="h-4 w-4 text-white fill-white" />
+                          </div>
+                        </div>
                       </div>
 
+                      {/* Content Section */}
                       <div className="flex-1 min-w-0 space-y-4 relative z-10">
                         <div className="space-y-1">
-                          <div className="flex justify-between items-start">
-                            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-blue-600">
-                              {enrollment.status === 'COMPLETED' ? 'Concluído' : 'Em andamento'}
-                            </p>
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                              <span className="flex h-2 w-2 rounded-full bg-blue-600 animate-pulse" />
+                              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-600/80">
+                                {enrollment.status === 'COMPLETED' ? 'Concluído' : 'Em andamento'}
+                              </p>
+                            </div>
+
                             {enrollment.dueDate && (
-                              <span className={cn(
-                                "text-[8px] font-black px-2 py-0.5 rounded-md uppercase tracking-widest flex items-center gap-1",
-                                new Date(enrollment.dueDate) < new Date() ? "bg-rose-50 text-rose-600" : "bg-orange-50 text-orange-600"
+                              <Badge className={cn(
+                                "text-[8px] font-black px-2 py-0.5 rounded-md uppercase tracking-widest flex items-center gap-1 border-none shadow-sm",
+                                new Date(enrollment.dueDate) < new Date() ? "bg-rose-500 text-white" : "bg-orange-100 text-orange-700"
                               )}>
                                 <Clock className="h-2 w-2" />
-                                {Math.max(0, Math.ceil((new Date(enrollment.dueDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24)))} dias restantes
-                              </span>
+                                {Math.max(0, Math.ceil((new Date(enrollment.dueDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24)))} dias
+                              </Badge>
                             )}
                           </div>
-                          <h3 className="font-black text-lg uppercase tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors truncate">
+
+                          <h3 className="font-black text-lg uppercase tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors truncate pr-4">
                             {enrollment.courseName || (enrollment.course as any)?.title}
                           </h3>
                         </div>
-                        <div className="space-y-2">
-                          <div className="flex justify-between text-[10px] font-black uppercase tracking-tight text-slate-400">
-                            <span>Progresso</span>
-                            <span className="text-slate-900">{enrollment.progressPercentage?.toFixed(0) || 0}%</span>
+
+                        {/* Progress Section */}
+                        <div className="space-y-2.5">
+                          <div className="flex justify-between items-end">
+                            <span className="text-[9px] font-black uppercase tracking-[0.15em] text-slate-400">Progresso de Aprendizado</span>
+                            <span className="text-xs font-black text-slate-900 italic">{enrollment.progressPercentage?.toFixed(0) || 0}%</span>
                           </div>
-                          <Progress value={enrollment.progressPercentage || 0} className="h-2 bg-slate-50 border border-slate-100" />
+                          <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden p-[2px]">
+                            <div
+                              className="h-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 rounded-full shadow-[0_0_10px_rgba(37,99,235,0.3)] transition-all duration-1000 group-hover:shadow-[0_0_15px_rgba(37,99,235,0.5)]"
+                              style={{ width: `${enrollment.progressPercentage || 0}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Floating Action Hint */}
+                      <div className="absolute right-6 top-1/2 -translate-y-1/2 opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500 hidden lg:block">
+                        <div className="h-10 w-10 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-xl shadow-blue-500/40">
+                          <ChevronRight className="h-5 w-5" />
                         </div>
                       </div>
                     </div>

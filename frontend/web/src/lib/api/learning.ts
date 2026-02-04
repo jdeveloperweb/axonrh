@@ -286,6 +286,9 @@ export const enrollmentsApi = {
   approve: (id: string, approverId: string) =>
     api.post<Enrollment>(`/learning/enrollments/${id}/approve?approverId=${approverId}`),
 
+  unenroll: (id: string) =>
+    api.delete(`/learning/enrollments/${id}`),
+
   getStatistics: (employeeId: string) =>
     api.get<EnrollmentStatistics>(`/learning/enrollments/employee/${employeeId}/statistics`),
 };

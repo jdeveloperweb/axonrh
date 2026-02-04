@@ -179,6 +179,11 @@ public class EnrollmentService {
         return enrollmentRepository.save(enrollment);
     }
 
+    public void delete(UUID tenantId, UUID enrollmentId) {
+        Enrollment enrollment = get(tenantId, enrollmentId);
+        enrollmentRepository.delete(enrollment);
+    }
+
     // ==================== Learning Paths ====================
 
     public PathEnrollment enrollInPath(UUID tenantId, UUID pathId, UUID employeeId, String employeeName) {

@@ -196,6 +196,19 @@ export default function LearningManagementPage() {
         }
     };
 
+    const handleRemoveEnrollment = async (enrollmentId: string) => {
+        if (!confirm('Deseja realmente remover esta matrícula? O colaborador perderá o acesso e todo o progresso deste treinamento.')) return;
+
+        try {
+            await enrollmentsApi.unenroll(enrollmentId);
+            toast.success('Inscrição removida com sucesso!');
+            await loadEnrollments();
+        } catch (error) {
+            console.error('Error removing enrollment:', error);
+            toast.error('Erro ao remover inscrição');
+        }
+    };
+
     const handleCreateNew = () => {
         setFormData({
             title: '',
@@ -959,7 +972,14 @@ export default function LearningManagementPage() {
                                                         </div>
                                                     </td>
                                                     <td className="px-8 py-6 text-right">
-                                                        <Button size="icon" variant="ghost" className="rounded-xl opacity-0 group-hover:opacity-100 transition-all"><MoreVertical className="h-4 w-4" /></Button>
+                                                        <Button
+                                                            size="icon"
+                                                            variant="ghost"
+                                                            className="rounded-xl opacity-0 group-hover:opacity-100 transition-all text-rose-500 hover:text-rose-600 hover:bg-rose-50"
+                                                            onClick={() => handleRemoveEnrollment(enrollment.id)}
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
                                                     </td>
                                                 </tr>
                                             ))

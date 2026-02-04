@@ -22,7 +22,8 @@ import {
     MessageSquare,
     Share2,
     ArrowLeft,
-    Video
+    Video,
+    LogOut
 } from 'lucide-react';
 import Image from "next/image";
 import { coursesApi, enrollmentsApi, Course, Enrollment } from '@/lib/api/learning';
@@ -90,6 +91,31 @@ export default function CourseDetails() {
             router.push(`/learning/course/${course?.id}/learn`);
         } catch (error) {
             console.error('Erro ao iniciar curso:', error);
+        }
+    };
+
+    const handleUnenroll = async () => {
+        if (!enrollment) return;
+
+        if (course?.isMandatory) {
+            toast.error('Este treinamento é obrigatório e não pode ser removido.');
+            return;
+        }
+
+        if (!confirm('Tem certeza que deseja sair deste treinamento? Todo o seu progresso será perdido.')) {
+            return;
+        }
+
+        try {
+            setEnrolling(true);
+            await enrollmentsApi.unenroll(enrollment.id);
+            setEnrollment(null);
+            toast.success('Você saiu do treinamento com sucesso.');
+        } catch (error: any) {
+            console.error('Erro ao desinscrever:', error);
+            toast.error('Erro ao sair do treinamento');
+        } finally {
+            setEnrolling(false);
         }
     };
 
@@ -290,6 +316,22 @@ export default function CourseDetails() {
                                         <Button variant="outline" className="w-full border-amber-500 text-amber-500 hover:bg-amber-50 font-bold py-6 rounded-xl">
                                             Ver Certificado
                                             <Award className="ml-2 h-5 w-5" />
+                                        </Button>
+                                    )}
+
+                                    {!course.isMandatory && enrollment.status !== 'COMPLETED' && (
+                                        <Button
+                                            variant="ghost"
+                                            className="w-full text-muted-foreground hover:text-red-500 hover:bg-red-50 font-bold py-4 rounded-xl text-xs uppercase tracking-widest mt-2 flex gap-2"
+                                            onClick={handleUnenroll}
+                                            disabled={enrolling}
+                                        >
+                                            {enrolling ? 'Saindo...' : (
+                                                <>
+                                                    <LogOut className="h-3 w-3" />
+                                                    Sair do Treinamento
+                                                </>
+                                            )}
                                         </Button>
                                     )}
                                 </div>

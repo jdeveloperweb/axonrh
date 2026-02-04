@@ -104,6 +104,12 @@ public class EnrollmentController {
         return ResponseEntity.ok(enrollmentService.approve(getTenantId(tenantIdHeader), id, approverId));
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, @PathVariable UUID id) {
+        enrollmentService.delete(getTenantId(tenantIdHeader), id);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/employee/{employeeId}/statistics")
     public ResponseEntity<EnrollmentService.EnrollmentStatistics> getEmployeeStatistics(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, @PathVariable UUID employeeId) {
         return ResponseEntity.ok(enrollmentService.getEmployeeStatistics(getTenantId(tenantIdHeader), employeeId));
