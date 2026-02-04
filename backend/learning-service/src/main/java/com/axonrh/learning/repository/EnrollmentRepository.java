@@ -25,12 +25,16 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, UUID> {
     @Query("SELECT e FROM Enrollment e JOIN FETCH e.course WHERE e.tenantId = :tenantId AND e.id = :id")
     Optional<Enrollment> findByTenantIdAndId(@Param("tenantId") UUID tenantId, @Param("id") UUID id);
     
-    Page<Enrollment> findByTenantId(UUID tenantId, Pageable pageable);
+    @Query(value = "SELECT e FROM Enrollment e LEFT JOIN FETCH e.course WHERE e.tenantId = :tenantId",
+           countQuery = "SELECT count(e) FROM Enrollment e WHERE e.tenantId = :tenantId")
+    Page<Enrollment> findByTenantId(@Param("tenantId") UUID tenantId, Pageable pageable);
 
     @Query("SELECT e FROM Enrollment e JOIN FETCH e.course WHERE e.tenantId = :tenantId AND e.employeeId = :employeeId")
     List<Enrollment> findByTenantIdAndEmployeeId(@Param("tenantId") UUID tenantId, @Param("employeeId") UUID employeeId);
 
-    Page<Enrollment> findByTenantIdAndCourseId(UUID tenantId, UUID courseId, Pageable pageable);
+    @Query(value = "SELECT e FROM Enrollment e LEFT JOIN FETCH e.course WHERE e.tenantId = :tenantId AND e.course.id = :courseId",
+           countQuery = "SELECT count(e) FROM Enrollment e WHERE e.tenantId = :tenantId AND e.course.id = :courseId")
+    Page<Enrollment> findByTenantIdAndCourseId(@Param("tenantId") UUID tenantId, @Param("courseId") UUID courseId, Pageable pageable);
 
     boolean existsByCourseId(UUID courseId);
 

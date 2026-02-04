@@ -28,7 +28,7 @@ public class Enrollment {
     @Column(name = "tenant_id", nullable = false)
     private UUID tenantId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "course_id", nullable = false)
     @org.hibernate.annotations.Fetch(org.hibernate.annotations.FetchMode.JOIN)
     private Course course;
