@@ -140,14 +140,9 @@ export default function CourseDetails() {
                             {course.description}
                         </p>
                         <div className="flex items-center gap-6 pt-2">
-                            <div className="flex items-center gap-2">
-                                <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
-                                <span className="font-bold text-lg">4.8</span>
-                                <span className="text-muted-foreground text-sm">(128 avaliações)</span>
-                            </div>
                             <div className="flex items-center gap-2 text-muted-foreground">
                                 <Users className="h-5 w-5" />
-                                <span className="text-sm font-medium">1,240 alunos inscritos</span>
+                                <span className="text-sm font-medium">Conteúdo exclusivo para colaboradores Axon</span>
                             </div>
                         </div>
                     </div>
@@ -166,7 +161,6 @@ export default function CourseDetails() {
                         <TabsList className="w-full justify-start rounded-none border-b bg-transparent h-auto p-0 mb-6 gap-8">
                             <TabsTrigger value="overview" className="rounded-none border-b-2 border-transparent px-0 py-3 text-base data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none font-bold">Resumo</TabsTrigger>
                             <TabsTrigger value="syllabus" className="rounded-none border-b-2 border-transparent px-0 py-3 text-base data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none font-bold">Conteúdo do Curso</TabsTrigger>
-                            <TabsTrigger value="reviews" className="rounded-none border-b-2 border-transparent px-0 py-3 text-base data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none font-bold">Avaliações</TabsTrigger>
                         </TabsList>
 
                         <TabsContent value="overview" className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -320,13 +314,10 @@ export default function CourseDetails() {
                                 </p>
                             </div>
 
-                            <div className="flex gap-4 pt-4">
-                                <Button variant="outline" size="sm" className="flex-1 font-bold text-xs uppercase tracking-widest h-10">
-                                    <Share2 className="h-3 w-3 mr-2" /> Compartilhar
-                                </Button>
-                                <Button variant="outline" size="sm" className="flex-1 font-bold text-xs uppercase tracking-widest h-10">
-                                    Favoritar
-                                </Button>
+                            <div className="pt-2">
+                                <p className="text-[10px] text-center text-muted-foreground uppercase font-black tracking-widest italic">
+                                    Finalize para obter seu certificado Axon
+                                </p>
                             </div>
                         </CardContent>
                     </Card>

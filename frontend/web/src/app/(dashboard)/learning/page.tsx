@@ -198,12 +198,12 @@ export default function LearningDashboard() {
             <div className="space-y-6">
               <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-slate-900 leading-[0.95] tracking-tight">
                 {greeting}, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600">
-                  {user?.name?.split(' ')[0] || 'Explorador'}
+                  {user?.name?.split(' ')[0] || 'Colaborador'}
                 </span>!<br />
-                <span className="text-slate-900">Evolua hoje.</span>
+                <span className="text-slate-900">Evolua sua carreira.</span>
               </h1>
               <p className="text-slate-500 text-base md:text-lg leading-relaxed font-medium max-w-xl">
-                Sua jornada de conhecimento está ativa. Temos {publishedCourses.length} trilhas disponíveis para impulsionar sua carreira.
+                Seu ecossistema de conhecimento Axon. {publishedCourses.length > 0 ? `Temos ${publishedCourses.length} trilhas exclusivas para você.` : 'Comece sua jornada de aprendizado agora.'}
               </p>
             </div>
 
@@ -397,19 +397,19 @@ export default function LearningDashboard() {
           </div>
 
           {/* Continue Learning Section */}
-          {myEnrollments.length > 0 && (
-            <div className="space-y-8 animate-in slide-in-from-left-4 duration-700 delay-100">
-              <div className="flex items-center justify-between px-2">
-                <h2 className="text-2xl font-black tracking-tighter text-slate-900 uppercase flex items-center gap-3">
-                  <Flame className="h-6 w-6 text-orange-500 fill-orange-500" />
-                  Continue Estudando
-                </h2>
-                <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Sua sequência: 5 dias</span>
-              </div>
+          <div className="space-y-8 animate-in slide-in-from-left-4 duration-700 delay-100">
+            <div className="flex items-center justify-between px-2">
+              <h2 className="text-2xl font-black tracking-tighter text-slate-900 uppercase flex items-center gap-3">
+                <Flame className="h-6 w-6 text-orange-500 fill-orange-500" />
+                Seus Treinamentos Active
+              </h2>
+              <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{myEnrollments.length} em andamento</span>
+            </div>
 
+            {myEnrollments.length > 0 ? (
               <div className="grid md:grid-cols-2 gap-8">
-                {myEnrollments.slice(0, 2).map((enrollment) => (
-                  <Link key={enrollment.id} href={`/learning/course/${enrollment.courseId}`}>
+                {myEnrollments.map((enrollment) => (
+                  <Link key={enrollment.id} href={`/learning/course/${enrollment.courseId || (enrollment.course as any)?.id}`}>
                     <div className="group relative bg-white border border-slate-100 rounded-2xl p-8 flex items-center gap-8 hover:shadow-2xl transition-all duration-500 cursor-pointer overflow-hidden shadow-sm hover:border-blue-100">
                       <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 opacity-0 group-hover:opacity-100 transition-opacity" />
 
@@ -420,23 +420,46 @@ export default function LearningDashboard() {
 
                       <div className="flex-1 min-w-0 space-y-4 relative z-10">
                         <div className="space-y-1">
-                          <p className="text-[9px] font-black uppercase tracking-[0.2em] text-blue-600">Em andamento</p>
-                          <h3 className="font-black text-lg uppercase tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors truncate">{enrollment.courseName}</h3>
+                          <div className="flex justify-between items-start">
+                            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-blue-600">
+                              {enrollment.status === 'COMPLETED' ? 'Concluído' : 'Em andamento'}
+                            </p>
+                            {enrollment.dueDate && (
+                              <span className={cn(
+                                "text-[8px] font-black px-2 py-0.5 rounded-md uppercase tracking-widest flex items-center gap-1",
+                                new Date(enrollment.dueDate) < new Date() ? "bg-rose-50 text-rose-600" : "bg-orange-50 text-orange-600"
+                              )}>
+                                <Clock className="h-2 w-2" />
+                                {Math.max(0, Math.ceil((new Date(enrollment.dueDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24)))} dias restantes
+                              </span>
+                            )}
+                          </div>
+                          <h3 className="font-black text-lg uppercase tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors truncate">
+                            {enrollment.courseName || (enrollment.course as any)?.title}
+                          </h3>
                         </div>
                         <div className="space-y-2">
                           <div className="flex justify-between text-[10px] font-black uppercase tracking-tight text-slate-400">
                             <span>Progresso</span>
-                            <span className="text-slate-900">{enrollment.progressPercentage.toFixed(0)}%</span>
+                            <span className="text-slate-900">{enrollment.progressPercentage?.toFixed(0) || 0}%</span>
                           </div>
-                          <Progress value={enrollment.progressPercentage} className="h-2 bg-slate-50 border border-slate-100" />
+                          <Progress value={enrollment.progressPercentage || 0} className="h-2 bg-slate-50 border border-slate-100" />
                         </div>
                       </div>
                     </div>
                   </Link>
                 ))}
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="bg-slate-50 border border-dashed border-slate-200 rounded-2xl p-12 text-center space-y-4">
+                <BookOpen className="h-12 w-12 text-slate-300 mx-auto" />
+                <div className="space-y-1">
+                  <p className="font-black text-slate-900 uppercase tracking-tight">Nenhuma inscrição ativa</p>
+                  <p className="text-sm text-slate-500 font-medium">Explore o catálogo abaixo para iniciar sua primeira trilha de conhecimento.</p>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Catalog Grid */}
           <div className="space-y-10">
@@ -453,7 +476,10 @@ export default function LearningDashboard() {
             <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-10">
               {filteredCourses.map((course, idx) => (
                 <div key={course.id} className="animate-in fade-in slide-in-from-bottom-6 duration-700" style={{ animationDelay: `${idx * 100}ms` }}>
-                  <CourseCardSimple course={course} />
+                  <CourseCard
+                    course={course}
+                    isEnrolled={myEnrollments.some(e => e.courseId === course.id || (e.course as any)?.id === course.id)}
+                  />
                 </div>
               ))}
             </div>
@@ -485,7 +511,7 @@ export default function LearningDashboard() {
 
 // --- REFINED COMPONENTS ---
 
-function CourseCardSimple({ course }: { course: any }) {
+function CourseCard({ course, isEnrolled }: { course: any, isEnrolled?: boolean }) {
   const getDifficultyStyles = (lvl?: string) => {
     switch (lvl) {
       case 'AVANCADO': return 'bg-purple-100 text-purple-700 border-purple-200';
@@ -529,6 +555,15 @@ function CourseCardSimple({ course }: { course: any }) {
               {course.categoryName || 'Geral'}
             </Badge>
           </div>
+
+          {/* Enrolled Badge Botton Left */}
+          {isEnrolled && (
+            <div className="absolute bottom-6 left-6">
+              <Badge className="bg-emerald-500 text-white border-none px-3 py-1 font-black text-[9px] uppercase tracking-[0.2em] shadow-xl">
+                Matriculado
+              </Badge>
+            </div>
+          )}
 
           {/* Mandatory Badge Top Right */}
           {course.isMandatory && (

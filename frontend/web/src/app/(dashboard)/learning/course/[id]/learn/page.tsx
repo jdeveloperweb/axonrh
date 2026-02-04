@@ -21,7 +21,8 @@ import {
     BrainCircuit,
     Type,
     Layers,
-    ExternalLink
+    ExternalLink,
+    ChevronDown
 } from 'lucide-react';
 import { coursesApi, enrollmentsApi, Course, Enrollment, Lesson, ContentType } from '@/lib/api/learning';
 import { useAuthStore } from '@/stores/auth-store';
@@ -52,7 +53,7 @@ export default function LearnCourse() {
                 ]);
 
                 const c = courseRes as any;
-                const e = ((enrollmentsRes as any) || []).find((enroll: any) => enroll.courseId === id);
+                const e = ((enrollmentsRes as any) || []).find((enroll: any) => (enroll.courseId === id || enroll.course?.id === id));
 
                 if (!e) {
                     toast.error('Você não está inscrito neste curso');
@@ -188,10 +189,7 @@ export default function LearnCourse() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <Button variant="outline" size="sm" className="hidden border-amber-200 bg-amber-50 text-amber-700 md:flex items-center gap-2 font-bold text-xs uppercase tracking-tighter">
-                        <Star className="h-3 w-3 fill-current" /> Avaliar Curso
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden">
+                    <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden text-muted-foreground">
                         <Menu className="h-5 w-5" />
                     </Button>
                 </div>

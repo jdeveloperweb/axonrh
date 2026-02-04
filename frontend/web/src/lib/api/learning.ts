@@ -99,6 +99,7 @@ export interface Enrollment {
   dueDate?: string;
   progressPercentage: number;
   finalScore?: number;
+  course?: Course;
   certificateId?: string;
   certificateIssuedAt?: string;
   lessonProgresses: LessonProgress[];
