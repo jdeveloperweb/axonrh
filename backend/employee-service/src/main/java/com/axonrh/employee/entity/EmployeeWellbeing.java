@@ -22,6 +22,9 @@ public class EmployeeWellbeing {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @Column(name = "tenant_id", nullable = false)
+    private UUID tenantId;
+
     @Column(nullable = false)
     private UUID employeeId;
 

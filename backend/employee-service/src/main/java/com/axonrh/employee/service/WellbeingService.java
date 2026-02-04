@@ -12,9 +12,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import com.axonrh.employee.config.TenantContext;
 import com.axonrh.employee.dto.EapRequestDTO;
 import com.axonrh.employee.dto.WellbeingStats;
-import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -26,7 +26,10 @@ public class WellbeingService {
     private final AiAssistantClient aiClient;
 
     public void processCheckIn(WellbeingCheckInRequest request) {
+        UUID tenantId = getTenantId();
+
         EmployeeWellbeing.EmployeeWellbeingBuilder builder = EmployeeWellbeing.builder()
+                .tenantId(tenantId)
                 .employeeId(request.getEmployeeId())
                 .score(request.getScore())
                 .notes(request.getNotes())
@@ -75,12 +78,14 @@ public class WellbeingService {
     }
 
     public List<EmployeeWellbeing> getHistory(UUID employeeId) {
-        return repository.findByEmployeeIdOrderByCreatedAtDesc(employeeId);
+        UUID tenantId = getTenantId();
+        return repository.findByTenantIdAndEmployeeIdOrderByCreatedAtDesc(tenantId, employeeId);
     }
 
     public WellbeingStats getStats() {
-        List<EmployeeWellbeing> all = repository.findAll();
-        
+        UUID tenantId = getTenantId();
+        List<EmployeeWellbeing> all = repository.findByTenantId(tenantId);
+
         if (all.isEmpty()) {
             return WellbeingStats.builder()
                     .totalCheckins(0)
@@ -125,5 +130,13 @@ public class WellbeingService {
                 .totalEapRequests(eapRequests.size())
                 .eapRequests(eapRequests)
                 .build();
+    }
+
+    private UUID getTenantId() {
+        String tenant = TenantContext.getCurrentTenant();
+        if (tenant == null) {
+            throw new IllegalStateException("Tenant nao definido no contexto");
+        }
+        return UUID.fromString(tenant);
     }
 }
