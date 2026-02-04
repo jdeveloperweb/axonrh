@@ -29,8 +29,122 @@ public class ToolDefinitionService {
         tools.add(buildQueryEmployeesTool());
         tools.add(buildQueryDatabaseTool());
         tools.add(buildSearchKnowledgeBaseTool());
+        tools.add(buildModifyDataTool());
+        tools.add(buildConfirmOperationTool());
+        tools.add(buildListPendingOperationsTool());
 
         return tools;
+    }
+
+    /**
+     * Tool for modifying data through natural language commands.
+     * This creates a pending operation that requires user confirmation.
+     */
+    private ChatRequest.Tool buildModifyDataTool() {
+        Map<String, Object> parameters = new LinkedHashMap<>();
+        parameters.put("type", "object");
+        parameters.put("properties", Map.of(
+            "comando", Map.of(
+                "type", "string",
+                "description", "O comando de modificação em linguagem natural. Exemplos:\n" +
+                        "- 'Alterar o nome do João Silva para João Santos'\n" +
+                        "- 'Mudar o salário da Maria Souza para R$ 8.000'\n" +
+                        "- 'Atualizar o departamento do Pedro para TI'\n" +
+                        "- 'Corrigir o email do Carlos para carlos@empresa.com'\n" +
+                        "- 'Mudar o endereço da Ana para Rua Nova, 123'"
+            ),
+            "tipo_entidade", Map.of(
+                "type", "string",
+                "enum", List.of("funcionario", "departamento", "cargo", "centro_custo"),
+                "description", "Tipo de entidade a ser modificada",
+                "default", "funcionario"
+            ),
+            "contexto", Map.of(
+                "type", "string",
+                "description", "Contexto adicional sobre a modificação (opcional)"
+            )
+        ));
+        parameters.put("required", List.of("comando"));
+
+        return ChatRequest.Tool.builder()
+                .type("function")
+                .function(ChatRequest.Tool.Function.builder()
+                        .name("modificar_dados")
+                        .description("Modifica dados no sistema através de comandos em linguagem natural. " +
+                                "IMPORTANTE: Esta função NÃO executa a modificação diretamente. " +
+                                "Ela cria uma operação pendente que será apresentada ao usuário para confirmação. " +
+                                "Use quando o usuário pedir para:\n" +
+                                "- Alterar/mudar/atualizar/corrigir dados de funcionários\n" +
+                                "- Modificar salário, cargo, departamento, endereço, nome, email, telefone\n" +
+                                "- Fazer qualquer alteração cadastral\n" +
+                                "A resposta incluirá um resumo das mudanças para o usuário confirmar.")
+                        .parameters(parameters)
+                        .build())
+                .build();
+    }
+
+    /**
+     * Tool for confirming or rejecting a pending operation.
+     */
+    private ChatRequest.Tool buildConfirmOperationTool() {
+        Map<String, Object> parameters = new LinkedHashMap<>();
+        parameters.put("type", "object");
+        parameters.put("properties", Map.of(
+            "operation_id", Map.of(
+                "type", "string",
+                "description", "O ID da operação pendente a ser confirmada ou rejeitada"
+            ),
+            "confirmar", Map.of(
+                "type", "boolean",
+                "description", "Se true, confirma e executa a operação. Se false, rejeita/cancela a operação."
+            ),
+            "motivo_rejeicao", Map.of(
+                "type", "string",
+                "description", "Motivo da rejeição (opcional, apenas se confirmar=false)"
+            )
+        ));
+        parameters.put("required", List.of("operation_id", "confirmar"));
+
+        return ChatRequest.Tool.builder()
+                .type("function")
+                .function(ChatRequest.Tool.Function.builder()
+                        .name("confirmar_operacao")
+                        .description("Confirma ou rejeita uma operação de modificação de dados pendente. " +
+                                "Use quando o usuário responder 'sim', 'confirmar', 'pode fazer', 'ok' para confirmar, " +
+                                "ou 'não', 'cancelar', 'não quero' para rejeitar a operação.")
+                        .parameters(parameters)
+                        .build())
+                .build();
+    }
+
+    /**
+     * Tool for listing pending operations.
+     */
+    private ChatRequest.Tool buildListPendingOperationsTool() {
+        Map<String, Object> parameters = new LinkedHashMap<>();
+        parameters.put("type", "object");
+        parameters.put("properties", Map.of(
+            "conversation_id", Map.of(
+                "type", "string",
+                "description", "ID da conversa para filtrar operações (opcional)"
+            ),
+            "incluir_historico", Map.of(
+                "type", "boolean",
+                "description", "Se true, inclui operações já processadas. Se false, apenas pendentes.",
+                "default", false
+            )
+        ));
+        parameters.put("required", List.of());
+
+        return ChatRequest.Tool.builder()
+                .type("function")
+                .function(ChatRequest.Tool.Function.builder()
+                        .name("listar_operacoes_pendentes")
+                        .description("Lista as operações de modificação de dados que estão pendentes de confirmação. " +
+                                "Use quando o usuário perguntar sobre operações pendentes ou quiser ver o status.")
+                        .parameters(parameters)
+                        .build())
+                .build();
     }
 
     /**

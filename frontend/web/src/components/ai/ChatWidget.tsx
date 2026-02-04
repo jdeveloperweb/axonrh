@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { chatApi, ChatMessage, ConversationContext } from '@/lib/api/ai';
+import { chatApi, ChatMessage, ConversationContext, dataOperationsApi } from '@/lib/api/ai';
 import { ChatIcons } from './ChatIcons';
 import { ActionConfirmation } from './ActionConfirmation';
 import { clsx, type ClassValue } from 'clsx';
@@ -299,13 +299,54 @@ export default function ChatWidget({
           <MessageBubble
             key={message.id}
             message={message}
-            onActionConfirm={() => submitMessage("Sim, pode confirmar.")}
-            onActionCancel={() => setMessages(prev => [...prev, {
-              id: Date.now().toString(),
-              role: 'assistant',
-              content: 'Entendido. A ação foi cancelada.',
-              timestamp: new Date().toISOString()
-            }])}
+            onActionConfirm={async (operationId) => {
+              if (operationId) {
+                try {
+                  const response = await dataOperationsApi.confirmOperation(operationId);
+                  setMessages(prev => [...prev, {
+                    id: Date.now().toString(),
+                    role: 'assistant',
+                    content: response.success
+                      ? `✅ ${response.message}`
+                      : `❌ ${response.message}`,
+                    timestamp: new Date().toISOString()
+                  }]);
+                } catch (error) {
+                  console.error('Failed to confirm operation:', error);
+                  setMessages(prev => [...prev, {
+                    id: Date.now().toString(),
+                    role: 'assistant',
+                    content: 'Erro ao confirmar a operação. Por favor, tente novamente.',
+                    type: 'ERROR',
+                    timestamp: new Date().toISOString()
+                  }]);
+                }
+              } else {
+                submitMessage("Sim, pode confirmar.");
+              }
+            }}
+            onActionCancel={async (operationId, reason) => {
+              if (operationId) {
+                try {
+                  const response = await dataOperationsApi.rejectOperation(operationId, reason);
+                  setMessages(prev => [...prev, {
+                    id: Date.now().toString(),
+                    role: 'assistant',
+                    content: `A operação foi cancelada. ${reason ? `Motivo: ${reason}` : ''}`,
+                    timestamp: new Date().toISOString()
+                  }]);
+                } catch (error) {
+                  console.error('Failed to reject operation:', error);
+                }
+              } else {
+                setMessages(prev => [...prev, {
+                  id: Date.now().toString(),
+                  role: 'assistant',
+                  content: 'Entendido. A ação foi cancelada.',
+                  timestamp: new Date().toISOString()
+                }]);
+              }
+            }}
           />
         ))}
 
@@ -380,8 +421,8 @@ function MessageBubble({
   onActionCancel
 }: {
   message: ChatMessage;
-  onActionConfirm: () => void;
-  onActionCancel: () => void;
+  onActionConfirm: (operationId?: string) => void;
+  onActionCancel: (operationId?: string, reason?: string) => void;
 }) {
   const isUser = message.role?.toLowerCase() === 'user';
   const isError = message.type === 'ERROR';
