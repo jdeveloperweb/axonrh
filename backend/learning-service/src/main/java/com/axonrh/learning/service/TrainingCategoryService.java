@@ -67,10 +67,11 @@ public class TrainingCategoryService {
         
         List<Course> courses = courseRepository.findByCategoryId(id);
         if (!courses.isEmpty()) {
-            String titles = courses.stream()
-                .map(c -> c.getTitle() + " (" + c.getStatus() + ")")
-                .collect(java.util.stream.Collectors.joining(", "));
-            throw new RuntimeException("Esta categoria não pode ser excluída pois existem cursos vinculados a ela: " + titles);
+            // Desvincular cursos em vez de bloquear a exclusão (ser prático)
+            for (Course course : courses) {
+                course.setCategoryId(null);
+                courseRepository.save(course);
+            }
         }
 
         categoryRepository.delete(category);

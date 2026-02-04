@@ -49,6 +49,15 @@
     --sidebar-collapsed-width: 64px;
     --header-height: 64px;
 
+    /* Popover/Menus */
+    --color-popover: #FFFFFF;
+    --color-popover-foreground: #212121;
+    --color-muted: #F5F5F5;
+    --color-muted-foreground: #757575;
+    --color-accent-muted: #F5F5F5;
+    --color-accent-foreground: #212121;
+    --color-ring: #1976D2;
+
     /* Transições */
     --transition-fast: 150ms;
     --transition-normal: 300ms;
@@ -90,6 +99,13 @@
 
     --color-border: #424242;
     --color-divider: #2D2D2D;
+    --color-popover: #1E1E1E;
+    --color-popover-foreground: #FFFFFF;
+    --color-muted: #2D2D2D;
+    --color-muted-foreground: #B0B0B0;
+    --color-accent-muted: #2D2D2D;
+    --color-accent-foreground: #FFFFFF;
+    --color-ring: #90CAF9;
   }
 
   /* Alto Contraste */

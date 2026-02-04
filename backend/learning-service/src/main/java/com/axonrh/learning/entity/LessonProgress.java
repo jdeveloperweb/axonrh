@@ -12,14 +12,18 @@ import java.util.UUID;
  */
 @Entity
 @Table(name = "lesson_progress", schema = "shared")
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class LessonProgress {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "enrollment_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonBackReference
+    @org.hibernate.annotations.Fetch(org.hibernate.annotations.FetchMode.JOIN)
     private Enrollment enrollment;
 
     @ManyToOne(fetch = FetchType.LAZY)

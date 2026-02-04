@@ -78,10 +78,8 @@ public class CourseService {
     public void delete(UUID tenantId, UUID courseId) {
         Course course = get(tenantId, courseId);
         
-        // Verifica se existem matrículas antes de excluir (ser prático mas seguro)
-        if (enrollmentRepository.existsByCourseId(courseId)) {
-            throw new RuntimeException("Este treinamento possui colaboradores matriculados e não pode ser excluído. Sugerimos arquivá-lo para que não apareça mais no catálogo.");
-        }
+        // Remove matrículas associadas antes de excluir (ser prático para permitir limpeza)
+        enrollmentRepository.deleteByCourseId(courseId);
 
         courseRepository.delete(course);
     }

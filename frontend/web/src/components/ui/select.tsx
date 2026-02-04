@@ -11,6 +11,8 @@ interface SelectContextValue {
   open: boolean
   setOpen: (open: boolean) => void
   id: string
+  selectedLabel?: string
+  setSelectedLabel: (label: string) => void
 }
 
 const SelectContext = React.createContext<SelectContextValue | null>(null)
@@ -33,6 +35,7 @@ interface SelectProps {
 const Select = ({ children, value: controlledValue, defaultValue, onValueChange }: SelectProps) => {
   const [uncontrolledValue, setUncontrolledValue] = React.useState(defaultValue)
   const [open, setOpen] = React.useState(false)
+  const [selectedLabel, setSelectedLabel] = React.useState<string | undefined>()
   const id = React.useId()
 
   const value = controlledValue ?? uncontrolledValue
@@ -46,7 +49,7 @@ const Select = ({ children, value: controlledValue, defaultValue, onValueChange 
   }
 
   return (
-    <SelectContext.Provider value={{ value, onValueChange: handleValueChange, open, setOpen, id }}>
+    <SelectContext.Provider value={{ value, onValueChange: handleValueChange, open, setOpen, id, selectedLabel, setSelectedLabel }}>
       <div className="relative">
         {children}
       </div>
@@ -64,8 +67,8 @@ interface SelectValueProps {
 }
 
 const SelectValue = ({ placeholder, children }: SelectValueProps) => {
-  const { value } = useSelect()
-  return <span>{children || value || placeholder}</span>
+  const { value, selectedLabel } = useSelect()
+  return <span>{children || (value ? selectedLabel || value : placeholder)}</span>
 }
 
 const SelectTrigger = React.forwardRef<
@@ -82,7 +85,7 @@ const SelectTrigger = React.forwardRef<
       aria-expanded={open}
       aria-controls={id}
       className={cn(
-        "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+        "flex h-10 w-full items-center justify-between rounded-md border border-input bg-white px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
         className
       )}
       onClick={() => setOpen(!open)}
@@ -102,12 +105,17 @@ const SelectContent = React.forwardRef<
   const { open, setOpen, id } = useSelect()
 
   React.useEffect(() => {
-    const handleClickOutside = () => setOpen(false)
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      if (!target.closest(`[id="${id}"]`) && !target.closest(`button[aria-controls="${id}"]`)) {
+        setOpen(false)
+      }
+    }
     if (open) {
       document.addEventListener("click", handleClickOutside)
       return () => document.removeEventListener("click", handleClickOutside)
     }
-  }, [open, setOpen])
+  }, [open, setOpen, id])
 
   if (!open) return null
 
@@ -116,7 +124,7 @@ const SelectContent = React.forwardRef<
       ref={ref}
       id={id}
       className={cn(
-        "absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md",
+        "absolute z-[100] mt-1 max-h-60 w-full overflow-auto rounded-xl border border-slate-200 bg-white p-1 text-slate-900 shadow-2xl animate-in fade-in zoom-in-95 duration-200",
         className
       )}
       onClick={(e) => e.stopPropagation()}
@@ -146,8 +154,14 @@ interface SelectItemProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const SelectItem = React.forwardRef<HTMLDivElement, SelectItemProps>(
   ({ className, children, value: itemValue, ...props }, ref) => {
-    const { value, onValueChange } = useSelect()
+    const { value, onValueChange, setSelectedLabel } = useSelect()
     const isSelected = value === itemValue
+
+    React.useEffect(() => {
+      if (isSelected && children) {
+        setSelectedLabel(children.toString())
+      }
+    }, [isSelected, children, setSelectedLabel])
 
     return (
       <div
@@ -155,7 +169,8 @@ const SelectItem = React.forwardRef<HTMLDivElement, SelectItemProps>(
         role="option"
         aria-selected={isSelected}
         className={cn(
-          "relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+          "relative flex w-full cursor-pointer select-none items-center rounded-lg py-2.5 pl-8 pr-2 text-sm outline-none hover:bg-slate-50 hover:text-blue-600 focus:bg-slate-50 focus:text-blue-600 data-[disabled]:pointer-events-none data-[disabled]:opacity-50 transition-colors",
+          isSelected && "bg-blue-50/50 text-blue-600 font-bold",
           className
         )}
         onClick={() => onValueChange?.(itemValue)}

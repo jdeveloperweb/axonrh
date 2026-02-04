@@ -32,12 +32,17 @@ const config: Config = {
         accent: {
           DEFAULT: "var(--color-accent)",
           foreground: "var(--color-accent-foreground)",
+          muted: "var(--color-accent-muted)",
         },
         background: "var(--color-background)",
         foreground: "var(--color-foreground)",
         muted: {
           DEFAULT: "var(--color-muted)",
           foreground: "var(--color-muted-foreground)",
+        },
+        popover: {
+          DEFAULT: "var(--color-popover)",
+          foreground: "var(--color-popover-foreground)",
         },
         card: {
           DEFAULT: "var(--color-card)",

@@ -209,7 +209,7 @@ export const coursesApi = {
     api.get<{ content: Course[]; totalElements: number }>(`/learning/courses?page=${page}&size=${size}`),
 
   listPublished: () =>
-    api.get<Course[]>('/learning/courses/published'),
+    api.get<Course[], Course[]>('/learning/courses/published'),
 
   listByCategory: (categoryId: string) =>
     api.get<Course[]>(`/learning/courses/category/${categoryId}`),
@@ -253,8 +253,11 @@ export const enrollmentsApi = {
   enroll: (courseId: string, data: { employeeId: string; employeeName: string; dueDate?: string }) =>
     api.post<Enrollment>('/learning/enrollments', { courseId, ...data }),
 
+  listAll: (page = 0, size = 20) =>
+    api.get<{ content: Enrollment[]; totalElements: number }, { content: Enrollment[]; totalElements: number }>(`/learning/enrollments?page=${page}&size=${size}`),
+
   get: (id: string) =>
-    api.get<Enrollment>(`/learning/enrollments/${id}`),
+    api.get<Enrollment, Enrollment>(`/learning/enrollments/${id}`),
 
   getByEmployee: (employeeId: string) =>
     api.get<Enrollment[]>(`/learning/enrollments/employee/${employeeId}`),

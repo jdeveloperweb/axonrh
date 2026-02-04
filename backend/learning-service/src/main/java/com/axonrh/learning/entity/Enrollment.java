@@ -1,6 +1,7 @@
 package com.axonrh.learning.entity;
 
 import com.axonrh.learning.entity.enums.EnrollmentStatus;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -17,6 +18,7 @@ import java.util.UUID;
  */
 @Entity
 @Table(name = "enrollments", schema = "shared")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Enrollment {
 
     @Id
@@ -80,7 +82,8 @@ public class Enrollment {
     @Column(columnDefinition = "TEXT")
     private String notes;
 
-    @OneToMany(mappedBy = "enrollment", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "enrollment", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @com.fasterxml.jackson.annotation.JsonManagedReference
     @org.hibernate.annotations.Fetch(org.hibernate.annotations.FetchMode.SUBSELECT)
     private List<LessonProgress> lessonProgresses = new ArrayList<>();
 

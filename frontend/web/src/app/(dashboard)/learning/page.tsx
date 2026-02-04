@@ -114,7 +114,7 @@ export default function LearningDashboard() {
         const [coursesRes, enrollmentsRes, statisticsRes, categoriesRes] = await Promise.all([
           coursesApi.listPublished().catch(() => []),
           enrollmentsApi.getActiveByEmployee(user.id).catch(() => []),
-          enrollmentsApi.getStatistics(user.id).catch(() => null),
+          enrollmentsApi.getStatistics(user.id).catch(() => ({ total: 0, completed: 0, inProgress: 0, averageProgress: 0 })),
           categoriesApi.list().catch(() => []),
         ]);
 
@@ -200,31 +200,41 @@ export default function LearningDashboard() {
                 {greeting}, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600">
                   {user?.name?.split(' ')[0] || 'Colaborador'}
                 </span>!<br />
-                <span className="text-slate-900">Evolua sua carreira.</span>
+                <span className="text-slate-900">
+                  {myEnrollments.length > 0
+                    ? 'Sua trilha de evolução continua.'
+                    : 'Transforme seu futuro hoje.'}
+                </span>
               </h1>
               <p className="text-slate-500 text-base md:text-lg leading-relaxed font-medium max-w-xl">
-                Seu ecossistema de conhecimento Axon. {publishedCourses.length > 0 ? `Temos ${publishedCourses.length} trilhas exclusivas para você.` : 'Comece sua jornada de aprendizado agora.'}
+                {myEnrollments.length > 0
+                  ? `Você tem ${myEnrollments.length} ${myEnrollments.length === 1 ? 'treinamento ativo' : 'treinamentos ativos'} em sua jornada.`
+                  : `Seu ecossistema de conhecimento Axon. Temos ${publishedCourses.length} trilhas exclusivas prontas para você.`}
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-6 pt-4">
-              <Button className="h-16 px-10 rounded-2xl bg-slate-900 text-white hover:bg-black font-black uppercase tracking-widest text-[11px] transition-all shadow-2xl shadow-slate-400/20 hover:-translate-y-1 active:scale-95 flex gap-3 group">
-                Continuar Estudos
-                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-              </Button>
+            <div className="flex flex-wrap items-center gap-10 pt-4">
+              <Link href={myEnrollments.length > 0 ? `/learning/course/${myEnrollments[0].courseId || (myEnrollments[0].course as any)?.id}` : '/learning/catalog'}>
+                <Button className="h-16 px-10 rounded-2xl bg-slate-900 text-white hover:bg-black font-black uppercase tracking-widest text-[11px] transition-all shadow-2xl shadow-slate-400/20 hover:-translate-y-1 active:scale-95 flex gap-3 group ring-offset-2 hover:ring-2 ring-slate-900/10">
+                  {myEnrollments.length > 0 ? 'Continuar Estudos' : 'Explorar Catálogo'}
+                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </Link>
 
-              <div className="flex items-center gap-4">
-                <div className="flex -space-x-3">
-                  {[1, 2, 3, 4].map(i => (
-                    <div key={i} className="h-10 w-10 rounded-full bg-slate-100 border-4 border-white shadow-sm overflow-hidden flex items-center justify-center">
-                      <div className="h-full w-full bg-gradient-to-br from-slate-200 to-slate-300" />
-                    </div>
-                  ))}
-                  <div className="h-10 w-10 rounded-full bg-blue-600 border-4 border-white flex items-center justify-center text-[9px] font-black text-white uppercase shadow-lg">+12k</div>
+              <div className="flex items-center gap-8 divide-x divide-slate-100">
+                <div className="flex flex-col pr-8">
+                  <div className="flex items-center gap-2">
+                    <Flame className="h-4 w-4 text-orange-500 fill-orange-500" />
+                    <span className="text-xl font-black text-slate-900">12 dias</span>
+                  </div>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Streak Atual</span>
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Ativos Agora</span>
-                  <span className="text-[9px] font-bold text-slate-400">Junte-se à comunidade</span>
+                <div className="flex flex-col pl-8">
+                  <div className="flex items-center gap-2">
+                    <Award className="h-4 w-4 text-purple-600" />
+                    <span className="text-xl font-black text-slate-900">2.450 pts</span>
+                  </div>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Score Total</span>
                 </div>
               </div>
             </div>
@@ -247,19 +257,19 @@ export default function LearningDashboard() {
                   <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
                   <p className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-400">Progresso Geral</p>
                 </div>
-                <h3 className="text-5xl font-black tracking-tighter">{(stats?.averageProgress || 84).toFixed(0)}%</h3>
+                <h3 className="text-5xl font-black tracking-tighter">{Math.round(stats?.averageProgress || 0)}%</h3>
               </div>
 
               <div className="space-y-4">
                 <div className="w-full h-3 bg-white/10 rounded-full overflow-hidden p-0.5">
                   <div
                     className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full shadow-[0_0_20px_rgba(59,130,246,0.6)] transition-all duration-1000"
-                    style={{ width: `${stats?.averageProgress || 84}%` }}
+                    style={{ width: `${stats?.averageProgress || 0}%` }}
                   />
                 </div>
                 <div className="flex justify-between items-center">
                   <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">
-                    {stats?.completed || 0} de {stats?.total || 3} concluídos
+                    {stats?.completed || 0} de {stats?.total || 0} concluídos
                   </p>
                   <Award className="h-4 w-4 text-blue-500 opacity-60" />
                 </div>
@@ -278,9 +288,12 @@ export default function LearningDashboard() {
             <div className="space-y-4 relative z-10">
               <div className="space-y-1">
                 <p className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.25em]">Ranking Semanal</p>
-                <h4 className="text-2xl font-black text-slate-900 tracking-tighter">Top 5% Global</h4>
+                <div className="flex items-baseline gap-2">
+                  <h4 className="text-3xl font-black text-slate-900 tracking-tighter">14º Lugar</h4>
+                  <span className="text-[11px] font-black text-emerald-500 uppercase tracking-tighter">↑ 2 posições</span>
+                </div>
               </div>
-              <p className="text-[11px] font-medium text-slate-400 max-w-[140px]">Você está superando a média de novos alunos!</p>
+              <p className="text-[11px] font-medium text-slate-400 max-w-[180px]">Você está superando <span className="text-slate-900 font-bold">95%</span> de todos os colaboradores!</p>
             </div>
 
             <div className="flex items-center justify-between pt-6 border-t border-slate-50 relative z-10">
@@ -401,7 +414,7 @@ export default function LearningDashboard() {
             <div className="flex items-center justify-between px-2">
               <h2 className="text-2xl font-black tracking-tighter text-slate-900 uppercase flex items-center gap-3">
                 <Flame className="h-6 w-6 text-orange-500 fill-orange-500" />
-                Seus Treinamentos Active
+                Meus Treinamentos em Andamento
               </h2>
               <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{myEnrollments.length} em andamento</span>
             </div>

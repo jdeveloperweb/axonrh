@@ -78,6 +78,10 @@ public class EnrollmentService {
                 .orElseThrow(() -> new EntityNotFoundException("Matricula nao encontrada"));
     }
 
+    public Page<Enrollment> listAll(UUID tenantId, Pageable pageable) {
+        return enrollmentRepository.findByTenantId(tenantId, pageable);
+    }
+
     public List<Enrollment> getByEmployee(UUID tenantId, UUID employeeId) {
         return enrollmentRepository.findByTenantIdAndEmployeeId(tenantId, employeeId);
     }

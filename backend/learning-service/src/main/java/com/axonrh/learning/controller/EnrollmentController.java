@@ -36,9 +36,14 @@ public class EnrollmentController {
         UUID employeeId = UUID.fromString((String) body.get("employeeId"));
         String employeeName = (String) body.get("employeeName");
         String dueDateStr = (String) body.get("dueDate");
-        LocalDate dueDate = dueDateStr != null ? LocalDate.parse(dueDateStr) : null;
+        LocalDate dueDate = (dueDateStr != null && !dueDateStr.trim().isEmpty()) ? LocalDate.parse(dueDateStr) : null;
         
         return ResponseEntity.ok(enrollmentService.enroll(getTenantId(tenantIdHeader), courseId, employeeId, employeeName, dueDate));
+    }
+
+    @GetMapping
+    public ResponseEntity<Page<Enrollment>> listAll(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, Pageable pageable) {
+        return ResponseEntity.ok(enrollmentService.listAll(getTenantId(tenantIdHeader), pageable));
     }
 
     @GetMapping("/{id}")

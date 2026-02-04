@@ -18,7 +18,13 @@ import java.util.UUID;
 @Repository
 public interface EnrollmentRepository extends JpaRepository<Enrollment, UUID> {
 
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.data.jpa.repository.Query("DELETE FROM Enrollment e WHERE e.course.id = :courseId")
+    void deleteByCourseId(@Param("courseId") UUID courseId);
+
     Optional<Enrollment> findByTenantIdAndId(UUID tenantId, UUID id);
+    
+    Page<Enrollment> findByTenantId(UUID tenantId, Pageable pageable);
 
     List<Enrollment> findByTenantIdAndEmployeeId(UUID tenantId, UUID employeeId);
 

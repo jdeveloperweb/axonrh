@@ -153,25 +153,20 @@ export default function LearningManagementPage() {
             console.error('Error loading employees:', error);
         }
 
+        // Load Enrollments
+        await loadEnrollments();
+
         setLoading(false);
     };
 
     const loadEnrollments = async () => {
         try {
             setEnrollmentLoading(true);
-            // This is a simplified fetch, ideally we'd have a listAllEnrollments or similar
-            // For now, we'll fetch per published course or a dedicated admin endpoint if it exists
-            // Since we're being practical, let's assume getByCourse for the top courses
-            const allEnrollments: Enrollment[] = [];
-            for (const course of courses.slice(0, 10)) {
-                try {
-                    const res = await (coursesApi as any).getEnrollments?.(course.id) || []; // Fallback if not in typings
-                    // Use a more direct approach if available, but for now let's use the API as is
-                    // enrollmentsApi.getByCourse is the correct one
-                    const res2 = await (coursesApi as any).getEnrollments?.(course.id) || { content: [] };
-                } catch (e) { }
-            }
-            // Mocking some data for demonstration if needed, but the logic should be here
+            const res = await enrollmentsApi.listAll(0, 50);
+            setEnrollments(res.content || []);
+        } catch (error) {
+            console.error('Error loading enrollments:', error);
+            // toast.error('Erro ao carregar matrículas');
         } finally {
             setEnrollmentLoading(false);
         }
@@ -192,7 +187,7 @@ export default function LearningManagementPage() {
             });
             toast.success('Treinamento atribuído com sucesso!');
             setAssignmentData({ courseId: '', employeeId: '', dueDate: '' });
-            // Refresh list if we had one
+            await loadEnrollments();
         } catch (error) {
             console.error('Error assigning course:', error);
             toast.error('Erro ao atribuir treinamento');
@@ -842,7 +837,7 @@ export default function LearningManagementPage() {
                                             value={assignmentData.employeeId}
                                             onValueChange={(val) => setAssignmentData({ ...assignmentData, employeeId: val })}
                                         >
-                                            <SelectTrigger className="h-12 w-64 rounded-xl border-slate-200 bg-white font-bold">
+                                            <SelectTrigger className="h-12 w-64 rounded-xl border-slate-200 bg-white font-bold shadow-sm hover:border-blue-300 transition-colors">
                                                 <SelectValue placeholder="Selecione um colaborador" />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -858,7 +853,7 @@ export default function LearningManagementPage() {
                                             value={assignmentData.courseId}
                                             onValueChange={(val) => setAssignmentData({ ...assignmentData, courseId: val })}
                                         >
-                                            <SelectTrigger className="h-12 w-64 rounded-xl border-slate-200 bg-white font-bold">
+                                            <SelectTrigger className="h-12 w-64 rounded-xl border-slate-200 bg-white font-bold shadow-sm hover:border-blue-300 transition-colors">
                                                 <SelectValue placeholder="Selecione o treinamento" />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -901,74 +896,74 @@ export default function LearningManagementPage() {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-50">
-                                        {/* Mocking for list display until listAll is available */}
-                                        <tr className="hover:bg-slate-50/50 transition-all group">
-                                            <td className="px-8 py-6">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center font-black text-blue-600 text-xs">JV</div>
-                                                    <div>
-                                                        <p className="font-black text-sm text-slate-900">Jaime Vicente</p>
-                                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Desenvolvedor Sênior</p>
+                                        {enrollments.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={6} className="px-8 py-20 text-center space-y-4">
+                                                    <div className="h-16 w-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto">
+                                                        <Plus className="h-8 w-8 text-slate-200" />
                                                     </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-8 py-6 font-bold text-sm text-slate-600">Liderança Alpha: Times Remotos</td>
-                                            <td className="px-8 py-6 text-sm">
-                                                <Badge className="bg-blue-50 text-blue-600 border-none font-black text-[9px] uppercase tracking-widest">IN_PROGRESS</Badge>
-                                            </td>
-                                            <td className="px-8 py-6">
-                                                <div className="w-32 space-y-2">
-                                                    <div className="flex justify-between text-[9px] font-black text-slate-400 uppercase">
-                                                        <span>Progresso</span>
-                                                        <span>45%</span>
-                                                    </div>
-                                                    <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                                                        <div className="h-full bg-blue-500 w-[45%]" />
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-8 py-6">
-                                                <div className="flex items-center gap-2 text-rose-500 font-black text-[10px] uppercase">
-                                                    <Calendar className="h-3 w-3" />
-                                                    15/02/2026
-                                                </div>
-                                            </td>
-                                            <td className="px-8 py-6 text-right">
-                                                <Button size="icon" variant="ghost" className="rounded-xl opacity-0 group-hover:opacity-100 transition-all"><MoreVertical className="h-4 w-4" /></Button>
-                                            </td>
-                                        </tr>
-                                        <tr className="hover:bg-slate-50/50 transition-all group">
-                                            <td className="px-8 py-6">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center font-black text-emerald-600 text-xs">MA</div>
-                                                    <div>
-                                                        <p className="font-black text-sm text-slate-900">Maria Oliveira</p>
-                                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Product Manager</p>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-8 py-6 font-bold text-sm text-slate-600">IA Generativa para Negócios</td>
-                                            <td className="px-8 py-6 text-sm">
-                                                <Badge className="bg-emerald-50 text-emerald-600 border-none font-black text-[9px] uppercase tracking-widest">COMPLETED</Badge>
-                                            </td>
-                                            <td className="px-8 py-6">
-                                                <div className="w-32 space-y-2">
-                                                    <div className="flex justify-between text-[9px] font-black text-slate-400 uppercase">
-                                                        <span>Concluído</span>
-                                                        <span>100%</span>
-                                                    </div>
-                                                    <div className="h-1.5 w-full bg-emerald-100 rounded-full overflow-hidden">
-                                                        <div className="h-full bg-emerald-500 w-full" />
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-8 py-6">
-                                                <span className="text-[10px] font-black text-slate-400 uppercase">SEM PRAZO</span>
-                                            </td>
-                                            <td className="px-8 py-6 text-right">
-                                                <Button size="icon" variant="ghost" className="rounded-xl opacity-0 group-hover:opacity-100 transition-all"><MoreVertical className="h-4 w-4" /></Button>
-                                            </td>
-                                        </tr>
+                                                    <p className="text-sm font-black text-slate-300 uppercase tracking-widest">Nenhuma matrícula encontrada.</p>
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            enrollments.map(enrollment => (
+                                                <tr key={enrollment.id} className="hover:bg-slate-50/50 transition-all group">
+                                                    <td className="px-8 py-6">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center font-black text-blue-600 text-xs">
+                                                                {enrollment.employeeName?.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || '??'}
+                                                            </div>
+                                                            <div>
+                                                                <p className="font-black text-sm text-slate-900">{enrollment.employeeName}</p>
+                                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">
+                                                                    {employees.find(e => e.id === enrollment.employeeId)?.position?.title || 'Colaborador'}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-8 py-6 font-bold text-sm text-slate-600">{enrollment.courseName}</td>
+                                                    <td className="px-8 py-6 text-sm">
+                                                        <Badge className={cn(
+                                                            "border-none font-black text-[9px] uppercase tracking-widest",
+                                                            enrollment.status === 'COMPLETED' ? "bg-emerald-50 text-emerald-600" :
+                                                                enrollment.status === 'IN_PROGRESS' ? "bg-blue-50 text-blue-600" :
+                                                                    "bg-slate-50 text-slate-600"
+                                                        )}>
+                                                            {enrollment.status}
+                                                        </Badge>
+                                                    </td>
+                                                    <td className="px-8 py-6">
+                                                        <div className="w-32 space-y-2">
+                                                            <div className="flex justify-between text-[9px] font-black text-slate-400 uppercase">
+                                                                <span>{enrollment.status === 'COMPLETED' ? 'Concluído' : 'Progresso'}</span>
+                                                                <span>{Math.round(enrollment.progressPercentage || 0)}%</span>
+                                                            </div>
+                                                            <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                                                                <div
+                                                                    className={cn(
+                                                                        "h-full transition-all",
+                                                                        enrollment.status === 'COMPLETED' ? "bg-emerald-500" : "bg-blue-500"
+                                                                    )}
+                                                                    style={{ width: `${enrollment.progressPercentage || 0}%` }}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-8 py-6">
+                                                        <div className={cn(
+                                                            "flex items-center gap-2 font-black text-[10px] uppercase",
+                                                            enrollment.dueDate ? "text-rose-500" : "text-slate-400"
+                                                        )}>
+                                                            <Calendar className="h-3 w-3" />
+                                                            {enrollment.dueDate ? new Date(enrollment.dueDate).toLocaleDateString('pt-BR') : 'SEM PRAZO'}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-8 py-6 text-right">
+                                                        <Button size="icon" variant="ghost" className="rounded-xl opacity-0 group-hover:opacity-100 transition-all"><MoreVertical className="h-4 w-4" /></Button>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
                                     </tbody>
                                 </table>
                             </div>
