@@ -42,6 +42,14 @@ public class FunctionCallingService {
      * Returns the final response after executing any necessary tool calls.
      */
     public FunctionCallingResult chat(List<ChatMessage> messages, UUID tenantId, UUID userId) {
+        return chat(messages, tenantId, userId, null);
+    }
+
+    /**
+     * Processes a chat request with function calling support and conversation context.
+     * Returns the final response after executing any necessary tool calls.
+     */
+    public FunctionCallingResult chat(List<ChatMessage> messages, UUID tenantId, UUID userId, String conversationId) {
         if (!functionCallingEnabled) {
             log.debug("Function calling disabled, using direct LLM chat");
             return directChat(messages);
@@ -50,7 +58,7 @@ public class FunctionCallingService {
         List<ChatMessage> conversationHistory = new ArrayList<>(messages);
         List<ChatRequest.Tool> tools = toolDefinitionService.getAllTools();
         ToolExecutorService.ExecutionContext context = new ToolExecutorService.ExecutionContext(
-                tenantId, userId, List.of());
+                tenantId, userId, List.of(), conversationId);
 
         int iterations = 0;
         ChatResponse response;

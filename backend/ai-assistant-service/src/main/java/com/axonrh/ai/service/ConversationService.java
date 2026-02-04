@@ -151,7 +151,7 @@ public class ConversationService {
         List<ChatMessage> messages = buildChatMessages(conversation);
 
         FunctionCallingService.FunctionCallingResult result = functionCallingService.chat(
-                messages, tenantId, userId);
+                messages, tenantId, userId, conversation.getId());
 
         // Record metadata about tool usage
         metadata.put("function_calling", true);
@@ -239,7 +239,7 @@ public class ConversationService {
                 return Mono.fromCallable(() -> {
                     List<ChatMessage> messages = buildChatMessages(conversation);
                     FunctionCallingService.FunctionCallingResult result = functionCallingService.chat(
-                            messages, tenantId, userId);
+                            messages, tenantId, userId, conversation.getId());
 
                     // Save assistant response
                     Message assistantMsg = Message.builder()

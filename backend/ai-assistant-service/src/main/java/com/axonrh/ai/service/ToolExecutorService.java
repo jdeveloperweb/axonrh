@@ -24,12 +24,18 @@ public class ToolExecutorService {
     private final CalculationService calculationService;
     private final QueryBuilderService queryBuilderService;
     private final KnowledgeService knowledgeService;
+    private final DataModificationService dataModificationService;
+    private final DataModificationExecutorService dataModificationExecutorService;
     private final ObjectMapper objectMapper;
 
     /**
      * Context needed for executing tools (tenant, user, permissions).
      */
-    public record ExecutionContext(UUID tenantId, UUID userId, List<String> permissions) {}
+    public record ExecutionContext(UUID tenantId, UUID userId, List<String> permissions, String conversationId) {
+        public ExecutionContext(UUID tenantId, UUID userId, List<String> permissions) {
+            this(tenantId, userId, permissions, null);
+        }
+    }
 
     /**
      * Result of a tool execution.
@@ -72,6 +78,9 @@ public class ToolExecutorService {
             case "consultar_funcionarios" -> executeQueryEmployees(arguments, context);
             case "consultar_banco_dados" -> executeQueryDatabase(arguments, context);
             case "buscar_base_conhecimento" -> executeSearchKnowledgeBase(arguments, context);
+            case "modificar_dados" -> executeModifyData(arguments, context);
+            case "confirmar_operacao" -> executeConfirmOperation(arguments, context);
+            case "listar_operacoes_pendentes" -> executeListPendingOperations(arguments, context);
             default -> throw new IllegalArgumentException("Unknown function: " + functionName);
         };
     }
@@ -317,5 +326,215 @@ public class ToolExecutorService {
         } catch (Exception e) {
             return "{\"erro\": true, \"mensagem\": \"Erro interno\"}";
         }
+    }
+
+    // === Data Modification Tools ===
+
+    /**
+     * Executes data modification command (creates pending operation).
+     */
+    private String executeModifyData(JsonNode args, ExecutionContext context) throws Exception {
+        String comando = getString(args, "comando");
+        String tipoEntidade = getString(args, "tipo_entidade", "funcionario");
+        String contexto = getString(args, "contexto", null);
+
+        log.info("Processing data modification: command='{}', entityType='{}'", comando, tipoEntidade);
+
+        Map<String, Object> additionalContext = new HashMap<>();
+        additionalContext.put("tipo_entidade", tipoEntidade);
+        if (contexto != null) {
+            additionalContext.put("contexto_adicional", contexto);
+        }
+
+        com.axonrh.ai.dto.DataModificationResponse response = dataModificationService.processModificationCommand(
+                comando,
+                context.tenantId(),
+                context.userId(),
+                context.conversationId(),
+                additionalContext);
+
+        return formatModificationResponse(response);
+    }
+
+    /**
+     * Executes operation confirmation (approve or reject).
+     */
+    private String executeConfirmOperation(JsonNode args, ExecutionContext context) throws Exception {
+        String operationIdStr = getString(args, "operation_id");
+        boolean confirmar = getBoolean(args, "confirmar", false);
+        String motivoRejeicao = getString(args, "motivo_rejeicao", null);
+
+        log.info("Processing operation confirmation: operationId='{}', confirm={}", operationIdStr, confirmar);
+
+        UUID operationId;
+        try {
+            operationId = UUID.fromString(operationIdStr);
+        } catch (IllegalArgumentException e) {
+            return objectMapper.writeValueAsString(Map.of(
+                "sucesso", false,
+                "erro", "ID de operação inválido: " + operationIdStr
+            ));
+        }
+
+        com.axonrh.ai.dto.OperationConfirmationRequest request = com.axonrh.ai.dto.OperationConfirmationRequest.builder()
+                .operationId(operationId)
+                .confirmed(confirmar)
+                .rejectionReason(motivoRejeicao)
+                .conversationId(context.conversationId())
+                .build();
+
+        com.axonrh.ai.dto.OperationConfirmationResponse response = dataModificationExecutorService.processConfirmation(
+                request, context.tenantId(), context.userId());
+
+        return formatConfirmationResponse(response);
+    }
+
+    /**
+     * Executes list pending operations.
+     */
+    private String executeListPendingOperations(JsonNode args, ExecutionContext context) throws Exception {
+        String conversationId = getString(args, "conversation_id", context.conversationId());
+        boolean incluirHistorico = getBoolean(args, "incluir_historico", false);
+
+        log.info("Listing pending operations for conversation: {}", conversationId);
+
+        List<com.axonrh.ai.entity.PendingOperation> operations;
+
+        if (conversationId != null) {
+            operations = dataModificationExecutorService.getPendingOperationsForConversation(
+                    conversationId, context.tenantId());
+        } else {
+            // Just return count if no conversation specified
+            long count = dataModificationExecutorService.countPendingOperations(
+                    context.tenantId(), context.userId());
+            return objectMapper.writeValueAsString(Map.of(
+                "total_pendentes", count,
+                "mensagem", count > 0
+                    ? String.format("Você tem %d operação(ões) pendente(s) de confirmação.", count)
+                    : "Você não tem operações pendentes."
+            ));
+        }
+
+        if (operations.isEmpty()) {
+            return objectMapper.writeValueAsString(Map.of(
+                "encontrado", false,
+                "total", 0,
+                "mensagem", "Não há operações pendentes nesta conversa."
+            ));
+        }
+
+        List<Map<String, Object>> formattedOps = new ArrayList<>();
+        for (com.axonrh.ai.entity.PendingOperation op : operations) {
+            Map<String, Object> opMap = new LinkedHashMap<>();
+            opMap.put("id", op.getId().toString());
+            opMap.put("tipo", op.getOperationType().toString());
+            opMap.put("status", op.getStatus().toString());
+            opMap.put("descricao", op.getDescription());
+            opMap.put("entidade", op.getTargetEntity());
+            opMap.put("nivel_risco", op.getRiskLevel().toString());
+            opMap.put("expira_em", op.getExpiresAt() != null ? op.getExpiresAt().toString() : null);
+
+            if (op.getChangesSummary() != null && !op.getChangesSummary().isEmpty()) {
+                List<Map<String, Object>> changes = new ArrayList<>();
+                for (var change : op.getChangesSummary()) {
+                    changes.add(Map.of(
+                        "campo", change.getFieldLabel(),
+                        "de", change.getOldValue() != null ? change.getOldValue().toString() : "(vazio)",
+                        "para", change.getNewValue() != null ? change.getNewValue().toString() : "(vazio)"
+                    ));
+                }
+                opMap.put("alteracoes", changes);
+            }
+
+            formattedOps.add(opMap);
+        }
+
+        return objectMapper.writeValueAsString(Map.of(
+            "encontrado", true,
+            "total", operations.size(),
+            "operacoes", formattedOps,
+            "instrucao", "Para confirmar uma operação, o usuário pode dizer 'confirmar' ou 'sim'. Para cancelar, 'cancelar' ou 'não'."
+        ));
+    }
+
+    /**
+     * Format modification response for LLM.
+     */
+    private String formatModificationResponse(com.axonrh.ai.dto.DataModificationResponse response) throws Exception {
+        Map<String, Object> formatted = new LinkedHashMap<>();
+
+        if (response.getOperationId() == null) {
+            // Error case
+            formatted.put("sucesso", false);
+            formatted.put("erro", response.getDescription());
+            formatted.put("requer_confirmacao", false);
+            return objectMapper.writeValueAsString(formatted);
+        }
+
+        formatted.put("sucesso", true);
+        formatted.put("operacao_id", response.getOperationId().toString());
+        formatted.put("tipo_operacao", response.getOperationType().toString());
+        formatted.put("status", response.getStatus().toString());
+        formatted.put("nivel_risco", response.getRiskLevel().toString());
+        formatted.put("entidade", response.getTargetEntity());
+        formatted.put("nome_entidade", response.getTargetEntityName());
+        formatted.put("descricao", response.getDescription());
+        formatted.put("requer_confirmacao", response.isRequiresConfirmation());
+
+        if (response.getChanges() != null && !response.getChanges().isEmpty()) {
+            List<Map<String, Object>> changes = new ArrayList<>();
+            for (var change : response.getChanges()) {
+                Map<String, Object> changeMap = new LinkedHashMap<>();
+                changeMap.put("campo", change.getFieldLabel());
+                changeMap.put("valor_atual", change.getOldValue() != null ? change.getOldValue() : "(vazio)");
+                changeMap.put("novo_valor", change.getNewValue() != null ? change.getNewValue() : "(vazio)");
+                if (change.isSensitive()) {
+                    changeMap.put("sensivel", true);
+                }
+                changes.add(changeMap);
+            }
+            formatted.put("alteracoes", changes);
+        }
+
+        if (response.getWarningMessage() != null) {
+            formatted.put("aviso", response.getWarningMessage());
+        }
+
+        formatted.put("mensagem_confirmacao", response.getConfirmationMessage());
+        formatted.put("expira_em", response.getExpiresAt() != null ? response.getExpiresAt().toString() : null);
+
+        // Instructions for the LLM
+        formatted.put("instrucao_resposta",
+            "IMPORTANTE: Apresente as alterações de forma clara e peça confirmação explícita do usuário. " +
+            "Mostre as alterações em formato de tabela ou lista. " +
+            "Informe que o usuário deve responder 'confirmar' ou 'cancelar'. " +
+            "Use o tipo de mensagem ACTION_CONFIRMATION para que o frontend exiba os botões de confirmação.");
+
+        return objectMapper.writeValueAsString(formatted);
+    }
+
+    /**
+     * Format confirmation response for LLM.
+     */
+    private String formatConfirmationResponse(com.axonrh.ai.dto.OperationConfirmationResponse response) throws Exception {
+        Map<String, Object> formatted = new LinkedHashMap<>();
+
+        formatted.put("sucesso", response.isSuccess());
+        formatted.put("operacao_id", response.getOperationId() != null ? response.getOperationId().toString() : null);
+        formatted.put("status", response.getStatus() != null ? response.getStatus().toString() : null);
+        formatted.put("mensagem", response.getMessage());
+
+        if (response.isSuccess() && response.getStatus() == com.axonrh.ai.entity.PendingOperation.OperationStatus.EXECUTED) {
+            formatted.put("entidade", response.getTargetEntity());
+            formatted.put("nome_entidade", response.getTargetEntityName());
+            formatted.put("registros_afetados", response.getAffectedRecordsCount());
+            formatted.put("executado_em", response.getExecutedAt() != null ? response.getExecutedAt().toString() : null);
+            formatted.put("pode_reverter", response.isCanRollback());
+            if (response.isCanRollback() && response.getRollbackDeadline() != null) {
+                formatted.put("prazo_reversao", response.getRollbackDeadline().toString());
+            }
+        }
+
+        return objectMapper.writeValueAsString(formatted);
     }
 }
