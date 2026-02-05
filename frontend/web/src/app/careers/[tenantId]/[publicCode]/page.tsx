@@ -48,7 +48,7 @@ export default function VacancyDetailPage() {
         phone: '',
         city: '',
         state: '',
-        linkedinUrl: '',
+        linkedinUrl: 'https://linkedin.com/in/',
         portfolioUrl: '',
     });
 
@@ -391,7 +391,7 @@ export default function VacancyDetailPage() {
                                             onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                                             className={`w-full pl-12 pr-4 py-3.5 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all text-gray-900 font-medium placeholder:text-gray-300 ${formErrors.fullName ? 'ring-2 ring-red-100' : ''
                                                 }`}
-                                            placeholder="Ex: Jaime Vicente"
+                                            placeholder="Seu nome completo"
                                         />
                                     </div>
                                     {formErrors.fullName && (
@@ -429,9 +429,23 @@ export default function VacancyDetailPage() {
                                             <input
                                                 type="tel"
                                                 value={formData.phone}
-                                                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                                onChange={(e) => {
+                                                    const value = e.target.value.replace(/\D/g, '');
+                                                    let formatted = '';
+                                                    if (value.length > 0) {
+                                                        formatted = '(' + value.substring(0, 2);
+                                                        if (value.length > 2) {
+                                                            formatted += ') ' + value.substring(2, 7);
+                                                        }
+                                                        if (value.length > 7) {
+                                                            formatted += '-' + value.substring(7, 11);
+                                                        }
+                                                    }
+                                                    setFormData({ ...formData, phone: formatted });
+                                                }}
                                                 className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all text-gray-900 font-medium placeholder:text-gray-300"
                                                 placeholder="(00) 00000-0000"
+                                                maxLength={15}
                                             />
                                         </div>
                                     </div>
