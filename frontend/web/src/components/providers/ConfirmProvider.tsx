@@ -89,7 +89,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
         <ConfirmContext.Provider value={{ confirm }}>
             {children}
             <AlertDialog open={open} onOpenChange={handleOpenChange}>
-                <AlertDialogContent className="max-w-[400px] p-0 overflow-hidden border-none shadow-[0_20px_70px_-10px_rgba(0,0,0,0.15)] bg-white/95 backdrop-blur-2xl rounded-[2.5rem] ring-1 ring-white/60">
+                <AlertDialogContent className="max-w-[400px] p-0 overflow-hidden border-none shadow-[0_20px_70px_-10px_rgba(0,0,0,0.15)] bg-white/95 backdrop-blur-2xl rounded-[2.5rem] ring-1 ring-white/60 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] duration-200">
 
                     {/* Abstract Background Element */}
                     <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-white/80 to-transparent pointer-events-none z-0" />
