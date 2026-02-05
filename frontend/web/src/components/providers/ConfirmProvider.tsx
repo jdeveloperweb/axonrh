@@ -62,21 +62,21 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
         switch (options.variant) {
             case 'destructive':
                 return {
-                    icon: <Trash2 className="w-10 h-10 text-red-600 relative z-10" />,
-                    iconBg: 'bg-red-50',
+                    icon: <Trash2 className="w-8 h-8 text-red-600 relative z-10" />,
+                    iconBg: 'bg-red-100/80',
                     iconRing: 'ring-red-100',
                     blobColor: 'bg-red-500',
-                    confirmButton: 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 shadow-lg shadow-red-500/30 text-white',
+                    confirmButton: 'bg-red-600 hover:bg-red-700 shadow-lg shadow-red-500/20 text-white',
                     cancelButton: 'hover:bg-red-50 text-red-900',
-                    titleColor: 'text-red-900'
+                    titleColor: 'text-red-950'
                 };
             default:
                 return {
-                    icon: <Info className="w-10 h-10 text-indigo-600 relative z-10" />,
-                    iconBg: 'bg-indigo-50',
+                    icon: <Info className="w-8 h-8 text-indigo-600 relative z-10" />,
+                    iconBg: 'bg-indigo-100/80',
                     iconRing: 'ring-indigo-100',
                     blobColor: 'bg-indigo-500',
-                    confirmButton: 'bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 shadow-lg shadow-indigo-500/30 text-white',
+                    confirmButton: 'bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/20 text-white',
                     cancelButton: 'hover:bg-indigo-50 text-indigo-900',
                     titleColor: 'text-slate-900'
                 };
@@ -89,18 +89,12 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
         <ConfirmContext.Provider value={{ confirm }}>
             {children}
             <AlertDialog open={open} onOpenChange={handleOpenChange}>
-                <AlertDialogContent className="max-w-[400px] p-0 overflow-hidden border-none shadow-[0_20px_70px_-10px_rgba(0,0,0,0.15)] bg-white/95 backdrop-blur-2xl rounded-[2.5rem] ring-1 ring-white/60 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] duration-200">
+                <AlertDialogContent className="max-w-[400px] p-0 overflow-hidden border-none shadow-2xl bg-white rounded-[2rem] duration-200 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]">
 
-                    {/* Abstract Background Element */}
-                    <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-white/80 to-transparent pointer-events-none z-0" />
-
-                    <div className="relative z-10 flex flex-col items-center p-8 text-center pt-12">
-                        {/* Animated Icon Container */}
-                        <div className="relative mb-6 group">
-                            <div className={`absolute inset-0 ${styles.blobColor} blur-2xl opacity-20 group-hover:opacity-30 transition-opacity duration-500 rounded-full animate-pulse`} />
-                            <div className={`relative w-24 h-24 rounded-[2rem] flex items-center justify-center ${styles.iconBg} border-[6px] border-white shadow-xl transform group-hover:scale-105 transition-transform duration-300 ease-out`}>
-                                {styles.icon}
-                            </div>
+                    <div className="flex flex-col items-center p-8 text-center pt-10">
+                        {/* Modern Static Icon Container */}
+                        <div className={`mb-6 p-4 rounded-2xl ${styles.iconBg}`}>
+                            {styles.icon}
                         </div>
 
                         <AlertDialogHeader className="space-y-3 w-full relative">
