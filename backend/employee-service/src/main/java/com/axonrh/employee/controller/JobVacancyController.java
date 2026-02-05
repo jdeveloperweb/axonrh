@@ -59,7 +59,7 @@ public class JobVacancyController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('POSITION:WRITE')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:CREATE')")
     @Operation(summary = "Criar nova vaga")
     public ResponseEntity<JobVacancyResponse> create(
             @Valid @RequestBody JobVacancyRequest request,
@@ -70,7 +70,7 @@ public class JobVacancyController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('POSITION:WRITE')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:UPDATE')")
     @Operation(summary = "Atualizar vaga")
     public ResponseEntity<JobVacancyResponse> update(
             @PathVariable UUID id,
@@ -81,7 +81,7 @@ public class JobVacancyController {
     }
 
     @PostMapping("/{id}/publish")
-    @PreAuthorize("hasAuthority('POSITION:WRITE')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:UPDATE')")
     @Operation(summary = "Publicar vaga")
     public ResponseEntity<JobVacancyResponse> publish(
             @PathVariable UUID id,
@@ -91,7 +91,7 @@ public class JobVacancyController {
     }
 
     @PostMapping("/{id}/pause")
-    @PreAuthorize("hasAuthority('POSITION:WRITE')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:UPDATE')")
     @Operation(summary = "Pausar vaga")
     public ResponseEntity<JobVacancyResponse> pause(
             @PathVariable UUID id,
@@ -101,7 +101,7 @@ public class JobVacancyController {
     }
 
     @PostMapping("/{id}/reopen")
-    @PreAuthorize("hasAuthority('POSITION:WRITE')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:UPDATE')")
     @Operation(summary = "Reabrir vaga pausada")
     public ResponseEntity<JobVacancyResponse> reopen(
             @PathVariable UUID id,
@@ -111,7 +111,7 @@ public class JobVacancyController {
     }
 
     @PostMapping("/{id}/close")
-    @PreAuthorize("hasAuthority('POSITION:WRITE')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:UPDATE')")
     @Operation(summary = "Fechar vaga")
     public ResponseEntity<JobVacancyResponse> close(
             @PathVariable UUID id,
@@ -121,7 +121,7 @@ public class JobVacancyController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('POSITION:WRITE')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:DELETE')")
     @Operation(summary = "Excluir vaga")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         talentPoolService.deleteVacancy(id);

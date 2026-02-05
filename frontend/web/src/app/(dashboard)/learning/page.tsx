@@ -143,6 +143,11 @@ export default function LearningDashboard() {
     });
   }, [publishedCourses, searchQuery, selectedCategory]);
 
+  const recommendedCourse = useMemo(() => {
+    if (!publishedCourses || publishedCourses.length === 0) return null;
+    return publishedCourses.find(c => !myEnrollments.some(e => (e.courseId || (e.course as any)?.id) === c.id)) || publishedCourses[0];
+  }, [publishedCourses, myEnrollments]);
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-[70vh] space-y-8 animate-in fade-in duration-1000">
@@ -243,71 +248,76 @@ export default function LearningDashboard() {
 
         {/* Stats Column */}
         <div className="lg:col-span-4 grid sm:grid-cols-2 lg:grid-cols-1 gap-6">
-          {/* Progress Card */}
-          <div className="bg-slate-950 rounded-2xl p-10 text-white relative overflow-hidden group shadow-2xl transition-all hover:scale-[1.02] hover:shadow-blue-500/10">
-            <div className="absolute -right-6 -top-6 opacity-10 group-hover:scale-125 group-hover:rotate-12 transition-transform duration-1000">
-              <Trophy className="h-48 w-48 text-blue-500" />
+          {/* Progress Card (Lighter Version) */}
+          <div className="bg-white border border-slate-100 rounded-2xl p-10 text-slate-900 relative overflow-hidden group shadow-xl transition-all hover:scale-[1.02] hover:border-blue-100">
+            <div className="absolute -right-6 -top-6 opacity-[0.03] group-hover:scale-125 group-hover:rotate-12 transition-transform duration-1000">
+              <Trophy className="h-48 w-48 text-blue-600" />
             </div>
 
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-indigo-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
 
             <div className="relative z-10 h-full flex flex-col justify-between space-y-12">
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
-                  <p className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-400">Progresso Geral</p>
+                  <div className="h-2 w-2 rounded-full bg-blue-600 animate-pulse" />
+                  <p className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-600">Seu Progresso de Carreira</p>
                 </div>
-                <h3 className="text-5xl font-black tracking-tighter">{Math.round(stats?.averageProgress || 0)}%</h3>
+                <h3 className="text-5xl font-black text-slate-900 tracking-tighter">{Math.round(stats?.averageProgress || 0)}%</h3>
               </div>
 
               <div className="space-y-4">
-                <div className="w-full h-3 bg-white/10 rounded-full overflow-hidden p-0.5">
+                <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden p-0.5">
                   <div
-                    className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full shadow-[0_0_20px_rgba(59,130,246,0.6)] transition-all duration-1000"
+                    className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all duration-1000"
                     style={{ width: `${stats?.averageProgress || 0}%` }}
                   />
                 </div>
                 <div className="flex justify-between items-center">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
                     {stats?.completed || 0} de {stats?.total || 0} concluídos
                   </p>
-                  <Award className="h-4 w-4 text-blue-500 opacity-60" />
+                  <div className="h-6 w-6 rounded-full bg-blue-50 flex items-center justify-center">
+                    <Award className="h-3 w-3 text-blue-600" />
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Activity Card */}
+          {/* Recommended Course Card (Functional) */}
           <div className="bg-white border border-slate-100 rounded-2xl p-10 flex flex-col justify-between relative overflow-hidden group shadow-xl transition-all hover:border-indigo-100">
             <div className="absolute top-0 right-0 p-8">
-              <div className="h-16 w-16 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center group-hover:rotate-6 transition-transform shadow-sm">
-                <TrendingUp className="h-8 w-8 text-indigo-600" />
+              <div className="h-16 w-16 rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center group-hover:rotate-6 transition-transform shadow-sm">
+                <Sparkles className="h-8 w-8 text-orange-500" />
               </div>
             </div>
 
             <div className="space-y-4 relative z-10">
               <div className="space-y-1">
-                <p className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.25em]">Ranking Semanal</p>
-                <div className="flex items-baseline gap-2">
-                  <h4 className="text-3xl font-black text-slate-900 tracking-tighter">14º Lugar</h4>
-                  <span className="text-[11px] font-black text-emerald-500 uppercase tracking-tighter">↑ 2 posições</span>
+                <p className="text-[10px] font-black text-orange-500 uppercase tracking-[0.25em]">Recomendação para Você</p>
+                <div className="flex flex-col gap-1">
+                  <h4 className="text-xl font-black text-slate-900 tracking-tight uppercase line-clamp-2 leading-tight">
+                    {recommendedCourse?.title || "Explorar Novos Conhecimentos"}
+                  </h4>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    {recommendedCourse?.categoryName || "Geral"} • {recommendedCourse?.durationMinutes || 45} min
+                  </span>
                 </div>
               </div>
-              <p className="text-[11px] font-medium text-slate-400 max-w-[180px]">Você está superando <span className="text-slate-900 font-bold">95%</span> de todos os colaboradores!</p>
+              <p className="text-[11px] font-medium text-slate-400 max-w-[200px] line-clamp-2">
+                {recommendedCourse?.description || "Aumente seu score e destaque-se com novos aprendizados hoje."}
+              </p>
             </div>
 
             <div className="flex items-center justify-between pt-6 border-t border-slate-50 relative z-10">
-              <div className="flex items-center gap-2">
-                <div className="flex -space-x-1.5">
-                  {[1, 2, 3].map(i => (
-                    <div key={i} className="h-6 w-6 rounded-full bg-slate-50 border border-white" />
-                  ))}
+              <Link href={recommendedCourse ? `/learning/course/${recommendedCourse.id}` : '/learning/catalog'} className="flex items-center gap-2 group/btn">
+                <span className="text-[10px] font-black text-slate-900 uppercase group-hover/btn:text-blue-600 transition-colors">Iniciar Agora</span>
+              </Link>
+              <Link href={recommendedCourse ? `/learning/course/${recommendedCourse.id}` : '/learning/catalog'}>
+                <div className="h-8 w-8 rounded-full bg-slate-900 flex items-center justify-center text-white hover:bg-blue-600 transition-all cursor-pointer hover:rotate-45">
+                  <ChevronRight className="h-4 w-4" />
                 </div>
-                <span className="text-[10px] font-black text-slate-400 uppercase">Ver Ranking</span>
-              </div>
-              <div className="h-8 w-8 rounded-full bg-slate-900 flex items-center justify-center text-white hover:bg-indigo-600 transition-colors cursor-pointer">
-                <ChevronRight className="h-4 w-4" />
-              </div>
+              </Link>
             </div>
           </div>
         </div>
