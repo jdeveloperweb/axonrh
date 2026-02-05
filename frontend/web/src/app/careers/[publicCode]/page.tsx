@@ -20,14 +20,19 @@ import {
     Mail,
     Phone,
     Linkedin,
-    Link as LinkIcon,
+    Sparkles,
+    ShieldCheck,
 } from 'lucide-react';
 import { talentPoolApi, PublicVacancy, PublicApplicationData, getEmploymentTypeLabel, getWorkRegimeLabel } from '@/lib/api/talent-pool';
+import { useThemeStore } from '@/stores/theme-store';
+import { cn, getPhotoUrl } from '@/lib/utils';
+import { configApi } from '@/lib/api/config';
 
 export default function VacancyDetailPage() {
     const params = useParams();
     const router = useRouter();
     const publicCode = params.publicCode as string;
+    const { tenantTheme, setTenantTheme } = useThemeStore();
 
     const [vacancy, setVacancy] = useState<PublicVacancy | null>(null);
     const [loading, setLoading] = useState(true);
@@ -61,10 +66,44 @@ export default function VacancyDetailPage() {
             }
         };
 
+        const fetchBranding = async () => {
+            if (!tenantTheme) {
+                const tenantId = process.env.NEXT_PUBLIC_DEFAULT_TENANT_ID ||
+                    localStorage.getItem('tenantId') ||
+                    localStorage.getItem('setup_tenant_id');
+
+                if (tenantId) {
+                    try {
+                        const config = await configApi.getThemeConfig(tenantId);
+                        setTenantTheme({
+                            tenantId: config.tenantId,
+                            logoUrl: config.logoUrl,
+                            logoWidth: (config.extraSettings?.logoWidth as number) || 150,
+                            colors: {
+                                primary: config.primaryColor || '#1976D2',
+                                secondary: config.secondaryColor || '#424242',
+                                accent: config.accentColor || '#FF4081',
+                                background: config.backgroundColor || '#FFFFFF',
+                                surface: config.surfaceColor || '#FAFAFA',
+                                textPrimary: config.textPrimaryColor || '#212121',
+                                textSecondary: config.textSecondaryColor || '#757575',
+                            },
+                            baseFontSize: (config.extraSettings?.baseFontSize as number) || 16,
+                            customCss: config.customCss,
+                            faviconUrl: config.faviconUrl
+                        });
+                    } catch (e) {
+                        console.error('Error fetching branding:', e);
+                    }
+                }
+            }
+        };
+
         if (publicCode) {
             fetchVacancy();
+            fetchBranding();
         }
-    }, [publicCode]);
+    }, [publicCode, tenantTheme, setTenantTheme]);
 
     const validateForm = (): boolean => {
         const errors: Record<string, string> = {};
@@ -125,28 +164,34 @@ export default function VacancyDetailPage() {
         }
     };
 
+    const primaryColor = tenantTheme?.colors?.primary || '#1976D2';
+
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+            <div className="min-h-screen bg-white flex flex-col items-center justify-center gap-4">
+                <div
+                    className="w-12 h-12 border-4 border-gray-100 border-t-transparent rounded-full animate-spin"
+                    style={{ borderTopColor: primaryColor }}
+                />
+                <p className="text-gray-400 font-medium">Carregando detalhes da vaga...</p>
             </div>
         );
     }
 
     if (error || !vacancy) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
-                <div className="bg-white rounded-xl shadow-lg p-8 max-w-md text-center">
-                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <X className="w-8 h-8 text-red-600" />
+            <div className="min-h-screen bg-[var(--color-surface-variant)]/30 flex items-center justify-center p-4">
+                <div className="bg-white rounded-3xl shadow-xl p-10 max-w-md text-center border border-gray-100">
+                    <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <X className="w-10 h-10 text-red-600" />
                     </div>
-                    <h2 className="text-xl font-semibold text-gray-900 mb-2">Vaga não encontrada</h2>
-                    <p className="text-gray-600 mb-6">{error || 'Esta vaga pode ter sido encerrada ou o link está incorreto.'}</p>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Vaga não encontrada</h2>
+                    <p className="text-gray-500 mb-8 leading-relaxed">{error || 'Esta vaga pode ter sido encerrada ou o link está incorreto.'}</p>
                     <Link
                         href="/careers"
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                        className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-gray-900 text-white rounded-2xl hover:bg-gray-800 transition-all font-bold"
                     >
-                        <ArrowLeft className="w-4 h-4" />
+                        <ArrowLeft className="w-5 h-5" />
                         Ver todas as vagas
                     </Link>
                 </div>
@@ -156,22 +201,28 @@ export default function VacancyDetailPage() {
 
     if (submitted) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-4">
-                <div className="bg-white rounded-xl shadow-lg p-8 max-w-md text-center">
-                    <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <CheckCircle className="w-10 h-10 text-green-600" />
+            <div className="min-h-screen bg-[var(--color-surface-variant)]/30 flex items-center justify-center p-4">
+                <div className="bg-white rounded-[2.5rem] shadow-2xl p-12 max-w-lg text-center border border-gray-100 relative overflow-hidden">
+                    <div
+                        className="absolute top-0 left-0 w-full h-2"
+                        style={{ backgroundColor: primaryColor }}
+                    />
+                    <div className="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-8">
+                        <CheckCircle className="w-12 h-12 text-green-600" />
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Candidatura enviada!</h2>
-                    <p className="text-gray-600 mb-6">
-                        Recebemos sua candidatura para a vaga de <strong>{vacancy.title}</strong>.
-                        Nossa equipe irá analisar seu perfil e entraremos em contato em breve.
+                    <h2 className="text-3xl font-bold text-gray-900 mb-4 tracking-tight">Candidatura enviada!</h2>
+                    <p className="text-gray-500 mb-10 leading-relaxed text-lg">
+                        Recebemos sua candidatura para a vaga de <br />
+                        <strong className="text-gray-900">{vacancy.title}</strong>. <br />
+                        Nossa equipe irá analisar seu perfil e entraremos em contato em breve através do seu email.
                     </p>
                     <Link
                         href="/careers"
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                        className="inline-flex items-center justify-center gap-2 px-10 py-4 text-white rounded-2xl font-bold shadow-xl hover:scale-105 transition-all"
+                        style={{ backgroundColor: primaryColor }}
                     >
-                        <ArrowLeft className="w-4 h-4" />
-                        Ver outras vagas
+                        <ArrowLeft className="w-5 h-5" />
+                        Ver outras oportunidades
                     </Link>
                 </div>
             </div>
@@ -179,69 +230,83 @@ export default function VacancyDetailPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+        <div className="min-h-screen bg-[var(--color-surface-variant)]/30 pb-20">
             {/* Header */}
-            <header className="bg-white shadow-sm sticky top-0 z-10">
-                <div className="max-w-6xl mx-auto px-4 py-4">
+            <header className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-100 shadow-sm">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
                     <Link
                         href="/careers"
-                        className="inline-flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors"
+                        className="inline-flex items-center gap-2 text-sm font-bold text-gray-600 hover:text-gray-900 transition-colors bg-gray-50 px-4 py-2 rounded-xl"
                     >
                         <ArrowLeft className="w-4 h-4" />
                         Voltar para vagas
                     </Link>
+                    {tenantTheme?.logoUrl && (
+                        <img
+                            src={getPhotoUrl(tenantTheme.logoUrl, undefined, 'logo') || ''}
+                            alt="Logo"
+                            className="h-8 w-auto object-contain hidden sm:block"
+                        />
+                    )}
                 </div>
             </header>
 
-            <div className="max-w-6xl mx-auto px-4 py-8">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
                     {/* Vacancy Details */}
-                    <div className="lg:col-span-2 space-y-6">
-                        {/* Header */}
-                        <div className="bg-white rounded-xl shadow-sm p-6">
-                            <div className="flex items-start gap-4">
-                                <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                                    <Briefcase className="w-8 h-8 text-blue-600" />
+                    <div className="lg:col-span-7 space-y-8">
+                        {/* Summary Card */}
+                        <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-8 sm:p-10">
+                            <div className="flex flex-col sm:flex-row items-start gap-6">
+                                <div
+                                    className="w-20 h-20 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg"
+                                    style={{ background: `linear-gradient(135deg, ${primaryColor}, #6366f1)` }}
+                                >
+                                    <Briefcase className="w-10 h-10 text-white" />
                                 </div>
-                                <div>
-                                    <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-                                        {vacancy.title}
-                                    </h1>
-                                    {vacancy.departmentName && (
-                                        <p className="text-gray-600 flex items-center gap-1 mb-3">
-                                            <Building2 className="w-4 h-4" />
-                                            {vacancy.departmentName}
-                                        </p>
-                                    )}
-                                    <div className="flex flex-wrap items-center gap-3">
-                                        {vacancy.location && (
-                                            <span className="flex items-center gap-1 text-gray-600">
-                                                <MapPin className="w-4 h-4" />
-                                                {vacancy.location}
-                                            </span>
-                                        )}
+                                <div className="flex-1">
+                                    <div className="flex flex-wrap items-center gap-2 mb-3 text-[10px] font-bold uppercase tracking-widest">
                                         {vacancy.workRegime && (
-                                            <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">
+                                            <span className="px-2.5 py-1 rounded-full bg-blue-50 text-blue-600 border border-blue-100">
                                                 {getWorkRegimeLabel(vacancy.workRegime)}
                                             </span>
                                         )}
                                         {vacancy.employmentType && (
-                                            <span className="px-3 py-1 bg-purple-50 text-purple-700 rounded-full text-sm font-medium">
+                                            <span className="px-2.5 py-1 rounded-full bg-purple-50 text-purple-600 border border-purple-100">
                                                 {getEmploymentTypeLabel(vacancy.employmentType)}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4 tracking-tight leading-tight">
+                                        {vacancy.title}
+                                    </h1>
+                                    <div className="flex flex-wrap items-center gap-y-3 gap-x-6 text-sm text-gray-500 font-medium">
+                                        {vacancy.departmentName && (
+                                            <span className="flex items-center gap-2 leading-none bg-gray-50 px-3 py-1.5 rounded-lg">
+                                                <Building2 className="w-4 h-4 text-gray-400" />
+                                                {vacancy.departmentName}
+                                            </span>
+                                        )}
+                                        {vacancy.location && (
+                                            <span className="flex items-center gap-2 leading-none bg-gray-50 px-3 py-1.5 rounded-lg">
+                                                <MapPin className="w-4 h-4 text-gray-400" />
+                                                {vacancy.location}
                                             </span>
                                         )}
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Salary and Deadline */}
-                            <div className="flex flex-wrap items-center gap-6 mt-6 pt-6 border-t border-gray-100">
+                            {/* Info Grid */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-10 p-6 bg-gray-50 rounded-2xl border border-gray-100">
                                 {(vacancy.salaryRangeMin || vacancy.salaryRangeMax) && (
-                                    <div className="flex items-center gap-2">
-                                        <DollarSign className="w-5 h-5 text-green-600" />
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center">
+                                            <DollarSign className="w-6 h-6 text-emerald-600" />
+                                        </div>
                                         <div>
-                                            <p className="text-sm text-gray-500">Faixa Salarial</p>
-                                            <p className="font-semibold text-gray-900">
+                                            <p className="text-xs text-gray-400 uppercase font-bold tracking-wider">Salário</p>
+                                            <p className="font-bold text-gray-900">
                                                 {vacancy.salaryRangeMin && vacancy.salaryRangeMax
                                                     ? `R$ ${vacancy.salaryRangeMin.toLocaleString('pt-BR')} - R$ ${vacancy.salaryRangeMax.toLocaleString('pt-BR')}`
                                                     : vacancy.salaryRangeMin
@@ -253,11 +318,13 @@ export default function VacancyDetailPage() {
                                     </div>
                                 )}
                                 {vacancy.deadline && (
-                                    <div className="flex items-center gap-2">
-                                        <Clock className="w-5 h-5 text-orange-600" />
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center">
+                                            <Clock className="w-6 h-6 text-orange-600" />
+                                        </div>
                                         <div>
-                                            <p className="text-sm text-gray-500">Prazo</p>
-                                            <p className="font-semibold text-gray-900">
+                                            <p className="text-xs text-gray-400 uppercase font-bold tracking-wider">Inscrições Até</p>
+                                            <p className="font-bold text-gray-900">
                                                 {new Date(vacancy.deadline).toLocaleDateString('pt-BR', {
                                                     day: 'numeric',
                                                     month: 'long',
@@ -270,221 +337,176 @@ export default function VacancyDetailPage() {
                             </div>
                         </div>
 
-                        {/* Description */}
-                        {vacancy.description && (
-                            <div className="bg-white rounded-xl shadow-sm p-6">
-                                <h2 className="text-lg font-semibold text-gray-900 mb-4">Sobre a Vaga</h2>
-                                <div className="prose prose-gray max-w-none">
-                                    <p className="text-gray-700 whitespace-pre-line">{vacancy.description}</p>
+                        {/* Content sections */}
+                        <div className="space-y-8">
+                            {[
+                                { title: 'Sobre a Vaga', icon: Sparkles, content: vacancy.description, color: 'text-amber-500', bg: 'bg-amber-50' },
+                                { title: 'Responsabilidades', icon: CheckCircle, content: vacancy.responsibilities, color: 'text-blue-500', bg: 'bg-blue-50' },
+                                { title: 'Requisitos', icon: ShieldCheck, content: vacancy.requirements, color: 'text-purple-500', bg: 'bg-purple-50' },
+                                { title: 'Benefícios', icon: DollarSign, content: vacancy.benefits, color: 'text-emerald-500', bg: 'bg-emerald-50' },
+                            ].map((section, idx) => section.content && (
+                                <div key={idx} className="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-8 sm:p-10 animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: `${idx * 100}ms` }}>
+                                    <div className="flex items-center gap-4 mb-6">
+                                        <div className={`w-10 h-10 ${section.bg} rounded-xl flex items-center justify-center`}>
+                                            <section.icon className={`w-5 h-5 ${section.color}`} />
+                                        </div>
+                                        <h2 className="text-xl font-bold text-gray-900">{section.title}</h2>
+                                    </div>
+                                    <div className="prose prose-blue max-w-none text-gray-600 leading-relaxed whitespace-pre-line">
+                                        {section.content}
+                                    </div>
                                 </div>
-                            </div>
-                        )}
-
-                        {/* Responsibilities */}
-                        {vacancy.responsibilities && (
-                            <div className="bg-white rounded-xl shadow-sm p-6">
-                                <h2 className="text-lg font-semibold text-gray-900 mb-4">Responsabilidades</h2>
-                                <div className="prose prose-gray max-w-none">
-                                    <p className="text-gray-700 whitespace-pre-line">{vacancy.responsibilities}</p>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Requirements */}
-                        {vacancy.requirements && (
-                            <div className="bg-white rounded-xl shadow-sm p-6">
-                                <h2 className="text-lg font-semibold text-gray-900 mb-4">Requisitos</h2>
-                                <div className="prose prose-gray max-w-none">
-                                    <p className="text-gray-700 whitespace-pre-line">{vacancy.requirements}</p>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Benefits */}
-                        {vacancy.benefits && (
-                            <div className="bg-white rounded-xl shadow-sm p-6">
-                                <h2 className="text-lg font-semibold text-gray-900 mb-4">Benefícios</h2>
-                                <div className="prose prose-gray max-w-none">
-                                    <p className="text-gray-700 whitespace-pre-line">{vacancy.benefits}</p>
-                                </div>
-                            </div>
-                        )}
+                            ))}
+                        </div>
                     </div>
 
-                    {/* Application Form */}
-                    <div className="lg:col-span-1">
-                        <div className="bg-white rounded-xl shadow-sm p-6 sticky top-24">
-                            <h2 className="text-lg font-semibold text-gray-900 mb-6">Candidate-se</h2>
+                    {/* Application Form Sidebar */}
+                    <div className="lg:col-span-5">
+                        <div className="bg-white rounded-[2.5rem] shadow-xl border border-gray-100 p-8 sm:p-10 sticky top-28 overflow-hidden relative">
+                            <div
+                                className="absolute top-0 right-0 w-32 h-32 bg-[var(--color-primary)]/5 rounded-full -mt-16 -mr-16 blur-2xl"
+                            />
+
+                            <h2 className="text-2xl font-bold text-gray-900 mb-2">Envie seu Currículo</h2>
+                            <p className="text-gray-500 text-sm mb-8 font-medium">Complete as informações abaixo para se candidatar</p>
 
                             {formErrors.submit && (
-                                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                                <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl text-red-700 text-sm flex items-center gap-3">
+                                    <X className="w-5 h-5 flex-shrink-0" />
                                     {formErrors.submit}
                                 </div>
                             )}
 
-                            <form onSubmit={handleSubmit} className="space-y-4">
-                                {/* Nome */}
+                            <form onSubmit={handleSubmit} className="space-y-5 relative z-10">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2 ml-1">
                                         Nome Completo *
                                     </label>
-                                    <div className="relative">
-                                        <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    <div className="relative group">
+                                        <User className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[var(--color-primary)] transition-colors" />
                                         <input
                                             type="text"
                                             value={formData.fullName}
                                             onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                                            className={`w-full pl-10 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                                                formErrors.fullName ? 'border-red-300' : 'border-gray-200'
-                                            }`}
-                                            placeholder="Seu nome completo"
+                                            className={`w-full pl-12 pr-4 py-3.5 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all text-gray-900 font-medium placeholder:text-gray-300 ${formErrors.fullName ? 'ring-2 ring-red-100' : ''
+                                                }`}
+                                            placeholder="Ex: Jaime Vicente"
                                         />
                                     </div>
                                     {formErrors.fullName && (
-                                        <p className="mt-1 text-sm text-red-600">{formErrors.fullName}</p>
+                                        <p className="mt-1.5 text-xs text-red-600 font-bold ml-1">{formErrors.fullName}</p>
                                     )}
                                 </div>
 
-                                {/* Email */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Email *
+                                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2 ml-1">
+                                        Email corporativo ou pessoal *
                                     </label>
-                                    <div className="relative">
-                                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    <div className="relative group">
+                                        <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[var(--color-primary)] transition-colors" />
                                         <input
                                             type="email"
                                             value={formData.email}
                                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                            className={`w-full pl-10 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                                                formErrors.email ? 'border-red-300' : 'border-gray-200'
-                                            }`}
+                                            className={`w-full pl-12 pr-4 py-3.5 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all text-gray-900 font-medium placeholder:text-gray-300 ${formErrors.email ? 'ring-2 ring-red-100' : ''
+                                                }`}
                                             placeholder="seu@email.com"
                                         />
                                     </div>
                                     {formErrors.email && (
-                                        <p className="mt-1 text-sm text-red-600">{formErrors.email}</p>
+                                        <p className="mt-1.5 text-xs text-red-600 font-bold ml-1">{formErrors.email}</p>
                                     )}
                                 </div>
 
-                                {/* Telefone */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Telefone
-                                    </label>
-                                    <div className="relative">
-                                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                        <input
-                                            type="tel"
-                                            value={formData.phone}
-                                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                            placeholder="(00) 00000-0000"
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Cidade e Estado */}
-                                <div className="grid grid-cols-3 gap-2">
-                                    <div className="col-span-2">
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Cidade
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2 ml-1">
+                                            Telefone
                                         </label>
-                                        <input
-                                            type="text"
-                                            value={formData.city}
-                                            onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                                            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                            placeholder="Sua cidade"
-                                        />
+                                        <div className="relative group">
+                                            <Phone className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[var(--color-primary)] transition-colors" />
+                                            <input
+                                                type="tel"
+                                                value={formData.phone}
+                                                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                                className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all text-gray-900 font-medium placeholder:text-gray-300"
+                                                placeholder="(00) 00000-0000"
+                                            />
+                                        </div>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            UF
+                                        <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2 ml-1">
+                                            Cidade/UF
                                         </label>
-                                        <input
-                                            type="text"
-                                            value={formData.state}
-                                            onChange={(e) => setFormData({ ...formData, state: e.target.value.toUpperCase().slice(0, 2) })}
-                                            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                            placeholder="SP"
-                                            maxLength={2}
-                                        />
+                                        <div className="relative group">
+                                            <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[var(--color-primary)] transition-colors" />
+                                            <input
+                                                type="text"
+                                                value={formData.city ? `${formData.city}${formData.state ? ` / ${formData.state}` : ''}` : ''}
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    if (val.includes('/')) {
+                                                        const [city, state] = val.split('/').map(s => s.trim());
+                                                        setFormData({ ...formData, city, state: state?.toUpperCase().slice(0, 2) || '' });
+                                                    } else {
+                                                        setFormData({ ...formData, city: val });
+                                                    }
+                                                }}
+                                                className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all text-gray-900 font-medium placeholder:text-gray-300"
+                                                placeholder="Sua cidade"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
 
-                                {/* LinkedIn */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        LinkedIn
+                                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2 ml-1">
+                                        Perfil LinkedIn
                                     </label>
-                                    <div className="relative">
-                                        <Linkedin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    <div className="relative group">
+                                        <Linkedin className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[var(--color-primary)] transition-colors" />
                                         <input
                                             type="url"
                                             value={formData.linkedinUrl}
                                             onChange={(e) => setFormData({ ...formData, linkedinUrl: e.target.value })}
-                                            className={`w-full pl-10 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                                                formErrors.linkedinUrl ? 'border-red-300' : 'border-gray-200'
-                                            }`}
+                                            className={`w-full pl-12 pr-4 py-3.5 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all text-gray-900 font-medium placeholder:text-gray-300 ${formErrors.linkedinUrl ? 'ring-2 ring-red-100' : ''
+                                                }`}
                                             placeholder="linkedin.com/in/seu-perfil"
                                         />
                                     </div>
-                                    {formErrors.linkedinUrl && (
-                                        <p className="mt-1 text-sm text-red-600">{formErrors.linkedinUrl}</p>
-                                    )}
                                 </div>
 
-                                {/* Portfolio */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Portfólio / Site
+                                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2 ml-1">
+                                        Seu Currículo (PDF ou Word) *
                                     </label>
-                                    <div className="relative">
-                                        <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                        <input
-                                            type="url"
-                                            value={formData.portfolioUrl}
-                                            onChange={(e) => setFormData({ ...formData, portfolioUrl: e.target.value })}
-                                            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                            placeholder="https://seusite.com"
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Resume Upload */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Currículo
-                                    </label>
-                                    <div className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
-                                        resumeFile ? 'border-green-300 bg-green-50' : 'border-gray-200 hover:border-blue-300'
-                                    }`}>
+                                    <div className={cn(
+                                        "border-2 border-dashed rounded-[2rem] p-8 text-center transition-all cursor-pointer group",
+                                        resumeFile
+                                            ? "border-green-200 bg-green-50/50"
+                                            : "border-gray-100 bg-gray-50 hover:bg-gray-100/50 hover:border-[var(--color-primary)]/30"
+                                    )}>
                                         {resumeFile ? (
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-2">
-                                                    <FileText className="w-5 h-5 text-green-600" />
-                                                    <span className="text-sm text-gray-700 truncate max-w-[150px]">
-                                                        {resumeFile.name}
-                                                    </span>
+                                            <div className="flex flex-col items-center">
+                                                <div className="w-14 h-14 bg-white rounded-2xl shadow-sm flex items-center justify-center mb-3">
+                                                    <FileText className="w-7 h-7 text-green-600" />
                                                 </div>
+                                                <p className="text-sm font-bold text-gray-900 truncate max-w-full px-4 mb-2">
+                                                    {resumeFile.name}
+                                                </p>
                                                 <button
                                                     type="button"
-                                                    onClick={() => setResumeFile(null)}
-                                                    className="p-1 hover:bg-gray-100 rounded"
+                                                    onClick={(e) => { e.preventDefault(); setResumeFile(null); }}
+                                                    className="text-xs font-bold text-red-500 hover:text-red-700 underline"
                                                 >
-                                                    <X className="w-4 h-4 text-gray-500" />
+                                                    Remover arquivo
                                                 </button>
                                             </div>
                                         ) : (
-                                            <label className="cursor-pointer">
-                                                <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                                                <p className="text-sm text-gray-600">
-                                                    Clique para enviar seu currículo
-                                                </p>
-                                                <p className="text-xs text-gray-400 mt-1">
-                                                    PDF ou Word (máx. 10MB)
-                                                </p>
+                                            <label className="cursor-pointer block w-full h-full">
+                                                <Upload className="w-10 h-10 text-gray-300 mx-auto mb-3 group-hover:text-[var(--color-primary)]/50 transition-colors" />
+                                                <p className="text-sm font-bold text-gray-700">Clique para anexar</p>
+                                                <p className="text-xs text-gray-400 mt-1 font-medium">Até 10MB</p>
                                                 <input
                                                     type="file"
                                                     accept=".pdf,.doc,.docx"
@@ -495,32 +517,33 @@ export default function VacancyDetailPage() {
                                         )}
                                     </div>
                                     {formErrors.resume && (
-                                        <p className="mt-1 text-sm text-red-600">{formErrors.resume}</p>
+                                        <p className="mt-1.5 text-xs text-red-600 font-bold ml-1">{formErrors.resume}</p>
                                     )}
                                 </div>
 
-                                {/* Submit Button */}
                                 <button
                                     type="submit"
                                     disabled={submitting}
-                                    className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    className="w-full py-4 rounded-[1.5rem] font-bold text-white shadow-xl hover:scale-[1.02] transform transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 mt-6"
+                                    style={{ backgroundColor: primaryColor }}
                                 >
                                     {submitting ? (
                                         <>
                                             <Loader2 className="w-5 h-5 animate-spin" />
-                                            Enviando...
+                                            <span>Processando...</span>
                                         </>
                                     ) : (
                                         <>
                                             <CheckCircle className="w-5 h-5" />
-                                            Enviar Candidatura
+                                            <span>Enviar Candidatura</span>
                                         </>
                                     )}
                                 </button>
 
-                                <p className="text-xs text-gray-500 text-center">
-                                    Ao se candidatar, você concorda com nossos termos de uso e política de privacidade.
-                                </p>
+                                <div className="flex items-center gap-2 justify-center mt-6 text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+                                    <ShieldCheck className="w-4 h-4" />
+                                    <span>Seus dados estão protegidos</span>
+                                </div>
                             </form>
                         </div>
                     </div>
@@ -528,11 +551,29 @@ export default function VacancyDetailPage() {
             </div>
 
             {/* Footer */}
-            <footer className="bg-gray-900 text-white py-8 mt-12">
-                <div className="max-w-6xl mx-auto px-4 text-center">
-                    <p className="text-gray-400">
-                        Powered by <span className="text-white font-semibold">AxonRH</span>
-                    </p>
+            <footer className="bg-white border-t border-gray-100 py-12">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+                        <div className="flex items-center gap-2">
+                            {tenantTheme?.logoUrl ? (
+                                <img
+                                    src={getPhotoUrl(tenantTheme.logoUrl, undefined, 'logo') || ''}
+                                    alt="Logo"
+                                    className="h-8 w-auto grayscale opacity-50"
+                                />
+                            ) : (
+                                <span className="text-xl font-bold text-gray-300">AxonRH</span>
+                            )}
+                        </div>
+                        <div className="flex gap-8 text-sm font-medium text-gray-400">
+                            <a href="#" className="hover:text-gray-900 transition-colors">Política de Privacidade</a>
+                            <a href="#" className="hover:text-gray-900 transition-colors">Termos de Uso</a>
+                            <a href="#" className="hover:text-gray-900 transition-colors">LinkedIn</a>
+                        </div>
+                        <p className="text-sm text-gray-400">
+                            © {new Date().getFullYear()} {tenantTheme?.tenantId || 'AxonRH'}. Todos os direitos reservados.
+                        </p>
+                    </div>
                 </div>
             </footer>
         </div>
