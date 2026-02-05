@@ -39,6 +39,8 @@ public interface EmployeeRepository extends JpaRepository<Employee, UUID>, JpaSp
 
     Optional<Employee> findByTenantIdAndRegistrationNumber(UUID tenantId, String registrationNumber);
 
+    Optional<Employee> findByTenantIdAndUserId(UUID tenantId, UUID userId);
+
     // ==================== Verificacoes de Existencia ====================
 
     boolean existsByTenantIdAndCpf(UUID tenantId, String cpf);

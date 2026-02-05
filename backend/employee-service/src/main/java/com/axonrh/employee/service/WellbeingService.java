@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import com.axonrh.employee.config.TenantContext;
 import com.axonrh.employee.dto.EapRequestDTO;
 import com.axonrh.employee.dto.WellbeingStats;
@@ -29,11 +30,12 @@ public class WellbeingService {
     private final AiAssistantClient aiClient;
 
     public void processCheckIn(WellbeingCheckInRequest request) {
-        // Obtem o colaborador para garantir existência e consistência do tenant
-        com.axonrh.employee.entity.Employee employee = employeeRepository.findById(request.getEmployeeId())
+        UUID tenantId = getTenantId();
+
+        // Obtem o colaborador para garantir existência e consistência do tenant (busca por ID ou UserID)
+        com.axonrh.employee.entity.Employee employee = employeeRepository.findByTenantIdAndId(tenantId, request.getEmployeeId())
+                .or(() -> employeeRepository.findByTenantIdAndUserId(tenantId, request.getEmployeeId()))
                 .orElseThrow(() -> new IllegalArgumentException("Colaborador não encontrado: " + request.getEmployeeId()));
-        
-        UUID tenantId = employee.getTenantId();
 
         EmployeeWellbeing.EmployeeWellbeingBuilder builder = EmployeeWellbeing.builder()
                 .tenantId(tenantId)
