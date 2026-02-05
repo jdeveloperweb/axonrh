@@ -22,6 +22,7 @@ import {
   Briefcase,
   ClipboardCheck,
   UserPlus,
+  HeartPulse,
 } from 'lucide-react';
 import { cn, getPhotoUrl } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
@@ -61,6 +62,7 @@ const navGroups: NavGroup[] = [
       { label: 'Desempenho', href: '/performance', icon: BarChart3, permission: 'PERFORMANCE:READ' },
       { label: 'Treinamentos', href: '/learning', icon: BookOpen, permission: 'LEARNING:READ' },
       { label: 'Processos RH', href: '/processes', icon: ClipboardCheck, permission: 'EMPLOYEE:READ' },
+      { label: 'Saúde Mental', href: '/wellbeing', icon: HeartPulse, permission: 'EMPLOYEE:READ' }, // Visible to HR/Managers
       { label: 'Assistente IA', href: '/assistant', icon: MessageSquare },
     ]
   },

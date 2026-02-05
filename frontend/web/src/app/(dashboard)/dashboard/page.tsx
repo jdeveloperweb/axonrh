@@ -615,6 +615,9 @@ export default function DashboardPage() {
       }
     };
 
+    // Filter for Dashboard: Only show pending requests
+    const pendingRequests = wellbeingStats?.eapRequests?.filter(req => !req.handled) || [];
+
     return (
       <div className="space-y-6 animate-in fade-in duration-500">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -695,16 +698,15 @@ export default function DashboardPage() {
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle>Solicitações de Ajuda (EAP)</CardTitle>
-                <p className="text-sm text-gray-500">Pedidos de contato recentes</p>
+                <p className="text-sm text-gray-500">Fila de atendimento prioritária</p>
               </div>
             </CardHeader>
             <CardContent className="h-[400px] overflow-y-auto pr-2">
-              {wellbeingStats?.eapRequests && wellbeingStats.eapRequests.length > 0 ? (
+              {pendingRequests.length > 0 ? (
                 <div className="space-y-4">
-                  {wellbeingStats.eapRequests.map((req, idx) => {
-                    const isHandled = req.handled;
+                  {pendingRequests.map((req, idx) => {
                     return (
-                      <div key={idx} className={`flex flex-col p-4 rounded-xl border transition-all ${isHandled ? 'bg-gray-50/50 border-gray-100 opacity-60' : 'bg-white border-purple-100 shadow-sm border-l-4 border-l-purple-500'}`}>
+                      <div key={idx} className="flex flex-col p-4 rounded-xl border transition-all bg-white border-purple-100 shadow-sm border-l-4 border-l-purple-500">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex items-center gap-3">
                             <div className="relative">
@@ -715,30 +717,20 @@ export default function DashboardPage() {
                                   {req.employeeName?.substring(0, 2) || '?'}
                                 </div>
                               )}
-                              {!isHandled && (
-                                <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse" />
-                              )}
+                              <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse" />
                             </div>
                             <div>
                               <p className="font-semibold text-gray-900 leading-none">{req.employeeName || 'Desconhecido'}</p>
                               <p className="text-xs text-gray-500 mt-1">{new Date(req.createdAt).toLocaleDateString()} às {new Date(req.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                             </div>
                           </div>
-                          {!isHandled && (
-                            <button
-                              onClick={() => handleMarkAsHandled(req.id)}
-                              className="px-3 py-1.5 text-xs font-medium bg-purple-50 text-purple-600 hover:bg-purple-100 rounded-lg transition-colors flex items-center gap-1.5"
-                            >
-                              <CheckCircle className="w-3.5 h-3.5" />
-                              Atender
-                            </button>
-                          )}
-                          {isHandled && (
-                            <div className="flex items-center gap-1 text-green-600 bg-green-50 px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider">
-                              <CheckCircle className="w-3 h-3" />
-                              Atendido
-                            </div>
-                          )}
+                          <button
+                            onClick={() => handleMarkAsHandled(req.id)}
+                            className="px-3 py-1.5 text-xs font-medium bg-purple-50 text-purple-600 hover:bg-purple-100 rounded-lg transition-colors flex items-center gap-1.5"
+                          >
+                            <CheckCircle className="w-3.5 h-3.5" />
+                            Atender
+                          </button>
                         </div>
 
                         <div className="grid grid-cols-2 gap-2 mb-3">
@@ -782,8 +774,8 @@ export default function DashboardPage() {
                   <div className="p-4 bg-green-50 rounded-full mb-4">
                     <CheckCircle className="w-12 h-12 text-green-400" />
                   </div>
-                  <p className="font-medium text-gray-600">Fila limpa!</p>
-                  <p className="text-sm">Nenhuma solicitação pendente no momento.</p>
+                  <p className="font-medium text-gray-600">Nada pendente!</p>
+                  <p className="text-sm text-center px-8">Todas as solicitações de contato já foram atendidas. Consulte o histórico no menu "Saúde Mental".</p>
                 </div>
               )}
             </CardContent>
