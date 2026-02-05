@@ -279,7 +279,7 @@ export default function TalentPoolPage() {
 
     const handleVacancyAction = async (vacancyId: string, action: 'publish' | 'pause' | 'reopen' | 'close' | 'delete') => {
         try {
-            setSubmitting(true);
+            setActionLoading(true);
 
             // Para delete, confirma primeiro
             if (action === 'delete') {
@@ -291,7 +291,7 @@ export default function TalentPoolPage() {
                 });
 
                 if (!confirmed) {
-                    setSubmitting(false);
+                    setActionLoading(false);
                     return;
                 }
             }
@@ -300,7 +300,10 @@ export default function TalentPoolPage() {
             switch (action) {
                 case 'publish':
                     await talentPoolApi.publishVacancy(vacancyId);
-                    toast({ title: 'Sucesso', description: 'Vaga publicada com sucesso' });
+                    toast({ 
+                        title: 'Vaga Publicada!', 
+                        description: 'A vaga está agora visível publicamente na internet e candidatos podem se inscrever.' 
+                    });
                     break;
                 case 'pause':
                     await talentPoolApi.pauseVacancy(vacancyId);
@@ -331,7 +334,7 @@ export default function TalentPoolPage() {
                 variant: 'destructive'
             });
         } finally {
-            setSubmitting(false);
+            setActionLoading(false);
         }
     };
 
