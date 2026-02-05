@@ -213,7 +213,7 @@ export default function TalentPoolPage() {
         e.preventDefault();
 
         // Validação manual
-        if (!vacancyForm.positionId) {
+        if (!vacancyForm.positionId || vacancyForm.positionId.trim() === '') {
             toast({
                 title: 'Erro de validação',
                 description: 'Por favor, selecione um Cargo para a vaga.',
@@ -222,7 +222,7 @@ export default function TalentPoolPage() {
             return;
         }
 
-        if (!vacancyForm.title) {
+        if (!vacancyForm.title || vacancyForm.title.trim() === '') {
             toast({
                 title: 'Erro de validação',
                 description: 'O título da vaga é obrigatório.',
@@ -231,24 +231,43 @@ export default function TalentPoolPage() {
             return;
         }
 
-
+        // Preparar dados para envio - converter strings vazias para undefined
+        const dataToSend: CreateVacancyData = {
+            positionId: vacancyForm.positionId,
+            title: vacancyForm.title.trim(),
+            description: vacancyForm.description?.trim() || undefined,
+            responsibilities: vacancyForm.responsibilities?.trim() || undefined,
+            requirements: vacancyForm.requirements?.trim() || undefined,
+            benefits: vacancyForm.benefits?.trim() || undefined,
+            vacancyType: vacancyForm.vacancyType,
+            employmentType: vacancyForm.employmentType,
+            workRegime: vacancyForm.workRegime,
+            location: vacancyForm.location?.trim() || undefined,
+            salaryRangeMin: vacancyForm.salaryRangeMin,
+            salaryRangeMax: vacancyForm.salaryRangeMax,
+            hideSalary: vacancyForm.hideSalary,
+            maxCandidates: vacancyForm.maxCandidates,
+            deadline: vacancyForm.deadline || undefined,
+        };
 
         try {
             setSubmitting(true);
             if (editingVacancy) {
-                await talentPoolApi.updateVacancy(editingVacancy.id, vacancyForm);
+                await talentPoolApi.updateVacancy(editingVacancy.id, dataToSend);
                 toast({ title: 'Sucesso', description: 'Vaga atualizada com sucesso' });
             } else {
-                await talentPoolApi.createVacancy(vacancyForm);
+                await talentPoolApi.createVacancy(dataToSend);
                 toast({ title: 'Sucesso', description: 'Vaga criada com sucesso' });
             }
             handleCloseVacancyModal();
             fetchData();
         } catch (error: unknown) {
-            const err = error as { response?: { data?: { message?: string } } };
+            console.error('Erro ao salvar vaga:', error);
+            const err = error as Error & { response?: { data?: { message?: string; error?: string } } };
+            const errorMessage = err.response?.data?.message || err.response?.data?.error || err.message || 'Falha ao salvar vaga';
             toast({
                 title: 'Erro',
-                description: err.response?.data?.message || 'Falha ao salvar vaga',
+                description: errorMessage,
                 variant: 'destructive',
             });
         } finally {
