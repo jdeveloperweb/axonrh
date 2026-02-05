@@ -62,17 +62,23 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
         switch (options.variant) {
             case 'destructive':
                 return {
-                    icon: <Trash2 className="w-8 h-8 text-red-600" />,
-                    bgIcon: 'bg-red-100',
-                    buttonClass: 'bg-red-600 hover:bg-red-700 shadow-md shadow-red-200',
-                    borderClass: 'border-red-100'
+                    icon: <Trash2 className="w-10 h-10 text-red-600 relative z-10" />,
+                    iconBg: 'bg-red-50',
+                    iconRing: 'ring-red-100',
+                    blobColor: 'bg-red-500',
+                    confirmButton: 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 shadow-lg shadow-red-500/30 text-white',
+                    cancelButton: 'hover:bg-red-50 text-red-900',
+                    titleColor: 'text-red-900'
                 };
             default:
                 return {
-                    icon: <Info className="w-8 h-8 text-[var(--color-primary)]" />,
-                    bgIcon: 'bg-[var(--color-primary)]/10',
-                    buttonClass: 'bg-[var(--color-primary)] hover:opacity-90 shadow-md shadow-blue-200',
-                    borderClass: 'border-blue-100'
+                    icon: <Info className="w-10 h-10 text-indigo-600 relative z-10" />,
+                    iconBg: 'bg-indigo-50',
+                    iconRing: 'ring-indigo-100',
+                    blobColor: 'bg-indigo-500',
+                    confirmButton: 'bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 shadow-lg shadow-indigo-500/30 text-white',
+                    cancelButton: 'hover:bg-indigo-50 text-indigo-900',
+                    titleColor: 'text-slate-900'
                 };
         }
     };
@@ -83,36 +89,40 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
         <ConfirmContext.Provider value={{ confirm }}>
             {children}
             <AlertDialog open={open} onOpenChange={handleOpenChange}>
-                <AlertDialogContent className="max-w-md p-0 overflow-hidden border-none shadow-2xl bg-white/90 backdrop-blur-xl rounded-[2rem] ring-1 ring-black/5">
-                    {/* Decorative top gradient */}
-                    <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-white to-transparent opacity-50 pointer-events-none" />
+                <AlertDialogContent className="max-w-[400px] p-0 overflow-hidden border-none shadow-[0_20px_70px_-10px_rgba(0,0,0,0.15)] bg-white/95 backdrop-blur-2xl rounded-[2.5rem] ring-1 ring-white/60">
 
-                    <div className="flex flex-col items-center p-8 text-center pt-10">
+                    {/* Abstract Background Element */}
+                    <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-white/80 to-transparent pointer-events-none z-0" />
+
+                    <div className="relative z-10 flex flex-col items-center p-8 text-center pt-12">
                         {/* Animated Icon Container */}
-                        <div className={`w-20 h-20 rounded-3xl flex items-center justify-center mb-6 ${styles.bgIcon} ${styles.borderClass} border-4 ring-4 ring-white shadow-xl animate-in zoom-in-50 duration-300`}>
-                            {styles.icon}
+                        <div className="relative mb-6 group">
+                            <div className={`absolute inset-0 ${styles.blobColor} blur-2xl opacity-20 group-hover:opacity-30 transition-opacity duration-500 rounded-full animate-pulse`} />
+                            <div className={`relative w-24 h-24 rounded-[2rem] flex items-center justify-center ${styles.iconBg} border-[6px] border-white shadow-xl transform group-hover:scale-105 transition-transform duration-300 ease-out`}>
+                                {styles.icon}
+                            </div>
                         </div>
 
-                        <AlertDialogHeader className="space-y-3 w-full">
-                            <AlertDialogTitle className="text-2xl font-black tracking-tight text-gray-900">
+                        <AlertDialogHeader className="space-y-3 w-full relative">
+                            <AlertDialogTitle className={`text-2xl font-black tracking-tight ${styles.titleColor}`}>
                                 {options.title || 'Confirmação'}
                             </AlertDialogTitle>
-                            <AlertDialogDescription className="text-base font-medium text-gray-500 leading-relaxed max-w-xs mx-auto">
+                            <AlertDialogDescription className="text-base font-medium text-slate-500 leading-relaxed mx-auto max-w-[280px]">
                                 {options.description || 'Tem certeza que deseja realizar esta ação?'}
                             </AlertDialogDescription>
                         </AlertDialogHeader>
 
-                        <div className="w-full mt-8 grid grid-cols-2 gap-3">
+                        <div className="w-full mt-10 grid grid-cols-2 gap-4">
                             <AlertDialogCancel
                                 onClick={handleCancel}
-                                className="w-full h-12 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-bold tracking-wide transition-all duration-200"
+                                className={`w-full h-14 rounded-2xl border-0 bg-transparent hover:bg-slate-50 text-slate-500 font-bold tracking-wide transition-all duration-200 mt-0 text-sm uppercase`}
                             >
                                 {options.cancelLabel || 'Cancelar'}
                             </AlertDialogCancel>
 
                             <AlertDialogAction
                                 onClick={handleConfirm}
-                                className={`w-full h-12 rounded-xl font-bold tracking-wide text-white transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] ${styles.buttonClass}`}
+                                className={`w-full h-14 rounded-2xl font-bold tracking-wider text-sm uppercase transition-all duration-300 transform hover:-translate-y-1 active:translate-y-0 ${styles.confirmButton}`}
                             >
                                 {options.confirmLabel || 'Confirmar'}
                             </AlertDialogAction>
