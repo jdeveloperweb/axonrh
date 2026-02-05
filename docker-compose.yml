@@ -237,7 +237,7 @@ services:
       <<: *backend-env
       SPRING_FLYWAY_ENABLED: "true"
       SERVER_PORT: 8083
-      APPLICATION_SERVICES_AI_ASSISTANT_URL: http://ai-assistant-service:8088
+      AI_ASSISTANT_SERVICE_URL: http://ai-assistant-service:8088
 
   timesheet-service:
     <<: *backend-service

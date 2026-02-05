@@ -149,3 +149,9 @@ springdoc:
     path: /swagger-ui.html
     tags-sorter: alpha
     operations-sorter: alpha
+
+# Application Services
+application:
+  services:
+    ai-assistant:
+      url: ${AI_ASSISTANT_SERVICE_URL:http://localhost:8088}
