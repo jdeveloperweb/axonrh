@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useConfirm } from '@/components/providers/ConfirmProvider';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,6 +32,7 @@ import { useAuthStore } from '@/stores/auth-store';
 import { toast } from 'sonner';
 
 export default function CourseDetails() {
+    const { confirm } = useConfirm();
     const { id } = useParams();
     const { user } = useAuthStore();
     const router = useRouter();
@@ -105,7 +107,12 @@ export default function CourseDetails() {
             return;
         }
 
-        if (!confirm('Tem certeza que deseja sair deste treinamento? Todo o seu progresso será perdido.')) {
+        if (!await confirm({
+            title: 'Sair do Treinamento',
+            description: 'Tem certeza que deseja sair deste treinamento? Todo o seu progresso será perdido.',
+            variant: 'destructive',
+            confirmLabel: 'Sair'
+        })) {
             return;
         }
 

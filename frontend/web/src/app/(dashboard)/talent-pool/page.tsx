@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useConfirm } from '@/components/providers/ConfirmProvider';
 import {
     Search,
     Plus,
@@ -47,6 +48,7 @@ import { employeesApi, Department } from '@/lib/api/employees';
 type Tab = 'vacancies' | 'candidates';
 
 export default function TalentPoolPage() {
+    const { confirm } = useConfirm();
     const { toast } = useToast();
 
     // State
@@ -295,7 +297,12 @@ export default function TalentPoolPage() {
                     toast({ title: 'Sucesso', description: 'Vaga fechada' });
                     break;
                 case 'delete':
-                    if (!confirm('Tem certeza que deseja excluir esta vaga?')) return;
+                    if (!await confirm({
+                        title: 'Excluir Vaga',
+                        description: 'Tem certeza que deseja excluir esta vaga? A ação não pode ser desfeita.',
+                        variant: 'destructive',
+                        confirmLabel: 'Excluir'
+                    })) return;
                     await talentPoolApi.deleteVacancy(vacancyId);
                     toast({ title: 'Sucesso', description: 'Vaga excluída' });
                     break;
@@ -333,7 +340,12 @@ export default function TalentPoolPage() {
     };
 
     const handleDeleteCandidate = async (candidateId: string) => {
-        if (!confirm('Tem certeza que deseja excluir este candidato?')) return;
+        if (!await confirm({
+            title: 'Excluir Candidato',
+            description: 'Tem certeza que deseja excluir este candidato? A ação não pode ser desfeita.',
+            variant: 'destructive',
+            confirmLabel: 'Excluir'
+        })) return;
         try {
             await talentPoolApi.deleteCandidate(candidateId);
             toast({ title: 'Sucesso', description: 'Candidato excluído' });

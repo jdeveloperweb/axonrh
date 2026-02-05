@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useConfirm } from '@/components/providers/ConfirmProvider';
 import {
     Search,
     UserPlus,
@@ -16,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { UserDialog } from '@/components/users/user-dialog';
 
 export default function UsersPage() {
+    const { confirm } = useConfirm();
     const { toast } = useToast();
     const [users, setUsers] = useState<UserDTO[]>([]);
     const [loading, setLoading] = useState(true);
@@ -57,7 +59,12 @@ export default function UsersPage() {
     };
 
     const handleDelete = async (id: string) => {
-        if (confirm('Tem certeza que deseja excluir este usuário?')) {
+        if (await confirm({
+            title: 'Excluir Usuário',
+            description: 'Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.',
+            variant: 'destructive',
+            confirmLabel: 'Excluir'
+        })) {
             try {
                 await userApi.delete(id);
                 toast({ title: 'Sucesso', description: 'Usuário excluído com sucesso' });

@@ -19,6 +19,7 @@ import {
   Source_Sans_3
 } from 'next/font/google';
 import './globals.css';
+import { ClientProviders } from '@/components/providers/ClientProviders';
 
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -137,7 +138,9 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className={`${plusJakarta.variable} ${outfit.variable} ${inter.variable} ${roboto.variable} ${openSans.variable} ${montserrat.variable} ${ubuntu.variable} ${lato.variable} ${poppins.variable} ${raleway.variable} ${playfair.variable} ${nunito.variable} ${merriweather.variable} ${ptSans.variable} ${lora.variable} ${oxygen.variable} ${sourceSans.variable} font-sans`}>
-        {children}
+        <ClientProviders>
+          {children}
+        </ClientProviders>
       </body>
     </html>
   );

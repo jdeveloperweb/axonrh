@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useConfirm } from '@/components/providers/ConfirmProvider';
 import {
     Search,
     Plus,
@@ -30,6 +31,7 @@ interface Manager {
 }
 
 export default function ManagersPage() {
+    const { confirm } = useConfirm();
     const { toast } = useToast();
 
     // State
@@ -135,7 +137,12 @@ export default function ManagersPage() {
     };
 
     const handleRemove = async (departmentId: string, name: string, department: string) => {
-        if (!confirm(`Remover ${name} como gestor do departamento ${department}?`)) return;
+        if (!await confirm({
+            title: 'Remover Gestor',
+            description: `Remover ${name} como gestor do departamento ${department}?`,
+            variant: 'destructive',
+            confirmLabel: 'Remover'
+        })) return;
 
         try {
             await departmentsApi.removeManager(departmentId);

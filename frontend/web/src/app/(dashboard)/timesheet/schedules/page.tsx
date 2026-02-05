@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useConfirm } from '@/components/providers/ConfirmProvider';
 import {
   Plus,
   Clock,
@@ -79,6 +80,7 @@ const DEFAULT_DAYS: ScheduleDayRequest[] = DAYS_OF_WEEK.map((day) => ({
 }));
 
 export default function SchedulesPage() {
+  const { confirm } = useConfirm();
   const [loading, setLoading] = useState(true);
   const [schedules, setSchedules] = useState<WorkSchedule[]>([]);
   const [showDialog, setShowDialog] = useState(false);
@@ -192,7 +194,12 @@ export default function SchedulesPage() {
   };
 
   const handleDelete = async (scheduleId: string) => {
-    if (!confirm('Deseja excluir esta escala? Esta ação não pode ser desfeita.')) return;
+    if (!await confirm({
+      title: 'Excluir Escala',
+      description: 'Deseja excluir esta escala? Esta ação não pode ser desfeita.',
+      variant: 'destructive',
+      confirmLabel: 'Excluir'
+    })) return;
 
     try {
       await timesheetApi.deleteSchedule(scheduleId);

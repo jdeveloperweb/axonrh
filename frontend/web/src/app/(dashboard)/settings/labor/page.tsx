@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useConfirm } from '@/components/providers/ConfirmProvider';
 import { useRouter } from 'next/navigation';
 import {
     timesheetApi,
@@ -46,6 +47,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function LaborSettingsPage() {
+    const { confirm } = useConfirm();
     const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [schedules, setSchedules] = useState<WorkSchedule[]>([]);
@@ -124,7 +126,12 @@ export default function LaborSettingsPage() {
     };
 
     const handleDeleteHoliday = async (id: string) => {
-        if (!confirm('Deseja excluir este feriado?')) return;
+        if (!await confirm({
+            title: 'Excluir Feriado',
+            description: 'Deseja excluir este feriado?',
+            variant: 'destructive',
+            confirmLabel: 'Excluir'
+        })) return;
         try {
             await timesheetApi.deleteHoliday(id);
             toast.success('Feriado excluído');
@@ -180,7 +187,12 @@ export default function LaborSettingsPage() {
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Deseja realmente excluir esta escala?')) return;
+        if (!await confirm({
+            title: 'Excluir Escala',
+            description: 'Deseja realmente excluir esta escala?',
+            variant: 'destructive',
+            confirmLabel: 'Excluir'
+        })) return;
         try {
             await timesheetApi.deleteSchedule(id);
             toast.success('Escala excluída com sucesso');
@@ -440,8 +452,8 @@ export default function LaborSettingsPage() {
                                                     <td className="px-6 py-4 text-slate-600">{holiday.name}</td>
                                                     <td className="px-6 py-4">
                                                         <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${holiday.type === 'NATIONAL' ? 'bg-blue-100 text-blue-700' :
-                                                                holiday.type === 'STATE' ? 'bg-orange-100 text-orange-700' :
-                                                                    'bg-emerald-100 text-emerald-700'
+                                                            holiday.type === 'STATE' ? 'bg-orange-100 text-orange-700' :
+                                                                'bg-emerald-100 text-emerald-700'
                                                             }`}>
                                                             {holiday.type === 'NATIONAL' ? 'Nacional' :
                                                                 holiday.type === 'STATE' ? 'Estadual' : 'Municipal'}

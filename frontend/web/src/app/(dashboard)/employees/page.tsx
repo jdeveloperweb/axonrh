@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useConfirm } from '@/components/providers/ConfirmProvider';
 import { useRouter } from 'next/navigation';
 import {
   Search,
@@ -61,6 +62,7 @@ const weekDays = [
 ];
 
 export default function EmployeesPage() {
+  const { confirm } = useConfirm();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -212,7 +214,12 @@ export default function EmployeesPage() {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Tem certeza que deseja excluir ${name}?`)) return;
+    if (!await confirm({
+      title: 'Excluir Colaborador',
+      description: `Tem certeza que deseja excluir ${name}?`,
+      variant: 'destructive',
+      confirmLabel: 'Excluir'
+    })) return;
 
     try {
       await employeesApi.delete(id);

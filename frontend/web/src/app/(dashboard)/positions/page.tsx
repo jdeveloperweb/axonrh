@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useConfirm } from '@/components/providers/ConfirmProvider';
 import {
     Search,
     Plus,
@@ -15,6 +16,7 @@ import { positionsApi, Position, CreatePositionData } from '@/lib/api/positions'
 import { employeesApi, Department } from '@/lib/api/employees';
 
 export default function PositionsPage() {
+    const { confirm } = useConfirm();
     const { toast } = useToast();
 
     // State
@@ -56,7 +58,7 @@ export default function PositionsPage() {
                 positionsApi.getActivePositions(), // Or getPositions for paginated, currently using active list for simplicity
                 employeesApi.getDepartments()
             ]);
-            setPositions(positionsData);
+            setPositions(positionsData as any);
             setDepartments(departmentsData);
         } catch {
             toast({
@@ -155,7 +157,12 @@ export default function PositionsPage() {
     };
 
     const handleDelete = async (id: string, title: string) => {
-        if (!confirm(`Tem certeza que deseja excluir o cargo ${title}?`)) return;
+        if (!await confirm({
+            title: 'Excluir Cargo',
+            description: `Tem certeza que deseja excluir o cargo ${title}?`,
+            variant: 'destructive',
+            confirmLabel: 'Excluir'
+        })) return;
 
         try {
             await positionsApi.deletePosition(id);

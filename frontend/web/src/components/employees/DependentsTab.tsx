@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useConfirm } from '@/components/providers/ConfirmProvider';
 import { Plus, Trash2, Users, Loader2, Edit2, CheckCircle2, X } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { employeesApi, EmployeeDependent } from '@/lib/api/employees';
@@ -16,6 +17,7 @@ const RELATIONSHIP_LABELS: Record<string, string> = {
 };
 
 export function DependentsTab({ employeeId }: DependentsTabProps) {
+    const { confirm } = useConfirm();
     const { toast } = useToast();
     const [dependents, setDependents] = useState<EmployeeDependent[]>([]);
     const [loading, setLoading] = useState(false);
@@ -152,7 +154,12 @@ export function DependentsTab({ employeeId }: DependentsTabProps) {
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Tem certeza que deseja remover este dependente?')) return;
+        if (!await confirm({
+            title: 'Remover Dependente',
+            description: 'Tem certeza que deseja remover este dependente? A ação não poderá ser desfeita.',
+            variant: 'destructive',
+            confirmLabel: 'Remover'
+        })) return;
         try {
             await employeesApi.removeDependent(employeeId, id);
             toast({ title: 'Sucesso', description: 'Dependente removido com sucesso' });

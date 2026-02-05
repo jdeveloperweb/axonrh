@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useConfirm } from '@/components/providers/ConfirmProvider';
 import { useRouter, useParams } from 'next/navigation';
 import {
   setupApi,
@@ -628,6 +629,7 @@ function Step1CompanyData({
 
 // Step 2 - Org Structure
 function Step2OrgStructure() {
+  const { confirm } = useConfirm();
   const [activeTab, setActiveTab] = useState<'manual' | 'import'>('manual');
   const [departments, setDepartments] = useState<Department[]>([]);
   const [positions, setPositions] = useState<Position[]>([]);
@@ -678,7 +680,12 @@ function Step2OrgStructure() {
   };
 
   const handleDeleteDepartment = async (id: string) => {
-    if (!confirm('Tem certeza?')) return;
+    if (!await confirm({
+      title: 'Excluir Departamento',
+      description: 'Tem certeza?',
+      variant: 'destructive',
+      confirmLabel: 'Excluir'
+    })) return;
     try {
       setLoading(true);
       await setupApi.deleteDepartment(id);
@@ -705,7 +712,12 @@ function Step2OrgStructure() {
   };
 
   const handleDeletePosition = async (id: string) => {
-    if (!confirm('Tem certeza?')) return;
+    if (!await confirm({
+      title: 'Excluir Cargo',
+      description: 'Tem certeza?',
+      variant: 'destructive',
+      confirmLabel: 'Excluir'
+    })) return;
     try {
       setLoading(true);
       await setupApi.deletePosition(id);

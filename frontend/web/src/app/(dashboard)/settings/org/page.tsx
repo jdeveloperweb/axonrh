@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useConfirm } from '@/components/providers/ConfirmProvider';
 import { useRouter } from 'next/navigation';
 import {
     setupApi,
@@ -41,6 +42,7 @@ import {
 } from "@/components/ui/dialog";
 
 export default function OrgSettingsPage() {
+    const { confirm } = useConfirm();
     const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [departments, setDepartments] = useState<Department[]>([]);
@@ -113,7 +115,12 @@ export default function OrgSettingsPage() {
     };
 
     const handleDeleteDept = async (id: string) => {
-        if (!confirm('Excluir este departamento?')) return;
+        if (!await confirm({
+            title: 'Excluir Departamento',
+            description: 'Deseja excluir este departamento? Esta ação não pode ser desfeita.',
+            variant: 'destructive',
+            confirmLabel: 'Excluir'
+        })) return;
         try {
             await setupApi.deleteDepartment(id);
             toast.success('Departamento excluído');
@@ -124,7 +131,12 @@ export default function OrgSettingsPage() {
     };
 
     const handleDeletePos = async (id: string) => {
-        if (!confirm('Excluir este cargo?')) return;
+        if (!await confirm({
+            title: 'Excluir Cargo',
+            description: 'Deseja excluir este cargo? Esta ação não pode ser desfeita.',
+            variant: 'destructive',
+            confirmLabel: 'Excluir'
+        })) return;
         try {
             await setupApi.deletePosition(id);
             toast.success('Cargo excluído');

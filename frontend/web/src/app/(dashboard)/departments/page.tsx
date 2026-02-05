@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useConfirm } from '@/components/providers/ConfirmProvider';
 import {
     Search,
     Plus,
@@ -16,6 +17,7 @@ import { departmentsApi, DepartmentDTO, CreateDepartmentDTO, UpdateDepartmentDTO
 import { employeesApi, Employee } from '@/lib/api/employees';
 
 export default function DepartmentsPage() {
+    const { confirm } = useConfirm();
     const { toast } = useToast();
 
     // State
@@ -125,7 +127,12 @@ export default function DepartmentsPage() {
     };
 
     const handleDelete = async (id: string, name: string) => {
-        if (!confirm(`Tem certeza que deseja excluir o departamento ${name}?`)) return;
+        if (!await confirm({
+            title: 'Excluir Departamento',
+            description: `Tem certeza que deseja excluir o departamento ${name}?`,
+            variant: 'destructive',
+            confirmLabel: 'Excluir'
+        })) return;
 
         try {
             await departmentsApi.delete(id);

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useConfirm } from '@/components/providers/ConfirmProvider';
 import {
   Plus,
   Clock,
@@ -47,6 +48,7 @@ import {
 import { timesheetApi, TimeAdjustment, TimeAdjustmentRequest } from '@/lib/api/timesheet';
 
 export default function AdjustmentsPage() {
+  const { confirm } = useConfirm();
   const [loading, setLoading] = useState(true);
   const [myAdjustments, setMyAdjustments] = useState<TimeAdjustment[]>([]);
   const [pendingAdjustments, setPendingAdjustments] = useState<TimeAdjustment[]>([]);
@@ -165,7 +167,12 @@ export default function AdjustmentsPage() {
   };
 
   const handleCancel = async (adjustmentId: string) => {
-    if (!confirm('Deseja cancelar esta solicitação?')) return;
+    if (!await confirm({
+      title: 'Cancelar Solicitação',
+      description: 'Deseja cancelar esta solicitação? Esta ação não pode ser desfeita.',
+      variant: 'destructive',
+      confirmLabel: 'Cancelar Solicitação'
+    })) return;
 
     try {
       await timesheetApi.cancelAdjustment(adjustmentId);

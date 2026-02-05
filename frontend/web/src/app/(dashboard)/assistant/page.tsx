@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useConfirm } from '@/components/providers/ConfirmProvider';
 import ChatWidget from '@/components/ai/ChatWidget';
 import { useSearchParams } from 'next/navigation';
 import { chatApi, Conversation } from '@/lib/api/ai';
@@ -105,6 +106,7 @@ interface RecentConversationsProps {
 }
 
 function RecentConversations({ onSelectConversation, activeConversationId }: RecentConversationsProps) {
+  const { confirm } = useConfirm();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -130,7 +132,12 @@ function RecentConversations({ onSelectConversation, activeConversationId }: Rec
   };
 
   const deleteHistory = async () => {
-    if (confirm('Tem certeza que deseja apagar todo o histórico?')) {
+    if (await confirm({
+      title: 'Limpar Histórico',
+      description: 'Tem certeza que deseja apagar todo o histórico?',
+      variant: 'destructive',
+      confirmLabel: 'Apagar Tudo'
+    })) {
       try {
         await chatApi.deleteAllConversations();
         setConversations([]);
@@ -143,7 +150,12 @@ function RecentConversations({ onSelectConversation, activeConversationId }: Rec
 
   const deleteConversation = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    if (confirm('Tem certeza que deseja apagar esta conversa?')) {
+    if (await confirm({
+      title: 'Apagar Conversa',
+      description: 'Tem certeza que deseja apagar esta conversa?',
+      variant: 'destructive',
+      confirmLabel: 'Apagar'
+    })) {
       try {
         await chatApi.deleteConversation(id);
         setConversations(prev => prev.filter(c => c.id !== id));

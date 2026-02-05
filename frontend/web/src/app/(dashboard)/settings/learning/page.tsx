@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useConfirm } from '@/components/providers/ConfirmProvider';
 import {
     Plus,
     Search,
@@ -73,6 +74,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 export default function LearningManagementPage() {
+    const { confirm } = useConfirm();
     const [courses, setCourses] = useState<Course[]>([]);
     const [categories, setCategories] = useState<TrainingCategory[]>([]);
     const [loading, setLoading] = useState(true);
@@ -197,7 +199,12 @@ export default function LearningManagementPage() {
     };
 
     const handleRemoveEnrollment = async (enrollmentId: string) => {
-        if (!confirm('Deseja realmente remover esta matrícula? O colaborador perderá o acesso e todo o progresso deste treinamento.')) return;
+        if (!await confirm({
+            title: 'Remover Matrícula',
+            description: 'Deseja realmente remover esta matrícula? O colaborador perderá o acesso e todo o progresso deste treinamento.',
+            variant: 'destructive',
+            confirmLabel: 'Remover'
+        })) return;
 
         try {
             await enrollmentsApi.unenroll(enrollmentId);
@@ -251,7 +258,12 @@ export default function LearningManagementPage() {
 
     const handleDeleteCourse = async () => {
         if (!selectedCourse?.id) return;
-        if (!confirm('Deseja realmente excluir este treinamento? Esta ação é irreversível e removerá todos os módulos e lições vinculados.')) return;
+        if (!await confirm({
+            title: 'Excluir Treinamento',
+            description: 'Deseja realmente excluir este treinamento? Esta ação é irreversível e removerá todos os módulos e lições vinculados.',
+            variant: 'destructive',
+            confirmLabel: 'Excluir'
+        })) return;
 
         try {
             setIsSaving(true);
@@ -291,7 +303,12 @@ export default function LearningManagementPage() {
     }
 
     const handleDeleteCategory = async (id: string) => {
-        if (!confirm('Deseja realmente excluir esta categoria? Isso pode afetar os cursos vinculados.')) return;
+        if (!await confirm({
+            title: 'Excluir Categoria',
+            description: 'Deseja realmente excluir esta categoria? Isso pode afetar os cursos vinculados.',
+            variant: 'destructive',
+            confirmLabel: 'Excluir'
+        })) return;
         try {
             await categoriesApi.delete(id);
             toast.success('Categoria removida!');
@@ -334,7 +351,12 @@ export default function LearningManagementPage() {
     }
 
     const handleDeleteModule = async (moduleId: string) => {
-        if (!selectedCourse?.id || !confirm('Deseja excluir este módulo?')) return;
+        if (!selectedCourse?.id || !await confirm({
+            title: 'Excluir Módulo',
+            description: 'Deseja excluir este módulo?',
+            variant: 'destructive',
+            confirmLabel: 'Excluir'
+        })) return;
         try {
             const updated = await coursesApi.removeModule(selectedCourse.id, moduleId) as any;
             setSelectedCourse(updated);
@@ -356,7 +378,12 @@ export default function LearningManagementPage() {
     };
 
     const handleDeleteLesson = async (moduleId: string, lessonId: string) => {
-        if (!selectedCourse?.id || !confirm('Deseja excluir esta lição?')) return;
+        if (!selectedCourse?.id || !await confirm({
+            title: 'Excluir Lição',
+            description: 'Deseja excluir esta lição?',
+            variant: 'destructive',
+            confirmLabel: 'Excluir'
+        })) return;
         try {
             const updated = await coursesApi.removeLesson(selectedCourse.id, moduleId, lessonId) as any;
             setSelectedCourse(updated);
