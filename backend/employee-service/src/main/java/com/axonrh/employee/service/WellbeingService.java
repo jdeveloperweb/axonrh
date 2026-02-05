@@ -53,11 +53,12 @@ public class WellbeingService {
 
         EmployeeWellbeing.EmployeeWellbeingBuilder builder = EmployeeWellbeing.builder()
                 .tenantId(tenantId)
-                .employeeId(request.getEmployeeId())
+                // Use o ID resolvido da entidade Employee, nao o user ID do request
+                .employeeId(employee.getId())
                 .score(request.getScore())
                 .notes(request.getNotes())
                 .wantsEapContact(request.isWantsEapContact())
-                .source(request.getSource())
+                .source(request.getSource() != null ? request.getSource() : "WEB")
                 .createdAt(LocalDateTime.now());
 
         String sentiment = "NEUTRAL";
@@ -100,9 +101,19 @@ public class WellbeingService {
         repository.save(builder.build());
     }
 
-    public List<EmployeeWellbeing> getHistory(UUID employeeId) {
+    public List<EmployeeWellbeing> getHistory(UUID idOrUserId) {
         UUID tenantId = getTenantId();
-        return repository.findByTenantIdAndEmployeeIdOrderByCreatedAtDesc(tenantId, employeeId);
+
+        // Resolve o ID para garantir que estamos buscando pelo Employee ID correto
+        // Frontend pode enviar User ID ou Employee ID
+        UUID resolvedEmployeeId = employeeRepository.findByTenantIdAndId(tenantId, idOrUserId)
+                .map(com.axonrh.employee.entity.Employee::getId)
+                .or(() -> employeeRepository.findByTenantIdAndUserId(tenantId, idOrUserId)
+                        .map(com.axonrh.employee.entity.Employee::getId))
+                // Fallback: assume que o ID passado eh o proprio Employee ID
+                .orElse(idOrUserId);
+
+        return repository.findByTenantIdAndEmployeeIdOrderByCreatedAtDesc(tenantId, resolvedEmployeeId);
     }
 
     public WellbeingStats getStats() {
