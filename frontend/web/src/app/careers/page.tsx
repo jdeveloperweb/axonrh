@@ -12,6 +12,7 @@ import {
     ArrowRight,
     Search,
     Filter,
+    Sparkles,
 } from 'lucide-react';
 import { talentPoolApi, PublicVacancy, getEmploymentTypeLabel, getWorkRegimeLabel } from '@/lib/api/talent-pool';
 import { useThemeStore } from '@/stores/theme-store';
