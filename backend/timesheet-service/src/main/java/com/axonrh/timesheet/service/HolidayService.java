@@ -27,23 +27,29 @@ public class HolidayService {
     public int importHolidays(UUID tenantId, int year) {
         log.info("Iniciando importação de feriados para o tenant {} e ano {}", tenantId, year);
         
-        // 1. Obter endereço da empresa (para feriados estaduais/municipais se disponível)
-        Map<String, String> companyLocation = getCompanyLocation(tenantId);
-        String state = companyLocation.get("state");
-        String city = companyLocation.get("city");
-        
-        log.info("Localização da empresa: {} - {}", city, state);
+        try {
+            // 1. Obter endereço da empresa (para feriados estaduais/municipais se disponível)
+            Map<String, String> companyLocation = getCompanyLocation(tenantId);
+            String state = companyLocation.get("state");
+            String city = companyLocation.get("city");
+            
+            log.info("Localização da empresa: {} - {}", city, state);
 
-        int count = 0;
-        
-        // 2. Importar Feriados Nacionais (BrasilAPI)
-        count += importNationalHolidays(tenantId, year);
-        
-        // 3. TODO: Implementar feriados estaduais e municipais
-        // Por enquanto, BrasilAPI só fornece nacionais de forma fácil.
-        // Poderíamos adicionar aqui outros provedores ou uma lista estática de feriados estaduais comuns.
-        
-        return count;
+            int count = 0;
+            
+            // 2. Importar Feriados Nacionais (BrasilAPI)
+            count += importNationalHolidays(tenantId, year);
+            
+            // 3. TODO: Implementar feriados estaduais e municipais
+            // Por enquanto, BrasilAPI só fornece nacionais de forma fácil.
+            // Poderíamos adicionar aqui outros provedores ou uma lista estática de feriados estaduais comuns.
+            
+            log.info("Importação concluída. Total de {} feriados importados", count);
+            return count;
+        } catch (Exception e) {
+            log.error("Erro ao importar feriados para tenant {}: {}", tenantId, e.getMessage(), e);
+            throw new RuntimeException("Erro ao importar feriados: " + e.getMessage(), e);
+        }
     }
 
     private int importNationalHolidays(UUID tenantId, int year) {
@@ -54,18 +60,32 @@ public class HolidayService {
             log.info("Buscando feriados nacionais na BrasilAPI: {}", url);
             Map<String, Object>[] response = restTemplate.getForObject(url, Map[].class);
             
-            if (response != null) {
+            if (response != null && response.length > 0) {
+                log.info("Recebidos {} feriados da API", response.length);
                 for (Map<String, Object> h : response) {
-                    LocalDate date = LocalDate.parse((String) h.get("date"));
-                    String name = (String) h.get("name");
-                    
-                    if (saveIfNotExist(tenantId, date, name, "NATIONAL", false)) {
-                        count++;
+                    try {
+                        LocalDate date = LocalDate.parse((String) h.get("date"));
+                        String name = (String) h.get("name");
+                        
+                        log.debug("Processando feriado: {} em {}", name, date);
+                        
+                        if (saveIfNotExist(tenantId, date, name, "NATIONAL", false)) {
+                            count++;
+                            log.debug("Feriado {} salvo com sucesso", name);
+                        } else {
+                            log.debug("Feriado {} já existe, ignorando", name);
+                        }
+                    } catch (Exception e) {
+                        log.warn("Erro ao processar feriado individual: {}", e.getMessage());
                     }
                 }
+                log.info("Total de {} feriados nacionais importados com sucesso", count);
+            } else {
+                log.warn("Nenhum feriado retornado pela BrasilAPI para o ano {}", year);
             }
         } catch (Exception e) {
-            log.error("Erro ao importar feriados da BrasilAPI: {}", e.getMessage());
+            log.error("Erro ao importar feriados da BrasilAPI: {}", e.getMessage(), e);
+            throw new RuntimeException("Falha ao buscar feriados da BrasilAPI: " + e.getMessage(), e);
         }
         
         return count;
