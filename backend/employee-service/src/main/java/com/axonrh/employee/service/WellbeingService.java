@@ -35,6 +35,7 @@ public class WellbeingService {
 
     public void processCheckIn(WellbeingCheckInRequest request) {
         UUID tenantId = getTenantId();
+        log.info("Processing check-in for request ID: {} with Tenant: {}", request.getEmployeeId(), tenantId);
 
         // Obtem o colaborador para garantir existência e consistência do tenant (busca por ID ou UserID)
         Optional<com.axonrh.employee.entity.Employee> empOpt = employeeRepository.findByTenantIdAndId(tenantId, request.getEmployeeId())
@@ -44,12 +45,15 @@ public class WellbeingService {
             // Tenta buscar por email do token JWT como fallback
             String email = getEmailFromContext();
             if (email != null) {
+                log.info("Employee not found by ID, trying fallback email: {}", email);
                 empOpt = employeeRepository.findByTenantIdAndEmail(tenantId, email);
             }
         }
 
         com.axonrh.employee.entity.Employee employee = empOpt
                 .orElseThrow(() -> new IllegalArgumentException("Colaborador não encontrado: " + request.getEmployeeId()));
+        
+        log.info("Check-in processed. Resolved Employee ID: {}", employee.getId());
 
         EmployeeWellbeing.EmployeeWellbeingBuilder builder = EmployeeWellbeing.builder()
                 .tenantId(tenantId)
@@ -97,12 +101,14 @@ public class WellbeingService {
         builder.sentiment(sentiment)
                 .riskLevel(riskLevel)
                 .keywords(keywords);
-
-        repository.save(builder.build());
+        
+        EmployeeWellbeing saved = repository.save(builder.build());
+        log.info("Wellbeing record saved with ID: {} for Employee ID: {}", saved.getId(), saved.getEmployeeId());
     }
 
     public List<EmployeeWellbeing> getHistory(UUID idOrUserId) {
         UUID tenantId = getTenantId();
+        log.info("Fetching history for ID: {} with Tenant: {}", idOrUserId, tenantId);
 
         // Resolve o ID para garantir que estamos buscando pelo Employee ID correto
         // Frontend pode enviar User ID ou Employee ID
@@ -112,6 +118,8 @@ public class WellbeingService {
                         .map(com.axonrh.employee.entity.Employee::getId))
                 // Fallback: assume que o ID passado eh o proprio Employee ID
                 .orElse(idOrUserId);
+        
+        log.info("Resolved Employee ID for history lookup: {}", resolvedEmployeeId);
 
         return repository.findByTenantIdAndEmployeeIdOrderByCreatedAtDesc(tenantId, resolvedEmployeeId);
     }
