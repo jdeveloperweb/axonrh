@@ -166,6 +166,7 @@ public class TalentPoolService {
      * Atualiza uma vaga
      */
     public JobVacancyResponse updateVacancy(UUID id, JobVacancyRequest request, UUID userId) {
+        log.info("Iniciando atualização da vaga: {} pelo usuário: {}", id, userId);
         UUID tenantId = getTenantId();
 
         JobVacancy vacancy = vacancyRepository.findByTenantIdAndId(tenantId, id)
@@ -174,9 +175,11 @@ public class TalentPoolService {
         Position position = positionRepository.findByTenantIdAndId(tenantId, request.getPositionId())
                 .orElseThrow(() -> new ResourceNotFoundException("Cargo não encontrado: " + request.getPositionId()));
 
+        log.debug("Mapeando dados para a vaga: {}", id);
         vacancyMapper.updateEntity(vacancy, request, position);
         vacancy.setUpdatedBy(userId);
 
+        log.debug("Salvando vaga no banco: {}", id);
         vacancy = vacancyRepository.save(vacancy);
         log.info("Vaga atualizada com sucesso no banco: {}", id);
 
@@ -187,24 +190,41 @@ public class TalentPoolService {
      * Publica uma vaga
      */
     public JobVacancyResponse publishVacancy(UUID id, UUID userId) {
+        log.info("Solicitação de publicação da vaga: {} pelo usuário: {}", id, userId);
         UUID tenantId = getTenantId();
 
         JobVacancy vacancy = vacancyRepository.findByTenantIdAndId(tenantId, id)
                 .orElseThrow(() -> new ResourceNotFoundException("Vaga não encontrada: " + id));
 
         if (vacancy.getStatus() == VacancyStatus.OPEN) {
+            log.warn("Tentativa de publicar vaga já aberta: {}", id);
             throw new InvalidOperationException("A vaga já está publicada");
         }
 
+        log.debug("Alterando status da vaga para OPEN: {}", id);
         vacancy.publish();
         vacancy.setUpdatedBy(userId);
 
-        // Garante código público único
-        while (vacancyRepository.existsByPublicCode(vacancy.getPublicCode())) {
+        // Garante código público único (evitando loops infinitos)
+        int attempts = 0;
+        while (attempts < 10) {
+            String currentCode = vacancy.getPublicCode();
+            log.debug("Verificando se código público existe: {} (Tentativa {})", currentCode, attempts + 1);
+            
+            // Busca se existe OUTRA vaga com este código
+            Optional<JobVacancy> existing = vacancyRepository.findByPublicCode(currentCode);
+            if (existing.isEmpty() || existing.get().getId().equals(vacancy.getId())) {
+                log.debug("Código público disponível: {}", currentCode);
+                break;
+            }
+            
+            log.debug("Conflito de código detectado, gerando novo...");
             vacancy.setPublicCode(null);
             vacancy.generatePublicCode();
+            attempts++;
         }
 
+        log.debug("Salvando publicação da vaga no banco...");
         vacancy = vacancyRepository.save(vacancy);
         log.info("Vaga publicada com sucesso no banco: {} - Código público: {}", id, vacancy.getPublicCode());
 

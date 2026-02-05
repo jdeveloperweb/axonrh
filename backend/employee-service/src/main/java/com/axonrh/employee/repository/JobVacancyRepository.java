@@ -16,8 +16,8 @@ import java.util.UUID;
 @Repository
 public interface JobVacancyRepository extends JpaRepository<JobVacancy, UUID> {
 
-    // Buscar por tenant e ID com pre-fetch
-    @Query("SELECT v FROM JobVacancy v LEFT JOIN FETCH v.position p LEFT JOIN FETCH p.department WHERE v.tenantId = :tenantId AND v.id = :id")
+    // Buscar por tenant e ID
+    @Query("SELECT v FROM JobVacancy v WHERE v.tenantId = :tenantId AND v.id = :id")
     Optional<JobVacancy> findByTenantIdAndId(@Param("tenantId") UUID tenantId, @Param("id") UUID id);
 
     // Buscar por código público (sem tenant - acesso público)
