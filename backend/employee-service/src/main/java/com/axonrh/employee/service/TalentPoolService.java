@@ -178,7 +178,7 @@ public class TalentPoolService {
         vacancy.setUpdatedBy(userId);
 
         vacancy = vacancyRepository.save(vacancy);
-        log.info("Vaga atualizada: {}", id);
+        log.info("Vaga atualizada com sucesso no banco: {}", id);
 
         return toResponseWithCandidateCount(vacancy);
     }
@@ -206,7 +206,7 @@ public class TalentPoolService {
         }
 
         vacancy = vacancyRepository.save(vacancy);
-        log.info("Vaga publicada: {} - Código público: {}", id, vacancy.getPublicCode());
+        log.info("Vaga publicada com sucesso no banco: {} - Código público: {}", id, vacancy.getPublicCode());
 
         return toResponseWithCandidateCount(vacancy);
     }
@@ -552,6 +552,7 @@ public class TalentPoolService {
 
     private JobVacancyResponse toResponseWithCandidateCount(JobVacancy vacancy) {
         JobVacancyResponse response = vacancyMapper.toResponse(vacancy);
+        log.debug("Contando candidatos para vaga: {}", vacancy.getId());
         long count = candidateRepository.countByVacancyIdAndIsActiveTrue(vacancy.getId());
         response.setCandidateCount((int) count);
         return response;

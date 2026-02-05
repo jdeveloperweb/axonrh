@@ -96,7 +96,7 @@ public class JobVacancyMapper {
                 .publishedAt(vacancy.getPublishedAt())
                 .closedAt(vacancy.getClosedAt())
                 .publicCode(vacancy.getPublicCode())
-                .candidateCount(vacancy.getCandidates() != null ? vacancy.getCandidates().size() : 0)
+                .candidateCount(0)
                 .isActive(vacancy.getIsActive())
                 .createdAt(vacancy.getCreatedAt())
                 .updatedAt(vacancy.getUpdatedAt())
