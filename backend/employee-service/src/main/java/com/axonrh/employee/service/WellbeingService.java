@@ -19,6 +19,10 @@ import com.axonrh.employee.dto.WellbeingStats;
 import com.axonrh.employee.repository.EmployeeRepository;
 
 import java.util.UUID;
+import java.util.Optional;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 
 @Slf4j
 @Service
@@ -33,8 +37,18 @@ public class WellbeingService {
         UUID tenantId = getTenantId();
 
         // Obtem o colaborador para garantir existência e consistência do tenant (busca por ID ou UserID)
-        com.axonrh.employee.entity.Employee employee = employeeRepository.findByTenantIdAndId(tenantId, request.getEmployeeId())
-                .or(() -> employeeRepository.findByTenantIdAndUserId(tenantId, request.getEmployeeId()))
+        Optional<com.axonrh.employee.entity.Employee> empOpt = employeeRepository.findByTenantIdAndId(tenantId, request.getEmployeeId())
+                .or(() -> employeeRepository.findByTenantIdAndUserId(tenantId, request.getEmployeeId()));
+
+        if (empOpt.isEmpty()) {
+            // Tenta buscar por email do token JWT como fallback
+            String email = getEmailFromContext();
+            if (email != null) {
+                empOpt = employeeRepository.findByTenantIdAndEmail(tenantId, email);
+            }
+        }
+
+        com.axonrh.employee.entity.Employee employee = empOpt
                 .orElseThrow(() -> new IllegalArgumentException("Colaborador não encontrado: " + request.getEmployeeId()));
 
         EmployeeWellbeing.EmployeeWellbeingBuilder builder = EmployeeWellbeing.builder()
@@ -147,5 +161,23 @@ public class WellbeingService {
             throw new IllegalStateException("Tenant nao definido no contexto");
         }
         return UUID.fromString(tenant);
+    }
+
+    private String getEmailFromContext() {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.getPrincipal() instanceof Jwt) {
+                Jwt jwt = (Jwt) authentication.getPrincipal();
+                // Tenta "email" ou "sub" se for email
+                String email = jwt.getClaimAsString("email");
+                if (email == null && jwt.getSubject().contains("@")) {
+                    email = jwt.getSubject();
+                }
+                return email;
+            }
+        } catch (Exception e) {
+            log.warn("Could not extract email from context", e);
+        }
+        return null;
     }
 }
