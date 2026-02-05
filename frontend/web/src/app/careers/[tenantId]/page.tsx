@@ -14,8 +14,17 @@ import {
     Search,
     Filter,
     Sparkles,
+    CheckCircle2,
+    Heart,
+    Star,
+    Coffee,
+    Zap,
+    Users,
+    X,
+    Upload,
+    Loader2,
 } from 'lucide-react';
-import { talentPoolApi, PublicVacancy, getEmploymentTypeLabel, getWorkRegimeLabel } from '@/lib/api/talent-pool';
+import { talentPoolApi, PublicVacancy, getEmploymentTypeLabel, getWorkRegimeLabel, PublicApplicationData } from '@/lib/api/talent-pool';
 import { useThemeStore } from '@/stores/theme-store';
 import { cn, getPhotoUrl } from '@/lib/utils';
 import { configApi } from '@/lib/api/config';
@@ -29,6 +38,7 @@ export default function CareersPage() {
     const [search, setSearch] = useState('');
     const [locationFilter, setLocationFilter] = useState('');
     const [regimeFilter, setRegimeFilter] = useState('');
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const { tenantTheme, setTenantTheme } = useThemeStore();
 
     useEffect(() => {
@@ -128,15 +138,9 @@ export default function CareersPage() {
                             </div>
                         </div>
                         <div className="hidden md:flex items-center gap-6">
-                            <a href="#" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Nossa Cultura</a>
-                            <a href="#" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Benefícios</a>
-                            <Link
-                                href="/login"
-                                className="px-4 py-2 rounded-lg text-sm font-bold text-white shadow-md hover:opacity-90 transition-all"
-                                style={{ backgroundColor: primaryColor }}
-                            >
-                                Área do Candidato
-                            </Link>
+                            <a href="#cultura" className="text-sm font-medium text-gray-600 hover:text-[var(--color-primary)] transition-colors">Nossa Cultura</a>
+                            <a href="#beneficios" className="text-sm font-medium text-gray-600 hover:text-[var(--color-primary)] transition-colors">Benefícios</a>
+                            <a href="#vagas" className="text-sm font-medium text-gray-600 hover:text-[var(--color-primary)] transition-colors">Vagas Abertas</a>
                         </div>
                     </div>
                 </div>
@@ -238,7 +242,7 @@ export default function CareersPage() {
             </section>
 
             {/* Vacancies List */}
-            <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
+            <section id="vagas" className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
                 <div className="flex items-center justify-between mb-10">
                     <div>
                         <h3 className="text-2xl font-bold text-gray-900 tracking-tight">Vagas em Destaque</h3>
@@ -359,6 +363,89 @@ export default function CareersPage() {
                 )}
             </section>
 
+            {/* Cultura Section */}
+            <section id="cultura" className="bg-white py-24">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center mb-16">
+                        <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Nossa Cultura</h2>
+                        <div className="w-20 h-1.5 bg-[var(--color-primary)] mx-auto rounded-full mb-6" />
+                        <p className="text-gray-500 text-lg max-w-2xl mx-auto">
+                            O que nos move e como trabalhamos para construir algo extraordinário todos os dias.
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div className="p-8 rounded-[2rem] bg-gray-50 hover:bg-white hover:shadow-xl transition-all duration-300 group">
+                            <div className="w-14 h-14 bg-blue-100 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                                <Heart className="w-7 h-7 text-blue-600" />
+                            </div>
+                            <h4 className="text-xl font-bold mb-4">Foco em Pessoas</h4>
+                            <p className="text-gray-500 leading-relaxed">
+                                Acreditamos que o sucesso da nossa empresa é o reflexo direto do bem-estar e crescimento do nosso time.
+                            </p>
+                        </div>
+                        <div className="p-8 rounded-[2rem] bg-gray-50 hover:bg-white hover:shadow-xl transition-all duration-300 group">
+                            <div className="w-14 h-14 bg-purple-100 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                                <Zap className="w-7 h-7 text-purple-600" />
+                            </div>
+                            <h4 className="text-xl font-bold mb-4">Inovação Ágil</h4>
+                            <p className="text-gray-500 leading-relaxed">
+                                Incentivamos a experimentação e aprendizado contínuo, sempre buscando formas melhores de resolver problemas.
+                            </p>
+                        </div>
+                        <div className="p-8 rounded-[2rem] bg-gray-50 hover:bg-white hover:shadow-xl transition-all duration-300 group">
+                            <div className="w-14 h-14 bg-emerald-100 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                                <Star className="w-7 h-7 text-emerald-600" />
+                            </div>
+                            <h4 className="text-xl font-bold mb-4">Excelência</h4>
+                            <p className="text-gray-500 leading-relaxed">
+                                Buscamos a qualidade em cada detalhe, entregando resultados que superam as expectativas.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Benefícios Section */}
+            <section id="beneficios" className="py-24 bg-gray-50">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex flex-col lg:flex-row items-center gap-16">
+                        <div className="lg:w-1/2">
+                            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">Benefícios que você vai amar</h2>
+                            <p className="text-gray-500 text-lg mb-10 leading-relaxed">
+                                Cuidamos de quem constrói o nosso negócio. Oferecemos um pacote abrangente para garantir sua qualidade de vida.
+                            </p>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                {[
+                                    { icon: Coffee, title: 'Ambiente Flexível', desc: 'Trabalho híbrido ou remoto conforme o time.' },
+                                    { icon: Heart, title: 'Saúde e Bem-estar', desc: 'Plano de saúde e odontológico premium.' },
+                                    { icon: Zap, title: 'Crescimento', desc: 'Subsídio para cursos e certificações.' },
+                                    { icon: Users, title: 'Cultura Inclusiva', desc: 'Eventos de integração e squads diversos.' }
+                                ].map((item, idx) => (
+                                    <div key={idx} className="flex gap-4">
+                                        <div className="flex-shrink-0 w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center">
+                                            <item.icon className="w-5 h-5 text-[var(--color-primary)]" />
+                                        </div>
+                                        <div>
+                                            <h5 className="font-bold text-gray-900">{item.title}</h5>
+                                            <p className="text-sm text-gray-500">{item.desc}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="lg:w-1/2 relative">
+                            <div className="aspect-square bg-gradient-to-br from-[var(--color-primary)]/10 to-blue-600/10 rounded-full flex items-center justify-center p-12">
+                                <div className="w-full h-full bg-white rounded-3xl shadow-2xl overflow-hidden flex items-center justify-center">
+                                    <Sparkles className="w-32 h-32 text-[var(--color-primary)]/20 animate-pulse" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             {/* CTA Section */}
             <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-24">
                 <div className="bg-gray-900 rounded-[2.5rem] p-8 sm:p-16 text-center overflow-hidden relative">
@@ -371,6 +458,7 @@ export default function CareersPage() {
                             Mesmo se não houver uma vaga aberta hoje que seja a sua cara, adoraríamos conhecer você para futuras oportunidades.
                         </p>
                         <button
+                            onClick={() => setIsModalOpen(true)}
                             className="px-8 py-4 rounded-2xl font-bold text-white transition-all shadow-xl hover:scale-105"
                             style={{ backgroundColor: primaryColor }}
                         >
@@ -379,6 +467,15 @@ export default function CareersPage() {
                     </div>
                 </div>
             </section>
+
+            {/* Talent Pool Modal */}
+            <TalentPoolModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                tenantId={tenantId}
+                primaryColor={primaryColor}
+                vacancies={vacancies}
+            />
 
             {/* Footer */}
             <footer className="bg-white border-t border-gray-100 py-12">
@@ -409,3 +506,236 @@ export default function CareersPage() {
         </div>
     );
 }
+
+function TalentPoolModal({ isOpen, onClose, tenantId, primaryColor, vacancies = [] }: {
+    isOpen: boolean;
+    onClose: () => void;
+    tenantId: string;
+    primaryColor: string;
+    vacancies?: PublicVacancy[];
+}) {
+    const [submitting, setSubmitting] = useState(false);
+    const [submitted, setSubmitted] = useState(false);
+    const [resumeFile, setResumeFile] = useState<File | null>(null);
+    const [error, setError] = useState<string | null>(null);
+
+    const [formData, setFormData] = useState<PublicApplicationData>({
+        fullName: '',
+        email: '',
+        phone: '',
+        city: '',
+        state: '',
+        linkedinUrl: '',
+        portfolioUrl: '',
+    });
+
+    const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+    if (!isOpen) return null;
+
+    const validateForm = (): boolean => {
+        const errors: Record<string, string> = {};
+        if (!formData.fullName.trim()) errors.fullName = 'Nome completo é obrigatório';
+        if (!formData.email.trim()) {
+            errors.email = 'Email é obrigatório';
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+            errors.email = 'Email inválido';
+        }
+        if (!resumeFile && !submitted) errors.resume = 'O currículo é obrigatório';
+
+        setFormErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError(null);
+
+        if (!validateForm()) return;
+
+        setSubmitting(true);
+        try {
+            // Tenta encontrar uma vaga de Banco de Talentos
+            const talentPoolVacancy = vacancies.find(v =>
+                v.publicCode.toLowerCase().includes('banco') ||
+                v.title.toLowerCase().includes('banco')
+            );
+
+            const codeToUse = talentPoolVacancy?.publicCode || 'BANCO';
+
+            await talentPoolApi.applyToVacancy(codeToUse, formData, resumeFile || undefined);
+            setSubmitted(true);
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
+            const msg = error.response?.data?.message || 'Erro ao enviar candidatura. Certifique-se de que existe uma vaga configurada para o Banco de Talentos.';
+            setError(msg);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+            <div className="bg-white rounded-[2.5rem] w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl relative animate-in zoom-in-95 duration-300">
+                <button
+                    onClick={onClose}
+                    className="absolute top-6 right-6 p-2 rounded-full hover:bg-gray-100 transition-colors z-10"
+                >
+                    <X className="w-6 h-6 text-gray-400" />
+                </button>
+
+                {submitted ? (
+                    <div className="p-12 text-center">
+                        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <CheckCircle2 className="w-10 h-10 text-green-600" />
+                        </div>
+                        <h3 className="text-3xl font-bold text-gray-900 mb-4">Candidatura Enviada!</h3>
+                        <p className="text-gray-500 mb-10 text-lg">
+                            Seu perfil agora faz parte do nosso Banco de Talentos. Entraremos em contato assim que surgir uma oportunidade que combine com você.
+                        </p>
+                        <button
+                            onClick={onClose}
+                            className="w-full py-4 rounded-2xl font-bold text-white shadow-lg transition-all hover:scale-[1.02]"
+                            style={{ backgroundColor: primaryColor }}
+                        >
+                            Fechar
+                        </button>
+                    </div>
+                ) : (
+                    <div className="p-8 sm:p-12">
+                        <div className="mb-10 text-center">
+                            <h3 className="text-3xl font-bold text-gray-900 mb-3">Banco de Talentos</h3>
+                            <p className="text-gray-500">Preencha seus dados para futuras oportunidades</p>
+                        </div>
+
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            {error && (
+                                <div className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-sm font-medium">
+                                    {error}
+                                </div>
+                            )}
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div className="sm:col-span-2">
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">Nome Completo *</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        className={cn(
+                                            "w-full px-5 py-4 bg-gray-50 rounded-2xl border-none focus:ring-2 transition-all",
+                                            formErrors.fullName ? "ring-2 ring-red-500/20" : "focus:ring-[var(--color-primary)]/20"
+                                        )}
+                                        value={formData.fullName}
+                                        onChange={e => setFormData({ ...formData, fullName: e.target.value })}
+                                    />
+                                    {formErrors.fullName && <p className="mt-1 text-xs text-red-500 font-bold">{formErrors.fullName}</p>}
+                                </div>
+
+                                <div className="sm:col-span-2">
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">Email Profissional *</label>
+                                    <input
+                                        type="email"
+                                        required
+                                        className={cn(
+                                            "w-full px-5 py-4 bg-gray-50 rounded-2xl border-none focus:ring-2 transition-all",
+                                            formErrors.email ? "ring-2 ring-red-500/20" : "focus:ring-[var(--color-primary)]/20"
+                                        )}
+                                        value={formData.email}
+                                        onChange={e => setFormData({ ...formData, email: e.target.value })}
+                                    />
+                                    {formErrors.email && <p className="mt-1 text-xs text-red-500 font-bold">{formErrors.email}</p>}
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">Telefone / WhatsApp</label>
+                                    <input
+                                        type="tel"
+                                        className="w-full px-5 py-4 bg-gray-50 rounded-2xl border-none focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all"
+                                        value={formData.phone}
+                                        onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">Cidade / Estado</label>
+                                    <input
+                                        type="text"
+                                        className="w-full px-5 py-4 bg-gray-50 rounded-2xl border-none focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all"
+                                        value={formData.city}
+                                        onChange={e => setFormData({ ...formData, city: e.target.value })}
+                                        placeholder="Ex: São Paulo, SP"
+                                    />
+                                </div>
+
+                                <div className="sm:col-span-2">
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">LinkedIn (URL)</label>
+                                    <input
+                                        type="url"
+                                        className="w-full px-5 py-4 bg-gray-50 rounded-2xl border-none focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all"
+                                        value={formData.linkedinUrl}
+                                        onChange={e => setFormData({ ...formData, linkedinUrl: e.target.value })}
+                                    />
+                                </div>
+
+                                <div className="sm:col-span-2">
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">Currículo (PDF ou Docx) *</label>
+                                    <div className={cn(
+                                        "relative border-2 border-dashed rounded-3xl p-8 transition-all flex flex-col items-center justify-center gap-3",
+                                        resumeFile ? "border-green-200 bg-green-50/30" : "border-gray-200 bg-gray-50/50 hover:bg-gray-100/50",
+                                        formErrors.resume && "border-red-200 bg-red-50/30"
+                                    )}>
+                                        <input
+                                            type="file"
+                                            accept=".pdf,.docx"
+                                            className="absolute inset-0 opacity-0 cursor-pointer"
+                                            onChange={e => setResumeFile(e.target.files?.[0] || null)}
+                                        />
+                                        {resumeFile ? (
+                                            <>
+                                                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-green-600">
+                                                    <CheckCircle2 className="w-6 h-6" />
+                                                </div>
+                                                <div className="text-center">
+                                                    <p className="font-bold text-gray-900">{resumeFile.name}</p>
+                                                    <p className="text-xs text-gray-500">Clique para trocar o arquivo</p>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-gray-400">
+                                                    <Upload className="w-6 h-6" />
+                                                </div>
+                                                <div className="text-center">
+                                                    <p className="font-bold text-gray-900">Clique ou arraste seu currículo</p>
+                                                    <p className="text-xs text-gray-500">PDF ou Word (máx 5MB)</p>
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                    {formErrors.resume && <p className="mt-2 text-xs text-red-500 font-bold">{formErrors.resume}</p>}
+                                </div>
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={submitting}
+                                className="w-full py-5 rounded-[1.5rem] font-bold text-white shadow-xl transition-all hover:scale-[1.02] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                style={{ backgroundColor: primaryColor }}
+                            >
+                                {submitting ? (
+                                    <>
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        Enviando...
+                                    </>
+                                ) : (
+                                    'Concluir Inscrição'
+                                )}
+                            </button>
+                        </form>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
