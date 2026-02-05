@@ -17,11 +17,11 @@ import {
   LogOut,
   Calculator,
   Database,
-
   Building2,
   UserCog,
   Briefcase,
   ClipboardCheck,
+  UserPlus,
 } from 'lucide-react';
 import { cn, getPhotoUrl } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
@@ -83,6 +83,7 @@ const navGroups: NavGroup[] = [
       { label: 'Organograma', href: '/organogram', icon: Users },
       { label: 'Departamentos', href: '/departments', icon: Building2 },
       { label: 'Cargos', href: '/positions', icon: Briefcase },
+      { label: 'Banco de Talentos', href: '/talent-pool', icon: UserPlus, permission: 'EMPLOYEE:READ' },
       { label: 'Gestores', href: '/managers', icon: UserCog },
       { label: 'Configurações', href: '/settings', icon: Settings, permission: 'CONFIG:READ' },
     ]
