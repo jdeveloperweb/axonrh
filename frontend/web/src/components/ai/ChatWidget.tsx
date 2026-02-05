@@ -170,7 +170,9 @@ export default function ChatWidget({
   }, [initialConversationId, loadConversation]);
 
   useEffect(() => {
-    scrollToBottom();
+    if (messages.length > 0) {
+      scrollToBottom();
+    }
   }, [messages, scrollToBottom]);
 
   // Handle initial message
