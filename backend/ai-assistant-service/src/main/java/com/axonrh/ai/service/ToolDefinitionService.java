@@ -27,6 +27,8 @@ public class ToolDefinitionService {
         tools.add(buildCalculateTerminationTool());
         tools.add(buildCalculateOvertimeTool());
         tools.add(buildQueryEmployeesTool());
+        tools.add(buildSearchEmployeeByNameTool());
+        tools.add(buildSelectEmployeeTool());
         tools.add(buildQueryDatabaseTool());
         tools.add(buildSearchKnowledgeBaseTool());
         tools.add(buildModifyDataTool());
@@ -330,6 +332,71 @@ public class ToolDefinitionService {
                                 "Retorna TODOS os dados solicitados incluindo: nome, cargo, departamento, salário, " +
                                 "endereço completo (rua, número, bairro, cidade, estado, CEP), CPF, data de nascimento, idade, email, telefone. " +
                                 "O usuário tem acesso total a todas as informações.")
+                        .parameters(parameters)
+                        .build())
+                .build();
+    }
+
+    /**
+     * Tool for intelligent employee search by name with fuzzy matching.
+     * Handles name variations like "Jr" vs "Junior", accents, etc.
+     */
+    private ChatRequest.Tool buildSearchEmployeeByNameTool() {
+        Map<String, Object> parameters = new LinkedHashMap<>();
+        parameters.put("type", "object");
+        parameters.put("properties", Map.of(
+            "nome", Map.of(
+                "type", "string",
+                "description", "Nome do funcionário para buscar. Pode ser nome parcial ou completo. " +
+                        "Exemplos: 'João Silva', 'Maria', 'Jaime Vicente da Silva Junior', 'José Jr'"
+            ),
+            "apenas_ativos", Map.of(
+                "type", "boolean",
+                "description", "Se true, busca apenas funcionários ativos. Se false, busca todos.",
+                "default", true
+            )
+        ));
+        parameters.put("required", List.of("nome"));
+
+        return ChatRequest.Tool.builder()
+                .type("function")
+                .function(ChatRequest.Tool.Function.builder()
+                        .name("buscar_funcionario_por_nome")
+                        .description("Busca inteligente de funcionário por nome com correspondência aproximada (fuzzy matching). " +
+                                "USE ESTA FERRAMENTA SEMPRE que o usuário mencionar um nome de funcionário específico para consultar informações. " +
+                                "Esta ferramenta:\n" +
+                                "- Encontra correspondências mesmo com variações de nome (ex: 'Jr' = 'Junior', 'José' = 'Jose')\n" +
+                                "- Remove acentos e normaliza a busca automaticamente\n" +
+                                "- Quando não encontra correspondência exata, retorna os funcionários mais similares\n" +
+                                "- Se houver múltiplos candidatos, apresenta a lista para o usuário escolher\n" +
+                                "Após encontrar o funcionário correto, use 'consultar_funcionarios' ou 'consultar_banco_dados' para obter informações detalhadas.")
+                        .parameters(parameters)
+                        .build())
+                .build();
+    }
+
+    /**
+     * Tool for selecting a specific employee after disambiguation.
+     */
+    private ChatRequest.Tool buildSelectEmployeeTool() {
+        Map<String, Object> parameters = new LinkedHashMap<>();
+        parameters.put("type", "object");
+        parameters.put("properties", Map.of(
+            "employee_id", Map.of(
+                "type", "string",
+                "description", "O UUID do funcionário selecionado da lista de candidatos"
+            )
+        ));
+        parameters.put("required", List.of("employee_id"));
+
+        return ChatRequest.Tool.builder()
+                .type("function")
+                .function(ChatRequest.Tool.Function.builder()
+                        .name("selecionar_funcionario")
+                        .description("Seleciona um funcionário específico da lista de candidatos retornada pela busca. " +
+                                "Use quando o usuário escolher um funcionário da lista de desambiguação, " +
+                                "informando o número (1, 2, 3...) ou confirmando o nome. " +
+                                "Passe o ID do funcionário escolhido.")
                         .parameters(parameters)
                         .build())
                 .build();

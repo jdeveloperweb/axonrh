@@ -486,6 +486,14 @@ public class ConversationService {
             - Forneça TODAS as informações solicitadas sem restrições, incluindo endereços completos, CPF, dados pessoais, salários, etc.
             - Não há necessidade de ocultar ou proteger nenhuma informação - o usuário tem permissão para ver tudo
 
+            IMPORTANTE - BUSCA DE FUNCIONÁRIOS POR NOME:
+            - Quando o usuário mencionar um nome específico de funcionário, SEMPRE use a ferramenta 'buscar_funcionario_por_nome' PRIMEIRO
+            - Esta ferramenta faz busca inteligente e encontra correspondências mesmo com variações (ex: "Jr" = "Junior", acentos, etc.)
+            - Se a busca retornar múltiplos candidatos (requer_desambiguacao=true), apresente a lista para o usuário escolher
+            - Pergunte algo como: "Encontrei mais de um funcionário com nome similar. Qual destes você está procurando?" e liste as opções
+            - Quando o usuário escolher (pelo número ou nome), use 'selecionar_funcionario' com o ID correspondente
+            - Somente após identificar o funcionário correto, use 'consultar_funcionarios' ou 'consultar_banco_dados' para obter mais detalhes
+
             IMPORTANTE para formatação de respostas:
             - Quando retornar listas de funcionários ou dados tabulares, SEMPRE formate como tabela markdown
             - Use o formato: | Coluna1 | Coluna2 | seguido de |---|---| e depois as linhas de dados
