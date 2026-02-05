@@ -63,6 +63,7 @@ export default function TalentPoolPage() {
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('');
     const [vacancyFilter, setVacancyFilter] = useState<string>('');
+    const [actionLoading, setActionLoading] = useState(false);
 
     // Modals
     const [showVacancyModal, setShowVacancyModal] = useState(false);
@@ -262,7 +263,7 @@ export default function TalentPoolPage() {
                 toast({ title: 'Sucesso', description: 'Vaga criada com sucesso' });
             }
             handleCloseVacancyModal();
-            fetchData();
+            await fetchData();
         } catch (error: unknown) {
             console.error('Erro ao salvar vaga:', error);
             const err = error as Error & { response?: { data?: { message?: string; error?: string } } };
@@ -300,9 +301,9 @@ export default function TalentPoolPage() {
             switch (action) {
                 case 'publish':
                     await talentPoolApi.publishVacancy(vacancyId);
-                    toast({ 
-                        title: 'Vaga Publicada!', 
-                        description: 'A vaga está agora visível publicamente na internet e candidatos podem se inscrever.' 
+                    toast({
+                        title: 'Vaga Publicada!',
+                        description: 'A vaga está agora visível publicamente na internet e candidatos podem se inscrever.'
                     });
                     break;
                 case 'pause':
@@ -637,17 +638,18 @@ export default function TalentPoolPage() {
                                             {vacancy.status === 'DRAFT' && (
                                                 <button
                                                     onClick={() => handleVacancyAction(vacancy.id, 'publish')}
-                                                    disabled={submitting}
+                                                    disabled={actionLoading}
                                                     className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                                                 >
                                                     <Play className="w-4 h-4" />
-                                                    {submitting ? 'Publicando...' : 'Publicar'}
+                                                    {actionLoading ? 'Publicando...' : 'Publicar'}
                                                 </button>
                                             )}
                                             {vacancy.status === 'OPEN' && (
                                                 <button
                                                     onClick={() => handleVacancyAction(vacancy.id, 'pause')}
-                                                    className="flex items-center gap-1 px-3 py-1.5 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 text-sm"
+                                                    disabled={actionLoading}
+                                                    className="flex items-center gap-1 px-3 py-1.5 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 text-sm disabled:opacity-50"
                                                 >
                                                     <Pause className="w-4 h-4" />
                                                     Pausar
@@ -656,7 +658,8 @@ export default function TalentPoolPage() {
                                             {vacancy.status === 'PAUSED' && (
                                                 <button
                                                     onClick={() => handleVacancyAction(vacancy.id, 'reopen')}
-                                                    className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
+                                                    disabled={actionLoading}
+                                                    className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm disabled:opacity-50"
                                                 >
                                                     <Play className="w-4 h-4" />
                                                     Reabrir
@@ -665,7 +668,8 @@ export default function TalentPoolPage() {
                                             {(vacancy.status === 'OPEN' || vacancy.status === 'PAUSED') && (
                                                 <button
                                                     onClick={() => handleVacancyAction(vacancy.id, 'close')}
-                                                    className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+                                                    disabled={actionLoading}
+                                                    className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm disabled:opacity-50"
                                                 >
                                                     <CheckCircle className="w-4 h-4" />
                                                     Fechar
