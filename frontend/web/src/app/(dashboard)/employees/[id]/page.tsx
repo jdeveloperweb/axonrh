@@ -23,15 +23,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DependentsTab } from '@/components/employees/DependentsTab';
-import { ShieldCheck, ShieldAlert, Key, CreditCard } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, Key, CreditCard, BrainCircuit } from 'lucide-react';
 import { EmployeeBadge } from '@/components/employees/EmployeeBadge';
 import { WellbeingTab } from '@/components/employees/WellbeingTab';
+import { DiscTab } from '@/components/employees/DiscTab';
 import { useThemeStore } from '@/stores/theme-store';
 import { useAuthStore } from '@/stores/auth-store';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
-type TabKey = 'overview' | 'documents' | 'dependents' | 'timesheet' | 'history' | 'wellbeing';
+type TabKey = 'overview' | 'documents' | 'dependents' | 'timesheet' | 'history' | 'wellbeing' | 'disc';
 
 const statusColors = {
   ACTIVE: { bg: 'bg-emerald-50 border-emerald-100', text: 'text-emerald-700', label: 'Ativo' },
@@ -283,6 +284,7 @@ export default function EmployeeDetailPage() {
     { key: 'timesheet' as TabKey, label: 'Ponto / Jornada', icon: Clock },
     { key: 'documents' as TabKey, label: 'Documentos', icon: FileText },
     { key: 'dependents' as TabKey, label: 'Dependentes', icon: Users },
+    { key: 'disc' as TabKey, label: 'Perfil DISC', icon: BrainCircuit },
     { key: 'history' as TabKey, label: 'Histórico', icon: History },
     { key: 'wellbeing' as TabKey, label: 'Bem-Estar (RH)', icon: HeartHandshake },
   ];
@@ -823,6 +825,10 @@ export default function EmployeeDetailPage() {
 
         {activeTab === 'wellbeing' && (
           <WellbeingTab employeeId={employeeId} />
+        )}
+
+        {activeTab === 'disc' && (
+          <DiscTab employeeId={employeeId} employeeName={employee.fullName} />
         )}
 
         {activeTab === 'history' && (
