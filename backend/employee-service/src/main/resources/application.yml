@@ -154,4 +154,4 @@ springdoc:
 application:
   services:
     ai-assistant:
-      url: ${AI_ASSISTANT_SERVICE_URL:http://localhost:8088}
+      url: ${AI_ASSISTANT_SERVICE_URL:http://ai-assistant-service:8088}
