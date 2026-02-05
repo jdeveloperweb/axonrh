@@ -388,6 +388,22 @@ export default function TalentPoolPage() {
         }
     };
 
+    const handleUpdateRating = async (candidateId: string, rating: number) => {
+        try {
+            const candidate = candidates.find(c => c.id === candidateId);
+            if (!candidate) return;
+
+            await talentPoolApi.updateCandidateStatus(candidateId, {
+                status: candidate.status,
+                rating
+            });
+            toast({ title: 'Sucesso', description: `Avaliação atualizada para ${rating} estrela${rating > 1 ? 's' : ''}` });
+            fetchData();
+        } catch {
+            toast({ title: 'Erro', description: 'Falha ao atualizar avaliação', variant: 'destructive' });
+        }
+    };
+
     return (
         <div className="p-6 space-y-6">
             {/* Page Header */}
@@ -784,13 +800,19 @@ export default function TalentPoolPage() {
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-1">
                                                         {[1, 2, 3, 4, 5].map(star => (
-                                                            <Star
+                                                            <button
                                                                 key={star}
-                                                                className={`w-4 h-4 ${candidate.rating && star <= candidate.rating
-                                                                    ? 'text-yellow-400 fill-yellow-400'
-                                                                    : 'text-gray-300'
-                                                                    }`}
-                                                            />
+                                                                onClick={() => handleUpdateRating(candidate.id, star)}
+                                                                className="hover:scale-110 transition-transform cursor-pointer"
+                                                                title={`Avaliar com ${star} estrela${star > 1 ? 's' : ''}`}
+                                                            >
+                                                                <Star
+                                                                    className={`w-4 h-4 ${candidate.rating != null && star <= candidate.rating
+                                                                        ? 'text-yellow-400 fill-yellow-400'
+                                                                        : 'text-gray-300 hover:text-yellow-200'
+                                                                        }`}
+                                                                />
+                                                            </button>
                                                         ))}
                                                     </div>
                                                 </td>
