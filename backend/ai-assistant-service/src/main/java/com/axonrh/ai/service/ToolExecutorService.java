@@ -26,6 +26,7 @@ public class ToolExecutorService {
     private final KnowledgeService knowledgeService;
     private final DataModificationService dataModificationService;
     private final DataModificationExecutorService dataModificationExecutorService;
+    private final NameMatchingService nameMatchingService;
     private final ObjectMapper objectMapper;
 
     /**
@@ -76,6 +77,8 @@ public class ToolExecutorService {
             case "calcular_rescisao" -> executeCalculateTermination(arguments);
             case "calcular_horas_extras" -> executeCalculateOvertime(arguments);
             case "consultar_funcionarios" -> executeQueryEmployees(arguments, context);
+            case "buscar_funcionario_por_nome" -> executeSearchEmployeeByName(arguments, context);
+            case "selecionar_funcionario" -> executeSelectEmployee(arguments, context);
             case "consultar_banco_dados" -> executeQueryDatabase(arguments, context);
             case "buscar_base_conhecimento" -> executeSearchKnowledgeBase(arguments, context);
             case "modificar_dados" -> executeModifyData(arguments, context);
@@ -192,6 +195,92 @@ public class ToolExecutorService {
                 consulta, context.tenantId(), maxResultados);
 
         return formatKnowledgeResults(results);
+    }
+
+    /**
+     * Executes intelligent employee search by name with fuzzy matching.
+     * Returns disambiguation options when multiple matches are found.
+     */
+    private String executeSearchEmployeeByName(JsonNode args, ExecutionContext context) throws Exception {
+        String nome = getString(args, "nome");
+        boolean apenasAtivos = getBoolean(args, "apenas_ativos", true);
+
+        log.info("Searching employee by name with fuzzy matching: name='{}', activeOnly={}", nome, apenasAtivos);
+
+        NameMatchingService.SearchResult result = nameMatchingService.searchByName(
+                nome, context.tenantId(), apenasAtivos);
+
+        return formatNameSearchResult(result);
+    }
+
+    /**
+     * Selects a specific employee from disambiguation options by index or ID.
+     */
+    private String executeSelectEmployee(JsonNode args, ExecutionContext context) throws Exception {
+        String employeeId = getString(args, "employee_id");
+
+        log.info("Selecting employee by ID: {}", employeeId);
+
+        if (employeeId == null || employeeId.isBlank()) {
+            return objectMapper.writeValueAsString(Map.of(
+                "sucesso", false,
+                "erro", "ID do funcionário não fornecido."
+            ));
+        }
+
+        try {
+            UUID id = UUID.fromString(employeeId);
+            NameMatchingService.SearchResult result = nameMatchingService.getEmployeeById(id, context.tenantId());
+            return formatNameSearchResult(result);
+        } catch (IllegalArgumentException e) {
+            return objectMapper.writeValueAsString(Map.of(
+                "sucesso", false,
+                "erro", "ID de funcionário inválido: " + employeeId
+            ));
+        }
+    }
+
+    /**
+     * Formats the name search result for LLM consumption.
+     */
+    private String formatNameSearchResult(NameMatchingService.SearchResult result) throws Exception {
+        Map<String, Object> formatted = new LinkedHashMap<>();
+        formatted.put("encontrado", result.found());
+        formatted.put("correspondencia_exata", result.exactMatch());
+        formatted.put("requer_desambiguacao", result.needsDisambiguation());
+        formatted.put("mensagem", result.message());
+
+        if (!result.candidates().isEmpty()) {
+            List<Map<String, Object>> candidates = new ArrayList<>();
+            int index = 1;
+            for (NameMatchingService.MatchResult match : result.candidates()) {
+                Map<String, Object> candidate = new LinkedHashMap<>();
+                candidate.put("indice", index++);
+                candidate.put("id", match.employeeId().toString());
+                candidate.put("nome_completo", match.fullName());
+                if (match.socialName() != null && !match.socialName().isBlank()) {
+                    candidate.put("nome_social", match.socialName());
+                }
+                if (match.department() != null) {
+                    candidate.put("departamento", match.department());
+                }
+                if (match.position() != null) {
+                    candidate.put("cargo", match.position());
+                }
+                candidate.put("similaridade", String.format("%.0f%%", match.similarity() * 100));
+                candidates.add(candidate);
+            }
+            formatted.put("candidatos", candidates);
+
+            if (result.needsDisambiguation()) {
+                formatted.put("instrucao",
+                    "Apresente a lista de candidatos ao usuário e pergunte qual funcionário ele está procurando. " +
+                    "O usuário pode responder com o número (1, 2, 3...) ou o nome completo. " +
+                    "Quando o usuário escolher, use a ferramenta 'selecionar_funcionario' com o ID correspondente.");
+            }
+        }
+
+        return objectMapper.writeValueAsString(formatted);
     }
 
     // === Helper methods for building queries ===
