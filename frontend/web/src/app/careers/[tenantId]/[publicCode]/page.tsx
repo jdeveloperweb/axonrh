@@ -31,6 +31,7 @@ import { configApi } from '@/lib/api/config';
 export default function VacancyDetailPage() {
     const params = useParams();
     const router = useRouter();
+    const tenantId = params.tenantId as string;
     const publicCode = params.publicCode as string;
     const { tenantTheme, setTenantTheme } = useThemeStore();
 
@@ -54,6 +55,11 @@ export default function VacancyDetailPage() {
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
     useEffect(() => {
+        if (!tenantId) return;
+
+        // Garantir que o setup_tenant_id está definido para as chamadas de API públicas
+        localStorage.setItem('setup_tenant_id', tenantId);
+
         const fetchVacancy = async () => {
             try {
                 const data = await talentPoolApi.getPublicVacancy(publicCode);
@@ -67,34 +73,29 @@ export default function VacancyDetailPage() {
         };
 
         const fetchBranding = async () => {
-            if (!tenantTheme) {
-                const tenantId = process.env.NEXT_PUBLIC_DEFAULT_TENANT_ID ||
-                    localStorage.getItem('tenantId') ||
-                    localStorage.getItem('setup_tenant_id');
-
-                if (tenantId) {
-                    try {
-                        const config = await configApi.getThemeConfig(tenantId);
-                        setTenantTheme({
-                            tenantId: config.tenantId,
-                            logoUrl: config.logoUrl,
-                            logoWidth: (config.extraSettings?.logoWidth as number) || 150,
-                            colors: {
-                                primary: config.primaryColor || '#1976D2',
-                                secondary: config.secondaryColor || '#424242',
-                                accent: config.accentColor || '#FF4081',
-                                background: config.backgroundColor || '#FFFFFF',
-                                surface: config.surfaceColor || '#FAFAFA',
-                                textPrimary: config.textPrimaryColor || '#212121',
-                                textSecondary: config.textSecondaryColor || '#757575',
-                            },
-                            baseFontSize: (config.extraSettings?.baseFontSize as number) || 16,
-                            customCss: config.customCss,
-                            faviconUrl: config.faviconUrl
-                        });
-                    } catch (e) {
-                        console.error('Error fetching branding:', e);
-                    }
+            // Re-fleta se o tenantTheme for nulo ou se o tenantId for diferente do atual
+            if (!tenantTheme || tenantTheme.tenantId !== tenantId) {
+                try {
+                    const config = await configApi.getThemeConfig(tenantId);
+                    setTenantTheme({
+                        tenantId: config.tenantId,
+                        logoUrl: config.logoUrl,
+                        logoWidth: (config.extraSettings?.logoWidth as number) || 150,
+                        colors: {
+                            primary: config.primaryColor || '#1976D2',
+                            secondary: config.secondaryColor || '#424242',
+                            accent: config.accentColor || '#FF4081',
+                            background: config.backgroundColor || '#FFFFFF',
+                            surface: config.surfaceColor || '#FAFAFA',
+                            textPrimary: config.textPrimaryColor || '#212121',
+                            textSecondary: config.textSecondaryColor || '#757575',
+                        },
+                        baseFontSize: (config.extraSettings?.baseFontSize as number) || 16,
+                        customCss: config.customCss,
+                        faviconUrl: config.faviconUrl
+                    });
+                } catch (e) {
+                    console.error('Error fetching branding:', e);
                 }
             }
         };
@@ -103,7 +104,7 @@ export default function VacancyDetailPage() {
             fetchVacancy();
             fetchBranding();
         }
-    }, [publicCode, tenantTheme, setTenantTheme]);
+    }, [tenantId, publicCode, tenantTheme, setTenantTheme]);
 
     const validateForm = (): boolean => {
         const errors: Record<string, string> = {};
@@ -188,7 +189,7 @@ export default function VacancyDetailPage() {
                     <h2 className="text-2xl font-bold text-gray-900 mb-2">Vaga não encontrada</h2>
                     <p className="text-gray-500 mb-8 leading-relaxed">{error || 'Esta vaga pode ter sido encerrada ou o link está incorreto.'}</p>
                     <Link
-                        href="/careers"
+                        href={`/careers/${tenantId}`}
                         className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-gray-900 text-white rounded-2xl hover:bg-gray-800 transition-all font-bold"
                     >
                         <ArrowLeft className="w-5 h-5" />
@@ -217,7 +218,7 @@ export default function VacancyDetailPage() {
                         Nossa equipe irá analisar seu perfil e entraremos em contato em breve através do seu email.
                     </p>
                     <Link
-                        href="/careers"
+                        href={`/careers/${tenantId}`}
                         className="inline-flex items-center justify-center gap-2 px-10 py-4 text-white rounded-2xl font-bold shadow-xl hover:scale-105 transition-all"
                         style={{ backgroundColor: primaryColor }}
                     >
@@ -235,7 +236,7 @@ export default function VacancyDetailPage() {
             <header className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-100 shadow-sm">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
                     <Link
-                        href="/careers"
+                        href={`/careers/${tenantId}`}
                         className="inline-flex items-center gap-2 text-sm font-bold text-gray-600 hover:text-gray-900 transition-colors bg-gray-50 px-4 py-2 rounded-xl"
                     >
                         <ArrowLeft className="w-4 h-4" />

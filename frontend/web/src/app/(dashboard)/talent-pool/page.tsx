@@ -44,12 +44,15 @@ import {
 } from '@/lib/api/talent-pool';
 import { positionsApi, Position } from '@/lib/api/positions';
 import { employeesApi, Department } from '@/lib/api/employees';
+import { useAuthStore } from '@/stores/auth-store';
 
 type Tab = 'vacancies' | 'candidates';
 
 export default function TalentPoolPage() {
     const { confirm } = useConfirm();
     const { toast } = useToast();
+    const { user } = useAuthStore();
+    const currentTenantId = user?.tenantId;
 
     // State
     const [activeTab, setActiveTab] = useState<Tab>('vacancies');
@@ -340,7 +343,7 @@ export default function TalentPoolPage() {
     };
 
     const copyPublicLink = (publicCode: string) => {
-        const url = `${window.location.origin}/careers/${publicCode}`;
+        const url = `${window.location.origin}/careers/${currentTenantId || 'default'}/${publicCode}`;
         navigator.clipboard.writeText(url);
         toast({ title: 'Link copiado!', description: 'Link da vaga copiado para a área de transferência' });
     };
@@ -690,7 +693,7 @@ export default function TalentPoolPage() {
                                                     {vacancy.publicCode && (
                                                         <>
                                                             <a
-                                                                href={`/careers/${vacancy.publicCode}`}
+                                                                href={`/careers/${currentTenantId || 'default'}/${vacancy.publicCode}`}
                                                                 target="_blank"
                                                                 rel="noopener noreferrer"
                                                                 className="w-full flex items-center gap-2 px-4 py-2 text-left hover:bg-gray-50"
