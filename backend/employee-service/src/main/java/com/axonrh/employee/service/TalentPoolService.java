@@ -552,9 +552,14 @@ public class TalentPoolService {
 
     private JobVacancyResponse toResponseWithCandidateCount(JobVacancy vacancy) {
         JobVacancyResponse response = vacancyMapper.toResponse(vacancy);
-        log.debug("Contando candidatos para vaga: {}", vacancy.getId());
-        long count = candidateRepository.countByVacancyIdAndIsActiveTrue(vacancy.getId());
-        response.setCandidateCount((int) count);
+        // O count abaixo está causando travamento (hang) no banco de dados. 
+        // Desativado temporariamente para permitir o salvamento e publicação da vaga.
+        response.setCandidateCount(0);
+        
+        // log.debug("Contando candidatos para vaga: {}", vacancy.getId());
+        // long count = candidateRepository.countActiveByVacancyIdNative(vacancy.getId());
+        // response.setCandidateCount((int) count);
+        
         return response;
     }
 

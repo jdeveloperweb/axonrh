@@ -69,6 +69,10 @@ public interface TalentCandidateRepository extends JpaRepository<TalentCandidate
            "AND LOWER(c.skills) LIKE LOWER(CONCAT('%', :skill, '%')) ORDER BY c.appliedAt DESC")
     List<TalentCandidate> findBySkillContaining(@Param("tenantId") UUID tenantId, @Param("skill") String skill);
 
+    // Contar candidatos por vaga (Native query para evitar hangs de JPA)
+    @Query(value = "SELECT COUNT(*) FROM shared.talent_candidates WHERE vacancy_id = :vacancyId AND is_active = true", nativeQuery = true)
+    long countActiveByVacancyIdNative(@Param("vacancyId") UUID vacancyId);
+
     // Estatísticas - contar por status
     @Query("SELECT c.status, COUNT(c) FROM TalentCandidate c WHERE c.tenantId = :tenantId AND c.isActive = true GROUP BY c.status")
     List<Object[]> countByStatusGrouped(@Param("tenantId") UUID tenantId);
