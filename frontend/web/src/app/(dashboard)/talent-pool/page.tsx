@@ -57,6 +57,7 @@ export default function TalentPoolPage() {
     const [positions, setPositions] = useState<Position[]>([]);
     const [departments, setDepartments] = useState<Department[]>([]);
     const [loading, setLoading] = useState(true);
+    const [submitting, setSubmitting] = useState(false);
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('');
     const [vacancyFilter, setVacancyFilter] = useState<string>('');
@@ -210,7 +211,30 @@ export default function TalentPoolPage() {
 
     const handleSubmitVacancy = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Validação manual
+        if (!vacancyForm.positionId) {
+            toast({
+                title: 'Erro de validação',
+                description: 'Por favor, selecione um Cargo para a vaga.',
+                variant: 'destructive',
+            });
+            return;
+        }
+
+        if (!vacancyForm.title) {
+            toast({
+                title: 'Erro de validação',
+                description: 'O título da vaga é obrigatório.',
+                variant: 'destructive',
+            });
+            return;
+        }
+
+
+
         try {
+            setSubmitting(true);
             if (editingVacancy) {
                 await talentPoolApi.updateVacancy(editingVacancy.id, vacancyForm);
                 toast({ title: 'Sucesso', description: 'Vaga atualizada com sucesso' });
@@ -227,6 +251,8 @@ export default function TalentPoolPage() {
                 description: err.response?.data?.message || 'Falha ao salvar vaga',
                 variant: 'destructive',
             });
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -387,8 +413,8 @@ export default function TalentPoolPage() {
                 <button
                     onClick={() => setActiveTab('vacancies')}
                     className={`pb-3 px-2 text-sm font-medium transition-colors relative ${activeTab === 'vacancies'
-                            ? 'text-[var(--color-primary)]'
-                            : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
+                        ? 'text-[var(--color-primary)]'
+                        : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
                         }`}
                 >
                     <div className="flex items-center gap-2">
@@ -403,8 +429,8 @@ export default function TalentPoolPage() {
                 <button
                     onClick={() => setActiveTab('candidates')}
                     className={`pb-3 px-2 text-sm font-medium transition-colors relative ${activeTab === 'candidates'
-                            ? 'text-[var(--color-primary)]'
-                            : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
+                        ? 'text-[var(--color-primary)]'
+                        : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
                         }`}
                 >
                     <div className="flex items-center gap-2">
@@ -688,8 +714,8 @@ export default function TalentPoolPage() {
                                                             <Star
                                                                 key={star}
                                                                 className={`w-4 h-4 ${candidate.rating && star <= candidate.rating
-                                                                        ? 'text-yellow-400 fill-yellow-400'
-                                                                        : 'text-gray-300'
+                                                                    ? 'text-yellow-400 fill-yellow-400'
+                                                                    : 'text-gray-300'
                                                                     }`}
                                                             />
                                                         ))}
@@ -743,7 +769,7 @@ export default function TalentPoolPage() {
                                 {editingVacancy ? 'Editar Vaga' : 'Nova Vaga'}
                             </h2>
                         </div>
-                        <form onSubmit={handleSubmitVacancy} className="p-6 space-y-6">
+                        <form onSubmit={handleSubmitVacancy} className="p-6 space-y-6" noValidate>
                             {/* Cargo */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
@@ -961,8 +987,10 @@ export default function TalentPoolPage() {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90"
+                                    disabled={submitting}
+                                    className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                 >
+                                    {submitting && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />}
                                     {editingVacancy ? 'Atualizar' : 'Criar Vaga'}
                                 </button>
                             </div>
@@ -1020,8 +1048,8 @@ export default function TalentPoolPage() {
                                             onClick={() => handleUpdateCandidateStatus(selectedCandidate.id, status)}
                                             disabled={selectedCandidate.status === status}
                                             className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${selectedCandidate.status === status
-                                                    ? `${getCandidateStatusColor(status)} cursor-default`
-                                                    : 'bg-white border border-gray-200 hover:bg-gray-100'
+                                                ? `${getCandidateStatusColor(status)} cursor-default`
+                                                : 'bg-white border border-gray-200 hover:bg-gray-100'
                                                 }`}
                                         >
                                             {getCandidateStatusLabel(status)}
