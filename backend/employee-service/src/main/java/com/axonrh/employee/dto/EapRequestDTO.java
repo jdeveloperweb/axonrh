@@ -14,6 +14,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class EapRequestDTO {
     private UUID employeeId;
+    private String employeeName;
     private Integer score;
     private String notes;
     private String riskLevel;

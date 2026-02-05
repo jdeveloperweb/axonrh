@@ -17,6 +17,7 @@ export interface MoodCheckInResponse {
 
 export interface EapRequest {
     employeeId: string;
+    employeeName?: string;
     score: number;
     notes: string;
     riskLevel: string;
@@ -34,17 +35,14 @@ export interface WellbeingStats {
 
 export const wellbeingApi = {
     checkIn: async (data: MoodCheckInRequest): Promise<MoodCheckInResponse> => {
-        const response = await api.post('/employees/wellbeing/check-in', data);
-        return response.data;
+        return await api.post('/employees/wellbeing/check-in', data);
     },
 
     getHistory: async (employeeId: string) => {
-        const response = await api.get(`/employees/wellbeing/history/${employeeId}`);
-        return response.data;
+        return await api.get(`/employees/wellbeing/history/${employeeId}`);
     },
 
     getStats: async (): Promise<WellbeingStats> => {
-        const response = await api.get('/employees/wellbeing/stats');
-        return response.data;
+        return await api.get('/employees/wellbeing/stats');
     }
 };

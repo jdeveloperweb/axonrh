@@ -11,15 +11,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 import com.axonrh.employee.config.TenantContext;
 import com.axonrh.employee.dto.EapRequestDTO;
 import com.axonrh.employee.dto.WellbeingStats;
 import com.axonrh.employee.repository.EmployeeRepository;
+import com.axonrh.employee.entity.Employee;
 
-import java.util.UUID;
-import java.util.Optional;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -38,7 +37,7 @@ public class WellbeingService {
         log.info("Processing check-in for request ID: {} with Tenant: {}", request.getEmployeeId(), tenantId);
 
         // Obtem o colaborador para garantir existência e consistência do tenant (busca por ID ou UserID)
-        Optional<com.axonrh.employee.entity.Employee> empOpt = employeeRepository.findByTenantIdAndId(tenantId, request.getEmployeeId())
+        Optional<Employee> empOpt = employeeRepository.findByTenantIdAndId(tenantId, request.getEmployeeId())
                 .or(() -> employeeRepository.findByTenantIdAndUserId(tenantId, request.getEmployeeId()));
 
         if (empOpt.isEmpty()) {
@@ -50,7 +49,7 @@ public class WellbeingService {
             }
         }
 
-        com.axonrh.employee.entity.Employee employee = empOpt
+        Employee employee = empOpt
                 .orElseThrow(() -> new IllegalArgumentException("Colaborador não encontrado: " + request.getEmployeeId()));
         
         log.info("Check-in processed. Resolved Employee ID: {}", employee.getId());
@@ -113,9 +112,9 @@ public class WellbeingService {
         // Resolve o ID para garantir que estamos buscando pelo Employee ID correto
         // Frontend pode enviar User ID ou Employee ID
         UUID resolvedEmployeeId = employeeRepository.findByTenantIdAndId(tenantId, idOrUserId)
-                .map(com.axonrh.employee.entity.Employee::getId)
+                .map(Employee::getId)
                 .or(() -> employeeRepository.findByTenantIdAndUserId(tenantId, idOrUserId)
-                        .map(com.axonrh.employee.entity.Employee::getId))
+                        .map(Employee::getId))
                 // Fallback: assume que o ID passado eh o proprio Employee ID
                 .orElse(idOrUserId);
         
@@ -154,15 +153,21 @@ public class WellbeingService {
 
         List<EapRequestDTO> eapRequests = all.stream()
                 .filter(EmployeeWellbeing::isWantsEapContact)
-                .sorted(java.util.Comparator.comparing(EmployeeWellbeing::getCreatedAt).reversed())
-                .map(w -> EapRequestDTO.builder()
-                        .employeeId(w.getEmployeeId())
-                        .score(w.getScore())
-                        .notes(w.getNotes())
-                        .riskLevel(w.getRiskLevel())
-                        .createdAt(w.getCreatedAt())
-                        .build())
-                .collect(java.util.stream.Collectors.toList());
+                .sorted(Comparator.comparing(EmployeeWellbeing::getCreatedAt).reversed())
+                .map(w -> {
+                    String name = employeeRepository.findById(w.getEmployeeId())
+                            .map(Employee::getFullName)
+                            .orElse("Desconhecido");
+                    return EapRequestDTO.builder()
+                            .employeeId(w.getEmployeeId())
+                            .employeeName(name)
+                            .score(w.getScore())
+                            .notes(w.getNotes())
+                            .riskLevel(w.getRiskLevel())
+                            .createdAt(w.getCreatedAt())
+                            .build();
+                })
+                .collect(Collectors.toList());
 
         return WellbeingStats.builder()
                 .totalCheckins(all.size())

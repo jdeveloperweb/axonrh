@@ -658,7 +658,7 @@ export default function DashboardPage() {
                       </div>
                       <div className="flex-1">
                         <div className="flex justify-between">
-                          <p className="font-medium text-gray-900">Colaborador ID: {req.employeeId.substring(0, 8)}...</p>
+                          <p className="font-medium text-gray-900">{req.employeeName || `Colaborador: ${req.employeeId.substring(0, 8)}...`}</p>
                           <span className="text-xs text-gray-500">{new Date(req.createdAt).toLocaleDateString()}</span>
                         </div>
                         <p className="text-sm text-gray-600 mt-1">Score: {req.score} | Risco: {translate(req.riskLevel)}</p>
