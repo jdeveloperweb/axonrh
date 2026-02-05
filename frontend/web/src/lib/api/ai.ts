@@ -311,10 +311,8 @@ export const knowledgeApi = {
     formData.append('type', type);
     if (title) formData.append('title', title);
     if (description) formData.append('description', description);
-
-    return api.post<KnowledgeDocument>('/ai/knowledge/documents', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    // Não definir Content-Type manualmente - deixar o axios configurar o boundary automaticamente
+    return api.post<KnowledgeDocument>('/ai/knowledge/documents', formData);
   },
 
   listDocuments: (page = 0, size = 20) =>

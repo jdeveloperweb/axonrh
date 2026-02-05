@@ -291,9 +291,8 @@ export const cnabApi = {
   processReturnFile: (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
-    return api.post<CnabFile>('/integration/cnab/return', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    // Não definir Content-Type manualmente - deixar o axios configurar o boundary automaticamente
+    return api.post<CnabFile>('/integration/cnab/return', formData);
   },
 
   listFiles: (page = 0, size = 20) =>
@@ -397,9 +396,8 @@ export const certificatesApi = {
     formData.append('file', file);
     formData.append('name', name);
     formData.append('password', password);
-    return api.post<DigitalCertificate>('/integration/certificates', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    // Não definir Content-Type manualmente - deixar o axios configurar o boundary automaticamente
+    return api.post<DigitalCertificate>('/integration/certificates', formData);
   },
 
   list: () =>

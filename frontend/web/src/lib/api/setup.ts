@@ -333,9 +333,8 @@ export const importApi = {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('type', type);
-    return api.post<ImportJob, ImportJob>('/setup/import/upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    // Não definir Content-Type manualmente - deixar o axios configurar o boundary automaticamente
+    return api.post<ImportJob, ImportJob>('/setup/import/upload', formData);
   },
 
   process: (jobId: string) =>

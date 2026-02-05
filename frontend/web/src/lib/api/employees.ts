@@ -286,9 +286,8 @@ export const employeesApi = {
   uploadPhoto: async (id: string, file: File): Promise<Employee> => {
     const formData = new FormData();
     formData.append('file', file);
-    return api.post<FormData, Employee>(`/employees/${id}/photo`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    // Não definir Content-Type manualmente - deixar o axios configurar o boundary automaticamente
+    return api.post<FormData, Employee>(`/employees/${id}/photo`, formData);
   },
 
   // Get employee documents
@@ -301,9 +300,8 @@ export const employeesApi = {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('type', type);
-    return api.post<FormData, EmployeeDocument>(`/employees/${id}/documents`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    // Não definir Content-Type manualmente - deixar o axios configurar o boundary automaticamente
+    return api.post<FormData, EmployeeDocument>(`/employees/${id}/documents`, formData);
   },
 
   // Get employee dependents

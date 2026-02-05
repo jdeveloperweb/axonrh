@@ -244,9 +244,8 @@ export const talentPoolApi = {
         if (resumeFile) {
             formData.append('resume', resumeFile);
         }
-        return api.post<FormData, TalentCandidate>(`/talent-pool/candidates/vacancy/${vacancyId}`, formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        // Não definir Content-Type manualmente - deixar o axios configurar o boundary automaticamente
+        return api.post<FormData, TalentCandidate>(`/talent-pool/candidates/vacancy/${vacancyId}`, formData);
     },
 
     updateCandidate: async (id: string, data: CreateCandidateData): Promise<TalentCandidate> => {
@@ -260,9 +259,8 @@ export const talentPoolApi = {
     uploadResume: async (id: string, file: File): Promise<TalentCandidate> => {
         const formData = new FormData();
         formData.append('file', file);
-        return api.post<FormData, TalentCandidate>(`/talent-pool/candidates/${id}/resume`, formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        // Não definir Content-Type manualmente - deixar o axios configurar o boundary automaticamente
+        return api.post<FormData, TalentCandidate>(`/talent-pool/candidates/${id}/resume`, formData);
     },
 
     deleteCandidate: async (id: string): Promise<void> => {
@@ -290,9 +288,8 @@ export const talentPoolApi = {
             const formData = new FormData();
             formData.append('data', new Blob([JSON.stringify(data)], { type: 'application/json' }));
             formData.append('resume', resumeFile);
-            return api.post<FormData, TalentCandidate>(`/public/careers/vacancies/${publicCode}/apply`, formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
+            // Não definir Content-Type manualmente - deixar o axios configurar o boundary automaticamente
+            return api.post<FormData, TalentCandidate>(`/public/careers/vacancies/${publicCode}/apply`, formData);
         } else {
             return api.post<PublicApplicationData, TalentCandidate>(`/public/careers/vacancies/${publicCode}/apply/json`, data);
         }

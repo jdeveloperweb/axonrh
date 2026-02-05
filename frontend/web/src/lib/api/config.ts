@@ -128,10 +128,8 @@ export const configApi = {
   uploadLogo: async (tenantId: string, file: File): Promise<LogoUploadResponse> => {
     const formData = new FormData();
     formData.append('file', file);
-
-    return apiClient.post<FormData, LogoUploadResponse>(`/config/logo/${tenantId}`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    // Não definir Content-Type manualmente - deixar o axios configurar o boundary automaticamente
+    return apiClient.post<FormData, LogoUploadResponse>(`/config/logo/${tenantId}`, formData);
   },
 
   /**
@@ -140,10 +138,8 @@ export const configApi = {
   uploadLogoDark: async (tenantId: string, file: File): Promise<LogoUploadResponse> => {
     const formData = new FormData();
     formData.append('file', file);
-
-    return apiClient.post<FormData, LogoUploadResponse>(`/config/logo/${tenantId}/dark`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    // Não definir Content-Type manualmente - deixar o axios configurar o boundary automaticamente
+    return apiClient.post<FormData, LogoUploadResponse>(`/config/logo/${tenantId}/dark`, formData);
   },
 
   /**
@@ -152,10 +148,8 @@ export const configApi = {
   uploadFavicon: async (tenantId: string, file: File): Promise<LogoUploadResponse> => {
     const formData = new FormData();
     formData.append('file', file);
-
-    return apiClient.post<FormData, LogoUploadResponse>(`/config/favicon/${tenantId}`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    // Não definir Content-Type manualmente - deixar o axios configurar o boundary automaticamente
+    return apiClient.post<FormData, LogoUploadResponse>(`/config/favicon/${tenantId}`, formData);
   },
 
   /**
@@ -164,10 +158,8 @@ export const configApi = {
   uploadLoginBackground: async (tenantId: string, file: File): Promise<LogoUploadResponse> => {
     const formData = new FormData();
     formData.append('file', file);
-
-    return apiClient.post<FormData, LogoUploadResponse>(`/config/login-background/${tenantId}`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    // Não definir Content-Type manualmente - deixar o axios configurar o boundary automaticamente
+    return apiClient.post<FormData, LogoUploadResponse>(`/config/login-background/${tenantId}`, formData);
   },
 
   /**

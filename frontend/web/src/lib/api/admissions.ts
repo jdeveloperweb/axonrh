@@ -189,9 +189,8 @@ export const admissionsApi = {
             const formData = new FormData();
             formData.append('file', file);
             formData.append('type', type);
-            return api.post<FormData, DocumentUploadResponse>(`/admissions/public/${token}/upload`, formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
+            // Não definir Content-Type manualmente - deixar o axios configurar o boundary automaticamente
+            return api.post<FormData, DocumentUploadResponse>(`/admissions/public/${token}/upload`, formData);
         }
     }
 };
