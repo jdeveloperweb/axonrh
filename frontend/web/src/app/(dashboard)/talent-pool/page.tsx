@@ -279,6 +279,24 @@ export default function TalentPoolPage() {
 
     const handleVacancyAction = async (vacancyId: string, action: 'publish' | 'pause' | 'reopen' | 'close' | 'delete') => {
         try {
+            setSubmitting(true);
+
+            // Para delete, confirma primeiro
+            if (action === 'delete') {
+                const confirmed = await confirm({
+                    title: 'Excluir Vaga',
+                    description: 'Tem certeza que deseja excluir esta vaga? A ação não pode ser desfeita.',
+                    variant: 'destructive',
+                    confirmLabel: 'Excluir'
+                });
+
+                if (!confirmed) {
+                    setSubmitting(false);
+                    return;
+                }
+            }
+
+            // Executa a ação
             switch (action) {
                 case 'publish':
                     await talentPoolApi.publishVacancy(vacancyId);
@@ -297,19 +315,23 @@ export default function TalentPoolPage() {
                     toast({ title: 'Sucesso', description: 'Vaga fechada' });
                     break;
                 case 'delete':
-                    if (!await confirm({
-                        title: 'Excluir Vaga',
-                        description: 'Tem certeza que deseja excluir esta vaga? A ação não pode ser desfeita.',
-                        variant: 'destructive',
-                        confirmLabel: 'Excluir'
-                    })) return;
                     await talentPoolApi.deleteVacancy(vacancyId);
                     toast({ title: 'Sucesso', description: 'Vaga excluída' });
                     break;
             }
-            fetchData();
-        } catch {
-            toast({ title: 'Erro', description: 'Falha ao executar ação', variant: 'destructive' });
+
+            await fetchData();
+        } catch (error: unknown) {
+            console.error('Erro ao executar ação:', error);
+            const err = error as Error & { response?: { data?: { message?: string; error?: string } } };
+            const errorMessage = err.response?.data?.message || err.response?.data?.error || err.message || 'Falha ao executar ação';
+            toast({
+                title: 'Erro',
+                description: errorMessage,
+                variant: 'destructive'
+            });
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -612,10 +634,11 @@ export default function TalentPoolPage() {
                                             {vacancy.status === 'DRAFT' && (
                                                 <button
                                                     onClick={() => handleVacancyAction(vacancy.id, 'publish')}
-                                                    className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
+                                                    disabled={submitting}
+                                                    className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                                                 >
                                                     <Play className="w-4 h-4" />
-                                                    Publicar
+                                                    {submitting ? 'Publicando...' : 'Publicar'}
                                                 </button>
                                             )}
                                             {vacancy.status === 'OPEN' && (
@@ -658,15 +681,24 @@ export default function TalentPoolPage() {
                                                         Editar
                                                     </button>
                                                     {vacancy.publicCode && (
-                                                        <a
-                                                            href={`/careers/${vacancy.publicCode}`}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="w-full flex items-center gap-2 px-4 py-2 text-left hover:bg-gray-50"
-                                                        >
-                                                            <ExternalLink className="w-4 h-4" />
-                                                            Ver página
-                                                        </a>
+                                                        <>
+                                                            <a
+                                                                href={`/careers/${vacancy.publicCode}`}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="w-full flex items-center gap-2 px-4 py-2 text-left hover:bg-gray-50"
+                                                            >
+                                                                <ExternalLink className="w-4 h-4" />
+                                                                Ver Vaga Pública
+                                                            </a>
+                                                            <button
+                                                                onClick={() => copyPublicLink(vacancy.publicCode!)}
+                                                                className="w-full flex items-center gap-2 px-4 py-2 text-left hover:bg-gray-50"
+                                                            >
+                                                                <Copy className="w-4 h-4" />
+                                                                Copiar Link
+                                                            </button>
+                                                        </>
                                                     )}
                                                     <button
                                                         onClick={() => handleVacancyAction(vacancy.id, 'delete')}

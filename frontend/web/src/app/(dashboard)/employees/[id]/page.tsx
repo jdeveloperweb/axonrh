@@ -354,9 +354,14 @@ export default function EmployeeDetailPage() {
               {/* Name and Info */}
               <div className="text-center md:text-left space-y-3">
                 <div>
-                  <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
-                    {employee.socialName || employee.fullName}
+                  <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
+                    {employee.fullName}
                   </h1>
+                  {employee.socialName && (
+                    <p className="text-lg font-bold text-slate-500 dark:text-slate-400 mt-1">
+                      {employee.socialName}
+                    </p>
+                  )}
                   <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-1 text-slate-500 dark:text-slate-400">
                     <span className="flex items-center gap-1.5 font-bold text-sm">
                       <Briefcase className="w-4 h-4 text-[var(--color-primary)]/70" />

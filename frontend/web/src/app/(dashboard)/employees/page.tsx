@@ -566,11 +566,16 @@ export default function EmployeesPage() {
                               employee.fullName.charAt(0).toUpperCase()
                             )}
                           </div>
-                          <div>
-                            <p className="font-bold text-gray-900 leading-none mb-1">
-                              {employee.socialName || employee.fullName}
+                          <div className="flex flex-col">
+                            <p className="font-bold text-gray-900 leading-tight">
+                              {employee.fullName}
                             </p>
-                            <p className="text-xs text-gray-500">
+                            {employee.socialName && (
+                              <p className="text-xs text-gray-500 font-medium">
+                                {employee.socialName}
+                              </p>
+                            )}
+                            <p className="text-[10px] text-gray-400 mt-0.5">
                               Mat: {employee.registrationNumber}
                             </p>
                           </div>
@@ -658,11 +663,16 @@ export default function EmployeesPage() {
                           employee.fullName.charAt(0).toUpperCase()
                         )}
                       </div>
-                      <div>
-                        <p className="font-bold text-gray-900">
-                          {employee.socialName || employee.fullName}
+                      <div className="flex flex-col">
+                        <p className="font-bold text-gray-900 leading-tight">
+                          {employee.fullName}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        {employee.socialName && (
+                          <p className="text-xs text-gray-500 font-medium">
+                            {employee.socialName}
+                          </p>
+                        )}
+                        <p className="text-[10px] text-gray-400 mt-0.5">
                           Mat: {employee.registrationNumber}
                         </p>
                       </div>

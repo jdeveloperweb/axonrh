@@ -113,9 +113,14 @@ export const EmployeeBadge: React.FC<EmployeeBadgeProps> = ({ employee, colors, 
 
             {/* Employee Info */}
             <div className="mt-6 px-8 text-center">
-                <h2 className="text-2xl font-black text-gray-900 leading-tight uppercase tracking-tight">
-                    {employee.socialName || employee.fullName}
+                <h2 className="text-xl font-black text-gray-900 leading-tight uppercase tracking-tight">
+                    {employee.fullName}
                 </h2>
+                {employee.socialName && (
+                    <p className="text-xs font-bold text-gray-500 uppercase mt-1">
+                        {employee.socialName}
+                    </p>
+                )}
                 <div
                     className="mt-1.5 inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-sm"
                     style={{
