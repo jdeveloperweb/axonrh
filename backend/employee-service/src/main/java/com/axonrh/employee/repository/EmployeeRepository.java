@@ -22,6 +22,7 @@ import java.util.UUID;
 public interface EmployeeRepository extends JpaRepository<Employee, UUID>, JpaSpecificationExecutor<Employee> {
 
     // ==================== Busca por Tenant ====================
+    List<Employee> findByTenantId(UUID tenantId);
 
     Page<Employee> findByTenantIdAndIsActiveTrue(UUID tenantId, Pageable pageable);
 

@@ -98,11 +98,15 @@ export default function TalentPoolPage() {
                 positionsApi.getActivePositions(),
                 employeesApi.getDepartments(),
             ]);
-            setVacancies(vacanciesData);
-            setCandidates(candidatesData);
+            setVacancies(vacanciesData || []);
+            setCandidates(candidatesData || []);
             setStats(statsData);
-            setPositions(positionsData);
-            setDepartments(departmentsData);
+            setPositions(positionsData || []);
+            setDepartments(departmentsData || []);
+
+            if (!positionsData || positionsData.length === 0) {
+                console.warn('⚠️ Nenhuma cargo ativo encontrado para este tenant.');
+            }
         } catch {
             toast({
                 title: 'Erro',
@@ -135,7 +139,15 @@ export default function TalentPoolPage() {
     });
 
     // Handlers - Vagas
-    const handleOpenVacancyModal = (vacancy?: JobVacancy) => {
+    const handleOpenVacancyModal = async (vacancy?: JobVacancy) => {
+        // Refresh positions to ensure we have the latest data
+        try {
+            const latestPositions = await positionsApi.getActivePositions();
+            setPositions(latestPositions || []);
+        } catch (error) {
+            console.error('Falha ao atualizar cargos:', error);
+        }
+
         if (vacancy) {
             setEditingVacancy(vacancy);
             setVacancyForm({
@@ -374,11 +386,10 @@ export default function TalentPoolPage() {
             <div className="flex gap-4 border-b border-gray-200">
                 <button
                     onClick={() => setActiveTab('vacancies')}
-                    className={`pb-3 px-2 text-sm font-medium transition-colors relative ${
-                        activeTab === 'vacancies'
+                    className={`pb-3 px-2 text-sm font-medium transition-colors relative ${activeTab === 'vacancies'
                             ? 'text-[var(--color-primary)]'
                             : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
-                    }`}
+                        }`}
                 >
                     <div className="flex items-center gap-2">
                         <Briefcase className="w-4 h-4" />
@@ -391,11 +402,10 @@ export default function TalentPoolPage() {
                 </button>
                 <button
                     onClick={() => setActiveTab('candidates')}
-                    className={`pb-3 px-2 text-sm font-medium transition-colors relative ${
-                        activeTab === 'candidates'
+                    className={`pb-3 px-2 text-sm font-medium transition-colors relative ${activeTab === 'candidates'
                             ? 'text-[var(--color-primary)]'
                             : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
-                    }`}
+                        }`}
                 >
                     <div className="flex items-center gap-2">
                         <Users className="w-4 h-4" />
@@ -677,11 +687,10 @@ export default function TalentPoolPage() {
                                                         {[1, 2, 3, 4, 5].map(star => (
                                                             <Star
                                                                 key={star}
-                                                                className={`w-4 h-4 ${
-                                                                    candidate.rating && star <= candidate.rating
+                                                                className={`w-4 h-4 ${candidate.rating && star <= candidate.rating
                                                                         ? 'text-yellow-400 fill-yellow-400'
                                                                         : 'text-gray-300'
-                                                                }`}
+                                                                    }`}
                                                             />
                                                         ))}
                                                     </div>
@@ -747,11 +756,16 @@ export default function TalentPoolPage() {
                                         required
                                         className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] bg-white"
                                     >
-                                        <option value="">Selecione um cargo...</option>
+                                        <option value="">{positions.length === 0 ? 'Nenhum cargo cadastrado' : 'Selecione um cargo...'}</option>
                                         {positions.map(p => (
                                             <option key={p.id} value={p.id}>{p.title} ({p.code})</option>
                                         ))}
                                     </select>
+                                    {positions.length === 0 && (
+                                        <p className="mt-1 text-xs text-amber-600 flex items-center gap-1">
+                                            Crie cargos primeiro na seção de <a href="/positions" className="underline font-medium">Cargos</a>.
+                                        </p>
+                                    )}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
@@ -1005,11 +1019,10 @@ export default function TalentPoolPage() {
                                             key={status}
                                             onClick={() => handleUpdateCandidateStatus(selectedCandidate.id, status)}
                                             disabled={selectedCandidate.status === status}
-                                            className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
-                                                selectedCandidate.status === status
+                                            className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${selectedCandidate.status === status
                                                     ? `${getCandidateStatusColor(status)} cursor-default`
                                                     : 'bg-white border border-gray-200 hover:bg-gray-100'
-                                            }`}
+                                                }`}
                                         >
                                             {getCandidateStatusLabel(status)}
                                         </button>

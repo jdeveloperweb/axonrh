@@ -17,7 +17,8 @@ import {
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend,
-  ComposedChart, Line
+  ComposedChart, Line,
+  Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis
 } from 'recharts';
 
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -54,7 +55,11 @@ const TRANSLATIONS: Record<string, string> = {
   'COMPLETED': 'Concluído',
   'NOT_STARTED': 'Não Iniciado',
   'EXPIRED': 'Expirado',
-  'PENDING': 'Pendente'
+  'PENDING': 'Pendente',
+  // Niveis de Risco
+  'HIGH': 'Alto Risco',
+  'MEDIUM': 'Médio Risco',
+  'LOW': 'Baixo Risco'
 };
 
 const translate = (key: string) => TRANSLATIONS[key] || key;
@@ -589,6 +594,27 @@ export default function DashboardPage() {
       },
     ];
 
+    // Prepare star (radar) data
+    const totalCheckins = wellbeingStats?.totalCheckins || 1;
+    const radarData = [
+      { subject: 'Bem-estar', value: ((wellbeingStats?.sentimentDistribution['POSITIVE'] || 0) / totalCheckins) * 100, fullMark: 100 },
+      { subject: 'Equilíbrio', value: ((wellbeingStats?.sentimentDistribution['NEUTRAL'] || 0) / totalCheckins) * 100, fullMark: 100 },
+      { subject: 'Atenção', value: ((wellbeingStats?.sentimentDistribution['NEGATIVE'] || 0) / totalCheckins) * 100, fullMark: 100 },
+      { subject: 'Satisfação', value: ((wellbeingStats?.averageScore || 0) / 5) * 100, fullMark: 100 },
+      { subject: 'Engajamento', value: Math.min(((wellbeingStats?.totalCheckins || 0) / (statsData?.totalEmployees || 1)) * 100, 100), fullMark: 100 },
+    ];
+
+    const handleMarkAsHandled = async (id: string) => {
+      try {
+        await wellbeingApi.markAsHandled(id);
+        // Refresh data
+        const wellbeingData = await wellbeingApi.getStats();
+        setWellbeingStats(wellbeingData);
+      } catch (error) {
+        console.error('Error marking request as handled:', error);
+      }
+    };
+
     return (
       <div className="space-y-6 animate-in fade-in duration-500">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -614,63 +640,150 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="border-none shadow-sm h-[400px]">
+          <Card className="border-none shadow-sm h-[480px]">
             <CardHeader>
-              <CardTitle>Mapa de Sentimentos</CardTitle>
-              <p className="text-sm text-gray-500">Distribuição geral dos check-ins</p>
+              <CardTitle>Estrela de Sentimentos</CardTitle>
+              <p className="text-sm text-gray-500">Visão multidimensional do bem-estar</p>
             </CardHeader>
-            <CardContent className="h-[320px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={sentimentData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={80}
-                    outerRadius={110}
-                    paddingAngle={5}
-                    dataKey="value"
-                    label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
-                  >
-                    {sentimentData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={sentimentColors[entry.name] || COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend verticalAlign="bottom" height={36} />
-                </PieChart>
-              </ResponsiveContainer>
+            <CardContent className="h-[400px] flex flex-col">
+              <div className="flex-1 min-h-0">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
+                    <PolarGrid stroke="#e2e8f0" />
+                    <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 11 }} />
+                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                    <Radar
+                      name="Nível"
+                      dataKey="value"
+                      stroke="#4F46E5"
+                      fill="#4F46E5"
+                      fillOpacity={0.4}
+                    />
+                    <Tooltip cursor={{ strokeDasharray: '3 3' }} />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Mini Sentiment Breakdown */}
+              <div className="mt-4 grid grid-cols-3 gap-2">
+                {[
+                  { label: 'Positivo', key: 'POSITIVE', color: 'bg-green-500' },
+                  { label: 'Neutro', key: 'NEUTRAL', color: 'bg-gray-400' },
+                  { label: 'Negativo', key: 'NEGATIVE', color: 'bg-red-500' }
+                ].map((s) => {
+                  const val = ((wellbeingStats?.sentimentDistribution[s.key] || 0) / totalCheckins) * 100;
+                  return (
+                    <div key={s.key} className="space-y-1">
+                      <div className="flex justify-between text-[10px] font-medium text-gray-500 uppercase tracking-wider">
+                        <span>{s.label}</span>
+                        <span>{val.toFixed(0)}%</span>
+                      </div>
+                      <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full ${s.color} transition-all duration-500`}
+                          style={{ width: `${val}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-sm h-[400px] overflow-hidden">
-            <CardHeader>
-              <CardTitle>Solicitações de Ajuda (EAP)</CardTitle>
-              <p className="text-sm text-gray-500">Pedidos de contato recentes</p>
+          <Card className="border-none shadow-sm h-[480px] overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Solicitações de Ajuda (EAP)</CardTitle>
+                <p className="text-sm text-gray-500">Pedidos de contato recentes</p>
+              </div>
             </CardHeader>
-            <CardContent className="h-[320px] overflow-y-auto pr-2">
+            <CardContent className="h-[400px] overflow-y-auto pr-2">
               {wellbeingStats?.eapRequests && wellbeingStats.eapRequests.length > 0 ? (
                 <div className="space-y-4">
-                  {wellbeingStats.eapRequests.map((req, idx) => (
-                    <div key={idx} className="flex items-start p-3 bg-gray-50 rounded-lg">
-                      <div className="p-2 bg-purple-100 rounded-full mr-3">
-                        <Users className="w-4 h-4 text-purple-600" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex justify-between">
-                          <p className="font-medium text-gray-900">{req.employeeName || `Colaborador: ${req.employeeId.substring(0, 8)}...`}</p>
-                          <span className="text-xs text-gray-500">{new Date(req.createdAt).toLocaleDateString()}</span>
+                  {wellbeingStats.eapRequests.map((req, idx) => {
+                    const isHandled = req.handled;
+                    return (
+                      <div key={idx} className={`flex flex-col p-4 rounded-xl border transition-all ${isHandled ? 'bg-gray-50/50 border-gray-100 opacity-60' : 'bg-white border-purple-100 shadow-sm border-l-4 border-l-purple-500'}`}>
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="relative">
+                              {req.employeePhotoUrl ? (
+                                <img src={req.employeePhotoUrl} alt={req.employeeName} className="w-10 h-10 rounded-full object-cover border border-gray-100" />
+                              ) : (
+                                <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold uppercase">
+                                  {req.employeeName?.substring(0, 2) || '?'}
+                                </div>
+                              )}
+                              {!isHandled && (
+                                <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse" />
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-semibold text-gray-900 leading-none">{req.employeeName || 'Desconhecido'}</p>
+                              <p className="text-xs text-gray-500 mt-1">{new Date(req.createdAt).toLocaleDateString()} às {new Date(req.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                            </div>
+                          </div>
+                          {!isHandled && (
+                            <button
+                              onClick={() => handleMarkAsHandled(req.id)}
+                              className="px-3 py-1.5 text-xs font-medium bg-purple-50 text-purple-600 hover:bg-purple-100 rounded-lg transition-colors flex items-center gap-1.5"
+                            >
+                              <CheckCircle className="w-3.5 h-3.5" />
+                              Atender
+                            </button>
+                          )}
+                          {isHandled && (
+                            <div className="flex items-center gap-1 text-green-600 bg-green-50 px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider">
+                              <CheckCircle className="w-3 h-3" />
+                              Atendido
+                            </div>
+                          )}
                         </div>
-                        <p className="text-sm text-gray-600 mt-1">Score: {req.score} | Risco: {translate(req.riskLevel)}</p>
-                        {req.notes && <p className="text-xs text-gray-500 italic mt-1">"{req.notes}"</p>}
+
+                        <div className="grid grid-cols-2 gap-2 mb-3">
+                          <div className="px-2 py-1.5 bg-gray-50 rounded-lg border border-gray-100">
+                            <p className="text-[10px] text-gray-400 uppercase font-bold">Humor</p>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <div className="flex gap-0.5">
+                                {[1, 2, 3, 4, 5].map((s) => (
+                                  <div key={s} className={`w-1.5 h-2.5 rounded-sm ${s <= req.score ? (req.score <= 2 ? 'bg-red-400' : req.score >= 4 ? 'bg-green-400' : 'bg-yellow-400') : 'bg-gray-200'}`} />
+                                ))}
+                              </div>
+                              <span className="text-xs font-medium text-gray-700">{req.score}/5</span>
+                            </div>
+                          </div>
+                          <div className="px-2 py-1.5 bg-gray-50 rounded-lg border border-gray-100">
+                            <p className="text-[10px] text-gray-400 uppercase font-bold">Análise IA</p>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <span className={`text-xs font-bold ${req.sentiment === 'POSITIVE' ? 'text-green-600' : req.sentiment === 'NEGATIVE' ? 'text-red-600' : 'text-gray-600'}`}>
+                                {req.sentiment === 'POSITIVE' ? 'Positivo' : req.sentiment === 'NEGATIVE' ? 'Negativo' : 'Neutro'}
+                              </span>
+                              <span className="text-gray-300">|</span>
+                              <span className={`text-[10px] font-bold uppercase ${req.riskLevel === 'HIGH' ? 'text-red-500' : 'text-blue-500'}`}>
+                                {translate(req.riskLevel)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {req.notes && (
+                          <div className="p-3 bg-blue-50/50 rounded-lg border border-blue-100">
+                            <p className="text-[10px] text-blue-400 uppercase font-bold mb-1">Relato do Colaborador</p>
+                            <p className="text-sm text-gray-700 italic leading-relaxed">"{req.notes}"</p>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center h-full text-gray-400">
-                  <CheckCircle className="w-12 h-12 mb-2 text-green-500" />
-                  <p>Nenhuma solicitação pendente.</p>
+                <div className="flex flex-col items-center justify-center h-full text-gray-400 py-12">
+                  <div className="p-4 bg-green-50 rounded-full mb-4">
+                    <CheckCircle className="w-12 h-12 text-green-400" />
+                  </div>
+                  <p className="font-medium text-gray-600">Fila limpa!</p>
+                  <p className="text-sm">Nenhuma solicitação pendente no momento.</p>
                 </div>
               )}
             </CardContent>

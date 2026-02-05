@@ -151,19 +151,29 @@ public class WellbeingService {
                 .filter(w -> "HIGH".equalsIgnoreCase(w.getRiskLevel()))
                 .count();
 
+        // Fix N+1: map all employees in the tenant
+        List<Employee> employees = employeeRepository.findByTenantId(tenantId);
+        Map<UUID, Employee> employeeMap = employees.stream()
+                .collect(Collectors.toMap(Employee::getId, e -> e, (e1, e2) -> e1));
+
         List<EapRequestDTO> eapRequests = all.stream()
                 .filter(EmployeeWellbeing::isWantsEapContact)
                 .sorted(Comparator.comparing(EmployeeWellbeing::getCreatedAt).reversed())
                 .map(w -> {
-                    String name = employeeRepository.findById(w.getEmployeeId())
-                            .map(Employee::getFullName)
-                            .orElse("Desconhecido");
+                    Employee emp = employeeMap.get(w.getEmployeeId());
+                    String name = emp != null ? emp.getFullName() : "Desconhecido";
+                    String photoUrl = emp != null ? emp.getPhotoUrl() : null;
+
                     return EapRequestDTO.builder()
+                            .id(w.getId())
                             .employeeId(w.getEmployeeId())
                             .employeeName(name)
+                            .employeePhotoUrl(photoUrl)
                             .score(w.getScore())
                             .notes(w.getNotes())
+                            .sentiment(w.getSentiment())
                             .riskLevel(w.getRiskLevel())
+                            .handled(w.isHandled())
                             .createdAt(w.getCreatedAt())
                             .build();
                 })
@@ -174,9 +184,21 @@ public class WellbeingService {
                 .averageScore(averageScore)
                 .sentimentDistribution(sentimentMap)
                 .highRiskCount(highRiskCount)
-                .totalEapRequests(eapRequests.size())
-                .eapRequests(eapRequests)
+                .totalEapRequests(eapRequests.stream().filter(r -> !r.isHandled()).count())
+                .eapRequests(eapRequests) // Send all, front will handle display/filtering if needed but usually we show recent handled too? user said "marcar que ja foi atendido", so we should show them differently or filter out.
                 .build();
+    }
+
+    public void markAsHandled(UUID id) {
+        UUID tenantId = getTenantId();
+        EmployeeWellbeing wellbeing = repository.findById(id)
+                .filter(w -> w.getTenantId().equals(tenantId))
+                .orElseThrow(() -> new IllegalArgumentException("Registro nao encontrado"));
+        
+        wellbeing.setHandled(true);
+        wellbeing.setHandledAt(LocalDateTime.now());
+        // For now not tracking WHO handled it as we don't have the user ID easily here without more extraction
+        repository.save(wellbeing);
     }
 
     private UUID getTenantId() {

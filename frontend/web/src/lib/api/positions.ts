@@ -48,8 +48,9 @@ export const positionsApi = {
     },
 
 
-    getActivePositions: async () => {
-        return api.get<unknown, Position[]>('/positions/active');
+    getActivePositions: async (departmentId?: string) => {
+        const url = departmentId ? `/positions/active?departmentId=${departmentId}` : '/positions/active';
+        return api.get<Position[]>(url);
     },
 
 

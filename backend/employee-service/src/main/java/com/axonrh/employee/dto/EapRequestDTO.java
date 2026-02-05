@@ -13,10 +13,14 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EapRequestDTO {
+    private UUID id;
     private UUID employeeId;
     private String employeeName;
+    private String employeePhotoUrl;
     private Integer score;
     private String notes;
+    private String sentiment;
     private String riskLevel;
+    private boolean handled;
     private LocalDateTime createdAt;
 }

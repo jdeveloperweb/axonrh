@@ -40,6 +40,7 @@ public class PositionService {
     @Transactional(readOnly = true)
     public List<PositionResponse> findAllActive(UUID departmentId) {
         UUID tenantId = getTenantId();
+        log.debug("Listando cargos ativos para o tenant: {} e departamento: {}", tenantId, departmentId);
         List<Position> positions;
         
         if (departmentId != null) {
@@ -48,6 +49,7 @@ public class PositionService {
             positions = positionRepository.findByTenantIdAndIsActiveTrueOrderByTitle(tenantId);
         }
 
+        log.debug("Encontrados {} cargos ativos", positions.size());
         return positions.stream()
                 .map(positionMapper::toResponse)
                 .collect(Collectors.toList());

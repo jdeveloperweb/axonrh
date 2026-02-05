@@ -48,4 +48,11 @@ public class EmployeeWellbeing {
 
     @CreationTimestamp
     private LocalDateTime createdAt;
+
+    @Builder.Default
+    private boolean handled = false;
+
+    private LocalDateTime handledAt;
+
+    private UUID handledBy;
 }

@@ -32,4 +32,10 @@ public class WellbeingController {
     public ResponseEntity<com.axonrh.employee.dto.WellbeingStats> getStats() {
         return ResponseEntity.ok(wellbeingService.getStats());
     }
+
+    @PostMapping("/{id}/handle")
+    public ResponseEntity<Void> markAsHandled(@PathVariable UUID id) {
+        wellbeingService.markAsHandled(id);
+        return ResponseEntity.ok().build();
+    }
 }

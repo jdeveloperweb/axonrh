@@ -16,11 +16,15 @@ export interface MoodCheckInResponse {
 }
 
 export interface EapRequest {
+    id: string;
     employeeId: string;
     employeeName?: string;
+    employeePhotoUrl?: string;
     score: number;
     notes: string;
+    sentiment?: string;
     riskLevel: string;
+    handled: boolean;
     createdAt: string;
 }
 
@@ -44,5 +48,9 @@ export const wellbeingApi = {
 
     getStats: async (): Promise<WellbeingStats> => {
         return await api.get('/employees/wellbeing/stats');
+    },
+
+    markAsHandled: async (id: string): Promise<void> => {
+        return await api.post(`/employees/wellbeing/${id}/handle`, {});
     }
 };
