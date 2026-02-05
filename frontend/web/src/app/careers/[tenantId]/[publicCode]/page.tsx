@@ -451,25 +451,44 @@ export default function VacancyDetailPage() {
                                     </div>
                                     <div>
                                         <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2 ml-1">
-                                            Cidade/UF
+                                            Estado
                                         </label>
                                         <div className="relative group">
-                                            <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[var(--color-primary)] transition-colors" />
-                                            <input
-                                                type="text"
-                                                value={formData.city ? `${formData.city}${formData.state ? ` / ${formData.state}` : ''}` : ''}
-                                                onChange={(e) => {
-                                                    const val = e.target.value;
-                                                    if (val.includes('/')) {
-                                                        const [city, state] = val.split('/').map(s => s.trim());
-                                                        setFormData({ ...formData, city, state: state?.toUpperCase().slice(0, 2) || '' });
-                                                    } else {
-                                                        setFormData({ ...formData, city: val });
-                                                    }
-                                                }}
-                                                className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all text-gray-900 font-medium placeholder:text-gray-300"
-                                                placeholder="Sua cidade"
-                                            />
+                                            <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[var(--color-primary)] transition-colors pointer-events-none z-10" />
+                                            <select
+                                                value={formData.state}
+                                                onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                                                className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all text-gray-900 font-medium appearance-none cursor-pointer"
+                                            >
+                                                <option value="">Selecione</option>
+                                                <option value="AC">Acre</option>
+                                                <option value="AL">Alagoas</option>
+                                                <option value="AP">Amapá</option>
+                                                <option value="AM">Amazonas</option>
+                                                <option value="BA">Bahia</option>
+                                                <option value="CE">Ceará</option>
+                                                <option value="DF">Distrito Federal</option>
+                                                <option value="ES">Espírito Santo</option>
+                                                <option value="GO">Goiás</option>
+                                                <option value="MA">Maranhão</option>
+                                                <option value="MT">Mato Grosso</option>
+                                                <option value="MS">Mato Grosso do Sul</option>
+                                                <option value="MG">Minas Gerais</option>
+                                                <option value="PA">Pará</option>
+                                                <option value="PB">Paraíba</option>
+                                                <option value="PR">Paraná</option>
+                                                <option value="PE">Pernambuco</option>
+                                                <option value="PI">Piauí</option>
+                                                <option value="RJ">Rio de Janeiro</option>
+                                                <option value="RN">Rio Grande do Norte</option>
+                                                <option value="RS">Rio Grande do Sul</option>
+                                                <option value="RO">Rondônia</option>
+                                                <option value="RR">Roraima</option>
+                                                <option value="SC">Santa Catarina</option>
+                                                <option value="SP">São Paulo</option>
+                                                <option value="SE">Sergipe</option>
+                                                <option value="TO">Tocantins</option>
+                                            </select>
                                         </div>
                                     </div>
                                 </div>
