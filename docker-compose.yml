@@ -1,8 +1,5 @@
 version: '3.8'
 
-# =====================
-# COMMON JVM SETTINGS
-# =====================
 x-backend-env: &backend-env
   DB_HOST: postgres
   DB_PORT: 5432
@@ -14,25 +11,12 @@ x-backend-env: &backend-env
   MINIO_ENDPOINT: http://minio:9000
   MINIO_ACCESS_KEY: axonrh
   MINIO_SECRET_KEY: axonrh123
-  MONGODB_URI: mongodb://axonrh:axonrh123@mongodb:27017/axonrh_conversations?authSource=admin
+  MONGODB_URI: mongodb://axonrh:axonrh123@mongodb:27017/axonrh_conversations?authSource=admin&connectTimeoutMS=30000&socketTimeoutMS=30000
   SPRING_FLYWAY_ENABLED: "false"
   SPRING_LIQUIBASE_ENABLED: "false"
   SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-  JAVA_OPTS: >
-    -Xms128m -Xmx384m -XX:MaxMetaspaceSize=128m -XX:+UseG1GC -XX:MaxGCPauseMillis=200
+  JAVA_OPTS: "-Xms128m -Xmx512m"
 
-# =====================
-# BACKEND MEMORY LIMIT
-# =====================
-x-backend-limits: &backend-limits
-  deploy:
-    resources:
-      limits:
-        memory: 512M
-
-# =====================
-# BACKEND BASE SERVICE
-# =====================
 x-backend-service: &backend-service
   image: maven:3.9.6-eclipse-temurin-21
   working_dir: /workspace/backend
@@ -41,7 +25,6 @@ x-backend-service: &backend-service
     - maven_repo:/root/.m2
   environment:
     <<: *backend-env
-  <<: *backend-limits
   depends_on:
     postgres:
       condition: service_healthy
@@ -59,10 +42,7 @@ x-backend-service: &backend-service
     - backend
 
 services:
-
-  # =====================
-  # DATABASES & INFRA
-  # =====================
+  # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
     container_name: axonrh-postgres
@@ -74,15 +54,16 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U $$POSTGRES_USER" ]
-    deploy:
-      resources:
-        limits:
-          memory: 512M
+      test: [ "CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - axonrh-network
 
+  # MongoDB for AI conversations
   mongodb:
     image: mongo:7
     container_name: axonrh-mongodb
@@ -99,13 +80,10 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    deploy:
-      resources:
-        limits:
-          memory: 256M
     networks:
       - axonrh-network
 
+  # Redis for caching and sessions
   redis:
     image: redis:7-alpine
     container_name: axonrh-redis
@@ -119,13 +97,10 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    deploy:
-      resources:
-        limits:
-          memory: 128M
     networks:
       - axonrh-network
 
+  # RabbitMQ for messaging
   rabbitmq:
     image: rabbitmq:3-management-alpine
     container_name: axonrh-rabbitmq
@@ -142,23 +117,24 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    deploy:
-      resources:
-        limits:
-          memory: 256M
     networks:
       - axonrh-network
 
+  # Zookeeper for Kafka
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
     container_name: axonrh-zookeeper
-    deploy:
-      resources:
-        limits:
-          memory: 256M
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
     networks:
       - axonrh-network
 
+  # Kafka for messaging
   kafka:
     image: confluentinc/cp-kafka:7.5.0
     container_name: axonrh-kafka
@@ -176,26 +152,59 @@ services:
     volumes:
       - kafka_data:/var/lib/kafka/data
     healthcheck:
-      test: [ "CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 > /dev/null 2>&1" ]
-      interval: 15s
-      timeout: 10s
+      test: [ "CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092" ]
+      interval: 10s
+      timeout: 5s
       retries: 5
-    deploy:
-      resources:
-        limits:
-          memory: 768M
     networks:
       - axonrh-network
 
-  # =====================
-  # BACKEND SERVICES
-  # =====================
+  # MailHog for email testing
+  mailhog:
+    image: mailhog/mailhog
+    container_name: axonrh-mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    healthcheck:
+      test: [ "CMD-SHELL", "curl --fail --silent --show-error http://localhost:8025" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - axonrh-network
+
+  # MinIO for file storage (S3 compatible)
+  minio:
+    image: minio/minio
+    container_name: axonrh-minio
+    environment:
+      MINIO_ROOT_USER: axonrh
+      MINIO_ROOT_PASSWORD: axonrh123
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: [ "CMD-SHELL", "curl --fail --silent --show-error http://localhost:9000/minio/health/live" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - axonrh-network
+
   config-service:
     <<: *backend-service
     container_name: axonrh-config-service
     command: mvn -pl config-service -am spring-boot:run
     ports:
       - "8888:8888"
+    environment:
+      <<: *backend-env
+      SPRING_FLYWAY_ENABLED: "true"
+      SERVER_PORT: 8888
 
   auth-service:
     <<: *backend-service
@@ -203,6 +212,10 @@ services:
     command: mvn -pl auth-service -am spring-boot:run
     ports:
       - "8081:8081"
+    environment:
+      <<: *backend-env
+      SPRING_FLYWAY_ENABLED: "true"
+      SERVER_PORT: 8081
 
   core-service:
     <<: *backend-service
@@ -210,6 +223,10 @@ services:
     command: mvn -pl core-service -am spring-boot:run
     ports:
       - "8082:8082"
+    environment:
+      <<: *backend-env
+      SPRING_FLYWAY_ENABLED: "true"
+      SERVER_PORT: 8082
 
   employee-service:
     <<: *backend-service
@@ -217,6 +234,11 @@ services:
     command: mvn -pl employee-service -am spring-boot:run
     ports:
       - "8083:8083"
+    environment:
+      <<: *backend-env
+      SPRING_FLYWAY_ENABLED: "true"
+      SERVER_PORT: 8083
+      AI_ASSISTANT_SERVICE_URL: http://ai-assistant-service:8088
 
   timesheet-service:
     <<: *backend-service
@@ -224,6 +246,10 @@ services:
     command: mvn -pl timesheet-service -am spring-boot:run
     ports:
       - "8084:8084"
+    environment:
+      <<: *backend-env
+      SPRING_FLYWAY_ENABLED: "true"
+      SERVER_PORT: 8084
 
   vacation-service:
     <<: *backend-service
@@ -231,6 +257,10 @@ services:
     command: mvn -pl vacation-service -am spring-boot:run
     ports:
       - "8185:8085"
+    environment:
+      <<: *backend-env
+      SPRING_FLYWAY_ENABLED: "true"
+      SERVER_PORT: 8085
 
   performance-service:
     <<: *backend-service
@@ -238,6 +268,10 @@ services:
     command: mvn -pl performance-service -am spring-boot:run
     ports:
       - "8086:8086"
+    environment:
+      <<: *backend-env
+      SPRING_FLYWAY_ENABLED: "true"
+      SERVER_PORT: 8086
 
   learning-service:
     <<: *backend-service
@@ -245,15 +279,24 @@ services:
     command: mvn -pl learning-service -am spring-boot:run
     ports:
       - "8187:8087"
+    environment:
+      <<: *backend-env
+      SPRING_FLYWAY_ENABLED: "true"
+      SERVER_PORT: 8087
 
   ai-assistant-service:
     <<: *backend-service
     container_name: axonrh-ai-assistant-service
     command: mvn -pl ai-assistant-service -am spring-boot:run
-    ports:
-      - "8088:8088"
     env_file:
       - .env
+    ports:
+      - "8088:8088"
+    environment:
+      <<: *backend-env
+      SPRING_FLYWAY_ENABLED: "true"
+      SERVER_PORT: 8088
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
 
   notification-service:
     <<: *backend-service
@@ -261,6 +304,10 @@ services:
     command: mvn -pl notification-service -am spring-boot:run
     ports:
       - "8089:8089"
+    environment:
+      <<: *backend-env
+      SPRING_FLYWAY_ENABLED: "true"
+      SERVER_PORT: 8089
 
   integration-service:
     <<: *backend-service
@@ -268,6 +315,10 @@ services:
     command: mvn -pl integration-service -am spring-boot:run
     ports:
       - "8090:8090"
+    environment:
+      <<: *backend-env
+      SPRING_FLYWAY_ENABLED: "true"
+      SERVER_PORT: 8090
 
   api-gateway:
     <<: *backend-service
@@ -275,10 +326,11 @@ services:
     command: mvn -pl api-gateway -am spring-boot:run
     ports:
       - "8180:8080"
+    environment:
+      <<: *backend-env
+      SPRING_FLYWAY_ENABLED: "true"
+      SERVER_PORT: 8080
 
-  # =====================
-  # FRONTEND
-  # =====================
   frontend:
     image: node:20-alpine
     container_name: axonrh-frontend
@@ -289,10 +341,11 @@ services:
     command: sh -c "npm install && npm run dev"
     ports:
       - "3000:3000"
-    deploy:
-      resources:
-        limits:
-          memory: 512M
+    environment:
+      NODE_ENV: development
+    depends_on:
+      api-gateway:
+        condition: service_started
     networks:
       - axonrh-network
     profiles:
