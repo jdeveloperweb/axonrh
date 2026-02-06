@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Edit, MoreHorizontal, User, MapPin, Briefcase, FileText, Users, History, Mail, Phone, Calendar, Building2, Camera, Download, DollarSign, Plus, UserX, Copy, ExternalLink, Clock, AlertTriangle, MessageCircle, Check, HeartHandshake } from 'lucide-react';
+import { ArrowLeft, Edit, MoreHorizontal, User, MapPin, Briefcase, FileText, Users, History, Mail, Phone, Calendar, Building2, Camera, Download, DollarSign, Plus, UserX, Copy, ExternalLink, Clock, AlertTriangle, MessageCircle, Check, HeartHandshake, Target } from 'lucide-react';
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ImageCropDialog } from '@/components/ui/image-crop-dialog';
@@ -27,12 +27,13 @@ import { ShieldCheck, ShieldAlert, Key, CreditCard, BrainCircuit } from 'lucide-
 import { EmployeeBadge } from '@/components/employees/EmployeeBadge';
 import { WellbeingTab } from '@/components/employees/WellbeingTab';
 import { DiscTab } from '@/components/employees/DiscTab';
+import { PerformanceTab } from '@/components/employees/PerformanceTab';
 import { useThemeStore } from '@/stores/theme-store';
 import { useAuthStore } from '@/stores/auth-store';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
-type TabKey = 'overview' | 'documents' | 'dependents' | 'timesheet' | 'history' | 'wellbeing' | 'disc';
+type TabKey = 'overview' | 'documents' | 'dependents' | 'timesheet' | 'history' | 'wellbeing' | 'performance' | 'disc';
 
 const statusColors = {
   ACTIVE: { bg: 'bg-emerald-50 border-emerald-100', text: 'text-emerald-700', label: 'Ativo' },
@@ -284,9 +285,10 @@ export default function EmployeeDetailPage() {
     { key: 'timesheet' as TabKey, label: 'Ponto / Jornada', icon: Clock },
     { key: 'documents' as TabKey, label: 'Documentos', icon: FileText },
     { key: 'dependents' as TabKey, label: 'Dependentes', icon: Users },
+    { key: 'wellbeing' as TabKey, label: 'Bem-Estar (RH)', icon: HeartHandshake },
+    { key: 'performance' as TabKey, label: 'Desempenho', icon: Target },
     { key: 'disc' as TabKey, label: 'Perfil DISC', icon: BrainCircuit },
     { key: 'history' as TabKey, label: 'Histórico', icon: History },
-    { key: 'wellbeing' as TabKey, label: 'Bem-Estar (RH)', icon: HeartHandshake },
   ];
 
   if (loading) {
@@ -830,6 +832,10 @@ export default function EmployeeDetailPage() {
 
         {activeTab === 'wellbeing' && (
           <WellbeingTab employeeId={employeeId} />
+        )}
+
+        {activeTab === 'performance' && (
+          <PerformanceTab employeeId={employeeId} employeeName={employee.fullName} />
         )}
 
         {activeTab === 'disc' && (

@@ -94,12 +94,12 @@ export default function DiscManagePage() {
         discApi.getStatistics(),
         discApi.listAssignments(0, 100),
         discApi.list(0, 100, undefined),
-        employeesApi.list(),
+        employeesApi.list({ status: 'ACTIVE', size: 1000 }), // Buscar apenas colaboradores ativos
       ]);
       setStatistics(statsRes);
       setAssignments(assignmentsRes.content);
       setEvaluations(evaluationsRes.content);
-      setEmployees(employeesRes);
+      setEmployees(employeesRes.content); // Usar a propriedade content
     } catch (error) {
       console.error('Failed to load data:', error);
       toast({
@@ -381,7 +381,7 @@ export default function DiscManagePage() {
                     outerRadius={80}
                     paddingAngle={5}
                     dataKey="value"
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
                   >
                     {pieChartData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
@@ -400,21 +400,19 @@ export default function DiscManagePage() {
       <div className="flex gap-4 border-b">
         <button
           onClick={() => setActiveTab('assignments')}
-          className={`pb-2 px-1 font-medium transition-colors ${
-            activeTab === 'assignments'
-              ? 'border-b-2 border-primary text-primary'
-              : 'text-muted-foreground hover:text-foreground'
-          }`}
+          className={`pb-2 px-1 font-medium transition-colors ${activeTab === 'assignments'
+            ? 'border-b-2 border-primary text-primary'
+            : 'text-muted-foreground hover:text-foreground'
+            }`}
         >
           Atribuicoes
         </button>
         <button
           onClick={() => setActiveTab('results')}
-          className={`pb-2 px-1 font-medium transition-colors ${
-            activeTab === 'results'
-              ? 'border-b-2 border-primary text-primary'
-              : 'text-muted-foreground hover:text-foreground'
-          }`}
+          className={`pb-2 px-1 font-medium transition-colors ${activeTab === 'results'
+            ? 'border-b-2 border-primary text-primary'
+            : 'text-muted-foreground hover:text-foreground'
+            }`}
         >
           Resultados
         </button>

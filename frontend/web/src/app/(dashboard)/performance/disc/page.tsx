@@ -53,7 +53,7 @@ const profileDescriptions: Record<string, { title: string; description: string; 
     },
 };
 
-// Mock questions when backend is not available
+// Mock questions when backend is not available - 28 perguntas para avaliação mais precisa
 const MOCK_QUESTIONS: DiscQuestion[] = [
     {
         id: "1",
@@ -163,6 +163,204 @@ const MOCK_QUESTIONS: DiscQuestion[] = [
             { id: "10b", text: "Ser reconhecido e trabalhar com pessoas", value: "I" },
             { id: "10c", text: "Ter estabilidade e um bom ambiente", value: "S" },
             { id: "10d", text: "Fazer um trabalho de alta qualidade", value: "C" }
+        ]
+    },
+    {
+        id: '11',
+        text: "Ao receber uma crítica, eu...",
+        order: 11,
+        options: [
+            { id: "11a", text: "Defendo meu ponto de vista com firmeza", value: "D" },
+            { id: "11b", text: "Tento entender e manter o relacionamento", value: "I" },
+            { id: "11c", text: "Fico magoado mas não demonstro", value: "S" },
+            { id: "11d", text: "Analiso se a crítica é válida tecnicamente", value: "C" }
+        ]
+    },
+    {
+        id: '12',
+        text: "Em um projeto novo, minha primeira reação é...",
+        order: 12,
+        options: [
+            { id: "12a", text: "Definir objetivos e começar logo", value: "D" },
+            { id: "12b", text: "Imaginar as possibilidades e compartilhar ideias", value: "I" },
+            { id: "12c", text: "Entender bem antes de me comprometer", value: "S" },
+            { id: "12d", text: "Planejar cada etapa detalhadamente", value: "C" }
+        ]
+    },
+    {
+        id: '13',
+        text: "Quando alguém discorda de mim, eu...",
+        order: 13,
+        options: [
+            { id: "13a", text: "Argumento para provar meu ponto", value: "D" },
+            { id: "13b", text: "Tento persuadir de forma amigável", value: "I" },
+            { id: "13c", text: "Ouço e busco um meio-termo", value: "S" },
+            { id: "13d", text: "Apresento dados e fatos", value: "C" }
+        ]
+    },
+    {
+        id: '14',
+        text: "Meu ritmo de trabalho é...",
+        order: 14,
+        options: [
+            { id: "14a", text: "Rápido e focado em entregas", value: "D" },
+            { id: "14b", text: "Variável, dependendo do entusiasmo", value: "I" },
+            { id: "14c", text: "Constante e previsível", value: "S" },
+            { id: "14d", text: "Metódico e cuidadoso", value: "C" }
+        ]
+    },
+    {
+        id: '15',
+        text: "Em reuniões, eu costumo...",
+        order: 15,
+        options: [
+            { id: "15a", text: "Conduzir e tomar decisões", value: "D" },
+            { id: "15b", text: "Contribuir com ideias e animar", value: "I" },
+            { id: "15c", text: "Ouvir mais do que falar", value: "S" },
+            { id: "15d", text: "Fazer anotações e questionar detalhes", value: "C" }
+        ]
+    },
+    {
+        id: '16',
+        text: "Quando erro, eu...",
+        order: 16,
+        options: [
+            { id: "16a", text: "Assumo e parto para a solução", value: "D" },
+            { id: "16b", text: "Explico o contexto e peço desculpas", value: "I" },
+            { id: "16c", text: "Fico preocupado com as consequências", value: "S" },
+            { id: "16d", text: "Analiso o que deu errado para não repetir", value: "C" }
+        ]
+    },
+    {
+        id: '17',
+        text: "Minha relação com prazos é...",
+        order: 17,
+        options: [
+            { id: "17a", text: "Entrego antes se possível", value: "D" },
+            { id: "17b", text: "Às vezes deixo para última hora", value: "I" },
+            { id: "17c", text: "Prefiro ter tempo de sobra", value: "S" },
+            { id: "17d", text: "Planejo para cumprir exatamente", value: "C" }
+        ]
+    },
+    {
+        id: '18',
+        text: "Em situações de incerteza, eu...",
+        order: 18,
+        options: [
+            { id: "18a", text: "Tomo a iniciativa e decido", value: "D" },
+            { id: "18b", text: "Mantenho o otimismo e improviso", value: "I" },
+            { id: "18c", text: "Espero mais informações", value: "S" },
+            { id: "18d", text: "Busco dados para reduzir riscos", value: "C" }
+        ]
+    },
+    {
+        id: '19',
+        text: "Minha forma de aprender é...",
+        order: 19,
+        options: [
+            { id: "19a", text: "Fazendo e experimentando", value: "D" },
+            { id: "19b", text: "Conversando e trocando experiências", value: "I" },
+            { id: "19c", text: "Observando e praticando", value: "S" },
+            { id: "19d", text: "Estudando e pesquisando a fundo", value: "C" }
+        ]
+    },
+    {
+        id: '20',
+        text: "Quando lidero, eu...",
+        order: 20,
+        options: [
+            { id: "20a", text: "Dou direções claras e espero resultados", value: "D" },
+            { id: "20b", text: "Inspiro e motivo a equipe", value: "I" },
+            { id: "20c", text: "Apoio e desenvolvo as pessoas", value: "S" },
+            { id: "20d", text: "Estabeleço processos e padrões", value: "C" }
+        ]
+    },
+    {
+        id: '21',
+        text: "Minha maior preocupação em um projeto é...",
+        order: 21,
+        options: [
+            { id: "21a", text: "Atingir os objetivos no prazo", value: "D" },
+            { id: "21b", text: "Manter todos engajados", value: "I" },
+            { id: "21c", text: "Garantir que ninguém seja prejudicado", value: "S" },
+            { id: "21d", text: "Assegurar a qualidade do resultado", value: "C" }
+        ]
+    },
+    {
+        id: '22',
+        text: "Em negociações, eu...",
+        order: 22,
+        options: [
+            { id: "22a", text: "Busco vencer e obter vantagens", value: "D" },
+            { id: "22b", text: "Procuro um acordo que agrade a todos", value: "I" },
+            { id: "22c", text: "Cedo para evitar conflitos", value: "S" },
+            { id: "22d", text: "Apresento argumentos lógicos", value: "C" }
+        ]
+    },
+    {
+        id: '23',
+        text: "Meu ambiente de trabalho ideal é...",
+        order: 23,
+        options: [
+            { id: "23a", text: "Desafiador e competitivo", value: "D" },
+            { id: "23b", text: "Colaborativo e animado", value: "I" },
+            { id: "23c", text: "Estável e harmonioso", value: "S" },
+            { id: "23d", text: "Organizado e estruturado", value: "C" }
+        ]
+    },
+    {
+        id: '24',
+        text: "Quando delego tarefas, eu...",
+        order: 24,
+        options: [
+            { id: "24a", text: "Dou autonomia e cobro resultados", value: "D" },
+            { id: "24b", text: "Explico a importância e confio", value: "I" },
+            { id: "24c", text: "Acompanho de perto e apoio", value: "S" },
+            { id: "24d", text: "Dou instruções detalhadas", value: "C" }
+        ]
+    },
+    {
+        id: '25',
+        text: "Minha reação a regras é...",
+        order: 25,
+        options: [
+            { id: "25a", text: "Questiono se fazem sentido", value: "D" },
+            { id: "25b", text: "Sigo se não atrapalham", value: "I" },
+            { id: "25c", text: "Prefiro seguir para evitar problemas", value: "S" },
+            { id: "25d", text: "Valorizo e sigo rigorosamente", value: "C" }
+        ]
+    },
+    {
+        id: '26',
+        text: "Em momentos de crise, eu...",
+        order: 26,
+        options: [
+            { id: "26a", text: "Assumo o controle e ajo", value: "D" },
+            { id: "26b", text: "Mantenho o moral alto", value: "I" },
+            { id: "26c", text: "Ofereço suporte emocional", value: "S" },
+            { id: "26d", text: "Analiso causas e soluções", value: "C" }
+        ]
+    },
+    {
+        id: '27',
+        text: "Meu estilo de feedback é...",
+        order: 27,
+        options: [
+            { id: "27a", text: "Direto e focado em melhorias", value: "D" },
+            { id: "27b", text: "Positivo e encorajador", value: "I" },
+            { id: "27c", text: "Cuidadoso para não magoar", value: "S" },
+            { id: "27d", text: "Específico e baseado em fatos", value: "C" }
+        ]
+    },
+    {
+        id: '28',
+        text: "Ao final de um projeto bem-sucedido, eu...",
+        order: 28,
+        options: [
+            { id: "28a", text: "Já penso no próximo desafio", value: "D" },
+            { id: "28b", text: "Celebro com a equipe", value: "I" },
+            { id: "28c", text: "Fico aliviado e satisfeito", value: "S" },
+            { id: "28d", text: "Documento lições aprendidas", value: "C" }
         ]
     },
 ];
@@ -407,26 +605,30 @@ export default function DiscPage() {
 
         return (
             <div className="space-y-8 pb-12">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-4xl font-black tracking-tight flex items-center gap-3">
+                <div className="flex items-start justify-between mb-2">
+                    <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-1">
                             <div className="p-3 rounded-2xl bg-primary/10 text-primary">
                                 <BrainCircuit className="h-8 w-8" />
                             </div>
-                            Seu Perfil Comportamental
-                        </h1>
-                        <p className="text-muted-foreground text-lg italic mt-1">Análise clínica baseada na metodologia Marston</p>
+                            <div>
+                                <h1 className="text-4xl font-black tracking-tight">Seu Perfil Comportamental</h1>
+                                <p className="text-muted-foreground text-lg italic">Análise clínica baseada na metodologia Marston</p>
+                            </div>
+                        </div>
                     </div>
                     <div className="flex gap-2">
+                        <Button variant="outline" className="h-11 font-bold border-2" onClick={handleStart}>
+                            Refazer Análise
+                        </Button>
                         {isAdmin && (
                             <Link href="/performance/disc/manage">
-                                <Button variant="outline" className="h-11 font-bold border-2">
+                                <Button className="h-11 font-bold shadow-lg shadow-primary/20">
                                     <Settings className="h-4 w-4 mr-2" />
-                                    Gerenciar
+                                    Gerenciar Avaliações
                                 </Button>
                             </Link>
                         )}
-                        <Button variant="outline" className="h-11 font-bold border-2" onClick={handleStart}>Refazer Análise</Button>
                     </div>
                 </div>
 
@@ -648,7 +850,7 @@ export default function DiscPage() {
                         <div className="space-y-4 max-w-2xl">
                             <h2 className="text-3xl font-black text-slate-900">Pronto para começar?</h2>
                             <p className="text-lg text-slate-500 font-medium leading-relaxed">
-                                Leva cerca de 5-10 minutos. Tente ser o mais honesto possível, respondendo com base em como você realmente age, não como gostaria de agir.
+                                Leva cerca de 8-12 minutos. Tente ser o mais honesto possível, respondendo com base em como você realmente age, não como gostaria de agir.
                             </p>
                         </div>
 
@@ -662,7 +864,7 @@ export default function DiscPage() {
                             <ArrowRight className="ml-3 h-6 w-6" />
                         </Button>
                         <p className="text-xs font-black uppercase tracking-widest text-slate-400">
-                            {questions.length} Perguntas • Feedback Instantâneo
+                            {questions.length} Perguntas • Avaliação Completa • Feedback Instantâneo
                         </p>
                     </div>
                 </CardContent>

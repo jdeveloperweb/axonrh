@@ -220,7 +220,7 @@ export default function LearningDashboard() {
 
             <div className="flex flex-wrap items-center gap-10 pt-4">
               <Link href={myEnrollments.length > 0 ? `/learning/course/${myEnrollments[0].courseId || (myEnrollments[0].course as any)?.id}` : '/learning/catalog'}>
-                <Button className="h-16 px-10 rounded-2xl bg-slate-900 text-white hover:bg-black font-black uppercase tracking-widest text-[11px] transition-all shadow-2xl shadow-slate-400/20 hover:-translate-y-1 active:scale-95 flex gap-3 group ring-offset-2 hover:ring-2 ring-slate-900/10">
+                <Button className="h-16 px-10 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 font-black uppercase tracking-widest text-[11px] transition-all shadow-2xl shadow-blue-400/30 hover:-translate-y-1 active:scale-95 flex gap-3 group ring-offset-2 hover:ring-2 ring-blue-500/20">
                   {myEnrollments.length > 0 ? 'Continuar Estudos' : 'Explorar Catálogo'}
                   <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
@@ -314,7 +314,7 @@ export default function LearningDashboard() {
                 <span className="text-[10px] font-black text-slate-900 uppercase group-hover/btn:text-blue-600 transition-colors">Iniciar Agora</span>
               </Link>
               <Link href={recommendedCourse ? `/learning/course/${recommendedCourse.id}` : '/learning/catalog'}>
-                <div className="h-8 w-8 rounded-full bg-slate-900 flex items-center justify-center text-white hover:bg-blue-600 transition-all cursor-pointer hover:rotate-45">
+                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white hover:from-blue-600 hover:to-indigo-600 transition-all cursor-pointer hover:rotate-45 shadow-lg shadow-blue-400/30">
                   <ChevronRight className="h-4 w-4" />
                 </div>
               </Link>
@@ -341,15 +341,15 @@ export default function LearningDashboard() {
                 className={cn(
                   "flex items-center justify-between px-6 py-5 rounded-2xl border transition-all duration-300 text-sm font-black uppercase tracking-tight group",
                   selectedCategory === null
-                    ? "bg-slate-950 border-slate-950 text-white shadow-2xl shadow-slate-300"
+                    ? "bg-gradient-to-r from-blue-500 to-indigo-500 border-blue-400 text-white shadow-2xl shadow-blue-300/40"
                     : "bg-white border-slate-100 hover:border-blue-200 text-slate-600 hover:bg-slate-50/50"
                 )}
               >
                 <div className="flex items-center gap-4">
-                  <LayoutGrid className={cn("h-4 w-4", selectedCategory === null ? "text-blue-400" : "text-slate-400")} />
+                  <LayoutGrid className={cn("h-4 w-4", selectedCategory === null ? "text-white" : "text-slate-400")} />
                   <span>Todos os Cursos</span>
                 </div>
-                {selectedCategory === null && <div className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />}
+                {selectedCategory === null && <div className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />}
               </button>
 
               {categories.map(cat => (
@@ -413,7 +413,7 @@ export default function LearningDashboard() {
               <Button variant="outline" className="h-16 w-16 rounded-2xl border-slate-100 shadow-sm hover:bg-slate-50 transition-all">
                 <List className="h-5 w-5 text-slate-400" />
               </Button>
-              <Button className="h-16 px-10 rounded-2xl bg-slate-900 hover:bg-black font-black uppercase tracking-[0.2em] text-[10px] shadow-xl shadow-slate-200 transition-all hover:-translate-y-0.5">
+              <Button className="h-16 px-10 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-black uppercase tracking-[0.2em] text-[10px] shadow-xl shadow-blue-300/40 transition-all hover:-translate-y-0.5">
                 Filtrar
               </Button>
             </div>
