@@ -18,6 +18,9 @@ import {
   Calendar,
   Star,
   BrainCircuit,
+  Plus,
+  MessageCircle,
+  User,
 } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -25,10 +28,13 @@ import {
   evaluationsApi,
   goalsApi,
   pdisApi,
+  discApi,
   EvaluationCycle,
   Evaluation,
   Goal,
   PDI,
+  DiscEvaluation,
+  DiscProfileType,
   GoalStatistics,
   PDIStatistics,
 } from '@/lib/api/performance';
@@ -40,6 +46,7 @@ export default function PerformanceDashboard() {
   const [myPDIs, setMyPDIs] = useState<PDI[]>([]);
   const [goalStats, setGoalStats] = useState<GoalStatistics | null>(null);
   const [pdiStats, setPDIStats] = useState<PDIStatistics | null>(null);
+  const [latestDisc, setLatestDisc] = useState<DiscEvaluation | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Mock user ID - em producao viria do contexto de autenticacao
@@ -52,13 +59,14 @@ export default function PerformanceDashboard() {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      const [cycles, evaluations, goals, pdis, gStats, pStats] = await Promise.all([
+      const [cycles, evaluations, goals, pdis, gStats, pStats, disc] = await Promise.all([
         cyclesApi.getActive(),
         evaluationsApi.getPending(currentUserId),
         goalsApi.getByEmployee(currentUserId),
         pdisApi.getActive(currentUserId),
         goalsApi.getStatistics(currentUserId),
         pdisApi.getManagerStatistics(currentUserId),
+        discApi.getLatest(currentUserId).catch(() => null),
       ]);
 
       setActiveCycles(cycles);
@@ -67,6 +75,7 @@ export default function PerformanceDashboard() {
       setMyPDIs(pdis);
       setGoalStats(gStats);
       setPDIStats(pStats);
+      setLatestDisc(disc);
     } catch (error: unknown) {
       console.error('Erro ao carregar dashboard:', error);
     } finally {
@@ -86,6 +95,41 @@ export default function PerformanceDashboard() {
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
+  const getDiscInsight = (profile: string) => {
+    switch (profile) {
+      case 'DOMINANCE':
+        return {
+          title: 'Foco em Execução',
+          tip: 'Você performa melhor em ambientes desafiadores. Tente delegar tarefas operacionais para focar na estratégia.',
+          color: 'text-red-600',
+          bg: 'bg-red-50'
+        };
+      case 'INFLUENCE':
+        return {
+          title: 'Poder de Colaboração',
+          tip: 'Sua rede de contatos é seu maior ativo. Use sua influência para alinhar times em projetos complexos.',
+          color: 'text-yellow-600',
+          bg: 'bg-yellow-50'
+        };
+      case 'STEADINESS':
+        return {
+          title: 'Estabilidade e Entrega',
+          tip: 'Sua consistência traz segurança ao time. Procure participar de planejamentos de longo prazo.',
+          color: 'text-green-600',
+          bg: 'bg-green-50'
+        };
+      case 'CONSCIENTIOUSNESS':
+        return {
+          title: 'Precisão Analítica',
+          tip: 'Sua atenção aos detalhes garante a qualidade. Lidere processos de auditoria ou melhoria contínua.',
+          color: 'text-blue-600',
+          bg: 'bg-blue-50'
+        };
+      default:
+        return null;
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -94,130 +138,184 @@ export default function PerformanceDashboard() {
     );
   }
 
+  const discInsight = latestDisc ? getDiscInsight(latestDisc.primaryProfile) : null;
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Gestao de Desempenho</h1>
-          <p className="text-muted-foreground">
-            Acompanhe avaliacoes, metas e desenvolvimento
+          <h1 className="text-4xl font-black tracking-tight">Gestão de Desempenho</h1>
+          <p className="text-muted-foreground text-lg">
+            Sua jornada de crescimento e performance na organização
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           <Link href="/performance/goals">
-            <Button variant="outline">
+            <Button variant="outline" className="h-11 px-6 font-bold">
               <Target className="h-4 w-4 mr-2" />
               Minhas Metas
             </Button>
           </Link>
           <Link href="/performance/evaluations">
-            <Button>
+            <Button className="h-11 px-6 font-bold shadow-lg shadow-primary/20">
               <ClipboardCheck className="h-4 w-4 mr-2" />
-              Avaliacoes
+              Avaliações
             </Button>
           </Link>
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Avaliacoes Pendentes
+      {/* Career Insights Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* main Career Insight */}
+        <Card className="lg:col-span-2 overflow-hidden border-none shadow-xl bg-gradient-to-br from-slate-900 to-slate-800 text-white">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-2xl font-bold">
+              <BrainCircuit className="h-6 w-6 text-primary-foreground" />
+              Insights de Carreira
             </CardTitle>
+            <CardDescription className="text-slate-400">
+              Sugestões personalizadas baseadas em seu perfil e resultados
+            </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{pendingEvaluations.length}</div>
-            <p className="text-xs text-muted-foreground">
-              para realizar
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Metas Ativas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{goalStats?.inProgress || 0}</div>
-            <Progress value={goalStats?.averageProgress || 0} className="mt-2" />
-            <p className="text-xs text-muted-foreground mt-1">
-              {goalStats?.averageProgress?.toFixed(0) || 0}% progresso medio
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              PDIs Ativos
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{pdiStats?.active || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              {pdiStats?.pendingApproval || 0} aguardando aprovacao
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Metas em Risco
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-destructive">
-              {goalStats?.atRisk || 0}
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {discInsight && (
+                <div className={`p-4 rounded-2xl ${discInsight.bg} ${discInsight.color} border border-white/10`}>
+                  <h4 className="font-black uppercase text-xs tracking-widest mb-2 opacity-70">Perfil Comportamental</h4>
+                  <p className="text-xl font-bold mb-1">{discInsight.title}</p>
+                  <p className="text-sm opacity-90">{discInsight.tip}</p>
+                </div>
+              )}
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                <h4 className="font-black uppercase text-xs tracking-widest mb-2 text-primary">Próximo Passo</h4>
+                <p className="text-xl font-bold mb-1">PDI em Foco</p>
+                <p className="text-sm text-slate-300">
+                  {myPDIs.length > 0
+                    ? `Você tem ${myPDIs.length} plano(s) ativo(s). Foque nas ações desta semana.`
+                    : 'Crie um novo PDI para acelerar suas promoções e desenvolvimento.'}
+                </p>
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground">
-              requerem atencao
-            </p>
+
+            <div className="pt-4 border-t border-white/10 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="text-center">
+                  <p className="text-3xl font-black">{goalStats?.averageProgress?.toFixed(0) || 0}%</p>
+                  <p className="text-[10px] text-slate-400 uppercase font-bold">Progresso das Metas</p>
+                </div>
+                <div className="h-12 w-[1px] bg-white/10" />
+                <div className="text-center">
+                  <p className="text-3xl font-black">{pendingEvaluations.length}</p>
+                  <p className="text-[10px] text-slate-400 uppercase font-bold">Pendências</p>
+                </div>
+              </div>
+              <Link href="/performance/reports">
+                <Button variant="ghost" className="text-white hover:bg-white/10 font-bold">
+                  Ver Relatório Completo <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
           </CardContent>
         </Card>
+
+        {/* Mini Stats Grid */}
+        <div className="grid grid-cols-1 gap-4">
+          <Card className="hover:shadow-lg transition-all border-l-4 border-l-amber-500">
+            <CardHeader className="py-4">
+              <CardTitle className="text-sm font-bold text-muted-foreground uppercase tracking-widest">
+                Status das Metas
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pb-4">
+              <div className="flex items-end justify-between">
+                <div>
+                  <p className="text-3xl font-black">{goalStats?.inProgress || 0}</p>
+                  <p className="text-xs text-muted-foreground font-medium">Ativas no período</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xl font-bold text-destructive">{goalStats?.atRisk || 0}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase font-black tracking-tighter">Em Risco</p>
+                </div>
+              </div>
+              <Progress value={goalStats?.averageProgress || 0} className="mt-4 h-2" />
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-all border-l-4 border-l-primary">
+            <CardHeader className="py-4">
+              <CardTitle className="text-sm font-bold text-muted-foreground uppercase tracking-widest">
+                Desenvolvimento (PDI)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pb-4 text-center">
+              <div className="relative inline-flex items-center justify-center">
+                <svg className="w-20 h-20 transform -rotate-90">
+                  <circle
+                    className="text-slate-100"
+                    strokeWidth="8"
+                    stroke="currentColor"
+                    fill="transparent"
+                    r="34"
+                    cx="40"
+                    cy="40"
+                  />
+                  <circle
+                    className="text-primary"
+                    strokeWidth="8"
+                    strokeDasharray={213.6}
+                    strokeDashoffset={213.6 - (213.6 * (pdiStats?.averageProgress || 0)) / 100}
+                    strokeLinecap="round"
+                    stroke="currentColor"
+                    fill="transparent"
+                    r="34"
+                    cx="40"
+                    cy="40"
+                  />
+                </svg>
+                <span className="absolute text-xl font-black">
+                  {pdiStats?.active || 0}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2 font-medium">PDIs Ativos</p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
-      {/* Ciclos Ativos */}
+      {/* Ciclos Ativos - Visual Update */}
       {activeCycles.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Ciclos de Avaliacao Ativos
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {activeCycles.map((cycle) => (
-                <div
-                  key={cycle.id}
-                  className="flex items-center justify-between p-4 border rounded-lg"
-                >
-                  <div>
-                    <h3 className="font-semibold">{cycle.name}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {new Date(cycle.startDate).toLocaleDateString('pt-BR')} -{' '}
-                      {new Date(cycle.endDate).toLocaleDateString('pt-BR')}
-                    </p>
-                  </div>
+        <div className="space-y-4">
+          <h2 className="text-xl font-black flex items-center gap-2">
+            <Calendar className="h-5 w-5 text-primary" />
+            Cíclos de Avaliação
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {activeCycles.map((cycle) => (
+              <Card key={cycle.id} className="group hover:border-primary/50 transition-all border-2">
+                <CardContent className="p-4 flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    {getStatusBadge(cycle.status)}
-                    <Link href={`/performance/cycles/${cycle.id}`}>
-                      <Button variant="ghost" size="sm">
-                        <ArrowRight className="h-4 w-4" />
-                      </Button>
-                    </Link>
+                    <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
+                      <Star className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-lg">{cycle.name}</h3>
+                      <p className="text-xs text-muted-foreground font-medium">
+                        {new Date(cycle.startDate).toLocaleDateString('pt-BR')} até {new Date(cycle.endDate).toLocaleDateString('pt-BR')}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                  <Link href={`/performance/cycles/${cycle.id}`}>
+                    <Button variant="ghost" size="icon" className="group-hover:translate-x-1 transition-transform">
+                      <ArrowRight className="h-5 w-5" />
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* Tabs de Conteudo */}

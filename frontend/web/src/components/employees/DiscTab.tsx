@@ -25,26 +25,53 @@ interface DiscTabProps {
   employeeName: string;
 }
 
-const profileDescriptions: Record<string, { title: string; description: string; color: string }> = {
+const profileDescriptions: Record<string, { title: string; subtitle: string; description: string; color: string }> = {
   DOMINANCE: {
-    title: 'Dominante (D)',
-    description: 'Focado em resultados, direto e assertivo. Gosta de desafios e de assumir o controle.',
+    title: 'Dominância (D)',
+    subtitle: 'Foco em Resultados e Controle',
+    description: 'Pessoas com perfil D tendem a ser diretas, assertivas e focadas em resultados. São motivadas por desafios e gostam de assumir o comando da situação.',
     color: '#ef4444',
   },
   INFLUENCE: {
-    title: 'Influente (I)',
-    description: 'Comunicativo, entusiasta e persuasivo. Gosta de interagir com pessoas e criar ambiente positivo.',
+    title: 'Influência (I)',
+    subtitle: 'Foco em Pessoas e Persuasão',
+    description: 'Pessoas com perfil I são comunicativas, entusiastas e otimistas. Valorizam relacionamentos interpessoais e têm facilidade em persuadir e motivar outros.',
     color: '#eab308',
   },
   STEADINESS: {
-    title: 'Estavel (S)',
-    description: 'Calmo, paciente e leal. Valoriza a cooperacao, estabilidade e trabalho em equipe.',
+    title: 'Estabilidade (S)',
+    subtitle: 'Foco em Colaboração e Ritmo',
+    description: 'Pessoas com perfil S são calmas, pacientes e ótimas ouvintes. Valorizam a estabilidade, a cooperação e o trabalho em equipe constante.',
     color: '#22c55e',
   },
   CONSCIENTIOUSNESS: {
-    title: 'Conforme (C)',
-    description: 'Analitico, preciso e detalhista. Valoriza qualidade, regras e procedimentos.',
+    title: 'Conformidade (C)',
+    subtitle: 'Foco em Detalhes e Qualidade',
+    description: 'Pessoas com perfil C são analíticas, precisas e cautelosas. Valorizam a qualidade, o cumprimento de normas e a lógica fundamentada em dados.',
     color: '#3b82f6',
+  },
+};
+
+const profileInsights: Record<string, { communication: string; motivators: string; fears: string }> = {
+  DOMINANCE: {
+    communication: 'Seja direto, breve e foque nos resultados. Evite rodeios e detalhes excessivos.',
+    motivators: 'Desafios, autoridade, prestígio e liberdade para agir de forma independente.',
+    fears: 'Falha em atingir objetivos, perda de controle ou ser visto como vulnerável.',
+  },
+  INFLUENCE: {
+    communication: 'Seja entusiasta, amigável e valorize suas ideias. Dê espaço para expressarem sua criatividade.',
+    motivators: 'Reconhecimento social, aprovação pública e oportunidade de interagir com novos grupos.',
+    fears: 'Rejeição social, perda de influência ou ser forçado a trabalhar em isolamento.',
+  },
+  STEADINESS: {
+    communication: 'Seja calmo, sincero e demonstre paciência. Explique as mudanças com antecedência e ofereça suporte.',
+    motivators: 'Estabilidade, ambientes previsíveis, harmonia no time e reconhecimento pela lealdade.',
+    fears: 'Instabilidade, mudanças bruscas sem planejamento ou conflitos interpessoais.',
+  },
+  CONSCIENTIOUSNESS: {
+    communication: 'Seja preciso, organizado e use dados. Valide as informações com fatos e dê tempo para análise.',
+    motivators: 'Qualidade, precisão técnica, processos claros e ser reconhecido como especialista.',
+    fears: 'Críticas à qualidade do seu trabalho, tomada de decisões sem dados ou erros em procedimentos.',
   },
 };
 
@@ -223,14 +250,16 @@ export function DiscTab({ employeeId, employeeName }: DiscTabProps) {
                   <BrainCircuit className="h-6 w-6" style={{ color: profileInfo?.color }} />
                 </div>
                 <div>
-                  <Badge
-                    className="mb-2"
-                    style={{ backgroundColor: profileInfo?.color + '20', color: profileInfo?.color }}
-                  >
-                    {profileInfo?.title}
-                  </Badge>
-                  <p className="text-sm text-muted-foreground">
-                    {profileInfo?.description}
+                  <div className="flex items-center gap-2 mb-1">
+                    <Badge
+                      style={{ backgroundColor: profileInfo?.color + '20', color: profileInfo?.color }}
+                    >
+                      {profileInfo?.title}
+                    </Badge>
+                    <span className="text-sm font-bold text-muted-foreground">{profileInfo?.subtitle}</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {latestResult.profileDescription || profileInfo?.description}
                   </p>
                 </div>
               </div>
@@ -278,21 +307,44 @@ export function DiscTab({ employeeId, employeeName }: DiscTabProps) {
             </div>
 
             {/* Radar Chart */}
-            <div className="h-64">
+            <div className="h-72 bg-white/50 rounded-2xl p-4 border border-dashed flex flex-col items-center justify-center">
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart cx="50%" cy="50%" outerRadius="80%" data={chartData}>
                   <PolarGrid />
-                  <PolarAngleAxis dataKey="subject" tick={{ fontSize: 12 }} />
+                  <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fontWeight: 'bold' }} />
                   <PolarRadiusAxis angle={30} domain={[0, 100]} />
                   <Radar
                     name="Perfil"
                     dataKey="A"
                     stroke={profileInfo?.color}
                     fill={profileInfo?.color}
-                    fillOpacity={0.4}
+                    fillOpacity={0.5}
                   />
                 </RadarChart>
               </ResponsiveContainer>
+              <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mt-2">Distribuição Comportamental</p>
+            </div>
+          </div>
+
+          {/* New Insight Section */}
+          <div className="mt-8 pt-8 border-t">
+            <h4 className="text-sm font-black uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2">
+              <History className="h-4 w-4" />
+              Guia de Gestão e Comunicação
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100">
+                <p className="text-[10px] font-black uppercase text-blue-600 mb-2">Comunicação</p>
+                <p className="text-sm text-slate-700">{profileInsights[latestResult.primaryProfile].communication}</p>
+              </div>
+              <div className="p-4 bg-emerald-50/50 rounded-xl border border-emerald-100">
+                <p className="text-[10px] font-black uppercase text-emerald-600 mb-2">Motivadores</p>
+                <p className="text-sm text-slate-700">{profileInsights[latestResult.primaryProfile].motivators}</p>
+              </div>
+              <div className="p-4 bg-rose-50/50 rounded-xl border border-rose-100">
+                <p className="text-[10px] font-black uppercase text-rose-600 mb-2">Medos/Bloqueios</p>
+                <p className="text-sm text-slate-700">{profileInsights[latestResult.primaryProfile].fears}</p>
+              </div>
             </div>
           </div>
         </CardContent>
