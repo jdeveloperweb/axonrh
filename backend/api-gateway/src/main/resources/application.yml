@@ -26,6 +26,14 @@ spring:
 
       # Rotas para microservicos
       routes:
+        # Actuator Health Check (API Gateway itself)
+        - id: actuator-health
+          uri: http://localhost:8080
+          predicates:
+            - Path=/actuator/health
+          filters:
+            - RewritePath=/actuator/health, /actuator/health
+
         # Auth Service
         - id: auth-service
           uri: http://axonrh-auth-service:8081

@@ -35,6 +35,7 @@ import {
   PDI,
   PDIStatistics,
 } from '@/lib/api/performance';
+import { useAuthStore } from '@/stores/auth-store';
 
 
 
@@ -47,9 +48,9 @@ export default function PDIListPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [newPDIOpen, setNewPDIOpen] = useState(false);
 
-  // Mock IDs - em producao viriam do contexto
-  const currentUserId = 'current-user-id';
-  const isManager = true;
+  const { user } = useAuthStore();
+  const currentUserId = user?.id || '';
+  const isManager = user?.roles?.includes('MANAGER') || user?.roles?.includes('ADMIN');
 
   const loadData = useCallback(async () => {
     try {
@@ -70,7 +71,7 @@ export default function PDIListPage() {
     } finally {
       setLoading(false);
     }
-  }, [isManager]);
+  }, [currentUserId, isManager]);
 
   useEffect(() => {
     loadData();
@@ -219,14 +220,14 @@ export default function PDIListPage() {
             </TabsContent>
 
             <TabsContent value="approval" className="mt-4">
-              <PDIApprovalList pdis={pendingApproval} onApprove={loadData} />
+              <PDIApprovalList pdis={pendingApproval} onApprove={loadData} currentUserId={currentUserId} />
             </TabsContent>
           </>
         )}
       </Tabs>
 
       {/* Dialog Novo PDI */}
-      <NewPDIDialog open={newPDIOpen} onOpenChange={setNewPDIOpen} onSuccess={loadData} />
+      <NewPDIDialog open={newPDIOpen} onOpenChange={setNewPDIOpen} onSuccess={loadData} currentUserId={currentUserId} userName={user?.name || ''} />
     </div>
   );
 }
@@ -322,16 +323,18 @@ function PDIList({
 function PDIApprovalList({
   pdis,
   onApprove,
+  currentUserId,
 }: {
   pdis: PDI[];
   onApprove: () => void;
+  currentUserId: string;
 }) {
   const [approving, setApproving] = useState<string | null>(null);
 
   const handleApprove = async (pdiId: string) => {
     try {
       setApproving(pdiId);
-      await pdisApi.approve(pdiId, 'current-user-id');
+      await pdisApi.approve(pdiId, currentUserId);
       onApprove();
     } catch (error: unknown) {
       console.error('Erro ao aprovar:', error);
@@ -402,10 +405,14 @@ function NewPDIDialog({
   open,
   onOpenChange,
   onSuccess,
+  currentUserId,
+  userName,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  currentUserId: string;
+  userName: string;
 }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -423,8 +430,8 @@ function NewPDIDialog({
         objectives,
         focusAreas,
         endDate,
-        employeeId: 'current-user-id',
-        employeeName: 'Usuario Atual',
+        employeeId: currentUserId,
+        employeeName: userName || 'Usuário Atual',
       });
       onOpenChange(false);
       onSuccess();
