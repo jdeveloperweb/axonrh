@@ -456,7 +456,18 @@ export default function CyclesManagePage() {
                                             <BarChart3 className="h-4 w-4" />
                                         </Button>
                                     </Link>
-                                    <Button size="icon" variant="ghost" className="h-9 w-9 border-2 border-transparent hover:border-slate-200 transition-all">
+                                    <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        className="h-9 w-9 border-2 border-transparent hover:border-slate-200 transition-all"
+                                        onClick={() => {
+                                            toast({
+                                                title: "Configurações",
+                                                description: "A edição de ciclos ativos estará disponível em breve.",
+                                                duration: 3000
+                                            });
+                                        }}
+                                    >
                                         <Settings2 className="h-4 w-4" />
                                     </Button>
                                 </div>

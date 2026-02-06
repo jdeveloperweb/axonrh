@@ -47,7 +47,11 @@ public class DiscController {
     public ResponseEntity<DiscEvaluationDTO> getLatestEvaluation(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID employeeId) {
-        return ResponseEntity.ok(discService.getLatestEvaluation(tenantId, employeeId));
+        DiscEvaluationDTO evaluation = discService.getLatestEvaluation(tenantId, employeeId);
+        if (evaluation == null) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(evaluation);
     }
 
     @GetMapping("/employee/{employeeId}/history")

@@ -91,7 +91,7 @@ spring:
         - id: performance-service
           uri: http://axonrh-performance-service:8086
           predicates:
-            - Path=/api/v1/performance/**, /api/v1/evaluations/**
+            - Path=/api/v1/performance/**, /api/v1/evaluations/**, /api/v1/pdis/**, /api/v1/goals/**
           filters:
             # - StripPrefix=2
             - name: JwtAuthFilter

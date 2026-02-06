@@ -353,119 +353,119 @@ export const evaluationsApi = {
 
 export const goalsApi = {
   create: (data: Partial<Goal>) =>
-    api.post<Goal, Goal>('/goals', data),
+    api.post<Goal, Goal>('/performance/goals', data),
 
   get: (id: string) =>
-    api.get<Goal, Goal>(`/goals/${id}`),
+    api.get<Goal, Goal>(`/performance/goals/${id}`),
 
   update: (id: string, data: Partial<Goal>) =>
-    api.put<Goal, Goal>(`/goals/${id}`, data),
+    api.put<Goal, Goal>(`/performance/goals/${id}`, data),
 
   delete: (id: string) =>
-    api.delete(`/goals/${id}`),
+    api.delete(`/performance/goals/${id}`),
 
   getByEmployee: (employeeId: string) =>
-    api.get<Goal[], Goal[]>(`/goals/employee/${employeeId}`),
+    api.get<Goal[], Goal[]>(`/performance/goals/employee/${employeeId}`),
 
   getByDepartment: (departmentId: string) =>
-    api.get<Goal[], Goal[]>(`/goals/department/${departmentId}`),
+    api.get<Goal[], Goal[]>(`/performance/goals/department/${departmentId}`),
 
   getByCycle: (cycleId: string, page = 0, size = 20) =>
-    api.get<{ content: Goal[]; totalElements: number }, { content: Goal[]; totalElements: number }>(`/goals/cycle/${cycleId}?page=${page}&size=${size}`),
+    api.get<{ content: Goal[]; totalElements: number }, { content: Goal[]; totalElements: number }>(`/performance/goals/cycle/${cycleId}?page=${page}&size=${size}`),
 
   getByStatus: (employeeId: string, status: GoalStatus) =>
-    api.get<Goal[], Goal[]>(`/goals/employee/${employeeId}/status/${status}`),
+    api.get<Goal[], Goal[]>(`/performance/goals/employee/${employeeId}/status/${status}`),
 
   getOverdue: () =>
-    api.get<Goal[], Goal[]>('/goals/overdue'),
+    api.get<Goal[], Goal[]>('/performance/goals/overdue'),
 
   getAtRisk: () =>
-    api.get<Goal[], Goal[]>('/goals/at-risk'),
+    api.get<Goal[], Goal[]>('/performance/goals/at-risk'),
 
   getKeyResults: (goalId: string) =>
-    api.get<Goal[], Goal[]>(`/goals/${goalId}/key-results`),
+    api.get<Goal[], Goal[]>(`/performance/goals/${goalId}/key-results`),
 
   createKeyResult: (goalId: string, data: Partial<Goal>) =>
-    api.post<Goal, Goal>(`/goals/${goalId}/key-results`, data),
+    api.post<Goal, Goal>(`/performance/goals/${goalId}/key-results`, data),
 
   getCompanyOKRs: (cycleId: string) =>
-    api.get<Goal[], Goal[]>(`/goals/company-okrs/${cycleId}`),
+    api.get<Goal[], Goal[]>(`/performance/goals/company-okrs/${cycleId}`),
 
   updateProgress: (id: string, data: { newValue: number; notes?: string; updatedBy: string }) =>
-    api.post<{ newValue: number; notes?: string; updatedBy: string }, Goal>(`/goals/${id}/progress`, data),
+    api.post<{ newValue: number; notes?: string; updatedBy: string }, Goal>(`/performance/goals/${id}/progress`, data),
 
   complete: (id: string) =>
-    api.post<unknown, Goal>(`/goals/${id}/complete`),
+    api.post<unknown, Goal>(`/performance/goals/${id}/complete`),
 
   cancel: (id: string) =>
-    api.post<unknown, Goal>(`/goals/${id}/cancel`),
+    api.post<unknown, Goal>(`/performance/goals/${id}/cancel`),
 
   markAtRisk: (id: string) =>
-    api.post<unknown, Goal>(`/goals/${id}/at-risk`),
+    api.post<unknown, Goal>(`/performance/goals/${id}/at-risk`),
 
   getStatistics: (employeeId: string) =>
-    api.get<GoalStatistics, GoalStatistics>(`/goals/employee/${employeeId}/statistics`),
+    api.get<GoalStatistics, GoalStatistics>(`/performance/goals/employee/${employeeId}/statistics`),
 };
 
 // ==================== PDI API ====================
 
 export const pdisApi = {
   create: (data: Partial<PDI>) =>
-    api.post<PDI, PDI>('/pdis', data),
+    api.post<PDI, PDI>('/performance/pdis', data),
 
   get: (id: string) =>
-    api.get<PDI, PDI>(`/pdis/${id}`),
+    api.get<PDI, PDI>(`/performance/pdis/${id}`),
 
   update: (id: string, data: Partial<PDI>) =>
-    api.put<PDI, PDI>(`/pdis/${id}`, data),
+    api.put<PDI, PDI>(`/performance/pdis/${id}`, data),
 
   delete: (id: string) =>
-    api.delete(`/pdis/${id}`),
+    api.delete(`/performance/pdis/${id}`),
 
   list: (page = 0, size = 20) =>
-    api.get<{ content: PDI[]; totalElements: number }, { content: PDI[]; totalElements: number }>(`/pdis?page=${page}&size=${size}`),
+    api.get<{ content: PDI[]; totalElements: number }, { content: PDI[]; totalElements: number }>(`/performance/pdis?page=${page}&size=${size}`),
 
   getByEmployee: (employeeId: string) =>
-    api.get<PDI[], PDI[]>(`/pdis/employee/${employeeId}`),
+    api.get<PDI[], PDI[]>(`/performance/pdis/employee/${employeeId}`),
 
   getActive: (employeeId: string) =>
-    api.get<PDI[], PDI[]>(`/pdis/employee/${employeeId}/active`),
+    api.get<PDI[], PDI[]>(`/performance/pdis/employee/${employeeId}/active`),
 
   getByTeam: (managerId: string) =>
-    api.get<PDI[], PDI[]>(`/pdis/team/${managerId}`),
+    api.get<PDI[], PDI[]>(`/performance/pdis/team/${managerId}`),
 
   getPendingApproval: (managerId: string) =>
-    api.get<PDI[], PDI[]>(`/pdis/pending-approval/${managerId}`),
+    api.get<PDI[], PDI[]>(`/performance/pdis/pending-approval/${managerId}`),
 
   getOverdue: () =>
-    api.get<PDI[], PDI[]>('/pdis/overdue'),
+    api.get<PDI[], PDI[]>('/performance/pdis/overdue'),
 
   submitForApproval: (id: string) =>
-    api.post<unknown, PDI>(`/pdis/${id}/submit`),
+    api.post<unknown, PDI>(`/performance/pdis/${id}/submit`),
 
   approve: (id: string, approverId: string) =>
-    api.post<unknown, PDI>(`/pdis/${id}/approve?approverId=${approverId}`),
+    api.post<unknown, PDI>(`/performance/pdis/${id}/approve?approverId=${approverId}`),
 
   activate: (id: string) =>
-    api.post<unknown, PDI>(`/pdis/${id}/activate`),
+    api.post<unknown, PDI>(`/performance/pdis/${id}/activate`),
 
   complete: (id: string) =>
-    api.post<unknown, PDI>(`/pdis/${id}/complete`),
+    api.post<unknown, PDI>(`/performance/pdis/${id}/complete`),
 
   cancel: (id: string) =>
-    api.post<unknown, PDI>(`/pdis/${id}/cancel`),
+    api.post<unknown, PDI>(`/performance/pdis/${id}/cancel`),
 
   addAction: (id: string, action: Partial<PDIAction>) =>
-    api.post<PDIAction, PDI>(`/pdis/${id}/actions`, action),
+    api.post<PDIAction, PDI>(`/performance/pdis/${id}/actions`, action),
 
   removeAction: (pdiId: string, actionId: string) =>
-    api.delete<PDI>(`/pdis/${pdiId}/actions/${actionId}`),
+    api.delete<PDI>(`/performance/pdis/${pdiId}/actions/${actionId}`),
 
   startAction: (pdiId: string, actionId: string) =>
-    api.post<unknown, PDI>(`/pdis/${pdiId}/actions/${actionId}/start`),
+    api.post<unknown, PDI>(`/performance/pdis/${pdiId}/actions/${actionId}/start`),
 
   completeAction: (pdiId: string, actionId: string, data: { notes?: string; hoursSpent?: number }) =>
-    api.post<{ notes?: string; hoursSpent?: number }, PDI>(`/pdis/${pdiId}/actions/${actionId}/complete`, data),
+    api.post<{ notes?: string; hoursSpent?: number }, PDI>(`/performance/pdis/${pdiId}/actions/${actionId}/complete`, data),
 
   createFromEvaluation: (data: {
     evaluationId: string;
@@ -475,10 +475,10 @@ export const pdisApi = {
     managerName: string;
     focusAreas?: string;
   }) =>
-    api.post<unknown, PDI>('/pdis/from-evaluation', data),
+    api.post<unknown, PDI>('/performance/pdis/from-evaluation', data),
 
   getManagerStatistics: (managerId: string) =>
-    api.get<PDIStatistics, PDIStatistics>(`/pdis/manager/${managerId}/statistics`),
+    api.get<PDIStatistics, PDIStatistics>(`/performance/pdis/manager/${managerId}/statistics`),
 };
 
 // ==================== DISC API ====================

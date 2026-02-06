@@ -82,7 +82,11 @@ public class DiscService {
         DiscEvaluation evaluation = evaluationRepository
             .findFirstByTenantIdAndEmployeeIdAndStatusOrderByCompletedAtDesc(
                 tenantId, employeeId, DiscAssessmentStatus.COMPLETED)
-            .orElseThrow(() -> new EntityNotFoundException("Nenhuma avaliacao DISC encontrada para este colaborador"));
+            .orElse(null);
+
+        if (evaluation == null) {
+            return null;
+        }
 
         return DiscEvaluationDTO.fromEntity(evaluation);
     }
@@ -187,6 +191,9 @@ public class DiscService {
 
     public DiscAssignmentDTO assignEvaluation(UUID tenantId, UUID employeeId, String employeeName,
                                               UUID assignedBy, String assignedByName, LocalDate dueDate) {
+        if (assignedBy == null) {
+            throw new IllegalArgumentException("O avaliador é obrigatório.");
+        }
         // Check if employee already has pending assignment
         boolean hasPending = assignmentRepository.existsByTenantIdAndEmployeeIdAndStatusIn(
             tenantId, employeeId, Arrays.asList(DiscAssessmentStatus.PENDING, DiscAssessmentStatus.IN_PROGRESS));
@@ -198,7 +205,7 @@ public class DiscService {
         // Get default questionnaire
         UUID questionnaireId = questionnaireRepository.findDefaultQuestionnaire()
             .map(DiscQuestionnaire::getId)
-            .orElse(null);
+            .orElseThrow(() -> new EntityNotFoundException("Questionário padrão DISC não encontrado. Configure um questionário padrão antes de atribuir avaliações."));
 
         // Create assignment
         DiscAssignment assignment = new DiscAssignment();

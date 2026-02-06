@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/goals")
+@RequestMapping("/api/v1/performance/goals")
 public class GoalController {
 
     private final GoalService goalService;

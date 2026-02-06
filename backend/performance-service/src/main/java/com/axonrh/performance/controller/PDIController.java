@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/pdis")
+@RequestMapping("/api/v1/performance/pdis")
 public class PDIController {
 
     private final PDIService pdiService;
