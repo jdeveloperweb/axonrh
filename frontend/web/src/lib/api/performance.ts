@@ -220,27 +220,59 @@ export interface PDIStatistics {
   averageProgress: number;
 }
 
+export type DiscAssessmentStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'EXPIRED' | 'CANCELLED';
+export type DiscProfileType = 'DOMINANCE' | 'INFLUENCE' | 'STEADINESS' | 'CONSCIENTIOUSNESS';
+
 export interface DiscEvaluation {
   id: string;
   employeeId: string;
+  employeeName?: string;
   dScore: number;
   iScore: number;
   sScore: number;
   cScore: number;
-  primaryProfile: string;
-  secondaryProfile?: string;
+  primaryProfile: DiscProfileType;
+  secondaryProfile?: DiscProfileType;
   profileDescription?: string;
+  status: DiscAssessmentStatus;
+  dueDate?: string;
   completedAt: string;
+  createdAt?: string;
 }
 
 export interface DiscQuestion {
-  id: number;
+  id: string;
   text: string;
+  order: number;
   options: {
     id: string;
     text: string;
     value: 'D' | 'I' | 'S' | 'C';
   }[];
+}
+
+export interface DiscAssignment {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  assignedBy: string;
+  assignedByName: string;
+  dueDate?: string;
+  status: DiscAssessmentStatus;
+  evaluationId?: string;
+  createdAt: string;
+  completedAt?: string;
+}
+
+export interface DiscStatistics {
+  totalEvaluations: number;
+  completedEvaluations: number;
+  pendingEvaluations: number;
+  overdueEvaluations: number;
+  dominanceCount: number;
+  influenceCount: number;
+  steadinessCount: number;
+  conscientiousnessCount: number;
 }
 
 // ==================== Cycles API ====================
@@ -447,13 +479,72 @@ export const pdisApi = {
 // ==================== DISC API ====================
 
 export const discApi = {
+  // Questions
+  getQuestions: () =>
+    api.get<DiscQuestion[], DiscQuestion[]>('/performance/disc/questions'),
+
+  // Evaluations
   getLatest: (employeeId: string) =>
     api.get<DiscEvaluation, DiscEvaluation>(`/performance/disc/employee/${employeeId}/latest`),
 
-  submit: (answers: Record<string, string>) =>
-    api.post<DiscEvaluation, DiscEvaluation>('/performance/disc', { answers }),
+  getHistory: (employeeId: string) =>
+    api.get<DiscEvaluation[], DiscEvaluation[]>(`/performance/disc/employee/${employeeId}/history`),
 
-  getQuestions: () =>
-    api.get<DiscQuestion[]>('/performance/disc/questions'),
+  getById: (evaluationId: string) =>
+    api.get<DiscEvaluation, DiscEvaluation>(`/performance/disc/${evaluationId}`),
+
+  list: (page = 0, size = 20, status?: DiscAssessmentStatus) => {
+    const params = new URLSearchParams({ page: page.toString(), size: size.toString() });
+    if (status) params.append('status', status);
+    return api.get<{ content: DiscEvaluation[]; totalElements: number }, { content: DiscEvaluation[]; totalElements: number }>(`/performance/disc?${params}`);
+  },
+
+  submit: (employeeId: string, employeeName: string, answers: Record<string, string>) =>
+    api.post<DiscEvaluation, DiscEvaluation>('/performance/disc', { employeeId, employeeName, answers }),
+
+  start: (evaluationId: string) =>
+    api.post<unknown, DiscEvaluation>(`/performance/disc/${evaluationId}/start`),
+
+  // Assignments
+  assign: (data: {
+    employeeId: string;
+    employeeName: string;
+    assignedBy: string;
+    assignedByName: string;
+    dueDate?: string;
+  }) =>
+    api.post<DiscAssignment, DiscAssignment>('/performance/disc/assign', data),
+
+  assignBulk: (data: {
+    employeeIds: string[];
+    employeeNames: Record<string, string>;
+    assignedBy: string;
+    assignedByName: string;
+    dueDate?: string;
+  }) =>
+    api.post<DiscAssignment[], DiscAssignment[]>('/performance/disc/assign/bulk', data),
+
+  cancelAssignment: (assignmentId: string) =>
+    api.delete(`/performance/disc/assignment/${assignmentId}`),
+
+  listAssignments: (page = 0, size = 20, pendingOnly = false) => {
+    const params = new URLSearchParams({ page: page.toString(), size: size.toString() });
+    if (pendingOnly) params.append('pendingOnly', 'true');
+    return api.get<{ content: DiscAssignment[]; totalElements: number }, { content: DiscAssignment[]; totalElements: number }>(`/performance/disc/assignments?${params}`);
+  },
+
+  getPendingForEmployee: (employeeId: string) =>
+    api.get<DiscAssignment[], DiscAssignment[]>(`/performance/disc/employee/${employeeId}/pending`),
+
+  // Statistics
+  getStatistics: () =>
+    api.get<DiscStatistics, DiscStatistics>('/performance/disc/statistics'),
+
+  // Helpers
+  hasCompleted: (employeeId: string) =>
+    api.get<boolean, boolean>(`/performance/disc/employee/${employeeId}/has-completed`),
+
+  hasPending: (employeeId: string) =>
+    api.get<boolean, boolean>(`/performance/disc/employee/${employeeId}/has-pending`),
 };
 
