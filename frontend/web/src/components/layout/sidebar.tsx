@@ -57,10 +57,10 @@ const navGroups: NavGroup[] = [
       // { label: 'Departamentos', href: '/departments', icon: Building2 }, // Future
       // { label: 'Cargos', href: '/positions', icon: Briefcase }, // Future
       // { label: 'Vagas', href: '/vacancies', icon: Target }, // Future
-      { label: 'Ponto', href: '/timesheet/record', icon: Clock, permission: 'TIMESHEET:READ' },
-      { label: 'Férias', href: '/vacation', icon: Calendar, permission: 'VACATION:READ' },
-      { label: 'Desempenho', href: '/performance', icon: BarChart3, permission: 'PERFORMANCE:READ' },
-      { label: 'Treinamentos', href: '/learning', icon: BookOpen, permission: 'LEARNING:READ' },
+      { label: 'Ponto', href: '/timesheet/record', icon: Clock },
+      { label: 'Férias', href: '/vacation', icon: Calendar },
+      { label: 'Desempenho', href: '/performance', icon: BarChart3 },
+      { label: 'Treinamentos', href: '/learning', icon: BookOpen },
       { label: 'Processos RH', href: '/processes', icon: ClipboardCheck, permission: 'EMPLOYEE:READ' },
       { label: 'Saúde Mental', href: '/wellbeing', icon: HeartPulse, permission: 'EMPLOYEE:READ' }, // Visible to HR/Managers
       { label: 'Assistente IA', href: '/assistant', icon: MessageSquare },

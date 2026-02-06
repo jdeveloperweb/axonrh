@@ -101,6 +101,8 @@ export default function LearningDashboard() {
   const [loading, setLoading] = useState(true);
   const [greeting, setGreeting] = useState('Olá');
 
+  const isAdminOrRH = user?.roles?.some(role => ['ADMIN', 'RH', 'MANAGER'].includes(role));
+
   useEffect(() => {
     const hour = new Date().getHours();
     if (hour < 12) setGreeting('Bom dia');
@@ -371,15 +373,27 @@ export default function LearningDashboard() {
                 </button>
               ))}
 
-              <Link href="/learning/settings/certificate">
-                <Button variant="ghost" className="w-full flex items-center justify-start gap-4 px-6 py-8 rounded-2xl border border-dashed border-slate-200 hover:border-primary hover:bg-primary/5 transition-all text-slate-500 hover:text-primary group">
-                  <Settings className="h-4 w-4 group-hover:rotate-90 transition-transform duration-500" />
+              <Link href="/learning/certificates">
+                <Button variant="ghost" className="w-full flex items-center justify-start gap-4 px-6 py-8 rounded-2xl border border-dashed border-slate-200 hover:border-emerald-200 hover:bg-emerald-50/50 transition-all text-slate-500 hover:text-emerald-600 group">
+                  <Award className="h-4 w-4 group-hover:scale-110 transition-transform duration-500" />
                   <div className="text-left">
-                    <p className="text-[10px] font-black uppercase tracking-widest leading-none mb-1">Configurações</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest leading-none mb-1">Meus Títulos</p>
                     <p className="font-black text-sm uppercase tracking-tight">Certificados</p>
                   </div>
                 </Button>
               </Link>
+
+              {isAdminOrRH && (
+                <Link href="/learning/settings/certificate">
+                  <Button variant="ghost" className="w-full flex items-center justify-start gap-4 px-6 py-8 rounded-2xl border border-dashed border-slate-200 hover:border-primary hover:bg-primary/5 transition-all text-slate-500 hover:text-primary group">
+                    <Settings className="h-4 w-4 group-hover:rotate-90 transition-transform duration-500" />
+                    <div className="text-left">
+                      <p className="text-[10px] font-black uppercase tracking-widest leading-none mb-1">Configurações</p>
+                      <p className="font-black text-sm uppercase tracking-tight">Gestão de Certificados</p>
+                    </div>
+                  </Button>
+                </Link>
+              )}
             </nav>
           </div>
 
