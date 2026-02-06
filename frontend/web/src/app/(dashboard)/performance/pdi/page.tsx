@@ -53,13 +53,25 @@ export default function PDIListPage() {
   const isManager = user?.roles?.includes('MANAGER') || user?.roles?.includes('ADMIN');
 
   const loadData = useCallback(async () => {
+    if (!currentUserId) {
+      console.warn('User ID not available, skipping PDI data load');
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       const [my, team, pending, statistics] = await Promise.all([
         pdisApi.getByEmployee(currentUserId),
         isManager ? pdisApi.getByTeam(currentUserId) : Promise.resolve([]),
         isManager ? pdisApi.getPendingApproval(currentUserId) : Promise.resolve([]),
-        pdisApi.getManagerStatistics(currentUserId),
+        pdisApi.getManagerStatistics(currentUserId).catch(() => ({
+          pendingApproval: 0,
+          active: 0,
+          completed: 0,
+          overdue: 0,
+          averageProgress: 0,
+        })),
       ]);
 
       setMyPDIs(my);

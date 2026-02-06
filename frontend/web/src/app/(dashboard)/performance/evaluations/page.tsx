@@ -17,6 +17,7 @@ import {
 import Link from 'next/link';
 import { evaluationsApi, Evaluation } from '@/lib/api/performance';
 import { Input } from '@/components/ui/input';
+import { useAuthStore } from '@/stores/auth-store';
 
 export default function EvaluationsListPage() {
     const [pendingEvaluations, setPendingEvaluations] = useState<Evaluation[]>([]);
@@ -24,14 +25,20 @@ export default function EvaluationsListPage() {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
 
-    // Mock user ID - em producao viria do contexto
-    const currentUserId = 'current-user-id';
+    const { user } = useAuthStore();
+    const currentUserId = user?.id || '';
 
     useEffect(() => {
         loadEvaluations();
     }, []);
 
     const loadEvaluations = async () => {
+        if (!currentUserId) {
+            console.warn('User ID not available, skipping evaluations load');
+            setLoading(false);
+            return;
+        }
+
         try {
             setLoading(true);
             // Fetch pending
@@ -147,9 +154,9 @@ export default function EvaluationsListPage() {
                                                     <div>
                                                         <h4 className="font-medium">{evaluation.employeeName}</h4>
                                                         <p className="text-sm text-muted-foreground">
-                                                            {evaluation.evaluationType === 'SELF' ? 'Autoavaliacao' :
-                                                                evaluation.evaluationType === 'MANAGER' ? 'Avaliacao de Gestor' :
-                                                                    evaluation.evaluationType === 'PEER' ? 'Avaliacao de Pares' :
+                                                            {evaluation.evaluatorType === 'SELF' ? 'Autoavaliacao' :
+                                                                evaluation.evaluatorType === 'MANAGER' ? 'Avaliacao de Gestor' :
+                                                                    evaluation.evaluatorType === 'PEER' ? 'Avaliacao de Pares' :
                                                                         'Avaliacao 360'}
                                                             {evaluation.cycleName && ` • ${evaluation.cycleName}`}
                                                         </p>
@@ -200,8 +207,8 @@ export default function EvaluationsListPage() {
                                                     <div>
                                                         <h4 className="font-medium">{evaluation.employeeName}</h4>
                                                         <p className="text-sm text-muted-foreground">
-                                                            {evaluation.evaluationType === 'SELF' ? 'Autoavaliacao' :
-                                                                evaluation.evaluationType === 'MANAGER' ? 'Avaliacao de Gestor' :
+                                                            {evaluation.evaluatorType === 'SELF' ? 'Autoavaliacao' :
+                                                                evaluation.evaluatorType === 'MANAGER' ? 'Avaliacao de Gestor' :
                                                                     'Avaliacao'}
                                                             {evaluation.cycleName && ` • ${evaluation.cycleName}`}
                                                         </p>
