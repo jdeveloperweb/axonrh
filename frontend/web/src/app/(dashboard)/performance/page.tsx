@@ -24,6 +24,8 @@ import {
 } from '@/components/ui/tooltip';
 import { Progress } from '@/components/ui/progress';
 
+import { PerformanceAnalytics } from '@/components/performance/PerformanceAnalytics';
+
 export default function PerformancePage() {
   return (
     <div className="space-y-8 pb-12">
@@ -263,97 +265,7 @@ export default function PerformancePage() {
       </TooltipProvider>
 
       {/* Analytics Section */}
-      <TooltipProvider>
-        <Card className="border-none shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
-              Indicadores da Organização
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-5 w-5 ml-2">
-                    <HelpCircle className="h-4 w-4 text-muted-foreground" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Visão geral da adesão aos programas de desempenho na empresa</p>
-                </TooltipContent>
-              </Tooltip>
-            </CardTitle>
-            <CardDescription>
-              Acompanhe a adesão e progresso dos colaboradores
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {/* DISC Adhesion */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-bold flex items-center gap-2">
-                      <BrainCircuit className="h-4 w-4 text-red-500" />
-                      Adesão ao DISC
-                    </h4>
-                    <p className="text-xs text-muted-foreground">Colaboradores mapeados</p>
-                  </div>
-                  <span className="text-2xl font-black text-red-500">68%</span>
-                </div>
-                <Progress value={68} className="h-2" />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>85/125 Colaboradores</span>
-                  <span className="text-green-600 font-bold">+12% este mês</span>
-                </div>
-              </div>
-
-              {/* PDI Active */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-bold flex items-center gap-2">
-                      <TrendingUp className="h-4 w-4 text-green-500" />
-                      PDIs Ativos
-                    </h4>
-                    <p className="text-xs text-muted-foreground">Planos em andamento</p>
-                  </div>
-                  <span className="text-2xl font-black text-green-500">45%</span>
-                </div>
-                <Progress value={45} className="h-2" />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>56/125 Colaboradores</span>
-                  <span className="text-amber-600 font-bold">Ação necessária</span>
-                </div>
-              </div>
-
-              {/* High Potentials */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-bold flex items-center gap-2">
-                      <Award className="h-4 w-4 text-purple-500" />
-                      Novos Talentos
-                    </h4>
-                    <p className="text-xs text-muted-foreground">Identificados no ciclo</p>
-                  </div>
-                  <span className="text-2xl font-black text-purple-500">12</span>
-                </div>
-                <div className="flex -space-x-2">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <div key={i} className="h-8 w-8 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-[10px] font-bold text-slate-500">
-                      U{i}
-                    </div>
-                  ))}
-                  <div className="h-8 w-8 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-[10px] font-bold text-slate-500">
-                    +7
-                  </div>
-                </div>
-                <div className="text-xs text-muted-foreground pt-1">
-                  Colaboradores com desempenho excepcional
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </TooltipProvider>
+      <PerformanceAnalytics />
     </div>
   );
 }

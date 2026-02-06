@@ -107,25 +107,30 @@ export default function ManagePDIPage() {
             setSending(true);
 
             // Enviar PDI para cada colaborador selecionado
-            await Promise.all(
-                selectedEmployees.map(async (employeeId) => {
-                    const employee = employees.find((e) => e.id === employeeId);
-                    if (!employee) return;
+            const promises = selectedEmployees.map(async (employeeId) => {
+                const employee = employees.find((e) => e.id === employeeId);
+                if (!employee) return;
 
-                    await pdisApi.create({
-                        employeeId,
-                        employeeName: employee.fullName,
-                        managerId: employee.manager?.id,
-                        managerName: employee.manager?.name || employee.manager?.fullName,
-                        title,
-                        description,
-                        objectives,
-                        focusAreas,
-                        endDate,
-                        status: 'DRAFT',
-                    });
-                })
-            );
+                console.log(`Sending PDI to employee: ${employee.fullName} (${employee.id})`);
+
+                const pdiPayload = {
+                    employeeId,
+                    employeeName: employee.fullName,
+                    managerId: employee.manager?.id,
+                    managerName: employee.manager?.name || employee.manager?.fullName,
+                    title,
+                    description,
+                    objectives,
+                    focusAreas,
+                    startDate: new Date().toISOString().split('T')[0], // Define start date as today
+                    endDate,
+                    status: 'DRAFT' as const,
+                };
+
+                return pdisApi.create(pdiPayload);
+            });
+
+            await Promise.all(promises);
 
             toast({
                 title: 'Sucesso',
@@ -145,12 +150,13 @@ export default function ManagePDIPage() {
             console.error('Failed to send PDI:', error);
             toast({
                 title: 'Erro',
-                description: 'Falha ao enviar PDI',
+                description: 'Falha ao enviar PDI. Verifique o console para mais detalhes.',
                 variant: 'destructive',
             });
         } finally {
             setSending(false);
         }
+
     };
 
     const filteredEmployees = employees.filter((emp) =>

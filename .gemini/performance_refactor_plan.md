@@ -96,7 +96,9 @@ Gerenciar → Escolher Tipo → Selecionar Colaboradores → Definir Prazo → E
 ### Fase 4: Melhorias de UX ✅
 - [x] Adicionar tooltips explicativos (Página Principal e Gestão)
 - [x] Adicionar filtros avançados (Gerenciamento de PDI)
-- [x] Dashboard analítico básico para RH (Visão Geral de Indicadores)
+- [x] Dashboard analítico para RH (Dados Reais Integrados)
+- [x] Correções Funcionais: Criação de PDI e Envio de DISC
+- [x] Reorganização Visual: Separar DISC e Desempenho no Perfil
 - [ ] Criar guia de uso completo
 - [ ] Implementar notificações reais
 - [ ] Implementar wizard de envio unificado

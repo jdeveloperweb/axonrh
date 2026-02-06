@@ -253,9 +253,12 @@ export default function DiscManagePage() {
                 <div className="space-y-2">
                   <Label>Colaboradores</Label>
                   <div className="border rounded-lg max-h-64 overflow-y-auto">
-                    {employees
-                      .filter(e => e.status === 'ACTIVE')
-                      .map(emp => (
+                    {employees.length === 0 ? (
+                      <div className="p-4 text-center text-sm text-muted-foreground">
+                        Nenhum colaborador encontrado.
+                      </div>
+                    ) : (
+                      employees.map(emp => (
                         <label
                           key={emp.id}
                           className="flex items-center gap-3 p-3 hover:bg-muted cursor-pointer border-b last:border-b-0"
@@ -275,11 +278,12 @@ export default function DiscManagePage() {
                           <div>
                             <p className="font-medium">{emp.fullName}</p>
                             <p className="text-xs text-muted-foreground">
-                              {emp.department?.name} - {emp.position?.title || emp.position?.name}
+                              {emp.department?.name || 'Sem departamento'} - {emp.position?.title || emp.position?.name || 'Sem cargo'}
                             </p>
                           </div>
                         </label>
-                      ))}
+                      ))
+                    )}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     {selectedEmployees.length} colaborador(es) selecionado(s)
