@@ -83,28 +83,28 @@ services:
     networks:
       - axonrh-network
 
-    mongodb:
-      image: mongo:7
-      container_name: axonrh-mongodb
-      environment:
-        MONGO_INITDB_ROOT_USERNAME: axonrh
-        MONGO_INITDB_ROOT_PASSWORD: axonrh123
-        MONGO_INITDB_DATABASE: axonrh
-      ports:
-        - "27017:27017"
-      volumes:
-        - mongodb_data:/data/db
-      healthcheck:
-        test: [ "CMD-SHELL", "mongosh --quiet --eval \"db.adminCommand('ping').ok\" | grep 1" ]
-        interval: 10s
-        timeout: 5s
-        retries: 5
-      deploy:
-        resources:
-          limits:
-            memory: 256M
-      networks:
-        - axonrh-network
+  mongodb:
+    image: mongo:7
+    container_name: axonrh-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: axonrh
+      MONGO_INITDB_ROOT_PASSWORD: axonrh123
+      MONGO_INITDB_DATABASE: axonrh
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: [ "CMD-SHELL", "mongosh --quiet --eval \"db.adminCommand('ping').ok\" | grep 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    networks:
+      - axonrh-network
 
   redis:
     image: redis:7-alpine
