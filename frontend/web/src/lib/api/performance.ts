@@ -4,7 +4,8 @@ import { api } from './client';
 
 export type CycleStatus = 'DRAFT' | 'ACTIVE' | 'EVALUATION' | 'CALIBRATION' | 'COMPLETED' | 'CANCELLED';
 export type CycleType = 'ANNUAL' | 'SEMI_ANNUAL' | 'QUARTERLY' | 'PROBATION' | 'PROJECT';
-export type EvaluationType = 'SELF' | 'MANAGER' | 'PEER' | 'SUBORDINATE' | 'EXTERNAL';
+export type EvaluationType = 'SELF' | 'MANAGER' | 'PEERS_180' | 'FULL_360';
+export type EvaluatorType = 'SELF' | 'MANAGER' | 'PEER' | 'SUBORDINATE';
 export type EvaluationStatus = 'PENDING' | 'IN_PROGRESS' | 'SUBMITTED' | 'CALIBRATED' | 'COMPLETED' | 'CANCELLED';
 export type GoalStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'ON_HOLD' | 'AT_RISK' | 'COMPLETED' | 'CANCELLED';
 export type GoalType = 'INDIVIDUAL' | 'TEAM' | 'DEPARTMENT' | 'COMPANY';
@@ -20,13 +21,17 @@ export interface EvaluationCycle {
   status: CycleStatus;
   startDate: string;
   endDate: string;
-  evaluationStartDate?: string;
-  evaluationEndDate?: string;
+  selfEvaluationStart?: string;
+  selfEvaluationEnd?: string;
+  managerEvaluationStart?: string;
+  managerEvaluationEnd?: string;
   calibrationStartDate?: string;
   calibrationEndDate?: string;
-  allowSelfEvaluation: boolean;
-  allowPeerEvaluation: boolean;
-  allow360Evaluation: boolean;
+  evaluationType: EvaluationType;
+  includeSelfEvaluation: boolean;
+  includeManagerEvaluation: boolean;
+  includePeerEvaluation: boolean;
+  includeSubordinateEvaluation: boolean;
   createdAt: string;
 }
 
@@ -50,7 +55,7 @@ export interface Evaluation {
   employeeName: string;
   evaluatorId: string;
   evaluatorName: string;
-  evaluationType: EvaluationType;
+  evaluatorType: EvaluatorType;
   status: EvaluationStatus;
   dueDate?: string;
   startedAt?: string;

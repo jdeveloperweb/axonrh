@@ -23,6 +23,9 @@ public interface DiscAssignmentRepository extends JpaRepository<DiscAssignment, 
     List<DiscAssignment> findByTenantIdAndEmployeeIdAndStatus(
         UUID tenantId, UUID employeeId, DiscAssessmentStatus status);
 
+    List<DiscAssignment> findByTenantIdAndEmployeeIdAndStatusIn(
+        UUID tenantId, UUID employeeId, List<DiscAssessmentStatus> statuses);
+
     // Verificar se colaborador tem atribuicao pendente
     boolean existsByTenantIdAndEmployeeIdAndStatusIn(
         UUID tenantId, UUID employeeId, List<DiscAssessmentStatus> statuses);

@@ -304,7 +304,7 @@ function CourseCard({ course, viewMode }: { course: Course, viewMode: 'grid' | '
 
     return (
         <Link href={`/learning/course/${course.id}`} className={cn(
-            "group block bg-white border border-slate-100 overflow-hidden hover:shadow-xl transition-all duration-500 relative",
+            "group block bg-white border border-slate-100 overflow-hidden transition-all duration-500 relative",
             viewMode === 'list' ? "rounded-xl flex flex-col md:flex-row p-4 gap-6" : "rounded-2xl"
         )}>
             <div className={cn(

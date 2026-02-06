@@ -192,7 +192,7 @@ public class DiscService {
             tenantId, employeeId, Arrays.asList(DiscAssessmentStatus.PENDING, DiscAssessmentStatus.IN_PROGRESS));
 
         if (hasPending) {
-            throw new IllegalStateException("Colaborador ja possui uma avaliacao DISC pendente");
+            throw new IllegalStateException("O colaborador já possui uma avaliação DISC pendente ou em andamento.");
         }
 
         // Get default questionnaire
@@ -270,8 +270,8 @@ public class DiscService {
     }
 
     public List<DiscAssignmentDTO> getPendingForEmployee(UUID tenantId, UUID employeeId) {
-        return assignmentRepository.findByTenantIdAndEmployeeIdAndStatus(
-                tenantId, employeeId, DiscAssessmentStatus.PENDING)
+        return assignmentRepository.findByTenantIdAndEmployeeIdAndStatusIn(
+                tenantId, employeeId, Arrays.asList(DiscAssessmentStatus.PENDING, DiscAssessmentStatus.IN_PROGRESS))
             .stream()
             .map(DiscAssignmentDTO::fromEntity)
             .collect(Collectors.toList());
