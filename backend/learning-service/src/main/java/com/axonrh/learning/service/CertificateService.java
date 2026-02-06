@@ -33,13 +33,16 @@ public class CertificateService {
         certificate.setEmployeeId(enrollment.getEmployeeId());
         certificate.setEmployeeName(enrollment.getEmployeeName());
         
-        // Buscar configuração de certificado
-        CertificateConfig config = configService.getConfig(tenantId, enrollment.getCourse().getId());
-        certificate.setInstructorName(config.getInstructorName());
-        certificate.setInstructorSignatureUrl(config.getInstructorSignatureUrl());
-        certificate.setGeneralSignerName(config.getGeneralSignerName());
-        certificate.setGeneralSignatureUrl(config.getGeneralSignatureUrl());
-        certificate.setCompanyLogoUrl(config.getCompanyLogoUrl());
+        // Buscar configurações (específica do curso e global)
+        CertificateConfig specificConfig = configService.getConfig(tenantId, enrollment.getCourse().getId());
+        CertificateConfig globalConfig = configService.getGlobalConfig(tenantId);
+
+        // Fallback campo a campo
+        certificate.setInstructorName(getValue(specificConfig.getInstructorName(), globalConfig.getInstructorName()));
+        certificate.setInstructorSignatureUrl(getValue(specificConfig.getInstructorSignatureUrl(), globalConfig.getInstructorSignatureUrl()));
+        certificate.setGeneralSignerName(getValue(specificConfig.getGeneralSignerName(), globalConfig.getGeneralSignerName()));
+        certificate.setGeneralSignatureUrl(getValue(specificConfig.getGeneralSignatureUrl(), globalConfig.getGeneralSignatureUrl()));
+        certificate.setCompanyLogoUrl(getValue(specificConfig.getCompanyLogoUrl(), globalConfig.getCompanyLogoUrl()));
 
         // Generate a simple unique code
         String uniqueCode = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
@@ -71,5 +74,9 @@ public class CertificateService {
     public Certificate verify(String code) {
         return certificateRepository.findByVerificationCode(code)
                 .orElseThrow(() -> new EntityNotFoundException("Certificado invalido ou nao encontrado"));
+    }
+
+    private String getValue(String specific, String global) {
+        return (specific != null && !specific.trim().isEmpty()) ? specific : global;
     }
 }
