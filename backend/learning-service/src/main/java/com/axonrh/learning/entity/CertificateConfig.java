@@ -46,6 +46,7 @@ public class CertificateConfig {
     private String companyLogoUrl;
 
     @Column(name = "show_company_logo")
+    @Builder.Default
     private Boolean showCompanyLogo = true;
 
     @CreationTimestamp

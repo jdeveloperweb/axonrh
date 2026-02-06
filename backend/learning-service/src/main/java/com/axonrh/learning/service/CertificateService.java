@@ -1,6 +1,7 @@
 package com.axonrh.learning.service;
 
 import com.axonrh.learning.entity.Certificate;
+import com.axonrh.learning.entity.CertificateConfig;
 import com.axonrh.learning.entity.Enrollment;
 import com.axonrh.learning.repository.CertificateRepository;
 import jakarta.persistence.EntityNotFoundException;
