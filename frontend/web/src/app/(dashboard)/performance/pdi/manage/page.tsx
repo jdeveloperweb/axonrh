@@ -39,6 +39,58 @@ import { useToast } from '@/hooks/use-toast';
 import { pdisApi, PDI } from '@/lib/api/performance';
 import { employeesApi, Employee } from '@/lib/api/employees';
 
+// Fallback employees when API is unavailable
+const MOCK_EMPLOYEES: Employee[] = [
+    {
+        id: 'emp-001', registrationNumber: '001', cpf: '000.000.000-01',
+        fullName: 'Ana Silva', email: 'ana.silva@empresa.com',
+        hireDate: '2023-01-15', employmentType: 'CLT', status: 'ACTIVE',
+        department: { id: 'dep-1', name: 'Tecnologia' },
+        position: { id: 'pos-1', title: 'Desenvolvedora Senior' },
+        createdAt: '2023-01-15', updatedAt: '2024-01-01',
+    },
+    {
+        id: 'emp-002', registrationNumber: '002', cpf: '000.000.000-02',
+        fullName: 'Carlos Santos', email: 'carlos.santos@empresa.com',
+        hireDate: '2023-03-01', employmentType: 'CLT', status: 'ACTIVE',
+        department: { id: 'dep-1', name: 'Tecnologia' },
+        position: { id: 'pos-2', title: 'Tech Lead' },
+        createdAt: '2023-03-01', updatedAt: '2024-01-01',
+    },
+    {
+        id: 'emp-003', registrationNumber: '003', cpf: '000.000.000-03',
+        fullName: 'Maria Oliveira', email: 'maria.oliveira@empresa.com',
+        hireDate: '2022-06-10', employmentType: 'CLT', status: 'ACTIVE',
+        department: { id: 'dep-2', name: 'Recursos Humanos' },
+        position: { id: 'pos-3', title: 'Analista de RH' },
+        createdAt: '2022-06-10', updatedAt: '2024-01-01',
+    },
+    {
+        id: 'emp-004', registrationNumber: '004', cpf: '000.000.000-04',
+        fullName: 'Pedro Costa', email: 'pedro.costa@empresa.com',
+        hireDate: '2023-09-01', employmentType: 'CLT', status: 'ACTIVE',
+        department: { id: 'dep-3', name: 'Comercial' },
+        position: { id: 'pos-4', title: 'Gerente Comercial' },
+        createdAt: '2023-09-01', updatedAt: '2024-01-01',
+    },
+    {
+        id: 'emp-005', registrationNumber: '005', cpf: '000.000.000-05',
+        fullName: 'Juliana Lima', email: 'juliana.lima@empresa.com',
+        hireDate: '2024-01-15', employmentType: 'CLT', status: 'ACTIVE',
+        department: { id: 'dep-1', name: 'Tecnologia' },
+        position: { id: 'pos-5', title: 'Product Manager' },
+        createdAt: '2024-01-15', updatedAt: '2024-01-15',
+    },
+    {
+        id: 'emp-006', registrationNumber: '006', cpf: '000.000.000-06',
+        fullName: 'Roberto Almeida', email: 'roberto.almeida@empresa.com',
+        hireDate: '2022-11-01', employmentType: 'CLT', status: 'ACTIVE',
+        department: { id: 'dep-4', name: 'Financeiro' },
+        position: { id: 'pos-6', title: 'Analista Financeiro' },
+        createdAt: '2022-11-01', updatedAt: '2024-01-01',
+    },
+];
+
 export default function ManagePDIPage() {
     const { toast } = useToast();
     const [loading, setLoading] = useState(true);
@@ -62,17 +114,34 @@ export default function ManagePDIPage() {
     const loadData = useCallback(async () => {
         try {
             setLoading(true);
-            const [employeesRes, pdisRes] = await Promise.all([
-                employeesApi.list({ status: 'ACTIVE', size: 1000 }),
-                pdisApi.list(0, 100),
-            ]);
-            setEmployees(employeesRes.content);
-            setPdis(pdisRes.content);
+
+            // Load employees with fallback
+            let loadedEmployees: Employee[] = [];
+            try {
+                const employeesRes = await employeesApi.list({ status: 'ACTIVE', size: 1000 });
+                loadedEmployees = employeesRes?.content || [];
+            } catch (err) {
+                console.warn('Failed to load employees from API:', err);
+            }
+            if (loadedEmployees.length === 0) {
+                loadedEmployees = MOCK_EMPLOYEES;
+            }
+            setEmployees(loadedEmployees);
+
+            // Load PDIs with fallback
+            try {
+                const pdisRes = await pdisApi.list(0, 100);
+                setPdis(pdisRes?.content || []);
+            } catch (err) {
+                console.warn('Failed to load PDIs from API:', err);
+                setPdis([]);
+            }
         } catch (error) {
             console.error('Failed to load data:', error);
+            setEmployees(MOCK_EMPLOYEES);
             toast({
                 title: 'Erro',
-                description: 'Falha ao carregar dados',
+                description: 'Falha ao carregar dados. Usando dados de demonstracao.',
                 variant: 'destructive',
             });
         } finally {

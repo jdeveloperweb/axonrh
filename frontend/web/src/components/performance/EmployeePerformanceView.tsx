@@ -34,10 +34,18 @@ import {
     PDI,
     Evaluation,
     DiscAssignment,
+    DiscEvaluation,
     Goal
 } from '@/lib/api/performance';
 import { useAuthStore } from '@/stores/auth-store';
 import { cn } from '@/lib/utils';
+
+const profileLabels: Record<string, { title: string; letter: string; color: string; traits: string[] }> = {
+    DOMINANCE: { title: 'Dominante', letter: 'D', color: '#ef4444', traits: ['Decisivo', 'Assertivo', 'Orientado a resultados', 'Competitivo'] },
+    INFLUENCE: { title: 'Influente', letter: 'I', color: '#eab308', traits: ['Comunicativo', 'Persuasivo', 'Otimista', 'Entusiasta'] },
+    STEADINESS: { title: 'Estavel', letter: 'S', color: '#22c55e', traits: ['Paciente', 'Confiavel', 'Leal', 'Cooperativo'] },
+    CONSCIENTIOUSNESS: { title: 'Conforme', letter: 'C', color: '#3b82f6', traits: ['Analitico', 'Preciso', 'Sistematico', 'Detalhista'] },
+};
 
 export function EmployeePerformanceView() {
     const { user } = useAuthStore();
@@ -47,6 +55,7 @@ export function EmployeePerformanceView() {
     const [pendingEvaluations, setPendingEvaluations] = useState<Evaluation[]>([]);
     const [latestEvaluation, setLatestEvaluation] = useState<Evaluation | null>(null);
     const [pendingDisc, setPendingDisc] = useState<DiscAssignment[]>([]);
+    const [latestDisc, setLatestDisc] = useState<DiscEvaluation | null>(null);
     const [myGoals, setMyGoals] = useState<Goal[]>([]);
 
     useEffect(() => {
@@ -60,11 +69,12 @@ export function EmployeePerformanceView() {
             setLoading(true);
             const userId = user!.id;
 
-            const [pdis, pendingEvals, historyEvals, discAssignments, goals] = await Promise.all([
+            const [pdis, pendingEvals, historyEvals, discAssignments, latestDiscRes, goals] = await Promise.all([
                 pdisApi.getActive(userId).catch(() => []),
                 evaluationsApi.getPending(userId).catch(() => []),
                 evaluationsApi.getByEmployee(userId).catch(() => []),
                 discApi.getPendingForEmployee(userId).catch(() => []),
+                discApi.getLatest(userId).catch(() => null),
                 goalsApi.getByEmployee(userId).catch(() => [])
             ]);
 
@@ -72,6 +82,7 @@ export function EmployeePerformanceView() {
             setPendingEvaluations(Array.isArray(pendingEvals) ? pendingEvals : []);
             setLatestEvaluation(Array.isArray(historyEvals) && historyEvals.length > 0 ? historyEvals[0] : null);
             setPendingDisc(Array.isArray(discAssignments) ? discAssignments : []);
+            setLatestDisc(latestDiscRes || null);
             setMyGoals(Array.isArray(goals) ? goals : []);
         } catch (error) {
             console.error('Error loading employee performance data:', error);
@@ -318,50 +329,55 @@ export function EmployeePerformanceView() {
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            {/* Se o teste estiver concluído, mostramos um resumo. Se não, CTA para fazer. */}
                             {pendingDisc.length > 0 ? (
                                 <div className="space-y-4 py-4">
                                     <p className="text-sm text-slate-300 leading-relaxed">
-                                        Você tem uma avaliação DISC pendente. Descubra seus motivadores, medos e estilo de comunicação.
+                                        Voce tem uma avaliacao DISC pendente. Descubra seus motivadores, medos e estilo de comunicacao.
                                     </p>
                                     <Link href="/performance/disc">
-                                        <Button className="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold">Começar Teste Agora</Button>
+                                        <Button className="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold">Comecar Teste Agora</Button>
                                     </Link>
                                 </div>
-                            ) : (
+                            ) : latestDisc ? (
                                 <div className="space-y-6">
                                     <div className="flex items-center justify-center py-4">
-                                        {/* Placeholder para um gráfico ou ícone de perfil */}
                                         <div className="relative w-32 h-32 flex items-center justify-center">
-                                            <div className="absolute inset-0 border-4 border-amber-500/20 rounded-full"></div>
-                                            <div className="absolute inset-0 border-4 border-amber-500 rounded-full border-t-transparent -rotate-45"></div>
+                                            <div className="absolute inset-0 border-4 rounded-full" style={{ borderColor: (profileLabels[latestDisc.primaryProfile]?.color || '#eab308') + '33' }}></div>
+                                            <div className="absolute inset-0 border-4 rounded-full border-t-transparent -rotate-45" style={{ borderColor: profileLabels[latestDisc.primaryProfile]?.color || '#eab308' }}></div>
                                             <div className="text-center">
-                                                <span className="text-4xl font-black text-amber-500">I</span>
-                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Influente</p>
+                                                <span className="text-4xl font-black" style={{ color: profileLabels[latestDisc.primaryProfile]?.color || '#eab308' }}>
+                                                    {profileLabels[latestDisc.primaryProfile]?.letter || 'I'}
+                                                </span>
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                                                    {profileLabels[latestDisc.primaryProfile]?.title || 'Influente'}
+                                                </p>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div className="space-y-3">
-                                        <p className="text-sm font-medium text-slate-300">Principais características:</p>
+                                        <p className="text-sm font-medium text-slate-300">Principais caracteristicas:</p>
                                         <ul className="grid grid-cols-2 gap-2">
-                                            <li className="flex items-center gap-2 text-xs text-slate-400">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div> Comunicativo
-                                            </li>
-                                            <li className="flex items-center gap-2 text-xs text-slate-400">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div> Persuasivo
-                                            </li>
-                                            <li className="flex items-center gap-2 text-xs text-slate-400">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div> Otimista
-                                            </li>
-                                            <li className="flex items-center gap-2 text-xs text-slate-400">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div> Entusiasta
-                                            </li>
+                                            {(profileLabels[latestDisc.primaryProfile]?.traits || []).map((trait, i) => (
+                                                <li key={i} className="flex items-center gap-2 text-xs text-slate-400">
+                                                    <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: profileLabels[latestDisc.primaryProfile]?.color || '#eab308' }}></div>
+                                                    {trait}
+                                                </li>
+                                            ))}
                                         </ul>
                                     </div>
 
-                                    <Link href="/performance/disc">
+                                    <Link href="/performance/disc/profile">
                                         <Button variant="outline" className="w-full border-slate-700 hover:bg-slate-800 text-white">Ver Detalhes do Perfil</Button>
+                                    </Link>
+                                </div>
+                            ) : (
+                                <div className="space-y-4 py-4">
+                                    <p className="text-sm text-slate-300 leading-relaxed">
+                                        Descubra seu perfil comportamental DISC e entenda seus pontos fortes e areas de desenvolvimento.
+                                    </p>
+                                    <Link href="/performance/disc">
+                                        <Button className="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold">Realizar Teste DISC</Button>
                                     </Link>
                                 </div>
                             )}
