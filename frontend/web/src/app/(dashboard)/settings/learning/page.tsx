@@ -37,6 +37,7 @@ import {
     Award
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -78,6 +79,7 @@ import { cn } from '@/lib/utils';
 
 export default function LearningManagementPage() {
     const { confirm } = useConfirm();
+    const router = useRouter();
     const [courses, setCourses] = useState<Course[]>([]);
     const [categories, setCategories] = useState<TrainingCategory[]>([]);
     const [loading, setLoading] = useState(true);
@@ -603,142 +605,146 @@ export default function LearningManagementPage() {
                         </Card>
 
                         {selectedCourse && (
-                            <Card className="border-slate-100 shadow-sm rounded-2xl overflow-hidden mt-10">
-                                <CardHeader className="border-b border-slate-50 py-8 px-10 flex flex-row items-center justify-between">
-                                    <div>
-                                        <CardTitle className="text-2xl font-black">Estrutura de Conteúdo</CardTitle>
-                                        <CardDescription>Módulos e Lições do curso.</CardDescription>
-                                    </div>
-                                    <Button
-                                        variant="outline"
-                                        className="rounded-xl border-slate-200 font-bold gap-2"
-                                        onClick={() => {
-                                            setModuleForm({ title: '', sequenceOrder: (selectedCourse!.modules?.length || 0) + 1 });
-                                            setIsModuleDialogOpen(true);
-                                        }}
-                                    >
-                                        <Plus className="h-4 w-4" />
-                                        Novo Módulo
-                                    </Button>
-                                </CardHeader>
-                                <CardContent className="p-0">
-                                    {selectedCourse!.modules?.length === 0 ? (
-                                        <div className="p-16 text-center space-y-4">
-                                            <div className="h-16 w-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto">
-                                                <Layers className="h-8 w-8 text-slate-300" />
-                                            </div>
-                                            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Nenhum módulo adicionado ainda.</p>
+                            <>
+                                <Card className="border-slate-100 shadow-sm rounded-2xl overflow-hidden mt-10">
+                                    <CardHeader className="border-b border-slate-50 py-8 px-10 flex flex-row items-center justify-between">
+                                        <div>
+                                            <CardTitle className="text-2xl font-black">Estrutura de Conteúdo</CardTitle>
+                                            <CardDescription>Módulos e Lições do curso.</CardDescription>
                                         </div>
-                                    ) : (
-                                        <div className="divide-y divide-slate-50">
-                                            {selectedCourse!.modules?.map((module, idx) => (
-                                                <div key={module.id} className={cn(
-                                                    "p-8 hover:bg-slate-50/50 transition-all border-l-4",
-                                                    selectedModule?.id === module.id ? "border-l-blue-600 bg-blue-50/20" : "border-l-transparent"
-                                                )}>
-                                                    <div className="flex items-center justify-between mb-6">
-                                                        <div className="flex items-center gap-4">
-                                                            <div className="h-8 w-8 rounded-lg bg-slate-900 flex items-center justify-center text-[10px] font-black text-white">
-                                                                {idx + 1}
+                                        <Button
+                                            variant="outline"
+                                            className="rounded-xl border-slate-200 font-bold gap-2"
+                                            onClick={() => {
+                                                setModuleForm({ title: '', sequenceOrder: (selectedCourse!.modules?.length || 0) + 1 });
+                                                setIsModuleDialogOpen(true);
+                                            }}
+                                        >
+                                            <Plus className="h-4 w-4" />
+                                            Novo Módulo
+                                        </Button>
+                                    </CardHeader>
+                                    <CardContent className="p-0">
+                                        {selectedCourse!.modules?.length === 0 ? (
+                                            <div className="p-16 text-center space-y-4">
+                                                <div className="h-16 w-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto">
+                                                    <Layers className="h-8 w-8 text-slate-300" />
+                                                </div>
+                                                <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Nenhum módulo adicionado ainda.</p>
+                                            </div>
+                                        ) : (
+                                            <div className="divide-y divide-slate-50">
+                                                {selectedCourse!.modules?.map((module, idx) => (
+                                                    <div key={module.id} className={cn(
+                                                        "p-8 hover:bg-slate-50/50 transition-all border-l-4",
+                                                        selectedModule?.id === module.id ? "border-l-blue-600 bg-blue-50/20" : "border-l-transparent"
+                                                    )}>
+                                                        <div className="flex items-center justify-between mb-6">
+                                                            <div className="flex items-center gap-4">
+                                                                <div className="h-8 w-8 rounded-lg bg-slate-900 flex items-center justify-center text-[10px] font-black text-white">
+                                                                    {idx + 1}
+                                                                </div>
+                                                                <h4 className="font-black text-lg">{module.title}</h4>
                                                             </div>
-                                                            <h4 className="font-black text-lg">{module.title}</h4>
+                                                            <div className="flex items-center gap-2">
+                                                                <Button size="icon" variant="ghost" className="h-10 w-10" onClick={() => {
+                                                                    setModuleForm(module);
+                                                                    setIsModuleDialogOpen(true);
+                                                                }}><Edit2 className="h-4 w-4" /></Button>
+                                                                <Button size="icon" variant="ghost" className="h-10 w-10 text-rose-500" onClick={() => handleDeleteModule(module.id)}><Trash2 className="h-4 w-4" /></Button>
+                                                            </div>
                                                         </div>
-                                                        <div className="flex items-center gap-2">
-                                                            <Button size="icon" variant="ghost" className="h-10 w-10" onClick={() => {
-                                                                setModuleForm(module);
-                                                                setIsModuleDialogOpen(true);
-                                                            }}><Edit2 className="h-4 w-4" /></Button>
-                                                            <Button size="icon" variant="ghost" className="h-10 w-10 text-rose-500" onClick={() => handleDeleteModule(module.id)}><Trash2 className="h-4 w-4" /></Button>
+                                                        <div className="pl-12 grid gap-3">
+                                                            {module.lessons?.map((lesson) => (
+                                                                <div key={lesson.id} className="bg-white border border-slate-100 p-4 rounded-xl flex items-center justify-between shadow-sm hover:border-blue-200 transition-all">
+                                                                    <div className="flex items-center gap-3">
+                                                                        {lesson.contentType === 'VIDEO' && <Video className="h-3 w-3 text-blue-500" />}
+                                                                        {lesson.contentType === 'DOCUMENTO' && <FileText className="h-3 w-3 text-rose-500" />}
+                                                                        {lesson.contentType === 'QUIZ' && <BrainCircuit className="h-3 w-3 text-amber-500" />}
+                                                                        {lesson.contentType === 'ARTIGO' && <Type className="h-3 w-3 text-emerald-500" />}
+                                                                        <span className="text-sm font-bold text-slate-600">{lesson.title}</span>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="text-[10px] font-black text-slate-400 uppercase">{lesson.durationMinutes}m</span>
+                                                                        <Button
+                                                                            size="icon"
+                                                                            variant="ghost"
+                                                                            className="h-8 w-8 text-rose-500"
+                                                                            onClick={() => handleDeleteLesson(module.id, lesson.id)}
+                                                                        >
+                                                                            <Trash2 className="h-3 w-3" />
+                                                                        </Button>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                            <Button
+                                                                variant="ghost"
+                                                                className="w-fit h-10 px-4 mt-2 rounded-xl text-xs font-black uppercase text-blue-600 hover:bg-blue-50/50 gap-2"
+                                                                onClick={() => {
+                                                                    setSelectedModule(module);
+                                                                    setLessonForm({ title: '', contentType: 'VIDEO', sequenceOrder: (module.lessons?.length || 0) + 1 });
+                                                                    setIsLessonDialogOpen(true);
+                                                                }}
+                                                            >
+                                                                <Plus className="h-3 w-3" />
+                                                                Adicionar Aula
+                                                            </Button>
                                                         </div>
                                                     </div>
-                                                    <div className="pl-12 grid gap-3">
-                                                        {module.lessons?.map((lesson, lIdx) => (
-                                                            <div key={lesson.id} className="bg-white border border-slate-100 p-4 rounded-xl flex items-center justify-between shadow-sm hover:border-blue-200 transition-all">
-                                                                <div className="flex items-center gap-3">
-                                                                    {lesson.contentType === 'VIDEO' && <Video className="h-3 w-3 text-blue-500" />}
-                                                                    {lesson.contentType === 'DOCUMENTO' && <FileText className="h-3 w-3 text-rose-500" />}
-                                                                    {lesson.contentType === 'QUIZ' && <BrainCircuit className="h-3 w-3 text-amber-500" />}
-                                                                    {lesson.contentType === 'ARTIGO' && <Type className="h-3 w-3 text-emerald-500" />}
-                                                                    <span className="text-sm font-bold text-slate-600">{lesson.title}</span>
-                                                                </div>
-                                                                <div className="flex items-center gap-2">
-                                                                    <span className="text-[10px] font-black text-slate-400 uppercase">{lesson.durationMinutes}m</span>
-                                                                    <Button
-                                                                        size="icon"
-                                                                        variant="ghost"
-                                                                        className="h-8 w-8 text-rose-500"
-                                                                        onClick={() => handleDeleteLesson(module.id, lesson.id)}
-                                                                    >
-                                                                        <Trash2 className="h-3 w-3" />
-                                                                    </Button>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                        <Button
-                                                            variant="ghost"
-                                                            className="w-fit h-10 px-4 mt-2 rounded-xl text-xs font-black uppercase text-blue-600 hover:bg-blue-50/50 gap-2"
-                                                            onClick={() => {
-                                                                setSelectedModule(module);
-                                                                setLessonForm({ title: '', contentType: 'VIDEO', sequenceOrder: (module.lessons?.length || 0) + 1 });
-                                                                setIsLessonDialogOpen(true);
-                                                            }}
-                                                        >
-                                                            <Plus className="h-3 w-3" />
-                                                            Adicionar Aula
-                                                        </Button>
-                                                        </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </CardContent>
-                            </Card>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </Card>
 
-                            <Card className="border-slate-100 shadow-sm rounded-2xl overflow-hidden mt-10">
-                                <CardHeader className="border-b border-slate-50 py-8 px-10">
-                                    <div className="flex items-center gap-4">
-                                        <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center">
-                                            <Award className="h-6 w-6 text-primary" />
-                                        </div>
-                                        <div>
-                                            <CardTitle className="text-2xl font-black">Personalização do Certificado</CardTitle>
-                                            <CardDescription>Configure o instrutor e assinatura específicos para este treinamento.</CardDescription>
-                                        </div>
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="p-10 space-y-8">
-                                    <div className="grid md:grid-cols-2 gap-8">
-                                        <div className="space-y-4">
-                                            <label className="text-xs font-black uppercase text-slate-400 tracking-widest">Nome do Instrutor Responsável</label>
-                                            <Input
-                                                className="h-14 rounded-xl border-slate-200 bg-white font-bold text-lg shadow-sm"
-                                                placeholder="Ex: Dr. Rodrigo Porto"
-                                                value={courseCertificateConfig?.instructorName || ''}
-                                                onChange={e => setCourseCertificateConfig(prev => prev ? { ...prev, instructorName: e.target.value } : null)}
-                                            />
-                                        </div>
-                                        <div className="space-y-4">
-                                            <label className="text-xs font-black uppercase text-slate-400 tracking-widest">URL da Assinatura do Instrutor</label>
-                                            <div className="flex gap-2">
-                                                <Input
-                                                    className="h-14 rounded-xl border-slate-200 bg-white font-bold text-sm shadow-sm"
-                                                    placeholder="https://sua-empresa.com/assinatura.png"
-                                                    value={courseCertificateConfig?.instructorSignatureUrl || ''}
-                                                    onChange={e => setCourseCertificateConfig(prev => prev ? { ...prev, instructorSignatureUrl: e.target.value } : null)}
-                                                />
+                                <Card className="border-slate-100 shadow-sm rounded-2xl overflow-hidden mt-10">
+                                    <CardHeader className="border-b border-slate-50 py-8 px-10">
+                                        <div className="flex items-center gap-4">
+                                            <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+                                                <Award className="h-6 w-6 text-primary" />
+                                            </div>
+                                            <div>
+                                                <CardTitle className="text-2xl font-black">Personalização do Certificado</CardTitle>
+                                                <CardDescription>Configure o instrutor e assinatura específicos para este treinamento.</CardDescription>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div className="bg-blue-50/50 p-6 rounded-2xl border border-blue-100/50 flex gap-4">
-                                        <AlertCircle className="h-5 w-5 text-blue-500 shrink-0" />
-                                        <p className="text-[11px] text-blue-700 font-medium">
-                                            Se estes campos ficarem em branco, o sistema utilizará as configurações gerais de certificado (Configurações Gerais > Certificados).
-                                            Dica: Use imagens PNG com fundo transparente para as assinaturas.
-                                        </p>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </div>
+                                    </CardHeader>
+                                    <CardContent className="p-10 space-y-8">
+                                        <div className="grid md:grid-cols-2 gap-8">
+                                            <div className="space-y-4">
+                                                <label className="text-xs font-black uppercase text-slate-400 tracking-widest">Nome do Instrutor Responsável</label>
+                                                <Input
+                                                    className="h-14 rounded-xl border-slate-200 bg-white font-bold text-lg shadow-sm"
+                                                    placeholder="Ex: Dr. Rodrigo Porto"
+                                                    value={courseCertificateConfig?.instructorName || ''}
+                                                    onChange={e => setCourseCertificateConfig(prev => prev ? { ...prev, instructorName: e.target.value } : null)}
+                                                />
+                                            </div>
+                                            <div className="space-y-4">
+                                                <label className="text-xs font-black uppercase text-slate-400 tracking-widest">URL da Assinatura do Instrutor</label>
+                                                <div className="flex gap-2">
+                                                    <Input
+                                                        className="h-14 rounded-xl border-slate-200 bg-white font-bold text-sm shadow-sm"
+                                                        placeholder="https://sua-empresa.com/assinatura.png"
+                                                        value={courseCertificateConfig?.instructorSignatureUrl || ''}
+                                                        onChange={e => setCourseCertificateConfig(prev => prev ? { ...prev, instructorSignatureUrl: e.target.value } : null)}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="bg-blue-50/50 p-6 rounded-2xl border border-blue-100/50 flex gap-4">
+                                            <AlertCircle className="h-5 w-5 text-blue-500 shrink-0" />
+                                            <p className="text-[11px] text-blue-700 font-medium">
+                                                Se estes campos ficarem em branco, o sistema utilizará as configurações gerais de certificado (Configurações Gerais &gt; Certificados).
+                                                Dica: Use imagens PNG com fundo transparente para as assinaturas.
+                                            </p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </>
+                        )}
+                    </div>
+
                     <aside className="lg:col-span-4 space-y-6">
                         <div className="bg-white border border-slate-100 rounded-2xl p-8 shadow-xl shadow-slate-200/20 space-y-8 sticky top-6">
                             <div className="space-y-2">
