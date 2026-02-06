@@ -93,11 +93,12 @@ Gerenciar → Escolher Tipo → Selecionar Colaboradores → Definir Prazo → E
 - [x] Separar tipos de avaliação claramente
 - [x] Melhorar acesso às funcionalidades
 
-### Fase 4: Melhorias de UX (Futuras)
-- [ ] Adicionar tooltips explicativos
-- [ ] Criar guia de uso
-- [ ] Implementar notificações
-- [ ] Adicionar filtros avançados
+### Fase 4: Melhorias de UX ✅
+- [x] Adicionar tooltips explicativos (Página Principal e Gestão)
+- [x] Adicionar filtros avançados (Gerenciamento de PDI)
+- [x] Dashboard analítico básico para RH (Visão Geral de Indicadores)
+- [ ] Criar guia de uso completo
+- [ ] Implementar notificações reais
 - [ ] Implementar wizard de envio unificado
 
 ## Arquivos Afetados

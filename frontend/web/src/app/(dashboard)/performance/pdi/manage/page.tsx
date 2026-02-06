@@ -32,6 +32,7 @@ import {
     AlertCircle,
     Loader2,
     Search,
+    Filter,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
@@ -46,6 +47,9 @@ export default function ManagePDIPage() {
     const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [sendDialogOpen, setSendDialogOpen] = useState(false);
+
+    // Filters
+    const [statusFilter, setStatusFilter] = useState<string>('ALL');
 
     // Form state
     const [title, setTitle] = useState('');
@@ -169,6 +173,11 @@ export default function ManagePDIPage() {
         setSelectedEmployees([]);
     };
 
+    const filteredPdis = pdis.filter(pdi => {
+        if (statusFilter !== 'ALL' && pdi.status !== statusFilter) return false;
+        return true;
+    });
+
     if (loading) {
         return (
             <div className="flex items-center justify-center h-96">
@@ -259,20 +268,37 @@ export default function ManagePDIPage() {
             {/* PDI List */}
             <Card>
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Users className="h-5 w-5" />
-                        PDIs Enviados
-                    </CardTitle>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <Users className="h-5 w-5" />
+                            <CardTitle>PDIs Enviados</CardTitle>
+                        </div>
+                        <div className="flex gap-2">
+                            <Select value={statusFilter} onValueChange={setStatusFilter}>
+                                <SelectTrigger className="w-[180px]">
+                                    <Filter className="w-4 h-4 mr-2" />
+                                    <SelectValue placeholder="Status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="ALL">Todos os Status</SelectItem>
+                                    <SelectItem value="DRAFT">Rascunho</SelectItem>
+                                    <SelectItem value="PENDING_APPROVAL">Aguardando Aprovação</SelectItem>
+                                    <SelectItem value="ACTIVE">Ativo</SelectItem>
+                                    <SelectItem value="COMPLETED">Concluído</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
                 </CardHeader>
                 <CardContent>
-                    {pdis.length === 0 ? (
+                    {filteredPdis.length === 0 ? (
                         <div className="text-center py-12">
                             <TrendingUp className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-                            <p className="text-muted-foreground">Nenhum PDI enviado ainda</p>
+                            <p className="text-muted-foreground">Nenhum PDI encontrado</p>
                         </div>
                     ) : (
                         <div className="space-y-3">
-                            {pdis.map((pdi) => (
+                            {filteredPdis.map((pdi) => (
                                 <Link key={pdi.id} href={`/performance/pdi/${pdi.id}`}>
                                     <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
                                         <div className="flex items-center gap-4">
@@ -286,7 +312,7 @@ export default function ManagePDIPage() {
                                         </div>
                                         <div className="flex items-center gap-3">
                                             <Badge variant={pdi.status === 'ACTIVE' ? 'default' : 'secondary'}>
-                                                {pdi.status === 'ACTIVE' ? 'Ativo' : pdi.status === 'COMPLETED' ? 'Concluído' : 'Rascunho'}
+                                                {pdi.status === 'ACTIVE' ? 'Ativo' : pdi.status === 'COMPLETED' ? 'Concluído' : pdi.status === 'PENDING_APPROVAL' ? 'Aguardando' : 'Rascunho'}
                                             </Badge>
                                             <span className="text-sm text-muted-foreground">
                                                 {pdi.overallProgress}%
