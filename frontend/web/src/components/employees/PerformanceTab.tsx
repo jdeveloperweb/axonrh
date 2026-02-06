@@ -132,7 +132,7 @@ export function PerformanceTab({ employeeId, employeeName }: PerformanceTabProps
                                     </div>
                                 </div>
                             ) : (
-                                <div className="text-center py-12">
+                                <div className="flex flex-col items-center justify-center py-12 text-center">
                                     <TrendingUp className="w-12 h-12 mx-auto mb-3 text-slate-300" />
                                     <p className="text-slate-500 mb-4">Nenhum PDI ativo no momento</p>
                                     <Link href="/performance/pdi">
@@ -208,7 +208,7 @@ export function PerformanceTab({ employeeId, employeeName }: PerformanceTabProps
                                     )}
                                 </div>
                             ) : (
-                                <div className="text-center py-12">
+                                <div className="flex flex-col items-center justify-center py-12 text-center">
                                     <Award className="w-12 h-12 mx-auto mb-3 text-slate-300" />
                                     <p className="text-slate-500 mb-4">Nenhuma avaliação encontrada</p>
                                     <Link href="/performance/evaluations">
