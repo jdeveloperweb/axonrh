@@ -116,6 +116,19 @@ public class EmployeeController {
         return ResponseEntity.ok(employee);
     }
 
+    @GetMapping("/{id}/history")
+    @PreAuthorize("hasAuthority('EMPLOYEE:READ')")
+    @Operation(summary = "Retorna histórico de alterações do colaborador")
+    public ResponseEntity<java.util.List<java.util.Map<String, Object>>> getHistory(
+            @Parameter(description = "ID do colaborador") @PathVariable UUID id) {
+
+        log.info("Buscando histórico do colaborador: {}", id);
+        // TODO: Implementar auditoria de histórico quando necessário
+        // Por enquanto, retorna lista vazia para evitar erro 404
+        return ResponseEntity.ok(java.util.Collections.emptyList());
+    }
+
+
     @GetMapping("/cpf/{cpf}")
     @PreAuthorize("hasAuthority('EMPLOYEE:READ')")
     @Operation(summary = "Busca colaborador por CPF")

@@ -40,3 +40,17 @@ spring:
           secret-key: ${JWT_SECRET:axonrh-jwt-secret-key-change-in-production-2026}
           jws-algorithms: HS256
 
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+  health:
+    defaults:
+      enabled: true
+
