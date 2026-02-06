@@ -33,4 +33,6 @@ public interface EvaluationCycleRepository extends JpaRepository<EvaluationCycle
                                             @Param("date") LocalDate date);
 
     boolean existsByTenantIdAndNameAndIdNot(UUID tenantId, String name, UUID id);
+    
+    boolean existsByTenantIdAndNameAndStartDate(UUID tenantId, String name, LocalDate startDate);
 }

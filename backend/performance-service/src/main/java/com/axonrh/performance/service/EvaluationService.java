@@ -36,6 +36,16 @@ public class EvaluationService {
     // ==================== Cycles ====================
 
     public EvaluationCycle createCycle(UUID tenantId, EvaluationCycle cycle) {
+        // Validar se já existe um ciclo com o mesmo nome e data de início
+        if (cycleRepository.existsByTenantIdAndNameAndStartDate(
+                tenantId, cycle.getName(), cycle.getStartDate())) {
+            throw new IllegalStateException(
+                "Já existe um ciclo com o nome '" + cycle.getName() + 
+                "' e data de início " + cycle.getStartDate() + 
+                ". Por favor, escolha um nome diferente ou altere a data de início."
+            );
+        }
+        
         cycle.setTenantId(tenantId);
         return cycleRepository.save(cycle);
     }
