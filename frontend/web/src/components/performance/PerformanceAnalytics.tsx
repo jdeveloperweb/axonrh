@@ -37,7 +37,7 @@ export function PerformanceAnalytics() {
             const [discStatsRes, pdisRes, employeesRes] = await Promise.all([
                 discApi.getStatistics(),
                 pdisApi.list(0, 500), // Buscar volume razoável para estatísticas
-                employeesApi.list({ status: 'ACTIVE', size: 1 }) // Apenas para pegar o total elements
+                employeesApi.list({ size: 1 }) // Apenas para pegar o total elements
             ]);
 
             setDiscStats(discStatsRes);

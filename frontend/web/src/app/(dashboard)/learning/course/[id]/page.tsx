@@ -99,6 +99,28 @@ export default function CourseDetails() {
         }
     };
 
+    const handleComplete = async () => {
+        if (!enrollment) return;
+        try {
+            if (!await confirm({
+                title: 'Finalizar Treinamento',
+                description: 'Parabéns por concluir o conteúdo! Deseja finalizar o curso e emitir seu certificado agora?',
+                confirmLabel: 'Finalizar e Emitir Certificado',
+                variant: 'default'
+            })) return;
+
+            setEnrolling(true);
+            const res = await enrollmentsApi.complete(enrollment.id, 100);
+            setEnrollment(res as any);
+            toast.success('Treinamento concluído com sucesso! Seu certificado foi gerado.');
+        } catch (error: any) {
+            console.error('Erro ao completar curso:', error);
+            toast.error('Erro ao finalizar treinamento');
+        } finally {
+            setEnrolling(false);
+        }
+    };
+
     const handleUnenroll = async () => {
         if (!enrollment) return;
 
@@ -317,13 +339,24 @@ export default function CourseDetails() {
                                         <Progress value={enrollment.progressPercentage} className="h-2 bg-muted transition-all" />
                                     </div>
 
-                                    <Button className="w-full py-6 text-lg font-bold rounded-xl shadow-lg shadow-primary/20" onClick={handleStart}>
-                                        {enrollment.progressPercentage > 0 ? 'Continuar Curso' : 'Iniciar Treinamento'}
-                                        <Play className="ml-2 h-4 w-4 fill-current" />
-                                    </Button>
+                                    {enrollment.progressPercentage === 100 && enrollment.status !== 'COMPLETED' ? (
+                                        <Button className="w-full py-6 text-lg font-bold rounded-xl shadow-lg bg-green-600 hover:bg-green-700 shadow-green-900/10" onClick={handleComplete} disabled={enrolling}>
+                                            {enrolling ? 'Processando...' : 'Finalizar e Emitir Certificado'}
+                                            <Award className="ml-2 h-5 w-5" />
+                                        </Button>
+                                    ) : (
+                                        <Button className="w-full py-6 text-lg font-bold rounded-xl shadow-lg shadow-primary/20" onClick={handleStart}>
+                                            {enrollment.progressPercentage > 0 ? 'Continuar Curso' : 'Iniciar Treinamento'}
+                                            <Play className="ml-2 h-4 w-4 fill-current" />
+                                        </Button>
+                                    )}
 
                                     {enrollment.status === 'COMPLETED' && (
-                                        <Button variant="outline" className="w-full border-amber-500 text-amber-500 hover:bg-amber-50 font-bold py-6 rounded-xl">
+                                        <Button
+                                            variant="outline"
+                                            className="w-full border-primary text-primary hover:bg-primary/5 font-bold py-6 rounded-xl"
+                                            onClick={() => router.push(`/learning/certificates/${enrollment.certificateId}`)}
+                                        >
                                             Ver Certificado
                                             <Award className="ml-2 h-5 w-5" />
                                         </Button>

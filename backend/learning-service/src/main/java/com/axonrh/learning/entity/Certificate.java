@@ -58,6 +58,21 @@ public class Certificate {
     @Column(name = "verification_code", nullable = false, unique = true)
     private String verificationCode;
 
+    @Column(name = "instructor_name")
+    private String instructorName;
+
+    @Column(name = "instructor_signature_url")
+    private String instructorSignatureUrl;
+
+    @Column(name = "general_signer_name")
+    private String generalSignerName;
+
+    @Column(name = "general_signature_url")
+    private String generalSignatureUrl;
+
+    @Column(name = "company_logo_url")
+    private String companyLogoUrl;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -174,6 +189,46 @@ public class Certificate {
 
     public void setVerificationCode(String verificationCode) {
         this.verificationCode = verificationCode;
+    }
+
+    public String getInstructorName() {
+        return instructorName;
+    }
+
+    public void setInstructorName(String instructorName) {
+        this.instructorName = instructorName;
+    }
+
+    public String getInstructorSignatureUrl() {
+        return instructorSignatureUrl;
+    }
+
+    public void setInstructorSignatureUrl(String instructorSignatureUrl) {
+        this.instructorSignatureUrl = instructorSignatureUrl;
+    }
+
+    public String getGeneralSignerName() {
+        return generalSignerName;
+    }
+
+    public void setGeneralSignerName(String generalSignerName) {
+        this.generalSignerName = generalSignerName;
+    }
+
+    public String getGeneralSignatureUrl() {
+        return generalSignatureUrl;
+    }
+
+    public void setGeneralSignatureUrl(String generalSignatureUrl) {
+        this.generalSignatureUrl = generalSignatureUrl;
+    }
+
+    public String getCompanyLogoUrl() {
+        return companyLogoUrl;
+    }
+
+    public void setCompanyLogoUrl(String companyLogoUrl) {
+        this.companyLogoUrl = companyLogoUrl;
     }
 
     public LocalDateTime getCreatedAt() {

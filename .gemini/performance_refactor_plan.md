@@ -99,6 +99,7 @@ Gerenciar → Escolher Tipo → Selecionar Colaboradores → Definir Prazo → E
 - [x] Dashboard analítico para RH (Dados Reais Integrados)
 - [x] Correções Funcionais: Criação de PDI e Envio de DISC
 - [x] Reorganização Visual: Separar DISC e Desempenho no Perfil
+- [x] Gestão de Ciclos de Performance (RH)
 - [ ] Criar guia de uso completo
 - [ ] Implementar notificações reais
 - [ ] Implementar wizard de envio unificado

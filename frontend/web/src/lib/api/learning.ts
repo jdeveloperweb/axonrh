@@ -120,6 +120,11 @@ export interface Certificate {
   durationHours?: number;
   pdfUrl?: string;
   verificationCode: string;
+  instructorName?: string;
+  instructorSignatureUrl?: string;
+  generalSignerName?: string;
+  generalSignatureUrl?: string;
+  companyLogoUrl?: string;
 }
 
 export interface LearningPath {
@@ -368,4 +373,25 @@ export const trainingEvaluationsApi = {
       npsScore: number;
       totalResponses: number;
     }>(`/learning/evaluations/course/${courseId}/summary`),
+};
+
+// ==================== Certificate Configs API ====================
+
+export interface CertificateConfig {
+  id?: string;
+  courseId?: string;
+  instructorName?: string;
+  instructorSignatureUrl?: string;
+  generalSignerName?: string;
+  generalSignatureUrl?: string;
+  companyLogoUrl?: string;
+  showCompanyLogo: boolean;
+}
+
+export const certificateConfigsApi = {
+  get: (courseId?: string) =>
+    api.get<CertificateConfig>(`/learning/certificate-configs${courseId ? `?courseId=${courseId}` : ''}`),
+
+  save: (data: CertificateConfig) =>
+    api.post<CertificateConfig>('/learning/certificate-configs', data),
 };

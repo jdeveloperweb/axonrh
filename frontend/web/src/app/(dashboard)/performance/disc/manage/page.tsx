@@ -94,12 +94,13 @@ export default function DiscManagePage() {
         discApi.getStatistics(),
         discApi.listAssignments(0, 100),
         discApi.list(0, 100, undefined),
-        employeesApi.list({ status: 'ACTIVE', size: 1000 }), // Buscar apenas colaboradores ativos
+        employeesApi.list({ size: 1000 }), // Trazer todos para garantir que apareçam
       ]);
+      console.log('Employees response:', employeesRes);
       setStatistics(statsRes);
       setAssignments(assignmentsRes.content);
       setEvaluations(evaluationsRes.content);
-      setEmployees(employeesRes.content); // Usar a propriedade content
+      setEmployees(employeesRes.content || []);
     } catch (error) {
       console.error('Failed to load data:', error);
       toast({

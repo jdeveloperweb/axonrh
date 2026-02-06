@@ -81,8 +81,11 @@ export default function CertificatesPage() {
                                     <h3 className="font-black text-lg uppercase tracking-tight line-clamp-1">{cert.courseName || cert.course?.title}</h3>
                                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Concluído em: {new Date(cert.completedAt!).toLocaleDateString('pt-BR')}</p>
                                 </div>
-                                <Button className="w-full h-12 rounded-xl font-black uppercase tracking-widest text-[10px] gap-2">
-                                    <Download className="h-4 w-4" /> Download PDF
+                                <Button
+                                    className="w-full h-12 rounded-xl font-black uppercase tracking-widest text-[10px] gap-2"
+                                    onClick={() => router.push(`/learning/certificates/${cert.certificateId}`)}
+                                >
+                                    <Award className="h-4 w-4" /> Visualizar Certificado
                                 </Button>
                             </CardContent>
                         </Card>

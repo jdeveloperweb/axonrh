@@ -370,6 +370,16 @@ export default function LearningDashboard() {
                   {selectedCategory === cat.id && <div className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />}
                 </button>
               ))}
+
+              <Link href="/learning/settings/certificate">
+                <Button variant="ghost" className="w-full flex items-center justify-start gap-4 px-6 py-8 rounded-2xl border border-dashed border-slate-200 hover:border-primary hover:bg-primary/5 transition-all text-slate-500 hover:text-primary group">
+                  <Settings className="h-4 w-4 group-hover:rotate-90 transition-transform duration-500" />
+                  <div className="text-left">
+                    <p className="text-[10px] font-black uppercase tracking-widest leading-none mb-1">Configurações</p>
+                    <p className="font-black text-sm uppercase tracking-tight">Certificados</p>
+                  </div>
+                </Button>
+              </Link>
             </nav>
           </div>
 

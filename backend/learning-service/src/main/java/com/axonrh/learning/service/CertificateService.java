@@ -16,9 +16,11 @@ import java.util.UUID;
 public class CertificateService {
 
     private final CertificateRepository certificateRepository;
+    private final CertificateConfigService configService;
 
-    public CertificateService(CertificateRepository certificateRepository) {
+    public CertificateService(CertificateRepository certificateRepository, CertificateConfigService configService) {
         this.certificateRepository = certificateRepository;
+        this.configService = configService;
     }
 
     public Certificate generate(UUID tenantId, Enrollment enrollment) {
@@ -30,6 +32,14 @@ public class CertificateService {
         certificate.setEmployeeId(enrollment.getEmployeeId());
         certificate.setEmployeeName(enrollment.getEmployeeName());
         
+        // Buscar configuração de certificado
+        CertificateConfig config = configService.getConfig(tenantId, enrollment.getCourse().getId());
+        certificate.setInstructorName(config.getInstructorName());
+        certificate.setInstructorSignatureUrl(config.getInstructorSignatureUrl());
+        certificate.setGeneralSignerName(config.getGeneralSignerName());
+        certificate.setGeneralSignatureUrl(config.getGeneralSignatureUrl());
+        certificate.setCompanyLogoUrl(config.getCompanyLogoUrl());
+
         // Generate a simple unique code
         String uniqueCode = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         certificate.setVerificationCode(uniqueCode);
