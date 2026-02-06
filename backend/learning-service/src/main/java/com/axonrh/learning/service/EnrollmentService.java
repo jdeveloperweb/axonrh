@@ -161,7 +161,7 @@ import java.util.UUID;
             Enrollment enrollment = get(tenantId, enrollmentId);
             enrollment.complete(score);
             
-            if (enrollment.getStatus() == EnrollmentStatus.COMPLETED) {
+            if (enrollment.getStatus() == EnrollmentStatus.COMPLETED && enrollment.getCertificateId() == null) {
                 Certificate certificate = certificateService.generate(tenantId, enrollment);
                 enrollment.issueCertificate(certificate.getId());
             }

@@ -50,7 +50,7 @@ export default function CertificateViewPage() {
         return (
             <div className="flex flex-col items-center justify-center h-screen space-y-4">
                 <h1 className="text-2xl font-bold">Certificado não encontrado</h1>
-                <Button onClick={() => router.back()}>Voltar</Button>
+                <Button onClick={() => router.push('/learning/catalog')}>Voltar</Button>
             </div>
         );
     }
@@ -60,7 +60,7 @@ export default function CertificateViewPage() {
             {/* Control Bar - Hidden when printing */}
             <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 py-4 px-6 print:hidden">
                 <div className="max-w-6xl mx-auto flex items-center justify-between">
-                    <Button variant="ghost" onClick={() => router.back()} className="font-bold gap-2">
+                    <Button variant="ghost" onClick={() => router.push('/learning/catalog')} className="font-bold gap-2">
                         <ArrowLeft className="h-4 w-4" /> Voltar
                     </Button>
                     <div className="flex gap-3">

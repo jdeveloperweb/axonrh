@@ -85,6 +85,7 @@ export function DiscTab({ employeeId, employeeName }: DiscTabProps) {
   const [sending, setSending] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
 
+  // Load history and latest result
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
@@ -99,8 +100,9 @@ export function DiscTab({ employeeId, employeeName }: DiscTabProps) {
 
         const historyRes = await discApi.getHistory(employeeId);
         setHistory(historyRes);
-      } catch {
-        // No evaluations found - this is ok
+      } catch (error) {
+        // No evaluations found - this is ok (404 expected if no result)
+        console.log('Sem resultados DISC anteriores:', error);
         setLatestResult(null);
         setHistory([]);
       }
@@ -117,6 +119,15 @@ export function DiscTab({ employeeId, employeeName }: DiscTabProps) {
 
   const handleSendEvaluation = async () => {
     try {
+      if (!user?.id) {
+        toast({
+          title: 'Erro',
+          description: 'Sua sessão expirou. Por favor, faça login novamente.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       setSending(true);
       const dueDate = new Date();
       dueDate.setDate(dueDate.getDate() + 7); // 7 days from now
@@ -124,20 +135,21 @@ export function DiscTab({ employeeId, employeeName }: DiscTabProps) {
       await discApi.assign({
         employeeId,
         employeeName,
-        assignedBy: user?.id || '',
-        assignedByName: user?.name || '',
+        assignedBy: user.id,
+        assignedByName: user.name || user.email || 'Admin',
         dueDate: dueDate.toISOString().split('T')[0],
       });
 
       toast({
         title: 'Sucesso',
-        description: 'Avaliacao DISC enviada para o colaborador',
+        description: 'Avaliação DISC enviada para o colaborador',
       });
       loadData();
-    } catch (error: unknown) {
+    } catch (error: any) {
+      console.error('Erro ao atribuir DISC:', error);
       toast({
         title: 'Erro',
-        description: error instanceof Error ? error.message : 'Falha ao enviar avaliacao',
+        description: error?.response?.data?.message || error.message || 'Falha ao enviar avaliação',
         variant: 'destructive',
       });
     } finally {
@@ -163,13 +175,13 @@ export function DiscTab({ employeeId, employeeName }: DiscTabProps) {
       <Card className="border-amber-200 bg-amber-50/50">
         <CardContent className="pt-6">
           <div className="flex flex-col items-center text-center space-y-4">
-            <div className="p-4 bg-amber-100 rounded-full">
-              <Clock className="h-8 w-8 text-amber-600" />
+            <div className="p-4 bg-amber-100 rounded-full animate-pulse">
+              <BrainCircuit className="h-8 w-8 text-amber-600" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-amber-900">Avaliacao DISC Pendente</h3>
+              <h3 className="text-lg font-bold text-amber-900">Avaliação DISC Pendente</h3>
               <p className="text-amber-700">
-                O colaborador tem uma avaliacao DISC pendente enviada em {formatDate(pending.createdAt)}.
+                O colaborador tem uma avaliação DISC pendente enviada em {formatDate(pending.createdAt)}.
               </p>
               {pending.dueDate && (
                 <p className="text-sm text-amber-600 mt-1">
@@ -189,18 +201,18 @@ export function DiscTab({ employeeId, employeeName }: DiscTabProps) {
       <Card>
         <CardContent className="pt-6">
           <div className="flex flex-col items-center text-center space-y-4">
-            <div className="p-4 bg-gray-100 rounded-full">
-              <BrainCircuit className="h-8 w-8 text-gray-400" />
+            <div className="p-4 bg-slate-100 rounded-full">
+              <BrainCircuit className="h-8 w-8 text-slate-400" />
             </div>
             <div>
-              <h3 className="text-lg font-bold">Nenhuma Avaliacao DISC</h3>
+              <h3 className="text-lg font-bold">Nenhuma Avaliação DISC</h3>
               <p className="text-muted-foreground">
-                Este colaborador ainda nao completou uma avaliacao DISC.
+                Este colaborador ainda não completou uma avaliação DISC.
               </p>
             </div>
-            <Button onClick={handleSendEvaluation} disabled={sending}>
+            <Button onClick={handleSendEvaluation} disabled={sending} className="bg-orange-500 hover:bg-orange-600 text-white border-none shadow-md">
               <Send className="h-4 w-4 mr-2" />
-              {sending ? 'Enviando...' : 'Enviar Avaliacao DISC'}
+              {sending ? 'Enviando...' : 'Enviar Avaliação DISC'}
             </Button>
           </div>
         </CardContent>

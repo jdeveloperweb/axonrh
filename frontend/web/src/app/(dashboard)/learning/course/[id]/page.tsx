@@ -179,7 +179,7 @@ export default function CourseDetails() {
     return (
         <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-8 pb-20">
             {/* Breadcrumbs / Back button */}
-            <Button variant="ghost" onClick={() => router.back()} className="mb-4 -ml-4 hover:bg-muted font-medium text-muted-foreground">
+            <Button variant="ghost" onClick={() => router.push('/learning/catalog')} className="mb-4 -ml-4 hover:bg-muted font-medium text-muted-foreground">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Voltar para o catálogo
             </Button>
@@ -339,19 +339,23 @@ export default function CourseDetails() {
                                         <Progress value={enrollment.progressPercentage} className="h-2 bg-muted transition-all" />
                                     </div>
 
-                                    {enrollment.progressPercentage === 100 && enrollment.status !== 'COMPLETED' ? (
+                                    {(enrollment.progressPercentage === 100 && enrollment.status !== 'COMPLETED') || (enrollment.status === 'COMPLETED' && !enrollment.certificateId) ? (
                                         <Button className="w-full py-6 text-lg font-bold rounded-xl shadow-lg bg-green-600 hover:bg-green-700 shadow-green-900/10" onClick={handleComplete} disabled={enrolling}>
                                             {enrolling ? 'Processando...' : 'Finalizar e Emitir Certificado'}
                                             <Award className="ml-2 h-5 w-5" />
                                         </Button>
                                     ) : (
-                                        <Button className="w-full py-6 text-lg font-bold rounded-xl shadow-lg shadow-primary/20" onClick={handleStart}>
-                                            {enrollment.progressPercentage > 0 ? 'Continuar Curso' : 'Iniciar Treinamento'}
-                                            <Play className="ml-2 h-4 w-4 fill-current" />
-                                        </Button>
+                                        <>
+                                            {enrollment.status !== 'COMPLETED' && (
+                                                <Button className="w-full py-6 text-lg font-bold rounded-xl shadow-lg shadow-primary/20" onClick={handleStart}>
+                                                    {enrollment.progressPercentage > 0 ? 'Continuar Curso' : 'Iniciar Treinamento'}
+                                                    <Play className="ml-2 h-4 w-4 fill-current" />
+                                                </Button>
+                                            )}
+                                        </>
                                     )}
 
-                                    {enrollment.status === 'COMPLETED' && (
+                                    {enrollment.status === 'COMPLETED' && enrollment.certificateId && (
                                         <Button
                                             variant="outline"
                                             className="w-full border-primary text-primary hover:bg-primary/5 font-bold py-6 rounded-xl"

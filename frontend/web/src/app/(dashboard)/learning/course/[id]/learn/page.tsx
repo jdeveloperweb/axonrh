@@ -22,15 +22,18 @@ import {
     Type,
     Layers,
     ExternalLink,
-    ChevronDown
+    ChevronDown,
+    Award
 } from 'lucide-react';
 import { coursesApi, enrollmentsApi, Course, Enrollment, Lesson, ContentType } from '@/lib/api/learning';
 import { useAuthStore } from '@/stores/auth-store';
+import { useConfirm } from '@/components/providers/ConfirmProvider';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 export default function LearnCourse() {
+    const { confirm } = useConfirm();
     const { id } = useParams();
     const { user } = useAuthStore();
     const router = useRouter();
@@ -137,6 +140,34 @@ export default function LearnCourse() {
         const currentIndex = allLessons.findIndex(l => l.id === currentLesson?.id);
         if (currentIndex > 0) {
             setCurrentLesson(allLessons[currentIndex - 1]);
+        }
+    };
+
+    const handleFinishCourse = async () => {
+        if (!enrollment || completing) return;
+        try {
+            if (!await confirm({
+                title: 'Finalizar Treinamento',
+                description: 'Parabéns por concluir o conteúdo! Deseja finalizar o curso e emitir seu certificado agora?',
+                confirmLabel: 'Finalizar e Emitir Certificado',
+                variant: 'default'
+            })) return;
+
+            setCompleting(true);
+            const res = (await enrollmentsApi.complete(enrollment.id, 100)) as any;
+            setEnrollment(res);
+            toast.success('Treinamento concluído com sucesso!');
+
+            if (res?.certificateId) {
+                router.push(`/learning/certificates/${res.certificateId}`);
+            } else {
+                router.push(`/learning/course/${course?.id}`);
+            }
+        } catch (error: any) {
+            console.error('Erro ao finalizar curso:', error);
+            toast.error('Erro ao finalizar treinamento');
+        } finally {
+            setCompleting(false);
         }
     };
 
@@ -302,24 +333,39 @@ export default function LearnCourse() {
                                     </div>
 
                                     <div className="flex gap-3">
-                                        <Button
-                                            variant={currentLesson && isLessonCompleted(currentLesson.id) ? "outline" : "primary"}
-                                            size="lg"
-                                            className={cn(
-                                                "font-bold text-xs uppercase rounded-xl min-w-[160px] transition-all duration-300",
-                                                currentLesson && isLessonCompleted(currentLesson.id)
-                                                    ? "border-green-500/50 text-green-500 hover:bg-green-500/10"
-                                                    : "shadow-lg shadow-primary/20 hover:scale-105"
-                                            )}
-                                            onClick={handleCompleteLesson}
-                                            disabled={!!(completing || (currentLesson && isLessonCompleted(currentLesson.id)))}
-                                        >
-                                            {currentLesson && isLessonCompleted(currentLesson.id) ? (
-                                                <span className="flex items-center gap-2">
-                                                    <CheckCircle2 className="h-4 w-4" /> Concluído
-                                                </span>
-                                            ) : completing ? 'Salvando...' : 'Marcar como Concluído'}
-                                        </Button>
+                                        {(() => {
+                                            const allLessons = course?.modules.flatMap(m => m.lessons) || [];
+                                            const currentIndex = allLessons.findIndex(l => l.id === currentLesson?.id);
+                                            const isLastLesson = currentIndex === allLessons.length - 1;
+                                            const isCompleted = !!(currentLesson && isLessonCompleted(currentLesson.id));
+
+                                            return (
+                                                <Button
+                                                    variant={isCompleted ? "outline" : "primary"}
+                                                    size="lg"
+                                                    className={cn(
+                                                        "font-bold text-xs uppercase rounded-xl min-w-[160px] transition-all duration-300",
+                                                        isCompleted
+                                                            ? (isLastLesson ? "bg-green-600 border-green-600 text-white hover:bg-green-700 hover:text-white" : "border-green-500/50 text-green-500 hover:bg-green-500/10")
+                                                            : "shadow-lg shadow-primary/20 hover:scale-105"
+                                                    )}
+                                                    onClick={isLastLesson && isCompleted ? handleFinishCourse : handleCompleteLesson}
+                                                    disabled={completing || (isCompleted && !isLastLesson)}
+                                                >
+                                                    {isCompleted ? (
+                                                        isLastLesson ? (
+                                                            <span className="flex items-center gap-2">
+                                                                <Award className="h-4 w-4" /> Finalizar e Emitir Certificado
+                                                            </span>
+                                                        ) : (
+                                                            <span className="flex items-center gap-2">
+                                                                <CheckCircle2 className="h-4 w-4" /> Concluído
+                                                            </span>
+                                                        )
+                                                    ) : completing ? 'Salvando...' : (isLastLesson ? 'Concluir e Finalizar' : 'Marcar como Concluído')}
+                                                </Button>
+                                            );
+                                        })()}
                                         <div className="h-10 w-px bg-border/20 mx-2" />
                                         <div className="flex gap-2">
                                             <Button
