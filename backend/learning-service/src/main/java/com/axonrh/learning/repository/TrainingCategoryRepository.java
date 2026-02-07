@@ -11,9 +11,9 @@ import java.util.UUID;
 
 @Repository
 public interface TrainingCategoryRepository extends JpaRepository<TrainingCategory, UUID> {
-    @Query("SELECT cat FROM TrainingCategory cat WHERE cat.tenantId = :tenantId OR cat.tenantId = '00000000-0000-0000-0000-000000000000'")
+    @Query("SELECT cat FROM TrainingCategory cat WHERE cat.tenantId = :tenantId OR cat.tenantId = cast('00000000-0000-0000-0000-000000000000' as uuid)")
     List<TrainingCategory> findByTenantId(@Param("tenantId") UUID tenantId);
 
-    @Query("SELECT cat FROM TrainingCategory cat WHERE (cat.tenantId = :tenantId OR cat.tenantId = '00000000-0000-0000-0000-000000000000') AND cat.isActive = true")
+    @Query("SELECT cat FROM TrainingCategory cat WHERE (cat.tenantId = :tenantId OR cat.tenantId = cast('00000000-0000-0000-0000-000000000000' as uuid)) AND cat.isActive = true")
     List<TrainingCategory> findByTenantIdAndIsActiveTrue(@Param("tenantId") UUID tenantId);
 }
