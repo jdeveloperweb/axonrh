@@ -294,58 +294,151 @@ export default function CourseCatalog() {
 }
 
 function CourseCard({ course, viewMode }: { course: Course, viewMode: 'grid' | 'list' }) {
-    const diffColor = (lvl?: string) => {
-        switch (lvl) {
-            case 'AVANCADO': return 'bg-purple-100 text-purple-700';
-            case 'INTERMEDIARIO': return 'bg-blue-100 text-blue-700';
-            default: return 'bg-slate-100 text-slate-600';
-        }
-    };
-
-    return (
-        <Link href={`/learning/course/${course.id}`} className={cn(
-            "group block bg-white border border-slate-100 overflow-hidden transition-all duration-500 relative",
-            viewMode === 'list' ? "rounded-xl flex flex-col md:flex-row p-4 gap-6" : "rounded-2xl"
-        )}>
-            <div className={cn(
-                "relative overflow-hidden shrink-0",
-                viewMode === 'list' ? "w-full md:w-64 h-44 rounded-lg" : "w-full h-44"
-            )}>
-                {/* Abstract Visual instead of generic images if URL is missing */}
-                <div className="absolute inset-0 bg-slate-900">
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-indigo-900 opacity-80 group-hover:scale-110 transition-transform duration-700" />
+    if (viewMode === 'list') {
+        return (
+            <Link href={`/learning/course/${course.id}`} className="group flex flex-col md:flex-row gap-6 p-6 bg-white rounded-3xl border border-slate-100 hover:shadow-xl transition-all duration-300">
+                <div className="h-48 w-full md:w-72 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 relative overflow-hidden shrink-0">
+                    <div className="absolute inset-0 opacity-20">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full blur-[40px] -mr-16 -mt-16"></div>
+                    </div>
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <Zap className="h-10 w-10 text-white opacity-20" />
+                        <Zap className="h-16 w-16 text-white opacity-20 rotate-12" />
+                    </div>
+                    <div className="absolute bottom-4 right-4 h-12 w-12 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
+                        <Zap className="h-6 w-6 text-white" />
                     </div>
                 </div>
-                {course.isMandatory && (
-                    <div className="absolute top-3 left-3 px-2 py-0.5 rounded bg-rose-600 text-white text-[8px] font-black uppercase tracking-widest shadow-lg">Obrigatório</div>
-                )}
-                <div className="absolute bottom-3 right-3 flex items-center gap-1 px-2 py-1 rounded bg-black/20 backdrop-blur-md text-white text-[9px] font-bold">
-                    <Clock className="h-2.5 w-2.5" /> {course.durationMinutes || 0} min
+                <div className="flex flex-col flex-1 py-2">
+                    <div className="flex items-center gap-3 mb-3 shrink-0">
+                        <span className="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-widest">
+                            {course.categoryName || 'GERAL'}
+                        </span>
+                        {course.isMandatory && (
+                            <span className="px-3 py-1 rounded-full bg-rose-100 text-rose-600 text-[10px] font-black uppercase tracking-widest">
+                                OBRIGATÓRIO
+                            </span>
+                        )}
+                    </div>
+
+                    <h3 className="text-2xl font-black text-slate-900 group-hover:text-blue-600 transition-colors uppercase leading-tight mb-3">
+                        {course.title}
+                    </h3>
+
+                    <p className="text-slate-500 font-medium leading-relaxed line-clamp-2 max-w-2xl mb-6">
+                        {course.description}
+                    </p>
+
+                    <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-6">
+                        <div className="flex gap-8">
+                            <div>
+                                <p className="text-[9px] font-bold text-slate-300 uppercase tracking-widest mb-1.5">Duração</p>
+                                <div className="flex items-center gap-2 text-slate-700 font-bold">
+                                    <Clock className="h-4 w-4 text-blue-500" />
+                                    {course.durationMinutes || 0} min
+                                </div>
+                            </div>
+                            <div>
+                                <p className="text-[9px] font-bold text-slate-300 uppercase tracking-widest mb-1.5">Nível</p>
+                                <div className={cn(
+                                    "px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-widest inline-block",
+                                    course.difficultyLevel === 'AVANCADO' ? 'bg-purple-100 text-purple-700' :
+                                        course.difficultyLevel === 'INTERMEDIARIO' ? 'bg-blue-100 text-blue-700' :
+                                            'bg-emerald-100 text-emerald-700'
+                                )}>
+                                    {course.difficultyLevel === 'AVANCADO' ? 'PRO' :
+                                        course.difficultyLevel === 'INTERMEDIARIO' ? 'MIDDLE' : 'BASIC'}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 text-blue-600 font-bold text-sm group-hover:translate-x-2 transition-transform">
+                            <span>Acessar</span>
+                            <ChevronRight className="h-4 w-4" />
+                        </div>
+                    </div>
+                </div>
+            </Link>
+        );
+    }
+
+    // Grid View - New Design
+    return (
+        <Link
+            href={`/learning/course/${course.id}`}
+            className="group relative flex flex-col bg-white rounded-[32px] shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 overflow-visible h-[420px]"
+        >
+            {/* Header Section */}
+            <div className="h-[45%] w-full bg-gradient-to-br from-blue-600 to-indigo-700 rounded-t-[32px] relative overflow-hidden group-hover:brightness-110 transition-all">
+                {/* Background decoration */}
+                <div className="absolute inset-0 opacity-20">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full blur-[60px] -mr-32 -mt-32"></div>
+                    <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-900 rounded-full blur-[60px] -ml-32 -mb-32"></div>
+                </div>
+
+                {/* Badges */}
+                <div className="absolute top-6 left-6 z-10">
+                    <div className="px-4 py-1.5 rounded-full bg-white/20 backdrop-blur-md border border-white/10 text-white text-[10px] font-black uppercase tracking-widest">
+                        {course.categoryName || 'GERAL'}
+                    </div>
+                </div>
+
+                <div className="absolute top-6 right-6 z-10">
+                    <div className={cn(
+                        "h-8 w-8 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110",
+                        course.isMandatory ? "bg-rose-500 shadow-rose-500/30" : "bg-white/20 backdrop-blur-md"
+                    )}>
+                        <Star className={cn("h-4 w-4", course.isMandatory ? "text-white fill-white" : "text-white")} />
+                    </div>
+                </div>
+
+                {/* Background Icon */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                    <Zap className="h-24 w-24 text-white opacity-10 rotate-12" />
                 </div>
             </div>
 
-            <div className="p-6 flex flex-col flex-1 space-y-4">
-                <div className="space-y-2 flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                        <span className={cn("px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest", diffColor(course.difficultyLevel))}>
-                            {course.difficultyLevel === 'AVANCADO' ? 'Avançado' : course.difficultyLevel === 'INTERMEDIARIO' ? 'Interm.' : 'Iniciante'}
-                        </span>
-                        <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">•</span>
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{course.categoryName || 'Geral'}</span>
-                    </div>
-                    <h3 className="text-lg font-black text-slate-900 group-hover:text-blue-600 transition-colors tracking-tight leading-tight uppercase line-clamp-2">{course.title}</h3>
-                    <p className="text-xs text-slate-500 font-medium line-clamp-2 leading-relaxed italic">{course.description}</p>
+            {/* Floating Glass Icon */}
+            <div className="absolute top-[45%] left-1/2 -translate-x-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform duration-500 z-20">
+                <div className="h-20 w-20 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 shadow-xl flex items-center justify-center rotate-6 group-hover:rotate-12 transition-all">
+                    <Zap className="h-8 w-8 text-white fill-white" />
                 </div>
+            </div>
 
-                <div className="pt-4 border-t border-slate-50 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <div className="h-6 w-6 rounded-full bg-slate-100 flex items-center justify-center text-[8px] font-bold text-slate-400">AA</div>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Axon Academy</span>
+            {/* Content Body */}
+            <div className="flex-1 pt-14 pb-8 px-8 flex flex-col items-center text-center bg-white rounded-b-[32px]">
+                <h3 className="text-xl font-black text-blue-600 uppercase leading-none tracking-tight mb-3 line-clamp-2">
+                    {course.title}
+                </h3>
+
+                <p className="text-sm font-medium text-slate-400 italic line-clamp-3 leading-relaxed mb-6">
+                    {course.description}
+                </p>
+
+                <div className="mt-auto w-full flex items-end justify-between px-2">
+                    <div className="flex gap-5">
+                        <div className="text-left">
+                            <p className="text-[9px] font-bold text-slate-300 uppercase tracking-widest mb-1.5">Duração</p>
+                            <div className="flex items-center gap-1.5 text-slate-700 font-bold text-xs uppercase">
+                                <Clock className="h-3.5 w-3.5 text-blue-500" />
+                                {course.durationMinutes || 0}M
+                            </div>
+                        </div>
+                        <div className="text-left">
+                            <p className="text-[9px] font-bold text-slate-300 uppercase tracking-widest mb-1.5">Nível</p>
+                            <span className={cn(
+                                "px-2.5 py-0.5 rounded text-[10px] font-black uppercase tracking-widest inline-block",
+                                course.difficultyLevel === 'AVANCADO' ? 'bg-purple-100 text-purple-600' :
+                                    course.difficultyLevel === 'INTERMEDIARIO' ? 'bg-blue-100 text-blue-600' :
+                                        'bg-emerald-100 text-emerald-600'
+                            )}>
+                                {course.difficultyLevel === 'AVANCADO' ? 'PRO' :
+                                    course.difficultyLevel === 'INTERMEDIARIO' ? 'INTER' : 'BASIC'}
+                            </span>
+                        </div>
                     </div>
-                    <div className="h-8 w-8 rounded-lg bg-slate-50 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all">
-                        <ChevronRight className="h-4 w-4" />
+
+                    <div className="h-10 w-10 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-200 group-hover:scale-110 group-hover:rotate-[-45deg] transition-all cursor-pointer">
+                        <ChevronRight className="h-5 w-5 ml-0.5" />
                     </div>
                 </div>
             </div>

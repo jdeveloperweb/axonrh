@@ -432,9 +432,8 @@ export default function DiscManagePage() {
                       filteredDialogEmployees.map(emp => (
                         <label
                           key={emp.id}
-                          className={`flex items-center gap-3 p-3 hover:bg-muted cursor-pointer border-b last:border-b-0 transition-colors ${
-                            selectedEmployees.includes(emp.id) ? 'bg-primary/5' : ''
-                          }`}
+                          className={`flex items-center gap-3 p-3 hover:bg-muted cursor-pointer border-b last:border-b-0 transition-colors ${selectedEmployees.includes(emp.id) ? 'bg-primary/5' : ''
+                            }`}
                         >
                           <input
                             type="checkbox"
@@ -575,6 +574,8 @@ export default function DiscManagePage() {
           </CardContent>
         </Card>
       )}
+
+
 
       {/* Tabs */}
       <div className="flex gap-4 border-b">
@@ -721,10 +722,10 @@ export default function DiscManagePage() {
                           </Badge>
                         )}
                       </TableCell>
-                      <TableCell>{evaluation.dScore}%</TableCell>
-                      <TableCell>{evaluation.iScore}%</TableCell>
-                      <TableCell>{evaluation.sScore}%</TableCell>
-                      <TableCell>{evaluation.cScore}%</TableCell>
+                      <TableCell>{evaluation.dScore != null ? `${evaluation.dScore}%` : '-'}</TableCell>
+                      <TableCell>{evaluation.iScore != null ? `${evaluation.iScore}%` : '-'}</TableCell>
+                      <TableCell>{evaluation.sScore != null ? `${evaluation.sScore}%` : '-'}</TableCell>
+                      <TableCell>{evaluation.cScore != null ? `${evaluation.cScore}%` : '-'}</TableCell>
                       <TableCell>
                         <Badge className={`${statusColors[evaluation.status].bg} ${statusColors[evaluation.status].text}`}>
                           {statusColors[evaluation.status].label}

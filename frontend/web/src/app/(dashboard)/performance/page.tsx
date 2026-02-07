@@ -195,18 +195,7 @@ export default function PerformancePage() {
                 </Card>
               </TooltipProvider>
 
-              {/* Analytics Global */}
-              <div>
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 bg-purple-100 rounded-lg text-purple-600">
-                    <BarChart3 className="h-6 w-6" />
-                  </div>
-                  <h3 className="text-xl font-bold text-slate-900">
-                    Estatísticas da Organização
-                  </h3>
-                </div>
-                <PerformanceAnalytics />
-              </div>
+
             </section>
           )}
         </div>

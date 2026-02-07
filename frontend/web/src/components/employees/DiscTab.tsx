@@ -132,9 +132,9 @@ export function DiscTab({ employeeId, employeeName }: DiscTabProps) {
       const dueDate = new Date();
       dueDate.setDate(dueDate.getDate() + 7); // 7 days from now
 
-      await discApi.assign({
-        employeeId,
-        employeeName,
+      await discApi.assignBulk({
+        employeeIds: [employeeId],
+        employeeNames: { [employeeId]: employeeName },
         assignedBy: user.id,
         assignedByName: user.name || user.email || 'Admin',
         dueDate: dueDate.toISOString().split('T')[0],
