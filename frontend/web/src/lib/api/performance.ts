@@ -551,6 +551,10 @@ export const discApi = {
   getStatistics: () =>
     api.get<DiscStatistics, DiscStatistics>('/performance/disc/statistics'),
 
+  // Deletion
+  deleteEvaluation: (id: string) =>
+    api.delete(`/performance/disc/${id}`),
+
   // Helpers
   hasCompleted: (employeeId: string) =>
     api.get<boolean, boolean>(`/performance/disc/employee/${employeeId}/has-completed`),

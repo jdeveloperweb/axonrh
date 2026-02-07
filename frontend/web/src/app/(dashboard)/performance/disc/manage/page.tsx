@@ -40,6 +40,7 @@ import {
   BarChart3,
   Eye,
   XCircle,
+  Trash2,
   RefreshCw,
   ArrowLeft,
 } from 'lucide-react';
@@ -295,6 +296,21 @@ export default function DiscManagePage() {
       toast({
         title: 'Erro',
         description: 'Falha ao cancelar atribuicao',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDeleteEvaluation = async (evaluationId: string) => {
+    if (!confirm('Tem certeza que deseja excluir esta avaliacao?')) return;
+    try {
+      await discApi.deleteEvaluation(evaluationId);
+      toast({ title: 'Sucesso', description: 'Avaliacao excluida' });
+      loadData();
+    } catch {
+      toast({
+        title: 'Erro',
+        description: 'Falha ao excluir avaliacao',
         variant: 'destructive',
       });
     }
@@ -672,13 +688,22 @@ export default function DiscManagePage() {
                           </Button>
                         )}
                         {assignment.evaluationId && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => window.open(`/performance/disc/result/${assignment.evaluationId}`, '_blank')}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
+                          <div className="flex justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => window.open(`/performance/disc/result/${assignment.evaluationId}`, '_blank')}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteEvaluation(assignment.evaluationId!)}
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </div>
                         )}
                       </TableCell>
                     </TableRow>
@@ -722,10 +747,10 @@ export default function DiscManagePage() {
                           </Badge>
                         )}
                       </TableCell>
-                      <TableCell>{evaluation.dScore != null ? `${evaluation.dScore}%` : '-'}</TableCell>
-                      <TableCell>{evaluation.iScore != null ? `${evaluation.iScore}%` : '-'}</TableCell>
-                      <TableCell>{evaluation.sScore != null ? `${evaluation.sScore}%` : '-'}</TableCell>
-                      <TableCell>{evaluation.cScore != null ? `${evaluation.cScore}%` : '-'}</TableCell>
+                      <TableCell>{((evaluation as any).dScore ?? (evaluation as any).d_score) != null ? `${(evaluation as any).dScore ?? (evaluation as any).d_score}%` : '-'}</TableCell>
+                      <TableCell>{((evaluation as any).iScore ?? (evaluation as any).i_score) != null ? `${(evaluation as any).iScore ?? (evaluation as any).i_score}%` : '-'}</TableCell>
+                      <TableCell>{((evaluation as any).sScore ?? (evaluation as any).s_score) != null ? `${(evaluation as any).sScore ?? (evaluation as any).s_score}%` : '-'}</TableCell>
+                      <TableCell>{((evaluation as any).cScore ?? (evaluation as any).c_score) != null ? `${(evaluation as any).cScore ?? (evaluation as any).c_score}%` : '-'}</TableCell>
                       <TableCell>
                         <Badge className={`${statusColors[evaluation.status].bg} ${statusColors[evaluation.status].text}`}>
                           {statusColors[evaluation.status].label}
@@ -735,15 +760,24 @@ export default function DiscManagePage() {
                         {evaluation.completedAt ? formatDate(evaluation.completedAt) : '-'}
                       </TableCell>
                       <TableCell className="text-right">
-                        {evaluation.status === 'COMPLETED' && (
+                        <div className="flex justify-end gap-1">
+                          {evaluation.status === 'COMPLETED' && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => window.open(`/performance/disc/result/${evaluation.id}`, '_blank')}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => window.open(`/performance/disc/result/${evaluation.id}`, '_blank')}
+                            onClick={() => handleDeleteEvaluation(evaluation.id)}
                           >
-                            <Eye className="h-4 w-4" />
+                            <Trash2 className="h-4 w-4 text-red-500" />
                           </Button>
-                        )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
