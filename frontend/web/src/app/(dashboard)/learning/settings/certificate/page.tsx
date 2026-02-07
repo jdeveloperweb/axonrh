@@ -19,6 +19,8 @@ export default function CertificateSettingsPage() {
         generalSignerName: '',
         generalSignatureUrl: '',
         companyLogoUrl: '',
+        companyName: '',
+        certificateTitle: '',
         showCompanyLogo: true
     });
     const [loading, setLoading] = useState(true);
@@ -231,6 +233,33 @@ export default function CertificateSettingsPage() {
                                 checked={config.showCompanyLogo}
                                 onCheckedChange={(val) => setConfig({ ...config, showCompanyLogo: val })}
                             />
+                        </div>
+
+                        <div className="grid md:grid-cols-2 gap-8">
+                            <div className="space-y-4">
+                                <Label htmlFor="companyName" className="text-xs font-black uppercase text-slate-400 tracking-widest">
+                                    Nome da Empresa (Exibido no Certificado)
+                                </Label>
+                                <Input
+                                    id="companyName"
+                                    placeholder="Ex: Axon Academy • Soluções em Capital Humano"
+                                    value={config.companyName || ''}
+                                    onChange={(e) => handleInputChange('companyName', e.target.value)}
+                                    className="h-14 rounded-xl border-slate-200 bg-white font-bold text-lg shadow-sm focus-visible:ring-primary/20 focus-visible:border-primary transition-all"
+                                />
+                            </div>
+                            <div className="space-y-4">
+                                <Label htmlFor="certificateTitle" className="text-xs font-black uppercase text-slate-400 tracking-widest">
+                                    Título do Certificado
+                                </Label>
+                                <Input
+                                    id="certificateTitle"
+                                    placeholder="Ex: Certificado de Conclusão"
+                                    value={config.certificateTitle || ''}
+                                    onChange={(e) => handleInputChange('certificateTitle', e.target.value)}
+                                    className="h-14 rounded-xl border-slate-200 bg-white font-bold text-lg shadow-sm focus-visible:ring-primary/20 focus-visible:border-primary transition-all"
+                                />
+                            </div>
                         </div>
 
                         <div className="space-y-4">

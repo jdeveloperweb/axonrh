@@ -45,6 +45,12 @@ public class CertificateConfig {
     @Column(name = "company_logo_url")
     private String companyLogoUrl;
 
+    @Column(name = "company_name")
+    private String companyName;
+
+    @Column(name = "certificate_title")
+    private String certificateTitle;
+
     @Column(name = "show_company_logo")
     @Builder.Default
     private Boolean showCompanyLogo = true;

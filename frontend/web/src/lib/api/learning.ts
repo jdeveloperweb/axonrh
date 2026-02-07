@@ -125,6 +125,8 @@ export interface Certificate {
   generalSignerName?: string;
   generalSignatureUrl?: string;
   companyLogoUrl?: string;
+  companyName?: string;
+  certificateTitle?: string;
 }
 
 export interface LearningPath {
@@ -385,6 +387,8 @@ export interface CertificateConfig {
   generalSignerName?: string;
   generalSignatureUrl?: string;
   companyLogoUrl?: string;
+  companyName?: string;
+  certificateTitle?: string;
   showCompanyLogo: boolean;
 }
 

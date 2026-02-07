@@ -43,6 +43,8 @@ public class CertificateService {
         certificate.setGeneralSignerName(getValue(specificConfig.getGeneralSignerName(), globalConfig.getGeneralSignerName()));
         certificate.setGeneralSignatureUrl(getValue(specificConfig.getGeneralSignatureUrl(), globalConfig.getGeneralSignatureUrl()));
         certificate.setCompanyLogoUrl(getValue(specificConfig.getCompanyLogoUrl(), globalConfig.getCompanyLogoUrl()));
+        certificate.setCompanyName(getValue(specificConfig.getCompanyName(), globalConfig.getCompanyName()));
+        certificate.setCertificateTitle(getValue(specificConfig.getCertificateTitle(), globalConfig.getCertificateTitle()));
 
         // Generate a simple unique code
         String uniqueCode = UUID.randomUUID().toString().substring(0, 8).toUpperCase();

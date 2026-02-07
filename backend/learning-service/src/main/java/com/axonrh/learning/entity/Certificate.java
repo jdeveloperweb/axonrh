@@ -74,6 +74,12 @@ public class Certificate {
     @Column(name = "company_logo_url")
     private String companyLogoUrl;
 
+    @Column(name = "company_name")
+    private String companyName;
+
+    @Column(name = "certificate_title")
+    private String certificateTitle;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -230,6 +236,22 @@ public class Certificate {
 
     public void setCompanyLogoUrl(String companyLogoUrl) {
         this.companyLogoUrl = companyLogoUrl;
+    }
+
+    public String getCompanyName() {
+        return companyName;
+    }
+
+    public void setCompanyName(String companyName) {
+        this.companyName = companyName;
+    }
+
+    public String getCertificateTitle() {
+        return certificateTitle;
+    }
+
+    public void setCertificateTitle(String certificateTitle) {
+        this.certificateTitle = certificateTitle;
     }
 
     public LocalDateTime getCreatedAt() {
