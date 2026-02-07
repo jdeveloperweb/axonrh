@@ -35,6 +35,17 @@ public class CertificateConfigService {
     }
 
     public CertificateConfig saveConfig(CertificateConfig config) {
+        if (config.getId() == null) {
+            // Se for global (courseId null), tenta buscar existente para atualizar
+            if (config.getCourseId() == null) {
+                repository.findFirstByTenantIdAndCourseIdIsNull(config.getTenantId())
+                        .ifPresent(existing -> config.setId(existing.getId()));
+            } else {
+                // Se for de curso, tenta buscar existente para atualizar
+                repository.findByTenantIdAndCourseId(config.getTenantId(), config.getCourseId())
+                        .ifPresent(existing -> config.setId(existing.getId()));
+            }
+        }
         return repository.save(config);
     }
     

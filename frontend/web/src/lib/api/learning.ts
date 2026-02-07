@@ -390,8 +390,8 @@ export interface CertificateConfig {
 
 export const certificateConfigsApi = {
   get: (courseId?: string) =>
-    api.get<CertificateConfig>(`/learning/certificate-configs${courseId ? `?courseId=${courseId}` : ''}`),
+    api.get<CertificateConfig, CertificateConfig>(`/learning/certificate-configs${courseId ? `?courseId=${courseId}` : ''}`),
 
   save: (data: CertificateConfig) =>
-    api.post<CertificateConfig>('/learning/certificate-configs', data),
+    api.post<CertificateConfig, CertificateConfig>('/learning/certificate-configs', data),
 };

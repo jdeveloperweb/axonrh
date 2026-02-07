@@ -111,91 +111,119 @@ export default function PerformancePage() {
 
       {/* 2. VISÃO DO GESTOR/RH */}
       {viewMode === 'manager' && canViewManagement && (
-        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-10 duration-700">
+
+          {/* Indicadores Globais (RH/ADMIN) */}
+          {hasAdminAccess && (
+            <section className="animate-in fade-in slide-in-from-top-4 duration-500">
+              <PerformanceAnalytics />
+            </section>
+          )}
+
           {/* VISÃO DO GESTOR (Equipe) */}
           {isManager && (
-            <section className="pt-4">
+            <section className="relative">
               <ManagerTeamView />
             </section>
           )}
 
-          {/* VISÃO ADMINISTRATIVA (RH/ADMIN) */}
+          {/* PAINEL DE CONTROLE DE FERRAMENTAS (RH/ADMIN) */}
           {hasAdminAccess && (
-            <section className={`space-y-10 ${isManager ? 'pt-12 border-t-2 border-slate-100' : 'pt-4'}`}>
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold tracking-tight text-slate-800 flex items-center gap-2">
-                  <Settings className="h-6 w-6 text-slate-400" />
-                  Painel Administrativo
-                </h2>
+            <section className={`space-y-8 ${isManager ? 'pt-16 border-t-2 border-slate-100/50' : 'pt-4'}`}>
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <h2 className="text-3xl font-black tracking-tighter text-slate-900 flex items-center gap-3">
+                    <Settings className="h-8 w-8 text-indigo-500" />
+                    Console de Administração
+                  </h2>
+                  <p className="text-slate-500 font-medium">Configurações globais e ferramentas do sistema de performance</p>
+                </div>
                 <Link href="/performance/cycles/manage">
-                  <Button variant="outline" size="sm" className="font-bold border-2 hover:bg-slate-50">
-                    Configurações de Ciclos
+                  <Button variant="outline" className="font-bold border-2 hover:bg-slate-50 rounded-xl px-6">
+                    Módulos e Ciclos
                   </Button>
                 </Link>
               </div>
 
-              <TooltipProvider>
-                <Card className="border-0 shadow-xl bg-white overflow-hidden">
-                  <CardHeader className="bg-slate-50/50 border-b border-slate-100 pb-6">
-                    <CardTitle className="text-xl font-bold text-slate-900">
-                      Ferramentas de Gestão Global
-                    </CardTitle>
-                    <CardDescription>
-                      Acesso rápido aos painéis de administração do RH
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="p-8">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                      <Link href="/performance/disc/manage">
-                        <div className="group cursor-pointer space-y-4 rounded-xl p-4 hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100">
-                          <div className="flex items-center justify-between">
-                            <div className="p-3 rounded-lg bg-red-100 text-red-600 group-hover:scale-110 transition-transform">
-                              <BrainCircuit className="h-6 w-6" />
-                            </div>
-                            <ArrowRight className="h-5 w-5 text-slate-300 group-hover:text-red-500 group-hover:translate-x-1 transition-all" />
-                          </div>
-                          <div>
-                            <h4 className="font-bold text-lg text-slate-900 mb-1">Painel DISC</h4>
-                            <p className="text-sm text-slate-500 font-medium">Analytics global de perfis comportamentais</p>
-                          </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <Link href="/performance/disc/manage">
+                  <Card className="group cursor-pointer border-0 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden bg-white ring-1 ring-slate-100 h-full">
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="p-3 rounded-2xl bg-rose-50 text-rose-600 group-hover:scale-110 group-hover:bg-rose-600 group-hover:text-white transition-all duration-500">
+                          <BrainCircuit className="h-7 w-7" />
                         </div>
-                      </Link>
-
-                      <Link href="/performance/pdi/manage">
-                        <div className="group cursor-pointer space-y-4 rounded-xl p-4 hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100">
-                          <div className="flex items-center justify-between">
-                            <div className="p-3 rounded-lg bg-emerald-100 text-emerald-600 group-hover:scale-110 transition-transform">
-                              <TrendingUp className="h-6 w-6" />
-                            </div>
-                            <ArrowRight className="h-5 w-5 text-slate-300 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
-                          </div>
-                          <div>
-                            <h4 className="font-bold text-lg text-slate-900 mb-1">Painel PDI</h4>
-                            <p className="text-sm text-slate-500 font-medium">Acompanhamento de planos de desenvolvimento</p>
-                          </div>
+                        <div className="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-rose-50 transition-colors">
+                          <ArrowRight className="h-4 w-4 text-slate-300 group-hover:text-rose-500 group-hover:translate-x-1 transition-all" />
                         </div>
-                      </Link>
+                      </div>
+                      <CardTitle className="text-xl font-black group-hover:text-rose-600 transition-colors">Painel DISC</CardTitle>
+                      <CardDescription className="text-sm font-medium leading-relaxed">
+                        Gerencie perfis comportamentais e inteligência emocional do time.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-4 border-t border-slate-50">
+                      <div className="flex items-center gap-2 text-rose-600 font-bold text-sm">
+                        <span>Acessar Analytics</span>
+                        <div className="h-1 w-1 rounded-full bg-rose-200" />
+                        <span className="text-slate-400">Dados Reais</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
 
-                      <Link href="/performance/cycles/manage">
-                        <div className="group cursor-pointer space-y-4 rounded-xl p-4 hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100">
-                          <div className="flex items-center justify-between">
-                            <div className="p-3 rounded-lg bg-blue-100 text-blue-600 group-hover:scale-110 transition-transform">
-                              <ClipboardCheck className="h-6 w-6" />
-                            </div>
-                            <ArrowRight className="h-5 w-5 text-slate-300 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
-                          </div>
-                          <div>
-                            <h4 className="font-bold text-lg text-slate-900 mb-1">Ciclos de Avaliação</h4>
-                            <p className="text-sm text-slate-500 font-medium">Gestão das janelas de avaliação 360 e 9box</p>
-                          </div>
+                <Link href="/performance/pdi/manage">
+                  <Card className="group cursor-pointer border-0 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden bg-white ring-1 ring-slate-100 h-full">
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="p-3 rounded-2xl bg-emerald-50 text-emerald-600 group-hover:scale-110 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-500">
+                          <TrendingUp className="h-7 w-7" />
                         </div>
-                      </Link>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TooltipProvider>
+                        <div className="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-emerald-50 transition-colors">
+                          <ArrowRight className="h-4 w-4 text-slate-300 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
+                        </div>
+                      </div>
+                      <CardTitle className="text-xl font-black group-hover:text-emerald-600 transition-colors">Painel PDI</CardTitle>
+                      <CardDescription className="text-sm font-medium leading-relaxed">
+                        Acompanhe trilhas de desenvolvimento e crescimento individual.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-4 border-t border-slate-50">
+                      <div className="flex items-center gap-2 text-emerald-600 font-bold text-sm">
+                        <span>Gestão de Planos</span>
+                        <div className="h-1 w-1 rounded-full bg-emerald-200" />
+                        <span className="text-slate-400">Monitoramento</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
 
-
+                <Link href="/performance/cycles/manage">
+                  <Card className="group cursor-pointer border-0 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden bg-white ring-1 ring-slate-100 h-full">
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="p-3 rounded-2xl bg-blue-50 text-blue-600 group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all duration-500">
+                          <ClipboardCheck className="h-7 w-7" />
+                        </div>
+                        <div className="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-blue-50 transition-colors">
+                          <ArrowRight className="h-4 w-4 text-slate-300 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
+                        </div>
+                      </div>
+                      <CardTitle className="text-xl font-black group-hover:text-blue-600 transition-colors">Avaliações</CardTitle>
+                      <CardDescription className="text-sm font-medium leading-relaxed">
+                        Ciclos de avaliação 360, competências e metodologia 9Box.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-4 border-t border-slate-50">
+                      <div className="flex items-center gap-2 text-blue-600 font-bold text-sm">
+                        <span>Ciclos Ativos</span>
+                        <div className="h-1 w-1 rounded-full bg-blue-200" />
+                        <span className="text-slate-400">Configuração</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              </div>
             </section>
           )}
         </div>

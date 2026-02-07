@@ -141,7 +141,7 @@ export function PerformanceAnalytics() {
                                 <div>
                                     <h4 className="font-bold flex items-center gap-2">
                                         <Award className="h-4 w-4 text-purple-500" />
-                                        Avaliações Pendo
+                                        Avaliações Pendentes
                                     </h4>
                                     <p className="text-xs text-muted-foreground">Ciclo Atual</p>
                                 </div>

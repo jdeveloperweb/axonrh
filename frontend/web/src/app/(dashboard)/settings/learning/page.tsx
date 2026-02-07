@@ -168,8 +168,8 @@ export default function LearningManagementPage() {
     const loadCourseCertificateConfig = async (courseId: string) => {
         try {
             const res = await certificateConfigsApi.get(courseId);
-            if (res && (res as any).data) {
-                setCourseCertificateConfig((res as any).data);
+            if (res) {
+                setCourseCertificateConfig(res as any);
             } else {
                 setCourseCertificateConfig({
                     courseId,
@@ -180,6 +180,13 @@ export default function LearningManagementPage() {
             }
         } catch (error) {
             console.error('Error loading course certificate config:', error);
+            // Initialize with default even on error so user can still type and save
+            setCourseCertificateConfig({
+                courseId,
+                instructorName: '',
+                instructorSignatureUrl: '',
+                showCompanyLogo: true
+            } as any);
         }
     };
 
@@ -728,7 +735,7 @@ export default function LearningManagementPage() {
                                                     className="h-14 rounded-xl border-slate-200 bg-white font-bold text-lg shadow-sm"
                                                     placeholder="Ex: Dr. Rodrigo Porto"
                                                     value={courseCertificateConfig?.instructorName || ''}
-                                                    onChange={e => setCourseCertificateConfig(prev => prev ? { ...prev, instructorName: e.target.value } : null)}
+                                                    onChange={e => setCourseCertificateConfig(prev => ({ ...(prev || { courseId: selectedCourse?.id, showCompanyLogo: true }), instructorName: e.target.value }))}
                                                 />
                                             </div>
                                             <div className="space-y-4">
@@ -738,7 +745,7 @@ export default function LearningManagementPage() {
                                                         className="h-14 rounded-xl border-slate-200 bg-white font-bold text-sm shadow-sm"
                                                         placeholder="https://sua-empresa.com/assinatura.png"
                                                         value={courseCertificateConfig?.instructorSignatureUrl || ''}
-                                                        onChange={e => setCourseCertificateConfig(prev => prev ? { ...prev, instructorSignatureUrl: e.target.value } : null)}
+                                                        onChange={e => setCourseCertificateConfig(prev => ({ ...(prev || { courseId: selectedCourse?.id, showCompanyLogo: true }), instructorSignatureUrl: e.target.value }))}
                                                     />
                                                 </div>
                                             </div>

@@ -32,8 +32,8 @@ export default function CertificateSettingsPage() {
         try {
             setLoading(true);
             const res = await certificateConfigsApi.get();
-            if (res && (res as any).data) {
-                setConfig((res as any).data);
+            if (res) {
+                setConfig(res);
             }
         } catch (error) {
             console.error('Erro ao carregar configurações:', error);
@@ -46,7 +46,10 @@ export default function CertificateSettingsPage() {
     const handleSave = async () => {
         try {
             setSaving(true);
-            await certificateConfigsApi.save(config);
+            const savedConfig = await certificateConfigsApi.save(config);
+            if (savedConfig) {
+                setConfig(savedConfig);
+            }
             toast.success('Configurações salvas com sucesso!');
         } catch (error) {
             console.error('Erro ao salvar:', error);
