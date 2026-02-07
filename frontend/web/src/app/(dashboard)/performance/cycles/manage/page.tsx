@@ -533,12 +533,12 @@ export default function CyclesManagePage() {
                     </div>
                 ) : cycles.length === 0 ? (
                     /* Empty State - Modernized */
-                    <div className="bg-white rounded-2xl border border-slate-200 p-16 text-center shadow-sm max-w-2xl mx-auto mt-12">
-                        <div className="bg-blue-50 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 transform rotate-3">
+                    <div className="bg-white rounded-2xl border border-slate-200 p-16 flex flex-col items-center text-center shadow-sm max-w-2xl mx-auto mt-12">
+                        <div className="bg-blue-50 w-20 h-20 rounded-2xl flex items-center justify-center mb-6 transform rotate-3">
                             <Calendar className="h-10 w-10 text-blue-600" />
                         </div>
                         <h3 className="text-xl font-bold text-slate-900 mb-2">Comece sua Jornada de Performance</h3>
-                        <p className="text-slate-500 mb-8 max-w-sm mx-auto leading-relaxed">
+                        <p className="text-slate-500 mb-8 max-w-sm leading-relaxed">
                             Crie seu primeiro ciclo de avaliação para começar a desenvolver talentos e acompanhar resultados.
                         </p>
                         <div className="flex justify-center">

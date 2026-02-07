@@ -294,6 +294,22 @@ export default function CourseCatalog() {
 }
 
 function CourseCard({ course, viewMode }: { course: Course, viewMode: 'grid' | 'list' }) {
+    const diffColor = (lvl?: string) => {
+        switch (lvl) {
+            case 'AVANCADO': return 'text-purple-600';
+            case 'INTERMEDIARIO': return 'text-blue-600';
+            default: return 'text-slate-600';
+        }
+    };
+
+    const diffLabel = (lvl?: string) => {
+        switch (lvl) {
+            case 'AVANCADO': return 'AVANÇADO';
+            case 'INTERMEDIARIO': return 'INTERMEDIÁRIO';
+            default: return 'INICIANTE';
+        }
+    }
+
     if (viewMode === 'list') {
         return (
             <Link href={`/learning/course/${course.id}`} className="group flex flex-col md:flex-row gap-6 p-6 bg-white rounded-3xl border border-slate-100 hover:shadow-xl transition-all duration-300">
@@ -363,82 +379,71 @@ function CourseCard({ course, viewMode }: { course: Course, viewMode: 'grid' | '
 
     // Grid View - New Design
     return (
-        <Link
-            href={`/learning/course/${course.id}`}
-            className="group relative flex flex-col bg-white rounded-[32px] shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 overflow-visible h-[420px]"
-        >
-            {/* Header Section */}
-            <div className="h-[45%] w-full bg-gradient-to-br from-blue-600 to-indigo-700 rounded-t-[32px] relative overflow-hidden group-hover:brightness-110 transition-all">
-                {/* Background decoration */}
-                <div className="absolute inset-0 opacity-20">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full blur-[60px] -mr-32 -mt-32"></div>
-                    <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-900 rounded-full blur-[60px] -ml-32 -mb-32"></div>
+        <Link href={`/learning/course/${course.id}`} className="group block bg-white border border-slate-200 overflow-hidden hover:shadow-lg transition-all duration-300 rounded-xl">
+            {/* Header / Thumbnail Area */}
+            <div className="relative bg-[#1e3a8a] flex items-center justify-center overflow-hidden shrink-0 w-full h-48">
+                {/* Background Pattern/Gradient */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-blue-900 to-blue-700 opacity-100" />
+
+                {/* Central Icon */}
+                <div className="relative z-10">
+                    <Zap className="h-12 w-12 text-blue-400 opacity-50" />
                 </div>
 
-                {/* Badges */}
-                <div className="absolute top-6 left-6 z-10">
-                    <div className="px-4 py-1.5 rounded-full bg-white/20 backdrop-blur-md border border-white/10 text-white text-[10px] font-black uppercase tracking-widest">
-                        {course.categoryName || 'GERAL'}
+                {/* Mandatory Badge */}
+                {course.isMandatory && (
+                    <div className="absolute top-4 left-4">
+                        <span className="px-2 py-1 rounded bg-[#ef4444] text-white text-[10px] font-bold uppercase tracking-wider">
+                            Obrigatorio
+                        </span>
                     </div>
-                </div>
+                )}
 
-                <div className="absolute top-6 right-6 z-10">
-                    <div className={cn(
-                        "h-8 w-8 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110",
-                        course.isMandatory ? "bg-rose-500 shadow-rose-500/30" : "bg-white/20 backdrop-blur-md"
-                    )}>
-                        <Star className={cn("h-4 w-4", course.isMandatory ? "text-white fill-white" : "text-white")} />
-                    </div>
-                </div>
-
-                {/* Background Icon */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                    <Zap className="h-24 w-24 text-white opacity-10 rotate-12" />
-                </div>
-            </div>
-
-            {/* Floating Glass Icon */}
-            <div className="absolute top-[45%] left-1/2 -translate-x-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform duration-500 z-20">
-                <div className="h-20 w-20 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 shadow-xl flex items-center justify-center rotate-6 group-hover:rotate-12 transition-all">
-                    <Zap className="h-8 w-8 text-white fill-white" />
+                {/* Duration Badge */}
+                <div className="absolute bottom-4 right-4 bg-slate-900/90 px-2 py-1 rounded flex items-center gap-1.5">
+                    <Clock className="h-3 w-3 text-white" />
+                    <span className="text-[10px] font-bold text-white">{course.durationMinutes || 0} min</span>
                 </div>
             </div>
 
             {/* Content Body */}
-            <div className="flex-1 pt-14 pb-8 px-8 flex flex-col items-center text-center bg-white rounded-b-[32px]">
-                <h3 className="text-xl font-black text-blue-600 uppercase leading-none tracking-tight mb-3 line-clamp-2">
-                    {course.title}
-                </h3>
-
-                <p className="text-sm font-medium text-slate-400 italic line-clamp-3 leading-relaxed mb-6">
-                    {course.description}
-                </p>
-
-                <div className="mt-auto w-full flex items-end justify-between px-2">
-                    <div className="flex gap-5">
-                        <div className="text-left">
-                            <p className="text-[9px] font-bold text-slate-300 uppercase tracking-widest mb-1.5">Duração</p>
-                            <div className="flex items-center gap-1.5 text-slate-700 font-bold text-xs uppercase">
-                                <Clock className="h-3.5 w-3.5 text-blue-500" />
-                                {course.durationMinutes || 0}M
-                            </div>
-                        </div>
-                        <div className="text-left">
-                            <p className="text-[9px] font-bold text-slate-300 uppercase tracking-widest mb-1.5">Nível</p>
-                            <span className={cn(
-                                "px-2.5 py-0.5 rounded text-[10px] font-black uppercase tracking-widest inline-block",
-                                course.difficultyLevel === 'AVANCADO' ? 'bg-purple-100 text-purple-600' :
-                                    course.difficultyLevel === 'INTERMEDIARIO' ? 'bg-blue-100 text-blue-600' :
-                                        'bg-emerald-100 text-emerald-600'
-                            )}>
-                                {course.difficultyLevel === 'AVANCADO' ? 'PRO' :
-                                    course.difficultyLevel === 'INTERMEDIARIO' ? 'INTER' : 'BASIC'}
-                            </span>
-                        </div>
+            <div className="p-5 space-y-4 flex flex-col flex-1">
+                <div className="space-y-2 flex-1">
+                    {/* Meta Row */}
+                    <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider">
+                        <span className={cn(diffColor(course.difficultyLevel))}>
+                            {diffLabel(course.difficultyLevel)}
+                        </span>
+                        <span className="text-slate-300">•</span>
+                        <span className="text-slate-400">
+                            {course.categoryName || 'GERAL'}
+                        </span>
                     </div>
 
-                    <div className="h-10 w-10 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-200 group-hover:scale-110 group-hover:rotate-[-45deg] transition-all cursor-pointer">
-                        <ChevronRight className="h-5 w-5 ml-0.5" />
+                    {/* Title */}
+                    <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-700 transition-colors leading-tight line-clamp-2">
+                        {course.title}
+                    </h3>
+
+                    {/* Description */}
+                    <p className="text-xs text-slate-500 font-medium leading-relaxed line-clamp-2">
+                        {course.description}
+                    </p>
+                </div>
+
+                {/* Footer */}
+                <div className="pt-4 mt-auto flex items-center justify-between border-t border-slate-50">
+                    <div className="flex items-center gap-2 opacity-70">
+                        <div className="h-5 w-5 rounded bg-slate-100 flex items-center justify-center text-[8px] font-bold text-slate-500">
+                            AA
+                        </div>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            Axon Academy
+                        </span>
+                    </div>
+
+                    <div className="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                        <ChevronRight className="h-4 w-4" />
                     </div>
                 </div>
             </div>
