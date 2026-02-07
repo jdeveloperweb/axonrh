@@ -22,6 +22,7 @@ import { vacationApi, VacationPeriod } from '@/lib/api/vacation';
 import { enrollmentsApi, Enrollment } from '@/lib/api/learning';
 import { Progress } from '@/components/ui/progress';
 import { useRouter } from 'next/navigation';
+import { pdisApi, PDI } from '@/lib/api/performance';
 
 export function CollaboratorDashboard() {
     const { user } = useAuthStore();
@@ -29,20 +30,23 @@ export function CollaboratorDashboard() {
     const [todayRecords, setTodayRecords] = useState<TimeRecord[]>([]);
     const [vacationPeriods, setVacationPeriods] = useState<VacationPeriod[]>([]);
     const [activeEnrollments, setActiveEnrollments] = useState<Enrollment[]>([]);
+    const [activePDIs, setActivePDIs] = useState<PDI[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         async function loadData() {
             try {
-                const [records, periods, enrollments] = await Promise.all([
+                const [records, periods, enrollments, pdis] = await Promise.all([
                     timesheetApi.getTodayRecords().catch(() => [] as TimeRecord[]),
                     vacationApi.getMyPeriods().catch(() => [] as VacationPeriod[]),
-                    user?.id ? enrollmentsApi.getActiveByEmployee(user.id).catch(() => [] as Enrollment[]) : Promise.resolve([] as Enrollment[])
+                    user?.id ? enrollmentsApi.getActiveByEmployee(user.id).catch(() => [] as Enrollment[]) : Promise.resolve([] as Enrollment[]),
+                    user?.id ? pdisApi.getActive(user.id).catch(() => [] as PDI[]) : Promise.resolve([] as PDI[])
                 ]);
 
                 setTodayRecords(Array.isArray(records) ? records : []);
                 setVacationPeriods(Array.isArray(periods) ? periods : []);
                 setActiveEnrollments(Array.isArray(enrollments) ? enrollments : []);
+                setActivePDIs(Array.isArray(pdis) ? pdis : []);
             } catch (error) {
                 console.error('Error loading collaborator dashboard data:', error);
             } finally {
@@ -256,6 +260,24 @@ export function CollaboratorDashboard() {
                             Notificações do RH
                         </h2>
                         <div className="space-y-4">
+                            {activePDIs.map((pdi) => (
+                                <div key={pdi.id} className="flex items-start gap-4 p-5 bg-white rounded-2xl shadow-sm border-l-4 border-l-indigo-500 border-indigo-100 hover:border-indigo-200 transition-all cursor-pointer" onClick={() => router.push(`/performance/pdi/${pdi.id}`)}>
+                                    <div className="p-3 bg-indigo-50 rounded-xl text-indigo-600">
+                                        <TrendingUp className="w-6 h-6" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="flex items-center justify-between mb-1">
+                                            <h5 className="font-bold text-indigo-900 uppercase text-xs tracking-wider">Novo PDI Disponível</h5>
+                                            <span className="text-[10px] text-indigo-400 font-medium bg-indigo-50 px-2 py-0.5 rounded-full">Ativo</span>
+                                        </div>
+                                        <h4 className="font-bold text-gray-900 mb-1">{pdi.title}</h4>
+                                        <p className="text-sm text-gray-500 leading-relaxed">
+                                            Um novo plano de desenvolvimento foi criado para você. Clique para ver seus objetivos e ações.
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+
                             <div className="flex items-start gap-4 p-5 bg-white rounded-2xl shadow-sm border border-gray-100 hover:border-gray-200 transition-all">
                                 <div className="p-3 bg-blue-50 rounded-xl text-blue-600">
                                     <FileText className="w-6 h-6" />

@@ -28,7 +28,9 @@ public class PDIService {
 
     public PDI createPDI(UUID tenantId, PDI pdi) {
         pdi.setTenantId(tenantId);
-        pdi.setStatus(PDIStatus.DRAFT);
+        if (pdi.getStatus() == null) {
+            pdi.setStatus(PDIStatus.DRAFT);
+        }
         return pdiRepository.save(pdi);
     }
 
@@ -191,6 +193,7 @@ public class PDIService {
         pdi.setFocusAreas(focusAreas);
         pdi.setStartDate(LocalDate.now());
         pdi.setEndDate(LocalDate.now().plusMonths(6));
+        pdi.setStatus(PDIStatus.ACTIVE);
 
         return pdiRepository.save(pdi);
     }

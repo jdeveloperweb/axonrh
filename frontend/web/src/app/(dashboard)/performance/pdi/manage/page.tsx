@@ -193,7 +193,7 @@ export default function ManagePDIPage() {
                     focusAreas,
                     startDate: new Date().toISOString().split('T')[0], // Define start date as today
                     endDate,
-                    status: 'DRAFT' as const,
+                    status: 'ACTIVE' as const,
                 };
 
                 return pdisApi.create(pdiPayload);
