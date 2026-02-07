@@ -292,6 +292,12 @@ export const cyclesApi = {
   get: (id: string) =>
     api.get<EvaluationCycle, EvaluationCycle>(`/performance/cycles/${id}`),
 
+  update: (id: string, data: Partial<EvaluationCycle>) =>
+    api.put<EvaluationCycle, EvaluationCycle>(`/performance/cycles/${id}`, data),
+
+  delete: (id: string) =>
+    api.delete(`/performance/cycles/${id}`),
+
   getActive: () =>
     api.get<EvaluationCycle[], EvaluationCycle[]>('/performance/cycles/active'),
 

@@ -66,4 +66,7 @@ public interface EvaluationRepository extends JpaRepository<Evaluation, UUID> {
     // Verificar se ja existe avaliacao
     boolean existsByTenantIdAndCycleIdAndEmployeeIdAndEvaluatorIdAndEvaluatorType(
             UUID tenantId, UUID cycleId, UUID employeeId, UUID evaluatorId, EvaluatorType evaluatorType);
+
+    // Contar avaliacoes por ciclo
+    long countByTenantIdAndCycleId(UUID tenantId, UUID cycleId);
 }

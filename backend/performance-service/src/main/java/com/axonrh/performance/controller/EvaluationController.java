@@ -49,6 +49,22 @@ public class EvaluationController {
         return ResponseEntity.ok(evaluationService.getCycle(tenantId, cycleId));
     }
 
+    @PutMapping("/cycles/{cycleId}")
+    public ResponseEntity<EvaluationCycle> updateCycle(
+            @RequestHeader("X-Tenant-ID") UUID tenantId,
+            @PathVariable UUID cycleId,
+            @RequestBody EvaluationCycle cycle) {
+        return ResponseEntity.ok(evaluationService.updateCycle(tenantId, cycleId, cycle));
+    }
+
+    @DeleteMapping("/cycles/{cycleId}")
+    public ResponseEntity<Void> deleteCycle(
+            @RequestHeader("X-Tenant-ID") UUID tenantId,
+            @PathVariable UUID cycleId) {
+        evaluationService.deleteCycle(tenantId, cycleId);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/cycles/active")
     public ResponseEntity<List<EvaluationCycle>> getActiveCycles(
             @RequestHeader("X-Tenant-ID") UUID tenantId) {

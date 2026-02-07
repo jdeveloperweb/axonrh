@@ -75,6 +75,65 @@ public class EvaluationService {
         return cycleRepository.save(cycle);
     }
 
+    public EvaluationCycle updateCycle(UUID tenantId, UUID cycleId, EvaluationCycle updatedCycle) {
+        EvaluationCycle existingCycle = getCycle(tenantId, cycleId);
+        
+        // Atualizar apenas os campos permitidos
+        if (updatedCycle.getName() != null) {
+            existingCycle.setName(updatedCycle.getName());
+        }
+        if (updatedCycle.getDescription() != null) {
+            existingCycle.setDescription(updatedCycle.getDescription());
+        }
+        if (updatedCycle.getCycleType() != null) {
+            existingCycle.setCycleType(updatedCycle.getCycleType());
+        }
+        if (updatedCycle.getStartDate() != null) {
+            existingCycle.setStartDate(updatedCycle.getStartDate());
+        }
+        if (updatedCycle.getEndDate() != null) {
+            existingCycle.setEndDate(updatedCycle.getEndDate());
+        }
+        if (updatedCycle.getEvaluationType() != null) {
+            existingCycle.setEvaluationType(updatedCycle.getEvaluationType());
+        }
+        
+        existingCycle.setIncludeSelfEvaluation(updatedCycle.isIncludeSelfEvaluation());
+        existingCycle.setIncludeManagerEvaluation(updatedCycle.isIncludeManagerEvaluation());
+        existingCycle.setIncludePeerEvaluation(updatedCycle.isIncludePeerEvaluation());
+        existingCycle.setIncludeSubordinateEvaluation(updatedCycle.isIncludeSubordinateEvaluation());
+        
+        if (updatedCycle.getSelfEvaluationStart() != null) {
+            existingCycle.setSelfEvaluationStart(updatedCycle.getSelfEvaluationStart());
+        }
+        if (updatedCycle.getSelfEvaluationEnd() != null) {
+            existingCycle.setSelfEvaluationEnd(updatedCycle.getSelfEvaluationEnd());
+        }
+        if (updatedCycle.getManagerEvaluationStart() != null) {
+            existingCycle.setManagerEvaluationStart(updatedCycle.getManagerEvaluationStart());
+        }
+        if (updatedCycle.getManagerEvaluationEnd() != null) {
+            existingCycle.setManagerEvaluationEnd(updatedCycle.getManagerEvaluationEnd());
+        }
+        
+        return cycleRepository.save(existingCycle);
+    }
+
+    public void deleteCycle(UUID tenantId, UUID cycleId) {
+        EvaluationCycle cycle = getCycle(tenantId, cycleId);
+        
+        // Verificar se há avaliações vinculadas
+        long evaluationCount = evaluationRepository.countByTenantIdAndCycleId(tenantId, cycleId);
+        if (evaluationCount > 0) {
+            throw new IllegalStateException(
+                "Não é possível excluir o ciclo pois existem " + evaluationCount + 
+                " avaliações vinculadas. Exclua as avaliações primeiro."
+            );
+        }
+        
+        cycleRepository.delete(cycle);
+    }
+
     // ==================== Evaluations ====================
 
     public Evaluation createEvaluation(UUID tenantId, Evaluation evaluation) {

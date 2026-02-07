@@ -12,7 +12,9 @@ import {
     ArrowLeft,
     TrendingUp,
     AlertCircle,
-    Target
+    Target,
+    Eye,
+    EyeOff
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -23,6 +25,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { cyclesApi, EvaluationStatistics, EvaluationCycle } from '@/lib/api/performance';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/utils';
+import { useAuthStore } from '@/stores/auth-store';
 import {
     Chart as ChartJS,
     ArcElement,
@@ -49,10 +52,17 @@ export default function CycleDashboardPage() {
     const params = useParams();
     const id = params?.id as string;
     const { toast } = useToast();
+    const { user } = useAuthStore();
 
     const [loading, setLoading] = useState(true);
     const [cycle, setCycle] = useState<EvaluationCycle | null>(null);
     const [stats, setStats] = useState<EvaluationStatistics | null>(null);
+    const [viewAsManager, setViewAsManager] = useState(true);
+
+    // Verifica se o usuário tem perfil de gestão
+    const isManager = user?.roles?.some(role =>
+        ['MANAGER', 'GESTOR', 'ADMIN', 'RH'].includes(role.toUpperCase())
+    ) || false;
 
     const loadData = useCallback(async () => {
         if (!id) return;
@@ -170,10 +180,10 @@ export default function CycleDashboardPage() {
                                 <Badge
                                     variant="outline"
                                     className={`font-bold border-2 px-4 py-1.5 text-sm ${cycle.status === 'ACTIVE'
-                                            ? 'bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-700 border-emerald-300 shadow-sm shadow-emerald-200/50'
-                                            : cycle.status === 'COMPLETED'
-                                                ? 'bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 border-blue-300 shadow-sm shadow-blue-200/50'
-                                                : 'bg-gradient-to-r from-slate-50 to-slate-100 text-slate-700 border-slate-300 shadow-sm shadow-slate-200/50'
+                                        ? 'bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-700 border-emerald-300 shadow-sm shadow-emerald-200/50'
+                                        : cycle.status === 'COMPLETED'
+                                            ? 'bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 border-blue-300 shadow-sm shadow-blue-200/50'
+                                            : 'bg-gradient-to-r from-slate-50 to-slate-100 text-slate-700 border-slate-300 shadow-sm shadow-slate-200/50'
                                         }`}
                                 >
                                     {cycle.status === 'ACTIVE' ? '● EM ANDAMENTO' :
@@ -186,23 +196,47 @@ export default function CycleDashboardPage() {
                             </p>
                         </div>
 
-                        <div className="flex items-center gap-3 bg-white p-3 rounded-2xl border-2 border-slate-200 shadow-lg shadow-slate-200/50">
-                            <div className="flex items-center gap-3 px-4 py-2 border-r-2 border-slate-200">
-                                <div className="p-2 bg-blue-50 rounded-lg">
-                                    <Calendar className="h-5 w-5 text-blue-600" />
+                        <div className="flex flex-col gap-3">
+                            {/* Botão de alternância de visualização */}
+                            {isManager && (
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setViewAsManager(!viewAsManager)}
+                                    className="flex items-center gap-2 border-2 border-slate-300 bg-white hover:bg-slate-50 hover:border-slate-400 transition-all duration-200 shadow-md hover:shadow-lg px-4 py-2 h-auto"
+                                >
+                                    {viewAsManager ? (
+                                        <>
+                                            <Eye className="h-4 w-4 text-blue-600" />
+                                            <span className="font-semibold text-slate-700">Visualização de Gestor</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <EyeOff className="h-4 w-4 text-slate-600" />
+                                            <span className="font-semibold text-slate-700">Visualização de Colaborador</span>
+                                        </>
+                                    )}
+                                </Button>
+                            )}
+
+                            {/* Datas do ciclo */}
+                            <div className="flex items-center gap-3 bg-white p-3 rounded-2xl border-2 border-slate-200 shadow-lg shadow-slate-200/50">
+                                <div className="flex items-center gap-3 px-4 py-2 border-r-2 border-slate-200">
+                                    <div className="p-2 bg-blue-50 rounded-lg">
+                                        <Calendar className="h-5 w-5 text-blue-600" />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Início</span>
+                                        <span className="text-base font-bold text-slate-800">{formatDate(cycle.startDate)}</span>
+                                    </div>
                                 </div>
-                                <div className="flex flex-col">
-                                    <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Início</span>
-                                    <span className="text-base font-bold text-slate-800">{formatDate(cycle.startDate)}</span>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-3 px-4 py-2">
-                                <div className="p-2 bg-purple-50 rounded-lg">
-                                    <Calendar className="h-5 w-5 text-purple-600" />
-                                </div>
-                                <div className="flex flex-col">
-                                    <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Fim</span>
-                                    <span className="text-base font-bold text-slate-800">{formatDate(cycle.endDate)}</span>
+                                <div className="flex items-center gap-3 px-4 py-2">
+                                    <div className="p-2 bg-purple-50 rounded-lg">
+                                        <Calendar className="h-5 w-5 text-purple-600" />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Fim</span>
+                                        <span className="text-base font-bold text-slate-800">{formatDate(cycle.endDate)}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>

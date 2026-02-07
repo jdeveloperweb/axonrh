@@ -36,6 +36,8 @@ import {
     StopCircle,
     BarChart3,
     Loader2,
+    Pencil,
+    Trash2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { cyclesApi, EvaluationCycle, CycleStatus, CycleType, EvaluationType } from '@/lib/api/performance';
@@ -47,7 +49,11 @@ export default function CyclesManagePage() {
     const [loading, setLoading] = useState(true);
     const [cycles, setCycles] = useState<EvaluationCycle[]>([]);
     const [createDialogOpen, setCreateDialogOpen] = useState(false);
+    const [editDialogOpen, setEditDialogOpen] = useState(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [editingCycle, setEditingCycle] = useState<EvaluationCycle | null>(null);
+    const [deletingCycleId, setDeletingCycleId] = useState<string | null>(null);
 
     // Form State
     const [name, setName] = useState('');
@@ -169,6 +175,111 @@ export default function CyclesManagePage() {
                 description: 'Falha ao concluir ciclo',
                 variant: 'destructive',
             });
+        }
+    };
+
+    const handleOpenEditDialog = (cycle: EvaluationCycle) => {
+        setEditingCycle(cycle);
+        setName(cycle.name);
+        setDescription(cycle.description || '');
+        setCycleType(cycle.cycleType);
+        setStartDate(cycle.startDate);
+        setEndDate(cycle.endDate);
+        setEvaluationStartDate(cycle.selfEvaluationStart || '');
+        setEvaluationEndDate(cycle.selfEvaluationEnd || '');
+        setAllowSelfEvaluation(cycle.includeSelfEvaluation);
+        setAllowPeerEvaluation(cycle.includePeerEvaluation);
+        setAllow360Evaluation(cycle.includeSubordinateEvaluation);
+        setEditDialogOpen(true);
+    };
+
+    const handleUpdateCycle = async () => {
+        if (!editingCycle || !name || !startDate || !endDate) {
+            toast({
+                title: 'Erro',
+                description: 'Preencha os campos obrigatórios (Nome, Início, Fim)',
+                variant: 'destructive',
+            });
+            return;
+        }
+
+        try {
+            setSubmitting(true);
+
+            let evaluationType: EvaluationType = 'MANAGER';
+            if (allow360Evaluation) {
+                evaluationType = 'FULL_360';
+            } else if (allowPeerEvaluation) {
+                evaluationType = 'PEERS_180';
+            } else if (allowSelfEvaluation) {
+                evaluationType = 'SELF';
+            }
+
+            await cyclesApi.update(editingCycle.id, {
+                name,
+                description,
+                cycleType,
+                startDate,
+                endDate,
+                evaluationType,
+                includeSelfEvaluation: allowSelfEvaluation,
+                includeManagerEvaluation: true,
+                includePeerEvaluation: allowPeerEvaluation,
+                includeSubordinateEvaluation: allow360Evaluation,
+                selfEvaluationStart: evaluationStartDate || undefined,
+                selfEvaluationEnd: evaluationEndDate || undefined,
+                managerEvaluationStart: evaluationStartDate || undefined,
+                managerEvaluationEnd: evaluationEndDate || undefined,
+            });
+
+            toast({
+                title: 'Sucesso',
+                description: 'Ciclo atualizado com sucesso',
+            });
+
+            setEditDialogOpen(false);
+            setEditingCycle(null);
+            resetForm();
+            loadCycles();
+        } catch (error) {
+            console.error('Failed to update cycle:', error);
+            toast({
+                title: 'Erro',
+                description: 'Falha ao atualizar ciclo. Verifique os dados e tente novamente.',
+                variant: 'destructive',
+            });
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleOpenDeleteDialog = (cycleId: string) => {
+        setDeletingCycleId(cycleId);
+        setDeleteDialogOpen(true);
+    };
+
+    const handleDeleteCycle = async () => {
+        if (!deletingCycleId) return;
+
+        try {
+            setSubmitting(true);
+            await cyclesApi.delete(deletingCycleId);
+            toast({
+                title: 'Sucesso',
+                description: 'Ciclo excluído com sucesso',
+            });
+            setDeleteDialogOpen(false);
+            setDeletingCycleId(null);
+            loadCycles();
+        } catch (error) {
+            console.error('Failed to delete cycle:', error);
+            toast({
+                title: 'Erro',
+                description: 'Falha ao excluir ciclo. Verifique se não há avaliações vinculadas.',
+                variant: 'destructive',
+            });
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -341,6 +452,148 @@ export default function CyclesManagePage() {
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>
+
+                    {/* Edit Dialog */}
+                    <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+                        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto border-none shadow-2xl">
+                            <DialogHeader className="pb-4 border-b">
+                                <DialogTitle className="text-2xl font-black">Editar Ciclo</DialogTitle>
+                                <DialogDescription className="text-base italic">
+                                    Atualize as informações do ciclo de performance.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-6 py-6">
+                                <div className="grid grid-cols-2 gap-6">
+                                    <div className="space-y-2 col-span-2">
+                                        <Label htmlFor="edit-name" className="text-sm font-bold flex items-center gap-1.5">
+                                            Nome do Ciclo <span className="text-red-500">*</span>
+                                        </Label>
+                                        <Input
+                                            id="edit-name"
+                                            value={name}
+                                            onChange={(e) => setName(e.target.value)}
+                                            placeholder="Ex: Ciclo Anual de Performance 2026"
+                                            className="h-11 border-2 focus-visible:ring-primary"
+                                        />
+                                    </div>
+                                    <div className="space-y-2 col-span-2">
+                                        <Label htmlFor="edit-desc" className="text-sm font-bold">Descrição</Label>
+                                        <Textarea
+                                            id="edit-desc"
+                                            value={description}
+                                            onChange={(e) => setDescription(e.target.value)}
+                                            placeholder="Descreva os objetivos principais deste ciclo..."
+                                            className="min-h-[100px] border-2 focus-visible:ring-primary resize-none"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-sm font-bold">Tipo de Ciclo</Label>
+                                        <Select value={cycleType} onValueChange={(v) => setCycleType(v as CycleType)}>
+                                            <SelectTrigger className="h-11 border-2">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="ANNUAL">Anual</SelectItem>
+                                                <SelectItem value="SEMI_ANNUAL">Semestral</SelectItem>
+                                                <SelectItem value="QUARTERLY">Trimestral</SelectItem>
+                                                <SelectItem value="PROBATION">Experiência</SelectItem>
+                                                <SelectItem value="PROJECT">Projeto Específico</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="space-y-2 hidden md:block"></div>
+                                    <div className="space-y-2">
+                                        <Label className="text-sm font-bold flex items-center gap-1.5 text-primary/80">
+                                            <Calendar className="h-4 w-4" /> Data de Início <span className="text-red-500">*</span>
+                                        </Label>
+                                        <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="h-11 border-2" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-sm font-bold flex items-center gap-1.5 text-primary/80">
+                                            <Calendar className="h-4 w-4" /> Data de Fim <span className="text-red-500">*</span>
+                                        </Label>
+                                        <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="h-11 border-2" />
+                                    </div>
+
+                                    <div className="col-span-2 bg-primary/5 p-4 rounded-xl border border-primary/10 mt-2">
+                                        <h4 className="text-sm font-black text-primary uppercase tracking-wider mb-4 flex items-center gap-2">
+                                            <CheckCircle2 className="h-4 w-4" /> Período de Avaliação (Questionários)
+                                        </h4>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label className="text-xs font-bold uppercase text-muted-foreground">Início das Avaliações</Label>
+                                                <Input type="date" value={evaluationStartDate} onChange={(e) => setEvaluationStartDate(e.target.value)} className="h-10 bg-white" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label className="text-xs font-bold uppercase text-muted-foreground">Fim das Avaliações</Label>
+                                                <Input type="date" value={evaluationEndDate} onChange={(e) => setEvaluationEndDate(e.target.value)} className="h-10 bg-white" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4 pt-4 border-t">
+                                    <h4 className="text-sm font-black text-foreground uppercase tracking-wider mb-4">Configurações de Modalidade</h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="flex items-center justify-between p-4 rounded-xl border-2 transition-colors hover:border-primary/30 group">
+                                            <div className="space-y-0.5">
+                                                <Label className="font-bold cursor-pointer">Autoavaliação</Label>
+                                                <p className="text-xs text-muted-foreground">O colaborador reflete sobre sua atuação</p>
+                                            </div>
+                                            <Switch checked={allowSelfEvaluation} onCheckedChange={setAllowSelfEvaluation} />
+                                        </div>
+                                        <div className="flex items-center justify-between p-4 rounded-xl border-2 transition-colors hover:border-primary/30 group">
+                                            <div className="space-y-0.5">
+                                                <Label className="font-bold cursor-pointer">Avaliação por Pares</Label>
+                                                <p className="text-xs text-muted-foreground">Troca de feedback entre colegas horizontais</p>
+                                            </div>
+                                            <Switch checked={allowPeerEvaluation} onCheckedChange={setAllowPeerEvaluation} />
+                                        </div>
+                                        <div className="flex items-center justify-between p-4 rounded-xl border-2 transition-colors hover:border-primary/30 group col-span-1 md:col-span-2">
+                                            <div className="space-y-0.5">
+                                                <Label className="font-bold cursor-pointer">Visão 360° Completa</Label>
+                                                <p className="text-xs text-muted-foreground">Inclui avaliações de liderados diretos e múltiplas perspectivas</p>
+                                            </div>
+                                            <Switch checked={allow360Evaluation} onCheckedChange={setAllow360Evaluation} />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <DialogFooter className="pt-6 border-t gap-3">
+                                <Button variant="ghost" onClick={() => { setEditDialogOpen(false); setEditingCycle(null); resetForm(); }} className="font-bold">Cancelar</Button>
+                                <Button onClick={handleUpdateCycle} disabled={submitting} className="min-w-[140px] font-bold">
+                                    {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
+                                    Salvar Alterações
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+
+                    {/* Delete Confirmation Dialog */}
+                    <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                        <DialogContent className="max-w-md border-none shadow-2xl">
+                            <DialogHeader className="pb-4">
+                                <DialogTitle className="text-2xl font-black text-red-600 flex items-center gap-2">
+                                    <Trash2 className="h-6 w-6" />
+                                    Confirmar Exclusão
+                                </DialogTitle>
+                                <DialogDescription className="text-base pt-2">
+                                    Tem certeza que deseja excluir este ciclo? Esta ação não pode ser desfeita e todas as avaliações vinculadas serão perdidas.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <DialogFooter className="pt-6 gap-3">
+                                <Button variant="ghost" onClick={() => { setDeleteDialogOpen(false); setDeletingCycleId(null); }} className="font-bold">Cancelar</Button>
+                                <Button
+                                    onClick={handleDeleteCycle}
+                                    disabled={submitting}
+                                    className="min-w-[140px] font-bold bg-red-600 hover:bg-red-700"
+                                >
+                                    {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
+                                    Excluir Ciclo
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
                 </div>
             </div>
 
@@ -459,16 +712,20 @@ export default function CyclesManagePage() {
                                     <Button
                                         size="icon"
                                         variant="ghost"
-                                        className="h-9 w-9 border-2 border-transparent hover:border-slate-200 transition-all"
-                                        onClick={() => {
-                                            toast({
-                                                title: "Configurações",
-                                                description: "A edição de ciclos ativos estará disponível em breve.",
-                                                duration: 3000
-                                            });
-                                        }}
+                                        className="h-9 w-9 border-2 border-transparent hover:border-blue-200 hover:text-blue-600 transition-all"
+                                        onClick={() => handleOpenEditDialog(cycle)}
+                                        title="Editar ciclo"
                                     >
-                                        <Settings2 className="h-4 w-4" />
+                                        <Pencil className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        className="h-9 w-9 border-2 border-transparent hover:border-red-200 hover:text-red-600 transition-all"
+                                        onClick={() => handleOpenDeleteDialog(cycle.id)}
+                                        title="Excluir ciclo"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
                                     </Button>
                                 </div>
                             </CardFooter>
