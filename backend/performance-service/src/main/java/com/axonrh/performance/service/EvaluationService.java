@@ -98,10 +98,18 @@ public class EvaluationService {
             existingCycle.setEvaluationType(updatedCycle.getEvaluationType());
         }
         
-        existingCycle.setIncludeSelfEvaluation(updatedCycle.isIncludeSelfEvaluation());
-        existingCycle.setIncludeManagerEvaluation(updatedCycle.isIncludeManagerEvaluation());
-        existingCycle.setIncludePeerEvaluation(updatedCycle.isIncludePeerEvaluation());
-        existingCycle.setIncludeSubordinateEvaluation(updatedCycle.isIncludeSubordinateEvaluation());
+        if (updatedCycle.getIncludeSelfEvaluation() != null) {
+            existingCycle.setIncludeSelfEvaluation(updatedCycle.getIncludeSelfEvaluation());
+        }
+        if (updatedCycle.getIncludeManagerEvaluation() != null) {
+            existingCycle.setIncludeManagerEvaluation(updatedCycle.getIncludeManagerEvaluation());
+        }
+        if (updatedCycle.getIncludePeerEvaluation() != null) {
+            existingCycle.setIncludePeerEvaluation(updatedCycle.getIncludePeerEvaluation());
+        }
+        if (updatedCycle.getIncludeSubordinateEvaluation() != null) {
+            existingCycle.setIncludeSubordinateEvaluation(updatedCycle.getIncludeSubordinateEvaluation());
+        }
         
         if (updatedCycle.getSelfEvaluationStart() != null) {
             existingCycle.setSelfEvaluationStart(updatedCycle.getSelfEvaluationStart());
