@@ -16,12 +16,12 @@ import java.util.UUID;
 @Repository
 public interface CourseRepository extends JpaRepository<Course, UUID> {
 
-    @Query("SELECT c FROM Course c WHERE (c.tenantId = :tenantId OR c.tenantId = cast('00000000-0000-0000-0000-000000000000' as uuid)) AND c.id = :id")
+    @Query("SELECT c FROM Course c WHERE (c.tenantId = :tenantId OR c.tenantId = '00000000-0000-0000-0000-000000000000') AND c.id = :id")
     Optional<Course> findByTenantIdAndId(@Param("tenantId") UUID tenantId, @Param("id") UUID id);
 
     Page<Course> findByTenantId(UUID tenantId, Pageable pageable);
 
-    @Query("SELECT c FROM Course c WHERE (c.tenantId = :tenantId OR c.tenantId = cast('00000000-0000-0000-0000-000000000000' as uuid)) AND c.status = :status ORDER BY c.createdAt DESC")
+    @Query("SELECT c FROM Course c WHERE (c.tenantId = :tenantId OR c.tenantId = '00000000-0000-0000-0000-000000000000') AND c.status = :status ORDER BY c.createdAt DESC")
     List<Course> findByTenantIdAndStatus(@Param("tenantId") UUID tenantId, @Param("status") CourseStatus status);
 
     List<Course> findByTenantIdAndCategoryId(UUID tenantId, UUID categoryId);

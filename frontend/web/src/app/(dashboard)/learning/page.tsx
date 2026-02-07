@@ -596,99 +596,91 @@ export default function LearningDashboard() {
 // --- REFINED COMPONENTS ---
 
 function CourseCard({ course, isEnrolled }: { course: any, isEnrolled?: boolean }) {
-  const getDifficultyStyles = (lvl?: string) => {
+  const getDifficultyColor = (lvl?: string) => {
     switch (lvl) {
-      case 'AVANCADO': return 'bg-purple-100 text-purple-700 border-purple-200';
-      case 'INTERMEDIARIO': return 'bg-blue-100 text-blue-700 border-blue-200';
-      default: return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+      case 'AVANCADO': return 'text-purple-600';
+      case 'INTERMEDIARIO': return 'text-blue-600';
+      default: return 'text-emerald-600';
     }
   };
 
-  const nameHash = (course.title || "").split("").reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
-  const gradients = [
-    'from-blue-600 to-indigo-700',
-    'from-indigo-600 to-purple-700',
-    'from-slate-800 to-slate-950',
-    'from-emerald-600 to-blue-700',
-  ];
-  const gIndex = nameHash % gradients.length;
-
   return (
     <Link href={`/learning/course/${course.id}`}>
-      <div className="group flex flex-col h-full bg-white border border-slate-100 rounded-[2rem] overflow-hidden hover:shadow-[0_48px_80px_-16px_rgba(0,0,0,0.12)] transition-all duration-700 cursor-pointer shadow-sm hover:-translate-y-3 border-b-0">
+      <div className="group flex flex-col h-full bg-white border border-slate-100 rounded-[2.5rem] overflow-hidden hover:shadow-[0_48px_80px_-16px_rgba(0,0,0,0.12)] transition-all duration-500 cursor-pointer shadow-sm hover:-translate-y-2">
 
         {/* Course Thumbnail Header */}
-        <div className="h-48 relative overflow-hidden bg-slate-900">
-          {/* Main Background Gradient */}
-          <div className={cn("absolute inset-0 bg-gradient-to-br transition-all duration-1000 group-hover:scale-110 group-hover:rotate-1", gradients[gIndex])} />
-
-          {/* Textures and Overlays */}
-          <div className="absolute inset-0 opacity-[0.1] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] group-hover:opacity-[0.05] transition-opacity" />
-          <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-all" />
-
-          {/* Floating Icon Center */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="h-16 w-16 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center group-hover:scale-125 group-hover:rotate-12 transition-all duration-700 shadow-2xl">
-              <Zap className="h-6 w-6 text-white fill-white/20" />
-            </div>
+        <div className="h-56 relative overflow-hidden bg-[#1e40af]">
+          {/* Decorative Lightning Bolt Background */}
+          <div className="absolute inset-0 flex items-center justify-center opacity-20">
+            <Zap className="h-32 w-32 text-white fill-white/10" />
           </div>
 
-          {/* Category Badge Top Left */}
-          <div className="absolute top-5 left-5">
-            <Badge className="bg-white/10 backdrop-blur-md text-white border border-white/20 px-3 py-1 font-black text-[8px] uppercase tracking-[0.2em] shadow-xl">
-              {course.categoryName || 'Geral'}
-            </Badge>
+          {/* Center Icon */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Zap className="h-12 w-12 text-blue-300 drop-shadow-[0_0_15px_rgba(147,197,253,0.5)]" />
+          </div>
+
+          {/* Mandatory Badge Top Left */}
+          {course.isMandatory && (
+            <div className="absolute top-5 left-5">
+              <Badge className="bg-red-500 hover:bg-red-600 text-white border-none px-3 py-1 font-black text-[9px] uppercase tracking-widest shadow-lg rounded-md">
+                OBRIGATORIO
+              </Badge>
+            </div>
+          )}
+
+          {/* Duration Badge Bottom Right */}
+          <div className="absolute bottom-5 right-5">
+            <div className="bg-black/60 backdrop-blur-md text-white px-3 py-1.5 rounded-lg flex items-center gap-2 border border-white/10 shadow-lg">
+              <Clock className="h-3.5 w-3.5" />
+              <span className="text-[10px] font-bold tracking-tight">{course.durationMinutes || '45'} min</span>
+            </div>
           </div>
 
           {/* Enrolled Badge Bottom Left */}
           {isEnrolled && (
             <div className="absolute bottom-5 left-5">
-              <Badge className="bg-emerald-500/90 backdrop-blur-md text-white border-none px-3 py-1 font-black text-[8px] uppercase tracking-[0.2em] shadow-xl">
+              <Badge className="bg-emerald-500/90 backdrop-blur-md text-white border-none px-3 py-1 font-black text-[8px] uppercase tracking-widest shadow-xl">
                 Matriculado
               </Badge>
-            </div>
-          )}
-
-          {/* Mandatory Badge Top Right */}
-          {course.isMandatory && (
-            <div className="absolute top-5 right-5">
-              <div className="h-8 w-8 rounded-full bg-rose-500/90 backdrop-blur-md flex items-center justify-center shadow-xl animate-pulse">
-                <Star className="h-3.5 w-3.5 text-white fill-white" />
-              </div>
             </div>
           )}
         </div>
 
         {/* Course Details */}
-        <div className="p-7 flex flex-col flex-1 space-y-5">
-          <div className="space-y-3 flex-1">
-            <h3 className="text-lg font-black uppercase tracking-tight leading-tight text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-2">
+        <div className="p-8 flex flex-col flex-1 space-y-6">
+          <div className="space-y-4 flex-1">
+            {/* Level & Category */}
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em]">
+              <span className={getDifficultyColor(course.difficultyLevel)}>
+                {course.difficultyLevel || 'INICIANTE'}
+              </span>
+              <span className="text-slate-300">•</span>
+              <span className="text-slate-400">
+                {course.categoryName || 'GERAL'}
+              </span>
+            </div>
+
+            <h3 className="text-xl font-bold tracking-tight leading-[1.2] text-slate-800 group-hover:text-blue-600 transition-colors line-clamp-2">
               {course.title}
             </h3>
-            <p className="text-[11px] text-slate-400 font-medium line-clamp-2 leading-relaxed italic">
+
+            <p className="text-[13px] text-slate-500 font-medium line-clamp-2 leading-relaxed">
               {course.description}
             </p>
           </div>
 
-          <div className="pt-5 border-t border-slate-50 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex flex-col">
-                <span className="text-[7px] font-black text-slate-300 uppercase tracking-widest">Duração</span>
-                <span className="flex items-center gap-1.5 text-[9px] font-black text-slate-900 uppercase">
-                  <Clock className="h-3 w-3 text-blue-500" /> {course.durationMinutes || '45'}m
-                </span>
+          {/* Footer Card */}
+          <div className="pt-6 border-t border-slate-50 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 rounded-lg bg-slate-50 flex items-center justify-center border border-slate-100">
+                <span className="text-[8px] font-black text-slate-400">AA</span>
               </div>
-              <div className="h-6 w-[1px] bg-slate-100" />
-              <div className="flex flex-col">
-                <span className="text-[7px] font-black text-slate-300 uppercase tracking-widest">Nível</span>
-                <span className={cn("px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border", getDifficultyStyles(course.difficultyLevel))}>
-                  {course.difficultyLevel === 'AVANCADO' ? 'Pro' : course.difficultyLevel === 'INTERMEDIARIO' ? 'Interm' : 'Basic'}
-                </span>
-              </div>
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Axon Academy</span>
             </div>
 
-            <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white group-hover:rotate-45 transition-all duration-500 shadow-sm">
-              <ArrowRight className="h-4 w-4" />
+            <div className="h-10 w-10 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-blue-600/5 group-hover:text-blue-600 transition-all duration-300">
+              <ChevronRight className="h-5 w-5 text-slate-300 group-hover:text-blue-600" />
             </div>
           </div>
         </div>

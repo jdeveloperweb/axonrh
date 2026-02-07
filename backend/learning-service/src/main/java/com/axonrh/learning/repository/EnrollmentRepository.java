@@ -41,13 +41,13 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, UUID> {
 
     @Query("SELECT e FROM Enrollment e JOIN FETCH e.course WHERE e.tenantId = :tenantId " +
            "AND e.employeeId = :employeeId " +
-           "AND e.status IN ('ENROLLED', 'IN_PROGRESS')")
+           "AND e.status IN (com.axonrh.learning.entity.enums.EnrollmentStatus.ENROLLED, com.axonrh.learning.entity.enums.EnrollmentStatus.IN_PROGRESS)")
     List<Enrollment> findActiveByEmployee(@Param("tenantId") UUID tenantId,
                                           @Param("employeeId") UUID employeeId);
 
     @Query("SELECT e FROM Enrollment e WHERE e.tenantId = :tenantId " +
            "AND e.dueDate < :date " +
-           "AND e.status NOT IN ('COMPLETED', 'CANCELLED', 'EXPIRED')")
+           "AND e.status NOT IN (com.axonrh.learning.entity.enums.EnrollmentStatus.COMPLETED, com.axonrh.learning.entity.enums.EnrollmentStatus.CANCELLED, com.axonrh.learning.entity.enums.EnrollmentStatus.EXPIRED)")
     List<Enrollment> findOverdue(@Param("tenantId") UUID tenantId, @Param("date") LocalDate date);
 
     long countByTenantIdAndEmployeeId(UUID tenantId, UUID employeeId);
@@ -60,17 +60,17 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, UUID> {
 
     @Query("SELECT AVG(e.progressPercentage) FROM Enrollment e WHERE e.tenantId = :tenantId " +
            "AND e.employeeId = :employeeId " +
-           "AND e.status IN ('ENROLLED', 'IN_PROGRESS')")
+           "AND e.status IN (com.axonrh.learning.entity.enums.EnrollmentStatus.ENROLLED, com.axonrh.learning.entity.enums.EnrollmentStatus.IN_PROGRESS)")
     Double calculateAverageProgress(@Param("tenantId") UUID tenantId,
                                     @Param("employeeId") UUID employeeId);
 
     // Dashboard Queries
 
-    @Query("SELECT COUNT(e) FROM Enrollment e WHERE e.tenantId = :tenantId AND e.status IN ('ENROLLED', 'IN_PROGRESS')")
+    @Query("SELECT COUNT(e) FROM Enrollment e WHERE e.tenantId = :tenantId AND e.status IN (com.axonrh.learning.entity.enums.EnrollmentStatus.ENROLLED, com.axonrh.learning.entity.enums.EnrollmentStatus.IN_PROGRESS)")
     long countActiveByTenant(@Param("tenantId") UUID tenantId);
 
     @Query("SELECT COUNT(e) FROM Enrollment e WHERE e.tenantId = :tenantId " +
-           "AND e.status = 'COMPLETED' " +
+           "AND e.status = com.axonrh.learning.entity.enums.EnrollmentStatus.COMPLETED " +
            "AND e.completedAt BETWEEN :start AND :end")
     long countCompletedByTenantAndDateRange(@Param("tenantId") UUID tenantId,
                                             @Param("start") LocalDateTime start,
@@ -84,11 +84,11 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, UUID> {
 
 
     @Query("SELECT AVG(e.progressPercentage) FROM Enrollment e WHERE e.tenantId = :tenantId " +
-           "AND e.status IN ('ENROLLED', 'IN_PROGRESS')")
+           "AND e.status IN (com.axonrh.learning.entity.enums.EnrollmentStatus.ENROLLED, com.axonrh.learning.entity.enums.EnrollmentStatus.IN_PROGRESS)")
     Double calculateTenantAverageProgress(@Param("tenantId") UUID tenantId);
 
     @Query("SELECT SUM(c.durationMinutes) FROM Enrollment e JOIN e.course c WHERE e.tenantId = :tenantId " +
-           "AND e.status = 'COMPLETED'")
+           "AND e.status = com.axonrh.learning.entity.enums.EnrollmentStatus.COMPLETED")
     Long sumCompletedDurationMinutes(@Param("tenantId") UUID tenantId);
 
     @Query("SELECT e.status, COUNT(e) FROM Enrollment e WHERE e.tenantId = :tenantId GROUP BY e.status")
