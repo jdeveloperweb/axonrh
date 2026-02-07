@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Award, Download, Printer, ArrowLeft, ShieldCheck, Share2 } from 'lucide-react';
-import { certificatesApi, Certificate } from '@/lib/api/learning';
+import { certificatesApi, Certificate, certificateConfigsApi, CertificateConfig } from '@/lib/api/learning';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
@@ -13,24 +13,30 @@ export default function CertificateViewPage() {
     const { id } = useParams();
     const router = useRouter();
     const [certificate, setCertificate] = useState<Certificate | null>(null);
+    const [config, setConfig] = useState<CertificateConfig | null>(null);
     const [loading, setLoading] = useState(true);
     const certificateRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        const loadCertificate = async () => {
+        const loadData = async () => {
             if (!id) return;
             try {
                 setLoading(true);
-                const res = await certificatesApi.get(id as string);
-                setCertificate(res as any);
+                // Buscar certificado e configuração em paralelo
+                const [certRes, configRes] = await Promise.all([
+                    certificatesApi.get(id as string),
+                    certificateConfigsApi.get()
+                ]);
+                setCertificate(certRes as any);
+                setConfig(configRes);
             } catch (error) {
-                console.error('Erro ao carregar certificado:', error);
+                console.error('Erro ao carregar dados:', error);
                 toast.error('Certificado não encontrado');
             } finally {
                 setLoading(false);
             }
         };
-        loadCertificate();
+        loadData();
     }, [id]);
 
     const handlePrint = () => {
@@ -96,8 +102,12 @@ export default function CertificateViewPage() {
                     <div className="relative h-full flex flex-col items-center justify-between py-16 px-16 z-10">
                         {/* Header Section */}
                         <div className="flex flex-col items-center space-y-8 w-full">
-                            {certificate.companyLogoUrl ? (
-                                <img src={certificate.companyLogoUrl} alt="Logo" className="h-20 w-auto object-contain" />
+                            {(certificate.companyLogoUrl || config?.companyLogoUrl) ? (
+                                <img
+                                    src={certificate.companyLogoUrl || config?.companyLogoUrl}
+                                    alt="Logo"
+                                    className="h-20 w-auto object-contain"
+                                />
                             ) : (
                                 <div className="h-16 w-16 bg-slate-900 rounded-xl flex items-center justify-center shadow-lg">
                                     <Award className="h-10 w-10 text-white" />
@@ -106,10 +116,10 @@ export default function CertificateViewPage() {
 
                             <div className="text-center space-y-3">
                                 <h2 className="text-sm font-black tracking-[0.5em] text-slate-400 uppercase">
-                                    {certificate.certificateTitle || 'Certificado de Conclusão'}
+                                    {certificate.certificateTitle || config?.certificateTitle || 'Certificado de Conclusão'}
                                 </h2>
                                 <p className="text-slate-900 font-bold uppercase tracking-[0.2em] text-[12px] opacity-70">
-                                    {certificate.companyName || 'Axon Academy • Soluções em Capital Humano'}
+                                    {certificate.companyName || config?.companyName || 'Axon Academy • Soluções em Capital Humano'}
                                 </p>
                             </div>
                         </div>
@@ -157,15 +167,19 @@ export default function CertificateViewPage() {
                             {/* Signature Area Left */}
                             <div className="flex flex-col items-center space-y-3 w-64">
                                 <div className="h-24 w-full flex items-center justify-center relative border-b-2 border-slate-900/5 hover:border-slate-900/10 transition-colors">
-                                    {certificate.instructorSignatureUrl ? (
-                                        <img src={certificate.instructorSignatureUrl} alt="Assinatura" className="max-h-full max-w-full object-contain mix-blend-multiply" />
+                                    {(certificate.instructorSignatureUrl || config?.instructorSignatureUrl) ? (
+                                        <img
+                                            src={certificate.instructorSignatureUrl || config?.instructorSignatureUrl}
+                                            alt="Assinatura"
+                                            className="max-h-full max-w-full object-contain mix-blend-multiply"
+                                        />
                                     ) : (
                                         <div className="h-px w-full bg-transparent" />
                                     )}
                                 </div>
                                 <div className="text-center">
                                     <p className="font-black text-slate-900 text-sm uppercase">
-                                        {certificate.instructorName || 'Instrutor Responsável'}
+                                        {certificate.instructorName || config?.instructorName || 'Instrutor Responsável'}
                                     </p>
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Instrutor</p>
                                 </div>
@@ -187,15 +201,19 @@ export default function CertificateViewPage() {
                             {/* Signature Area Right */}
                             <div className="flex flex-col items-center space-y-3 w-64">
                                 <div className="h-24 w-full flex items-center justify-center relative border-b-2 border-slate-900/5 hover:border-slate-900/10 transition-colors">
-                                    {certificate.generalSignatureUrl ? (
-                                        <img src={certificate.generalSignatureUrl} alt="Assinatura" className="max-h-full max-w-full object-contain mix-blend-multiply" />
+                                    {(certificate.generalSignatureUrl || config?.generalSignatureUrl) ? (
+                                        <img
+                                            src={certificate.generalSignatureUrl || config?.generalSignatureUrl}
+                                            alt="Assinatura"
+                                            className="max-h-full max-w-full object-contain mix-blend-multiply"
+                                        />
                                     ) : (
                                         <div className="h-px w-full bg-transparent" />
                                     )}
                                 </div>
                                 <div className="text-center">
                                     <p className="font-black text-slate-900 text-sm uppercase">
-                                        {certificate.generalSignerName || 'Diretoria de RH'}
+                                        {certificate.generalSignerName || config?.generalSignerName || 'Diretoria de RH'}
                                     </p>
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Responsável Legal</p>
                                 </div>
@@ -211,7 +229,7 @@ export default function CertificateViewPage() {
                                 <p className="text-[10px] font-black uppercase tracking-widest leading-none">Original<br />Document</p>
                                 <div className="h-px w-12 bg-slate-900 my-2" />
                                 <p className="text-[7px] font-black tracking-tighter uppercase whitespace-nowrap">
-                                    {certificate.companyName ? certificate.companyName.substring(0, 15) : 'AXON'} ACADEMY
+                                    {(certificate.companyName || config?.companyName || 'AXON').substring(0, 15)} ACADEMY
                                 </p>
                             </div>
                         </div>
