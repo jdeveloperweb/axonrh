@@ -477,36 +477,47 @@ export default function LearningManagementPage() {
                 </div>
 
                 {activeView === 'LIST' && (
-                    <div className="flex flex-wrap gap-4">
-                        <Button
-                            variant="outline"
-                            onClick={() => setActiveView('ENROLLMENTS')}
-                            className="h-16 px-8 rounded-2xl border-slate-200 text-slate-600 font-black uppercase tracking-widest text-[10px] transition-all hover:bg-slate-50 flex gap-3 shadow-sm"
-                        >
-                            <Plus className="h-4 w-4 text-emerald-600" />
-                            Matrículas & Indicações
-                        </Button>
-                        <Button
-                            variant="outline"
-                            onClick={() => setActiveView('CATEGORIES')}
-                            className="h-16 px-8 rounded-2xl border-slate-200 text-slate-600 font-black uppercase tracking-widest text-[10px] transition-all hover:bg-slate-50 flex gap-3 shadow-sm"
-                        >
-                            <Layers className="h-4 w-4 text-blue-600" />
-                            Categorias
-                        </Button>
-                        <Button
-                            variant="outline"
-                            onClick={() => router.push('/learning/settings/certificate')}
-                            className="h-16 px-8 rounded-2xl border-slate-200 text-slate-600 font-black uppercase tracking-widest text-[10px] transition-all hover:bg-slate-50 flex gap-3 shadow-sm"
-                        >
-                            <Award className="h-4 w-4 text-primary" />
-                            Configurações Gerais
-                        </Button>
+                    <div className="flex flex-wrap items-center justify-end gap-3">
+                        <div className="flex flex-wrap items-center gap-1 p-1.5 bg-slate-50 border border-slate-100 rounded-xl">
+                            <Button
+                                variant="ghost"
+                                onClick={() => setActiveView('ENROLLMENTS')}
+                                className="h-10 px-5 rounded-lg text-slate-600 font-bold text-[10px] uppercase tracking-wide hover:bg-white hover:text-slate-900 hover:shadow-sm border border-transparent hover:border-slate-100 transition-all gap-2"
+                            >
+                                <Plus className="h-3.5 w-3.5 text-emerald-600" />
+                                Matrículas & Indicações
+                            </Button>
+
+                            <div className="h-4 w-px bg-slate-200 hidden md:block" />
+
+                            <Button
+                                variant="ghost"
+                                onClick={() => setActiveView('CATEGORIES')}
+                                className="h-10 px-5 rounded-lg text-slate-600 font-bold text-[10px] uppercase tracking-wide hover:bg-white hover:text-slate-900 hover:shadow-sm border border-transparent hover:border-slate-100 transition-all gap-2"
+                            >
+                                <Layers className="h-3.5 w-3.5 text-blue-600" />
+                                Categorias
+                            </Button>
+
+                            <div className="h-4 w-px bg-slate-200 hidden md:block" />
+
+                            <Button
+                                variant="ghost"
+                                onClick={() => router.push('/learning/settings/certificate')}
+                                className="h-10 px-5 rounded-lg text-slate-600 font-bold text-[10px] uppercase tracking-wide hover:bg-white hover:text-slate-900 hover:shadow-sm border border-transparent hover:border-slate-100 transition-all gap-2"
+                            >
+                                <Award className="h-3.5 w-3.5 text-amber-500" />
+                                Configurações Gerais
+                            </Button>
+                        </div>
+
                         <Button
                             onClick={handleCreateNew}
-                            className="h-16 px-10 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-blue-200 transition-all hover:-translate-y-1 active:scale-95 flex gap-3"
+                            className="h-12 pl-6 pr-8 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold uppercase tracking-wide text-[11px] shadow-xl shadow-blue-200 transition-all hover:-translate-y-1 active:scale-95 flex gap-2 ml-2"
                         >
-                            <Plus className="h-5 w-5" />
+                            <div className="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center">
+                                <Plus className="h-4 w-4 text-white" />
+                            </div>
                             Novo Treinamento
                         </Button>
                     </div>
