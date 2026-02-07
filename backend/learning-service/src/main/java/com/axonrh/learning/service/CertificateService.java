@@ -56,8 +56,10 @@ public class CertificateService {
         int durationMinutes = enrollment.getCourse().getDurationMinutes() != null ? enrollment.getCourse().getDurationMinutes() : 0;
         certificate.setDurationHours(durationMinutes / 60);
 
-        // Mock PDF URL
-        certificate.setPdfUrl("/api/learning/certificates/" + uniqueCode + "/download");
+        certificate = certificateRepository.save(certificate);
+        
+        // Mock PDF URL using the generated ID
+        certificate.setPdfUrl("/api/v1/learning/certificates/" + certificate.getId() + "/download");
 
         return certificateRepository.save(certificate);
     }

@@ -21,6 +21,7 @@ public class Certificate {
     @Column(name = "tenant_id", nullable = false)
     private UUID tenantId;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "enrollment_id", nullable = false)
     private Enrollment enrollment;
