@@ -13,8 +13,8 @@ import {
     TrendingUp,
     AlertCircle,
     Target,
-    Eye,
-    EyeOff
+    UserCog,
+    User
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -25,7 +25,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { cyclesApi, EvaluationStatistics, EvaluationCycle } from '@/lib/api/performance';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/utils';
-import { useAuthStore } from '@/stores/auth-store';
 import {
     Chart as ChartJS,
     ArcElement,
@@ -48,21 +47,17 @@ ChartJS.register(
     Title
 );
 
+type ViewMode = 'manager' | 'employee';
+
 export default function CycleDashboardPage() {
     const params = useParams();
     const id = params?.id as string;
     const { toast } = useToast();
-    const { user } = useAuthStore();
 
     const [loading, setLoading] = useState(true);
     const [cycle, setCycle] = useState<EvaluationCycle | null>(null);
     const [stats, setStats] = useState<EvaluationStatistics | null>(null);
-    const [viewAsManager, setViewAsManager] = useState(true);
-
-    // Verifica se o usuário tem perfil de gestão
-    const isManager = user?.roles?.some(role =>
-        ['MANAGER', 'GESTOR', 'ADMIN', 'RH'].includes(role.toUpperCase())
-    ) || false;
+    const [viewMode, setViewMode] = useState<ViewMode>('manager');
 
     const loadData = useCallback(async () => {
         if (!id) return;
@@ -159,31 +154,31 @@ export default function CycleDashboardPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-indigo-50/30">
-            <div className="p-6 md:p-10 max-w-[1600px] mx-auto space-y-10 animate-in fade-in duration-700">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
+            <div className="p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
                 {/* Header */}
-                <div className="space-y-8">
+                <div className="space-y-6">
                     <Link
                         href="/performance/cycles/manage"
-                        className="inline-flex items-center gap-2 text-sm font-bold text-slate-600 hover:text-indigo-600 transition-all duration-300 group px-4 py-2 rounded-xl hover:bg-white/80 backdrop-blur-sm"
+                        className="inline-flex items-center text-sm font-semibold text-muted-foreground hover:text-primary transition-all duration-200 group"
                     >
-                        <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-2 duration-300" />
+                        <ArrowLeft className="h-4 w-4 mr-2 transition-transform group-hover:-translate-x-1" />
                         Voltar para Gestão de Ciclos
                     </Link>
 
-                    <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-8">
-                        <div className="space-y-4 flex-1">
-                            <div className="flex items-center gap-4 flex-wrap">
-                                <h1 className="text-4xl md:text-6xl font-black tracking-tight bg-gradient-to-r from-slate-900 via-indigo-900 to-blue-900 bg-clip-text text-transparent leading-tight">
+                    <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-3 flex-wrap">
+                                <h1 className="text-5xl font-black tracking-tight bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent">
                                     {cycle.name}
                                 </h1>
                                 <Badge
                                     variant="outline"
-                                    className={`font-bold border-2 px-5 py-2 text-sm rounded-full shadow-lg backdrop-blur-sm ${cycle.status === 'ACTIVE'
-                                        ? 'bg-gradient-to-r from-emerald-400/20 to-emerald-500/20 text-emerald-700 border-emerald-400/50 shadow-emerald-200/50'
+                                    className={`font-bold border-2 px-4 py-1.5 text-sm ${cycle.status === 'ACTIVE'
+                                        ? 'bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-700 border-emerald-300 shadow-sm shadow-emerald-200/50'
                                         : cycle.status === 'COMPLETED'
-                                            ? 'bg-gradient-to-r from-blue-400/20 to-blue-500/20 text-blue-700 border-blue-400/50 shadow-blue-200/50'
-                                            : 'bg-gradient-to-r from-slate-400/20 to-slate-500/20 text-slate-700 border-slate-400/50 shadow-slate-200/50'
+                                            ? 'bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 border-blue-300 shadow-sm shadow-blue-200/50'
+                                            : 'bg-gradient-to-r from-slate-50 to-slate-100 text-slate-700 border-slate-300 shadow-sm shadow-slate-200/50'
                                         }`}
                                 >
                                     {cycle.status === 'ACTIVE' ? '● EM ANDAMENTO' :
@@ -191,254 +186,352 @@ export default function CycleDashboardPage() {
                                             cycle.status === 'COMPLETED' ? '✓ CONCLUÍDO' : cycle.status}
                                 </Badge>
                             </div>
-                            <p className="text-base md:text-lg text-slate-600 max-w-3xl leading-relaxed font-medium">
+                            <p className="text-lg text-muted-foreground max-w-3xl leading-relaxed">
                                 {cycle.description || 'Acompanhamento detalhado do ciclo de avaliação de desempenho.'}
                             </p>
                         </div>
 
-                        <div className="flex flex-col gap-4 lg:min-w-[380px]">
-                            {/* Botão de alternância de visualização */}
-                            {isManager && (
-                                <Button
-                                    variant="outline"
-                                    onClick={() => setViewAsManager(!viewAsManager)}
-                                    className="group relative overflow-hidden border-2 bg-white/80 backdrop-blur-md hover:bg-white transition-all duration-300 shadow-lg hover:shadow-xl px-6 py-6 h-auto rounded-2xl"
-                                >
-                                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                                    <div className="relative flex items-center justify-center gap-3">
-                                        {viewAsManager ? (
-                                            <>
-                                                <div className="p-2 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-xl shadow-lg shadow-indigo-500/30">
-                                                    <Eye className="h-5 w-5 text-white" />
-                                                </div>
-                                                <div className="flex flex-col items-start">
-                                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Modo Atual</span>
-                                                    <span className="font-bold text-slate-800 text-base">Visualização de Gestor</span>
-                                                </div>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <div className="p-2 bg-gradient-to-br from-slate-500 to-slate-600 rounded-xl shadow-lg shadow-slate-500/30">
-                                                    <EyeOff className="h-5 w-5 text-white" />
-                                                </div>
-                                                <div className="flex flex-col items-start">
-                                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Modo Atual</span>
-                                                    <span className="font-bold text-slate-800 text-base">Visualização de Colaborador</span>
-                                                </div>
-                                            </>
-                                        )}
-                                    </div>
-                                </Button>
-                            )}
-
-                            {/* Datas do ciclo */}
-                            <div className="flex items-stretch gap-3 bg-white/80 backdrop-blur-md p-4 rounded-2xl border-2 border-slate-200/50 shadow-xl hover:shadow-2xl transition-all duration-300">
-                                <div className="flex items-center gap-3 px-4 py-3 flex-1 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100/50">
-                                    <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg shadow-blue-500/30">
-                                        <Calendar className="h-5 w-5 text-white" />
-                                    </div>
-                                    <div className="flex flex-col">
-                                        <span className="text-[10px] uppercase font-bold text-blue-600 tracking-wider">Início</span>
-                                        <span className="text-base font-black text-slate-800">{formatDate(cycle.startDate)}</span>
-                                    </div>
+                        <div className="flex items-center gap-3 bg-white p-3 rounded-2xl border-2 border-slate-200 shadow-lg shadow-slate-200/50">
+                            <div className="flex items-center gap-3 px-4 py-2 border-r-2 border-slate-200">
+                                <div className="p-2 bg-blue-50 rounded-lg">
+                                    <Calendar className="h-5 w-5 text-blue-600" />
                                 </div>
-                                <div className="flex items-center gap-3 px-4 py-3 flex-1 rounded-xl bg-gradient-to-br from-purple-50 to-purple-100/50">
-                                    <div className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg shadow-purple-500/30">
-                                        <Calendar className="h-5 w-5 text-white" />
-                                    </div>
-                                    <div className="flex flex-col">
-                                        <span className="text-[10px] uppercase font-bold text-purple-600 tracking-wider">Fim</span>
-                                        <span className="text-base font-black text-slate-800">{formatDate(cycle.endDate)}</span>
-                                    </div>
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Início</span>
+                                    <span className="text-base font-bold text-slate-800">{formatDate(cycle.startDate)}</span>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3 px-4 py-2">
+                                <div className="p-2 bg-purple-50 rounded-lg">
+                                    <Calendar className="h-5 w-5 text-purple-600" />
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Fim</span>
+                                    <span className="text-base font-bold text-slate-800">{formatDate(cycle.endDate)}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
+
+                    {/* View Mode Toggle */}
+                    <div className="flex items-center justify-center">
+                        <div className="inline-flex items-center gap-2 p-1.5 bg-white rounded-2xl border-2 border-slate-200 shadow-xl shadow-slate-300/30">
+                            <button
+                                onClick={() => setViewMode('manager')}
+                                className={`
+                                    flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all duration-300
+                                    ${viewMode === 'manager'
+                                        ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/40 scale-105'
+                                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                                    }
+                                `}
+                            >
+                                <UserCog className={`h-5 w-5 transition-transform duration-300 ${viewMode === 'manager' ? 'rotate-12' : ''}`} />
+                                Visão Gestor/RH
+                            </button>
+                            <button
+                                onClick={() => setViewMode('employee')}
+                                className={`
+                                    flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all duration-300
+                                    ${viewMode === 'employee'
+                                        ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/40 scale-105'
+                                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                                    }
+                                `}
+                            >
+                                <User className={`h-5 w-5 transition-transform duration-300 ${viewMode === 'employee' ? 'rotate-12' : ''}`} />
+                                Visão Colaborador
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
-                {/* Stats Overview */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <Card className="group border-0 shadow-xl bg-white/90 backdrop-blur-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 overflow-hidden relative">
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-blue-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                        <CardContent className="p-8 relative">
-                            <div className="flex items-start justify-between mb-6">
-                                <div className="p-4 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-2xl shadow-xl shadow-blue-500/40 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
-                                    <Users className="h-8 w-8" />
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-xs font-extrabold text-blue-600 uppercase tracking-widest mb-2">Total</p>
-                                    <h3 className="text-5xl font-black bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 bg-clip-text text-transparent">{stats?.total || 0}</h3>
-                                </div>
-                            </div>
-                            <p className="text-sm font-bold text-slate-700">Avaliações no Ciclo</p>
-                            <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
-                        </CardContent>
-                    </Card>
-
-                    <Card className="group border-0 shadow-xl bg-white/90 backdrop-blur-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 overflow-hidden relative">
-                        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-emerald-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                        <CardContent className="p-8 relative">
-                            <div className="flex items-start justify-between mb-6">
-                                <div className="p-4 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-2xl shadow-xl shadow-emerald-500/40 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
-                                    <CheckCircle2 className="h-8 w-8" />
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-xs font-extrabold text-emerald-600 uppercase tracking-widest mb-2">Concluídas</p>
-                                    <h3 className="text-5xl font-black bg-gradient-to-br from-emerald-600 via-emerald-700 to-green-700 bg-clip-text text-transparent">{stats?.completed || 0}</h3>
-                                </div>
-                            </div>
-                            <p className="text-sm font-bold text-slate-700">Avaliações Finalizadas</p>
-                            <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-green-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
-                        </CardContent>
-                    </Card>
-
-                    <Card className="group border-0 shadow-xl bg-white/90 backdrop-blur-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 overflow-hidden relative">
-                        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-amber-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                        <CardContent className="p-8 relative">
-                            <div className="flex items-start justify-between mb-6">
-                                <div className="p-4 bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-2xl shadow-xl shadow-amber-500/40 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
-                                    <Clock className="h-8 w-8" />
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-xs font-extrabold text-amber-600 uppercase tracking-widest mb-2">Pendentes</p>
-                                    <h3 className="text-5xl font-black bg-gradient-to-br from-amber-600 via-amber-700 to-orange-700 bg-clip-text text-transparent">{stats?.pending || 0}</h3>
-                                </div>
-                            </div>
-                            <p className="text-sm font-bold text-slate-700">Aguardando Início</p>
-                            <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-orange-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
-                        </CardContent>
-                    </Card>
-
-                    <Card className="group border-0 shadow-xl bg-white/90 backdrop-blur-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 overflow-hidden relative">
-                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-indigo-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                        <CardContent className="p-8 relative">
-                            <div className="flex items-start justify-between mb-6">
-                                <div className="p-4 bg-gradient-to-br from-indigo-500 to-indigo-600 text-white rounded-2xl shadow-xl shadow-indigo-500/40 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
-                                    <Target className="h-8 w-8" />
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-xs font-extrabold text-indigo-600 uppercase tracking-widest mb-2">Taxa</p>
-                                    <h3 className="text-5xl font-black bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-700 bg-clip-text text-transparent">{Math.round(stats?.completionRate || 0)}%</h3>
-                                </div>
-                            </div>
-                            <p className="text-sm font-bold text-slate-700">Taxa de Conclusão</p>
-                            <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-purple-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
-                        </CardContent>
-                    </Card>
-                </div>
-
-                {/* Charts Section */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Completion Status Chart */}
-                    <Card className="col-span-1 border-0 shadow-2xl bg-white/95 backdrop-blur-sm hover:shadow-3xl transition-all duration-500 overflow-hidden group">
-                        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                        <CardHeader className="pb-6 relative">
-                            <CardTitle className="font-black flex items-center gap-3 text-xl">
-                                <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-600 text-white rounded-xl shadow-lg shadow-purple-500/30">
-                                    <PieChart className="h-6 w-6" />
-                                </div>
-                                <div>
-                                    <div className="text-xl font-black text-slate-900">Status das Avaliações</div>
-                                    <div className="text-xs font-semibold text-slate-500 mt-1">Distribuição atual do progresso</div>
-                                </div>
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="flex items-center justify-center p-8 pt-0 relative">
-                            <div className="h-[300px] w-full max-w-[340px]">
-                                {stats?.total === 0 ? (
-                                    <div className="h-full flex flex-col items-center justify-center text-muted-foreground text-center">
-                                        <div className="p-6 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl mb-4 shadow-inner">
-                                            <AlertCircle className="h-14 w-14 text-slate-300" />
+                {/* Manager View - Full Statistics */}
+                {viewMode === 'manager' && (
+                    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        {/* Stats Overview */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <Card className="border-0 shadow-lg shadow-blue-500/5 bg-gradient-to-br from-blue-50 via-white to-blue-50/50 hover:shadow-xl hover:shadow-blue-500/15 transition-all duration-500 hover:-translate-y-2 group overflow-hidden">
+                                <CardContent className="p-7">
+                                    <div className="flex items-start justify-between mb-5">
+                                        <div className="p-3.5 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-2xl shadow-lg shadow-blue-500/25 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
+                                            <Users className="h-7 w-7" />
                                         </div>
-                                        <p className="text-sm font-bold text-slate-600">Sem dados para exibir</p>
-                                        <p className="text-xs text-slate-400 mt-2">Aguardando avaliações</p>
+                                        <div className="text-right">
+                                            <p className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1.5">Total</p>
+                                            <h3 className="text-4xl font-black bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">{stats?.total || 0}</h3>
+                                        </div>
                                     </div>
-                                ) : (
-                                    <Doughnut
-                                        data={completionData}
-                                        options={{
-                                            plugins: {
-                                                legend: {
-                                                    position: 'bottom',
-                                                    labels: {
-                                                        usePointStyle: true,
-                                                        padding: 18,
-                                                        font: { size: 13, weight: 700 }
-                                                    }
-                                                }
-                                            },
-                                            maintainAspectRatio: false,
-                                            cutout: '70%'
-                                        }}
-                                    />
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
+                                    <p className="text-sm font-semibold text-slate-600">Avaliações no Ciclo</p>
+                                </CardContent>
+                            </Card>
 
-                    {/* Progress Timeline */}
-                    <Card className="col-span-1 lg:col-span-2 border-0 shadow-2xl bg-white/95 backdrop-blur-sm hover:shadow-3xl transition-all duration-500 overflow-hidden group">
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                        <CardHeader className="pb-6 relative">
-                            <CardTitle className="font-black flex items-center gap-3 text-xl">
-                                <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-xl shadow-lg shadow-blue-500/30">
-                                    <TrendingUp className="h-6 w-6" />
-                                </div>
-                                <div>
-                                    <div className="text-xl font-black text-slate-900">Progresso Global</div>
-                                    <div className="text-xs font-semibold text-slate-500 mt-1">Acompanhamento da taxa de adesão e conclusão</div>
-                                </div>
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-10 p-8 pt-0 relative">
-                            <div className="space-y-4">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-sm font-bold text-slate-700 uppercase tracking-wide">Progresso Geral</span>
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-3xl font-black bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                                            {Math.round(stats?.completionRate || 0)}%
-                                        </span>
+                            <Card className="border-0 shadow-lg shadow-emerald-500/5 bg-gradient-to-br from-emerald-50 via-white to-emerald-50/50 hover:shadow-xl hover:shadow-emerald-500/15 transition-all duration-500 hover:-translate-y-2 group overflow-hidden">
+                                <CardContent className="p-7">
+                                    <div className="flex items-start justify-between mb-5">
+                                        <div className="p-3.5 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-2xl shadow-lg shadow-emerald-500/25 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
+                                            <CheckCircle2 className="h-7 w-7" />
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-1.5">Concluídas</p>
+                                            <h3 className="text-4xl font-black bg-gradient-to-r from-emerald-600 to-emerald-700 bg-clip-text text-transparent">{stats?.completed || 0}</h3>
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="relative">
-                                    <Progress
-                                        value={stats?.completionRate || 0}
-                                        className="h-8 rounded-full bg-gradient-to-r from-slate-100 to-slate-200 shadow-inner border-2 border-slate-200/50"
-                                    />
-                                    <div className="absolute inset-0 flex items-center justify-center">
-                                        <span className="text-xs font-black text-slate-700 drop-shadow-sm">
-                                            {stats?.completed || 0} de {stats?.total || 0} concluídas
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
+                                    <p className="text-sm font-semibold text-slate-600">Avaliações Finalizadas</p>
+                                </CardContent>
+                            </Card>
 
-                            <div className="grid grid-cols-3 gap-6 pt-8 border-t-2 border-slate-100">
-                                <div className="space-y-3 p-5 rounded-2xl bg-gradient-to-br from-indigo-50 via-indigo-50/50 to-white border-2 border-indigo-100/50 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                                    <span className="text-xs uppercase font-extrabold text-indigo-600 tracking-widest">Em Calibração</span>
-                                    <div className="flex items-center gap-3">
-                                        <div className="h-5 w-5 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 shadow-xl shadow-indigo-500/40" />
-                                        <span className="text-3xl font-black text-indigo-700">{stats?.calibrated || 0}</span>
+                            <Card className="border-0 shadow-lg shadow-amber-500/5 bg-gradient-to-br from-amber-50 via-white to-amber-50/50 hover:shadow-xl hover:shadow-amber-500/15 transition-all duration-500 hover:-translate-y-2 group overflow-hidden">
+                                <CardContent className="p-7">
+                                    <div className="flex items-start justify-between mb-5">
+                                        <div className="p-3.5 bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-2xl shadow-lg shadow-amber-500/25 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
+                                            <Clock className="h-7 w-7" />
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-xs font-bold text-amber-600 uppercase tracking-wider mb-1.5">Pendentes</p>
+                                            <h3 className="text-4xl font-black bg-gradient-to-r from-amber-600 to-amber-700 bg-clip-text text-transparent">{stats?.pending || 0}</h3>
+                                        </div>
+                                    </div>
+                                    <p className="text-sm font-semibold text-slate-600">Aguardando Início</p>
+                                </CardContent>
+                            </Card>
+
+                            <Card className="border-0 shadow-lg shadow-indigo-500/5 bg-gradient-to-br from-indigo-50 via-white to-indigo-50/50 hover:shadow-xl hover:shadow-indigo-500/15 transition-all duration-500 hover:-translate-y-2 group overflow-hidden">
+                                <CardContent className="p-7">
+                                    <div className="flex items-start justify-between mb-5">
+                                        <div className="p-3.5 bg-gradient-to-br from-indigo-500 to-indigo-600 text-white rounded-2xl shadow-lg shadow-indigo-500/25 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
+                                            <Target className="h-7 w-7" />
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-1.5">Taxa</p>
+                                            <h3 className="text-4xl font-black bg-gradient-to-r from-indigo-600 to-indigo-700 bg-clip-text text-transparent">{Math.round(stats?.completionRate || 0)}%</h3>
+                                        </div>
+                                    </div>
+                                    <p className="text-sm font-semibold text-slate-600">Taxa de Conclusão</p>
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        {/* Charts Section */}
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            {/* Completion Status Chart */}
+                            <Card className="col-span-1 border-0 shadow-lg shadow-slate-200/40 bg-white hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-500 hover:-translate-y-1 rounded-3xl overflow-hidden">
+                                <CardHeader className="pb-4">
+                                    <CardTitle className="font-bold flex items-center gap-2 text-xl">
+                                        <div className="p-2 bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-lg">
+                                            <PieChart className="h-5 w-5" />
+                                        </div>
+                                        Status das Avaliações
+                                    </CardTitle>
+                                    <CardDescription className="text-sm">Distribuição atual do progresso</CardDescription>
+                                </CardHeader>
+                                <CardContent className="flex items-center justify-center p-6 pt-2">
+                                    <div className="h-[280px] w-full max-w-[320px]">
+                                        {stats?.total === 0 ? (
+                                            <div className="h-full flex flex-col items-center justify-center text-muted-foreground text-center">
+                                                <div className="p-4 bg-slate-50 rounded-full mb-3">
+                                                    <AlertCircle className="h-12 w-12 text-slate-300" />
+                                                </div>
+                                                <p className="text-sm font-semibold text-slate-500">Sem dados para exibir</p>
+                                                <p className="text-xs text-slate-400 mt-1">Aguardando avaliações</p>
+                                            </div>
+                                        ) : (
+                                            <Doughnut
+                                                data={completionData}
+                                                options={{
+                                                    plugins: {
+                                                        legend: {
+                                                            position: 'bottom',
+                                                            labels: {
+                                                                usePointStyle: true,
+                                                                padding: 15,
+                                                                font: { size: 12, weight: '600' }
+                                                            }
+                                                        }
+                                                    },
+                                                    maintainAspectRatio: false,
+                                                    cutout: '65%'
+                                                }}
+                                            />
+                                        )}
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            {/* Progress Timeline */}
+                            <Card className="col-span-1 lg:col-span-2 border-0 shadow-lg shadow-slate-200/40 bg-white hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-500 hover:-translate-y-1 rounded-3xl overflow-hidden">
+                                <CardHeader className="pb-4">
+                                    <CardTitle className="font-bold flex items-center gap-2 text-xl">
+                                        <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg">
+                                            <TrendingUp className="h-5 w-5" />
+                                        </div>
+                                        Progresso Global
+                                    </CardTitle>
+                                    <CardDescription className="text-sm">Acompanhamento da taxa de adesão e conclusão</CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-8 p-8 pt-4">
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-sm font-bold text-slate-700">Progresso Geral</span>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-2xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                                                    {Math.round(stats?.completionRate || 0)}%
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="relative">
+                                            <Progress
+                                                value={stats?.completionRate || 0}
+                                                className="h-6 rounded-full bg-slate-100 shadow-inner"
+                                            />
+                                            <div className="absolute inset-0 flex items-center justify-center">
+                                                <span className="text-xs font-bold text-slate-600">
+                                                    {stats?.completed || 0} de {stats?.total || 0} concluídas
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-3 gap-6 pt-6 border-t-2 border-slate-100">
+                                        <div className="space-y-2 p-4 rounded-xl bg-gradient-to-br from-indigo-50 to-indigo-100/50 border border-indigo-200/50">
+                                            <span className="text-xs uppercase font-bold text-indigo-600 tracking-wider">Em Calibração</span>
+                                            <div className="flex items-center gap-3">
+                                                <div className="h-4 w-4 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 shadow-lg shadow-indigo-500/30" />
+                                                <span className="text-2xl font-black text-indigo-700">{stats?.calibrated || 0}</span>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2 p-4 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100/50 border border-blue-200/50">
+                                            <span className="text-xs uppercase font-bold text-blue-600 tracking-wider">Em Andamento</span>
+                                            <div className="flex items-center gap-3">
+                                                <div className="h-4 w-4 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg shadow-blue-500/30" />
+                                                <span className="text-2xl font-black text-blue-700">{stats?.inProgress || 0}</span>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2 p-4 rounded-xl bg-gradient-to-br from-amber-50 to-amber-100/50 border border-amber-200/50">
+                                            <span className="text-xs uppercase font-bold text-amber-600 tracking-wider">Não Iniciadas</span>
+                                            <div className="flex items-center gap-3">
+                                                <div className="h-4 w-4 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 shadow-lg shadow-amber-500/30" />
+                                                <span className="text-2xl font-black text-amber-700">{stats?.pending || 0}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </div>
+                )}
+
+                {/* Employee View - Simplified */}
+                {viewMode === 'employee' && (
+                    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        {/* Simplified Stats */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <Card className="border-0 shadow-xl shadow-emerald-500/10 bg-gradient-to-br from-emerald-50 via-white to-emerald-50/50 hover:shadow-2xl hover:shadow-emerald-500/20 transition-all duration-300 hover:-translate-y-1 group">
+                                <CardContent className="p-8">
+                                    <div className="flex items-start justify-between mb-4">
+                                        <div className="p-4 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-2xl shadow-lg shadow-emerald-500/30 group-hover:scale-110 transition-transform duration-300">
+                                            <Target className="h-8 w-8" />
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-1">Meu Status</p>
+                                            <h3 className="text-5xl font-black bg-gradient-to-r from-emerald-600 to-emerald-700 bg-clip-text text-transparent">
+                                                {stats?.completed || 0}
+                                            </h3>
+                                        </div>
+                                    </div>
+                                    <p className="text-base font-semibold text-slate-600">Avaliações Concluídas</p>
+                                </CardContent>
+                            </Card>
+
+                            <Card className="border-0 shadow-xl shadow-blue-500/10 bg-gradient-to-br from-blue-50 via-white to-blue-50/50 hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 hover:-translate-y-1 group">
+                                <CardContent className="p-8">
+                                    <div className="flex items-start justify-between mb-4">
+                                        <div className="p-4 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-2xl shadow-lg shadow-blue-500/30 group-hover:scale-110 transition-transform duration-300">
+                                            <Clock className="h-8 w-8" />
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">Pendentes</p>
+                                            <h3 className="text-5xl font-black bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
+                                                {stats?.pending || 0}
+                                            </h3>
+                                        </div>
+                                    </div>
+                                    <p className="text-base font-semibold text-slate-600">Aguardando Resposta</p>
+                                </CardContent>
+                            </Card>
+
+                            <Card className="border-0 shadow-xl shadow-purple-500/10 bg-gradient-to-br from-purple-50 via-white to-purple-50/50 hover:shadow-2xl hover:shadow-purple-500/20 transition-all duration-300 hover:-translate-y-1 group">
+                                <CardContent className="p-8">
+                                    <div className="flex items-start justify-between mb-4">
+                                        <div className="p-4 bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-2xl shadow-lg shadow-purple-500/30 group-hover:scale-110 transition-transform duration-300">
+                                            <TrendingUp className="h-8 w-8" />
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-xs font-bold text-purple-600 uppercase tracking-wider mb-1">Progresso</p>
+                                            <h3 className="text-5xl font-black bg-gradient-to-r from-purple-600 to-purple-700 bg-clip-text text-transparent">
+                                                {Math.round(stats?.completionRate || 0)}%
+                                            </h3>
+                                        </div>
+                                    </div>
+                                    <p className="text-base font-semibold text-slate-600">Taxa de Conclusão</p>
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        {/* Employee Progress Card */}
+                        <Card className="border-0 shadow-2xl shadow-slate-300/30 bg-white hover:shadow-2xl hover:shadow-slate-300/40 transition-all duration-300">
+                            <CardHeader className="pb-4">
+                                <CardTitle className="font-bold flex items-center gap-2 text-2xl">
+                                    <div className="p-2 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-lg">
+                                        <CheckCircle2 className="h-6 w-6" />
+                                    </div>
+                                    Meu Progresso no Ciclo
+                                </CardTitle>
+                                <CardDescription className="text-base">Acompanhe seu desempenho e avaliações pendentes</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-8 p-8 pt-4">
+                                <div className="space-y-4">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-base font-bold text-slate-700">Progresso Geral</span>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-3xl font-black bg-gradient-to-r from-emerald-600 to-emerald-700 bg-clip-text text-transparent">
+                                                {Math.round(stats?.completionRate || 0)}%
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="relative">
+                                        <Progress
+                                            value={stats?.completionRate || 0}
+                                            className="h-8 rounded-full bg-slate-100 shadow-inner"
+                                        />
+                                        <div className="absolute inset-0 flex items-center justify-center">
+                                            <span className="text-sm font-bold text-slate-600">
+                                                {stats?.completed || 0} de {stats?.total || 0} concluídas
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="space-y-3 p-5 rounded-2xl bg-gradient-to-br from-blue-50 via-blue-50/50 to-white border-2 border-blue-100/50 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                                    <span className="text-xs uppercase font-extrabold text-blue-600 tracking-widest">Em Andamento</span>
-                                    <div className="flex items-center gap-3">
-                                        <div className="h-5 w-5 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 shadow-xl shadow-blue-500/40" />
-                                        <span className="text-3xl font-black text-blue-700">{stats?.inProgress || 0}</span>
+
+                                <div className="grid grid-cols-2 gap-6 pt-6 border-t-2 border-slate-100">
+                                    <div className="space-y-3 p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100/50 border-2 border-blue-200/50">
+                                        <span className="text-sm uppercase font-bold text-blue-600 tracking-wider">Em Andamento</span>
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-5 w-5 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg shadow-blue-500/30" />
+                                            <span className="text-3xl font-black text-blue-700">{stats?.inProgress || 0}</span>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-3 p-6 rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100/50 border-2 border-amber-200/50">
+                                        <span className="text-sm uppercase font-bold text-amber-600 tracking-wider">Não Iniciadas</span>
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-5 w-5 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 shadow-lg shadow-amber-500/30" />
+                                            <span className="text-3xl font-black text-amber-700">{stats?.pending || 0}</span>
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="space-y-3 p-5 rounded-2xl bg-gradient-to-br from-amber-50 via-amber-50/50 to-white border-2 border-amber-100/50 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                                    <span className="text-xs uppercase font-extrabold text-amber-600 tracking-widest">Não Iniciadas</span>
-                                    <div className="flex items-center gap-3">
-                                        <div className="h-5 w-5 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 shadow-xl shadow-amber-500/40" />
-                                        <span className="text-3xl font-black text-amber-700">{stats?.pending || 0}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                )}
             </div>
         </div>
     );
