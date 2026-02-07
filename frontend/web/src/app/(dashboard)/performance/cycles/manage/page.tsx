@@ -516,7 +516,7 @@ export default function CyclesManagePage() {
                                 </DialogHeader>
                                 <DialogFooter className="gap-2 mt-4">
                                     <Button variant="outline" onClick={() => { setDeleteDialogOpen(false); setDeletingCycleId(null); }}>Cancelar</Button>
-                                    <Button variant="destructive" onClick={handleDeleteCycle} disabled={submitting}>
+                                    <Button variant="danger" onClick={handleDeleteCycle} disabled={submitting}>
                                         {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : "Excluir Ciclo"}
                                     </Button>
                                 </DialogFooter>
@@ -541,13 +541,15 @@ export default function CyclesManagePage() {
                         <p className="text-slate-500 mb-8 max-w-sm mx-auto leading-relaxed">
                             Crie seu primeiro ciclo de avaliação para começar a desenvolver talentos e acompanhar resultados.
                         </p>
-                        <Button
-                            size="lg"
-                            onClick={() => setCreateDialogOpen(true)}
-                            className="h-12 px-8 rounded-xl font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 hover:shadow-xl hover:shadow-blue-600/30 transition-all hover:-translate-y-1"
-                        >
-                            Criar Primeiro Ciclo
-                        </Button>
+                        <div className="flex justify-center">
+                            <Button
+                                size="lg"
+                                onClick={() => setCreateDialogOpen(true)}
+                                className="h-12 px-8 rounded-xl font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 hover:shadow-xl hover:shadow-blue-600/30 transition-all hover:-translate-y-1"
+                            >
+                                Criar Primeiro Ciclo
+                            </Button>
+                        </div>
                     </div>
                 ) : (
                     /* Cycles Grid */
