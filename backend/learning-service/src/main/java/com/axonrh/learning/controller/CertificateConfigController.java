@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/learning/certificate-configs")
+@RequestMapping("/api/v1/learning/certificate-configs")
 public class CertificateConfigController {
 
     private final CertificateConfigService service;
@@ -17,10 +17,18 @@ public class CertificateConfigController {
         this.service = service;
     }
 
+    private UUID getTenantId(String tenantIdHeader) {
+        if (tenantIdHeader != null && !tenantIdHeader.isEmpty()) {
+            return UUID.fromString(tenantIdHeader);
+        }
+        return UUID.fromString("00000000-0000-0000-0000-000000000000");
+    }
+
     @GetMapping
     public ResponseEntity<CertificateConfig> getConfig(
-            @RequestHeader("X-Tenant-ID") UUID tenantId,
+            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader,
             @RequestParam(required = false) UUID courseId) {
+        UUID tenantId = getTenantId(tenantIdHeader);
         if (courseId != null) {
             return ResponseEntity.ok(service.getConfig(tenantId, courseId));
         }
@@ -29,9 +37,9 @@ public class CertificateConfigController {
 
     @PostMapping
     public ResponseEntity<CertificateConfig> saveConfig(
-            @RequestHeader("X-Tenant-ID") UUID tenantId,
+            @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader,
             @RequestBody CertificateConfig config) {
-        config.setTenantId(tenantId);
+        config.setTenantId(getTenantId(tenantIdHeader));
         return ResponseEntity.ok(service.saveConfig(config));
     }
 }
