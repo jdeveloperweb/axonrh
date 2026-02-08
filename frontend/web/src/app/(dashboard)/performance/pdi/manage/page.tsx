@@ -39,6 +39,7 @@ import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { pdisApi, PDI } from '@/lib/api/performance';
 import { employeesApi, Employee } from '@/lib/api/employees';
+import { useAuthStore } from '@/stores/auth-store';
 import { useConfirm } from '@/components/providers/ConfirmProvider';
 
 // Fallback employees when API is unavailable
@@ -95,6 +96,8 @@ const MOCK_EMPLOYEES: Employee[] = [
 
 export default function ManagePDIPage() {
     const { toast } = useToast();
+    const { user } = useAuthStore();
+    const { confirm } = useConfirm();
     const [loading, setLoading] = useState(true);
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [pdis, setPdis] = useState<PDI[]>([]);

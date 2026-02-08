@@ -19,17 +19,6 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import {
   ArrowLeft,
   Plus,
   User,
@@ -173,9 +162,21 @@ export default function PDIDetailPage() {
   };
 
   const handleRemoveAction = async (actionId: string) => {
+    const actionToRemove = pdi?.actions.find(a => a.id === actionId);
+    if (!actionToRemove) return;
+
+    const confirmed = await confirm({
+      title: 'Remover Acao',
+      description: `Tem certeza que deseja remover a acao "${actionToRemove.title}"? Esta acao nao pode ser desfeita.`,
+      variant: 'destructive',
+      confirmLabel: 'Remover'
+    });
+
+    if (!confirmed) return;
+
     try {
       await pdisApi.removeAction(pdiId, actionId);
-      toast({ title: 'Sucesso', description: 'Acao removida' });
+      toast({ title: 'Sucesso', description: 'Acao removida com sucesso' });
       loadPDI();
     } catch (error) {
       console.error('Erro ao remover acao:', error);
@@ -286,31 +287,15 @@ export default function PDIDetailPage() {
         {/* Delete PDI button for Authorized Users */}
         {(user?.roles?.some(r => ['ADMIN', 'RH', 'GESTOR_RH', 'ANALISTA_DP', 'MANAGER', 'GESTOR', 'LIDER'].includes(r)) || pdi.employeeId === user?.id) &&
           (pdi.status === 'DRAFT' || pdi.status === 'ACTIVE') && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="outline" size="icon" className="text-red-500 hover:text-red-700 hover:bg-red-50 border-red-100">
-                  {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-5 w-5" />}
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Excluir PDI</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Tem certeza que deseja excluir o PDI &quot;{pdi.title}&quot;? Esta acao nao pode ser desfeita e todos os dados relacionados, incluindo acoes, serao removidos permanentemente.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={handleDeletePDI}
-                    className="bg-red-600 hover:bg-red-700 text-white font-bold"
-                    disabled={isDeleting}
-                  >
-                    {isDeleting ? 'Excluindo...' : 'Confirmar Exclusao'}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            <Button
+              variant="outline"
+              size="icon"
+              className="text-red-500 hover:text-red-700 hover:bg-red-50 border-red-100"
+              onClick={handleDeletePDI}
+              disabled={isDeleting}
+            >
+              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-5 w-5" />}
+            </Button>
           )}
       </div>
 
@@ -623,30 +608,14 @@ export default function PDIDetailPage() {
                                 Concluir
                               </Button>
                             )}
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button size="sm" variant="ghost" className="h-8 text-xs text-red-500 hover:text-red-700 hover:bg-red-50">
-                                  <Trash2 className="h-3 w-3" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Remover Acao</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Tem certeza que deseja remover a acao &quot;{action.title}&quot;? Esta acao nao pode ser desfeita.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => handleRemoveAction(action.id!)}
-                                    className="bg-red-600 hover:bg-red-700"
-                                  >
-                                    Remover
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-8 text-xs text-red-500 hover:text-red-700 hover:bg-red-50"
+                              onClick={() => handleRemoveAction(action.id!)}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
                           </div>
                         )}
 

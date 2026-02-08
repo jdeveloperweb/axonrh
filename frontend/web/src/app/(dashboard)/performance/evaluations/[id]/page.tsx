@@ -10,17 +10,6 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Separator } from '@/components/ui/separator';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import {
   ArrowLeft,
   Save,
   Send,
@@ -32,6 +21,7 @@ import Link from 'next/link';
 import { evaluationsApi, Evaluation, EvaluationAnswer } from '@/lib/api/performance';
 import { getErrorMessage } from '@/lib/api/client';
 import { useToast } from '@/hooks/use-toast';
+import { useConfirm } from '@/components/providers/ConfirmProvider';
 
 interface FormQuestion {
   id: string;
@@ -115,6 +105,7 @@ export default function EvaluationPage() {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
+  const { confirm } = useConfirm();
   const evaluationId = params.id as string;
 
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
@@ -221,6 +212,14 @@ export default function EvaluationPage() {
   };
 
   const handleSubmit = async () => {
+    const confirmed = await confirm({
+      title: 'Confirmar Submissão',
+      description: 'Após submeter a avaliação, você não poderá mais editá-la. Tem certeza que deseja continuar?',
+      confirmLabel: 'Confirmar'
+    });
+
+    if (!confirmed) return;
+
     try {
       setSubmitting(true);
       await evaluationsApi.saveAnswers(evaluationId, Object.values(answers));
@@ -311,8 +310,8 @@ export default function EvaluationPage() {
         <div className="flex-1">
           <h1 className="text-2xl font-bold">Avaliacao de Desempenho</h1>
           <p className="text-muted-foreground">
-            {evaluation.evaluationType === 'SELF' ? 'Autoavaliacao' :
-              evaluation.evaluationType === 'MANAGER' ? 'Avaliacao de Gestor' :
+            {evaluation.evaluatorType === 'SELF' ? 'Autoavaliacao' :
+              evaluation.evaluatorType === 'MANAGER' ? 'Avaliacao de Gestor' :
                 'Avaliacao de Pares'}
           </p>
         </div>
@@ -483,29 +482,13 @@ export default function EvaluationPage() {
             {saving ? 'Salvando...' : 'Salvar Rascunho'}
           </Button>
 
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button disabled={calculateProgress() < 100 || submitting}>
-                <Send className="h-4 w-4 mr-2" />
-                {submitting ? 'Enviando...' : 'Submeter Avaliacao'}
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Confirmar Submissao</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Apos submeter a avaliacao, voce nao podera mais edita-la.
-                  Tem certeza que deseja continuar?
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={handleSubmit}>
-                  Confirmar
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <Button
+            disabled={calculateProgress() < 100 || submitting}
+            onClick={handleSubmit}
+          >
+            <Send className="h-4 w-4 mr-2" />
+            {submitting ? 'Enviando...' : 'Submeter Avaliacao'}
+          </Button>
         </div>
       )}
 
