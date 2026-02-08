@@ -12,6 +12,7 @@ import java.util.UUID;
 
 /**
  * Acao de um PDI.
+ * Represents an action item within an Individual Development Plan.
  */
 @Entity
 @Table(name = "pdi_actions")
