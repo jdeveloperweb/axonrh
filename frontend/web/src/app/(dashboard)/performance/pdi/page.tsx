@@ -79,7 +79,11 @@ export default function PDIListPage() {
       setLoading(true);
 
       // BUSCAR O ID DO COLABORADOR
-      const employee = await employeesApi.getMe().catch(() => null);
+      const employee = await employeesApi.getMe().catch((error) => {
+        console.error('Erro ao buscar dados do colaborador:', error);
+        return null;
+      });
+
       if (!employee) {
         console.warn('Colaborador não encontrado para este usuário.');
         setLoading(false);
@@ -87,9 +91,15 @@ export default function PDIListPage() {
       }
 
       const employeeId = employee.id;
+      console.log('DEBUG: User ID:', user?.id);
+      console.log('DEBUG: Employee ID:', employeeId);
+      console.log('DEBUG: Tenant ID:', user?.tenantId);
 
       const [my, team, pending, statistics] = await Promise.all([
-        pdisApi.getByEmployee(employeeId),
+        pdisApi.getByEmployee(employeeId).then(res => {
+          console.log('DEBUG: getByEmployee result:', res);
+          return res;
+        }),
         isManager ? pdisApi.getByTeam(employeeId) : Promise.resolve([]),
         isManager ? pdisApi.getPendingApproval(employeeId) : Promise.resolve([]),
         pdisApi.getManagerStatistics(employeeId).catch(() => ({

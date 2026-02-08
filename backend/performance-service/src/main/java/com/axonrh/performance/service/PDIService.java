@@ -18,6 +18,8 @@ import java.util.UUID;
 @Transactional
 public class PDIService {
 
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PDIService.class);
+
     private final PDIRepository pdiRepository;
 
     public PDIService(PDIRepository pdiRepository) {
@@ -85,7 +87,10 @@ public class PDIService {
     // ==================== Listing ====================
 
     public List<PDI> getEmployeePDIs(UUID tenantId, UUID employeeId) {
-        return pdiRepository.findByTenantIdAndEmployeeIdOrderByCreatedAtDesc(tenantId, employeeId);
+        logger.info("Fetching PDIs for tenantId: {} and employeeId: {}", tenantId, employeeId);
+        List<PDI> pdis = pdiRepository.findByTenantIdAndEmployeeIdOrderByCreatedAtDesc(tenantId, employeeId);
+        logger.info("Found {} PDIs", pdis.size());
+        return pdis;
     }
 
     public List<PDI> getActivePDIs(UUID tenantId, UUID employeeId) {
