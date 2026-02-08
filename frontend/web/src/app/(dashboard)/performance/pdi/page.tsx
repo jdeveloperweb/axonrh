@@ -57,9 +57,11 @@ import { employeesApi, Employee } from '@/lib/api/employees';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
+import { useConfirm } from '@/components/providers/ConfirmProvider';
 
 export default function PDIListPage() {
   const { toast } = useToast();
+  const { confirm } = useConfirm();
   const [myPDIs, setMyPDIs] = useState<PDI[]>([]);
   const [teamPDIs, setTeamPDIs] = useState<PDI[]>([]);
   const [pendingApproval, setPendingApproval] = useState<PDI[]>([]);
@@ -113,6 +115,34 @@ export default function PDIListPage() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  const handleDeletePDI = async (id: string, title?: string) => {
+    const confirmed = await confirm({
+      title: 'Excluir PDI Permanentemente?',
+      description: `AVISO DE RISCO: Você está prestes a excluir o PDI "${title || ''}" e todo o seu histórico. Esta ação é irreversível e não pode ser desfeita.`,
+      variant: 'destructive',
+      confirmLabel: 'Entendo o risco, Excluir',
+      cancelLabel: 'Cancelar'
+    });
+
+    if (!confirmed) return;
+
+    try {
+      await pdisApi.delete(id);
+      toast({
+        title: 'PDI Excluído',
+        description: 'O PDI foi removido do sistema.',
+      });
+      loadData();
+    } catch (error) {
+      console.error('Failed to delete PDI:', error);
+      toast({
+        title: 'Erro ao Excluir',
+        description: 'Não foi possível excluir o PDI.',
+        variant: 'destructive',
+      });
+    }
+  };
 
 
   const filteredMyPDIs = myPDIs.filter((p) =>
@@ -216,6 +246,7 @@ export default function PDIListPage() {
             pdis={filteredMyPDIs}
             emptyMessage="Você ainda não possui nenhum PDI criado."
             showEmployee={false}
+            onDelete={handleDeletePDI}
           />
         </TabsContent>
 
@@ -226,6 +257,7 @@ export default function PDIListPage() {
                 pdis={filteredTeamPDIs}
                 emptyMessage="Nenhum PDI encontrado para sua equipe."
                 showEmployee={true}
+                onDelete={handleDeletePDI}
               />
             </TabsContent>
 
@@ -303,7 +335,7 @@ function TabTrigger({ value, icon, label, count }: any) {
   );
 }
 
-function PDIList({ pdis, emptyMessage, showEmployee }: { pdis: PDI[]; emptyMessage: string; showEmployee: boolean; }) {
+function PDIList({ pdis, emptyMessage, showEmployee, onDelete }: { pdis: PDI[]; emptyMessage: string; showEmployee: boolean; onDelete?: (id: string, title?: string) => void; }) {
   if (pdis.length === 0) {
     return (
       <Card className="border-dashed bg-slate-50/50 shadow-none">
@@ -387,7 +419,21 @@ function PDIList({ pdis, emptyMessage, showEmployee }: { pdis: PDI[]; emptyMessa
               </div>
             </div>
 
-            <div className="hidden md:flex items-center pl-6">
+            <div className="hidden md:flex items-center pl-6 gap-2">
+              {onDelete && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="z-10 group/trash hover:bg-red-50"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onDelete(pdi.id, pdi.title);
+                  }}
+                >
+                  <Trash2 className="w-4 h-4 text-slate-300 group-hover/trash:text-red-500 transition-colors" />
+                </Button>
+              )}
               <Button variant="ghost" size="icon" className="group-hover:translate-x-1 transition-transform group-hover:bg-indigo-50 group-hover:text-indigo-600">
                 <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-indigo-600" />
               </Button>
