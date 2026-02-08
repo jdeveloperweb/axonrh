@@ -53,24 +53,30 @@ export default function CertificateViewPage() {
             setDownloading(true);
             const element = certificateRef.current;
 
-            // Render the certificate to a canvas
+            // Render the certificate to a canvas with precise settings
             const canvas = await html2canvas(element, {
-                scale: 3, // High quality
-                useCORS: true, // For external images (logos/signatures)
+                scale: 2, // 2x is usually enough for good quality and more stable
+                useCORS: true,
                 logging: false,
-                backgroundColor: '#ffffff'
+                backgroundColor: '#ffffff',
+                windowWidth: element.scrollWidth,
+                windowHeight: element.scrollHeight,
+                onclone: (clonedDoc) => {
+                    // Force the cloned element to be visible and have correct dimensions
+                    const clonedElement = clonedDoc.querySelector('[ref="certificateRef"]') as HTMLElement;
+                    if (clonedElement) {
+                        clonedElement.style.overflow = 'visible';
+                    }
+                }
             });
 
-            const imgData = canvas.toDataURL('image/png');
+            const imgWidth = 841.89; // A4 width in pts (landscape)
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-            // Create PDF (landscape A4)
-            const pdf = new jsPDF({
-                orientation: 'landscape',
-                unit: 'px',
-                format: [canvas.width, canvas.height]
-            });
+            const pdf = new jsPDF('l', 'pt', 'a4');
+            const imgData = canvas.toDataURL('image/png', 1.0);
 
-            pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+            pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
             pdf.save(`certificado-${certificate.employeeName.toLowerCase().replace(/\s+/g, '-')}.pdf`);
 
             toast.success('Download iniciado!');
@@ -216,7 +222,7 @@ export default function CertificateViewPage() {
                             <div className="text-center space-y-2 w-full">
                                 <p className="text-slate-400 font-serif italic text-base">Certificamos que</p>
                                 <div className="w-full overflow-hidden px-4">
-                                    <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
+                                    <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-[1.2] whitespace-nowrap overflow-hidden text-ellipsis">
                                         {certificate.employeeName}
                                     </h1>
                                 </div>
@@ -228,7 +234,7 @@ export default function CertificateViewPage() {
                                     concluiu com êxito o treinamento corporativo de
                                 </p>
                                 <div className="px-8 w-full overflow-hidden">
-                                    <h3 className="text-2xl md:text-3xl font-black text-slate-800 uppercase tracking-tighter whitespace-nowrap overflow-hidden text-ellipsis">
+                                    <h3 className="text-2xl md:text-3xl font-black text-slate-800 uppercase tracking-tighter whitespace-nowrap overflow-hidden text-ellipsis leading-[1.4]">
                                         {certificate.courseName}
                                     </h3>
                                 </div>
