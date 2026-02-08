@@ -39,7 +39,10 @@ import {
   ChevronRight,
   AlertCircle,
   MoreHorizontal,
-  Briefcase
+  Briefcase,
+  BarChart3,
+  BookOpen,
+  GraduationCap
 } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -124,7 +127,7 @@ export default function PDIListPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
       </div>
     );
   }
@@ -140,13 +143,13 @@ export default function PDIListPage() {
             </Button>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Planos de Desenvolvimento</h1>
-            <p className="text-muted-foreground text-sm">
-              Gerencie PDIs e acompanhe o desenvolvimento profissional
+            <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Meus Planos</h1>
+            <p className="text-slate-500 mt-1">
+              Visualize seu progresso e alcance seus objetivos profissionais
             </p>
           </div>
         </div>
-        <Button onClick={() => setNewPDIOpen(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200 dark:shadow-indigo-900/20">
+        <Button onClick={() => setNewPDIOpen(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200 dark:shadow-indigo-900/20 font-bold h-11 px-6">
           <Plus className="h-4 w-4 mr-2" />
           Novo PDI
         </Button>
@@ -157,31 +160,31 @@ export default function PDIListPage() {
         <StatCard
           title="PDIs Ativos"
           value={stats?.active || 0}
-          subtitle="Em desenvolvimento"
-          icon={<Target className="h-6 w-6 text-white" />}
-          gradient="from-indigo-500 to-blue-600"
+          desc="Em desenvolvimento"
+          icon={<Target className="h-6 w-6 text-emerald-600" />}
+          colorClass="bg-emerald-50 text-emerald-700 border-emerald-100"
         />
         <StatCard
           title="Progresso Médio"
           value={`${stats?.averageProgress?.toFixed(0) || 0}%`}
-          subtitle="Geral da equipe"
-          icon={<TrendingUp className="h-6 w-6 text-white" />}
-          gradient="from-emerald-500 to-green-600"
+          desc="Geral da equipe"
+          icon={<TrendingUp className="h-6 w-6 text-blue-600" />}
+          colorClass="bg-blue-50 text-blue-700 border-blue-100"
           isProgress
         />
         <StatCard
           title="Pendentes"
           value={stats?.pendingApproval || 0}
-          subtitle="Aguardando aprovação"
-          icon={<Clock className="h-6 w-6 text-white" />}
-          gradient="from-amber-400 to-orange-500"
+          desc="Aguardando aprovação"
+          icon={<Clock className="h-6 w-6 text-amber-600" />}
+          colorClass="bg-amber-50 text-amber-700 border-amber-100"
         />
         <StatCard
           title="Atrasados"
           value={stats?.overdue || 0}
-          subtitle="Prazo expirado"
-          icon={<AlertCircle className="h-6 w-6 text-white" />}
-          gradient="from-red-500 to-rose-600"
+          desc="Prazo expirado"
+          icon={<AlertCircle className="h-6 w-6 text-red-600" />}
+          colorClass="bg-red-50 text-red-700 border-red-100"
         />
       </div>
 
@@ -192,13 +195,13 @@ export default function PDIListPage() {
           placeholder="Buscar por título, colaborador ou objetivo..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10 h-11 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 focus:ring-indigo-500"
+          className="pl-10 h-12 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 focus:ring-indigo-500 text-base shadow-sm"
         />
       </div>
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="my" className="w-full">
-        <TabsList className="w-full justify-start border-b border-slate-200 dark:border-slate-800 bg-transparent p-0 h-auto rounded-none mb-6">
+        <TabsList className="w-full justify-start border-b border-slate-200 dark:border-slate-800 bg-transparent p-0 h-auto rounded-none mb-8">
           <TabTrigger value="my" icon={<User className="h-4 w-4" />} label={`Meus PDIs (${myPDIs.length})`} />
           {isManager && (
             <>
@@ -208,7 +211,7 @@ export default function PDIListPage() {
           )}
         </TabsList>
 
-        <TabsContent value="my" className="mt-0">
+        <TabsContent value="my" className="mt-0 space-y-6">
           <PDIList
             pdis={filteredMyPDIs}
             emptyMessage="Você ainda não possui nenhum PDI criado."
@@ -218,7 +221,7 @@ export default function PDIListPage() {
 
         {isManager && (
           <>
-            <TabsContent value="team" className="mt-0">
+            <TabsContent value="team" className="mt-0 space-y-6">
               <PDIList
                 pdis={filteredTeamPDIs}
                 emptyMessage="Nenhum PDI encontrado para sua equipe."
@@ -226,7 +229,7 @@ export default function PDIListPage() {
               />
             </TabsContent>
 
-            <TabsContent value="approval" className="mt-0">
+            <TabsContent value="approval" className="mt-0 space-y-6">
               <PDIApprovalList pdis={pendingApproval} onApprove={loadData} />
             </TabsContent>
           </>
@@ -249,27 +252,32 @@ export default function PDIListPage() {
 // Sub-components
 // ----------------------------------------------------------------------
 
-function StatCard({ title, value, subtitle, icon, gradient, isProgress }: any) {
+function StatCard({ title, value, desc, icon, colorClass, isProgress }: any) {
   return (
-    <Card className={`border-none shadow-lg bg-gradient-to-br ${gradient} text-white overflow-hidden relative group hover:scale-[1.02] transition-transform duration-300`}>
-      <div className="absolute -right-6 -bottom-6 opacity-20 rotate-12 group-hover:rotate-0 transition-transform duration-500">
-        <div className="p-4 bg-white/20 rounded-full h-32 w-32 flex items-center justify-center">
-          {icon}
-        </div>
-      </div>
+    <Card className="border shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden relative group bg-white dark:bg-slate-950">
+      <div className={cn("absolute inset-0 opacity-0 group-hover:opacity-5 transition-opacity duration-500 bg-current", colorClass && colorClass.split(' ')[0])}></div>
       <CardHeader className="pb-2 relative z-10">
-        <CardTitle className="text-xs font-black uppercase tracking-widest opacity-80">
-          {title}
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+            {title}
+          </CardTitle>
+          <div className={cn("p-2 rounded-lg transition-transform duration-300 group-hover:scale-110", colorClass)}>
+            {icon}
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="relative z-10">
-        <div className="text-4xl font-black">{value}</div>
-        {isProgress ? (
-          <div className="mt-3 bg-black/20 rounded-full h-1.5 overflow-hidden">
-            <div className="h-full bg-white opacity-90" style={{ width: String(value).replace('%', '') + '%' }}></div>
+        <div className="text-3xl font-black text-slate-900 dark:text-white">{value}</div>
+        {isProgress && typeof value === 'string' && (
+          <div className="mt-3 bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden w-full">
+            <div
+              className="h-full bg-indigo-600 rounded-full"
+              style={{ width: value }}
+            ></div>
           </div>
-        ) : (
-          <p className="text-xs mt-1 opacity-80 font-medium">{subtitle}</p>
+        )}
+        {!isProgress && (
+          <p className="text-xs mt-1 text-slate-400 font-medium">{desc}</p>
         )}
       </CardContent>
     </Card>
@@ -280,7 +288,7 @@ function TabTrigger({ value, icon, label, count }: any) {
   return (
     <TabsTrigger
       value={value}
-      className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 data-[state=active]:text-indigo-600 data-[state=active]:shadow-none rounded-none px-6 py-3 border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-all"
+      className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 data-[state=active]:text-indigo-600 data-[state=active]:shadow-none rounded-none px-6 py-4 border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition-all text-sm font-medium"
     >
       <div className="flex items-center gap-2">
         {icon}
@@ -296,25 +304,14 @@ function TabTrigger({ value, icon, label, count }: any) {
 }
 
 function PDIList({ pdis, emptyMessage, showEmployee }: { pdis: PDI[]; emptyMessage: string; showEmployee: boolean; }) {
-  const getStatusConfig = (status: string) => {
-    const config: Record<string, { label: string; className: string; icon: any }> = {
-      DRAFT: { label: 'Rascunho', className: 'bg-slate-100 text-slate-600 border-slate-200', icon: Briefcase },
-      PENDING_APPROVAL: { label: 'Aguardando', className: 'bg-amber-50 text-amber-700 border-amber-200', icon: Clock },
-      ACTIVE: { label: 'Em Andamento', className: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: TrendingUp },
-      COMPLETED: { label: 'Concluído', className: 'bg-blue-50 text-blue-700 border-blue-200', icon: CheckCircle2 },
-      CANCELLED: { label: 'Cancelado', className: 'bg-red-50 text-red-700 border-red-200', icon: AlertCircle },
-    };
-    return config[status] || config['DRAFT'];
-  };
-
   if (pdis.length === 0) {
     return (
-      <Card className="border-dashed bg-slate-50/50">
+      <Card className="border-dashed bg-slate-50/50 shadow-none">
         <CardContent className="py-16 text-center flex flex-col items-center">
           <div className="h-16 w-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
             <TrendingUp className="h-8 w-8 text-slate-300" />
           </div>
-          <h3 className="font-semibold text-slate-800 mb-1">Lista Vazia</h3>
+          <h3 className="font-semibold text-slate-800 mb-1">Nenhum PDI encontrado</h3>
           <p className="text-muted-foreground">{emptyMessage}</p>
         </CardContent>
       </Card>
@@ -323,84 +320,81 @@ function PDIList({ pdis, emptyMessage, showEmployee }: { pdis: PDI[]; emptyMessa
 
   return (
     <div className="grid grid-cols-1 gap-4">
-      {pdis.map((pdi) => {
-        const status = getStatusConfig(pdi.status);
-        const StatusIcon = status.icon;
+      {pdis.map((pdi) => (
+        <Link key={pdi.id} href={`/performance/pdi/${pdi.id}`}>
+          <div className="group relative flex flex-col md:flex-row md:items-center justify-between p-6 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl hover:shadow-lg hover:border-indigo-200 dark:hover:border-indigo-900 transition-all duration-300 cursor-pointer">
 
-        return (
-          <Link key={pdi.id} href={`/performance/pdi/${pdi.id}`}>
-            <Card className="group hover:shadow-lg transition-all border-l-4 overflow-hidden" style={{ borderLeftColor: pdi.status === 'ACTIVE' ? '#10b981' : pdi.status === 'PENDING_APPROVAL' ? '#f59e0b' : '#cbd5e1' }}>
-              <CardContent className="p-6">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            {/* Status Indicator Line */}
+            <div className={cn(
+              "absolute left-0 top-6 bottom-6 w-1 rounded-r-full transition-colors",
+              pdi.status === 'ACTIVE' ? "bg-emerald-500" :
+                pdi.status === 'COMPLETED' ? "bg-blue-500" :
+                  pdi.status === 'PENDING_APPROVAL' ? "bg-amber-500" : "bg-slate-300"
+            )}></div>
 
-                  {/* Left Section: Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-2">
-                      <Badge variant="outline" className={cn("font-medium border gap-1.5", status.className)}>
-                        <StatusIcon className="w-3 h-3" />
-                        {status.label}
-                      </Badge>
-                      {pdi.endDate && (
-                        <span className="text-xs text-slate-500 font-medium flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
-                          {new Date(pdi.endDate).toLocaleDateString('pt-BR')}
-                        </span>
-                      )}
-                    </div>
+            <div className="flex-1 pl-4">
+              <div className="flex items-center gap-3 mb-2">
+                <Badge variant="outline" className={cn(
+                  "px-2.5 py-0.5 text-xs font-bold capitalize border",
+                  pdi.status === 'ACTIVE' && "bg-emerald-50 text-emerald-700 border-emerald-200",
+                  pdi.status === 'COMPLETED' && "bg-blue-50 text-blue-700 border-blue-200",
+                  pdi.status === 'PENDING_APPROVAL' && "bg-amber-50 text-amber-700 border-amber-200",
+                  pdi.status === 'DRAFT' && "bg-slate-50 text-slate-700 border-slate-200"
+                )}>
+                  {pdi.status === 'ACTIVE' ? 'Ativo' :
+                    pdi.status === 'COMPLETED' ? 'Concluído' :
+                      pdi.status === 'PENDING_APPROVAL' ? 'Aguardando' : 'Rascunho'}
+                </Badge>
+                {pdi.endDate && (
+                  <span className="text-xs text-slate-500 font-medium flex items-center gap-1 bg-slate-50 px-2 py-0.5 rounded-full">
+                    <Calendar className="w-3 h-3" />
+                    {new Date(pdi.endDate).toLocaleDateString('pt-BR')}
+                  </span>
+                )}
+              </div>
 
-                    <h3 className="text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition-colors mb-1">
-                      {pdi.title}
-                    </h3>
+              <h3 className="text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition-colors mb-1">
+                {pdi.title}
+              </h3>
 
-                    {showEmployee && (
-                      <div className="flex items-center gap-2 mt-2">
-                        <Avatar className="h-5 w-5">
-                          <AvatarFallback className="text-[9px] bg-slate-100">
-                            {pdi.employeeName?.[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        <p className="text-sm text-slate-600">{pdi.employeeName}</p>
-                      </div>
-                    )}
-
-                    {!showEmployee && (
-                      <p className="text-sm text-slate-500 line-clamp-1 mt-1">
-                        {pdi.description || 'Sem descrição definida.'}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Right Section: Progress & Actions */}
-                  <div className="flex flex-row md:flex-col items-center md:items-end gap-6 md:gap-2 min-w-[200px]">
-                    <div className="w-full md:text-right">
-                      <div className="flex items-center justify-between md:justify-end gap-2 mb-1">
-                        <span className="text-xs font-bold text-slate-500">PROGRESSO</span>
-                        <span className="text-sm font-black text-slate-900">{pdi.overallProgress}%</span>
-                      </div>
-                      <Progress value={pdi.overallProgress} className="h-2 w-full md:w-48 bg-slate-100" />
-                    </div>
-
-                    <div className="hidden md:flex items-center gap-4 text-xs text-slate-400 mt-2">
-                      <span className="flex items-center gap-1">
-                        <Target className="w-3 h-3" /> {pdi.actions.length} ações
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3" /> {pdi.actions.filter(a => a.status === 'COMPLETED').length} concluídas
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="md:border-l md:pl-6 flex items-center">
-                    <Button variant="ghost" size="icon" className="group-hover:translate-x-1 transition-transform">
-                      <ChevronRight className="w-5 h-5 text-slate-400" />
-                    </Button>
-                  </div>
+              {showEmployee ? (
+                <div className="flex items-center gap-2 mt-2">
+                  <Avatar className="h-6 w-6">
+                    <AvatarFallback className="text-[10px] bg-indigo-100 text-indigo-700 font-bold">
+                      {pdi.employeeName?.[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <p className="text-sm font-medium text-slate-600">{pdi.employeeName}</p>
                 </div>
-              </CardContent>
-            </Card>
-          </Link>
-        );
-      })}
+              ) : (
+                <p className="text-sm text-slate-500 line-clamp-1 max-w-lg">
+                  {pdi.description || 'Sem descrição definida.'}
+                </p>
+              )}
+            </div>
+
+            <div className="flex flex-col md:items-end gap-1 mt-4 md:mt-0 min-w-[200px] border-l md:border-l-0 md:pl-0 pl-4 border-slate-100">
+              <div className="flex justify-between md:justify-end w-full gap-4 mb-1">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Progresso</span>
+                <span className="text-sm font-black text-slate-900">{pdi.overallProgress}%</span>
+              </div>
+              <Progress value={pdi.overallProgress} className="h-2 w-full md:w-48 bg-slate-100" indicatorClassName={cn(
+                pdi.overallProgress === 100 ? "bg-emerald-500" : "bg-indigo-600"
+              )} />
+              <div className="flex gap-3 mt-2 text-xs text-slate-400">
+                <span className="flex items-center gap-1"><Target className="w-3 h-3" /> {pdi.actions.length} ações</span>
+                <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> {pdi.actions.filter(a => a.status === 'COMPLETED').length} concluídas</span>
+              </div>
+            </div>
+
+            <div className="hidden md:flex items-center pl-6">
+              <Button variant="ghost" size="icon" className="group-hover:translate-x-1 transition-transform group-hover:bg-indigo-50 group-hover:text-indigo-600">
+                <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-indigo-600" />
+              </Button>
+            </div>
+          </div>
+        </Link>
+      ))}
     </div>
   );
 }
@@ -424,7 +418,7 @@ function PDIApprovalList({ pdis, onApprove }: { pdis: PDI[]; onApprove: () => vo
 
   if (pdis.length === 0) {
     return (
-      <Card className="bg-slate-50/50 border-dashed">
+      <Card className="bg-slate-50/50 border-dashed shadow-none">
         <CardContent className="py-12 text-center">
           <CheckCircle2 className="h-12 w-12 mx-auto text-emerald-500 mb-4 opacity-50" />
           <p className="text-muted-foreground font-medium">Tudo em dia!</p>
@@ -437,48 +431,50 @@ function PDIApprovalList({ pdis, onApprove }: { pdis: PDI[]; onApprove: () => vo
   return (
     <div className="grid grid-cols-1 gap-4">
       {pdis.map((pdi) => (
-        <Card key={pdi.id} className="border-l-4 border-l-amber-400 shadow-sm">
+        <Card key={pdi.id} className="border-l-4 border-l-amber-400 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
           <CardContent className="p-6">
             <div className="flex flex-col md:flex-row justify-between gap-6">
               <div className="space-y-3 flex-1">
                 <div className="flex items-center gap-3">
-                  <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 gap-1.5">
+                  <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 gap-1.5 px-2.5 py-0.5 font-bold">
                     <Clock className="w-3 h-3" />
                     Aguardando Aprovação
                   </Badge>
-                  <span className="text-xs text-slate-400">Criado em {new Date(pdi.createdAt).toLocaleDateString()}</span>
+                  <span className="text-xs text-slate-400 font-medium">Criado em {new Date(pdi.createdAt).toLocaleDateString()}</span>
                 </div>
 
                 <div>
-                  <h3 className="font-bold text-lg text-slate-900">{pdi.title}</h3>
+                  <h3 className="font-bold text-xl text-slate-900">{pdi.title}</h3>
                   <div className="flex items-center gap-2 mt-1">
-                    <User className="h-4 w-4 text-slate-400" />
+                    <Avatar className="h-5 w-5">
+                      <AvatarFallback className="text-[9px] bg-slate-100">{pdi.employeeName?.[0]}</AvatarFallback>
+                    </Avatar>
                     <p className="text-sm font-medium text-slate-700">{pdi.employeeName}</p>
                   </div>
                 </div>
 
                 {pdi.focusAreas && (
-                  <div className="p-3 bg-slate-50 rounded-lg text-sm text-slate-600 border border-slate-100">
+                  <div className="p-3 bg-slate-50 rounded-lg text-sm text-slate-600 border border-slate-100/50">
                     <span className="font-semibold text-slate-800">Áreas de Foco:</span> {pdi.focusAreas}
                   </div>
                 )}
 
                 <div className="flex gap-4 text-xs font-medium text-slate-500">
-                  <span className="flex items-center gap-1"><Target className="w-3 h-3" /> {pdi.actions.length} ações planejadas</span>
-                  <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> Até {pdi.endDate ? new Date(pdi.endDate).toLocaleDateString() : 'N/A'}</span>
+                  <span className="flex items-center gap-1"><Target className="w-3 h-3 text-indigo-500" /> {pdi.actions.length} ações planejadas</span>
+                  <span className="flex items-center gap-1"><Calendar className="w-3 h-3 text-indigo-500" /> Até {pdi.endDate ? new Date(pdi.endDate).toLocaleDateString() : 'N/A'}</span>
                 </div>
               </div>
 
-              <div className="flex md:flex-col gap-3 justify-center md:border-l md:pl-6">
+              <div className="flex md:flex-col gap-3 justify-center md:border-l md:pl-6 md:w-48">
                 <Button
                   onClick={() => handleApprove(pdi.id)}
                   disabled={approving === pdi.id}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm w-full md:w-auto"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-200 w-full font-bold"
                 >
                   {approving === pdi.id ? 'Aprovando...' : 'Aprovar Plano'}
                 </Button>
-                <Link href={`/performance/pdi/${pdi.id}`} className="w-full md:w-auto">
-                  <Button variant="outline" className="w-full">Revisar Detalhes</Button>
+                <Link href={`/performance/pdi/${pdi.id}`} className="w-full">
+                  <Button variant="outline" className="w-full hover:bg-slate-50 text-slate-600 font-medium border-slate-300">Revisar Detalhes</Button>
                 </Link>
               </div>
             </div>
@@ -614,7 +610,7 @@ function NewPDIDialog({ open, onOpenChange, onSuccess, currentUserName, isManage
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2 col-span-2">
-              <Label>Título do Plano</Label>
+              <Label className="font-semibold text-slate-700">Título do Plano <span className="text-red-500">*</span></Label>
               <Input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -633,7 +629,7 @@ function NewPDIDialog({ open, onOpenChange, onSuccess, currentUserName, isManage
             </div>
 
             <div className="space-y-2">
-              <Label>Data Limite (Meta)</Label>
+              <Label className="font-semibold text-slate-700">Data Limite (Meta) <span className="text-red-500">*</span></Label>
               <Input
                 type="date"
                 value={endDate}
@@ -672,7 +668,7 @@ function NewPDIDialog({ open, onOpenChange, onSuccess, currentUserName, isManage
             <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-4">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
                 <div className="md:col-span-2 space-y-2">
-                  <Label className="text-xs">O que fazer?</Label>
+                  <Label className="text-xs font-semibold text-slate-500">O que fazer?</Label>
                   <Input
                     value={actionTitle}
                     onChange={(e) => setActionTitle(e.target.value)}
@@ -681,7 +677,7 @@ function NewPDIDialog({ open, onOpenChange, onSuccess, currentUserName, isManage
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs">Tipo de Ação</Label>
+                  <Label className="text-xs font-semibold text-slate-500">Tipo de Ação</Label>
                   <Select value={actionType} onValueChange={(v) => setActionType(v as PDIActionType)}>
                     <SelectTrigger className="bg-white">
                       <SelectValue />
@@ -709,7 +705,7 @@ function NewPDIDialog({ open, onOpenChange, onSuccess, currentUserName, isManage
             </div>
 
             {actions.length > 0 ? (
-              <div className="space-y-2 bg-white rounded-lg border border-slate-100 p-2">
+              <div className="space-y-2 bg-white rounded-lg border border-slate-100 p-2 shadow-sm">
                 {actions.map((act, idx) => (
                   <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 animate-in slide-in-from-bottom-2 fade-in duration-300">
                     <div className="flex items-center gap-3">
