@@ -16,17 +16,6 @@ import {
     DialogFooter,
 } from '@/components/ui/dialog';
 import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-    AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import {
     Select,
     SelectContent,
     SelectItem,
@@ -50,6 +39,7 @@ import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { pdisApi, PDI } from '@/lib/api/performance';
 import { employeesApi, Employee } from '@/lib/api/employees';
+import { useConfirm } from '@/components/providers/ConfirmProvider';
 
 // Fallback employees when API is unavailable
 const MOCK_EMPLOYEES: Employee[] = [
@@ -240,7 +230,16 @@ export default function ManagePDIPage() {
 
     };
 
-    const handleDeletePDI = async (id: string) => {
+    const handleDeletePDI = async (id: string, title?: string) => {
+        const confirmed = await confirm({
+            title: 'Excluir PDI',
+            description: `Tem certeza que deseja excluir o PDI "${title || ''}"? Esta ação não pode ser desfeita.`,
+            variant: 'destructive',
+            confirmLabel: 'Excluir'
+        });
+
+        if (!confirmed) return;
+
         try {
             await pdisApi.delete(id);
             toast({
@@ -425,38 +424,18 @@ export default function ManagePDIPage() {
                                                 </span>
                                             </div>
 
-                                            <AlertDialog>
-                                                <AlertDialogTrigger asChild>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
-                                                        onClick={(e) => e.preventDefault()}
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
-                                                </AlertDialogTrigger>
-                                                <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-                                                    <AlertDialogHeader>
-                                                        <AlertDialogTitle>Excluir PDI</AlertDialogTitle>
-                                                        <AlertDialogDescription>
-                                                            Tem certeza que deseja excluir o PDI &quot;{pdi.title}&quot;? Esta ação não pode ser desfeita.
-                                                        </AlertDialogDescription>
-                                                    </AlertDialogHeader>
-                                                    <AlertDialogFooter>
-                                                        <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Cancelar</AlertDialogCancel>
-                                                        <AlertDialogAction
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleDeletePDI(pdi.id);
-                                                            }}
-                                                            className="bg-red-600 hover:bg-red-700"
-                                                        >
-                                                            Excluir
-                                                        </AlertDialogAction>
-                                                    </AlertDialogFooter>
-                                                </AlertDialogContent>
-                                            </AlertDialog>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    handleDeletePDI(pdi.id, pdi.title);
+                                                }}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
                                         </div>
                                     </div>
                                 </Link>

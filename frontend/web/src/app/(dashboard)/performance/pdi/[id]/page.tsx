@@ -54,6 +54,7 @@ import Link from 'next/link';
 import { pdisApi, PDI, PDIAction, PDIActionType, PDIActionStatus } from '@/lib/api/performance';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/stores/auth-store';
+import { useConfirm } from '@/components/providers/ConfirmProvider';
 
 const ACTION_TYPES: { value: PDIActionType; label: string; icon: React.ReactNode; color: string }[] = [
   { value: 'TRAINING', label: 'Treinamento', icon: <BookOpen className="h-4 w-4" />, color: 'bg-blue-500' },
@@ -91,6 +92,7 @@ export default function PDIDetailPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { user } = useAuthStore();
+  const { confirm } = useConfirm();
   const pdiId = params.id as string;
 
   const [pdi, setPDI] = useState<PDI | null>(null);
@@ -102,6 +104,15 @@ export default function PDIDetailPage() {
   const [actionFilter, setActionFilter] = useState<string>('ALL');
 
   const handleDeletePDI = async () => {
+    const confirmed = await confirm({
+      title: 'Excluir PDI',
+      description: `Tem certeza que deseja excluir o PDI "${pdi?.title}"? Esta acao nao pode ser desfeita.`,
+      variant: 'destructive',
+      confirmLabel: 'Excluir'
+    });
+
+    if (!confirmed) return;
+
     try {
       setIsDeleting(true);
       await pdisApi.delete(pdiId);
@@ -515,9 +526,9 @@ export default function PDIDetailPage() {
                   <div
                     key={action.id}
                     className={`relative border rounded-xl p-4 transition-all hover:shadow-sm ${isCompleted ? 'bg-green-50/50 border-green-100' :
-                        isDue ? 'bg-red-50/50 border-red-100' :
-                          action.status === 'IN_PROGRESS' ? 'bg-blue-50/50 border-blue-100' :
-                            'bg-white border-slate-100'
+                      isDue ? 'bg-red-50/50 border-red-100' :
+                        action.status === 'IN_PROGRESS' ? 'bg-blue-50/50 border-blue-100' :
+                          'bg-white border-slate-100'
                       }`}
                   >
                     {/* Colored left border */}
