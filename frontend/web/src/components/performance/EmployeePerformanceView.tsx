@@ -93,10 +93,11 @@ export function EmployeePerformanceView() {
 
             // Filter to show relevant PDIs (Active, Draft, Pending Approval)
             const allPDIs = Array.isArray(pdis) ? pdis : [];
-            const relevantPDIs = allPDIs.filter(p =>
-                ['ACTIVE', 'DRAFT', 'PENDING_APPROVAL'].includes(p.status)
-            );
-            setActivePDIs(relevantPDIs);
+            // TEMPORARY DEBUG: Showing ALL PDIs to diagnose visibility issue
+            // const relevantPDIs = allPDIs.filter(p =>
+            //     ['ACTIVE', 'DRAFT', 'PENDING_APPROVAL'].includes(p.status)
+            // );
+            setActivePDIs(allPDIs);
             setPendingEvaluations(Array.isArray(pendingEvals) ? pendingEvals : []);
             setLatestEvaluation(Array.isArray(historyEvals) && historyEvals.length > 0 ? historyEvals[0] : null);
             setPendingDisc(Array.isArray(discAssignments) ? discAssignments : []);
@@ -431,6 +432,16 @@ export function EmployeePerformanceView() {
                     </Card>
 
                 </div>
+            </div>
+            <div className="mt-8 p-4 bg-slate-100 rounded text-xs font-mono text-slate-500">
+                <p><strong>DEBUG INFO (Temporário):</strong></p>
+                <p>User ID: {user?.id}</p>
+                <p>PDIs Encontrados: {activePDIs.length}</p>
+                <ul>
+                    {activePDIs.map(p => (
+                        <li key={p.id}>ID: {p.id} | Status: {p.status} | Title: {p.title} | EmpID: {p.employeeId}</li>
+                    ))}
+                </ul>
             </div>
         </div>
     );
