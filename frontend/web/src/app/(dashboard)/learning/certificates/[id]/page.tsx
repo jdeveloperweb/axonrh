@@ -141,10 +141,31 @@ export default function CertificateViewPage() {
                 <div
                     ref={certificateRef}
                     className={cn(
-                        "relative w-full aspect-[1.414/1] bg-white border-[20px] border-slate-900 p-0 shadow-2xl overflow-hidden shadow-black/30",
-                        "print:shadow-none print:border-[10px] print:m-0 print:w-full print:h-full"
+                        "relative w-full aspect-[1.414/1] bg-white border-[24px] border-slate-900 p-0 shadow-2xl overflow-hidden shadow-black/30",
+                        "print:shadow-none print:border-[12px] print:m-0 print:w-full print:h-full"
                     )}
                 >
+                    {/* Ornamental Gold Frame Layers */}
+                    <div className="absolute inset-0 border-[6px] border-amber-600/40 pointer-events-none z-20" />
+                    <div className="absolute inset-1 border border-amber-500/20 pointer-events-none z-20" />
+
+                    {/* Intricate Corner Ornaments */}
+                    <div className="absolute top-0 left-0 w-32 h-32 pointer-events-none z-30 opacity-80">
+                        <div className="absolute top-4 left-4 w-12 h-12 border-t-4 border-l-4 border-amber-600 rounded-tl-sm" />
+                        <div className="absolute top-6 left-6 w-8 h-8 border-t-2 border-l-2 border-amber-500/50 rounded-tl-sm" />
+                    </div>
+                    <div className="absolute top-0 right-0 w-32 h-32 pointer-events-none z-30 opacity-80 decoration-inherit">
+                        <div className="absolute top-4 right-4 w-12 h-12 border-t-4 border-r-4 border-amber-600 rounded-tr-sm" />
+                        <div className="absolute top-6 right-6 w-8 h-8 border-t-2 border-r-2 border-amber-500/50 rounded-tr-sm" />
+                    </div>
+                    <div className="absolute bottom-0 left-0 w-32 h-32 pointer-events-none z-30 opacity-80">
+                        <div className="absolute bottom-4 left-4 w-12 h-12 border-b-4 border-l-4 border-amber-600 rounded-bl-sm" />
+                        <div className="absolute bottom-6 left-6 w-8 h-8 border-b-2 border-l-2 border-amber-500/50 rounded-bl-sm" />
+                    </div>
+                    <div className="absolute bottom-0 right-0 w-32 h-32 pointer-events-none z-30 opacity-80">
+                        <div className="absolute bottom-4 right-4 w-12 h-12 border-b-4 border-r-4 border-amber-600 rounded-br-sm" />
+                        <div className="absolute bottom-6 right-6 w-8 h-8 border-b-2 border-r-2 border-amber-500/50 rounded-br-sm" />
+                    </div>
                     {/* Premium Background Paper Texture */}
                     <div className="absolute inset-0 opacity-[0.2] pointer-events-none" style={{
                         backgroundColor: '#fff',
@@ -153,11 +174,11 @@ export default function CertificateViewPage() {
                     }} />
                     <div className="absolute inset-0 opacity-[0.4] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/cream-pixels.png')]" />
 
-                    {/* Decorative Frame System */}
-                    <div className="absolute inset-4 border-[3px] border-slate-900 pointer-events-none" />
-                    <div className="absolute inset-5 border border-amber-600/30 pointer-events-none" />
-                    <div className="absolute inset-8 border border-slate-900/10 pointer-events-none" />
-                    <div className="absolute inset-[34px] border-[0.5px] border-amber-600/20 pointer-events-none" />
+                    {/* Decorative Inner Frame System */}
+                    <div className="absolute inset-2 border-[2px] border-amber-600/30 pointer-events-none" />
+                    <div className="absolute inset-3 border-[0.5px] border-amber-500/10 pointer-events-none" />
+                    <div className="absolute inset-[30px] border border-amber-600/10 pointer-events-none" />
+                    <div className="absolute inset-[32px] border-[0.5px] border-amber-600/5 pointer-events-none" />
 
                     <div className="relative h-full flex flex-col items-center justify-around py-14 px-20 z-10">
                         {/* Header Section */}
@@ -191,21 +212,23 @@ export default function CertificateViewPage() {
                         </div>
 
                         {/* Main Achievement Section */}
-                        <div className="flex flex-col items-center space-y-4 w-full flex-1 justify-center py-4">
-                            <div className="text-center space-y-2">
+                        <div className="flex flex-col items-center space-y-4 w-full flex-1 justify-center py-4 px-12">
+                            <div className="text-center space-y-2 w-full">
                                 <p className="text-slate-400 font-serif italic text-base">Certificamos que</p>
-                                <h1 className="text-5xl md:text-6xl font-black text-slate-900 tracking-tight leading-none">
-                                    {certificate.employeeName}
-                                </h1>
+                                <div className="w-full overflow-hidden px-4">
+                                    <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
+                                        {certificate.employeeName}
+                                    </h1>
+                                </div>
                                 <div className="h-[2px] w-20 bg-amber-600/20 mx-auto rounded-full mt-2" />
                             </div>
 
-                            <div className="text-center max-w-3xl space-y-4">
-                                <p className="text-slate-500 font-medium text-sm leading-relaxed">
+                            <div className="text-center max-w-4xl space-y-4 w-full">
+                                <p className="text-slate-500 font-medium text-sm leading-relaxed uppercase tracking-[0.1em]">
                                     concluiu com êxito o treinamento corporativo de
                                 </p>
-                                <div className="px-10">
-                                    <h3 className="text-3xl md:text-4xl font-black text-slate-800 uppercase tracking-tighter decoration-amber-200/50">
+                                <div className="px-8 w-full overflow-hidden">
+                                    <h3 className="text-2xl md:text-3xl font-black text-slate-800 uppercase tracking-tighter whitespace-nowrap overflow-hidden text-ellipsis">
                                         {certificate.courseName}
                                     </h3>
                                 </div>
