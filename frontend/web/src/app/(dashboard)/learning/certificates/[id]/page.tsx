@@ -159,9 +159,9 @@ export default function CertificateViewPage() {
                     <div className="absolute inset-8 border border-slate-900/10 pointer-events-none" />
                     <div className="absolute inset-[34px] border-[0.5px] border-amber-600/20 pointer-events-none" />
 
-                    <div className="relative h-full flex flex-col items-center justify-between py-6 px-16 z-10">
+                    <div className="relative h-full flex flex-col items-center justify-between py-4 px-16 z-10">
                         {/* Header Section */}
-                        <div className="flex flex-col items-center space-y-3 w-full">
+                        <div className="flex flex-col items-center space-y-2 w-full">
                             {(certificate.companyLogoUrl || config?.companyLogoUrl) ? (
                                 <div className="relative group flex items-center justify-center">
                                     <img
@@ -191,35 +191,35 @@ export default function CertificateViewPage() {
                         </div>
 
                         {/* Main Achievement Section */}
-                        <div className="flex flex-col items-center space-y-4 w-full flex-1 justify-center py-2">
+                        <div className="flex flex-col items-center space-y-2 w-full flex-1 justify-center py-1">
                             <div className="text-center space-y-1">
-                                <p className="text-slate-400 font-serif italic text-base">Certificamos que</p>
-                                <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-none">
+                                <p className="text-slate-400 font-serif italic text-sm">Certificamos que</p>
+                                <h1 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight leading-none">
                                     {certificate.employeeName}
                                 </h1>
-                                <div className="h-[2px] w-16 bg-amber-600/20 mx-auto rounded-full mt-2" />
+                                <div className="h-[1px] w-12 bg-amber-600/20 mx-auto rounded-full mt-1" />
                             </div>
 
-                            <div className="text-center max-w-3xl space-y-2">
-                                <p className="text-slate-500 font-medium text-sm leading-relaxed">
+                            <div className="text-center max-w-3xl space-y-1">
+                                <p className="text-slate-500 font-medium text-[12px] leading-relaxed">
                                     concluiu com êxito o treinamento corporativo de
                                 </p>
                                 <div className="px-10 py-1">
-                                    <h3 className="text-2xl md:text-3xl font-black text-slate-800 uppercase tracking-tighter decoration-amber-200/50 decoration-4 underline-offset-4">
+                                    <h3 className="text-xl md:text-2xl font-black text-slate-800 uppercase tracking-tighter decoration-amber-200/50 decoration-2 underline-offset-4">
                                         {certificate.courseName}
                                     </h3>
                                 </div>
                                 <div className="flex items-center justify-center gap-8 pt-2">
-                                    <div className="flex items-center gap-3 group">
-                                        <div className="h-2 w-2 rounded-full bg-amber-500 shadow-sm shadow-amber-500/50" />
-                                        <p className="text-slate-500 font-black text-[10px] uppercase tracking-[0.2em] group-hover:text-amber-700 transition-colors">
+                                    <div className="flex items-center gap-2 group">
+                                        <div className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                                        <p className="text-slate-500 font-black text-[9px] uppercase tracking-[0.2em]">
                                             Carga Horária: {certificate.durationHours || 0} horas
                                         </p>
                                     </div>
                                     {certificate.finalScore && (
-                                        <div className="flex items-center gap-3 group">
-                                            <div className="h-2 w-2 rounded-full bg-amber-500 shadow-sm shadow-amber-500/50" />
-                                            <p className="text-slate-500 font-black text-[10px] uppercase tracking-[0.2em] group-hover:text-amber-700 transition-colors">
+                                        <div className="flex items-center gap-2 group">
+                                            <div className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                                            <p className="text-slate-500 font-black text-[9px] uppercase tracking-[0.2em]">
                                                 Aproveitamento: {certificate.finalScore}%
                                             </p>
                                         </div>
@@ -229,10 +229,10 @@ export default function CertificateViewPage() {
                         </div>
 
                         {/* Signatures and Validation Section */}
-                        <div className="w-full flex justify-between items-end px-4">
+                        <div className="w-full flex justify-between items-end px-4 pb-2">
                             {/* Signature Area Left */}
-                            <div className="flex flex-col items-center space-y-2 w-64">
-                                <div className="h-16 w-full flex items-center justify-center relative border-b-2 border-slate-900/5 hover:border-slate-900/10 transition-colors">
+                            <div className="flex flex-col items-center space-y-1 w-60">
+                                <div className="h-14 w-full flex items-center justify-center relative border-b border-slate-900/10">
                                     {(certificate.instructorSignatureUrl || config?.instructorSignatureUrl) ? (
                                         <img
                                             src={certificate.instructorSignatureUrl || config?.instructorSignatureUrl}
@@ -244,29 +244,29 @@ export default function CertificateViewPage() {
                                     )}
                                 </div>
                                 <div className="text-center">
-                                    <p className="font-black text-slate-900 text-sm uppercase">
+                                    <p className="font-black text-slate-900 text-[11px] uppercase">
                                         {certificate.instructorName || config?.instructorName || 'Instrutor Responsável'}
                                     </p>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Instrutor</p>
+                                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Instrutor</p>
                                 </div>
                             </div>
 
                             {/* Authentication Center */}
-                            <div className="flex flex-col items-center space-y-4 pb-2">
-                                <div className="px-6 py-3 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col items-center gap-1 shadow-sm">
-                                    <span className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em]">Autenticidade</span>
-                                    <span className="font-mono text-sm font-black text-slate-900 tracking-wider">
+                            <div className="flex flex-col items-center space-y-2 pb-1">
+                                <div className="px-4 py-1.5 bg-slate-50 border border-slate-100 rounded-xl flex flex-col items-center gap-0.5">
+                                    <span className="text-[7px] font-black uppercase text-slate-400 tracking-widest">Autenticidade</span>
+                                    <span className="font-mono text-[11px] font-black text-slate-900 tracking-wider">
                                         {certificate.verificationCode}
                                     </span>
                                 </div>
-                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                                <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest">
                                     {new Date(certificate.issuedAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
                                 </p>
                             </div>
 
                             {/* Signature Area Right */}
-                            <div className="flex flex-col items-center space-y-2 w-64">
-                                <div className="h-16 w-full flex items-center justify-center relative border-b-2 border-slate-900/5 hover:border-slate-900/10 transition-colors">
+                            <div className="flex flex-col items-center space-y-1 w-60">
+                                <div className="h-14 w-full flex items-center justify-center relative border-b border-slate-900/10">
                                     {(certificate.generalSignatureUrl || config?.generalSignatureUrl) ? (
                                         <img
                                             src={certificate.generalSignatureUrl || config?.generalSignatureUrl}
@@ -278,10 +278,10 @@ export default function CertificateViewPage() {
                                     )}
                                 </div>
                                 <div className="text-center">
-                                    <p className="font-black text-slate-900 text-sm uppercase">
+                                    <p className="font-black text-slate-900 text-[11px] uppercase">
                                         {certificate.generalSignerName || config?.generalSignerName || 'Diretoria de RH'}
                                     </p>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Responsável Legal</p>
+                                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Responsável Legal</p>
                                 </div>
                             </div>
                         </div>
