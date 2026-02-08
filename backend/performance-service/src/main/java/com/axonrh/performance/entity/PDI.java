@@ -13,6 +13,7 @@ import java.util.UUID;
 
 /**
  * Plano de Desenvolvimento Individual.
+ * Represents an Individual Development Plan.
  */
 @Entity
 @Table(name = "pdis")
