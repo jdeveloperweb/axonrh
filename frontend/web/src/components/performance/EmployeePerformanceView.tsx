@@ -37,6 +37,7 @@ import {
     DiscEvaluation,
     Goal
 } from '@/lib/api/performance';
+import { employeesApi } from '@/lib/api/employees';
 import { useAuthStore } from '@/stores/auth-store';
 import { cn } from '@/lib/utils';
 
@@ -67,15 +68,27 @@ export function EmployeePerformanceView() {
     const loadData = async () => {
         try {
             setLoading(true);
-            const userId = user!.id;
+
+            // PRIMEIRO: buscar os dados do colaborador vinculado ao usuário logado
+            // Isso é necessário porque o sistema de performance utiliza o ID do Colaborador, 
+            // enquanto o auth store possui apenas o ID do Usuário.
+            const employee = await employeesApi.getMe().catch(() => null);
+
+            if (!employee) {
+                console.warn('Colaborador não encontrado para este usuário.');
+                setLoading(false);
+                return;
+            }
+
+            const employeeId = employee.id;
 
             const [pdis, pendingEvals, historyEvals, discAssignments, latestDiscRes, goals] = await Promise.all([
-                pdisApi.getActive(userId).catch(() => []),
-                evaluationsApi.getPending(userId).catch(() => []),
-                evaluationsApi.getByEmployee(userId).catch(() => []),
-                discApi.getPendingForEmployee(userId).catch(() => []),
-                discApi.getLatest(userId).catch(() => null),
-                goalsApi.getByEmployee(userId).catch(() => [])
+                pdisApi.getActive(employeeId).catch(() => []),
+                evaluationsApi.getPending(employeeId).catch(() => []),
+                evaluationsApi.getByEmployee(employeeId).catch(() => []),
+                discApi.getPendingForEmployee(employeeId).catch(() => []),
+                discApi.getLatest(employeeId).catch(() => null),
+                goalsApi.getByEmployee(employeeId).catch(() => [])
             ]);
 
             setActivePDIs(Array.isArray(pdis) ? pdis : []);

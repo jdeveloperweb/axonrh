@@ -365,6 +365,11 @@ export const employeesApi = {
     return api.get<unknown, { valid: boolean; exists: boolean; message?: string }>(`/employees/validate-cpf/${cpf}`);
   },
 
+  // Get current logged employee
+  getMe: async (): Promise<Employee> => {
+    return api.get<Employee, Employee>('/employees/me');
+  },
+
   // Search address by CEP
   searchCep: async (cep: string): Promise<EmployeeAddress> => {
     try {

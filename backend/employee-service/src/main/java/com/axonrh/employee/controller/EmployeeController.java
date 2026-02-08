@@ -327,4 +327,11 @@ public class EmployeeController {
         ex.printStackTrace();
         return ResponseEntity.internalServerError().body(ex.getMessage());
     }
+    @GetMapping("/me")
+    @Operation(summary = "Busca dados do colaborador logado")
+    public ResponseEntity<EmployeeResponse> getMe(
+            @RequestHeader("X-User-Id") UUID userId) {
+        log.info("Buscando dados do colaborador para o usuario: {}", userId);
+        return ResponseEntity.ok(employeeService.findByUserId(userId));
+    }
 }

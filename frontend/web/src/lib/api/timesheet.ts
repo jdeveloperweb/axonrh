@@ -40,6 +40,10 @@ export interface DailySummary {
   lastExit?: string;
   breakStart?: string;
   breakEnd?: string;
+  scheduledEntry?: string;
+  scheduledExit?: string;
+  scheduledBreakStart?: string;
+  scheduledBreakEnd?: string;
   expectedWorkMinutes: number;
   expectedWorkFormatted: string;
   workedMinutes: number;

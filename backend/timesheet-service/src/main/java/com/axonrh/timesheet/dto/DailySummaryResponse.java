@@ -38,6 +38,12 @@ public class DailySummaryResponse implements Serializable {
     private LocalTime breakStart;
     private LocalTime breakEnd;
 
+    // Horarios esperados (da escala)
+    private LocalTime scheduledEntry;
+    private LocalTime scheduledExit;
+    private LocalTime scheduledBreakStart;
+    private LocalTime scheduledBreakEnd;
+
     // Totais formatados
     private Integer expectedWorkMinutes;
     private String expectedWorkFormatted;

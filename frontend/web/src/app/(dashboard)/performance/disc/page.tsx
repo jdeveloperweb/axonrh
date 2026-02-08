@@ -25,6 +25,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { formatDate } from '@/lib/utils';
 import Link from 'next/link';
+import { employeesApi } from '@/lib/api/employees';
 
 const profileDescriptions: Record<string, { title: string; description: string; color: string; strengths: string[] }> = {
     DOMINANCE: {
@@ -391,6 +392,16 @@ export default function DiscPage() {
             setLoading(true);
             if (!user?.id) return;
 
+            // BUSCAR O ID DO COLABORADOR
+            const employee = await employeesApi.getMe().catch(() => null);
+            if (!employee) {
+                console.warn('Colaborador não encontrado para este usuário.');
+                setLoading(false);
+                return;
+            }
+
+            const employeeId = employee.id;
+
             // Load questions
             try {
                 const questionsRes = await discApi.getQuestions();
@@ -402,10 +413,10 @@ export default function DiscPage() {
 
             // Load latest result and history
             try {
-                const res = await discApi.getLatest(user.id);
+                const res = await discApi.getLatest(employeeId);
                 setResult(res);
 
-                const historyRes = await discApi.getHistory(user.id);
+                const historyRes = await discApi.getHistory(employeeId);
                 setHistory(historyRes);
             } catch {
                 console.log('Nenhum resultado DISC encontrado');
@@ -477,8 +488,13 @@ export default function DiscPage() {
             setSubmitting(true);
             if (!user?.id || !user?.name) throw new Error("Usuário não autenticado");
 
+            // BUSCAR O ID DO COLABORADOR
+            const employee = await employeesApi.getMe().catch(() => null);
+            if (!employee) throw new Error("Colaborador não encontrado");
+            const employeeId = employee.id;
+
             try {
-                const res = await discApi.submit(user.id, user.name, answers);
+                const res = await discApi.submit(employeeId, user.name, answers);
                 setResult(res);
                 toast({ title: 'Sucesso', description: 'Avaliação DISC concluída!' });
             } catch (error) {

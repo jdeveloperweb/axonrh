@@ -656,4 +656,11 @@ public class EmployeeService {
             log.error("Erro ao publicar evento de desligamento: {}", e.getMessage());
         }
     }
+    @Transactional(readOnly = true)
+    public EmployeeResponse findByUserId(UUID userId) {
+        UUID tenantId = getTenantId();
+        Employee employee = employeeRepository.findByTenantIdAndUserId(tenantId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Colaborador nao encontrado para o usuario: " + userId));
+        return employeeMapper.toResponse(employee);
+    }
 }

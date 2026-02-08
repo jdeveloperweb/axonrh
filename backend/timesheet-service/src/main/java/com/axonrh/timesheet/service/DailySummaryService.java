@@ -18,6 +18,10 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.axonrh.timesheet.entity.EmployeeSchedule;
+import com.axonrh.timesheet.entity.ScheduleDay;
+import com.axonrh.timesheet.entity.WorkSchedule;
+import com.axonrh.timesheet.repository.EmployeeScheduleRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.DayOfWeek;
@@ -39,6 +43,7 @@ public class DailySummaryService {
 
     private final DailySummaryRepository dailySummaryRepository;
     private final TimeRecordRepository timeRecordRepository;
+    private final EmployeeScheduleRepository employeeScheduleRepository;
     private final OvertimeBankService overtimeBankService;
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final ObjectMapper objectMapper;
@@ -46,11 +51,13 @@ public class DailySummaryService {
     public DailySummaryService(
             DailySummaryRepository dailySummaryRepository,
             TimeRecordRepository timeRecordRepository,
+            EmployeeScheduleRepository employeeScheduleRepository,
             OvertimeBankService overtimeBankService,
             @Qualifier("timesheetKafkaTemplate") KafkaTemplate<String, Object> kafkaTemplate,
             ObjectMapper objectMapper) {
         this.dailySummaryRepository = dailySummaryRepository;
         this.timeRecordRepository = timeRecordRepository;
+        this.employeeScheduleRepository = employeeScheduleRepository;
         this.overtimeBankService = overtimeBankService;
         this.kafkaTemplate = kafkaTemplate;
         this.objectMapper = objectMapper;
@@ -77,11 +84,14 @@ public class DailySummaryService {
                         .summaryDate(date)
                         .build());
 
+        // Buscar escala ativa para o dia
+        Optional<EmployeeSchedule> activeSchedule = employeeScheduleRepository.findActiveSchedule(tenantId, employeeId, date);
+
         // Buscar registros validos do dia
         List<TimeRecord> records = timeRecordRepository.findValidRecordsForDate(tenantId, employeeId, date);
 
         // Calcular totais
-        calculateTotals(summary, records);
+        calculateTotals(summary, records, activeSchedule.orElse(null));
 
         DailySummary saved = dailySummaryRepository.save(summary);
 
@@ -137,23 +147,25 @@ public class DailySummaryService {
                 log.error("Erro ao buscar sumários no banco para colaborador {} no tenant {}: {}", 
                         employeeId, currentTenant, e.getMessage());
             }
-        } else {
-            log.warn("Solicitação de espelho de ponto sem Tenant ID no contexto (employeeId={})", employeeId);
         }
 
         try {
             return startDate.datesUntil(endDate.plusDays(1))
                     .map(date -> {
                         try {
+                            UUID tenantId = currentTenant != null ? UUID.fromString(currentTenant) : null;
+                            Optional<EmployeeSchedule> schedule = tenantId != null ? 
+                                employeeScheduleRepository.findActiveSchedule(tenantId, employeeId, date) : Optional.empty();
+                                
                             DailySummary summary = summaryMap.get(date);
                             if (summary != null) {
-                                return toResponse(summary);
+                                return toResponse(summary, schedule.orElse(null));
                             } else {
-                                return createVirtualSummary(employeeId, date);
+                                return createVirtualSummary(employeeId, date, schedule.orElse(null));
                             }
                         } catch (Exception e) {
                             log.error("Erro ao converter resumo do dia {}: {}", date, e.getMessage());
-                            return createVirtualSummary(employeeId, date);
+                            return createVirtualSummary(employeeId, date, null);
                         }
                     })
                     .toList();
@@ -163,24 +175,58 @@ public class DailySummaryService {
         }
     }
 
-    private DailySummaryResponse createVirtualSummary(UUID employeeId, LocalDate date) {
+    private DailySummaryResponse createVirtualSummary(UUID employeeId, LocalDate date, EmployeeSchedule schedule) {
+        int expectedMinutes = 0;
+        LocalTime scheduledEntry = null;
+        LocalTime scheduledExit = null;
+        LocalTime scheduledBreakStart = null;
+        LocalTime scheduledBreakEnd = null;
+
+        if (schedule != null && schedule.getWorkSchedule() != null) {
+            ScheduleDay daySpec = schedule.getWorkSchedule().getScheduleDays().stream()
+                    .filter(d -> d.getDayOfWeek() == date.getDayOfWeek())
+                    .findFirst()
+                    .orElse(null);
+            
+            if (daySpec != null && Boolean.TRUE.equals(daySpec.getIsWorkDay())) {
+                expectedMinutes = daySpec.getExpectedWorkMinutes() != null ? daySpec.getExpectedWorkMinutes() : 0;
+                scheduledEntry = daySpec.getEntryTime();
+                scheduledExit = daySpec.getExitTime();
+                scheduledBreakStart = daySpec.getBreakStartTime();
+                scheduledBreakEnd = daySpec.getBreakEndTime();
+            }
+        } else if (date.getDayOfWeek() != DayOfWeek.SATURDAY && date.getDayOfWeek() != DayOfWeek.SUNDAY) {
+            // Se não tem escala e é dia de semana, assume 8h como fallback
+            expectedMinutes = 480; 
+            scheduledEntry = LocalTime.of(8, 0);
+            scheduledExit = LocalTime.of(17, 0);
+            scheduledBreakStart = LocalTime.of(12, 0);
+            scheduledBreakEnd = LocalTime.of(13, 0);
+        }
+
+        int balance = -expectedMinutes;
+
         return DailySummaryResponse.builder()
                 .employeeId(employeeId)
                 .summaryDate(date)
                 .dayOfWeek(getDayOfWeekLabel(date.getDayOfWeek()))
-                .expectedWorkMinutes(480) // Padrao
-                .expectedWorkFormatted("08:00")
+                .expectedWorkMinutes(expectedMinutes)
+                .expectedWorkFormatted(formatMinutes(expectedMinutes))
                 .workedMinutes(0)
                 .workedFormatted("00:00")
                 .overtimeMinutes(0)
                 .overtimeFormatted("00:00")
-                .deficitMinutes(480)
-                .deficitFormatted("08:00")
-                .isAbsent(false) // Nao marcar como falta automaticamente (pode ser folga/fim de semana)
+                .deficitMinutes(expectedMinutes)
+                .deficitFormatted(formatMinutes(expectedMinutes))
+                .isAbsent(false)
                 .hasMissingRecords(false)
-                .balanceMinutes(-480)
-                .balanceFormatted("08:00")
-                .isPositive(false)
+                .scheduledEntry(scheduledEntry)
+                .scheduledExit(scheduledExit)
+                .scheduledBreakStart(scheduledBreakStart)
+                .scheduledBreakEnd(scheduledBreakEnd)
+                .balanceMinutes(balance)
+                .balanceFormatted(formatMinutes(Math.abs(balance)))
+                .isPositive(balance >= 0)
                 .build();
     }
 
@@ -197,7 +243,10 @@ public class DailySummaryService {
 
         return dailySummaryRepository
                 .findByTenantIdAndEmployeeIdAndSummaryDate(tenantId, employeeId, date)
-                .map(this::toResponse);
+                .map(summary -> {
+                    Optional<EmployeeSchedule> schedule = employeeScheduleRepository.findActiveSchedule(tenantId, employeeId, date);
+                    return toResponse(summary, schedule.orElse(null));
+                });
     }
 
     /**
@@ -239,11 +288,18 @@ public class DailySummaryService {
     }
 
     /**
-     * Calcula os totais do dia.
+     * Calcula os totais do dia com base na escala de trabalho.
      */
-    private void calculateTotals(DailySummary summary, List<TimeRecord> records) {
+    private void calculateTotals(DailySummary summary, List<TimeRecord> records, EmployeeSchedule employeeSchedule) {
         if (records.isEmpty()) {
             summary.setHasMissingRecords(true);
+            
+            // Buscar horas esperadas do dia
+            int expected = getExpectedMinutes(summary.getSummaryDate(), employeeSchedule);
+            summary.setExpectedWorkMinutes(expected);
+            summary.setWorkedMinutes(0);
+            summary.setOvertimeMinutes(0);
+            summary.setDeficitMinutes(expected);
             return;
         }
 
@@ -286,7 +342,17 @@ public class DailySummaryService {
         boolean hasMissing = firstEntry == null || lastExit == null;
         summary.setHasMissingRecords(hasMissing);
 
+        // Horas esperadas da escala
+        int expected = getExpectedMinutes(summary.getSummaryDate(), employeeSchedule);
+        summary.setExpectedWorkMinutes(expected);
+        if (employeeSchedule != null) {
+            summary.setWorkScheduleId(employeeSchedule.getWorkSchedule().getId());
+        }
+
         if (hasMissing) {
+            summary.setWorkedMinutes(0);
+            summary.setOvertimeMinutes(0);
+            summary.setDeficitMinutes(expected);
             return;
         }
 
@@ -307,21 +373,42 @@ public class DailySummaryService {
         int nightMinutes = calculateNightShiftMinutes(firstEntry, lastExit, breakStart, breakEnd);
         summary.setNightShiftMinutes(nightMinutes);
 
-        // TODO: Calcular horas extras e deficit baseado na escala
-        // Isso requer integracao com WorkScheduleService
-        summary.setExpectedWorkMinutes(480); // 8 horas padrao
-        int expected = summary.getExpectedWorkMinutes();
+        // Aplicar tolerância CLT (Art. 58 § 1º)
+        // Se a diferença absoluta entre o trabalhado e o esperado for <= 10 e individual <= 5
+        // Simplificação: se a diferença total do dia for <= 10 min, não gera extra nem déficit
+        int diff = workedMinutes - expected;
+        int tolerance = 10; // Limite diário da CLT
+        
+        if (employeeSchedule != null && employeeSchedule.getWorkSchedule() != null) {
+            // Se a escala define tolerância diferente, respeita
+            tolerance = employeeSchedule.getWorkSchedule().getToleranceMinutes() != null ? 
+                    employeeSchedule.getWorkSchedule().getToleranceMinutes() * 2 : 10;
+        }
 
-        if (workedMinutes > expected) {
-            summary.setOvertimeMinutes(workedMinutes - expected);
-            summary.setDeficitMinutes(0);
-        } else if (workedMinutes < expected) {
+        if (Math.abs(diff) <= tolerance) {
             summary.setOvertimeMinutes(0);
-            summary.setDeficitMinutes(expected - workedMinutes);
+            summary.setDeficitMinutes(0);
+        } else if (diff > 0) {
+            summary.setOvertimeMinutes(diff);
+            summary.setDeficitMinutes(0);
         } else {
             summary.setOvertimeMinutes(0);
-            summary.setDeficitMinutes(0);
+            summary.setDeficitMinutes(Math.abs(diff));
         }
+    }
+
+    private int getExpectedMinutes(LocalDate date, EmployeeSchedule schedule) {
+        if (schedule == null || schedule.getWorkSchedule() == null) {
+            // Fallback: 8h em dias de semana
+            return (date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY) ? 0 : 480;
+        }
+        
+        return schedule.getWorkSchedule().getScheduleDays().stream()
+                .filter(d -> d.getDayOfWeek() == date.getDayOfWeek())
+                .filter(d -> Boolean.TRUE.equals(d.getIsWorkDay()))
+                .map(d -> d.getExpectedWorkMinutes() != null ? d.getExpectedWorkMinutes() : 0)
+                .findFirst()
+                .orElse(0);
     }
 
     /**
@@ -352,10 +439,29 @@ public class DailySummaryService {
         return nightMinutes;
     }
 
-    private DailySummaryResponse toResponse(DailySummary summary) {
+    private DailySummaryResponse toResponse(DailySummary summary, EmployeeSchedule employeeSchedule) {
         int overtime = summary.getOvertimeMinutes() != null ? summary.getOvertimeMinutes() : 0;
         int deficit = summary.getDeficitMinutes() != null ? summary.getDeficitMinutes() : 0;
         int balance = overtime - deficit;
+
+        LocalTime scheduledEntry = null;
+        LocalTime scheduledExit = null;
+        LocalTime scheduledBreakStart = null;
+        LocalTime scheduledBreakEnd = null;
+
+        if (employeeSchedule != null && employeeSchedule.getWorkSchedule() != null) {
+            ScheduleDay daySpec = employeeSchedule.getWorkSchedule().getScheduleDays().stream()
+                    .filter(d -> d.getDayOfWeek() == summary.getSummaryDate().getDayOfWeek())
+                    .findFirst()
+                    .orElse(null);
+            
+            if (daySpec != null && Boolean.TRUE.equals(daySpec.getIsWorkDay())) {
+                scheduledEntry = daySpec.getEntryTime();
+                scheduledExit = daySpec.getExitTime();
+                scheduledBreakStart = daySpec.getBreakStartTime();
+                scheduledBreakEnd = daySpec.getBreakEndTime();
+            }
+        }
 
         return DailySummaryResponse.builder()
                 .id(summary.getId())
@@ -363,10 +469,15 @@ public class DailySummaryService {
                 .summaryDate(summary.getSummaryDate())
                 .dayOfWeek(getDayOfWeekLabel(summary.getSummaryDate().getDayOfWeek()))
                 .workScheduleId(summary.getWorkScheduleId())
+                .workScheduleName(employeeSchedule != null ? employeeSchedule.getWorkSchedule().getName() : null)
                 .firstEntry(summary.getFirstEntry())
                 .lastExit(summary.getLastExit())
                 .breakStart(summary.getBreakStart())
                 .breakEnd(summary.getBreakEnd())
+                .scheduledEntry(scheduledEntry)
+                .scheduledExit(scheduledExit)
+                .scheduledBreakStart(scheduledBreakStart)
+                .scheduledBreakEnd(scheduledBreakEnd)
                 .expectedWorkMinutes(summary.getExpectedWorkMinutes())
                 .expectedWorkFormatted(formatMinutes(summary.getExpectedWorkMinutes()))
                 .workedMinutes(summary.getWorkedMinutes())

@@ -405,29 +405,61 @@ export default function TimesheetMirrorPage() {
                             {day.dayOfWeek.substring(0, 3)}
                           </TableCell>
                           <TableCell className="text-center font-mono">
-                            {day.firstEntry || '-'}
+                            <div className="flex flex-col items-center">
+                              <span className={cn(!day.firstEntry && "text-muted-foreground/30")}>
+                                {day.firstEntry ? day.firstEntry.substring(0, 5) : '--:--'}
+                              </span>
+                              {day.scheduledEntry && (
+                                <span className="text-[10px] text-muted-foreground/50 font-sans">
+                                  exp. {day.scheduledEntry.substring(0, 5)}
+                                </span>
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell className="text-center">
-                            {day.breakStart && day.breakEnd ? (
-                              <span className="font-mono text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
-                                {day.breakStart} - {day.breakEnd}
-                              </span>
-                            ) : '-'}
+                            <div className="flex flex-col items-center">
+                              {day.breakStart && day.breakEnd ? (
+                                <span className="font-mono text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                                  {day.breakStart.substring(0, 5)} - {day.breakEnd.substring(0, 5)}
+                                </span>
+                              ) : (
+                                <span className="text-muted-foreground/30">--:--</span>
+                              )}
+                              {day.scheduledBreakStart && day.scheduledBreakEnd && (
+                                <span className="text-[10px] text-muted-foreground/50 font-sans mt-0.5">
+                                  exp. {day.scheduledBreakStart.substring(0, 5)} - {day.scheduledBreakEnd.substring(0, 5)}
+                                </span>
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell className="text-center font-mono">
-                            {day.lastExit || '-'}
+                            <div className="flex flex-col items-center">
+                              <span className={cn(!day.lastExit && "text-muted-foreground/30")}>
+                                {day.lastExit ? day.lastExit.substring(0, 5) : '--:--'}
+                              </span>
+                              {day.scheduledExit && (
+                                <span className="text-[10px] text-muted-foreground/50 font-sans">
+                                  exp. {day.scheduledExit.substring(0, 5)}
+                                </span>
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell className="text-center">
-                            <div className="flex items-center justify-center gap-1 font-mono font-medium">
-                              {getBalanceIcon(balance)}
-                              <span
-                                className={cn(
-                                  balance > 0 ? "text-emerald-600" :
-                                    balance < 0 ? "text-rose-600" : "text-muted-foreground"
-                                )}
-                              >
-                                {day.balanceFormatted}
-                              </span>
+                            <div className="flex flex-col items-center justify-center">
+                              <div className="flex items-center gap-1 font-mono font-medium">
+                                {getBalanceIcon(balance)}
+                                <span
+                                  className={cn(
+                                    balance > 0 ? "text-emerald-600" :
+                                      balance < 0 ? "text-rose-600" : "text-muted-foreground"
+                                  )}
+                                >
+                                  {balance < 0 ? '-' : balance > 0 ? '+' : ''}{day.balanceFormatted}
+                                </span>
+                              </div>
+                              {day.expectedWorkMinutes > 0 && day.workedMinutes === 0 && !day.isAbsent && !day.isHoliday && (
+                                <span className="text-[9px] text-rose-400 font-sans uppercase">Falta</span>
+                              )}
                             </div>
                           </TableCell>
                           <TableCell className="text-center">
