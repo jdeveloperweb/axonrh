@@ -159,7 +159,7 @@ export default function CertificateViewPage() {
                     <div className="absolute inset-8 border border-slate-900/10 pointer-events-none" />
                     <div className="absolute inset-[34px] border-[0.5px] border-amber-600/20 pointer-events-none" />
 
-                    <div className="relative h-full flex flex-col items-center justify-between py-2 px-16 z-10">
+                    <div className="relative h-full flex flex-col items-center justify-around py-14 px-20 z-10">
                         {/* Header Section */}
                         <div className="flex flex-col items-center space-y-1 w-full">
                             {(certificate.companyLogoUrl || config?.companyLogoUrl) ? (
@@ -167,7 +167,7 @@ export default function CertificateViewPage() {
                                     <img
                                         src={certificate.companyLogoUrl || config?.companyLogoUrl}
                                         alt="Logo"
-                                        className="h-10 w-auto object-contain relative transition-all duration-500"
+                                        className="h-12 w-auto object-contain relative transition-all duration-500"
                                     />
                                 </div>
                             ) : (
@@ -176,50 +176,50 @@ export default function CertificateViewPage() {
                                 </div>
                             )}
 
-                            <div className="text-center space-y-2">
+                            <div className="text-center space-y-1">
                                 <h2 className="text-[10px] font-black tracking-[0.6em] text-amber-700/80 uppercase pl-2">
                                     {certificate.certificateTitle || config?.certificateTitle || 'Certificado de Conclusão'}
                                 </h2>
                                 <div className="flex items-center gap-4 justify-center">
-                                    <div className="h-[1px] w-8 bg-gradient-to-r from-transparent to-slate-300" />
-                                    <p className="text-slate-900 font-black uppercase tracking-[0.2em] text-[10px]">
-                                        {certificate.companyName || config?.companyName || 'Axon Academy • Soluções em Capital Humano'}
+                                    <div className="h-[1px] w-8 bg-gradient-to-r from-transparent to-slate-200" />
+                                    <p className="text-slate-900 font-bold uppercase tracking-[0.2em] text-[10px] opacity-80">
+                                        {certificate.companyName || config?.companyName || 'Axon Academy'}
                                     </p>
-                                    <div className="h-[1px] w-8 bg-gradient-to-l from-transparent to-slate-300" />
+                                    <div className="h-[1px] w-8 bg-gradient-to-l from-transparent to-slate-200" />
                                 </div>
                             </div>
                         </div>
 
                         {/* Main Achievement Section */}
-                        <div className="flex flex-col items-center space-y-1 w-full flex-1 justify-center py-0">
-                            <div className="text-center space-y-0.5">
-                                <p className="text-slate-400 font-serif italic text-[12px]">Certificamos que</p>
-                                <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight leading-none">
+                        <div className="flex flex-col items-center space-y-4 w-full flex-1 justify-center py-4">
+                            <div className="text-center space-y-2">
+                                <p className="text-slate-400 font-serif italic text-base">Certificamos que</p>
+                                <h1 className="text-5xl md:text-6xl font-black text-slate-900 tracking-tight leading-none">
                                     {certificate.employeeName}
                                 </h1>
-                                <div className="h-[1px] w-10 bg-amber-600/20 mx-auto rounded-full mt-0.5" />
+                                <div className="h-[2px] w-20 bg-amber-600/20 mx-auto rounded-full mt-2" />
                             </div>
 
-                            <div className="text-center max-w-3xl space-y-1">
-                                <p className="text-slate-500 font-medium text-[10px] uppercase tracking-wider leading-relaxed opacity-80">
+                            <div className="text-center max-w-3xl space-y-4">
+                                <p className="text-slate-500 font-medium text-sm leading-relaxed">
                                     concluiu com êxito o treinamento corporativo de
                                 </p>
-                                <div className="px-10 py-0.5">
-                                    <h3 className="text-lg md:text-xl font-black text-slate-800 uppercase tracking-tighter decoration-amber-200/50 decoration-2 underline-offset-4">
+                                <div className="px-10">
+                                    <h3 className="text-3xl md:text-4xl font-black text-slate-800 uppercase tracking-tighter decoration-amber-200/50">
                                         {certificate.courseName}
                                     </h3>
                                 </div>
-                                <div className="flex items-center justify-center gap-6 pt-0.5">
-                                    <div className="flex items-center gap-2 group">
-                                        <div className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                                        <p className="text-slate-500 font-black text-[9px] uppercase tracking-[0.2em]">
+                                <div className="flex items-center justify-center gap-8 pt-2">
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-2 w-2 rounded-full bg-amber-500 shadow-sm" />
+                                        <p className="text-slate-500 font-black text-[10px] uppercase tracking-widest">
                                             Carga Horária: {certificate.durationHours || 0} horas
                                         </p>
                                     </div>
                                     {certificate.finalScore && (
-                                        <div className="flex items-center gap-2 group">
-                                            <div className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                                            <p className="text-slate-500 font-black text-[9px] uppercase tracking-[0.2em]">
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-2 w-2 rounded-full bg-amber-500 shadow-sm" />
+                                            <p className="text-slate-500 font-black text-[10px] uppercase tracking-widest">
                                                 Aproveitamento: {certificate.finalScore}%
                                             </p>
                                         </div>
@@ -229,7 +229,7 @@ export default function CertificateViewPage() {
                         </div>
 
                         {/* Signatures and Validation Section */}
-                        <div className="w-full flex justify-between items-end px-4 pb-1">
+                        <div className="w-full flex justify-between items-end px-10">
                             {/* Signature Area Left */}
                             <div className="flex flex-col items-center space-y-0.5 w-60">
                                 <div className="h-12 w-full flex items-center justify-center relative border-b border-slate-900/10">
@@ -287,13 +287,13 @@ export default function CertificateViewPage() {
                         </div>
                     </div>
 
-                    {/* Security Stamp - Scaled even more to save space */}
-                    <div className="absolute top-8 right-8 opacity-[0.7] pointer-events-none group transform scale-[0.6] origin-top-right">
-                        <div className="h-24 w-24 border-[4px] border-amber-600/20 rounded-full flex items-center justify-center relative">
+                    {/* Security Stamp - Fixed at a safe position */}
+                    <div className="absolute top-12 right-12 opacity-[0.8] pointer-events-none group transform scale-[0.7] origin-top-right">
+                        <div className="h-32 w-32 border-[6px] border-amber-600/20 rounded-full flex items-center justify-center relative">
                             <div className="absolute inset-0 border border-amber-500/30 rounded-full animate-[spin_30s_linear_infinite]" style={{ borderStyle: 'dotted' }} />
-                            <div className="bg-gradient-to-br from-amber-500/5 via-transparent to-transparent rounded-full h-[85%] w-[85%] flex items-center justify-center flex-col p-2 text-center border border-amber-600/20 shadow-inner">
-                                <Award className="h-5 w-5 text-amber-600 mb-0.5 opacity-70" />
-                                <p className="text-[6px] font-black uppercase tracking-widest leading-none text-amber-800">Original<br />Document</p>
+                            <div className="bg-gradient-to-br from-amber-500/5 via-transparent to-transparent rounded-full h-[85%] w-[85%] flex items-center justify-center flex-col p-4 text-center border border-amber-600/20 shadow-inner">
+                                <Award className="h-10 w-10 text-amber-600 mb-1 opacity-70" />
+                                <p className="text-[10px] font-black uppercase tracking-widest leading-none text-amber-800">Original<br />Document</p>
                             </div>
                         </div>
                     </div>
