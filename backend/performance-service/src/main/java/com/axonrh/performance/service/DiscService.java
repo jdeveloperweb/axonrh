@@ -314,6 +314,12 @@ public class DiscService {
         }
     }
 
+    public void deleteEvaluation(UUID tenantId, UUID evaluationId) {
+        DiscEvaluation evaluation = evaluationRepository.findByTenantIdAndId(tenantId, evaluationId)
+            .orElseThrow(() -> new EntityNotFoundException("Avaliacao DISC nao encontrada"));
+        evaluationRepository.delete(evaluation);
+    }
+
     // ==================== Helpers ====================
 
     public boolean hasCompletedEvaluation(UUID tenantId, UUID employeeId) {

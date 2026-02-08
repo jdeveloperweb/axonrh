@@ -106,6 +106,14 @@ public class DiscController {
         return ResponseEntity.ok(discService.startEvaluation(tenantId, evaluationId));
     }
 
+    @DeleteMapping("/{evaluationId}")
+    public ResponseEntity<Void> deleteEvaluation(
+            @RequestHeader("X-Tenant-ID") UUID tenantId,
+            @PathVariable UUID evaluationId) {
+        discService.deleteEvaluation(tenantId, evaluationId);
+        return ResponseEntity.noContent().build();
+    }
+
     // ==================== Assignments ====================
 
     @PostMapping("/assign")
