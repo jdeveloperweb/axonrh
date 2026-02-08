@@ -87,6 +87,7 @@ export default function PDIDetailPage() {
 
   const [pdi, setPDI] = useState<PDI | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [newActionOpen, setNewActionOpen] = useState(false);
   const [completeActionOpen, setCompleteActionOpen] = useState(false);
@@ -124,18 +125,30 @@ export default function PDIDetailPage() {
   const loadPDI = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
+      console.log('AXON - Carregando PDI ID:', pdiId);
 
       // BUSCAR O COLABORADOR LOGADO PARA CHECAGEM DE PERMISSÃO
-      if (!currentEmployee) {
-        const emp = await employeesApi.getMe().catch(() => null);
+      let emp = currentEmployee;
+      if (!emp) {
+        console.log('AXON - Buscando colaborador logado...');
+        emp = await employeesApi.getMe().catch(() => null);
         setCurrentEmployee(emp);
       }
 
+      console.log('AXON - Chamando pdisApi.get...');
       const data = await pdisApi.get(pdiId);
+      console.log('AXON - Dados do PDI recebidos:', data);
       setPDI(data);
-    } catch (error) {
-      console.error('Erro ao carregar PDI:', error);
-      toast({ title: 'Erro', description: 'Falha ao carregar PDI', variant: 'destructive' });
+    } catch (err: any) {
+      console.error('AXON - Erro detalhado ao carregar PDI:', err);
+      const errorMessage = err.response?.data?.message || err.message || 'Falha ao carregar PDI';
+      setError(errorMessage);
+      toast({
+        title: 'Erro ao carregar PDI',
+        description: errorMessage,
+        variant: 'destructive'
+      });
     } finally {
       setLoading(false);
     }
@@ -285,11 +298,20 @@ export default function PDIDetailPage() {
   if (!pdi) {
     return (
       <div className="text-center py-12 space-y-4">
-        <AlertCircle className="h-12 w-12 mx-auto text-muted-foreground" />
-        <p className="text-lg font-medium">PDI nao encontrado</p>
-        <Link href="/performance/pdi">
-          <Button>Voltar para PDIs</Button>
-        </Link>
+        <AlertCircle className="h-12 w-12 mx-auto text-red-500" />
+        <h2 className="text-xl font-bold">Não foi possível carregar o PDI</h2>
+        <p className="text-muted-foreground max-w-md mx-auto">
+          {error || 'O PDI solicitado não foi encontrado ou você não tem permissão para acessá-lo.'}
+        </p>
+        <div className="flex justify-center gap-4 pt-4">
+          <Button variant="outline" onClick={() => loadPDI()}>
+            Tentar Novamente
+          </Button>
+          <Link href="/performance/pdi">
+            <Button>Voltar para Lista</Button>
+          </Link>
+        </div>
+        <p className="text-[10px] text-slate-300 mt-8">ID: {pdiId}</p>
       </div>
     );
   }
