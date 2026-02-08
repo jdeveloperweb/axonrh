@@ -83,7 +83,7 @@ export function EmployeePerformanceView() {
             const employeeId = employee.id;
 
             const [pdis, pendingEvals, historyEvals, discAssignments, latestDiscRes, goals] = await Promise.all([
-                pdisApi.getActive(employeeId).catch(() => []),
+                pdisApi.getByEmployee(employeeId).catch(() => []),
                 evaluationsApi.getPending(employeeId).catch(() => []),
                 evaluationsApi.getByEmployee(employeeId).catch(() => []),
                 discApi.getPendingForEmployee(employeeId).catch(() => []),
@@ -91,7 +91,12 @@ export function EmployeePerformanceView() {
                 goalsApi.getByEmployee(employeeId).catch(() => [])
             ]);
 
-            setActivePDIs(Array.isArray(pdis) ? pdis : []);
+            // Filter to show relevant PDIs (Active, Draft, Pending Approval)
+            const allPDIs = Array.isArray(pdis) ? pdis : [];
+            const relevantPDIs = allPDIs.filter(p =>
+                ['ACTIVE', 'DRAFT', 'PENDING_APPROVAL'].includes(p.status)
+            );
+            setActivePDIs(relevantPDIs);
             setPendingEvaluations(Array.isArray(pendingEvals) ? pendingEvals : []);
             setLatestEvaluation(Array.isArray(historyEvals) && historyEvals.length > 0 ? historyEvals[0] : null);
             setPendingDisc(Array.isArray(discAssignments) ? discAssignments : []);
@@ -118,7 +123,9 @@ export function EmployeePerformanceView() {
         );
     }
 
-    const hasPendingItems = pendingEvaluations.length > 0 || pendingDisc.length > 0;
+    const allPDIs = Array.isArray(activePDIs) ? activePDIs : [];
+    const pendingPDIs = allPDIs.filter(p => ['DRAFT', 'PENDING_APPROVAL'].includes(p.status));
+    const hasPendingItems = pendingEvaluations.length > 0 || pendingDisc.length > 0 || pendingPDIs.length > 0;
 
     return (
         <div className="space-y-8 pb-12">
@@ -144,6 +151,17 @@ export function EmployeePerformanceView() {
                             >
                                 <ClipboardCheck className="mr-2 h-4 w-4" />
                                 Responder {evalItem.evaluatorType === 'SELF' ? 'Autoavaliação' : `Avaliação de ${evalItem.employeeName}`}
+                            </Button>
+                        ))}
+                        {pendingPDIs.map((pdi) => (
+                            <Button
+                                key={pdi.id}
+                                variant="outline"
+                                className="bg-white/50 backdrop-blur-sm border-amber-200 hover:bg-amber-100 transition-all text-amber-900"
+                                onClick={() => router.push(`/performance/pdi/${pdi.id}`)}
+                            >
+                                <TrendingUp className="mr-2 h-4 w-4" />
+                                {pdi.status === 'DRAFT' ? 'Continuar PDI (Rascunho)' : 'Revisar PDI Pendente'}
                             </Button>
                         ))}
                         {pendingDisc.map((discItem) => (

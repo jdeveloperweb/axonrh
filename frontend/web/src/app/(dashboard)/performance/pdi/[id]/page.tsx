@@ -307,7 +307,7 @@ export default function PDIDetailPage() {
           <Button variant="outline" onClick={() => loadPDI()}>
             Tentar Novamente
           </Button>
-          <Link href="/performance/pdi">
+          <Link href="/performance">
             <Button>Voltar para Lista</Button>
           </Link>
         </div>
@@ -340,7 +340,7 @@ export default function PDIDetailPage() {
     <div className="space-y-6 pb-12">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Link href="/performance/pdi">
+        <Link href="/performance">
           <Button variant="ghost" size="icon">
             <ArrowLeft className="h-5 w-5" />
           </Button>

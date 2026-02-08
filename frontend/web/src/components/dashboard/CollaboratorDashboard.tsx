@@ -45,13 +45,17 @@ export function CollaboratorDashboard() {
                     timesheetApi.getTodayRecords().catch(() => [] as TimeRecord[]),
                     vacationApi.getMyPeriods().catch(() => [] as VacationPeriod[]),
                     employeeId ? enrollmentsApi.getActiveByEmployee(employeeId).catch(() => [] as Enrollment[]) : Promise.resolve([] as Enrollment[]),
-                    employeeId ? pdisApi.getActive(employeeId).catch(() => [] as PDI[]) : Promise.resolve([] as PDI[])
+                    employeeId ? pdisApi.getByEmployee(employeeId).catch(() => [] as PDI[]) : Promise.resolve([] as PDI[])
                 ]);
 
                 setTodayRecords(Array.isArray(records) ? records : []);
                 setVacationPeriods(Array.isArray(periods) ? periods : []);
                 setActiveEnrollments(Array.isArray(enrollments) ? enrollments : []);
-                setActivePDIs(Array.isArray(pdis) ? pdis : []);
+
+                // Filter PDIs
+                const allPDIs = Array.isArray(pdis) ? pdis : [];
+                const relevantPDIs = allPDIs.filter(p => ['ACTIVE', 'DRAFT', 'PENDING_APPROVAL'].includes(p.status));
+                setActivePDIs(relevantPDIs);
             } catch (error) {
                 console.error('Error loading collaborator dashboard data:', error);
             } finally {
@@ -272,12 +276,22 @@ export function CollaboratorDashboard() {
                                     </div>
                                     <div className="flex-1">
                                         <div className="flex items-center justify-between mb-1">
-                                            <h5 className="font-bold text-indigo-900 uppercase text-xs tracking-wider">Novo PDI Disponível</h5>
-                                            <span className="text-[10px] text-indigo-400 font-medium bg-indigo-50 px-2 py-0.5 rounded-full">Ativo</span>
+                                            <h5 className="font-bold text-indigo-900 uppercase text-xs tracking-wider">
+                                                {pdi.status === 'DRAFT' ? 'PDI em Rascunho' :
+                                                    pdi.status === 'PENDING_APPROVAL' ? 'PDI Pendente' :
+                                                        'Novo PDI Disponível'}
+                                            </h5>
+                                            <span className="text-[10px] text-indigo-400 font-medium bg-indigo-50 px-2 py-0.5 rounded-full">
+                                                {pdi.status === 'ACTIVE' ? 'Ativo' :
+                                                    pdi.status === 'DRAFT' ? 'Rascunho' :
+                                                        pdi.status === 'PENDING_APPROVAL' ? 'Aguardando' : pdi.status}
+                                            </span>
                                         </div>
                                         <h4 className="font-bold text-gray-900 mb-1">{pdi.title}</h4>
                                         <p className="text-sm text-gray-500 leading-relaxed">
-                                            Um novo plano de desenvolvimento foi criado para você. Clique para ver seus objetivos e ações.
+                                            {pdi.status === 'DRAFT' ? 'Continue editando seu plano de desenvolvimento.' :
+                                                pdi.status === 'PENDING_APPROVAL' ? 'Seu PDI está aguardando aprovação.' :
+                                                    'Um novo plano de desenvolvimento foi criado para você. Clique para ver seus objetivos e ações.'}
                                         </p>
                                     </div>
                                 </div>
