@@ -8,6 +8,8 @@ import { certificatesApi, Certificate, certificateConfigsApi, CertificateConfig 
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 export default function CertificateViewPage() {
     const { id } = useParams();
@@ -15,6 +17,7 @@ export default function CertificateViewPage() {
     const [certificate, setCertificate] = useState<Certificate | null>(null);
     const [config, setConfig] = useState<CertificateConfig | null>(null);
     const [loading, setLoading] = useState(true);
+    const [downloading, setDownloading] = useState(false);
     const certificateRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -41,6 +44,42 @@ export default function CertificateViewPage() {
 
     const handlePrint = () => {
         window.print();
+    };
+
+    const handleDownloadPDF = async () => {
+        if (!certificateRef.current || !certificate) return;
+
+        try {
+            setDownloading(true);
+            const element = certificateRef.current;
+
+            // Render the certificate to a canvas
+            const canvas = await html2canvas(element, {
+                scale: 3, // High quality
+                useCORS: true, // For external images (logos/signatures)
+                logging: false,
+                backgroundColor: '#ffffff'
+            });
+
+            const imgData = canvas.toDataURL('image/png');
+
+            // Create PDF (landscape A4)
+            const pdf = new jsPDF({
+                orientation: 'landscape',
+                unit: 'px',
+                format: [canvas.width, canvas.height]
+            });
+
+            pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+            pdf.save(`certificado-${certificate.employeeName.toLowerCase().replace(/\s+/g, '-')}.pdf`);
+
+            toast.success('Download iniciado!');
+        } catch (error) {
+            console.error('Erro ao gerar PDF:', error);
+            toast.error('Erro ao gerar o PDF do certificado');
+        } finally {
+            setDownloading(false);
+        }
     };
 
     if (loading) {
@@ -70,11 +109,25 @@ export default function CertificateViewPage() {
                         <ArrowLeft className="h-4 w-4" /> Voltar
                     </Button>
                     <div className="flex gap-3">
-                        <Button variant="outline" className="font-bold gap-2" onClick={handlePrint}>
+                        <Button
+                            variant="outline"
+                            className="font-bold gap-2"
+                            onClick={handlePrint}
+                            disabled={downloading}
+                        >
                             <Printer className="h-4 w-4" /> Imprimir
                         </Button>
-                        <Button className="font-bold gap-2 bg-slate-900 border-none">
-                            <Download className="h-4 w-4" /> Baixar PDF
+                        <Button
+                            className="font-bold gap-2 bg-slate-900 border-none"
+                            onClick={handleDownloadPDF}
+                            disabled={downloading}
+                        >
+                            {downloading ? (
+                                <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            ) : (
+                                <Download className="h-4 w-4" />
+                            )}
+                            {downloading ? 'Gerando...' : 'Baixar PDF'}
                         </Button>
                         <Button variant="secondary" className="font-bold gap-2">
                             <Share2 className="h-4 w-4" /> Compartilhar
