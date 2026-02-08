@@ -99,51 +99,51 @@ export default function CertificateViewPage() {
                     <div className="absolute inset-4 border border-slate-200 pointer-events-none" />
                     <div className="absolute inset-6 border-[0.5px] border-slate-900/10 pointer-events-none" />
 
-                    <div className="relative h-full flex flex-col items-center justify-between py-16 px-16 z-10">
+                    <div className="relative h-full flex flex-col items-center justify-between py-8 px-16 z-10">
                         {/* Header Section */}
-                        <div className="flex flex-col items-center space-y-8 w-full">
+                        <div className="flex flex-col items-center space-y-4 w-full">
                             {(certificate.companyLogoUrl || config?.companyLogoUrl) ? (
                                 <img
                                     src={certificate.companyLogoUrl || config?.companyLogoUrl}
                                     alt="Logo"
-                                    className="h-20 w-auto object-contain"
+                                    className="h-14 w-auto object-contain"
                                 />
                             ) : (
-                                <div className="h-16 w-16 bg-slate-900 rounded-xl flex items-center justify-center shadow-lg">
-                                    <Award className="h-10 w-10 text-white" />
+                                <div className="h-12 w-12 bg-slate-900 rounded-xl flex items-center justify-center shadow-lg">
+                                    <Award className="h-8 w-8 text-white" />
                                 </div>
                             )}
 
-                            <div className="text-center space-y-3">
-                                <h2 className="text-sm font-black tracking-[0.5em] text-slate-400 uppercase">
+                            <div className="text-center space-y-1">
+                                <h2 className="text-[10px] font-black tracking-[0.5em] text-slate-400 uppercase">
                                     {certificate.certificateTitle || config?.certificateTitle || 'Certificado de Conclusão'}
                                 </h2>
-                                <p className="text-slate-900 font-bold uppercase tracking-[0.2em] text-[12px] opacity-70">
+                                <p className="text-slate-900 font-bold uppercase tracking-[0.2em] text-[10px] opacity-70">
                                     {certificate.companyName || config?.companyName || 'Axon Academy • Soluções em Capital Humano'}
                                 </p>
                             </div>
                         </div>
 
                         {/* Main Achievement Section */}
-                        <div className="flex flex-col items-center space-y-12 w-full flex-1 justify-center py-8">
-                            <div className="text-center space-y-4">
-                                <p className="text-slate-400 font-serif italic text-xl">Certificamos que</p>
-                                <h1 className="text-6xl md:text-7xl font-black text-slate-900 tracking-tight leading-none">
+                        <div className="flex flex-col items-center space-y-6 w-full flex-1 justify-center py-4">
+                            <div className="text-center space-y-2">
+                                <p className="text-slate-400 font-serif italic text-lg">Certificamos que</p>
+                                <h1 className="text-5xl md:text-6xl font-black text-slate-900 tracking-tight leading-none">
                                     {certificate.employeeName}
                                 </h1>
-                                <div className="h-1 w-24 bg-slate-900/10 mx-auto rounded-full" />
+                                <div className="h-1 w-20 bg-slate-900/10 mx-auto rounded-full" />
                             </div>
 
-                            <div className="text-center max-w-3xl space-y-8">
-                                <p className="text-slate-500 font-medium text-lg leading-relaxed">
+                            <div className="text-center max-w-3xl space-y-4">
+                                <p className="text-slate-500 font-medium text-base leading-relaxed">
                                     concluiu com êxito o treinamento corporativo de
                                 </p>
-                                <div className="px-10 py-4">
-                                    <h3 className="text-4xl font-black text-slate-800 uppercase tracking-tighter decoration-slate-200 decoration-4 underline-offset-8">
+                                <div className="px-10 py-2">
+                                    <h3 className="text-3xl font-black text-slate-800 uppercase tracking-tighter decoration-slate-200 decoration-4 underline-offset-8">
                                         {certificate.courseName}
                                     </h3>
                                 </div>
-                                <div className="flex items-center justify-center gap-12 pt-4">
+                                <div className="flex items-center justify-center gap-8 pt-2">
                                     <div className="flex items-center gap-3">
                                         <div className="h-2 w-2 rounded-full bg-slate-900/20" />
                                         <p className="text-slate-400 font-black text-[11px] uppercase tracking-widest">
