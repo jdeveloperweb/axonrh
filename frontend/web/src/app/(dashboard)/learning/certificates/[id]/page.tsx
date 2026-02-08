@@ -92,35 +92,49 @@ export default function CertificateViewPage() {
                         "print:shadow-none print:border-[10px] print:m-0 print:w-full print:h-full"
                     )}
                 >
-                    {/* Subtle Classic Background Texture */}
-                    <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/cream-pixels.png')]" />
+                    {/* Premium Background Paper Texture */}
+                    <div className="absolute inset-0 opacity-[0.2] pointer-events-none" style={{
+                        backgroundColor: '#fff',
+                        backgroundImage: `radial-gradient(#e2e8f0 0.5px, transparent 0.5px)`,
+                        backgroundSize: '24px 24px'
+                    }} />
+                    <div className="absolute inset-0 opacity-[0.4] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/cream-pixels.png')]" />
 
-                    {/* Decorative Frame Lines */}
-                    <div className="absolute inset-4 border border-slate-200 pointer-events-none" />
-                    <div className="absolute inset-6 border-[0.5px] border-slate-900/10 pointer-events-none" />
+                    {/* Decorative Frame System */}
+                    <div className="absolute inset-4 border-[3px] border-slate-900 pointer-events-none" />
+                    <div className="absolute inset-5 border border-amber-600/30 pointer-events-none" />
+                    <div className="absolute inset-8 border border-slate-900/10 pointer-events-none" />
+                    <div className="absolute inset-[34px] border-[0.5px] border-amber-600/20 pointer-events-none" />
 
                     <div className="relative h-full flex flex-col items-center justify-between py-8 px-16 z-10">
                         {/* Header Section */}
                         <div className="flex flex-col items-center space-y-4 w-full">
                             {(certificate.companyLogoUrl || config?.companyLogoUrl) ? (
-                                <img
-                                    src={certificate.companyLogoUrl || config?.companyLogoUrl}
-                                    alt="Logo"
-                                    className="h-14 w-auto object-contain"
-                                />
+                                <div className="relative group">
+                                    <div className="absolute -inset-4 bg-white/50 blur-xl opacity-0 group-hover:opacity-100 transition-opacity rounded-full" />
+                                    <img
+                                        src={certificate.companyLogoUrl || config?.companyLogoUrl}
+                                        alt="Logo"
+                                        className="h-16 w-auto object-contain relative transition-transform hover:scale-105 duration-500"
+                                    />
+                                </div>
                             ) : (
-                                <div className="h-12 w-12 bg-slate-900 rounded-xl flex items-center justify-center shadow-lg">
-                                    <Award className="h-8 w-8 text-white" />
+                                <div className="h-14 w-14 bg-slate-900 rounded-2xl flex items-center justify-center shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-500">
+                                    <Award className="h-8 w-8 text-amber-500" />
                                 </div>
                             )}
 
-                            <div className="text-center space-y-1">
-                                <h2 className="text-[10px] font-black tracking-[0.5em] text-slate-400 uppercase">
+                            <div className="text-center space-y-2">
+                                <h2 className="text-[10px] font-black tracking-[0.6em] text-amber-700/80 uppercase pl-2">
                                     {certificate.certificateTitle || config?.certificateTitle || 'Certificado de Conclusão'}
                                 </h2>
-                                <p className="text-slate-900 font-bold uppercase tracking-[0.2em] text-[10px] opacity-70">
-                                    {certificate.companyName || config?.companyName || 'Axon Academy • Soluções em Capital Humano'}
-                                </p>
+                                <div className="flex items-center gap-4 justify-center">
+                                    <div className="h-[1px] w-8 bg-gradient-to-r from-transparent to-slate-300" />
+                                    <p className="text-slate-900 font-black uppercase tracking-[0.2em] text-[10px]">
+                                        {certificate.companyName || config?.companyName || 'Axon Academy • Soluções em Capital Humano'}
+                                    </p>
+                                    <div className="h-[1px] w-8 bg-gradient-to-l from-transparent to-slate-300" />
+                                </div>
                             </div>
                         </div>
 
@@ -143,17 +157,17 @@ export default function CertificateViewPage() {
                                         {certificate.courseName}
                                     </h3>
                                 </div>
-                                <div className="flex items-center justify-center gap-8 pt-2">
-                                    <div className="flex items-center gap-3">
-                                        <div className="h-2 w-2 rounded-full bg-slate-900/20" />
-                                        <p className="text-slate-400 font-black text-[11px] uppercase tracking-widest">
+                                <div className="flex items-center justify-center gap-10 pt-4">
+                                    <div className="flex items-center gap-3 group">
+                                        <div className="h-2 w-2 rounded-full bg-amber-500 shadow-sm shadow-amber-500/50" />
+                                        <p className="text-slate-500 font-black text-[10px] uppercase tracking-[0.2em] group-hover:text-amber-700 transition-colors">
                                             Carga Horária: {certificate.durationHours || 0} horas
                                         </p>
                                     </div>
                                     {certificate.finalScore && (
-                                        <div className="flex items-center gap-3">
-                                            <div className="h-2 w-2 rounded-full bg-slate-900/20" />
-                                            <p className="text-slate-400 font-black text-[11px] uppercase tracking-widest">
+                                        <div className="flex items-center gap-3 group">
+                                            <div className="h-2 w-2 rounded-full bg-amber-500 shadow-sm shadow-amber-500/50" />
+                                            <p className="text-slate-500 font-black text-[10px] uppercase tracking-[0.2em] group-hover:text-amber-700 transition-colors">
                                                 Aproveitamento: {certificate.finalScore}%
                                             </p>
                                         </div>
@@ -165,8 +179,8 @@ export default function CertificateViewPage() {
                         {/* Signatures and Validation Section */}
                         <div className="w-full flex justify-between items-end px-4">
                             {/* Signature Area Left */}
-                            <div className="flex flex-col items-center space-y-3 w-64">
-                                <div className="h-24 w-full flex items-center justify-center relative border-b-2 border-slate-900/5 hover:border-slate-900/10 transition-colors">
+                            <div className="flex flex-col items-center space-y-2 w-64">
+                                <div className="h-16 w-full flex items-center justify-center relative border-b-2 border-slate-900/5 hover:border-slate-900/10 transition-colors">
                                     {(certificate.instructorSignatureUrl || config?.instructorSignatureUrl) ? (
                                         <img
                                             src={certificate.instructorSignatureUrl || config?.instructorSignatureUrl}
@@ -199,8 +213,8 @@ export default function CertificateViewPage() {
                             </div>
 
                             {/* Signature Area Right */}
-                            <div className="flex flex-col items-center space-y-3 w-64">
-                                <div className="h-24 w-full flex items-center justify-center relative border-b-2 border-slate-900/5 hover:border-slate-900/10 transition-colors">
+                            <div className="flex flex-col items-center space-y-2 w-64">
+                                <div className="h-16 w-full flex items-center justify-center relative border-b-2 border-slate-900/5 hover:border-slate-900/10 transition-colors">
                                     {(certificate.generalSignatureUrl || config?.generalSignatureUrl) ? (
                                         <img
                                             src={certificate.generalSignatureUrl || config?.generalSignatureUrl}
@@ -221,25 +235,26 @@ export default function CertificateViewPage() {
                         </div>
                     </div>
 
-                    {/* Security Stamp - Repositioned to not overlap text */}
-                    <div className="absolute top-10 right-10 opacity-[0.05] pointer-events-none group transform rotate-12">
-                        <div className="h-40 w-40 border-4 border-slate-900 rounded-full flex items-center justify-center">
-                            <div className="border border-slate-900 rounded-full h-[90%] w-[90%] flex items-center justify-center flex-col p-4 text-center">
-                                <Award className="h-10 w-10 text-slate-900 mb-2" />
-                                <p className="text-[10px] font-black uppercase tracking-widest leading-none">Original<br />Document</p>
-                                <div className="h-px w-12 bg-slate-900 my-2" />
-                                <p className="text-[7px] font-black tracking-tighter uppercase whitespace-nowrap">
-                                    {(certificate.companyName || config?.companyName || 'AXON').substring(0, 15)} ACADEMY
+                    {/* Security Stamp - Premium Gold Wax Style */}
+                    <div className="absolute top-12 right-12 opacity-[0.9] pointer-events-none group transform rotate-6">
+                        <div className="h-32 w-32 border-[6px] border-amber-600/20 rounded-full flex items-center justify-center relative">
+                            <div className="absolute inset-0 border border-amber-500/40 rounded-full animate-[spin_20s_linear_infinite]" style={{ borderStyle: 'dashed' }} />
+                            <div className="bg-gradient-to-br from-amber-500/10 via-amber-600/5 to-transparent rounded-full h-[85%] w-[85%] flex items-center justify-center flex-col p-4 text-center border border-amber-600/30 shadow-inner">
+                                <Award className="h-8 w-8 text-amber-600 mb-1 opacity-80" />
+                                <p className="text-[8px] font-black uppercase tracking-widest leading-none text-amber-800">Original<br />Document</p>
+                                <div className="h-px w-8 bg-amber-600/30 my-2" />
+                                <p className="text-[6px] font-black tracking-tighter uppercase whitespace-nowrap text-amber-700/60 font-serif italic">
+                                    Verificado pela Axon Academy
                                 </p>
                             </div>
                         </div>
                     </div>
 
-                    {/* Classic Guilloché Corner Accents */}
-                    <div className="absolute top-4 left-4 w-12 h-12 border-t border-l border-slate-300 rounded-tl-lg pointer-events-none" />
-                    <div className="absolute top-4 right-4 w-12 h-12 border-t border-r border-slate-300 rounded-tr-lg pointer-events-none" />
-                    <div className="absolute bottom-4 left-4 w-12 h-12 border-b border-l border-slate-300 rounded-bl-lg pointer-events-none" />
-                    <div className="absolute bottom-4 right-4 w-12 h-12 border-b border-r border-slate-300 rounded-br-lg pointer-events-none" />
+                    {/* Classic Corner Accents - Gold Style */}
+                    <div className="absolute top-4 left-4 w-12 h-12 border-t-[3px] border-l-[3px] border-amber-600/40 rounded-tl-sm pointer-events-none" />
+                    <div className="absolute top-4 right-4 w-12 h-12 border-t-[3px] border-r-[3px] border-amber-600/40 rounded-tr-sm pointer-events-none" />
+                    <div className="absolute bottom-4 left-4 w-12 h-12 border-b-[3px] border-l-[3px] border-amber-600/40 rounded-bl-sm pointer-events-none" />
+                    <div className="absolute bottom-4 right-4 w-12 h-12 border-b-[3px] border-r-[3px] border-amber-600/40 rounded-br-sm pointer-events-none" />
                 </div>
             </div>
 
