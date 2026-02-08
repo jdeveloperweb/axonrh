@@ -159,15 +159,15 @@ export default function CertificateViewPage() {
                     <div className="absolute inset-8 border border-slate-900/10 pointer-events-none" />
                     <div className="absolute inset-[34px] border-[0.5px] border-amber-600/20 pointer-events-none" />
 
-                    <div className="relative h-full flex flex-col items-center justify-between py-4 px-16 z-10">
+                    <div className="relative h-full flex flex-col items-center justify-between py-2 px-16 z-10">
                         {/* Header Section */}
-                        <div className="flex flex-col items-center space-y-2 w-full">
+                        <div className="flex flex-col items-center space-y-1 w-full">
                             {(certificate.companyLogoUrl || config?.companyLogoUrl) ? (
                                 <div className="relative group flex items-center justify-center">
                                     <img
                                         src={certificate.companyLogoUrl || config?.companyLogoUrl}
                                         alt="Logo"
-                                        className="h-12 w-auto object-contain relative transition-all duration-500 group-hover:drop-shadow-lg"
+                                        className="h-10 w-auto object-contain relative transition-all duration-500"
                                     />
                                 </div>
                             ) : (
@@ -191,25 +191,25 @@ export default function CertificateViewPage() {
                         </div>
 
                         {/* Main Achievement Section */}
-                        <div className="flex flex-col items-center space-y-2 w-full flex-1 justify-center py-1">
-                            <div className="text-center space-y-1">
-                                <p className="text-slate-400 font-serif italic text-sm">Certificamos que</p>
-                                <h1 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight leading-none">
+                        <div className="flex flex-col items-center space-y-1 w-full flex-1 justify-center py-0">
+                            <div className="text-center space-y-0.5">
+                                <p className="text-slate-400 font-serif italic text-[12px]">Certificamos que</p>
+                                <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight leading-none">
                                     {certificate.employeeName}
                                 </h1>
-                                <div className="h-[1px] w-12 bg-amber-600/20 mx-auto rounded-full mt-1" />
+                                <div className="h-[1px] w-10 bg-amber-600/20 mx-auto rounded-full mt-0.5" />
                             </div>
 
                             <div className="text-center max-w-3xl space-y-1">
-                                <p className="text-slate-500 font-medium text-[12px] leading-relaxed">
+                                <p className="text-slate-500 font-medium text-[10px] uppercase tracking-wider leading-relaxed opacity-80">
                                     concluiu com êxito o treinamento corporativo de
                                 </p>
-                                <div className="px-10 py-1">
-                                    <h3 className="text-xl md:text-2xl font-black text-slate-800 uppercase tracking-tighter decoration-amber-200/50 decoration-2 underline-offset-4">
+                                <div className="px-10 py-0.5">
+                                    <h3 className="text-lg md:text-xl font-black text-slate-800 uppercase tracking-tighter decoration-amber-200/50 decoration-2 underline-offset-4">
                                         {certificate.courseName}
                                     </h3>
                                 </div>
-                                <div className="flex items-center justify-center gap-8 pt-2">
+                                <div className="flex items-center justify-center gap-6 pt-0.5">
                                     <div className="flex items-center gap-2 group">
                                         <div className="h-1.5 w-1.5 rounded-full bg-amber-500" />
                                         <p className="text-slate-500 font-black text-[9px] uppercase tracking-[0.2em]">
@@ -229,10 +229,10 @@ export default function CertificateViewPage() {
                         </div>
 
                         {/* Signatures and Validation Section */}
-                        <div className="w-full flex justify-between items-end px-4 pb-2">
+                        <div className="w-full flex justify-between items-end px-4 pb-1">
                             {/* Signature Area Left */}
-                            <div className="flex flex-col items-center space-y-1 w-60">
-                                <div className="h-14 w-full flex items-center justify-center relative border-b border-slate-900/10">
+                            <div className="flex flex-col items-center space-y-0.5 w-60">
+                                <div className="h-12 w-full flex items-center justify-center relative border-b border-slate-900/10">
                                     {(certificate.instructorSignatureUrl || config?.instructorSignatureUrl) ? (
                                         <img
                                             src={certificate.instructorSignatureUrl || config?.instructorSignatureUrl}
@@ -287,17 +287,13 @@ export default function CertificateViewPage() {
                         </div>
                     </div>
 
-                    {/* Security Stamp - Scaled and repositioned */}
-                    <div className="absolute top-10 right-10 opacity-[0.8] pointer-events-none group transform scale-75 origin-top-right">
-                        <div className="h-28 w-28 border-[4px] border-amber-600/20 rounded-full flex items-center justify-center relative">
-                            <div className="absolute inset-0 border border-amber-500/30 rounded-full animate-[spin_25s_linear_infinite]" style={{ borderStyle: 'dotted' }} />
+                    {/* Security Stamp - Scaled even more to save space */}
+                    <div className="absolute top-8 right-8 opacity-[0.7] pointer-events-none group transform scale-[0.6] origin-top-right">
+                        <div className="h-24 w-24 border-[4px] border-amber-600/20 rounded-full flex items-center justify-center relative">
+                            <div className="absolute inset-0 border border-amber-500/30 rounded-full animate-[spin_30s_linear_infinite]" style={{ borderStyle: 'dotted' }} />
                             <div className="bg-gradient-to-br from-amber-500/5 via-transparent to-transparent rounded-full h-[85%] w-[85%] flex items-center justify-center flex-col p-2 text-center border border-amber-600/20 shadow-inner">
-                                <Award className="h-6 w-6 text-amber-600 mb-1 opacity-70" />
-                                <p className="text-[7px] font-black uppercase tracking-widest leading-none text-amber-800">Original<br />Document</p>
-                                <div className="h-px w-6 bg-amber-600/20 my-1" />
-                                <p className="text-[5px] font-black tracking-tighter uppercase whitespace-nowrap text-amber-700/50 font-serif italic">
-                                    Verified authenticity
-                                </p>
+                                <Award className="h-5 w-5 text-amber-600 mb-0.5 opacity-70" />
+                                <p className="text-[6px] font-black uppercase tracking-widest leading-none text-amber-800">Original<br />Document</p>
                             </div>
                         </div>
                     </div>
