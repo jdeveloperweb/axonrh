@@ -23,6 +23,7 @@ import { enrollmentsApi, Enrollment } from '@/lib/api/learning';
 import { Progress } from '@/components/ui/progress';
 import { useRouter } from 'next/navigation';
 import { pdisApi, PDI } from '@/lib/api/performance';
+import { employeesApi } from '@/lib/api/employees';
 
 export function CollaboratorDashboard() {
     const { user } = useAuthStore();
@@ -36,11 +37,15 @@ export function CollaboratorDashboard() {
     useEffect(() => {
         async function loadData() {
             try {
+                // BUSCAR O ID DO COLABORADOR
+                const employee = await employeesApi.getMe().catch(() => null);
+                const employeeId = employee?.id;
+
                 const [records, periods, enrollments, pdis] = await Promise.all([
                     timesheetApi.getTodayRecords().catch(() => [] as TimeRecord[]),
                     vacationApi.getMyPeriods().catch(() => [] as VacationPeriod[]),
-                    user?.id ? enrollmentsApi.getActiveByEmployee(user.id).catch(() => [] as Enrollment[]) : Promise.resolve([] as Enrollment[]),
-                    user?.id ? pdisApi.getActive(user.id).catch(() => [] as PDI[]) : Promise.resolve([] as PDI[])
+                    employeeId ? enrollmentsApi.getActiveByEmployee(employeeId).catch(() => [] as Enrollment[]) : Promise.resolve([] as Enrollment[]),
+                    employeeId ? pdisApi.getActive(employeeId).catch(() => [] as PDI[]) : Promise.resolve([] as PDI[])
                 ]);
 
                 setTodayRecords(Array.isArray(records) ? records : []);

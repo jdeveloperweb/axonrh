@@ -43,6 +43,7 @@ import Link from 'next/link';
 import { pdisApi, PDI, PDIAction, PDIActionType, PDIActionStatus } from '@/lib/api/performance';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/stores/auth-store';
+import { employeesApi, Employee } from '@/lib/api/employees';
 import { useConfirm } from '@/components/providers/ConfirmProvider';
 
 const ACTION_TYPES: { value: PDIActionType; label: string; icon: React.ReactNode; color: string }[] = [
@@ -91,6 +92,7 @@ export default function PDIDetailPage() {
   const [completeActionOpen, setCompleteActionOpen] = useState(false);
   const [selectedAction, setSelectedAction] = useState<PDIAction | null>(null);
   const [actionFilter, setActionFilter] = useState<string>('ALL');
+  const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(null);
 
   const handleDeletePDI = async () => {
     const confirmed = await confirm({
@@ -122,6 +124,13 @@ export default function PDIDetailPage() {
   const loadPDI = useCallback(async () => {
     try {
       setLoading(true);
+
+      // BUSCAR O COLABORADOR LOGADO PARA CHECAGEM DE PERMISSÃO
+      if (!currentEmployee) {
+        const emp = await employeesApi.getMe().catch(() => null);
+        setCurrentEmployee(emp);
+      }
+
       const data = await pdisApi.get(pdiId);
       setPDI(data);
     } catch (error) {
@@ -130,7 +139,7 @@ export default function PDIDetailPage() {
     } finally {
       setLoading(false);
     }
-  }, [pdiId, toast]);
+  }, [pdiId, toast, currentEmployee]);
 
   useEffect(() => {
     loadPDI();
@@ -227,6 +236,34 @@ export default function PDIDetailPage() {
     }
   };
 
+  const handleApprove = async () => {
+    try {
+      if (!currentEmployee) {
+        toast({ title: 'Erro', description: 'Aprovador não identificado', variant: 'destructive' });
+        return;
+      }
+      await pdisApi.approve(pdiId, currentEmployee.id);
+      toast({ title: 'Sucesso', description: 'PDI aprovado com sucesso!' });
+      loadPDI();
+    } catch (error) {
+      console.error('Erro ao aprovar PDI:', error);
+      toast({ title: 'Erro', description: 'Falha ao aprovar PDI', variant: 'destructive' });
+    }
+  };
+
+  const handleReject = async () => {
+    // Para simplificar, vamos apenas usar o cancelamento como "Recusar" por enquanto, 
+    // ou manter o status para revisão.
+    try {
+      await pdisApi.cancel(pdiId);
+      toast({ title: 'PDI Recusado', description: 'O PDI foi retornado para rascunho/cancelado.' });
+      loadPDI();
+    } catch (error) {
+      console.error('Erro ao recusar PDI:', error);
+      toast({ title: 'Erro', description: 'Falha ao recusar PDI', variant: 'destructive' });
+    }
+  };
+
   const getActionIcon = (type: PDIActionType) => {
     const found = ACTION_TYPES.find((t) => t.value === type);
     return found?.icon || <Target className="h-4 w-4" />;
@@ -295,7 +332,7 @@ export default function PDIDetailPage() {
         </Badge>
 
         {/* Delete PDI button for Authorized Users */}
-        {(user?.roles?.some(r => ['ADMIN', 'RH', 'GESTOR_RH', 'ANALISTA_DP', 'MANAGER', 'GESTOR', 'LIDER'].includes(r)) || pdi.employeeId === user?.id) &&
+        {(user?.roles?.some(r => ['ADMIN', 'RH', 'GESTOR_RH', 'ANALISTA_DP', 'MANAGER', 'GESTOR', 'LIDER'].includes(r)) || pdi.employeeId === currentEmployee?.id) &&
           (pdi.status === 'DRAFT' || pdi.status === 'ACTIVE') && (
             <Button
               variant="outline"
@@ -674,6 +711,28 @@ export default function PDIDetailPage() {
       </Card>
 
       {/* PDI Actions - Status-based */}
+      {pdi.status === 'PENDING_APPROVAL' && (
+        <Card className="border-none shadow-sm bg-amber-50">
+          <CardContent className="py-6">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div>
+                <p className="font-bold text-amber-800">Aguardando sua Aprovação</p>
+                <p className="text-sm text-amber-600">Analise os objetivos e as ações propostas antes de aprovar.</p>
+              </div>
+              <div className="flex gap-3">
+                <Button variant="outline" className="text-red-600 border-red-200 hover:bg-red-50" onClick={handleReject}>
+                  Recusar / Revisar
+                </Button>
+                <Button onClick={handleApprove} className="bg-amber-600 hover:bg-amber-700 text-white font-bold">
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                  Aprovar PDI
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {pdi.status === 'DRAFT' && (
         <Card className="border-none shadow-sm bg-slate-50">
           <CardContent className="py-6">

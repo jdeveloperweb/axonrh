@@ -46,6 +46,7 @@ import {
   PDIStatistics,
 } from '@/lib/api/performance';
 import { useAuthStore } from '@/stores/auth-store';
+import { employeesApi } from '@/lib/api/employees';
 
 
 
@@ -63,19 +64,24 @@ export default function PDIListPage() {
   const isManager = user?.roles?.some(role => ['ADMIN', 'RH', 'GESTOR_RH', 'ANALISTA_DP', 'MANAGER', 'GESTOR', 'LIDER'].includes(role));
 
   const loadData = useCallback(async () => {
-    if (!currentUserId) {
-      console.warn('User ID not available, skipping PDI data load');
-      setLoading(false);
-      return;
-    }
-
     try {
       setLoading(true);
+
+      // BUSCAR O ID DO COLABORADOR
+      const employee = await employeesApi.getMe().catch(() => null);
+      if (!employee) {
+        console.warn('Colaborador não encontrado para este usuário.');
+        setLoading(false);
+        return;
+      }
+
+      const employeeId = employee.id;
+
       const [my, team, pending, statistics] = await Promise.all([
-        pdisApi.getByEmployee(currentUserId),
-        isManager ? pdisApi.getByTeam(currentUserId) : Promise.resolve([]),
-        isManager ? pdisApi.getPendingApproval(currentUserId) : Promise.resolve([]),
-        pdisApi.getManagerStatistics(currentUserId).catch(() => ({
+        pdisApi.getByEmployee(employeeId),
+        isManager ? pdisApi.getByTeam(employeeId) : Promise.resolve([]),
+        isManager ? pdisApi.getPendingApproval(employeeId) : Promise.resolve([]),
+        pdisApi.getManagerStatistics(employeeId).catch(() => ({
           pendingApproval: 0,
           active: 0,
           completed: 0,
@@ -93,7 +99,7 @@ export default function PDIListPage() {
     } finally {
       setLoading(false);
     }
-  }, [currentUserId, isManager]);
+  }, [isManager]);
 
   useEffect(() => {
     loadData();
@@ -260,7 +266,7 @@ export default function PDIListPage() {
       </Tabs>
 
       {/* Dialog Novo PDI */}
-      <NewPDIDialog open={newPDIOpen} onOpenChange={setNewPDIOpen} onSuccess={loadData} currentUserId={currentUserId} userName={user?.name || ''} />
+      <NewPDIDialog open={newPDIOpen} onOpenChange={setNewPDIOpen} onSuccess={loadData} userName={user?.name || ''} />
     </div>
   );
 }
@@ -367,7 +373,12 @@ function PDIApprovalList({
   const handleApprove = async (pdiId: string) => {
     try {
       setApproving(pdiId);
-      await pdisApi.approve(pdiId, currentUserId);
+
+      // BUSCAR O ID DO COLABORADOR (APROVADOR)
+      const employee = await employeesApi.getMe().catch(() => null);
+      if (!employee) throw new Error('Aprovador não encontrado');
+
+      await pdisApi.approve(pdiId, employee.id);
       onApprove();
     } catch (error: unknown) {
       console.error('Erro ao aprovar:', error);
@@ -438,13 +449,11 @@ function NewPDIDialog({
   open,
   onOpenChange,
   onSuccess,
-  currentUserId,
   userName,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
-  currentUserId: string;
   userName: string;
 }) {
   const [title, setTitle] = useState('');
@@ -460,13 +469,18 @@ function NewPDIDialog({
   const handleSubmit = async () => {
     try {
       setSaving(true);
+
+      // BUSCAR O ID DO COLABORADOR
+      const employee = await employeesApi.getMe().catch(() => null);
+      if (!employee) throw new Error('Colaborador não encontrado');
+
       await pdisApi.create({
         title,
         description,
         objectives,
         focusAreas,
         endDate,
-        employeeId: currentUserId,
+        employeeId: employee.id,
         employeeName: userName || 'Usuário Atual',
         actions: actions.map(a => ({
           ...a,

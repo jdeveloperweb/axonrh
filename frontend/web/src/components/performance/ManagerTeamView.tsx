@@ -22,16 +22,9 @@ import {
     AlertTriangle
 } from 'lucide-react';
 import Link from 'next/link';
-import {
-    pdisApi,
-    evaluationsApi,
-    cyclesApi,
-    PDI,
-    PDIStatistics,
-    Evaluation,
-    EvaluationCycle
-} from '@/lib/api/performance';
+import { pdisApi, evaluationsApi, cyclesApi, PDI, PDIStatistics, Evaluation, EvaluationCycle } from '@/lib/api/performance';
 import { useAuthStore } from '@/stores/auth-store';
+import { employeesApi } from '@/lib/api/employees';
 
 export function ManagerTeamView() {
     const { user } = useAuthStore();
@@ -51,7 +44,15 @@ export function ManagerTeamView() {
     const loadTeamData = async () => {
         try {
             setLoading(true);
-            const managerId = user!.id;
+
+            // BUSCAR O ID DO COLABORADOR (GESTOR)
+            const employee = await employeesApi.getMe().catch(() => null);
+            if (!employee) {
+                setLoading(false);
+                return;
+            }
+
+            const managerId = employee.id;
 
             const [pdis, stats, pending, evals, cycles] = await Promise.all([
                 pdisApi.getByTeam(managerId).catch(() => []),
