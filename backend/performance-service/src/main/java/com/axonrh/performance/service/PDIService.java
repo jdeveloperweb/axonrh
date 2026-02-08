@@ -31,6 +31,12 @@ public class PDIService {
         if (pdi.getStatus() == null) {
             pdi.setStatus(PDIStatus.DRAFT);
         }
+        
+        if (pdi.getActions() != null && !pdi.getActions().isEmpty()) {
+            pdi.getActions().forEach(action -> action.setPdi(pdi));
+            pdi.calculateProgress();
+        }
+        
         return pdiRepository.save(pdi);
     }
 
@@ -172,6 +178,18 @@ public class PDIService {
                 .orElseThrow(() -> new EntityNotFoundException("Acao nao encontrada"));
 
         action.complete(notes, hoursSpent);
+        pdi.calculateProgress();
+        return pdiRepository.save(pdi);
+    }
+
+    public PDI updateActionProgress(UUID tenantId, UUID pdiId, UUID actionId, Integer progress) {
+        PDI pdi = getPDI(tenantId, pdiId);
+        PDIAction action = pdi.getActions().stream()
+                .filter(a -> a.getId().equals(actionId))
+                .findFirst()
+                .orElseThrow(() -> new EntityNotFoundException("Acao nao encontrada"));
+
+        action.setProgress(progress);
         pdi.calculateProgress();
         return pdiRepository.save(pdi);
     }

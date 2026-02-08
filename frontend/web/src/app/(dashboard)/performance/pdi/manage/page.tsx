@@ -34,13 +34,31 @@ import {
     Search,
     Filter,
     Trash2,
+    Plus,
+    Target,
+    Calendar,
+    Briefcase,
+    BookOpen,
+    GraduationCap,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
-import { pdisApi, PDI } from '@/lib/api/performance';
+import { pdisApi, PDI, PDIAction, PDIActionType } from '@/lib/api/performance';
 import { employeesApi, Employee } from '@/lib/api/employees';
 import { useAuthStore } from '@/stores/auth-store';
 import { useConfirm } from '@/components/providers/ConfirmProvider';
+
+const ACTION_TYPES: { value: PDIActionType; label: string; icon: React.ReactNode }[] = [
+    { value: 'TRAINING', label: 'Treinamento', icon: <BookOpen className="h-4 w-4" /> },
+    { value: 'COURSE', label: 'Curso', icon: <GraduationCap className="h-4 w-4" /> },
+    { value: 'CERTIFICATION', label: 'Certificação', icon: <Target className="h-4 w-4" /> },
+    { value: 'MENTORING', label: 'Mentoria', icon: <Users className="h-4 w-4" /> },
+    { value: 'COACHING', label: 'Coaching', icon: <Users className="h-4 w-4" /> },
+    { value: 'PROJECT', label: 'Projeto', icon: <Briefcase className="h-4 w-4" /> },
+    { value: 'READING', label: 'Leitura', icon: <BookOpen className="h-4 w-4" /> },
+    { value: 'WORKSHOP', label: 'Workshop', icon: <GraduationCap className="h-4 w-4" /> },
+    { value: 'OTHER', label: 'Outro', icon: <Target className="h-4 w-4" /> },
+];
 
 // Fallback employees when API is unavailable
 const MOCK_EMPLOYEES: Employee[] = [
@@ -114,6 +132,10 @@ export default function ManagePDIPage() {
     const [objectives, setObjectives] = useState('');
     const [focusAreas, setFocusAreas] = useState('');
     const [endDate, setEndDate] = useState('');
+    const [actions, setActions] = useState<PDIAction[]>([]);
+    const [actionTitle, setActionTitle] = useState('');
+    const [actionType, setActionType] = useState<PDIActionType>('TRAINING');
+    const [actionDueDate, setActionDueDate] = useState('');
     const [sending, setSending] = useState(false);
 
     const loadData = useCallback(async () => {
@@ -199,6 +221,10 @@ export default function ManagePDIPage() {
                     startDate: new Date().toISOString().split('T')[0], // Define start date as today
                     endDate,
                     status: 'ACTIVE' as const,
+                    actions: actions.map(a => ({
+                        ...a,
+                        status: 'PENDING' as const
+                    }))
                 };
 
                 return pdisApi.create(pdiPayload);
@@ -218,6 +244,7 @@ export default function ManagePDIPage() {
             setObjectives('');
             setFocusAreas('');
             setEndDate('');
+            setActions([]);
             setSendDialogOpen(false);
             loadData();
         } catch (error) {
@@ -322,52 +349,64 @@ export default function ManagePDIPage() {
             </div>
 
             {/* Statistics */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <Card className="border-none shadow-xl bg-gradient-to-br from-indigo-500 to-blue-600 text-white overflow-hidden relative">
+                    <div className="absolute -right-4 -bottom-4 opacity-20 rotate-12">
+                        <TrendingUp size={100} />
+                    </div>
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                            <TrendingUp className="h-4 w-4" />
+                        <CardTitle className="text-xs font-black uppercase tracking-widest opacity-80">
                             Total de PDIs
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-3xl font-black">{stats.total}</div>
+                        <div className="text-4xl font-black">{stats.total}</div>
+                        <p className="text-xs mt-1 opacity-70">Planos registrados</p>
                     </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="border-none shadow-xl bg-gradient-to-br from-emerald-500 to-green-600 text-white overflow-hidden relative">
+                    <div className="absolute -right-4 -bottom-4 opacity-20 rotate-12">
+                        <CheckCircle2 size={100} />
+                    </div>
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-green-500" />
-                            Ativos
+                        <CardTitle className="text-xs font-black uppercase tracking-widest opacity-80">
+                            PDIs Ativos
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-3xl font-black text-green-500">{stats.active}</div>
+                        <div className="text-4xl font-black">{stats.active}</div>
+                        <p className="text-xs mt-1 opacity-70">Em desenvolvimento</p>
                     </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="border-none shadow-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white overflow-hidden relative">
+                    <div className="absolute -right-4 -bottom-4 opacity-20 rotate-12">
+                        <Clock size={100} />
+                    </div>
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                            <Clock className="h-4 w-4 text-amber-500" />
-                            Aguardando Aprovação
+                        <CardTitle className="text-xs font-black uppercase tracking-widest opacity-80">
+                            Aguardando
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-3xl font-black text-amber-500">{stats.pending}</div>
+                        <div className="text-4xl font-black">{stats.pending}</div>
+                        <p className="text-xs mt-1 opacity-70">Pendente aprovação</p>
                     </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="border-none shadow-xl bg-gradient-to-br from-slate-700 to-slate-900 text-white overflow-hidden relative">
+                    <div className="absolute -right-4 -bottom-4 opacity-20 rotate-12">
+                        <CheckCircle2 size={100} />
+                    </div>
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-blue-500" />
+                        <CardTitle className="text-xs font-black uppercase tracking-widest opacity-80">
                             Concluídos
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-3xl font-black text-blue-500">{stats.completed}</div>
+                        <div className="text-4xl font-black">{stats.completed}</div>
+                        <p className="text-xs mt-1 opacity-70">Objetivos alcançados</p>
                     </CardContent>
                 </Card>
             </div>
@@ -560,6 +599,101 @@ export default function ManagePDIPage() {
                                     value={endDate}
                                     onChange={(e) => setEndDate(e.target.value)}
                                 />
+                            </div>
+
+                            {/* Dynamic Actions Section */}
+                            <div className="space-y-4 border-t pt-4">
+                                <Label className="text-lg font-black flex items-center gap-2">
+                                    <Target className="h-5 w-5 text-primary" />
+                                    Ações de Desenvolvimento
+                                </Label>
+
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end bg-muted/30 p-4 rounded-xl">
+                                    <div className="md:col-span-2 space-y-2">
+                                        <Label htmlFor="actionTitle">Tarefa / Ação</Label>
+                                        <Input
+                                            id="actionTitle"
+                                            value={actionTitle}
+                                            onChange={(e) => setActionTitle(e.target.value)}
+                                            placeholder="Ex: Fazer curso de Next.js"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Tipo</Label>
+                                        <Select
+                                            value={actionType}
+                                            onValueChange={(v) => setActionType(v as PDIActionType)}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {ACTION_TYPES.map(type => (
+                                                    <SelectItem key={type.value} value={type.value}>
+                                                        <div className="flex items-center gap-2">
+                                                            {type.icon}
+                                                            {type.label}
+                                                        </div>
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="secondary"
+                                        className="font-bold"
+                                        onClick={() => {
+                                            if (!actionTitle) return;
+                                            setActions([...actions, {
+                                                title: actionTitle,
+                                                actionType,
+                                                status: 'PENDING',
+                                                dueDate: endDate // Default to PDI end date
+                                            } as PDIAction]);
+                                            setActionTitle('');
+                                        }}
+                                    >
+                                        <Plus className="h-4 w-4 mr-2" />
+                                        Adicionar
+                                    </Button>
+                                </div>
+
+                                {/* Actions List */}
+                                <div className="space-y-2">
+                                    {actions.length === 0 ? (
+                                        <p className="text-sm text-muted-foreground text-center py-4 italic">
+                                            Nenhuma tarefa adicionada ainda
+                                        </p>
+                                    ) : (
+                                        actions.map((action, index) => (
+                                            <div
+                                                key={index}
+                                                className="flex items-center justify-between p-3 border rounded-lg bg-card"
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className="h-8 w-8 rounded bg-primary/10 flex items-center justify-center text-primary">
+                                                        {ACTION_TYPES.find(t => t.value === action.actionType)?.icon || <Target className="h-4 w-4" />}
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-bold text-sm">{action.title}</p>
+                                                        <p className="text-xs text-muted-foreground">
+                                                            {ACTION_TYPES.find(t => t.value === action.actionType)?.label}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8 text-red-500 hover:text-red-700"
+                                                    onClick={() => setActions(actions.filter((_, i) => i !== index))}
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>

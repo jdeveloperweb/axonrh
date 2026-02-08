@@ -58,6 +58,9 @@ public class PDIAction {
     @Column(name = "resource_name")
     private String resourceName;
 
+    @Column(name = "progress")
+    private Integer progress = 0;
+
     @Column(name = "estimated_hours")
     private Integer estimatedHours;
 
@@ -90,6 +93,9 @@ public class PDIAction {
             throw new IllegalStateException("Acao ja foi iniciada");
         }
         this.status = PDIActionStatus.IN_PROGRESS;
+        if (this.progress == null || this.progress == 0) {
+            this.progress = 10;
+        }
     }
 
     public void complete(String notes, Integer hoursSpent) {
@@ -97,6 +103,7 @@ public class PDIAction {
         this.completedAt = LocalDateTime.now();
         this.completionNotes = notes;
         this.actualHours = hoursSpent;
+        this.progress = 100;
 
         if (pdi != null) {
             pdi.calculateProgress();
@@ -201,6 +208,22 @@ public class PDIAction {
 
     public void setResourceUrl(String resourceUrl) {
         this.resourceUrl = resourceUrl;
+    }
+
+    public Integer getProgress() {
+        return progress;
+    }
+
+    public void setProgress(Integer progress) {
+        this.progress = progress;
+        if (this.progress != null) {
+            if (this.progress >= 100) {
+                this.status = PDIActionStatus.COMPLETED;
+                if (this.completedAt == null) this.completedAt = LocalDateTime.now();
+            } else if (this.progress > 0) {
+                this.status = PDIActionStatus.IN_PROGRESS;
+            }
+        }
     }
 
     public String getResourceName() {

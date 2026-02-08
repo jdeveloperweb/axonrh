@@ -164,6 +164,7 @@ export interface PDIAction {
   competencyName?: string;
   resourceUrl?: string;
   resourceName?: string;
+  progress?: number;
   estimatedHours?: number;
   actualHours?: number;
   mentorId?: string;
@@ -472,6 +473,9 @@ export const pdisApi = {
 
   completeAction: (pdiId: string, actionId: string, data: { notes?: string; hoursSpent?: number }) =>
     api.post<{ notes?: string; hoursSpent?: number }, PDI>(`/performance/pdis/${pdiId}/actions/${actionId}/complete`, data),
+
+  updateActionProgress: (pdiId: string, actionId: string, progress: number) =>
+    api.post<{ progress: number }, PDI>(`/performance/pdis/${pdiId}/actions/${actionId}/progress`, { progress }),
 
   createFromEvaluation: (data: {
     evaluationId: string;

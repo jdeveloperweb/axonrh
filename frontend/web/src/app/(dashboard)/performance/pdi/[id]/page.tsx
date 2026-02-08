@@ -161,6 +161,16 @@ export default function PDIDetailPage() {
     }
   };
 
+  const handleUpdateActionProgress = async (actionId: string, progress: number) => {
+    try {
+      await pdisApi.updateActionProgress(pdiId, actionId, progress);
+      loadPDI();
+    } catch (error) {
+      console.error('Erro ao atualizar progresso:', error);
+      toast({ title: 'Erro', description: 'Falha ao atualizar progresso', variant: 'destructive' });
+    }
+  };
+
   const handleRemoveAction = async (actionId: string) => {
     const actionToRemove = pdi?.actions.find(a => a.id === actionId);
     if (!actionToRemove) return;
@@ -581,6 +591,24 @@ export default function PDIDetailPage() {
                           )}
                         </div>
 
+                        {/* Action Progress Slider */}
+                        {!isCompleted && action.status === 'IN_PROGRESS' && isEditable && (
+                          <div className="mt-4 space-y-2 max-w-xs">
+                            <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-wider text-blue-600">
+                              <span>Progresso da Tarefa</span>
+                              <span className="bg-blue-100 px-1.5 py-0.5 rounded">{action.progress || 0}%</span>
+                            </div>
+                            <input
+                              type="range"
+                              min="0"
+                              max="100"
+                              step="5"
+                              value={action.progress || 0}
+                              onChange={(e) => handleUpdateActionProgress(action.id!, parseInt(e.target.value))}
+                              className="w-full h-1.5 bg-blue-100 rounded-lg appearance-none cursor-pointer accent-blue-600 hover:accent-blue-700 transition-all"
+                            />
+                          </div>
+                        )}
                         {/* Action buttons */}
                         {!isCompleted && isEditable && (
                           <div className="flex gap-2 mt-3">

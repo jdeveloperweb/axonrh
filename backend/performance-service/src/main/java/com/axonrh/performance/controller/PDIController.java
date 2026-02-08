@@ -173,6 +173,17 @@ public class PDIController {
                 tenantId, pdiId, actionId, request.notes(), request.hoursSpent()));
     }
 
+    @PostMapping("/{pdiId}/actions/{actionId}/progress")
+    public ResponseEntity<PDI> updateActionProgress(
+            @RequestHeader("X-Tenant-ID") UUID tenantId,
+            @PathVariable UUID pdiId,
+            @PathVariable UUID actionId,
+            @RequestBody UpdateProgressRequest request) {
+        return ResponseEntity.ok(pdiService.updateActionProgress(
+                tenantId, pdiId, actionId, request.progress()));
+    }
+
+
     // ==================== From Evaluation ====================
 
     @PostMapping("/from-evaluation")
@@ -199,6 +210,8 @@ public class PDIController {
     // ==================== DTOs ====================
 
     record CompleteActionRequest(String notes, Integer hoursSpent) {}
+
+    record UpdateProgressRequest(Integer progress) {}
 
     record CreateFromEvaluationRequest(
             UUID evaluationId,

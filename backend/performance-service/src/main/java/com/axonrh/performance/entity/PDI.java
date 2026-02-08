@@ -125,11 +125,11 @@ public class PDI {
             return;
         }
 
-        long completedActions = actions.stream()
-                .filter(a -> a.getStatus() == com.axonrh.performance.entity.enums.PDIActionStatus.COMPLETED)
-                .count();
+        int totalProgress = actions.stream()
+                .mapToInt(a -> a.getProgress() != null ? a.getProgress() : 0)
+                .sum();
 
-        this.overallProgress = (int) (completedActions * 100 / actions.size());
+        this.overallProgress = totalProgress / actions.size();
 
         if (this.overallProgress == 100 && this.status == PDIStatus.ACTIVE) {
             this.status = PDIStatus.COMPLETED;

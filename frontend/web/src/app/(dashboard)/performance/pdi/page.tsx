@@ -18,6 +18,13 @@ import {
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   ArrowLeft,
   Plus,
   Search,
@@ -28,11 +35,14 @@ import {
   Users,
   Calendar,
   Target,
+  Trash2,
 } from 'lucide-react';
 import Link from 'next/link';
 import {
   pdisApi,
   PDI,
+  PDIAction,
+  PDIActionType,
   PDIStatistics,
 } from '@/lib/api/performance';
 import { useAuthStore } from '@/stores/auth-store';
@@ -130,53 +140,64 @@ export default function PDIListPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <Card className="border-none shadow-xl bg-gradient-to-br from-indigo-500 to-blue-600 text-white overflow-hidden relative">
+          <div className="absolute -right-4 -bottom-4 opacity-20 rotate-12">
+            <Target size={100} />
+          </div>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs font-black uppercase tracking-widest opacity-80">
               PDIs Ativos
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.active || 0}</div>
+            <div className="text-4xl font-black">{stats?.active || 0}</div>
+            <p className="text-xs mt-1 opacity-70">Planos ativos</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-none shadow-xl bg-gradient-to-br from-emerald-500 to-green-600 text-white overflow-hidden relative">
+          <div className="absolute -right-4 -bottom-4 opacity-20 rotate-12">
+            <TrendingUp size={100} />
+          </div>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Aguardando Aprovacao
+            <CardTitle className="text-xs font-black uppercase tracking-widest opacity-80">
+              Progresso Médio
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-amber-500">
-              {stats?.pendingApproval || 0}
-            </div>
+            <div className="text-4xl font-black">{stats?.averageProgress?.toFixed(0) || 0}%</div>
+            <Progress value={stats?.averageProgress || 0} className="mt-3 h-1.5 bg-white/20 accent-white" />
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-none shadow-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white overflow-hidden relative">
+          <div className="absolute -right-4 -bottom-4 opacity-20 rotate-12">
+            <Clock size={100} />
+          </div>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Progresso Medio
+            <CardTitle className="text-xs font-black uppercase tracking-widest opacity-80">
+              Pendentes
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.averageProgress?.toFixed(0) || 0}%</div>
-            <Progress value={stats?.averageProgress || 0} className="mt-2" />
+            <div className="text-4xl font-black">{stats?.pendingApproval || 0}</div>
+            <p className="text-xs mt-1 opacity-70">Aguardando aprovação</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-none shadow-xl bg-gradient-to-br from-red-500 to-rose-600 text-white overflow-hidden relative">
+          <div className="absolute -right-4 -bottom-4 opacity-20 rotate-12">
+            <Clock size={100} />
+          </div>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs font-black uppercase tracking-widest opacity-80">
               Atrasados
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-destructive">
-              {stats?.overdue || 0}
-            </div>
+            <div className="text-4xl font-black">{stats?.overdue || 0}</div>
+            <p className="text-xs mt-1 opacity-70">Prazo expirado</p>
           </CardContent>
         </Card>
       </div>
@@ -431,6 +452,9 @@ function NewPDIDialog({
   const [objectives, setObjectives] = useState('');
   const [focusAreas, setFocusAreas] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [actions, setActions] = useState<PDIAction[]>([]);
+  const [actionTitle, setActionTitle] = useState('');
+  const [actionType, setActionType] = useState<PDIActionType>('TRAINING');
   const [saving, setSaving] = useState(false);
 
   const handleSubmit = async () => {
@@ -444,6 +468,10 @@ function NewPDIDialog({
         endDate,
         employeeId: currentUserId,
         employeeName: userName || 'Usuário Atual',
+        actions: actions.map(a => ({
+          ...a,
+          status: 'PENDING' as const
+        }))
       });
       onOpenChange(false);
       onSuccess();
@@ -517,10 +545,92 @@ function NewPDIDialog({
             <Label htmlFor="endDate">Data Limite</Label>
             <Input
               id="endDate"
-              type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
             />
+          </div>
+
+          {/* Dynamic Actions Section */}
+          <div className="space-y-4 border-t pt-4">
+            <Label className="text-base font-bold flex items-center gap-2">
+              <Target className="h-4 w-4 text-primary" />
+              Tarefas / Ações do PDI
+            </Label>
+
+            <div className="flex flex-col gap-3 p-3 bg-muted/50 rounded-lg">
+              <div className="flex gap-2">
+                <Input
+                  value={actionTitle}
+                  onChange={(e) => setActionTitle(e.target.value)}
+                  placeholder="Ex: Concluir curso de React"
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    if (!actionTitle) return;
+                    setActions([...actions, {
+                      title: actionTitle,
+                      actionType,
+                      status: 'PENDING',
+                      dueDate: endDate
+                    } as PDIAction]);
+                    setActionTitle('');
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Adicionar
+                </Button>
+              </div>
+              <div className="flex gap-2 items-center">
+                <Label className="text-xs">Tipo:</Label>
+                <Select
+                  value={actionType}
+                  onValueChange={(v) => setActionType(v as PDIActionType)}
+                >
+                  <SelectTrigger className="h-8 text-xs w-[150px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="TRAINING">Treinamento</SelectItem>
+                    <SelectItem value="COURSE">Curso</SelectItem>
+                    <SelectItem value="CERTIFICATION">Certificação</SelectItem>
+                    <SelectItem value="MENTORING">Mentoria</SelectItem>
+                    <SelectItem value="PROJECT">Projeto</SelectItem>
+                    <SelectItem value="READING">Leitura</SelectItem>
+                    <SelectItem value="OTHER">Outro</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Actions List */}
+            <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+              {actions.map((action, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-2 border rounded bg-card text-sm"
+                >
+                  <div className="flex items-center gap-2">
+                    <Target className="h-3 w-3 text-primary" />
+                    <span>{action.title}</span>
+                    <Badge variant="outline" className="text-[10px] h-4">
+                      {action.actionType}
+                    </Badge>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 text-red-500"
+                    onClick={() => setActions(actions.filter((_, i) => i !== index))}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
