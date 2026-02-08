@@ -130,7 +130,7 @@ export function EmployeePerformanceView() {
                                 onClick={() => router.push(`/performance/evaluations/${evalItem.id}`)}
                             >
                                 <ClipboardCheck className="mr-2 h-4 w-4" />
-                                Responder {evalItem.evaluationType === 'SELF' ? 'Autoavaliação' : `Avaliação de ${evalItem.employeeName}`}
+                                Responder {evalItem.evaluatorType === 'SELF' ? 'Autoavaliação' : `Avaliação de ${evalItem.employeeName}`}
                             </Button>
                         ))}
                         {pendingDisc.map((discItem) => (
@@ -330,7 +330,7 @@ export function EmployeePerformanceView() {
                         </CardHeader>
                         <CardContent>
                             {pendingDisc.length > 0 ? (
-                                <div className="space-y-4 py-4">
+                                <div className="flex flex-col gap-8 py-4">
                                     <p className="text-sm text-slate-300 leading-relaxed">
                                         Voce tem uma avaliacao DISC pendente. Descubra seus motivadores, medos e estilo de comunicacao.
                                     </p>
@@ -372,7 +372,7 @@ export function EmployeePerformanceView() {
                                     </Link>
                                 </div>
                             ) : (
-                                <div className="space-y-4 py-4">
+                                <div className="flex flex-col gap-8 py-4">
                                     <p className="text-sm text-slate-300 leading-relaxed">
                                         Descubra seu perfil comportamental DISC e entenda seus pontos fortes e areas de desenvolvimento.
                                     </p>
