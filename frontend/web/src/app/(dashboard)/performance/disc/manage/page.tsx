@@ -15,17 +15,7 @@ import {
   DialogTrigger,
   DialogFooter,
 } from '@/components/ui/dialog';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+import { useConfirm } from '@/components/providers/ConfirmProvider';
 import {
   Select,
   SelectContent,
@@ -176,6 +166,7 @@ const MOCK_EMPLOYEES: Employee[] = [
 export default function DiscManagePage() {
   const { user } = useAuthStore();
   const { toast } = useToast();
+  const { confirm } = useConfirm();
   const [loading, setLoading] = useState(true);
   const [statistics, setStatistics] = useState<DiscStatistics | null>(null);
   const [assignments, setAssignments] = useState<DiscAssignment[]>([]);
@@ -314,6 +305,15 @@ export default function DiscManagePage() {
   };
 
   const handleDeleteEvaluation = async (evaluationId: string) => {
+    const confirmed = await confirm({
+      title: 'Excluir Avaliacao',
+      description: 'Tem certeza que deseja excluir esta avaliacao DISC? Esta acao nao pode ser desfeita.',
+      variant: 'destructive',
+      confirmLabel: 'Excluir'
+    });
+
+    if (!confirmed) return;
+
     try {
       await discApi.deleteEvaluation(evaluationId);
       toast({ title: 'Sucesso', description: 'Avaliacao excluida com sucesso' });
@@ -708,30 +708,13 @@ export default function DiscManagePage() {
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="sm">
-                                  <Trash2 className="h-4 w-4 text-red-500" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Excluir Avaliacao</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Tem certeza que deseja excluir esta avaliacao DISC? Esta acao nao pode ser desfeita.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => handleDeleteEvaluation(assignment.evaluationId!)}
-                                    className="bg-red-600 hover:bg-red-700 font-bold"
-                                  >
-                                    Confirmar Exclusao
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteEvaluation(assignment.evaluationId!)}
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
                           </div>
                         )}
                       </TableCell>
@@ -799,30 +782,13 @@ export default function DiscManagePage() {
                               <Eye className="h-4 w-4" />
                             </Button>
                           )}
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <Trash2 className="h-4 w-4 text-red-500" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Excluir Avaliacao</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Tem certeza que deseja excluir esta avaliacao DISC? Esta acao nao pode ser desfeita.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => handleDeleteEvaluation(evaluation.id)}
-                                  className="bg-red-600 hover:bg-red-700 font-bold"
-                                >
-                                  Confirmar Exclusao
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteEvaluation(evaluation.id)}
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
