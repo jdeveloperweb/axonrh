@@ -64,7 +64,7 @@ export default function TimesheetMirrorPage() {
 
   // Check permissions
   const canViewOthers = user?.roles?.some(role =>
-    ['ADMIN', 'MANAGER', 'HR', 'GESTOR', 'RH'].includes(role.toUpperCase())
+    ['ADMIN', 'MANAGER', 'HR', 'GESTOR', 'RH', 'GESTOR_RH', 'ANALISTA_DP', 'LIDER'].includes(role.toUpperCase())
   ) ?? false;
 
   const [loading, setLoading] = useState(true);

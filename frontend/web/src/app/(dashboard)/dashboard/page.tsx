@@ -75,7 +75,7 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('geral');
 
   const roles = user?.roles || [];
-  const isManagement = roles.includes('ADMIN') || roles.includes('RH');
+  const isManagement = roles.includes('ADMIN') || roles.includes('RH') || roles.includes('GESTOR_RH') || roles.includes('ANALISTA_DP');
 
   useEffect(() => {
     if (!isManagement) return;

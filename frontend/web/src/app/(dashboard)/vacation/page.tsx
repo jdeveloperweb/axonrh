@@ -47,8 +47,8 @@ export default function VacationPage() {
 
   const roles = user?.roles || [];
   const isAdmin = roles.includes('ADMIN');
-  const isRH = roles.includes('RH');
-  const isManager = roles.includes('GESTOR') || roles.includes('LIDER');
+  const isRH = roles.includes('RH') || roles.includes('GESTOR_RH') || roles.includes('ANALISTA_DP');
+  const isManager = roles.includes('GESTOR') || roles.includes('LIDER') || roles.includes('MANAGER');
   const [statistics, setStatistics] = useState({
     pendingRequests: 0,
     expiringPeriods: 0,

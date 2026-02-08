@@ -378,7 +378,7 @@ export default function DiscPage() {
     const [submitting, setSubmitting] = useState(false);
     const [showHistory, setShowHistory] = useState(false);
 
-    const isAdmin = user?.roles?.some((role: string) => ['ADMIN', 'RH'].includes(role));
+    const isAdmin = user?.roles?.some((role: string) => ['ADMIN', 'RH', 'GESTOR_RH', 'ANALISTA_DP'].includes(role));
 
     useEffect(() => {
         if (user?.id) {
@@ -662,7 +662,7 @@ export default function DiscPage() {
                                     </div>
                                 </div>
                                 <div className="bg-slate-800/50 p-10 flex items-center justify-center border-l border-white/5 min-h-[400px]">
-                                    <ResponsiveContainer width="100%" height="300">
+                                    <ResponsiveContainer width="100%" height={300}>
                                         <RadarChart cx="50%" cy="50%" outerRadius="80%" data={chartData}>
                                             <PolarGrid stroke="#475569" />
                                             <PolarAngleAxis dataKey="subject" tick={{ fill: '#94a3b8', fontWeight: 'black', fontSize: 16 }} />

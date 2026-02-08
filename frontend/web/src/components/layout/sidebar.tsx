@@ -173,7 +173,7 @@ export function Sidebar() {
             {navGroups.map((group, groupIndex) => {
               const roles = user?.roles || [];
               const isAdmin = roles.includes('ADMIN');
-              const isRH = roles.includes('RH');
+              const isRH = roles.includes('RH') || roles.includes('GESTOR_RH') || roles.includes('ANALISTA_DP');
               const hasAdminAccess = isAdmin || isRH;
 
               // Só quem tem acesso admin (ADMIN ou RH) vê o grupo de administração
@@ -255,7 +255,20 @@ export function Sidebar() {
               <div className="flex-1 min-w-0">
                 <p className="font-medium truncate">{user.name}</p>
                 <p className="text-sm text-[var(--color-text-secondary)] truncate">
-                  {user.roles?.[0] || 'Colaborador'}
+                  {(() => {
+                    const roleLabels: Record<string, string> = {
+                      'ADMIN': 'Administrador',
+                      'GESTOR_RH': 'Gestor de RH',
+                      'RH': 'RH',
+                      'ANALISTA_DP': 'Analista de DP',
+                      'LIDER': 'Líder',
+                      'GESTOR': 'Gestor',
+                      'MANAGER': 'Gestor',
+                      'CONTADOR': 'Contador',
+                      'COLABORADOR': 'Colaborador'
+                    };
+                    return roleLabels[user.roles?.[0] || ''] || user.roles?.[0] || 'Colaborador';
+                  })()}
                 </p>
               </div>
             </div>

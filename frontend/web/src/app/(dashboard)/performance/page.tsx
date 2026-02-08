@@ -35,8 +35,8 @@ export default function PerformancePage() {
 
   const roles = user?.roles || [];
   const isAdmin = roles.includes('ADMIN');
-  const isRH = roles.includes('RH');
-  const isManager = roles.includes('MANAGER') || roles.includes('GESTOR');
+  const isRH = roles.includes('RH') || roles.includes('GESTOR_RH') || roles.includes('ANALISTA_DP');
+  const isManager = roles.includes('MANAGER') || roles.includes('GESTOR') || roles.includes('LIDER');
   const hasAdminAccess = isAdmin || isRH;
 
   const [viewMode, setViewMode] = useState<'employee' | 'manager'>('employee');

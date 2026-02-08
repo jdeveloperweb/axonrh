@@ -101,7 +101,7 @@ export default function LearningDashboard() {
   const [loading, setLoading] = useState(true);
   const [greeting, setGreeting] = useState('Olá');
 
-  const isAdminOrRH = user?.roles?.some(role => ['ADMIN', 'RH', 'MANAGER'].includes(role));
+  const isAdminOrRH = user?.roles?.some(role => ['ADMIN', 'RH', 'GESTOR_RH', 'ANALISTA_DP', 'MANAGER', 'LIDER'].includes(role));
 
   useEffect(() => {
     const hour = new Date().getHours();

@@ -50,7 +50,7 @@ export default function PDIListPage() {
 
   const { user } = useAuthStore();
   const currentUserId = user?.id || '';
-  const isManager = user?.roles?.includes('MANAGER') || user?.roles?.includes('ADMIN');
+  const isManager = user?.roles?.some(role => ['ADMIN', 'RH', 'GESTOR_RH', 'ANALISTA_DP', 'MANAGER', 'GESTOR', 'LIDER'].includes(role));
 
   const loadData = useCallback(async () => {
     if (!currentUserId) {
