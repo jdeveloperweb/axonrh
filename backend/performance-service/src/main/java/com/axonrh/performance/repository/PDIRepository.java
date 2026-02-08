@@ -52,5 +52,6 @@ public interface PDIRepository extends JpaRepository<PDI, UUID> {
     Double calculateAverageProgress(@Param("tenantId") UUID tenantId);
 
     // Paginacao
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"actions"})
     Page<PDI> findByTenantId(UUID tenantId, Pageable pageable);
 }

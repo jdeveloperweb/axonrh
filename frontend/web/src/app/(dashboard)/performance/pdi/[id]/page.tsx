@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -53,6 +53,7 @@ import {
 import Link from 'next/link';
 import { pdisApi, PDI, PDIAction, PDIActionType, PDIActionStatus } from '@/lib/api/performance';
 import { useToast } from '@/hooks/use-toast';
+import { useAuthStore } from '@/stores/auth-store';
 
 const ACTION_TYPES: { value: PDIActionType; label: string; icon: React.ReactNode; color: string }[] = [
   { value: 'TRAINING', label: 'Treinamento', icon: <BookOpen className="h-4 w-4" />, color: 'bg-blue-500' },
@@ -87,15 +88,36 @@ const ACTION_STATUS_CONFIG: Record<string, { label: string; color: string; icon:
 
 export default function PDIDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const { toast } = useToast();
+  const { user } = useAuthStore();
   const pdiId = params.id as string;
 
   const [pdi, setPDI] = useState<PDI | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [newActionOpen, setNewActionOpen] = useState(false);
   const [completeActionOpen, setCompleteActionOpen] = useState(false);
   const [selectedAction, setSelectedAction] = useState<PDIAction | null>(null);
   const [actionFilter, setActionFilter] = useState<string>('ALL');
+
+  const handleDeletePDI = async () => {
+    try {
+      setIsDeleting(true);
+      await pdisApi.delete(pdiId);
+      toast({ title: 'Sucesso', description: 'PDI removido com sucesso' });
+      router.push('/performance/pdi');
+    } catch (error) {
+      console.error('Erro ao remover PDI:', error);
+      toast({
+        title: 'Erro',
+        description: error instanceof Error ? error.message : 'Falha ao remover PDI',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const loadPDI = useCallback(async () => {
     try {
@@ -249,6 +271,36 @@ export default function PDIDetailPage() {
         <Badge className={`${statusConfig.bgColor} ${statusConfig.textColor} px-3 py-1 text-sm font-bold`}>
           {statusConfig.label}
         </Badge>
+
+        {/* Delete PDI button for Authorized Users */}
+        {(user?.roles?.some(r => ['ADMIN', 'RH', 'GESTOR_RH', 'ANALISTA_DP', 'MANAGER', 'GESTOR', 'LIDER'].includes(r)) || pdi.employeeId === user?.id) &&
+          (pdi.status === 'DRAFT' || pdi.status === 'ACTIVE') && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="icon" className="text-red-500 hover:text-red-700 hover:bg-red-50 border-red-100">
+                  {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-5 w-5" />}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Excluir PDI</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Tem certeza que deseja excluir o PDI &quot;{pdi.title}&quot;? Esta acao nao pode ser desfeita e todos os dados relacionados, incluindo acoes, serao removidos permanentemente.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDeletePDI}
+                    className="bg-red-600 hover:bg-red-700 text-white font-bold"
+                    disabled={isDeleting}
+                  >
+                    {isDeleting ? 'Excluindo...' : 'Confirmar Exclusao'}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
       </div>
 
       {/* Info Cards - Redesigned */}
@@ -462,12 +514,11 @@ export default function PDIDetailPage() {
                 return (
                   <div
                     key={action.id}
-                    className={`relative border rounded-xl p-4 transition-all hover:shadow-sm ${
-                      isCompleted ? 'bg-green-50/50 border-green-100' :
-                      isDue ? 'bg-red-50/50 border-red-100' :
-                      action.status === 'IN_PROGRESS' ? 'bg-blue-50/50 border-blue-100' :
-                      'bg-white border-slate-100'
-                    }`}
+                    className={`relative border rounded-xl p-4 transition-all hover:shadow-sm ${isCompleted ? 'bg-green-50/50 border-green-100' :
+                        isDue ? 'bg-red-50/50 border-red-100' :
+                          action.status === 'IN_PROGRESS' ? 'bg-blue-50/50 border-blue-100' :
+                            'bg-white border-slate-100'
+                      }`}
                   >
                     {/* Colored left border */}
                     <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-xl ${getActionColor(action.actionType)}`} />

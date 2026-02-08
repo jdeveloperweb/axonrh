@@ -16,6 +16,17 @@ import {
     DialogFooter,
 } from '@/components/ui/dialog';
 import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import {
     Select,
     SelectContent,
     SelectItem,
@@ -33,6 +44,7 @@ import {
     Loader2,
     Search,
     Filter,
+    Trash2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
@@ -228,6 +240,24 @@ export default function ManagePDIPage() {
 
     };
 
+    const handleDeletePDI = async (id: string) => {
+        try {
+            await pdisApi.delete(id);
+            toast({
+                title: 'Sucesso',
+                description: 'PDI excluído com sucesso',
+            });
+            loadData();
+        } catch (error) {
+            console.error('Failed to delete PDI:', error);
+            toast({
+                title: 'Erro',
+                description: 'Falha ao excluir PDI',
+                variant: 'destructive',
+            });
+        }
+    };
+
     const filteredEmployees = employees.filter((emp) =>
         emp.fullName.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -386,12 +416,47 @@ export default function ManagePDIPage() {
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-3">
-                                            <Badge variant={pdi.status === 'ACTIVE' ? 'default' : 'secondary'}>
-                                                {pdi.status === 'ACTIVE' ? 'Ativo' : pdi.status === 'COMPLETED' ? 'Concluído' : pdi.status === 'PENDING_APPROVAL' ? 'Aguardando' : 'Rascunho'}
-                                            </Badge>
-                                            <span className="text-sm text-muted-foreground">
-                                                {pdi.overallProgress}%
-                                            </span>
+                                            <div className="flex items-center gap-3 mr-4">
+                                                <Badge variant={pdi.status === 'ACTIVE' ? 'default' : 'secondary'}>
+                                                    {pdi.status === 'ACTIVE' ? 'Ativo' : pdi.status === 'COMPLETED' ? 'Concluído' : pdi.status === 'PENDING_APPROVAL' ? 'Aguardando' : 'Rascunho'}
+                                                </Badge>
+                                                <span className="text-sm text-muted-foreground w-10 text-right">
+                                                    {pdi.overallProgress}%
+                                                </span>
+                                            </div>
+
+                                            <AlertDialog>
+                                                <AlertDialogTrigger asChild>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                                        onClick={(e) => e.preventDefault()}
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </AlertDialogTrigger>
+                                                <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                                                    <AlertDialogHeader>
+                                                        <AlertDialogTitle>Excluir PDI</AlertDialogTitle>
+                                                        <AlertDialogDescription>
+                                                            Tem certeza que deseja excluir o PDI &quot;{pdi.title}&quot;? Esta ação não pode ser desfeita.
+                                                        </AlertDialogDescription>
+                                                    </AlertDialogHeader>
+                                                    <AlertDialogFooter>
+                                                        <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Cancelar</AlertDialogCancel>
+                                                        <AlertDialogAction
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleDeletePDI(pdi.id);
+                                                            }}
+                                                            className="bg-red-600 hover:bg-red-700"
+                                                        >
+                                                            Excluir
+                                                        </AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                            </AlertDialog>
                                         </div>
                                     </div>
                                 </Link>
