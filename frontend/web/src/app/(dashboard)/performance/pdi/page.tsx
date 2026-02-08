@@ -53,8 +53,10 @@ import { useAuthStore } from '@/stores/auth-store';
 import { employeesApi, Employee } from '@/lib/api/employees';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useToast } from '@/hooks/use-toast';
 
 export default function PDIListPage() {
+  const { toast } = useToast();
   const [myPDIs, setMyPDIs] = useState<PDI[]>([]);
   const [teamPDIs, setTeamPDIs] = useState<PDI[]>([]);
   const [pendingApproval, setPendingApproval] = useState<PDI[]>([]);
@@ -488,6 +490,7 @@ function PDIApprovalList({ pdis, onApprove }: { pdis: PDI[]; onApprove: () => vo
 }
 
 function NewPDIDialog({ open, onOpenChange, onSuccess, currentUserName, isManager }: any) {
+  const { toast } = useToast();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [objectives, setObjectives] = useState('');
@@ -550,6 +553,11 @@ function NewPDIDialog({ open, onOpenChange, onSuccess, currentUserName, isManage
       });
       onOpenChange(false);
       onSuccess();
+      toast({
+        title: 'PDI Criado com Sucesso',
+        description: `O PDI foi atribuído para ${targetEmployeeName}.`,
+        variant: 'default'
+      });
 
       // Reset
       setTitle('');
