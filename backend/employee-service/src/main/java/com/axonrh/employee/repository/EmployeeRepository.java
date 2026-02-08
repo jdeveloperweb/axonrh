@@ -98,6 +98,11 @@ public interface EmployeeRepository extends JpaRepository<Employee, UUID>, JpaSp
             "WHERE e.tenantId = :tenantId AND e.id = :id")
     Optional<Employee> findByIdWithRelations(@Param("tenantId") UUID tenantId, @Param("id") UUID id);
 
+    @Query("SELECT e FROM Employee e LEFT JOIN FETCH e.department LEFT JOIN FETCH e.position " +
+            "LEFT JOIN FETCH e.costCenter LEFT JOIN FETCH e.manager " +
+            "WHERE e.tenantId = :tenantId AND e.userId = :userId")
+    Optional<Employee> findByUserIdWithRelations(@Param("tenantId") UUID tenantId, @Param("userId") UUID userId);
+
     @Query("SELECT DISTINCT e.addressCity FROM Employee e WHERE e.tenantId = :tenantId AND e.addressCity IS NOT NULL")
     List<String> findDistinctCities(@Param("tenantId") UUID tenantId);
 

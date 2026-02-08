@@ -659,7 +659,7 @@ public class EmployeeService {
     @Transactional(readOnly = true)
     public EmployeeResponse findByUserId(UUID userId) {
         UUID tenantId = getTenantId();
-        Employee employee = employeeRepository.findByTenantIdAndUserId(tenantId, userId)
+        Employee employee = employeeRepository.findByUserIdWithRelations(tenantId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Colaborador nao encontrado para o usuario: " + userId));
         return employeeMapper.toResponse(employee);
     }

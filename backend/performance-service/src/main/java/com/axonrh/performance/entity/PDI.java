@@ -80,7 +80,7 @@ public class PDI {
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
 
-    @OneToMany(mappedBy = "pdi", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "pdi", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @OrderBy("dueDate ASC")
     private List<PDIAction> actions = new ArrayList<>();
 
