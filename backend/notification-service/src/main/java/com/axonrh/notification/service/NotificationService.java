@@ -214,6 +214,14 @@ public class NotificationService {
     }
 
     /**
+     * Arquiva todas as notificacoes ativas.
+     */
+    public void archiveAll(UUID tenantId, UUID userId) {
+        notificationRepository.archiveAllByUser(tenantId, userId, LocalDateTime.now());
+        sendWebSocketUpdate(userId, "all_archived", null);
+    }
+
+    /**
      * Exclui notificacao.
      */
     public void delete(UUID tenantId, UUID userId, UUID notificationId) {

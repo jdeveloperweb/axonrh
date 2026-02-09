@@ -12,6 +12,7 @@ interface NotificationState {
     markAsRead: (id: string) => Promise<void>;
     markAllAsRead: () => Promise<void>;
     archiveNotification: (id: string) => Promise<void>;
+    archiveAllNotifications: () => Promise<void>;
     deleteNotification: (id: string) => Promise<void>;
     deleteAllNotifications: () => Promise<void>;
     addNotification: (notification: Notification) => void;
@@ -91,6 +92,15 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
             await get().fetchUnreadCount();
         } catch (err) {
             console.error('Failed to archive notification:', err);
+        }
+    },
+
+    archiveAllNotifications: async () => {
+        try {
+            await notificationsApi.archiveAll();
+            set({ notifications: [], unreadCount: 0 });
+        } catch (err) {
+            console.error('Failed to archive all notifications:', err);
         }
     },
 

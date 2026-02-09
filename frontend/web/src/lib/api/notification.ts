@@ -147,6 +147,9 @@ export const notificationsApi = {
   archive: (id: string) =>
     api.post<Notification>(`/notifications/${id}/archive`),
 
+  archiveAll: () =>
+    api.post<void>('/notifications/archive-all'),
+
   delete: (id: string) =>
     api.delete(`/notifications/${id}`),
 

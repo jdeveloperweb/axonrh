@@ -69,6 +69,13 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
                        @Param("readAt") LocalDateTime readAt);
 
     @Modifying
+    @Query("UPDATE Notification n SET n.isArchived = true, n.archivedAt = :archivedAt " +
+           "WHERE n.tenantId = :tenantId AND n.userId = :userId AND n.isArchived = false")
+    void archiveAllByUser(@Param("tenantId") UUID tenantId,
+                          @Param("userId") UUID userId,
+                          @Param("archivedAt") LocalDateTime archivedAt);
+
+    @Modifying
     @Query("DELETE FROM Notification n WHERE n.tenantId = :tenantId " +
            "AND n.userId = :userId AND n.isArchived = :archived")
     void deleteAllByUser(@Param("tenantId") UUID tenantId,
