@@ -12,7 +12,9 @@ import {
   GraduationCap,
   CheckCircle,
   BookOpen,
-  Clock as ClockIcon
+  Clock as ClockIcon,
+  ShieldCheck,
+  LineChart
 } from 'lucide-react';
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
@@ -73,6 +75,7 @@ export default function DashboardPage() {
   const [wellbeingStats, setWellbeingStats] = useState<WellbeingStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('geral');
+  const [viewMode, setViewMode] = useState<'manager' | 'collaborator'>('manager');
 
   const roles = user?.roles || [];
   const isManagement = roles.includes('ADMIN') || roles.includes('RH') || roles.includes('GESTOR_RH') || roles.includes('ANALISTA_DP');
@@ -793,6 +796,35 @@ export default function DashboardPage() {
     return <CollaboratorDashboard />;
   }
 
+  const ViewToggle = () => (
+    <div className="bg-slate-100 p-1 rounded-lg flex items-center">
+      <button
+        onClick={() => setViewMode('manager')}
+        className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'manager'
+          ? 'bg-white shadow-sm text-blue-600'
+          : 'text-slate-500 hover:text-slate-700'
+          }`}
+      >
+        <ShieldCheck className="w-4 h-4" />
+        Visão Gestor
+      </button>
+      <button
+        onClick={() => setViewMode('collaborator')}
+        className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'collaborator'
+          ? 'bg-white shadow-sm text-blue-600'
+          : 'text-slate-500 hover:text-slate-700'
+          }`}
+      >
+        <LineChart className="w-4 h-4" />
+        Minha Visão
+      </button>
+    </div>
+  );
+
+  if (viewMode === 'collaborator') {
+    return <CollaboratorDashboard extraHeaderContent={<ViewToggle />} />;
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -805,6 +837,7 @@ export default function DashboardPage() {
             Bem-vindo ao painel de gestão.
           </p>
         </div>
+        <ViewToggle />
       </div>
 
       {/* Tabs */}

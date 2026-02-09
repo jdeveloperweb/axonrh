@@ -26,7 +26,11 @@ import { useRouter } from 'next/navigation';
 import { pdisApi, PDI, discApi, DiscAssignment } from '@/lib/api/performance';
 import { employeesApi } from '@/lib/api/employees';
 
-export function CollaboratorDashboard() {
+interface CollaboratorDashboardProps {
+    extraHeaderContent?: React.ReactNode;
+}
+
+export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashboardProps) {
     const { user } = useAuthStore();
     const router = useRouter();
     const [todayRecords, setTodayRecords] = useState<TimeRecord[]>([]);
@@ -108,25 +112,29 @@ export function CollaboratorDashboard() {
                         Aqui está o que está acontecendo com você hoje.
                     </p>
                 </div>
-                <div className="grid grid-cols-2 md:flex items-center gap-3">
-                    <Button
-                        variant="outline"
-                        className="border-gray-200 hover:bg-white hover:text-[var(--color-primary)] hover:border-[var(--color-primary)] transition-all text-xs sm:text-sm"
-                        onClick={() => router.push('/assistant')}
-                    >
-                        <MessageSquare className="w-4 h-4 mr-0 sm:mr-2 text-[var(--color-primary)]" />
-                        <span className="hidden sm:inline">Falar com AxonIA</span>
-                        <span className="sm:hidden">AxonIA</span>
-                    </Button>
-                    <Button
-                        className="bg-[var(--color-primary)] hover:bg-[var(--color-primary)]/90 shadow-sm shadow-[var(--color-primary)]/20 text-white text-xs sm:text-sm"
-                        onClick={() => router.push('/timesheet/record')}
-                    >
-                        <Clock className="w-4 h-4 mr-0 sm:mr-2" />
-                        <span className="hidden sm:inline">Registrar Ponto</span>
-                        <span className="sm:hidden">Bater Ponto</span>
-                    </Button>
+                <div className="flex flex-col md:flex-row items-center gap-3">
+                    {extraHeaderContent}
+                    <div className="grid grid-cols-2 md:flex items-center gap-3 w-full md:w-auto">
+                        <Button
+                            variant="outline"
+                            className="border-gray-200 hover:bg-white hover:text-[var(--color-primary)] hover:border-[var(--color-primary)] transition-all text-xs sm:text-sm"
+                            onClick={() => router.push('/assistant')}
+                        >
+                            <MessageSquare className="w-4 h-4 mr-0 sm:mr-2 text-[var(--color-primary)]" />
+                            <span className="hidden sm:inline">Falar com AxonIA</span>
+                            <span className="sm:hidden">AxonIA</span>
+                        </Button>
+                        <Button
+                            className="bg-[var(--color-primary)] hover:bg-[var(--color-primary)]/90 shadow-sm shadow-[var(--color-primary)]/20 text-white text-xs sm:text-sm"
+                            onClick={() => router.push('/timesheet/record')}
+                        >
+                            <Clock className="w-4 h-4 mr-0 sm:mr-2" />
+                            <span className="hidden sm:inline">Registrar Ponto</span>
+                            <span className="sm:hidden">Bater Ponto</span>
+                        </Button>
+                    </div>
                 </div>
+
             </div>
 
             {/* Main Stats Grid */}
