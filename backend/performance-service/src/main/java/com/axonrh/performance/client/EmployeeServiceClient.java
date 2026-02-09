@@ -12,4 +12,7 @@ public interface EmployeeServiceClient {
 
     @GetMapping("/{id}")
     EmployeeDTO getEmployee(@PathVariable("id") UUID id);
+
+    @GetMapping("/user/{userId}")
+    EmployeeDTO getEmployeeByUserId(@PathVariable("userId") UUID userId);
 }

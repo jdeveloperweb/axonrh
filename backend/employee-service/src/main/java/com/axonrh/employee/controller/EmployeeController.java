@@ -335,4 +335,11 @@ public class EmployeeController {
         log.info("Buscando dados do colaborador para o usuario: {} (email: {})", userId, email);
         return ResponseEntity.ok(employeeService.findByUserId(userId, email));
     }
+
+    @GetMapping("/user/{userId}")
+    @PreAuthorize("hasAuthority('EMPLOYEE:READ')")
+    @Operation(summary = "Busca colaborador por User ID")
+    public ResponseEntity<EmployeeResponse> findByUserId(@PathVariable UUID userId) {
+        return ResponseEntity.ok(employeeService.findByUserId(userId, null));
+    }
 }
