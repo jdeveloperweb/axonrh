@@ -26,8 +26,11 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
         set({ isLoading: true, error: null });
         try {
             const response = await notificationsApi.list(0, 50);
+            // Como o interceptor no client.ts já retorna response.data, 
+            // a variável 'response' aqui já contém o payload { content: [], totalElements: X }
+            const data = response as any;
             set({
-                notifications: response.data.content,
+                notifications: data.content || [],
                 isLoading: false
             });
             await get().fetchUnreadCount();
@@ -39,7 +42,8 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     fetchUnreadCount: async () => {
         try {
             const response = await notificationsApi.getUnreadCount();
-            set({ unreadCount: response.data.count });
+            const data = response as any;
+            set({ unreadCount: data.count || 0 });
         } catch (err) {
             console.error('Failed to fetch unread count:', err);
         }
