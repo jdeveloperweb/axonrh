@@ -428,18 +428,17 @@ export default function PDIDetailPage() {
 
         <div className="flex items-center gap-2">
           {/* Delete PDI button for Authorized Users */}
-          {(user?.roles?.some(r => ['ADMIN', 'RH', 'GESTOR_RH', 'ANALISTA_DP', 'MANAGER', 'GESTOR', 'LIDER'].includes(r)) || pdi.employeeId === currentEmployee?.id) &&
-            (pdi.status === 'DRAFT' || pdi.status === 'ACTIVE') && (
-              <Button
-                variant="outline"
-                className="text-red-500 hover:text-red-700 hover:bg-red-50 border-red-200 font-bold"
-                onClick={handleDeletePDI}
-                disabled={isDeleting}
-              >
-                {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
-                Excluir PDI
-              </Button>
-            )}
+          {(user?.roles?.some(r => ['ADMIN', 'RH', 'GESTOR_RH', 'ANALISTA_DP', 'MANAGER', 'GESTOR', 'LIDER'].includes(r)) || pdi.employeeId === currentEmployee?.id) && (
+            <Button
+              variant="outline"
+              className="text-red-500 hover:text-red-700 hover:bg-red-50 border-red-200 font-bold"
+              onClick={handleDeletePDI}
+              disabled={isDeleting}
+            >
+              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
+              Excluir PDI
+            </Button>
+          )}
           {isEditable && (
             <Button onClick={() => setNewActionOpen(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-10 px-5 shadow-lg shadow-indigo-200">
               <Plus className="h-4 w-4 mr-2" />

@@ -84,9 +84,6 @@ public class PDIService {
 
     public void deletePDI(UUID tenantId, UUID pdiId) {
         PDI pdi = getPDI(tenantId, pdiId);
-        if (pdi.getStatus() != PDIStatus.DRAFT && pdi.getStatus() != PDIStatus.ACTIVE) {
-            throw new IllegalStateException("Apenas PDIs em rascunho ou ativos podem ser excluidos");
-        }
         pdiRepository.delete(pdi);
     }
 
