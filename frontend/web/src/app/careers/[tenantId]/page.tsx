@@ -378,11 +378,10 @@ export default function CareersPage() {
                         {/* Foco em Pessoas */}
                         <div className="group rounded-[2rem] bg-gray-50 hover:bg-white hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
                             <div className="h-48 relative overflow-hidden">
-                                <Image
+                                <img
                                     src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80"
                                     alt="Foco em Pessoas"
-                                    fill
-                                    className="object-cover group-hover:scale-110 transition-transform duration-700"
+                                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                                 <div className="absolute bottom-4 left-6 p-3 bg-white/20 backdrop-blur-md rounded-xl border border-white/20">
@@ -400,11 +399,10 @@ export default function CareersPage() {
                         {/* Inovação Ágil */}
                         <div className="group rounded-[2rem] bg-gray-50 hover:bg-white hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
                             <div className="h-48 relative overflow-hidden">
-                                <Image
+                                <img
                                     src="https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=800&q=80"
                                     alt="Inovação Ágil"
-                                    fill
-                                    className="object-cover group-hover:scale-110 transition-transform duration-700"
+                                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                                 <div className="absolute bottom-4 left-6 p-3 bg-white/20 backdrop-blur-md rounded-xl border border-white/20">
@@ -422,11 +420,10 @@ export default function CareersPage() {
                         {/* Excelência */}
                         <div className="group rounded-[2rem] bg-gray-50 hover:bg-white hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
                             <div className="h-48 relative overflow-hidden">
-                                <Image
+                                <img
                                     src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=800&q=80"
                                     alt="Excelência"
-                                    fill
-                                    className="object-cover group-hover:scale-110 transition-transform duration-700"
+                                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                                 <div className="absolute bottom-4 left-6 p-3 bg-white/20 backdrop-blur-md rounded-xl border border-white/20">
@@ -476,11 +473,10 @@ export default function CareersPage() {
                         <div className="lg:w-1/2 relative">
                             <div className="aspect-square bg-gradient-to-br from-[var(--color-primary)]/10 to-blue-600/10 rounded-full flex items-center justify-center p-12">
                                 <div className="w-full h-full bg-white rounded-3xl shadow-2xl overflow-hidden relative group">
-                                    <Image
-                                        src="https://images.unsplash.com/photo-1576091160550-2187580018f7?auto=format&fit=crop&w=800&q=80"
-                                        alt="Time de saúde realizando monitoramento proativo e gestão de custos"
-                                        fill
-                                        className="object-cover group-hover:scale-110 transition-transform duration-700"
+                                    <img
+                                        src="https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=800&q=80"
+                                        alt="Benefícios AxonRH"
+                                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                                 </div>
