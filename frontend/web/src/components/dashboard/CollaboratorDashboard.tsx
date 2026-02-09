@@ -267,91 +267,61 @@ export function CollaboratorDashboard() {
                         )}
                     </div>
 
-                    <div className="mt-10 space-y-4">
-                        <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                            <AlertCircle className="w-5 h-5 text-blue-500" />
-                            Notificações do RH
-                        </h2>
-                        <div className="space-y-4">
-                            {pendingDisc.map((disc) => (
-                                <div key={disc.id} className="flex items-start gap-4 p-5 bg-white rounded-2xl shadow-sm border-l-4 border-l-orange-500 border-orange-100 hover:border-orange-200 transition-all cursor-pointer" onClick={() => router.push(`/performance/disc`)}>
-                                    <div className="p-3 bg-orange-50 rounded-xl text-orange-600">
-                                        <BrainCircuit className="w-6 h-6" />
-                                    </div>
-                                    <div className="flex-1">
-                                        <div className="flex items-center justify-between mb-1">
-                                            <h5 className="font-bold text-orange-900 uppercase text-xs tracking-wider">Mapeamento Comportamental</h5>
-                                            <span className="text-[10px] text-orange-400 font-medium bg-orange-50 px-2 py-0.5 rounded-full">Pendente</span>
+                    {(pendingDisc.length > 0 || activePDIs.length > 0) && (
+                        <div className="mt-10 space-y-4">
+                            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                                <AlertCircle className="w-5 h-5 text-blue-500" />
+                                Notificações do RH
+                            </h2>
+                            <div className="space-y-4">
+                                {pendingDisc.map((disc) => (
+                                    <div key={disc.id} className="flex items-start gap-4 p-5 bg-white rounded-2xl shadow-sm border-l-4 border-l-orange-500 border-orange-100 hover:border-orange-200 transition-all cursor-pointer" onClick={() => router.push(`/performance/disc`)}>
+                                        <div className="p-3 bg-orange-50 rounded-xl text-orange-600">
+                                            <BrainCircuit className="w-6 h-6" />
                                         </div>
-                                        <h4 className="font-bold text-gray-900 mb-1">Realizar Teste DISC</h4>
-                                        <p className="text-sm text-gray-500 leading-relaxed">
-                                            Um novo teste DISC foi solicitado para você. Clique para iniciar o seu mapeamento de perfil comportamental.
-                                        </p>
-                                    </div>
-                                </div>
-                            ))}
-
-                            {activePDIs.map((pdi) => (
-                                <div key={pdi.id} className="flex items-start gap-4 p-5 bg-white rounded-2xl shadow-sm border-l-4 border-l-indigo-500 border-indigo-100 hover:border-indigo-200 transition-all cursor-pointer" onClick={() => router.push(`/performance/pdi/${pdi.id}`)}>
-                                    <div className="p-3 bg-indigo-50 rounded-xl text-indigo-600">
-                                        <TrendingUp className="w-6 h-6" />
-                                    </div>
-                                    <div className="flex-1">
-                                        <div className="flex items-center justify-between mb-1">
-                                            <h5 className="font-bold text-indigo-900 uppercase text-xs tracking-wider">
-                                                {pdi.status === 'DRAFT' ? 'PDI em Rascunho' :
-                                                    pdi.status === 'PENDING_APPROVAL' ? 'PDI Pendente' :
-                                                        'Novo PDI Disponível'}
-                                            </h5>
-                                            <span className="text-[10px] text-indigo-400 font-medium bg-indigo-50 px-2 py-0.5 rounded-full">
-                                                {pdi.status === 'ACTIVE' ? 'Ativo' :
-                                                    pdi.status === 'DRAFT' ? 'Rascunho' :
-                                                        pdi.status === 'PENDING_APPROVAL' ? 'Aguardando' : pdi.status}
-                                            </span>
+                                        <div className="flex-1">
+                                            <div className="flex items-center justify-between mb-1">
+                                                <h5 className="font-bold text-orange-900 uppercase text-xs tracking-wider">Mapeamento Comportamental</h5>
+                                                <span className="text-[10px] text-orange-400 font-medium bg-orange-50 px-2 py-0.5 rounded-full">Pendente</span>
+                                            </div>
+                                            <h4 className="font-bold text-gray-900 mb-1">Realizar Teste DISC</h4>
+                                            <p className="text-sm text-gray-500 leading-relaxed">
+                                                Um novo teste DISC foi solicitado para você. Clique para iniciar o seu mapeamento de perfil comportamental.
+                                            </p>
                                         </div>
-                                        <h4 className="font-bold text-gray-900 mb-1">{pdi.title}</h4>
-                                        <p className="text-sm text-gray-500 leading-relaxed">
-                                            {pdi.status === 'DRAFT' ? 'Continue editando seu plano de desenvolvimento.' :
-                                                pdi.status === 'PENDING_APPROVAL' ? 'Seu PDI está aguardando aprovação.' :
-                                                    'Um novo plano de desenvolvimento foi criado para você. Clique para ver seus objetivos e ações.'}
-                                        </p>
                                     </div>
-                                </div>
-                            ))}
+                                ))}
 
-                            <div className="flex items-start gap-4 p-5 bg-white rounded-2xl shadow-sm border border-gray-100 hover:border-gray-200 transition-all">
-                                <div className="p-3 bg-blue-50 rounded-xl text-blue-600">
-                                    <FileText className="w-6 h-6" />
-                                </div>
-                                <div className="flex-1">
-                                    <div className="flex items-center justify-between mb-1">
-                                        <h5 className="font-bold text-gray-900 uppercase text-xs tracking-wider">Comunicado Geral</h5>
-                                        <span className="text-[10px] text-gray-400 font-medium bg-gray-50 px-2 py-0.5 rounded-full">Há 2 horas</span>
+                                {activePDIs.map((pdi) => (
+                                    <div key={pdi.id} className="flex items-start gap-4 p-5 bg-white rounded-2xl shadow-sm border-l-4 border-l-indigo-500 border-indigo-100 hover:border-indigo-200 transition-all cursor-pointer" onClick={() => router.push(`/performance/pdi/${pdi.id}`)}>
+                                        <div className="p-3 bg-indigo-50 rounded-xl text-indigo-600">
+                                            <TrendingUp className="w-6 h-6" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <div className="flex items-center justify-between mb-1">
+                                                <h5 className="font-bold text-indigo-900 uppercase text-xs tracking-wider">
+                                                    {pdi.status === 'DRAFT' ? 'PDI em Rascunho' :
+                                                        pdi.status === 'PENDING_APPROVAL' ? 'PDI Pendente' :
+                                                            'Novo PDI Disponível'}
+                                                </h5>
+                                                <span className="text-[10px] text-indigo-400 font-medium bg-indigo-50 px-2 py-0.5 rounded-full">
+                                                    {pdi.status === 'ACTIVE' ? 'Ativo' :
+                                                        pdi.status === 'DRAFT' ? 'Rascunho' :
+                                                            pdi.status === 'PENDING_APPROVAL' ? 'Aguardando' : pdi.status}
+                                                </span>
+                                            </div>
+                                            <h4 className="font-bold text-gray-900 mb-1">{pdi.title}</h4>
+                                            <p className="text-sm text-gray-500 leading-relaxed">
+                                                {pdi.status === 'DRAFT' ? 'Continue editando seu plano de desenvolvimento.' :
+                                                    pdi.status === 'PENDING_APPROVAL' ? 'Seu PDI está aguardando aprovação.' :
+                                                        'Um novo plano de desenvolvimento foi criado para você. Clique para ver seus objetivos e ações.'}
+                                            </p>
+                                        </div>
                                     </div>
-                                    <h4 className="font-bold text-gray-900 mb-1">Novo canal de cultura e benefícios</h4>
-                                    <p className="text-sm text-gray-500 leading-relaxed">
-                                        Lançamos uma nova seção no portal AxonIA com todos os detalhes sobre nossos benefícios e cultura corporativa. Confira!
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="flex items-start gap-4 p-5 bg-white rounded-2xl shadow-sm border border-gray-100 hover:border-gray-200 transition-all opacity-80">
-                                <div className="p-3 bg-amber-50 rounded-xl text-amber-600">
-                                    <HelpCircle className="w-6 h-6" />
-                                </div>
-                                <div className="flex-1">
-                                    <div className="flex items-center justify-between mb-1">
-                                        <h5 className="font-bold text-gray-900 uppercase text-xs tracking-wider">Pesquisa Interna</h5>
-                                        <span className="text-[10px] text-gray-400 font-medium bg-gray-50 px-2 py-0.5 rounded-full">Ontem</span>
-                                    </div>
-                                    <h4 className="font-bold text-gray-900 mb-1">Pesquisa de Clima Organizacional 2026</h4>
-                                    <p className="text-sm text-gray-500 leading-relaxed">
-                                        Sua opinião é fundamental para construirmos um ambiente melhor. Participe da pesquisa anual de clima.
-                                    </p>
-                                </div>
+                                ))}
                             </div>
                         </div>
-                    </div>
+                    )}
                 </div>
 
                 {/* Sidebar info */}
