@@ -150,6 +150,9 @@ export const notificationsApi = {
   delete: (id: string) =>
     api.delete(`/notifications/${id}`),
 
+  deleteAll: (archived = false) =>
+    api.delete(`/notifications/all?archived=${archived}`),
+
   sendBulk: (data: {
     userIds: string[];
     type: NotificationType;

@@ -97,6 +97,16 @@ public class NotificationController {
         return ResponseEntity.ok().build();
     }
 
+    @DeleteMapping("/all")
+    public ResponseEntity<Void> deleteAll(
+            @RequestHeader("X-Tenant-ID") UUID tenantId,
+            @RequestHeader("X-User-ID") UUID userId,
+            @RequestParam(defaultValue = "false") boolean archived) {
+
+        notificationService.deleteAll(tenantId, userId, archived);
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/{notificationId}/archive")
     public ResponseEntity<Notification> archiveNotification(
             @RequestHeader("X-Tenant-ID") UUID tenantId,

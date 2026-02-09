@@ -70,6 +70,13 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
 
     @Modifying
     @Query("DELETE FROM Notification n WHERE n.tenantId = :tenantId " +
+           "AND n.userId = :userId AND n.isArchived = :archived")
+    void deleteAllByUser(@Param("tenantId") UUID tenantId,
+                         @Param("userId") UUID userId,
+                         @Param("archived") boolean archived);
+
+    @Modifying
+    @Query("DELETE FROM Notification n WHERE n.tenantId = :tenantId " +
            "AND n.createdAt < :cutoffDate AND n.isRead = true")
     int deleteOldNotifications(@Param("tenantId") UUID tenantId,
                                @Param("cutoffDate") LocalDateTime cutoffDate);

@@ -13,6 +13,7 @@ interface NotificationState {
     markAllAsRead: () => Promise<void>;
     archiveNotification: (id: string) => Promise<void>;
     deleteNotification: (id: string) => Promise<void>;
+    deleteAllNotifications: () => Promise<void>;
     addNotification: (notification: Notification) => void;
     showArchived: boolean;
     setShowArchived: (show: boolean) => void;
@@ -102,6 +103,16 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
             await get().fetchUnreadCount();
         } catch (err) {
             console.error('Failed to delete notification:', err);
+        }
+    },
+
+    deleteAllNotifications: async () => {
+        const { showArchived } = get();
+        try {
+            await notificationsApi.deleteAll(showArchived);
+            set({ notifications: [], unreadCount: showArchived ? get().unreadCount : 0 });
+        } catch (err) {
+            console.error('Failed to delete all notifications:', err);
         }
     },
 
