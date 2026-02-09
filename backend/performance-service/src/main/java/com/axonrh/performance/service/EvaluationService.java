@@ -227,13 +227,17 @@ public class EvaluationService {
     public Evaluation completeEvaluation(UUID tenantId, UUID evaluationId) {
         Evaluation evaluation = getEvaluation(tenantId, evaluationId);
         evaluation.complete();
-        return evaluationRepository.save(evaluation);
+        Evaluation saved = evaluationRepository.save(evaluation);
+        eventPublisher.publishEvaluationCompleted(saved);
+        return saved;
     }
 
     public Evaluation acknowledgeEvaluation(UUID tenantId, UUID evaluationId, String comments) {
         Evaluation evaluation = getEvaluation(tenantId, evaluationId);
         evaluation.acknowledge(comments);
-        return evaluationRepository.save(evaluation);
+        Evaluation saved = evaluationRepository.save(evaluation);
+        eventPublisher.publishEvaluationAcknowledged(saved);
+        return saved;
     }
 
     // ==================== 9Box Matrix ====================

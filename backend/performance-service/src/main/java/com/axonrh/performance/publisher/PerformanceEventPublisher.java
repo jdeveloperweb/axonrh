@@ -169,4 +169,159 @@ public class PerformanceEventPublisher {
             log.error("Erro ao publicar lembrete de DISC", e);
         }
     }
+
+    public void publishDiscCompleted(com.axonrh.performance.entity.DiscEvaluation evaluation) {
+        try {
+            // Notificar quem solicitou (gestor/RH)
+            if (evaluation.getRequestedBy() == null) return;
+            
+            EmployeeDTO requester = employeeClient.getEmployee(evaluation.getRequestedBy());
+            if (requester.getUserId() == null) return;
+
+            NotificationEvent event = NotificationEvent.builder()
+                    .tenantId(evaluation.getTenantId())
+                    .userId(requester.getUserId())
+                    .eventType("DISC_COMPLETED")
+                    .title("Teste DISC Concluído")
+                    .body("O colaborador " + evaluation.getEmployeeName() + " concluiu o teste DISC.")
+                    .category("PERFORMANCE")
+                    .priority("NORMAL")
+                    .actionUrl("/performance/disc/" + evaluation.getId())
+                    .sourceType("DISC_EVALUATION")
+                    .sourceId(evaluation.getId())
+                    .metadata(Map.of(
+                            "evaluationId", evaluation.getId().toString(),
+                            "employeeName", evaluation.getEmployeeName()
+                    ))
+                    .build();
+
+            domainEventPublisher.publish(KafkaTopics.PERFORMANCE_DOMAIN_EVENTS, event);
+        } catch (Exception e) {
+            log.error("Erro ao publicar evento de DISC concluido", e);
+        }
+    }
+
+    public void publishPDIViewed(PDI pdi, UUID viewerUserId) {
+        try {
+            // Determinar quem notificar:
+            // Se o colaborador visualizou, notifica o gestor
+            // Se o gestor visualizou, notifica o colaborador
+            
+            UUID targetEmployeeId;
+            String message;
+            
+            EmployeeDTO viewerEmployee = employeeClient.getEmployeeByUserId(viewerUserId);
+            if (viewerEmployee == null) return;
+
+            if (viewerEmployee.getId().equals(pdi.getEmployeeId())) {
+                // Colaborador viu -> Notifica gestor
+                if (pdi.getManagerId() == null) return;
+                targetEmployeeId = pdi.getManagerId();
+                message = "O colaborador " + pdi.getEmployeeName() + " visualizou o PDI: " + pdi.getTitle();
+            } else if (viewerEmployee.getId().equals(pdi.getManagerId())) {
+                // Gestor viu -> Notifica colaborador
+                targetEmployeeId = pdi.getEmployeeId();
+                message = "O gestor " + pdi.getManagerName() + " visualizou o seu PDI: " + pdi.getTitle();
+            } else {
+                // Outra pessoa viu? (RH talvez). Nao notifica por enquanto ou escolhe um padrao.
+                return;
+            }
+
+            EmployeeDTO target = employeeClient.getEmployee(targetEmployeeId);
+            if (target.getUserId() == null) return;
+
+            NotificationEvent event = NotificationEvent.builder()
+                    .tenantId(pdi.getTenantId())
+                    .userId(target.getUserId())
+                    .eventType("PDI_VIEWED")
+                    .title("PDI Visualizado")
+                    .body(message)
+                    .category("PERFORMANCE")
+                    .priority("LOW")
+                    .actionUrl("/performance/pdi/" + pdi.getId())
+                    .sourceType("PDI")
+                    .sourceId(pdi.getId())
+                    .build();
+
+            domainEventPublisher.publish(KafkaTopics.PERFORMANCE_DOMAIN_EVENTS, event);
+        } catch (Exception e) {
+            log.error("Erro ao publicar evento de PDI visualizado", e);
+        }
+    }
+
+    public void publishPDIActionCompleted(com.axonrh.performance.entity.PDI pdi, com.axonrh.performance.entity.PDIAction action) {
+        try {
+            if (pdi.getManagerId() == null) return;
+            
+            EmployeeDTO manager = employeeClient.getEmployee(pdi.getManagerId());
+            if (manager.getUserId() == null) return;
+
+            NotificationEvent event = NotificationEvent.builder()
+                    .tenantId(pdi.getTenantId())
+                    .userId(manager.getUserId())
+                    .eventType("PDI_ACTION_COMPLETED")
+                    .title("Ação de PDI Concluída")
+                    .body("O colaborador " + pdi.getEmployeeName() + " concluiu a ação: " + action.getTitle())
+                    .category("PERFORMANCE")
+                    .priority("NORMAL")
+                    .actionUrl("/performance/pdi/" + pdi.getId())
+                    .sourceType("PDI_ACTION")
+                    .sourceId(action.getId())
+                    .build();
+
+            domainEventPublisher.publish(KafkaTopics.PERFORMANCE_DOMAIN_EVENTS, event);
+        } catch (Exception e) {
+            log.error("Erro ao publicar evento de acao de PDI concluida", e);
+        }
+    }
+
+    public void publishEvaluationAcknowledged(com.axonrh.performance.entity.Evaluation evaluation) {
+        try {
+            EmployeeDTO manager = employeeClient.getEmployee(evaluation.getEvaluatorId());
+            if (manager.getUserId() == null) return;
+
+            NotificationEvent event = NotificationEvent.builder()
+                    .tenantId(evaluation.getTenantId())
+                    .userId(manager.getUserId())
+                    .eventType("EVALUATION_ACKNOWLEDGED")
+                    .title("Avaliação Visualizada pelo Colaborador")
+                    .body("O colaborador " + evaluation.getEmployeeName() + " leu e deu o ciente na sua avaliação.")
+                    .category("PERFORMANCE")
+                    .priority("NORMAL")
+                    .actionUrl("/performance/evaluations/" + evaluation.getId())
+                    .sourceType("EVALUATION")
+                    .sourceId(evaluation.getId())
+                    .build();
+
+            domainEventPublisher.publish(KafkaTopics.PERFORMANCE_DOMAIN_EVENTS, event);
+        } catch (Exception e) {
+            log.error("Erro ao publicar evento de ciencia de avaliacao", e);
+        }
+    }
+
+    public void publishEvaluationCompleted(com.axonrh.performance.entity.Evaluation evaluation) {
+        try {
+            // Notificar o colaborador que a avaliacao dele está pronta
+            EmployeeDTO employee = employeeClient.getEmployee(evaluation.getEmployeeId());
+            if (employee.getUserId() == null) return;
+
+            NotificationEvent event = NotificationEvent.builder()
+                    .tenantId(evaluation.getTenantId())
+                    .userId(employee.getUserId())
+                    .eventType("EVALUATION_COMPLETED")
+                    .title("Sua Avaliação foi Concluída")
+                    .body("Sua avaliação de desempenho do ciclo " + (evaluation.getCycle() != null ? evaluation.getCycle().getName() : "") + " foi finalizada e está disponível para visualização.")
+                    .category("PERFORMANCE")
+                    .priority("NORMAL")
+                    .actionUrl("/performance/evaluations/my-evaluations")
+                    .sourceType("EVALUATION")
+                    .sourceId(evaluation.getId())
+                    .build();
+
+            domainEventPublisher.publish(KafkaTopics.PERFORMANCE_DOMAIN_EVENTS, event);
+        } catch (Exception e) {
+            log.error("Erro ao publicar evento de avaliacao concluida para o colaborador", e);
+        }
+    }
 }
+

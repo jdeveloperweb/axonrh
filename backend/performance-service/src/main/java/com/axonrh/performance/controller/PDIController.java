@@ -36,8 +36,13 @@ public class PDIController {
     @GetMapping("/{pdiId}")
     public ResponseEntity<PDI> getPDI(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
+            @RequestHeader(value = "X-User-ID", required = false) UUID viewerUserId,
             @PathVariable UUID pdiId) {
-        return ResponseEntity.ok(pdiService.getPDI(tenantId, pdiId));
+        PDI pdi = pdiService.getPDI(tenantId, pdiId);
+        if (viewerUserId != null) {
+            pdiService.markAsViewed(tenantId, pdiId, viewerUserId);
+        }
+        return ResponseEntity.ok(pdi);
     }
 
     @PutMapping("/{pdiId}")

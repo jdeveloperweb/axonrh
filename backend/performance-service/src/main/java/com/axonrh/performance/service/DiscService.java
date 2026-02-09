@@ -181,6 +181,8 @@ public class DiscService {
             assignmentRepository.save(assignment);
         }
 
+        eventPublisher.publishDiscCompleted(evaluation);
+
         return DiscEvaluationDTO.fromEntity(evaluation);
     }
 

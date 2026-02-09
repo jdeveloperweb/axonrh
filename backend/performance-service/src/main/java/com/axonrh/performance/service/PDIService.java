@@ -53,6 +53,11 @@ public class PDIService {
                 .orElseThrow(() -> new EntityNotFoundException("PDI nao encontrado"));
     }
 
+    public void markAsViewed(UUID tenantId, UUID pdiId, UUID viewerUserId) {
+        PDI pdi = getPDI(tenantId, pdiId);
+        eventPublisher.publishPDIViewed(pdi, viewerUserId);
+    }
+
     public PDI updatePDI(UUID tenantId, UUID pdiId, PDI updates) {
         PDI pdi = getPDI(tenantId, pdiId);
 
@@ -191,7 +196,9 @@ public class PDIService {
 
         action.complete(notes, hoursSpent);
         pdi.calculateProgress();
-        return pdiRepository.save(pdi);
+        PDI saved = pdiRepository.save(pdi);
+        eventPublisher.publishPDIActionCompleted(saved, action);
+        return saved;
     }
 
     public PDI updateActionProgress(UUID tenantId, UUID pdiId, UUID actionId, Integer progress) {
