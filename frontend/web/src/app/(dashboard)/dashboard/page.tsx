@@ -797,47 +797,72 @@ export default function DashboardPage() {
   }
 
   const ViewToggle = () => (
-    <div className="bg-white border border-slate-200 p-1.5 rounded-xl shadow-sm flex items-center gap-1">
+    <div className="relative group p-1 bg-slate-100/50 backdrop-blur-sm border border-slate-200/60 rounded-full flex items-center shadow-inner gap-1 w-fit">
+      {/* Animated Background Pill */}
+      <div
+        className={`absolute top-1 bottom-1 rounded-full bg-white shadow-sm transition-all duration-500 ease-out z-0 border border-slate-100/50 ${viewMode === 'manager'
+          ? 'left-1 w-[calc(50%-2px)] translate-x-0 bg-gradient-to-r from-white to-slate-50'
+          : 'left-1 w-[calc(50%-2px)] translate-x-[100%] bg-gradient-to-r from-white to-slate-50'
+          }`}
+      />
+
       <button
         onClick={() => setViewMode('manager')}
-        className={`relative flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${viewMode === 'manager'
-          ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-200 ring-2 ring-indigo-100'
-          : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+        className={`relative z-10 flex items-center justify-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 outline-none focus:ring-2 focus:ring-indigo-100 ${viewMode === 'manager'
+          ? 'text-indigo-600 scale-[1.02]'
+          : 'text-slate-500 hover:text-slate-700'
           }`}
       >
-        <ShieldCheck className={`w-4 h-4 ${viewMode === 'manager' ? 'text-indigo-100' : ''}`} />
-        Visão Gestor
+        <div className={`p-1 rounded-full transition-colors duration-300 ${viewMode === 'manager' ? 'bg-indigo-100 text-indigo-600' : 'bg-transparent text-current'}`}>
+          <ShieldCheck className="w-4 h-4" />
+        </div>
+        <span className="tracking-tight">Visão Gestor</span>
       </button>
+
       <button
         onClick={() => setViewMode('collaborator')}
-        className={`relative flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${viewMode === 'collaborator'
-          ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-md shadow-blue-200 ring-2 ring-blue-100'
-          : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+        className={`relative z-10 flex items-center justify-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 outline-none focus:ring-2 focus:ring-blue-100 ${viewMode === 'collaborator'
+          ? 'text-blue-600 scale-[1.02]'
+          : 'text-slate-500 hover:text-slate-700'
           }`}
       >
-        <LineChart className={`w-4 h-4 ${viewMode === 'collaborator' ? 'text-blue-100' : ''}`} />
-        Minha Visão
+        <div className={`p-1 rounded-full transition-colors duration-300 ${viewMode === 'collaborator' ? 'bg-blue-100 text-blue-600' : 'bg-transparent text-current'}`}>
+          <LineChart className="w-4 h-4" />
+        </div>
+        <span className="tracking-tight">Minha Visão</span>
       </button>
     </div>
   );
 
   if (viewMode === 'collaborator') {
-    return <CollaboratorDashboard extraHeaderContent={<ViewToggle />} />;
+    return <CollaboratorDashboard extraHeaderContent={<div className="scale-90 origin-right"><ViewToggle /></div>} />;
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Olá, {user?.name?.split(' ')[0] || 'Usuário'}!
-          </h1>
-          <p className="text-gray-500">
-            Bem-vindo ao painel de gestão.
-          </p>
+    <div className="space-y-8">
+      {/* Header Moderno com Toggle Integrado */}
+      <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6 pb-6 border-b border-slate-100">
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-2xl shadow-lg shadow-indigo-200">
+              <BarChart3 className="w-8 h-8 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+                Painel de Gestão
+              </h1>
+              <p className="text-slate-500 font-medium">
+                Bem-vindo, {user?.name?.split(' ')[0] || 'Gestor'}. Acompanhe os indicadores da organização.
+              </p>
+            </div>
+          </div>
         </div>
-        <ViewToggle />
+
+        {/* Seletor em Posição de Destaque */}
+        <div className="flex flex-col items-end gap-2">
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider pr-2">Modo de Visualização</span>
+          <ViewToggle />
+        </div>
       </div>
 
       {/* Tabs */}
