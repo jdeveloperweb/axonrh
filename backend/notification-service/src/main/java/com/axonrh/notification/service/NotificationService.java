@@ -28,13 +28,16 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final SimpMessagingTemplate messagingTemplate;
     private final PushNotificationService pushService;
+    private final PreferenceService preferenceService;
 
     public NotificationService(NotificationRepository notificationRepository,
                                SimpMessagingTemplate messagingTemplate,
-                               PushNotificationService pushService) {
+                               PushNotificationService pushService,
+                               PreferenceService preferenceService) {
         this.notificationRepository = notificationRepository;
         this.messagingTemplate = messagingTemplate;
         this.pushService = pushService;
+        this.preferenceService = preferenceService;
     }
 
     /**
@@ -48,32 +51,53 @@ public class NotificationService {
                                            String actionData, Priority priority,
                                            String sourceType, UUID sourceId,
                                            boolean sendPush) {
-        Notification notification = new Notification();
-        notification.setTenantId(tenantId);
-        notification.setUserId(userId);
-        notification.setEmployeeId(employeeId);
-        notification.setType(type);
-        notification.setCategory(category);
-        notification.setTitle(title);
-        notification.setMessage(message);
-        notification.setIcon(icon);
-        notification.setImageUrl(imageUrl);
-        notification.setActionType(actionType);
-        notification.setActionUrl(actionUrl);
-        notification.setActionData(actionData);
-        notification.setPriority(priority);
-        notification.setSourceType(sourceType);
-        notification.setSourceId(sourceId);
+        
+        // 1. Get user preferences
+        var prefs = preferenceService.getPreferences(tenantId, userId);
+        
+        // 2. Check category-specific preferences if category is provided
+        boolean inAppEnabled = prefs.isInAppEnabled();
+        boolean pushEnabled = prefs.isPushEnabled() && sendPush;
+        
+        if (category != null) {
+            var catPrefs = prefs.getCategoryPreferences() != null ? prefs.getCategoryPreferences().get(category) : null;
+            if (catPrefs != null) {
+                inAppEnabled = inAppEnabled && catPrefs.isInApp();
+                pushEnabled = pushEnabled && catPrefs.isPush();
+            }
+        }
 
-        Notification saved = notificationRepository.save(notification);
+        Notification saved = null;
+        
+        // 3. Save and send in-app if enabled
+        if (inAppEnabled) {
+            Notification notification = new Notification();
+            notification.setTenantId(tenantId);
+            notification.setUserId(userId);
+            notification.setEmployeeId(employeeId);
+            notification.setType(type);
+            notification.setCategory(category);
+            notification.setTitle(title);
+            notification.setMessage(message);
+            notification.setIcon(icon);
+            notification.setImageUrl(imageUrl);
+            notification.setActionType(actionType);
+            notification.setActionUrl(actionUrl);
+            notification.setActionData(actionData);
+            notification.setPriority(priority);
+            notification.setSourceType(sourceType);
+            notification.setSourceId(sourceId);
 
-        // Send via WebSocket
-        sendWebSocketNotification(userId, saved);
+            saved = notificationRepository.save(notification);
 
-        // Send push notification if requested
-        if (sendPush) {
+            // Send via WebSocket
+            sendWebSocketNotification(userId, saved);
+        }
+
+        // 4. Send push notification if enabled
+        if (pushEnabled) {
             Map<String, String> data = Map.of(
-                    "notificationId", saved.getId().toString(),
+                    "notificationId", saved != null ? saved.getId().toString() : UUID.randomUUID().toString(),
                     "type", type.name(),
                     "category", category != null ? category : "",
                     "actionUrl", actionUrl != null ? actionUrl : ""

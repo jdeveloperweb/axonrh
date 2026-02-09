@@ -34,7 +34,7 @@ public class PerformanceEventsListener {
             UUID tenantId = UUID.fromString(tenantIdStr);
             UUID userId = UUID.fromString(userIdStr);
             String title = (String) event.get("title");
-            String body = (String) event.get("message");
+            String body = (String) event.get("body");
             String actionUrl = (String) event.get("actionUrl");
             String sourceType = (String) event.get("sourceType");
             String sourceIdStr = (String) event.get("sourceId");

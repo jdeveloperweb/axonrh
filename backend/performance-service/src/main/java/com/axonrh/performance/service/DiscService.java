@@ -19,6 +19,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +35,8 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class DiscService {
+
+    private static final Logger log = LoggerFactory.getLogger(DiscService.class);
 
     private final DiscQuestionnaireRepository questionnaireRepository;
     private final DiscQuestionRepository questionRepository;
@@ -225,7 +229,7 @@ public class DiscService {
 
     // Get questionnaire title for notification
     String qTitle = questionnaireRepository.findById(questionnaireId)
-            .map(DiscQuestionnaire::getTitle)
+            .map(DiscQuestionnaire::getName)
             .orElse("Avaliação DISC");
 
     eventPublisher.publishDiscAssigned(assignment, qTitle);

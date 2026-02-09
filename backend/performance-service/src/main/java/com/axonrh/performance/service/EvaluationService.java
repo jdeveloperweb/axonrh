@@ -12,6 +12,8 @@ import com.axonrh.performance.repository.EvaluationRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +25,8 @@ import java.util.UUID;
 @Service
 @Transactional
 public class EvaluationService {
+
+    private static final Logger log = LoggerFactory.getLogger(EvaluationService.class);
 
     private final EvaluationRepository evaluationRepository;
     private final EvaluationCycleRepository cycleRepository;

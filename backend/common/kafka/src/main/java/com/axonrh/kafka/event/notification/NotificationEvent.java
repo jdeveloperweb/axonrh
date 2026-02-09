@@ -66,6 +66,21 @@ public class NotificationEvent extends DomainEvent {
     private String actionUrl;
 
     /**
+     * Categoria da notificacao (ex: PERFORMANCE, VACATION).
+     */
+    private String category;
+
+    /**
+     * Tipo da fonte (ex: PDI, DISC, EVALUATION).
+     */
+    private String sourceType;
+
+    /**
+     * ID da fonte.
+     */
+    private UUID sourceId;
+
+    /**
      * Se deve ser agendada para envio posterior.
      */
     private java.time.Instant scheduledFor;
