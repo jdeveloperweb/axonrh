@@ -36,7 +36,7 @@ import {
     BarElement,
     Title
 } from 'chart.js';
-import { Doughnut } from 'react-chartjs-2';
+import { Doughnut, Bar } from 'react-chartjs-2';
 import { Separator } from '@/components/ui/separator';
 
 ChartJS.register(
@@ -362,37 +362,38 @@ export default function CycleDashboardPage() {
                                             <p className="text-sm text-slate-400 mt-1">Nenhuma avaliação iniciada ainda.</p>
                                         </div>
                                     ) : (
-                                        <div className="w-full h-full relative">
-                                            <Doughnut
+                                        <div className="w-full h-full">
+                                            <Bar
                                                 data={completionData}
                                                 options={{
+                                                    indexAxis: 'y' as const,
                                                     responsive: true,
                                                     maintainAspectRatio: false,
                                                     plugins: {
                                                         legend: {
-                                                            position: 'bottom',
-                                                            labels: {
-                                                                usePointStyle: true,
-                                                                pointStyle: 'circle',
-                                                                padding: 20,
-                                                                font: { size: 12, family: "'Inter', sans-serif" }
-                                                            }
+                                                            display: false
                                                         },
                                                         tooltip: {
                                                             backgroundColor: 'rgba(15, 23, 42, 0.9)',
                                                             padding: 12,
                                                             cornerRadius: 8,
                                                             displayColors: true,
-                                                            usePointStyle: true,
                                                         }
                                                     },
-                                                    cutout: '65%'
+                                                    scales: {
+                                                        x: {
+                                                            display: false,
+                                                            grid: { display: false }
+                                                        },
+                                                        y: {
+                                                            grid: { display: false },
+                                                            ticks: {
+                                                                font: { size: 12, weight: 'bold', family: "'Inter', sans-serif" }
+                                                            }
+                                                        }
+                                                    }
                                                 }}
                                             />
-                                            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pb-8">
-                                                <span className="text-3xl font-bold text-slate-800">{stats?.total || 0}</span>
-                                                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Total</span>
-                                            </div>
                                         </div>
                                     )}
                                 </CardContent>

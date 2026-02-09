@@ -58,7 +58,7 @@ import { employeesApi, Employee } from '@/lib/api/employees';
 import { useAuthStore } from '@/stores/auth-store';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/utils';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend } from 'recharts';
 
 const statusColors: Record<DiscAssessmentStatus, { bg: string; text: string; label: string }> = {
   PENDING: { bg: 'bg-amber-50', text: 'text-amber-700', label: 'Pendente' },
@@ -628,41 +628,100 @@ export default function DiscManagePage() {
 
       {/* Profile Distribution Chart */}
       {pieChartData.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
-              Distribuicao de Perfis
-            </CardTitle>
-            <CardDescription>
-              Perfis predominantes dos colaboradores avaliados
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card className="lg:col-span-2 border-none shadow-xl bg-white overflow-hidden rounded-[2rem]">
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                  <BarChart3 className="h-5 w-5" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl font-black text-slate-900 uppercase tracking-tight">
+                    Distribuição de Perfis
+                  </CardTitle>
+                  <CardDescription className="font-medium text-slate-500">
+                    Ocorrência predominante de comportamentos na equipe
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px] w-full pt-4">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
                     data={pieChartData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey="value"
-                    label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                    layout="vertical"
+                    margin={{ top: 5, right: 30, left: 40, bottom: 5 }}
+                    barSize={32}
                   >
-                    {pieChartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                    <XAxis type="number" hide />
+                    <YAxis
+                      dataKey="name"
+                      type="category"
+                      tick={{ fill: '#64748b', fontSize: 12, fontWeight: 700 }}
+                      axisLine={false}
+                      tickLine={false}
+                      width={100}
+                    />
+                    <Tooltip
+                      cursor={{ fill: '#f8fafc' }}
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload;
+                          return (
+                            <div className="bg-slate-900 text-white p-3 rounded-xl shadow-2xl border border-white/10 animate-in fade-in zoom-in duration-200">
+                              <p className="text-xs font-black uppercase tracking-widest opacity-60 mb-1">{data.name}</p>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xl font-black">{data.value}</span>
+                                <span className="text-xs font-bold text-slate-400">Colaboradores</span>
+                              </div>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Bar
+                      dataKey="value"
+                      radius={[0, 12, 12, 0]}
+                    >
+                      {pieChartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Quick Stats Summary */}
+          <Card className="border-none shadow-xl bg-slate-900 text-white rounded-[2rem] overflow-hidden">
+            <CardHeader>
+              <CardTitle className="text-sm font-black uppercase tracking-widest text-slate-400">Resumo de Talentos</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {pieChartData.map((profile, idx) => (
+                <div key={idx} className="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/10 group hover:bg-white/10 transition-all">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-8 rounded-full" style={{ backgroundColor: profile.color }} />
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-tight text-slate-400">{profile.name}</p>
+                      <p className="text-lg font-black">{profile.value}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] font-black uppercase text-slate-500">Representação</p>
+                    <p className="font-black text-primary">
+                      {statistics ? ((profile.value / statistics.completedEvaluations) * 100).toFixed(0) : 0}%
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
       )}
 
 
