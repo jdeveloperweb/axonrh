@@ -53,6 +53,8 @@ export function EmployeePerformanceView() {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [activePDIs, setActivePDIs] = useState<PDI[]>([]);
+    const [employeeId, setEmployeeId] = useState<string | null>(null);
+    const [employeeName, setEmployeeName] = useState<string | null>(null);
     const [pendingEvaluations, setPendingEvaluations] = useState<Evaluation[]>([]);
     const [latestEvaluation, setLatestEvaluation] = useState<Evaluation | null>(null);
     const [pendingDisc, setPendingDisc] = useState<DiscAssignment[]>([]);
@@ -75,28 +77,35 @@ export function EmployeePerformanceView() {
             const employee = await employeesApi.getMe().catch(() => null);
 
             if (!employee) {
-                console.warn('Colaborador não encontrado para este usuário.');
+                console.warn('AXON_DEBUG: Colaborador não encontrado para este usuário.');
                 setLoading(false);
                 return;
             }
 
-            const employeeId = employee.id;
+            const empId = employee.id;
+            setEmployeeId(empId);
+            setEmployeeName(employee.fullName);
+            console.log('AXON_DEBUG: Employee ID:', empId);
+            console.log('AXON_DEBUG: Employee Name:', employee.fullName);
 
             const [pdis, pendingEvals, historyEvals, discAssignments, latestDiscRes, goals] = await Promise.all([
-                pdisApi.getByEmployee(employeeId).catch(() => []),
-                evaluationsApi.getPending(employeeId).catch(() => []),
-                evaluationsApi.getByEmployee(employeeId).catch(() => []),
-                discApi.getPendingForEmployee(employeeId).catch(() => []),
-                discApi.getLatest(employeeId).catch(() => null),
-                goalsApi.getByEmployee(employeeId).catch(() => [])
+                pdisApi.getByEmployee(empId).then(res => {
+                    console.log('AXON_DEBUG: PDIs fetched:', res);
+                    return res;
+                }).catch(err => {
+                    console.error('AXON_DEBUG: Error fetching PDIs:', err);
+                    return [];
+                }),
+                evaluationsApi.getPending(empId).catch(() => []),
+                evaluationsApi.getByEmployee(empId).catch(() => []),
+                discApi.getPendingForEmployee(empId).catch(() => []),
+                discApi.getLatest(empId).catch(() => null),
+                goalsApi.getByEmployee(empId).catch(() => [])
             ]);
 
             // Filter to show relevant PDIs (Active, Draft, Pending Approval)
             const allPDIs = Array.isArray(pdis) ? pdis : [];
-            // TEMPORARY DEBUG: Showing ALL PDIs to diagnose visibility issue
-            // const relevantPDIs = allPDIs.filter(p =>
-            //     ['ACTIVE', 'DRAFT', 'PENDING_APPROVAL'].includes(p.status)
-            // );
+            console.log('AXON_DEBUG: Setting Active PDIs:', allPDIs);
             setActivePDIs(allPDIs);
             setPendingEvaluations(Array.isArray(pendingEvals) ? pendingEvals : []);
             setLatestEvaluation(Array.isArray(historyEvals) && historyEvals.length > 0 ? historyEvals[0] : null);
@@ -436,6 +445,9 @@ export function EmployeePerformanceView() {
             <div className="mt-8 p-4 bg-slate-100 rounded text-xs font-mono text-slate-500">
                 <p><strong>DEBUG INFO (Temporário):</strong></p>
                 <p>User ID: {user?.id}</p>
+                <p>Tenant ID: {user?.tenantId || 'N/A'}</p>
+                <p>Employee ID: {employeeId || 'N/A'}</p>
+                <p>Employee Name: {employeeName || 'N/A'}</p>
                 <p>PDIs Encontrados: {activePDIs.length}</p>
                 <ul>
                     {activePDIs.map(p => (

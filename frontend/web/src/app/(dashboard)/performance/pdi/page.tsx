@@ -589,6 +589,9 @@ function NewPDIDialog({ open, onOpenChange, onSuccess, currentUserName, isManage
         }
       }
 
+      console.log('AXON_DEBUG: Creating PDI for targetEmployeeId:', targetEmployeeId);
+      console.log('AXON_DEBUG: Target Employee Name:', targetEmployeeName);
+
       await pdisApi.create({
         title,
         description,
