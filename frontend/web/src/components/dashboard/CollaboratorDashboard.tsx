@@ -12,7 +12,8 @@ import {
     PlayCircle,
     ArrowRight,
     FileText,
-    HelpCircle
+    HelpCircle,
+    BrainCircuit
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,7 +23,7 @@ import { vacationApi, VacationPeriod } from '@/lib/api/vacation';
 import { enrollmentsApi, Enrollment } from '@/lib/api/learning';
 import { Progress } from '@/components/ui/progress';
 import { useRouter } from 'next/navigation';
-import { pdisApi, PDI } from '@/lib/api/performance';
+import { pdisApi, PDI, discApi, DiscAssignment } from '@/lib/api/performance';
 import { employeesApi } from '@/lib/api/employees';
 
 export function CollaboratorDashboard() {
@@ -32,6 +33,7 @@ export function CollaboratorDashboard() {
     const [vacationPeriods, setVacationPeriods] = useState<VacationPeriod[]>([]);
     const [activeEnrollments, setActiveEnrollments] = useState<Enrollment[]>([]);
     const [activePDIs, setActivePDIs] = useState<PDI[]>([]);
+    const [pendingDisc, setPendingDisc] = useState<DiscAssignment[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -41,11 +43,12 @@ export function CollaboratorDashboard() {
                 const employee = await employeesApi.getMe().catch(() => null);
                 const employeeId = employee?.id;
 
-                const [records, periods, enrollments, pdis] = await Promise.all([
+                const [records, periods, enrollments, pdis, disc] = await Promise.all([
                     timesheetApi.getTodayRecords().catch(() => [] as TimeRecord[]),
                     vacationApi.getMyPeriods().catch(() => [] as VacationPeriod[]),
                     employeeId ? enrollmentsApi.getActiveByEmployee(employeeId).catch(() => [] as Enrollment[]) : Promise.resolve([] as Enrollment[]),
-                    employeeId ? pdisApi.getByEmployee(employeeId).catch(() => [] as PDI[]) : Promise.resolve([] as PDI[])
+                    employeeId ? pdisApi.getByEmployee(employeeId).catch(() => [] as PDI[]) : Promise.resolve([] as PDI[]),
+                    employeeId ? discApi.getPendingForEmployee(employeeId).catch(() => [] as DiscAssignment[]) : Promise.resolve([] as DiscAssignment[])
                 ]);
 
                 setTodayRecords(Array.isArray(records) ? records : []);
@@ -56,6 +59,7 @@ export function CollaboratorDashboard() {
                 const allPDIs = Array.isArray(pdis) ? pdis : [];
                 const relevantPDIs = allPDIs.filter(p => ['ACTIVE', 'DRAFT', 'PENDING_APPROVAL'].includes(p.status));
                 setActivePDIs(relevantPDIs);
+                setPendingDisc(Array.isArray(disc) ? disc : []);
             } catch (error) {
                 console.error('Error loading collaborator dashboard data:', error);
             } finally {
@@ -269,6 +273,24 @@ export function CollaboratorDashboard() {
                             Notificações do RH
                         </h2>
                         <div className="space-y-4">
+                            {pendingDisc.map((disc) => (
+                                <div key={disc.id} className="flex items-start gap-4 p-5 bg-white rounded-2xl shadow-sm border-l-4 border-l-orange-500 border-orange-100 hover:border-orange-200 transition-all cursor-pointer" onClick={() => router.push(`/performance/disc`)}>
+                                    <div className="p-3 bg-orange-50 rounded-xl text-orange-600">
+                                        <BrainCircuit className="w-6 h-6" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="flex items-center justify-between mb-1">
+                                            <h5 className="font-bold text-orange-900 uppercase text-xs tracking-wider">Mapeamento Comportamental</h5>
+                                            <span className="text-[10px] text-orange-400 font-medium bg-orange-50 px-2 py-0.5 rounded-full">Pendente</span>
+                                        </div>
+                                        <h4 className="font-bold text-gray-900 mb-1">Realizar Teste DISC</h4>
+                                        <p className="text-sm text-gray-500 leading-relaxed">
+                                            Um novo teste DISC foi solicitado para você. Clique para iniciar o seu mapeamento de perfil comportamental.
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+
                             {activePDIs.map((pdi) => (
                                 <div key={pdi.id} className="flex items-start gap-4 p-5 bg-white rounded-2xl shadow-sm border-l-4 border-l-indigo-500 border-indigo-100 hover:border-indigo-200 transition-all cursor-pointer" onClick={() => router.push(`/performance/pdi/${pdi.id}`)}>
                                     <div className="p-3 bg-indigo-50 rounded-xl text-indigo-600">
