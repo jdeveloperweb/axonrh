@@ -37,7 +37,7 @@ import {
     DiscEvaluation,
     Goal
 } from '@/lib/api/performance';
-import { employeesApi } from '@/lib/api/employees';
+import { employeesApi, Employee } from '@/lib/api/employees';
 import { useAuthStore } from '@/stores/auth-store';
 import { cn } from '@/lib/utils';
 
@@ -55,7 +55,6 @@ export function EmployeePerformanceView() {
     const [activePDIs, setActivePDIs] = useState<PDI[]>([]);
     const [employeeId, setEmployeeId] = useState<string | null>(null);
     const [employeeName, setEmployeeName] = useState<string | null>(null);
-    const [candidates, setCandidates] = useState<Employee[]>([]);
     const [pendingEvaluations, setPendingEvaluations] = useState<Evaluation[]>([]);
     const [latestEvaluation, setLatestEvaluation] = useState<Evaluation | null>(null);
     const [pendingDisc, setPendingDisc] = useState<DiscAssignment[]>([]);
@@ -79,9 +78,6 @@ export function EmployeePerformanceView() {
 
             if (!employee) {
                 console.warn('AXON_DEBUG: Colaborador não encontrado para este usuário.');
-                // Fetch list of employees to see if we can find Jaime
-                const allEmps = await employeesApi.list({ size: 100 }).catch(() => ({ content: [] }));
-                setCandidates(allEmps.content);
                 setLoading(false);
                 return;
             }
@@ -445,31 +441,6 @@ export function EmployeePerformanceView() {
                     </Card>
 
                 </div>
-            </div>
-            <div className="mt-8 p-4 bg-slate-100 rounded text-xs font-mono text-slate-500">
-                <p><strong>DEBUG INFO (Temporário):</strong></p>
-                <p>User ID: {user?.id}</p>
-                <p>Tenant ID: {user?.tenantId || 'N/A'}</p>
-                <p>Employee ID: {employeeId || 'N/A'}</p>
-                <p>Employee Name: {employeeName || 'N/A'}</p>
-                <p>PDIs Encontrados: {activePDIs.length}</p>
-
-                {candidates.length > 0 && (
-                    <div className="mt-2 border-t pt-2">
-                        <p><strong>CANDIDATOS ENCONTRADOS NO TENANT:</strong></p>
-                        <ul className="list-disc pl-4">
-                            {candidates.map(c => (
-                                <li key={c.id}>Name: {c.fullName} | ID: {c.id} | Email: {c.email} | UserID: {c.userId || 'NULL'}</li>
-                            ))}
-                        </ul>
-                        <p className="mt-1 text-red-500">Se o seu nome está na lista com UserID NULL, o vínculo está quebrado.</p>
-                    </div>
-                )}
-                <ul>
-                    {activePDIs.map(p => (
-                        <li key={p.id}>ID: {p.id} | Status: {p.status} | Title: {p.title} | EmpID: {p.employeeId}</li>
-                    ))}
-                </ul>
             </div>
         </div>
     );

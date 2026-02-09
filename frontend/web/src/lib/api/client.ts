@@ -43,6 +43,9 @@ api.interceptors.request.use(
           config.headers['X-User-Id'] = storedUserId;
         }
       }
+      if (user?.email) {
+        config.headers['X-User-Email'] = user.email;
+      }
     }
 
     return config;

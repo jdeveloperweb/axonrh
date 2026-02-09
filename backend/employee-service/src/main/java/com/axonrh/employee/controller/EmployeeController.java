@@ -330,8 +330,9 @@ public class EmployeeController {
     @GetMapping("/me")
     @Operation(summary = "Busca dados do colaborador logado")
     public ResponseEntity<EmployeeResponse> getMe(
-            @RequestHeader("X-User-Id") UUID userId) {
-        log.info("Buscando dados do colaborador para o usuario: {}", userId);
-        return ResponseEntity.ok(employeeService.findByUserId(userId));
+            @RequestHeader("X-User-Id") UUID userId,
+            @RequestHeader(value = "X-User-Email", required = false) String email) {
+        log.info("Buscando dados do colaborador para o usuario: {} (email: {})", userId, email);
+        return ResponseEntity.ok(employeeService.findByUserId(userId, email));
     }
 }

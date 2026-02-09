@@ -656,11 +656,33 @@ public class EmployeeService {
             log.error("Erro ao publicar evento de desligamento: {}", e.getMessage());
         }
     }
-    @Transactional(readOnly = true)
-    public EmployeeResponse findByUserId(UUID userId) {
+    @Transactional
+    public EmployeeResponse findByUserId(UUID userId, String email) {
         UUID tenantId = getTenantId();
-        Employee employee = employeeRepository.findByUserIdWithRelations(tenantId, userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Colaborador nao encontrado para o usuario: " + userId));
-        return employeeMapper.toResponse(employee);
+        
+        // 1. Tenta buscar pelo UserID vinculado
+        Optional<Employee> employeeOpt = employeeRepository.findByUserIdWithRelations(tenantId, userId);
+        
+        if (employeeOpt.isPresent()) {
+            return employeeMapper.toResponse(employeeOpt.get());
+        }
+
+        // 2. Se não encontrou, tenta buscar pelo e-mail (Auto-heal)
+        if (email != null && !email.isBlank()) {
+            log.info(">>> [AUTO-HEAL] Tentando vincular usuario {} via email: {}", userId, email);
+            Optional<Employee> byEmail = employeeRepository.findByTenantIdAndEmail(tenantId, email);
+            
+            if (byEmail.isPresent()) {
+                Employee employee = byEmail.get();
+                if (employee.getUserId() == null) {
+                    log.info(">>> [AUTO-HEAL] Vinculando UserID {} ao colaborador {} ({})", userId, employee.getId(), employee.getFullName());
+                    employee.setUserId(userId);
+                    employeeRepository.save(employee);
+                }
+                return employeeMapper.toResponse(employee);
+            }
+        }
+
+        throw new ResourceNotFoundException("Colaborador nao encontrado para o usuario: " + userId);
     }
 }
