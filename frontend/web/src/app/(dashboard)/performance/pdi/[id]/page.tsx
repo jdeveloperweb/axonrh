@@ -77,6 +77,67 @@ const ACTION_STATUS_CONFIG: Record<string, { label: string; color: string; icon:
   CANCELLED: { label: 'Cancelada', color: 'text-red-500', icon: <AlertCircle className="h-4 w-4" /> },
 };
 
+// ==================== Components ====================
+
+function StatCard({
+  title,
+  value,
+  subtitle,
+  icon,
+  variant = 'default',
+  className
+}: {
+  title: string;
+  value: string | number;
+  subtitle?: string;
+  icon: React.ReactNode;
+  variant?: 'default' | 'blue' | 'green' | 'amber' | 'red' | 'purple';
+  className?: string
+}) {
+  const variants = {
+    default: 'bg-slate-50 text-slate-600',
+    blue: 'bg-blue-50 text-blue-600',
+    green: 'bg-emerald-50 text-emerald-600',
+    amber: 'bg-amber-50 text-amber-600',
+    red: 'bg-red-50 text-red-600',
+    purple: 'bg-violet-50 text-violet-600',
+  };
+
+  const iconStyles = {
+    default: 'bg-slate-100 text-slate-600',
+    blue: 'bg-blue-100 text-blue-600',
+    green: 'bg-emerald-100 text-emerald-600',
+    amber: 'bg-amber-100 text-amber-600',
+    red: 'bg-red-100 text-red-600',
+    purple: 'bg-violet-100 text-violet-600',
+  };
+
+  return (
+    <Card className={`border-none shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden relative group ${className}`}>
+      <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-transparent to-current opacity-[0.03] rounded-full -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-700 ease-out ${variants[variant]}`} />
+      <CardContent className="p-6">
+        <div className="flex items-start justify-between mb-4 relative z-10">
+          <div className={`p-3 rounded-xl ${iconStyles[variant]} shadow-sm`}>
+            {icon}
+          </div>
+          {variant === 'green' && <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />}
+        </div>
+        <div className="relative z-10">
+          <p className="text-sm font-medium text-slate-500 mb-1">{title}</p>
+          <div className="flex items-baseline gap-2">
+            <h3 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+              {value}
+            </h3>
+          </div>
+          {subtitle && (
+            <p className="text-xs font-medium text-slate-400 mt-1">{subtitle}</p>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function PDIDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -97,10 +158,11 @@ export default function PDIDetailPage() {
 
   const handleDeletePDI = async () => {
     const confirmed = await confirm({
-      title: 'Excluir PDI',
-      description: `Tem certeza que deseja excluir o PDI "${pdi?.title}"? Esta acao nao pode ser desfeita.`,
+      title: 'Excluir PDI Permanentemente?',
+      description: `AVISO DE RISCO: Você está prestes a excluir o PDI "${pdi?.title}" e todo o seu histórico. Esta ação é irreversível e não pode ser desfeita.`,
       variant: 'destructive',
-      confirmLabel: 'Excluir'
+      confirmLabel: 'Entendo o risco, Excluir',
+      cancelLabel: 'Cancelar'
     });
 
     if (!confirmed) return;
@@ -337,177 +399,190 @@ export default function PDIDetailPage() {
   const totalActualHours = pdi.actions.reduce((acc, a) => acc + (a.actualHours || 0), 0);
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-8 pb-12 animate-in fade-in duration-500">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link href="/performance">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-        </Link>
-        <div className="flex-1">
-          <h1 className="text-2xl font-black tracking-tight">{pdi.title}</h1>
-          <p className="text-muted-foreground">{pdi.employeeName}</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Link href="/performance/pdi">
+            <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
+              <ArrowLeft className="h-5 w-5 text-slate-500" />
+            </Button>
+          </Link>
+          <div>
+            <div className="flex items-center gap-3 mb-1">
+              <Badge className={`${statusConfig.bgColor} ${statusConfig.textColor} hover:${statusConfig.bgColor} px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide border-0`}>
+                {statusConfig.label}
+              </Badge>
+              {isOverdue && (
+                <Badge variant="destructive" className="px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide bg-red-100 text-red-700 hover:bg-red-100 border-0">
+                  Atrasado
+                </Badge>
+              )}
+            </div>
+            <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">{pdi.title}</h1>
+            <p className="text-slate-500 font-medium flex items-center gap-2 mt-1">
+              <User className="h-4 w-4" /> {pdi.employeeName}
+            </p>
+          </div>
         </div>
-        <Badge className={`${statusConfig.bgColor} ${statusConfig.textColor} px-3 py-1 text-sm font-bold`}>
-          {statusConfig.label}
-        </Badge>
 
-        {/* Delete PDI button for Authorized Users */}
-        {(user?.roles?.some(r => ['ADMIN', 'RH', 'GESTOR_RH', 'ANALISTA_DP', 'MANAGER', 'GESTOR', 'LIDER'].includes(r)) || pdi.employeeId === currentEmployee?.id) &&
-          (pdi.status === 'DRAFT' || pdi.status === 'ACTIVE') && (
-            <Button
-              variant="outline"
-              size="icon"
-              className="text-red-500 hover:text-red-700 hover:bg-red-50 border-red-100"
-              onClick={handleDeletePDI}
-              disabled={isDeleting}
-            >
-              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-5 w-5" />}
+        <div className="flex items-center gap-2">
+          {/* Delete PDI button for Authorized Users */}
+          {(user?.roles?.some(r => ['ADMIN', 'RH', 'GESTOR_RH', 'ANALISTA_DP', 'MANAGER', 'GESTOR', 'LIDER'].includes(r)) || pdi.employeeId === currentEmployee?.id) &&
+            (pdi.status === 'DRAFT' || pdi.status === 'ACTIVE') && (
+              <Button
+                variant="outline"
+                className="text-red-500 hover:text-red-700 hover:bg-red-50 border-red-200 font-bold"
+                onClick={handleDeletePDI}
+                disabled={isDeleting}
+              >
+                {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
+                Excluir PDI
+              </Button>
+            )}
+          {isEditable && (
+            <Button onClick={() => setNewActionOpen(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-10 px-5 shadow-lg shadow-indigo-200">
+              <Plus className="h-4 w-4 mr-2" />
+              Nova Ação
             </Button>
           )}
+        </div>
       </div>
 
-      {/* Info Cards - Redesigned */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="border-none shadow-sm">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <User className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground font-medium">Colaborador</p>
-                <p className="font-bold text-sm">{pdi.employeeName}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Info Cards - Premium Design */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <StatCard
+          title="Colaborador"
+          value={pdi.employeeName.split(' ')[0]}
+          subtitle="Responsável"
+          icon={<User className="h-6 w-6" />}
+          variant="blue"
+        />
 
-        <Card className="border-none shadow-sm">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                <Users className="h-5 w-5 text-blue-500" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground font-medium">Gestor</p>
-                <p className="font-bold text-sm">{pdi.managerName || 'Nao definido'}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Gestor"
+          value={pdi.managerName ? pdi.managerName.split(' ')[0] : 'N/A'}
+          subtitle="Aprovador"
+          icon={<Users className="h-6 w-6" />}
+          variant="purple"
+        />
 
-        <Card className={`border-none shadow-sm ${isOverdue ? 'ring-2 ring-red-200' : ''}`}>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${isOverdue ? 'bg-red-500/10' : 'bg-amber-500/10'}`}>
-                <Calendar className={`h-5 w-5 ${isOverdue ? 'text-red-500' : 'text-amber-500'}`} />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground font-medium">Prazo</p>
-                <p className={`font-bold text-sm ${isOverdue ? 'text-red-600' : ''}`}>
-                  {pdi.endDate ? new Date(pdi.endDate).toLocaleDateString('pt-BR') : 'Sem prazo'}
-                </p>
-                {daysRemaining !== null && (
-                  <p className={`text-[10px] font-bold ${isOverdue ? 'text-red-500' : daysRemaining <= 7 ? 'text-amber-500' : 'text-muted-foreground'}`}>
-                    {isOverdue ? `${Math.abs(daysRemaining)} dias atrasado` : `${daysRemaining} dias restantes`}
-                  </p>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Prazo Final"
+          value={pdi.endDate ? new Date(pdi.endDate).toLocaleDateString('pt-BR') : 'Sem prazo'}
+          subtitle={isOverdue ? `${Math.abs(daysRemaining || 0)} dias atrasado` : `${daysRemaining} dias restantes`}
+          icon={<Calendar className="h-6 w-6" />}
+          variant={isOverdue ? 'red' : 'amber'}
+        />
 
-        <Card className="border-none shadow-sm">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-indigo-500/10 flex items-center justify-center">
-                <Clock className="h-5 w-5 text-indigo-500" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground font-medium">Horas</p>
-                <p className="font-bold text-sm">{totalActualHours}h / {totalEstimatedHours}h</p>
-                <p className="text-[10px] text-muted-foreground font-bold">investidas / estimadas</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Investimento"
+          value={`${totalActualHours}h`}
+          subtitle={`de ${totalEstimatedHours}h estimadas`}
+          icon={<Clock className="h-6 w-6" />}
+          variant="green"
+        />
       </div>
 
       {/* Progress Section - Enhanced */}
-      <Card className="border-none shadow-md overflow-hidden">
-        <div className="h-1 bg-primary" style={{ width: `${pdi.overallProgress}%` }} />
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
-              Progresso do PDI
-            </CardTitle>
-            <span className="text-3xl font-black text-primary">{pdi.overallProgress}%</span>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <Card className="col-span-1 md:col-span-4 border-none shadow-md overflow-hidden bg-white dark:bg-slate-900 ring-1 ring-slate-100 dark:ring-slate-800">
+          <div className={`h-1.5 w-full bg-slate-100 dark:bg-slate-800`}>
+            <div className="h-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 transition-all duration-1000 ease-out" style={{ width: `${pdi.overallProgress}%` }} />
           </div>
-        </CardHeader>
-        <CardContent>
-          <Progress value={pdi.overallProgress} className="h-4 mb-6" />
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <BarChart3 className="h-5 w-5 text-indigo-500" />
+                  Progresso Geral
+                </CardTitle>
+                <CardDescription>Acompanhe a evolução do seu plano</CardDescription>
+              </div>
+              <span className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+                {pdi.overallProgress}%
+              </span>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Progress value={pdi.overallProgress} className="h-3 mb-8 bg-slate-100 dark:bg-slate-800 [&>div]:bg-gradient-to-r [&>div]:from-blue-500 [&>div]:via-indigo-500 [&>div]:to-purple-500" />
 
-          <div className="grid grid-cols-3 gap-4">
-            <div className="text-center p-3 rounded-lg bg-slate-50">
-              <div className="flex items-center justify-center gap-1 mb-1">
-                <CircleDot className="h-4 w-4 text-slate-400" />
-                <span className="text-2xl font-black text-slate-600">{pendingActions}</span>
+            <div className="grid grid-cols-3 gap-6">
+              <div className="text-center p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 transition-colors cursor-default group border border-slate-100 dark:border-slate-800">
+                <div className="flex items-center justify-center gap-2 mb-2 group-hover:scale-110 transition-transform">
+                  <div className="p-2 bg-slate-200 dark:bg-slate-700 rounded-full">
+                    <CircleDot className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+                  </div>
+                  <span className="text-2xl font-black text-slate-700 dark:text-slate-200">{pendingActions}</span>
+                </div>
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Pendentes</p>
               </div>
-              <p className="text-xs font-medium text-muted-foreground">Pendentes</p>
-            </div>
-            <div className="text-center p-3 rounded-lg bg-blue-50">
-              <div className="flex items-center justify-center gap-1 mb-1">
-                <Play className="h-4 w-4 text-blue-500" />
-                <span className="text-2xl font-black text-blue-600">{inProgressActions}</span>
-              </div>
-              <p className="text-xs font-medium text-muted-foreground">Em Andamento</p>
-            </div>
-            <div className="text-center p-3 rounded-lg bg-green-50">
-              <div className="flex items-center justify-center gap-1 mb-1">
-                <CheckCircle2 className="h-4 w-4 text-green-500" />
-                <span className="text-2xl font-black text-green-600">{completedActions}</span>
-              </div>
-              <p className="text-xs font-medium text-muted-foreground">Concluidas</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Description, Objectives, Focus Areas */}
+              <div className="text-center p-4 rounded-2xl bg-blue-50 dark:bg-blue-900/10 hover:bg-blue-100 dark:hover:bg-blue-900/20 transition-colors cursor-default group border border-blue-100 dark:border-blue-900/20">
+                <div className="flex items-center justify-center gap-2 mb-2 group-hover:scale-110 transition-transform">
+                  <div className="p-2 bg-blue-200 dark:bg-blue-800 rounded-full">
+                    <Play className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <span className="text-2xl font-black text-blue-700 dark:text-blue-300">{inProgressActions}</span>
+                </div>
+                <p className="text-xs font-bold uppercase tracking-wider text-blue-500 dark:text-blue-400">Em Andamento</p>
+              </div>
+
+              <div className="text-center p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-900/10 hover:bg-emerald-100 dark:hover:bg-emerald-900/20 transition-colors cursor-default group border border-emerald-100 dark:border-emerald-900/20">
+                <div className="flex items-center justify-center gap-2 mb-2 group-hover:scale-110 transition-transform">
+                  <div className="p-2 bg-emerald-200 dark:bg-emerald-800 rounded-full">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <span className="text-2xl font-black text-emerald-700 dark:text-emerald-300">{completedActions}</span>
+                </div>
+                <p className="text-xs font-bold uppercase tracking-wider text-emerald-500 dark:text-emerald-400">Concluídas</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Description, Objectives, Focus Areas combined */}
       {(pdi.description || pdi.objectives || pdi.focusAreas) && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {pdi.description && (
-            <Card className="border-none shadow-sm">
+            <Card className="border-none shadow-sm h-full hover:shadow-md transition-shadow relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-1 h-full bg-slate-200"></div>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-bold text-muted-foreground uppercase tracking-wide">Descricao</CardTitle>
+                <CardTitle className="text-sm font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                  <BookOpen className="w-4 h-4" /> Descrição
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-slate-700 leading-relaxed">{pdi.description}</p>
+                <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium">{pdi.description}</p>
               </CardContent>
             </Card>
           )}
           {pdi.objectives && (
-            <Card className="border-none shadow-sm">
+            <Card className="border-none shadow-sm h-full hover:shadow-md transition-shadow relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-1 h-full bg-indigo-200"></div>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-bold text-muted-foreground uppercase tracking-wide">Objetivos</CardTitle>
+                <CardTitle className="text-sm font-bold text-indigo-500 uppercase tracking-widest flex items-center gap-2">
+                  <Target className="w-4 h-4" /> Objetivos
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">{pdi.objectives}</p>
+                <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line font-medium">{pdi.objectives}</p>
               </CardContent>
             </Card>
           )}
           {pdi.focusAreas && (
-            <Card className="border-none shadow-sm">
+            <Card className="border-none shadow-sm h-full hover:shadow-md transition-shadow relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-1 h-full bg-emerald-200"></div>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-bold text-muted-foreground uppercase tracking-wide">Areas de Foco</CardTitle>
+                <CardTitle className="text-sm font-bold text-emerald-500 uppercase tracking-widest flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4" /> Áreas de Foco
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2">
                   {pdi.focusAreas.split(',').map((area, idx) => (
-                    <Badge key={idx} variant="secondary" className="font-medium">
+                    <Badge key={idx} variant="secondary" className="font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-100 px-3 py-1">
                       {area.trim()}
                     </Badge>
                   ))}
@@ -519,58 +594,62 @@ export default function PDIDetailPage() {
       )}
 
       {/* Actions Section - Enhanced */}
-      <Card className="border-none shadow-md">
-        <CardHeader>
+      <Card className="border-none shadow-md overflow-hidden bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+        <CardHeader className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 pb-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <CardTitle className="flex items-center gap-2">
-                <Target className="h-5 w-5" />
-                Acoes de Desenvolvimento
+              <CardTitle className="flex items-center gap-2 text-xl font-black tracking-tight text-slate-900 dark:text-white">
+                <Target className="h-5 w-5 text-indigo-500" />
+                Ações de Desenvolvimento
               </CardTitle>
-              <CardDescription>
-                {pdi.actions.length} acoes planejadas - {completedActions} concluidas
+              <CardDescription className="font-medium text-slate-500 mt-1">
+                {pdi.actions.length} ações planejadas - {completedActions} concluídas
               </CardDescription>
             </div>
             <div className="flex gap-2">
               <Select value={actionFilter} onValueChange={setActionFilter}>
-                <SelectTrigger className="w-[160px]">
+                <SelectTrigger className="w-[160px] bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 h-9">
                   <SelectValue placeholder="Filtrar" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="ALL">Todas</SelectItem>
                   <SelectItem value="PENDING">Pendentes</SelectItem>
                   <SelectItem value="IN_PROGRESS">Em Andamento</SelectItem>
-                  <SelectItem value="COMPLETED">Concluidas</SelectItem>
+                  <SelectItem value="COMPLETED">Concluídas</SelectItem>
                 </SelectContent>
               </Select>
               {isEditable && (
-                <Button onClick={() => setNewActionOpen(true)}>
+                <Button onClick={() => setNewActionOpen(true)} size="sm" className="h-9 font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm">
                   <Plus className="h-4 w-4 mr-2" />
-                  Nova Acao
+                  Nova Ação
                 </Button>
               )}
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           {pdi.actions.length === 0 ? (
-            <div className="text-center py-12 border-2 border-dashed rounded-xl">
-              <Target className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-lg font-medium text-muted-foreground mb-2">Nenhuma acao cadastrada</p>
-              <p className="text-sm text-muted-foreground mb-6">Adicione acoes de desenvolvimento para acompanhar o progresso</p>
+            <div className="text-center py-16 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl bg-slate-50/50 dark:bg-slate-800/20">
+              <div className="bg-indigo-50 dark:bg-indigo-900/30 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Target className="h-8 w-8 text-indigo-500 dark:text-indigo-400" />
+              </div>
+              <p className="text-lg font-bold text-slate-900 dark:text-white mb-2">Nenhuma ação cadastrada</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 max-w-sm mx-auto leading-relaxed">
+                Adicione ações de desenvolvimento para traçar o caminho até seus objetivos profissionais.
+              </p>
               {isEditable && (
-                <Button onClick={() => setNewActionOpen(true)}>
+                <Button onClick={() => setNewActionOpen(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 shadow-md shadow-indigo-200">
                   <Plus className="h-4 w-4 mr-2" />
-                  Adicionar primeira acao
+                  Adicionar primeira ação
                 </Button>
               )}
             </div>
           ) : filteredActions.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">Nenhuma acao com o filtro selecionado</p>
+            <div className="text-center py-12">
+              <p className="text-muted-foreground font-medium">Nenhuma ação com o filtro selecionado</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {filteredActions.map((action) => {
                 const actionStatus = ACTION_STATUS_CONFIG[action.status] || ACTION_STATUS_CONFIG['PENDING'];
                 const isCompleted = action.status === 'COMPLETED';
@@ -579,31 +658,31 @@ export default function PDIDetailPage() {
                 return (
                   <div
                     key={action.id}
-                    className={`relative border rounded-xl p-4 transition-all hover:shadow-sm ${isCompleted ? 'bg-green-50/50 border-green-100' :
-                      isDue ? 'bg-red-50/50 border-red-100' :
-                        action.status === 'IN_PROGRESS' ? 'bg-blue-50/50 border-blue-100' :
-                          'bg-white border-slate-100'
+                    className={`relative border rounded-2xl p-5 transition-all hover:shadow-md group ${isCompleted ? 'bg-emerald-50/50 border-emerald-100 hover:bg-emerald-50' :
+                      isDue ? 'bg-red-50/50 border-red-100 hover:bg-red-50' :
+                        action.status === 'IN_PROGRESS' ? 'bg-blue-50/50 border-blue-100 hover:bg-blue-50' :
+                          'bg-white border-slate-100 dark:bg-slate-900 dark:border-slate-800'
                       }`}
                   >
                     {/* Colored left border */}
-                    <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-xl ${getActionColor(action.actionType)}`} />
+                    <div className={`absolute left-0 top-0 bottom-0 w-1.5 rounded-l-2xl ${getActionColor(action.actionType)} group-hover:w-2 transition-all duration-300`} />
 
-                    <div className="flex items-start gap-4 pl-2">
-                      <div className={`h-10 w-10 rounded-lg ${getActionColor(action.actionType)} bg-opacity-10 flex items-center justify-center flex-shrink-0 ${actionStatus.color}`}>
-                        {isCompleted ? <CheckCircle2 className="h-5 w-5 text-green-500" /> : getActionIcon(action.actionType)}
+                    <div className="flex items-start gap-4 pl-3">
+                      <div className={`h-12 w-12 rounded-xl flex shadow-sm items-center justify-center flex-shrink-0 ${isCompleted ? 'bg-emerald-100 text-emerald-600' : `${getActionColor(action.actionType)} bg-opacity-10 ${actionStatus.color}`}`}>
+                        {isCompleted ? <CheckCircle2 className="h-6 w-6" /> : getActionIcon(action.actionType)}
                       </div>
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1">
-                            <h4 className={`font-bold ${isCompleted ? 'text-slate-400 line-through' : 'text-slate-900'}`}>
+                            <h4 className={`text-lg font-bold leading-tight ${isCompleted ? 'text-slate-400 line-through decoration-slate-300' : 'text-slate-900 dark:text-white'}`}>
                               {action.title}
                             </h4>
-                            <div className="flex items-center gap-2 mt-1">
-                              <Badge variant="outline" className="text-[10px] font-bold">
+                            <div className="flex items-center gap-2 mt-2">
+                              <Badge variant="outline" className={`text-[10px] font-bold px-2 py-0.5 uppercase tracking-wide bg-white dark:bg-slate-800 ${getActionColor(action.actionType).replace('bg-', 'border-').replace('500', '200')} ${getActionColor(action.actionType).replace('bg-', 'text-').replace('500', '700')}`}>
                                 {ACTION_TYPES.find((t) => t.value === action.actionType)?.label || action.actionType}
                               </Badge>
-                              <span className={`text-xs font-bold flex items-center gap-1 ${actionStatus.color}`}>
+                              <span className={`text-xs font-bold flex items-center gap-1.5 ${actionStatus.color} bg-white dark:bg-slate-800 px-2 py-0.5 rounded-full shadow-sm border border-slate-100 dark:border-slate-700`}>
                                 {actionStatus.icon}
                                 {actionStatus.label}
                               </span>
@@ -612,22 +691,22 @@ export default function PDIDetailPage() {
                         </div>
 
                         {action.description && (
-                          <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
+                          <p className="text-sm text-slate-600 dark:text-slate-400 mt-3 line-clamp-2 leading-relaxed">
                             {action.description}
                           </p>
                         )}
 
-                        <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-muted-foreground">
+                        <div className="flex flex-wrap items-center gap-4 mt-4 text-xs font-medium text-slate-500">
                           {action.dueDate && (
-                            <span className={`flex items-center gap-1 ${isDue ? 'text-red-500 font-bold' : ''}`}>
-                              <Calendar className="h-3 w-3" />
+                            <span className={`flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded-md border border-slate-100 dark:border-slate-700 ${isDue ? 'text-red-600 bg-red-50 border-red-100 font-bold' : ''}`}>
+                              <Calendar className="h-3.5 w-3.5" />
                               {new Date(action.dueDate).toLocaleDateString('pt-BR')}
                               {isDue && ' (atrasada)'}
                             </span>
                           )}
                           {action.estimatedHours && (
-                            <span className="flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
+                            <span className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded-md border border-slate-100 dark:border-slate-700">
+                              <Clock className="h-3.5 w-3.5" />
                               {action.actualHours ? `${action.actualHours}h / ` : ''}{action.estimatedHours}h
                             </span>
                           )}
@@ -636,15 +715,15 @@ export default function PDIDetailPage() {
                               href={action.resourceUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex items-center gap-1 text-primary hover:underline font-medium"
+                              className="flex items-center gap-1.5 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 px-2 py-1 rounded-md transition-colors"
                             >
-                              <ExternalLink className="h-3 w-3" />
+                              <ExternalLink className="h-3.5 w-3.5" />
                               {action.resourceName || 'Recurso'}
                             </a>
                           )}
                           {action.mentorName && (
-                            <span className="flex items-center gap-1">
-                              <User className="h-3 w-3" />
+                            <span className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded-md border border-slate-100 dark:border-slate-700">
+                              <User className="h-3.5 w-3.5" />
                               Mentor: {action.mentorName}
                             </span>
                           )}
@@ -652,10 +731,10 @@ export default function PDIDetailPage() {
 
                         {/* Action Progress Slider */}
                         {!isCompleted && action.status === 'IN_PROGRESS' && isEditable && (
-                          <div className="mt-4 space-y-2 max-w-xs">
-                            <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-wider text-blue-600">
-                              <span>Progresso da Tarefa</span>
-                              <span className="bg-blue-100 px-1.5 py-0.5 rounded">{action.progress || 0}%</span>
+                          <div className="mt-5 space-y-2 max-w-sm bg-blue-50/50 p-3 rounded-xl border border-blue-100/50">
+                            <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-wider text-blue-700">
+                              <span className="flex items-center gap-1"><TrendingUp className="h-3 w-3" /> Progresso da Tarefa</span>
+                              <span className="bg-white px-2 py-0.5 rounded shadow-sm text-blue-600">{action.progress || 0}%</span>
                             </div>
                             <input
                               type="range"
@@ -664,22 +743,22 @@ export default function PDIDetailPage() {
                               step="5"
                               value={action.progress || 0}
                               onChange={(e) => handleUpdateActionProgress(action.id!, parseInt(e.target.value))}
-                              className="w-full h-1.5 bg-blue-100 rounded-lg appearance-none cursor-pointer accent-blue-600 hover:accent-blue-700 transition-all"
+                              className="w-full h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer accent-blue-600 hover:accent-blue-700 transition-all"
                             />
                           </div>
                         )}
                         {/* Action buttons */}
                         {!isCompleted && isEditable && (
-                          <div className="flex gap-2 mt-3">
+                          <div className="flex gap-2 mt-4 pt-3 border-t border-dashed border-slate-100">
                             {action.status === 'PENDING' && (
                               <Button
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleStartAction(action.id!)}
-                                className="h-8 text-xs font-bold"
+                                className="h-8 text-xs font-bold border-slate-200 hover:bg-slate-50 hover:text-indigo-600"
                               >
-                                <Play className="h-3 w-3 mr-1" />
-                                Iniciar
+                                <Play className="h-3 w-3 mr-1.5" />
+                                Iniciar Tarefa
                               </Button>
                             )}
                             {action.status === 'IN_PROGRESS' && (
@@ -689,34 +768,34 @@ export default function PDIDetailPage() {
                                   setSelectedAction(action);
                                   setCompleteActionOpen(true);
                                 }}
-                                className="h-8 text-xs font-bold bg-green-600 hover:bg-green-700"
+                                className="h-8 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shadow-emerald-200"
                               >
-                                <CheckCircle2 className="h-3 w-3 mr-1" />
-                                Concluir
+                                <CheckCircle2 className="h-3 w-3 mr-1.5" />
+                                Concluir Tarefa
                               </Button>
                             )}
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-8 text-xs text-red-500 hover:text-red-700 hover:bg-red-50"
+                              className="h-8 text-xs text-slate-400 hover:text-red-600 hover:bg-red-50 ml-auto"
                               onClick={() => handleRemoveAction(action.id!)}
                             >
-                              <Trash2 className="h-3 w-3" />
+                              <Trash2 className="h-3.5 w-3.5" />
                             </Button>
                           </div>
                         )}
 
                         {/* Completion notes */}
                         {action.completionNotes && (
-                          <div className="mt-3 p-3 bg-green-50 dark:bg-green-950 rounded-lg border border-green-100">
-                            <p className="text-xs font-bold text-green-700 dark:text-green-300 mb-1">
-                              Notas de Conclusao:
+                          <div className="mt-4 p-4 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-xl border border-emerald-100 dark:border-emerald-900/20">
+                            <p className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 mb-1 flex items-center gap-1">
+                              <CheckCircle2 className="h-3 w-3" /> Notas de Conclusão:
                             </p>
-                            <p className="text-sm text-green-600 dark:text-green-400">
+                            <p className="text-sm text-emerald-800 dark:text-emerald-300 font-medium">
                               {action.completionNotes}
                             </p>
                             {action.actualHours && (
-                              <p className="text-xs text-green-500 mt-1 font-medium">
+                              <p className="text-xs text-emerald-600 mt-2 font-bold bg-white/50 inline-block px-2 py-1 rounded-md border border-emerald-100">
                                 Tempo investido: {action.actualHours}h
                               </p>
                             )}
@@ -734,18 +813,27 @@ export default function PDIDetailPage() {
 
       {/* PDI Actions - Status-based */}
       {pdi.status === 'PENDING_APPROVAL' && (
-        <Card className="border-none shadow-sm bg-amber-50">
-          <CardContent className="py-6">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div>
-                <p className="font-bold text-amber-800">Aguardando sua Aprovação</p>
-                <p className="text-sm text-amber-600">Analise os objetivos e as ações propostas antes de aprovar.</p>
+        <Card className="border-none shadow-md bg-amber-50 dark:bg-amber-900/20 ring-1 ring-amber-100 dark:ring-amber-900/30 overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-amber-200/20 rounded-full -mr-20 -mt-20 blur-3xl" />
+          <CardContent className="py-8 relative z-10">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-amber-100 dark:bg-amber-900/40 rounded-xl">
+                  <Clock className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div>
+                  <p className="text-lg font-black text-amber-800 dark:text-amber-200">Aguardando sua Aprovação</p>
+                  <p className="text-sm font-medium text-amber-700/80 dark:text-amber-300/80 mt-1 max-w-xl">
+                    Este PDI foi submetido para sua revisão. Analise os objetivos, o prazo e as ações propostas.
+                    Você pode aprovar para iniciar o desenvolvimento ou solicitar ajustes.
+                  </p>
+                </div>
               </div>
-              <div className="flex gap-3">
-                <Button variant="outline" className="text-red-600 border-red-200 hover:bg-red-50" onClick={handleReject}>
-                  Recusar / Revisar
+              <div className="flex gap-3 w-full sm:w-auto">
+                <Button variant="outline" className="flex-1 sm:flex-none border-amber-200 text-amber-700 hover:bg-amber-100 hover:text-amber-800 font-bold bg-white" onClick={handleReject}>
+                  Solicitar Ajustes
                 </Button>
-                <Button onClick={handleApprove} className="bg-amber-600 hover:bg-amber-700 text-white font-bold">
+                <Button onClick={handleApprove} className="flex-1 sm:flex-none bg-amber-600 hover:bg-amber-700 text-white font-bold shadow-lg shadow-amber-200 dark:shadow-amber-900/20">
                   <CheckCircle2 className="h-4 w-4 mr-2" />
                   Aprovar PDI
                 </Button>
@@ -756,19 +844,28 @@ export default function PDIDetailPage() {
       )}
 
       {pdi.status === 'DRAFT' && (
-        <Card className="border-none shadow-sm bg-slate-50">
-          <CardContent className="py-6">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div>
-                <p className="font-bold text-slate-700">PDI em modo Rascunho</p>
-                <p className="text-sm text-muted-foreground">Ative o PDI ou envie para aprovacao do gestor</p>
+        <Card className="border-none shadow-md bg-slate-50 dark:bg-slate-800/50 ring-1 ring-slate-200 dark:ring-slate-700 overflow-hidden relative">
+          <CardContent className="py-8 relative z-10">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-white dark:bg-slate-700 rounded-xl shadow-sm border border-slate-100 dark:border-slate-600">
+                  <Briefcase className="h-6 w-6 text-slate-600 dark:text-slate-300" />
+                </div>
+                <div>
+                  <p className="text-lg font-black text-slate-800 dark:text-white">PDI em modo Rascunho</p>
+                  <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1 max-w-xl">
+                    Este plano ainda não está ativo. Finalize o planejamento das ações e envie para aprovação do gestor
+                    ou ative-o diretamente se você tiver permissão.
+                  </p>
+                </div>
               </div>
-              <div className="flex gap-3">
-                <Button variant="outline" onClick={handleActivate}>
+              <div className="flex gap-3 w-full sm:w-auto">
+                <Button variant="outline" onClick={handleActivate} className="flex-1 sm:flex-none font-bold border-slate-300 text-slate-700">
                   Ativar Diretamente
                 </Button>
-                <Button onClick={handleSubmitForApproval} className="font-bold">
-                  Submeter para Aprovacao
+                <Button onClick={handleSubmitForApproval} className="flex-1 sm:flex-none font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200 dark:shadow-indigo-900/20">
+                  <Play className="h-4 w-4 mr-2" />
+                  Submeter para Aprovação
                 </Button>
               </div>
             </div>
@@ -777,19 +874,24 @@ export default function PDIDetailPage() {
       )}
 
       {pdi.status === 'ACTIVE' && pdi.overallProgress === 100 && (
-        <Card className="border-none shadow-sm bg-green-50">
-          <CardContent className="py-6">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <CheckCircle2 className="h-8 w-8 text-green-500" />
+        <Card className="border-none shadow-md bg-emerald-50 dark:bg-emerald-900/20 ring-1 ring-emerald-100 dark:ring-emerald-900/30 overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-200/20 rounded-full -mr-20 -mt-20 blur-3xl animate-pulse" />
+          <CardContent className="py-8 relative z-10">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-emerald-100 dark:bg-emerald-900/40 rounded-full shadow-sm animate-bounce">
+                  <CheckCircle2 className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
+                </div>
                 <div>
-                  <p className="font-bold text-green-800">Todas as acoes concluidas!</p>
-                  <p className="text-sm text-green-600">Marque o PDI como concluido</p>
+                  <p className="text-xl font-black text-emerald-800 dark:text-emerald-200">Parabéns! Todas as ações concluídas!</p>
+                  <p className="text-sm font-medium text-emerald-700/80 dark:text-emerald-300/80 mt-1">
+                    Você atingiu 100% do progresso neste PDI. Marque-o como concluído para finalizar o ciclo.
+                  </p>
                 </div>
               </div>
-              <Button onClick={handleCompletePDI} className="bg-green-600 hover:bg-green-700 font-bold">
-                <CheckCircle2 className="h-4 w-4 mr-2" />
-                Concluir PDI
+              <Button onClick={handleCompletePDI} size="lg" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black shadow-xl shadow-emerald-200 dark:shadow-emerald-900/20 px-8">
+                <CheckCircle2 className="h-5 w-5 mr-2" />
+                CONCLUIR PDI
               </Button>
             </div>
           </CardContent>
