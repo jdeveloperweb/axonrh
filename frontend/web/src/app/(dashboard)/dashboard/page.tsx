@@ -797,37 +797,55 @@ export default function DashboardPage() {
   }
 
   const ViewToggle = () => (
-    <div className="relative group p-1 bg-slate-100/50 backdrop-blur-sm border border-slate-200/60 rounded-full flex items-center shadow-inner gap-1 w-fit">
-      {/* Animated Background Pill */}
+    <div className="relative p-1.5 bg-gradient-to-b from-white to-slate-50 border border-slate-200/80 rounded-2xl flex items-center shadow-lg shadow-slate-200/50 w-fit backdrop-blur-xl">
+      {/* Animated Sliding Background */}
       <div
-        className={`absolute top-1 bottom-1 rounded-full bg-white shadow-sm transition-all duration-500 ease-out z-0 border border-slate-100/50 ${viewMode === 'manager'
-          ? 'left-1 w-[calc(50%-2px)] translate-x-0 bg-gradient-to-r from-white to-slate-50'
-          : 'left-1 w-[calc(50%-2px)] translate-x-[100%] bg-gradient-to-r from-white to-slate-50'
+        className={`absolute top-1.5 bottom-1.5 rounded-xl shadow-md transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) z-0 ${viewMode === 'manager'
+          ? 'left-1.5 w-[calc(50%-6px)] bg-gradient-to-br from-indigo-500 via-indigo-600 to-violet-600 shadow-indigo-300/40 translate-x-0'
+          : 'left-1.5 w-[calc(50%-6px)] bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-600 shadow-blue-300/40 translate-x-[104%]'
           }`}
       />
 
       <button
         onClick={() => setViewMode('manager')}
-        className={`relative z-10 flex items-center justify-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 outline-none focus:ring-2 focus:ring-indigo-100 ${viewMode === 'manager'
-          ? 'text-indigo-600 scale-[1.02]'
-          : 'text-slate-500 hover:text-slate-700'
+        className={`relative z-10 flex items-center justify-center gap-2.5 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 min-w-[150px] group ${viewMode === 'manager'
+          ? 'text-white'
+          : 'text-slate-500 hover:text-slate-800'
           }`}
       >
-        <div className={`p-1 rounded-full transition-colors duration-300 ${viewMode === 'manager' ? 'bg-indigo-100 text-indigo-600' : 'bg-transparent text-current'}`}>
+        <div className={`relative p-1.5 rounded-lg transition-all duration-300 ${viewMode === 'manager'
+          ? 'bg-white/20 backdrop-blur-sm'
+          : 'bg-slate-100 group-hover:bg-slate-200'
+          }`}>
           <ShieldCheck className="w-4 h-4" />
+          {viewMode === 'manager' && (
+            <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-yellow-400 border border-indigo-500"></span>
+            </span>
+          )}
         </div>
         <span className="tracking-tight">Visão Gestor</span>
       </button>
 
       <button
         onClick={() => setViewMode('collaborator')}
-        className={`relative z-10 flex items-center justify-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 outline-none focus:ring-2 focus:ring-blue-100 ${viewMode === 'collaborator'
-          ? 'text-blue-600 scale-[1.02]'
-          : 'text-slate-500 hover:text-slate-700'
+        className={`relative z-10 flex items-center justify-center gap-2.5 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 min-w-[150px] group ${viewMode === 'collaborator'
+          ? 'text-white'
+          : 'text-slate-500 hover:text-slate-800'
           }`}
       >
-        <div className={`p-1 rounded-full transition-colors duration-300 ${viewMode === 'collaborator' ? 'bg-blue-100 text-blue-600' : 'bg-transparent text-current'}`}>
+        <div className={`relative p-1.5 rounded-lg transition-all duration-300 ${viewMode === 'collaborator'
+          ? 'bg-white/20 backdrop-blur-sm'
+          : 'bg-slate-100 group-hover:bg-slate-200'
+          }`}>
           <LineChart className="w-4 h-4" />
+          {viewMode === 'collaborator' && (
+            <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-400 border border-blue-500"></span>
+            </span>
+          )}
         </div>
         <span className="tracking-tight">Minha Visão</span>
       </button>

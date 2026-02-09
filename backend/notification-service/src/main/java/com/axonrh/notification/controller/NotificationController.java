@@ -29,6 +29,10 @@ public class NotificationController {
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @RequestHeader("X-User-ID") UUID userId,
             Pageable pageable) {
+        
+        // Log para debug
+        java.util.logging.Logger.getLogger(NotificationController.class.getName())
+            .info("Buscando notificacoes para tenant=" + tenantId + ", user=" + userId);
 
         return ResponseEntity.ok(notificationService.getUserNotifications(tenantId, userId, pageable));
     }
