@@ -378,9 +378,9 @@ export default function PDIDetailPage() {
     );
   }
 
-  const completedActions = pdi.actions.filter((a) => a.status === 'COMPLETED').length;
-  const inProgressActions = pdi.actions.filter((a) => a.status === 'IN_PROGRESS').length;
-  const pendingActions = pdi.actions.filter((a) => a.status === 'PENDING').length;
+  const completedActions = pdi.actions?.filter((a) => a.status === 'COMPLETED').length || 0;
+  const inProgressActions = pdi.actions?.filter((a) => a.status === 'IN_PROGRESS').length || 0;
+  const pendingActions = pdi.actions?.filter((a) => a.status === 'PENDING').length || 0;
   const isEditable = pdi.status === 'DRAFT' || pdi.status === 'ACTIVE';
   const statusConfig = STATUS_CONFIG[pdi.status] || STATUS_CONFIG['DRAFT'];
 
@@ -395,8 +395,8 @@ export default function PDIDetailPage() {
   const isOverdue = daysRemaining !== null && daysRemaining < 0;
 
   // Estimate total hours
-  const totalEstimatedHours = pdi.actions.reduce((acc, a) => acc + (a.estimatedHours || 0), 0);
-  const totalActualHours = pdi.actions.reduce((acc, a) => acc + (a.actualHours || 0), 0);
+  const totalEstimatedHours = pdi.actions?.reduce((acc, a) => acc + (a.estimatedHours || 0), 0) || 0;
+  const totalActualHours = pdi.actions?.reduce((acc, a) => acc + (a.actualHours || 0), 0) || 0;
 
   return (
     <div className="space-y-8 pb-12 animate-in fade-in duration-500">
@@ -452,7 +452,7 @@ export default function PDIDetailPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <StatCard
           title="Colaborador"
-          value={pdi.employeeName.split(' ')[0]}
+          value={pdi.employeeName?.split(' ')[0] || 'N/A'}
           subtitle="Responsável"
           icon={<User className="h-6 w-6" />}
           variant="blue"
