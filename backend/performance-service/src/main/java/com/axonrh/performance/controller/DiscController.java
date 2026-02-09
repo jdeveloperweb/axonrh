@@ -114,6 +114,13 @@ public class DiscController {
         return ResponseEntity.noContent().build();
     }
 
+    @DeleteMapping("/cancelled")
+    public ResponseEntity<Void> deleteCancelled(
+            @RequestHeader("X-Tenant-ID") UUID tenantId) {
+        discService.deleteCancelled(tenantId);
+        return ResponseEntity.noContent().build();
+    }
+
     // ==================== Assignments ====================
 
     @PostMapping("/assign")
@@ -147,6 +154,14 @@ public class DiscController {
     }
 
     @DeleteMapping("/assignment/{assignmentId}")
+    public ResponseEntity<Void> deleteAssignment(
+            @RequestHeader("X-Tenant-ID") UUID tenantId,
+            @PathVariable UUID assignmentId) {
+        discService.deleteAssignment(tenantId, assignmentId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/assignment/{assignmentId}/cancel")
     public ResponseEntity<Void> cancelAssignment(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID assignmentId) {

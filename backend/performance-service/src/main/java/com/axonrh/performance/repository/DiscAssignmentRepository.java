@@ -48,4 +48,6 @@ public interface DiscAssignmentRepository extends JpaRepository<DiscAssignment, 
 
     // Estatisticas
     long countByTenantIdAndStatus(UUID tenantId, DiscAssessmentStatus status);
+
+    void deleteByTenantIdAndStatus(UUID tenantId, DiscAssessmentStatus status);
 }

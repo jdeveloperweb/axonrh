@@ -62,4 +62,6 @@ public interface DiscEvaluationRepository extends JpaRepository<DiscEvaluation, 
            "ORDER BY e.completedAt DESC")
     List<DiscEvaluation> findCompletedByEmployeeIds(@Param("tenantId") UUID tenantId,
                                                     @Param("employeeIds") List<UUID> employeeIds);
+
+    void deleteByTenantIdAndStatus(UUID tenantId, DiscAssessmentStatus status);
 }

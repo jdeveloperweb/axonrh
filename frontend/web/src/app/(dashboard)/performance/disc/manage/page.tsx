@@ -291,6 +291,15 @@ export default function DiscManagePage() {
   };
 
   const handleCancelAssignment = async (assignmentId: string) => {
+    const confirmed = await confirm({
+      title: 'Cancelar Atribuicao',
+      description: 'Tem certeza que deseja cancelar esta atribuicao? O colaborador nao podera mais iniciar o teste.',
+      confirmLabel: 'Cancelar',
+      variant: 'destructive'
+    });
+
+    if (!confirmed) return;
+
     try {
       await discApi.cancelAssignment(assignmentId);
       toast({ title: 'Sucesso', description: 'Atribuicao cancelada' });
@@ -299,6 +308,53 @@ export default function DiscManagePage() {
       toast({
         title: 'Erro',
         description: 'Falha ao cancelar atribuicao',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDeleteAssignment = async (assignmentId: string) => {
+    const confirmed = await confirm({
+      title: 'Excluir Atribuicao',
+      description: 'Tem certeza que deseja excluir esta atribuicao? Esta acao nao pode ser desfeita.',
+      variant: 'destructive',
+      confirmLabel: 'Excluir'
+    });
+
+    if (!confirmed) return;
+
+    try {
+      await discApi.deleteAssignment(assignmentId);
+      toast({ title: 'Sucesso', description: 'Atribuicao excluida' });
+      loadData();
+    } catch {
+      toast({
+        title: 'Erro',
+        description: 'Falha ao excluir atribuicao',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDeleteCancelled = async () => {
+    const confirmed = await confirm({
+      title: 'Limpar Cancelados',
+      description: 'Tem certeza que deseja excluir todas as atribuicoes e avaliacoes canceladas? Esta acao limparia o banco de dados e nao pode ser desfeita.',
+      variant: 'destructive',
+      confirmLabel: 'Limpar Tudo'
+    });
+
+    if (!confirmed) return;
+
+    try {
+      await discApi.deleteCancelled();
+      toast({ title: 'Sucesso', description: 'Registros cancelados excluidos com sucesso' });
+      loadData();
+    } catch (error) {
+      console.error('Failed to clear cancelled:', error);
+      toast({
+        title: 'Erro',
+        description: 'Falha ao limpar registros cancelados',
         variant: 'destructive',
       });
     }
@@ -399,6 +455,10 @@ export default function DiscManagePage() {
           <Button variant="outline" onClick={loadData}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Atualizar
+          </Button>
+          <Button variant="outline" onClick={handleDeleteCancelled} className="text-red-500 hover:text-red-600 hover:bg-red-50 border-red-200">
+            <Trash2 className="h-4 w-4 mr-2" />
+            Limpar Cancelados
           </Button>
           <Dialog open={assignDialogOpen} onOpenChange={(open) => {
             setAssignDialogOpen(open);
@@ -695,8 +755,19 @@ export default function DiscManagePage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleCancelAssignment(assignment.id)}
+                            title="Cancelar Atribuicao"
                           >
                             <XCircle className="h-4 w-4 text-red-500" />
+                          </Button>
+                        )}
+                        {assignment.status === 'CANCELLED' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteAssignment(assignment.id)}
+                            title="Excluir Atribuicao"
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
                           </Button>
                         )}
                         {assignment.evaluationId && (

@@ -354,6 +354,17 @@ public class DiscService {
         evaluationRepository.delete(evaluation);
     }
 
+    public void deleteAssignment(UUID tenantId, UUID assignmentId) {
+        DiscAssignment assignment = assignmentRepository.findByTenantIdAndId(tenantId, assignmentId)
+            .orElseThrow(() -> new EntityNotFoundException("Atribuicao DISC nao encontrada"));
+        assignmentRepository.delete(assignment);
+    }
+
+    public void deleteCancelled(UUID tenantId) {
+        assignmentRepository.deleteByTenantIdAndStatus(tenantId, DiscAssessmentStatus.CANCELLED);
+        evaluationRepository.deleteByTenantIdAndStatus(tenantId, DiscAssessmentStatus.CANCELLED);
+    }
+
     // ==================== Helpers ====================
 
     public boolean hasCompletedEvaluation(UUID tenantId, UUID employeeId) {

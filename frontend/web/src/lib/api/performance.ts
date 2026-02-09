@@ -540,7 +540,13 @@ export const discApi = {
     api.post<DiscAssignment[], DiscAssignment[]>('/performance/disc/assign/bulk', data),
 
   cancelAssignment: (assignmentId: string) =>
+    api.post(`/performance/disc/assignment/${assignmentId}/cancel`),
+
+  deleteAssignment: (assignmentId: string) =>
     api.delete(`/performance/disc/assignment/${assignmentId}`),
+
+  deleteCancelled: () =>
+    api.delete('/performance/disc/cancelled'),
 
   listAssignments: (page = 0, size = 20, pendingOnly = false) => {
     const params = new URLSearchParams({ page: page.toString(), size: size.toString() });
