@@ -5,6 +5,7 @@ import com.axonrh.kafka.topic.KafkaTopics;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -83,7 +84,7 @@ public class NotificationEvent extends DomainEvent {
     /**
      * Se deve ser agendada para envio posterior.
      */
-    private java.time.Instant scheduledFor;
+    private Instant scheduledFor;
 
     @Override
     public String getTopicName() {

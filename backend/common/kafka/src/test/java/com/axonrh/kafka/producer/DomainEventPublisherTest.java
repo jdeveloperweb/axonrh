@@ -1,5 +1,6 @@
 package com.axonrh.kafka.producer;
 
+import com.axonrh.kafka.event.DomainEvent;
 import com.axonrh.kafka.event.employee.EmployeeCreatedEvent;
 import com.axonrh.kafka.topic.KafkaTopics;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -29,10 +30,10 @@ import static org.mockito.Mockito.*;
 class DomainEventPublisherTest {
 
     @Mock
-    private KafkaTemplate<String, com.axonrh.kafka.event.DomainEvent> kafkaTemplate;
+    private KafkaTemplate<String, DomainEvent> kafkaTemplate;
 
     @Captor
-    private ArgumentCaptor<ProducerRecord<String, com.axonrh.kafka.event.DomainEvent>> recordCaptor;
+    private ArgumentCaptor<ProducerRecord<String, DomainEvent>> recordCaptor;
 
     private DomainEventPublisher publisher;
 
@@ -66,7 +67,7 @@ class DomainEventPublisherTest {
 
         // Then
         verify(kafkaTemplate).send(recordCaptor.capture());
-        ProducerRecord<String, com.axonrh.kafka.event.DomainEvent> record = recordCaptor.getValue();
+        ProducerRecord<String, DomainEvent> record = recordCaptor.getValue();
 
         assertThat(record.topic()).isEqualTo(KafkaTopics.EMPLOYEE_DOMAIN_EVENTS);
         assertThat(record.key()).isEqualTo(aggregateId.toString());
@@ -180,7 +181,7 @@ class DomainEventPublisherTest {
 
         // Then
         verify(kafkaTemplate).send(recordCaptor.capture());
-        ProducerRecord<String, com.axonrh.kafka.event.DomainEvent> record = recordCaptor.getValue();
+        ProducerRecord<String, DomainEvent> record = recordCaptor.getValue();
 
         assertThat(record.topic()).isEqualTo(KafkaTopics.DEAD_LETTER_QUEUE);
 
