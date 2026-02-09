@@ -22,10 +22,30 @@ public class PerformanceEventPublisher {
     private final DomainEventPublisher domainEventPublisher;
     private final EmployeeServiceClient employeeClient;
 
+    private EmployeeDTO getEmployeeSafely(UUID employeeId) {
+        if (employeeId == null) return null;
+        try {
+            return employeeClient.getEmployee(employeeId);
+        } catch (Exception e) {
+            log.warn("Falha ao buscar funcionario {}: {}", employeeId, e.getMessage());
+            return null;
+        }
+    }
+
+    private EmployeeDTO getEmployeeByUserIdSafely(UUID userId) {
+        if (userId == null) return null;
+        try {
+            return employeeClient.getEmployeeByUserId(userId);
+        } catch (Exception e) {
+            log.warn("Falha ao buscar funcionario por userId {}: {}", userId, e.getMessage());
+            return null;
+        }
+    }
+
     public void publishPDICreated(PDI pdi) {
         try {
-            EmployeeDTO employee = employeeClient.getEmployee(pdi.getEmployeeId());
-            if (employee.getUserId() == null) {
+            EmployeeDTO employee = getEmployeeSafely(pdi.getEmployeeId());
+            if (employee == null || employee.getUserId() == null) {
                 log.warn("Funcionario {} nao possui userId associado. Notificacao de PDI nao sera enviada.", pdi.getEmployeeId());
                 return;
             }
@@ -55,8 +75,8 @@ public class PerformanceEventPublisher {
 
     public void publishDiscAssigned(DiscAssignment assignment, String questionnaireTitle) {
         try {
-            EmployeeDTO employee = employeeClient.getEmployee(assignment.getEmployeeId());
-            if (employee.getUserId() == null) {
+            EmployeeDTO employee = getEmployeeSafely(assignment.getEmployeeId());
+            if (employee == null || employee.getUserId() == null) {
                 log.warn("Funcionario {} nao possui userId associado. Notificacao de DISC nao sera enviada.", assignment.getEmployeeId());
                 return;
             }
@@ -88,8 +108,8 @@ public class PerformanceEventPublisher {
         try {
             // A avaliacao pode ser para o proprio (autoavaliacao) ou para outro (gestor/par)
             // O avaliador (evaluatorId) e quem deve receber a notificacao para preencher
-            EmployeeDTO evaluator = employeeClient.getEmployee(evaluation.getEvaluatorId());
-            if (evaluator.getUserId() == null) {
+            EmployeeDTO evaluator = getEmployeeSafely(evaluation.getEvaluatorId());
+            if (evaluator == null || evaluator.getUserId() == null) {
                 log.warn("Avaliador {} nao possui userId associado. Notificacao de avaliacao nao sera enviada.", evaluation.getEvaluatorId());
                 return;
             }
@@ -120,8 +140,8 @@ public class PerformanceEventPublisher {
 
     public void publishEvaluationReminder(com.axonrh.performance.entity.Evaluation evaluation, String cycleName) {
         try {
-            EmployeeDTO evaluator = employeeClient.getEmployee(evaluation.getEvaluatorId());
-            if (evaluator.getUserId() == null) return;
+            EmployeeDTO evaluator = getEmployeeSafely(evaluation.getEvaluatorId());
+            if (evaluator == null || evaluator.getUserId() == null) return;
 
             NotificationEvent event = NotificationEvent.builder()
                     .tenantId(evaluation.getTenantId())
@@ -148,8 +168,8 @@ public class PerformanceEventPublisher {
 
     public void publishDiscReminder(com.axonrh.performance.entity.DiscAssignment assignment) {
         try {
-            EmployeeDTO employee = employeeClient.getEmployee(assignment.getEmployeeId());
-            if (employee.getUserId() == null) return;
+            EmployeeDTO employee = getEmployeeSafely(assignment.getEmployeeId());
+            if (employee == null || employee.getUserId() == null) return;
 
             NotificationEvent event = NotificationEvent.builder()
                     .tenantId(assignment.getTenantId())
@@ -175,8 +195,8 @@ public class PerformanceEventPublisher {
             // Notificar quem solicitou (gestor/RH)
             if (evaluation.getRequestedBy() == null) return;
             
-            EmployeeDTO requester = employeeClient.getEmployee(evaluation.getRequestedBy());
-            if (requester.getUserId() == null) return;
+            EmployeeDTO requester = getEmployeeSafely(evaluation.getRequestedBy());
+            if (requester == null || requester.getUserId() == null) return;
 
             NotificationEvent event = NotificationEvent.builder()
                     .tenantId(evaluation.getTenantId())
@@ -210,7 +230,7 @@ public class PerformanceEventPublisher {
             UUID targetEmployeeId;
             String message;
             
-            EmployeeDTO viewerEmployee = employeeClient.getEmployeeByUserId(viewerUserId);
+            EmployeeDTO viewerEmployee = getEmployeeByUserIdSafely(viewerUserId);
             if (viewerEmployee == null) return;
 
             if (viewerEmployee.getId().equals(pdi.getEmployeeId())) {
@@ -227,8 +247,8 @@ public class PerformanceEventPublisher {
                 return;
             }
 
-            EmployeeDTO target = employeeClient.getEmployee(targetEmployeeId);
-            if (target.getUserId() == null) return;
+            EmployeeDTO target = getEmployeeSafely(targetEmployeeId);
+            if (target == null || target.getUserId() == null) return;
 
             NotificationEvent event = NotificationEvent.builder()
                     .tenantId(pdi.getTenantId())
@@ -253,8 +273,8 @@ public class PerformanceEventPublisher {
         try {
             if (pdi.getManagerId() == null) return;
             
-            EmployeeDTO manager = employeeClient.getEmployee(pdi.getManagerId());
-            if (manager.getUserId() == null) return;
+            EmployeeDTO manager = getEmployeeSafely(pdi.getManagerId());
+            if (manager == null || manager.getUserId() == null) return;
 
             NotificationEvent event = NotificationEvent.builder()
                     .tenantId(pdi.getTenantId())
@@ -277,8 +297,8 @@ public class PerformanceEventPublisher {
 
     public void publishEvaluationAcknowledged(com.axonrh.performance.entity.Evaluation evaluation) {
         try {
-            EmployeeDTO manager = employeeClient.getEmployee(evaluation.getEvaluatorId());
-            if (manager.getUserId() == null) return;
+            EmployeeDTO manager = getEmployeeSafely(evaluation.getEvaluatorId());
+            if (manager == null || manager.getUserId() == null) return;
 
             NotificationEvent event = NotificationEvent.builder()
                     .tenantId(evaluation.getTenantId())
@@ -302,8 +322,8 @@ public class PerformanceEventPublisher {
     public void publishEvaluationCompleted(com.axonrh.performance.entity.Evaluation evaluation) {
         try {
             // Notificar o colaborador que a avaliacao dele está pronta
-            EmployeeDTO employee = employeeClient.getEmployee(evaluation.getEmployeeId());
-            if (employee.getUserId() == null) return;
+            EmployeeDTO employee = getEmployeeSafely(evaluation.getEmployeeId());
+            if (employee == null || employee.getUserId() == null) return;
 
             NotificationEvent event = NotificationEvent.builder()
                     .tenantId(evaluation.getTenantId())

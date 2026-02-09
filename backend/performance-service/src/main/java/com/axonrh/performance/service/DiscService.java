@@ -141,11 +141,17 @@ public class DiscService {
             evaluation.setEmployeeName(employeeName);
         }
 
+        log.info("Processing DISC evaluation for employee: {}. Total answers: {}", employeeName, answers.size());
+        if (log.isDebugEnabled()) {
+            log.debug("Answers: {}", answers);
+        }
+
         // Calculate scores
         int dCount = 0, iCount = 0, sCount = 0, cCount = 0;
         int totalQuestions = answers.size();
 
         for (String value : answers.values()) {
+            if (value == null) continue;
             switch (value.toUpperCase()) {
                 case "D" -> dCount++;
                 case "I" -> iCount++;
@@ -159,6 +165,9 @@ public class DiscService {
         int iScore = totalQuestions > 0 ? (iCount * 100) / totalQuestions : 0;
         int sScore = totalQuestions > 0 ? (sCount * 100) / totalQuestions : 0;
         int cScore = totalQuestions > 0 ? (cCount * 100) / totalQuestions : 0;
+
+        log.info("Calculated DISC scores for {}: D={}% , I={}% , S={}% , C={}%", 
+            employeeName, dScore, iScore, sScore, cScore);
 
         // Serialize answers to JSON
         String answersJson;
