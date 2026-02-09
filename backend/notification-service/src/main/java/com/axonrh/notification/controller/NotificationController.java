@@ -28,13 +28,10 @@ public class NotificationController {
     public ResponseEntity<Page<Notification>> getNotifications(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @RequestHeader("X-User-ID") UUID userId,
+            @RequestParam(defaultValue = "false") boolean archived,
             Pageable pageable) {
-        
-        // Log para debug
-        java.util.logging.Logger.getLogger(NotificationController.class.getName())
-            .info("Buscando notificacoes para tenant=" + tenantId + ", user=" + userId);
 
-        return ResponseEntity.ok(notificationService.getUserNotifications(tenantId, userId, pageable));
+        return ResponseEntity.ok(notificationService.getUserNotifications(tenantId, userId, archived, pageable));
     }
 
     @GetMapping("/unread")

@@ -7,13 +7,15 @@ interface NotificationState {
     isLoading: boolean;
     error: string | null;
 
-    fetchNotifications: () => Promise<void>;
+    fetchNotifications: (archived?: boolean) => Promise<void>;
     fetchUnreadCount: () => Promise<void>;
     markAsRead: (id: string) => Promise<void>;
     markAllAsRead: () => Promise<void>;
     archiveNotification: (id: string) => Promise<void>;
     deleteNotification: (id: string) => Promise<void>;
     addNotification: (notification: Notification) => void;
+    showArchived: boolean;
+    setShowArchived: (show: boolean) => void;
 }
 
 export const useNotificationStore = create<NotificationState>((set, get) => ({
@@ -22,12 +24,16 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     isLoading: false,
     error: null,
 
-    fetchNotifications: async () => {
+    showArchived: false,
+    setShowArchived: (show) => {
+        set({ showArchived: show });
+        get().fetchNotifications(show);
+    },
+
+    fetchNotifications: async (archived = false) => {
         set({ isLoading: true, error: null });
         try {
-            const response = await notificationsApi.list(0, 50);
-            // Como o interceptor no client.ts já retorna response.data, 
-            // a variável 'response' aqui já contém o payload { content: [], totalElements: X }
+            const response = await notificationsApi.list(0, 50, archived);
             const data = response as any;
             set({
                 notifications: data.content || [],

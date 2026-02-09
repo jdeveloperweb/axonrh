@@ -111,8 +111,8 @@ export interface NotificationCategory {
 // ==================== Notifications API ====================
 
 export const notificationsApi = {
-  list: (page = 0, size = 20) =>
-    api.get<{ content: Notification[]; totalElements: number }>(`/notifications?page=${page}&size=${size}`),
+  list: (page = 0, size = 20, archived = false) =>
+    api.get<{ content: Notification[]; totalElements: number }>(`/notifications?page=${page}&size=${size}&archived=${archived}`),
 
   getUnread: () =>
     api.get<Notification[]>('/notifications/unread'),

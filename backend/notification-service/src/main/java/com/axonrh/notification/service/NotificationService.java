@@ -160,14 +160,13 @@ public class NotificationService {
     }
 
     /**
-     * Busca notificacoes do usuario.
+     * Busca notificações do usuário.
      */
-    public Page<Notification> getUserNotifications(UUID tenantId, UUID userId, Pageable pageable) {
-        log.info("Executando findByTenantIdAndUserId no repositorio. Tenant: {}, User: {}", tenantId, userId);
-        Page<Notification> result = notificationRepository.findByTenantIdAndUserId(tenantId, userId, pageable);
-        log.info("Resultado da busca: {} notificacoes encontradas", result.getTotalElements());
-        result.getContent().forEach(n -> log.info("Notificacao encontrada: ID={}, Read={}, Archived={}", n.getId(), n.isRead(), n.isArchived()));
-        return result;
+    public Page<Notification> getUserNotifications(UUID tenantId, UUID userId, boolean archived, Pageable pageable) {
+        if (archived) {
+            return notificationRepository.findArchivedByUser(tenantId, userId, pageable);
+        }
+        return notificationRepository.findActiveByUser(tenantId, userId, pageable);
     }
 
     /**

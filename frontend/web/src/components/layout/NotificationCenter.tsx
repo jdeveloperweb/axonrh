@@ -27,18 +27,21 @@ interface NotificationCenterProps {
 
 export function NotificationCenter({ onClose }: NotificationCenterProps) {
     const {
+        archiveNotification,
+        deleteNotification,
+        showArchived,
+        setShowArchived,
         notifications,
-        unreadCount,
         isLoading,
+        unreadCount,
         fetchNotifications,
-        markAsRead,
         markAllAsRead,
-        archiveNotification
+        markAsRead
     } = useNotificationStore();
 
     useEffect(() => {
-        fetchNotifications();
-    }, [fetchNotifications]);
+        fetchNotifications(showArchived);
+    }, [fetchNotifications, showArchived]);
 
     const getIcon = (type: NotificationType) => {
         switch (type) {
@@ -65,7 +68,7 @@ export function NotificationCenter({ onClose }: NotificationCenterProps) {
                         </p>
                     )}
                 </div>
-                {unreadCount > 0 && (
+                {unreadCount > 0 && !showArchived && (
                     <button
                         onClick={() => markAllAsRead()}
                         className="text-xs text-[var(--color-primary)] hover:underline font-medium"
@@ -73,6 +76,32 @@ export function NotificationCenter({ onClose }: NotificationCenterProps) {
                         Ler todas
                     </button>
                 )}
+            </div>
+
+            {/* Tabs */}
+            <div className="flex border-b border-[var(--color-border)] bg-[var(--color-surface-variant)]/10">
+                <button
+                    onClick={() => setShowArchived(false)}
+                    className={cn(
+                        "flex-1 py-2 text-xs font-semibold transition-colors border-b-2",
+                        !showArchived
+                            ? "border-[var(--color-primary)] text-[var(--color-primary)]"
+                            : "border-transparent text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+                    )}
+                >
+                    Ativas
+                </button>
+                <button
+                    onClick={() => setShowArchived(true)}
+                    className={cn(
+                        "flex-1 py-2 text-xs font-semibold transition-colors border-b-2",
+                        showArchived
+                            ? "border-[var(--color-primary)] text-[var(--color-primary)]"
+                            : "border-transparent text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+                    )}
+                >
+                    Arquivadas
+                </button>
             </div>
 
             {/* List */}
@@ -134,23 +163,35 @@ export function NotificationCenter({ onClose }: NotificationCenterProps) {
                                 </div>
 
                                 {/* Quick Actions */}
-                                <div className="absolute right-2 bottom-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                                    {!notification.isRead && (
+                                <div className="absolute top-4 right-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    {showArchived ? (
                                         <button
-                                            onClick={() => markAsRead(notification.id)}
-                                            className="p-1.5 rounded-full hover:bg-[var(--color-surface-variant)] text-[var(--color-text-secondary)] hover:text-green-600"
-                                            title="Marcar como lida"
+                                            onClick={() => deleteNotification(notification.id)}
+                                            className="p-1.5 rounded-full hover:bg-[var(--color-surface-variant)] text-[var(--color-text-secondary)] hover:text-red-600"
+                                            title="Excluir permanentemente"
                                         >
-                                            <Check className="w-4 h-4" />
+                                            <Trash2 className="w-4 h-4" />
                                         </button>
+                                    ) : (
+                                        <>
+                                            {!notification.isRead && (
+                                                <button
+                                                    onClick={() => markAsRead(notification.id)}
+                                                    className="p-1.5 rounded-full hover:bg-[var(--color-surface-variant)] text-[var(--color-text-secondary)] hover:text-green-600"
+                                                    title="Marcar como lida"
+                                                >
+                                                    <Check className="w-4 h-4" />
+                                                </button>
+                                            )}
+                                            <button
+                                                onClick={() => archiveNotification(notification.id)}
+                                                className="p-1.5 rounded-full hover:bg-[var(--color-surface-variant)] text-[var(--color-text-secondary)] hover:text-orange-600"
+                                                title="Arquivar"
+                                            >
+                                                <Archive className="w-4 h-4" />
+                                            </button>
+                                        </>
                                     )}
-                                    <button
-                                        onClick={() => archiveNotification(notification.id)}
-                                        className="p-1.5 rounded-full hover:bg-[var(--color-surface-variant)] text-[var(--color-text-secondary)] hover:text-orange-600"
-                                        title="Arquivar"
-                                    >
-                                        <Archive className="w-4 h-4" />
-                                    </button>
                                 </div>
                             </div>
                         ))}

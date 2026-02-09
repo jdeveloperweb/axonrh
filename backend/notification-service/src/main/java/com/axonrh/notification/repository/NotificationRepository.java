@@ -43,6 +43,13 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
                                         Pageable pageable);
 
     @Query("SELECT n FROM Notification n WHERE n.tenantId = :tenantId " +
+           "AND n.userId = :userId AND n.isArchived = true " +
+           "ORDER BY n.archivedAt DESC")
+    Page<Notification> findArchivedByUser(@Param("tenantId") UUID tenantId,
+                                          @Param("userId") UUID userId,
+                                          Pageable pageable);
+
+    @Query("SELECT n FROM Notification n WHERE n.tenantId = :tenantId " +
            "AND n.userId = :userId AND n.category = :category " +
            "ORDER BY n.createdAt DESC")
     List<Notification> findByCategory(@Param("tenantId") UUID tenantId,
