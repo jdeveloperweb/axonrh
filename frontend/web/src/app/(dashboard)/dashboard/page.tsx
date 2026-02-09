@@ -797,25 +797,25 @@ export default function DashboardPage() {
   }
 
   const ViewToggle = () => (
-    <div className="bg-slate-100 p-1 rounded-lg flex items-center">
+    <div className="bg-white border border-slate-200 p-1.5 rounded-xl shadow-sm flex items-center gap-1">
       <button
         onClick={() => setViewMode('manager')}
-        className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'manager'
-          ? 'bg-white shadow-sm text-blue-600'
-          : 'text-slate-500 hover:text-slate-700'
+        className={`relative flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${viewMode === 'manager'
+          ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-200 ring-2 ring-indigo-100'
+          : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
           }`}
       >
-        <ShieldCheck className="w-4 h-4" />
+        <ShieldCheck className={`w-4 h-4 ${viewMode === 'manager' ? 'text-indigo-100' : ''}`} />
         Visão Gestor
       </button>
       <button
         onClick={() => setViewMode('collaborator')}
-        className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'collaborator'
-          ? 'bg-white shadow-sm text-blue-600'
-          : 'text-slate-500 hover:text-slate-700'
+        className={`relative flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${viewMode === 'collaborator'
+          ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-md shadow-blue-200 ring-2 ring-blue-100'
+          : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
           }`}
       >
-        <LineChart className="w-4 h-4" />
+        <LineChart className={`w-4 h-4 ${viewMode === 'collaborator' ? 'text-blue-100' : ''}`} />
         Minha Visão
       </button>
     </div>

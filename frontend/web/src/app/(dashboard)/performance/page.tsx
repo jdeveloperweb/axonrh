@@ -76,25 +76,25 @@ export default function PerformancePage() {
           </div>
 
           {canViewManagement && (
-            <div className="flex bg-slate-100 p-1.5 rounded-xl shadow-inner self-start md:self-center">
+            <div className="bg-white border border-slate-200 p-1.5 rounded-xl shadow-sm flex items-center gap-1 self-start md:self-center">
               <button
                 onClick={() => setViewMode('manager')}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 ${viewMode === 'manager'
-                  ? 'bg-white text-indigo-700 shadow-sm ring-1 ring-black/5'
-                  : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
+                className={`relative flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${viewMode === 'manager'
+                  ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-200 ring-2 ring-indigo-100'
+                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
                   }`}
               >
-                <ShieldCheck className="h-4 w-4" />
+                <ShieldCheck className={`h-4 w-4 ${viewMode === 'manager' ? 'text-indigo-100' : ''}`} />
                 Visão Gestor
               </button>
               <button
                 onClick={() => setViewMode('employee')}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 ${viewMode === 'employee'
-                  ? 'bg-white text-emerald-700 shadow-sm ring-1 ring-black/5'
-                  : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
+                className={`relative flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${viewMode === 'employee'
+                  ? 'bg-gradient-to-r from-emerald-600 to-green-600 text-white shadow-md shadow-emerald-200 ring-2 ring-emerald-100'
+                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
                   }`}
               >
-                <TrendingUp className="h-4 w-4" />
+                <TrendingUp className={`h-4 w-4 ${viewMode === 'employee' ? 'text-emerald-100' : ''}`} />
                 Minha Visão
               </button>
             </div>
