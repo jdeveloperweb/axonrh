@@ -19,14 +19,16 @@ public class VacationEventsListener {
     private final ObjectMapper objectMapper;
 
     @KafkaListener(topics = "vacation.domain.events", groupId = "notification-service")
-    public void handleVacationEvent(String message) {
+    public void handleVacationEvent(Map<String, Object> event) {
         try {
-            Map<String, Object> event = objectMapper.readValue(message, Map.class);
             String eventType = (String) event.get("eventType");
-            String tenantIdStr = (String) event.get("tenantId");
-            String employeeIdStr = (String) event.get("employeeId");
-            UUID tenantId = UUID.fromString(tenantIdStr);
-            UUID employeeId = UUID.fromString(employeeIdStr);
+            Object tenantIdObj = event.get("tenantId");
+            Object employeeIdObj = event.get("employeeId");
+            
+            if (tenantIdObj == null) return;
+            
+            UUID tenantId = UUID.fromString(tenantIdObj.toString());
+            UUID employeeId = employeeIdObj != null ? UUID.fromString(employeeIdObj.toString()) : null;
 
             log.info("Recebido evento de ferias: {} para funcionario {}", eventType, employeeId);
 
