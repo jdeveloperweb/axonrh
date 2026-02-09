@@ -375,32 +375,70 @@ export default function CareersPage() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <div className="p-8 rounded-[2rem] bg-gray-50 hover:bg-white hover:shadow-xl transition-all duration-300 group">
-                            <div className="w-14 h-14 bg-blue-100 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                                <Heart className="w-7 h-7 text-blue-600" />
+                        {/* Foco em Pessoas */}
+                        <div className="group rounded-[2rem] bg-gray-50 hover:bg-white hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
+                            <div className="h-48 relative overflow-hidden">
+                                <Image
+                                    src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80"
+                                    alt="Foco em Pessoas"
+                                    fill
+                                    className="object-cover group-hover:scale-110 transition-transform duration-700"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                                <div className="absolute bottom-4 left-6 p-3 bg-white/20 backdrop-blur-md rounded-xl border border-white/20">
+                                    <Heart className="w-6 h-6 text-white" />
+                                </div>
                             </div>
-                            <h4 className="text-xl font-bold mb-4">Foco em Pessoas</h4>
-                            <p className="text-gray-500 leading-relaxed">
-                                Acreditamos que o sucesso da nossa empresa é o reflexo direto do bem-estar e crescimento do nosso time.
-                            </p>
+                            <div className="p-8 pt-6">
+                                <h4 className="text-xl font-bold mb-4">Foco em Pessoas</h4>
+                                <p className="text-gray-500 leading-relaxed">
+                                    Acreditamos que o sucesso da nossa empresa é o reflexo direto do bem-estar e crescimento do nosso time.
+                                </p>
+                            </div>
                         </div>
-                        <div className="p-8 rounded-[2rem] bg-gray-50 hover:bg-white hover:shadow-xl transition-all duration-300 group">
-                            <div className="w-14 h-14 bg-purple-100 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                                <Zap className="w-7 h-7 text-purple-600" />
+
+                        {/* Inovação Ágil */}
+                        <div className="group rounded-[2rem] bg-gray-50 hover:bg-white hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
+                            <div className="h-48 relative overflow-hidden">
+                                <Image
+                                    src="https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=800&q=80"
+                                    alt="Inovação Ágil"
+                                    fill
+                                    className="object-cover group-hover:scale-110 transition-transform duration-700"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                                <div className="absolute bottom-4 left-6 p-3 bg-white/20 backdrop-blur-md rounded-xl border border-white/20">
+                                    <Zap className="w-6 h-6 text-white" />
+                                </div>
                             </div>
-                            <h4 className="text-xl font-bold mb-4">Inovação Ágil</h4>
-                            <p className="text-gray-500 leading-relaxed">
-                                Incentivamos a experimentação e aprendizado contínuo, sempre buscando formas melhores de resolver problemas.
-                            </p>
+                            <div className="p-8 pt-6">
+                                <h4 className="text-xl font-bold mb-4">Inovação Ágil</h4>
+                                <p className="text-gray-500 leading-relaxed">
+                                    Incentivamos a experimentação e aprendizado contínuo, sempre buscando formas melhores de resolver problemas.
+                                </p>
+                            </div>
                         </div>
-                        <div className="p-8 rounded-[2rem] bg-gray-50 hover:bg-white hover:shadow-xl transition-all duration-300 group">
-                            <div className="w-14 h-14 bg-emerald-100 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                                <Star className="w-7 h-7 text-emerald-600" />
+
+                        {/* Excelência */}
+                        <div className="group rounded-[2rem] bg-gray-50 hover:bg-white hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
+                            <div className="h-48 relative overflow-hidden">
+                                <Image
+                                    src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=800&q=80"
+                                    alt="Excelência"
+                                    fill
+                                    className="object-cover group-hover:scale-110 transition-transform duration-700"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                                <div className="absolute bottom-4 left-6 p-3 bg-white/20 backdrop-blur-md rounded-xl border border-white/20">
+                                    <Star className="w-6 h-6 text-white" />
+                                </div>
                             </div>
-                            <h4 className="text-xl font-bold mb-4">Excelência</h4>
-                            <p className="text-gray-500 leading-relaxed">
-                                Buscamos a qualidade em cada detalhe, entregando resultados que superam as expectativas.
-                            </p>
+                            <div className="p-8 pt-6">
+                                <h4 className="text-xl font-bold mb-4">Excelência</h4>
+                                <p className="text-gray-500 leading-relaxed">
+                                    Buscamos a qualidade em cada detalhe, entregando resultados que superam as expectativas.
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
