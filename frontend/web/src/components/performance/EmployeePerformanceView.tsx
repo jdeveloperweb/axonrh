@@ -22,7 +22,8 @@ import {
     Award,
     Star,
     CheckCircle2,
-    Clock
+    Clock,
+    Sparkles
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -359,86 +360,163 @@ export function EmployeePerformanceView() {
                 <div className="space-y-8">
 
                     {/* Card DISC */}
-                    <Card className="border-none shadow-premium overflow-hidden bg-gradient-to-br from-slate-900 to-slate-800 text-white">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <BrainCircuit className="h-5 w-5 text-amber-400" />
+                    <Card className="border-none shadow-premium overflow-hidden bg-[#0f172a] text-white relative group">
+                        {/* Efeito de brilho no fundo */}
+                        <div className="absolute -right-20 -top-20 w-64 h-64 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all duration-500"></div>
+
+                        <CardHeader className="relative">
+                            <CardTitle className="flex items-center gap-2 text-lg font-bold">
+                                <div className="p-2 bg-amber-500/10 rounded-lg">
+                                    <BrainCircuit className="h-5 w-5 text-amber-400" />
+                                </div>
                                 Perfil DISC
                             </CardTitle>
                             <CardDescription className="text-slate-400">
-                                Seu perfil comportamental mapeado
+                                Seu perfil comportamental mapeado pela AxonIA
                             </CardDescription>
                         </CardHeader>
-                        <CardContent>
+
+                        <CardContent className="relative space-y-6">
                             {pendingDisc.length > 0 ? (
-                                <div className="flex flex-col gap-8 py-4">
-                                    <p className="text-sm text-slate-300 leading-relaxed">
-                                        Voce tem uma avaliacao DISC pendente. Descubra seus motivadores, medos e estilo de comunicacao.
-                                    </p>
+                                <div className="flex flex-col gap-6 py-4">
+                                    <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
+                                        <p className="text-sm text-slate-300 leading-relaxed">
+                                            Você tem uma avaliação DISC pendente. Descubra seus motivadores, medos e estilo de comunicação para evoluir em sua carreira.
+                                        </p>
+                                    </div>
                                     <Link href="/performance/disc">
-                                        <Button className="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold">Comecar Teste Agora</Button>
+                                        <Button className="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold shadow-lg shadow-amber-500/20 py-6 transition-all transform hover:scale-[1.02]">
+                                            Começar Teste Agora
+                                            <ArrowRight className="ml-2 h-4 w-4" />
+                                        </Button>
                                     </Link>
                                 </div>
                             ) : latestDisc ? (
                                 <div className="space-y-6">
-                                    <div className="flex items-center justify-center py-4">
-                                        <div className="relative w-32 h-32 flex items-center justify-center">
-                                            <div className="absolute inset-0 border-4 rounded-full" style={{ borderColor: (profileLabels[latestDisc.primaryProfile]?.color || '#eab308') + '33' }}></div>
-                                            <div className="absolute inset-0 border-4 rounded-full border-t-transparent -rotate-45" style={{ borderColor: profileLabels[latestDisc.primaryProfile]?.color || '#eab308' }}></div>
-                                            <div className="text-center">
-                                                <span className="text-4xl font-black" style={{ color: profileLabels[latestDisc.primaryProfile]?.color || '#eab308' }}>
+                                    {/* Visualização Central Revisitada */}
+                                    <div className="flex items-center justify-around py-2">
+                                        <div className="relative w-36 h-36 flex items-center justify-center">
+                                            {/* Rings decorativos com animação de pulso suave */}
+                                            <div className="absolute inset-0 border-2 rounded-full opacity-20 animate-pulse" style={{ borderColor: profileLabels[latestDisc.primaryProfile]?.color || '#eab308' }}></div>
+                                            <div className="absolute inset-2 border-2 rounded-full opacity-40" style={{ borderColor: (profileLabels[latestDisc.primaryProfile]?.color || '#eab308') + '88' }}></div>
+
+                                            {/* Semicírculo de progresso */}
+                                            <div className="absolute inset-0">
+                                                <svg className="w-full h-full -rotate-90">
+                                                    <circle
+                                                        cx="72"
+                                                        cy="72"
+                                                        r="68"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        strokeWidth="4"
+                                                        className="text-slate-800"
+                                                    />
+                                                    <circle
+                                                        cx="72"
+                                                        cy="72"
+                                                        r="68"
+                                                        fill="none"
+                                                        stroke={profileLabels[latestDisc.primaryProfile]?.color || '#eab308'}
+                                                        strokeWidth="4"
+                                                        strokeDasharray={2 * Math.PI * 68}
+                                                        strokeDashoffset={2 * Math.PI * 68 * (1 - (latestDisc[latestDisc.primaryProfile === 'DOMINANCE' ? 'dScore' : latestDisc.primaryProfile === 'INFLUENCE' ? 'iScore' : latestDisc.primaryProfile === 'STEADINESS' ? 'sScore' : 'cScore'] || 75) / 100)}
+                                                        strokeLinecap="round"
+                                                        style={{ transition: 'stroke-dashoffset 1s ease-in-out' }}
+                                                    />
+                                                </svg>
+                                            </div>
+
+                                            <div className="text-center z-10">
+                                                <span className="text-5xl font-black drop-shadow-glow" style={{ color: profileLabels[latestDisc.primaryProfile]?.color || '#eab308' }}>
                                                     {profileLabels[latestDisc.primaryProfile]?.letter || 'I'}
                                                 </span>
-                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-                                                    {profileLabels[latestDisc.primaryProfile]?.title || 'Influente'}
-                                                </p>
+                                                <div className="mt-1">
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none">
+                                                        {profileLabels[latestDisc.primaryProfile]?.title || 'Influente'}
+                                                    </p>
+                                                    <p className="text-lg font-bold text-white mt-1">
+                                                        {latestDisc[latestDisc.primaryProfile === 'DOMINANCE' ? 'dScore' : latestDisc.primaryProfile === 'INFLUENCE' ? 'iScore' : latestDisc.primaryProfile === 'STEADINESS' ? 'sScore' : 'cScore'] || 0}%
+                                                    </p>
+                                                </div>
                                             </div>
+                                        </div>
+
+                                        {/* Mini Estatísticas ao lado */}
+                                        <div className="hidden sm:flex flex-col gap-3">
+                                            {Object.entries(profileLabels).map(([key, label]) => {
+                                                const score = latestDisc[key === 'DOMINANCE' ? 'dScore' : key === 'INFLUENCE' ? 'iScore' : key === 'STEADINESS' ? 'sScore' : 'cScore'] || 0;
+                                                return (
+                                                    <div key={key} className="flex items-center gap-2">
+                                                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: label.color }}></div>
+                                                        <span className="text-[10px] font-bold text-slate-500 w-3">{label.letter}</span>
+                                                        <span className="text-[11px] font-medium text-slate-300">{score}%</span>
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
                                     </div>
 
-                                    <div className="space-y-3">
-                                        <p className="text-sm font-medium text-slate-300">Principais caracteristicas:</p>
-                                        <ul className="grid grid-cols-2 gap-2">
+                                    <div className="bg-slate-800/40 rounded-2xl p-4 border border-slate-700/50">
+                                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Principais Características</p>
+                                        <div className="grid grid-cols-2 gap-3">
                                             {(profileLabels[latestDisc.primaryProfile]?.traits || []).map((trait, i) => (
-                                                <li key={i} className="flex items-center gap-2 text-xs text-slate-400">
-                                                    <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: profileLabels[latestDisc.primaryProfile]?.color || '#eab308' }}></div>
-                                                    {trait}
-                                                </li>
+                                                <div key={i} className="flex items-center gap-2 group/trait">
+                                                    <div className="p-1 rounded bg-slate-800 group-hover/trait:bg-slate-700 transition-colors">
+                                                        <CheckCircle2 className="h-3 w-3" style={{ color: profileLabels[latestDisc.primaryProfile]?.color || '#eab308' }} />
+                                                    </div>
+                                                    <span className="text-xs text-slate-300 group-hover/trait:text-white transition-colors">
+                                                        {trait}
+                                                    </span>
+                                                </div>
                                             ))}
-                                        </ul>
+                                        </div>
                                     </div>
 
-                                    <Link href="/performance/disc/profile">
-                                        <Button variant="outline" className="w-full border-slate-700 hover:bg-slate-800 text-white">Ver Detalhes do Perfil</Button>
-                                    </Link>
+                                    <div className="flex flex-col gap-3">
+                                        <Link href="/performance/disc/profile">
+                                            <Button className="w-full bg-white/5 hover:bg-white/10 text-white border-slate-700 transition-all py-6">
+                                                Ver Detalhes do Perfil
+                                            </Button>
+                                        </Link>
+                                    </div>
                                 </div>
                             ) : (
-                                <div className="flex flex-col gap-8 py-4">
-                                    <p className="text-sm text-slate-300 leading-relaxed">
-                                        Descubra seu perfil comportamental DISC e entenda seus pontos fortes e areas de desenvolvimento.
-                                    </p>
+                                <div className="flex flex-col gap-6 py-4">
+                                    <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
+                                        <p className="text-sm text-slate-300 leading-relaxed text-center">
+                                            Descubra seu perfil comportamental DISC e entenda melhor como você interage com o time.
+                                        </p>
+                                    </div>
                                     <Link href="/performance/disc">
-                                        <Button className="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold">Realizar Teste DISC</Button>
+                                        <Button className="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold shadow-lg shadow-amber-500/20">
+                                            Realizar Teste DISC
+                                        </Button>
                                     </Link>
                                 </div>
                             )}
                         </CardContent>
                     </Card>
 
-                    {/* Card de Mentor/Gestor */}
-                    <Card className="border-none shadow-sm bg-blue-50 dark:bg-blue-900/10">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-bold text-blue-800 dark:text-blue-300 flex items-center gap-2">
-                                <AlertCircle className="h-4 w-4" />
-                                Dica da AxonIA
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-xs text-blue-700/80 dark:text-blue-400/80 italic leading-relaxed">
-                                "Baseado no seu perfil Influente, você se sai muito bem em atividades colaborativas. Tente focar um pouco mais nos detalhes técnicos da sua meta de 'Otimização de Processos' esta semana."
-                            </p>
-                        </CardContent>
-                    </Card>
+                    {/* Card de Insight da IA Revisitado */}
+                    <div className="relative overflow-hidden rounded-3xl p-[1px] bg-gradient-to-br from-blue-400/50 via-indigo-500/50 to-purple-600/50 shadow-lg">
+                        <div className="relative bg-white dark:bg-[#0f172a] rounded-[23px] p-6 h-full">
+                            <div className="flex items-start gap-4">
+                                <div className="p-3 bg-blue-500/10 rounded-2xl">
+                                    <Sparkles className="h-5 w-5 text-blue-500 animate-pulse" />
+                                </div>
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tighter">Dica da AxonIA</h4>
+                                        <Badge variant="secondary" className="bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border-none text-[10px]">Insight IA</Badge>
+                                    </div>
+                                    <p className="text-sm text-slate-600 dark:text-slate-400 italic leading-relaxed">
+                                        "Baseado no seu perfil <span className="font-bold text-blue-500">{latestDisc?.primaryProfile === 'INFLUENCE' ? 'Influente' : profileLabels[latestDisc?.primaryProfile || '']?.title || 'Influente'}</span>, você se sai muito bem em atividades colaborativas. Tente focar um pouco mais nos detalhes técnicos da sua meta de 'Otimização de Processos' esta semana."
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                 </div>
             </div>

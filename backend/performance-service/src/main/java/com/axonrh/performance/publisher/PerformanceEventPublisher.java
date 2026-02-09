@@ -206,7 +206,7 @@ public class PerformanceEventPublisher {
                     .body("O colaborador " + evaluation.getEmployeeName() + " concluiu o teste DISC.")
                     .category("PERFORMANCE")
                     .priority("NORMAL")
-                    .actionUrl("/performance/disc/" + evaluation.getId())
+                    .actionUrl("/performance/disc/result/" + evaluation.getId())
                     .sourceType("DISC_EVALUATION")
                     .sourceId(evaluation.getId())
                     .metadata(Map.of(

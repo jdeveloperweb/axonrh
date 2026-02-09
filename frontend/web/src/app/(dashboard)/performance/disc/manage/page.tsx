@@ -432,23 +432,25 @@ export default function DiscManagePage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+    <div className="p-8 space-y-8 animate-in fade-in duration-500">
+      {/* Optimized Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-7 rounded-[2rem] shadow-sm border border-slate-100">
+        <div className="flex items-center gap-5">
           <Link href="/performance">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-5 w-5" />
+            <Button variant="outline" size="icon" className="h-14 w-14 rounded-2xl border-2 hover:bg-slate-50 transition-all hover:scale-105 shadow-sm">
+              <ArrowLeft className="h-6 w-6 text-slate-600" />
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
-              <BrainCircuit className="h-8 w-8 text-primary" />
-              Gestao de Avaliacoes DISC
-            </h1>
-            <p className="text-muted-foreground">
-              Envie e acompanhe avaliacoes DISC dos colaboradores
-            </p>
+            <div className="flex items-center gap-2 mb-1">
+              <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
+                <BrainCircuit className="h-5 w-5" />
+              </div>
+              <h1 className="text-2xl font-black tracking-tight text-slate-900 uppercase">
+                Gestão de Avaliações DISC
+              </h1>
+            </div>
+            <p className="text-muted-foreground font-medium">Controle e acompanhamento de perfis comportamentais</p>
           </div>
         </div>
         <div className="flex gap-2">
@@ -775,14 +777,15 @@ export default function DiscManagePage() {
 
                           {assignment.evaluationId && (
                             <>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => window.open(`/performance/disc/result/${assignment.evaluationId}`, '_blank')}
-                                title="Visualizar Resultado"
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
+                              <Link href={`/performance/disc/result/${assignment.evaluationId}`}>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  title="Visualizar Resultado"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </Link>
                               <Button
                                 variant="ghost"
                                 size="sm"
@@ -851,13 +854,15 @@ export default function DiscManagePage() {
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
                           {evaluation.status === 'COMPLETED' && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => window.open(`/performance/disc/result/${evaluation.id}`, '_blank')}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
+                            <Link href={`/performance/disc/result/${evaluation.id}`}>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                title="Visualizar Resultado"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </Link>
                           )}
                           <Button
                             variant="ghost"

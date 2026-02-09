@@ -2,10 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import {
     BrainCircuit,
     ArrowLeft,
@@ -15,6 +14,9 @@ import {
     Download,
     User,
     Calendar,
+    Target,
+    Zap,
+    MessageSquare,
 } from 'lucide-react';
 import {
     discApi,
@@ -89,36 +91,41 @@ export default function DiscResultPage() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-[60vh]">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+                <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                <p className="text-slate-400 font-bold animate-pulse uppercase tracking-widest text-xs">Gerando Relatório...</p>
             </div>
         );
     }
 
     if (error || !result) {
         return (
-            <div className="space-y-8 max-w-3xl mx-auto py-12">
+            <div className="space-y-8 max-w-3xl mx-auto py-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" onClick={() => window.history.back()}>
-                        <ArrowLeft className="h-5 w-5" />
-                    </Button>
+                    <Link href="/performance/disc/manage">
+                        <Button variant="ghost" size="icon">
+                            <ArrowLeft className="h-5 w-5" />
+                        </Button>
+                    </Link>
                     <div>
                         <h1 className="text-3xl font-black tracking-tight">Resultado DISC</h1>
                     </div>
                 </div>
 
-                <Card className="border-dashed border-2">
-                    <CardContent className="py-16 flex flex-col items-center text-center">
-                        <div className="p-4 bg-red-100 rounded-full mb-6">
+                <Card className="border-dashed border-2 rounded-[2rem]">
+                    <CardContent className="py-20 flex flex-col items-center text-center">
+                        <div className="p-5 bg-red-100 rounded-2xl mb-6">
                             <BrainCircuit className="h-12 w-12 text-red-600" />
                         </div>
-                        <h2 className="text-2xl font-bold mb-2">Erro ao carregar resultado</h2>
-                        <p className="text-muted-foreground max-w-md mb-8">
-                            {error || 'Ocorreu um erro inesperado.'}
+                        <h2 className="text-2xl font-black mb-2 uppercase">Erro ao carregar</h2>
+                        <p className="text-muted-foreground max-w-md mb-8 font-medium">
+                            {error || 'Ocorreu um erro ao processar os dados do perfil.'}
                         </p>
-                        <Button variant="outline" onClick={() => window.history.back()}>
-                            Voltar
-                        </Button>
+                        <Link href="/performance/disc/manage">
+                            <Button variant="outline" className="h-12 px-8 rounded-2xl border-2 font-bold hover:bg-slate-50">
+                                Voltar para Gestão
+                            </Button>
+                        </Link>
                     </CardContent>
                 </Card>
             </div>
@@ -127,91 +134,135 @@ export default function DiscResultPage() {
 
     const profileInfo = profileDescriptions[result.primaryProfile] || profileDescriptions['DOMINANCE'];
 
-    // Ensure scores are numbers even if API returns them differently
     const dVal = (result as any).dScore ?? (result as any).d_score ?? 0;
     const iVal = (result as any).iScore ?? (result as any).i_score ?? 0;
     const sVal = (result as any).sScore ?? (result as any).s_score ?? 0;
     const cVal = (result as any).cScore ?? (result as any).c_score ?? 0;
 
     const chartData = [
-        { subject: 'Dominancia', A: dVal, fullMark: 100 },
-        { subject: 'Influencia', A: iVal, fullMark: 100 },
-        { subject: 'Estabilidade', A: sVal, fullMark: 100 },
-        { subject: 'Conformidade', A: cVal, fullMark: 100 },
+        { subject: 'DOMINÂNCIA', A: dVal, fullMark: 100 },
+        { subject: 'INFLUÊNCIA', A: iVal, fullMark: 100 },
+        { subject: 'ESTABILIDADE', A: sVal, fullMark: 100 },
+        { subject: 'CONFORMIDADE', A: cVal, fullMark: 100 },
     ];
 
     return (
-        <div className="space-y-8 pb-12">
-            {/* Header */}
-            <div className="flex items-start justify-between">
-                <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" onClick={() => window.history.back()}>
-                        <ArrowLeft className="h-5 w-5" />
-                    </Button>
+        <div className="space-y-8 pb-24 animate-in fade-in duration-700">
+            {/* Optimized Header */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-white p-7 rounded-[2rem] shadow-sm border border-slate-100">
+                <div className="flex items-center gap-6">
+                    <Link href="/performance/disc/manage">
+                        <Button variant="outline" size="icon" className="h-14 w-14 rounded-2xl border-2 hover:bg-slate-50 transition-all hover:scale-105 shadow-sm">
+                            <ArrowLeft className="h-6 w-6 text-slate-600" />
+                        </Button>
+                    </Link>
                     <div>
-                        <h1 className="text-3xl font-black tracking-tight flex items-center gap-3">
-                            <BrainCircuit className="h-8 w-8 text-primary" />
-                            Resultado da Avaliacao DISC
-                        </h1>
-                        <p className="text-muted-foreground">Perfil comportamental de {result.employeeName}</p>
+                        <div className="flex items-center gap-2 mb-1">
+                            <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
+                                <BrainCircuit className="h-5 w-5" />
+                            </div>
+                            <h1 className="text-2xl font-black tracking-tight text-slate-900 uppercase">
+                                Relatório Comportamental
+                            </h1>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-1.5 text-slate-400 font-bold text-[10px] uppercase tracking-wider">
+                                <User className="h-3 w-3" />
+                                {result.employeeName}
+                            </div>
+                            <div className="flex items-center gap-1.5 text-slate-400 font-bold text-[10px] uppercase tracking-wider border-l pl-4">
+                                <Calendar className="h-3 w-3" />
+                                {formatDate(result.completedAt)}
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div className="flex gap-2">
-                    <Button variant="outline" onClick={() => window.print()} className="font-bold">
-                        <Download className="h-4 w-4 mr-2" />
+                <div className="flex gap-3">
+                    <Button variant="outline" onClick={() => window.print()} className="h-14 px-8 rounded-2xl font-black border-2 hover:bg-slate-50 shadow-sm uppercase tracking-widest text-xs">
+                        <Download className="h-4 w-4 mr-3" />
                         Exportar PDF
                     </Button>
                 </div>
             </div>
 
-            {/* Employee Info Strip */}
-            <div className="flex flex-wrap gap-4 px-2">
-                <div className="flex items-center gap-2 text-sm bg-slate-100 px-4 py-2 rounded-full font-medium">
-                    <User className="h-4 w-4 text-slate-500" />
-                    <span className="text-slate-500">Colaborador:</span>
-                    <span className="text-slate-900">{result.employeeName}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm bg-slate-100 px-4 py-2 rounded-full font-medium">
-                    <Calendar className="h-4 w-4 text-slate-500" />
-                    <span className="text-slate-500">Concluido em:</span>
-                    <span className="text-slate-900">{formatDate(result.completedAt)}</span>
-                </div>
-            </div>
-
-            {/* Main Profile Card */}
-            <Card className="overflow-hidden border-none shadow-2xl bg-slate-900 text-white">
+            {/* Main Result Hero - Dark Mode Premium */}
+            <Card className="overflow-hidden border-none shadow-3xl bg-slate-950 text-white rounded-[3rem] relative">
+                <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-primary/5 to-transparent pointer-events-none" />
                 <CardContent className="p-0">
-                    <div className="grid grid-cols-1 lg:grid-cols-2">
-                        <div className="p-10 flex flex-col justify-center space-y-6">
-                            <div className="space-y-2">
-                                <Badge className="text-xs font-black uppercase tracking-widest bg-primary hover:bg-primary border-none text-white px-3 py-1">
-                                    Perfil Predominante
+                    <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[500px]">
+                        <div className="lg:col-span-6 p-12 lg:p-20 flex flex-col justify-center space-y-10 relative z-10">
+                            <div className="space-y-4">
+                                <Badge className="text-[10px] font-black uppercase tracking-[0.3em] bg-primary hover:bg-primary border-none text-white px-5 py-2 rounded-full shadow-2xl shadow-primary/40">
+                                    Perfil Comportamental
                                 </Badge>
-                                <h2 className="text-5xl font-black tracking-tighter uppercase">{profileInfo.title}</h2>
+                                <h2 className="text-7xl font-black tracking-tighter uppercase leading-[0.85]">
+                                    {profileInfo.title.split(' (')[0]}
+                                    <span className="block text-primary text-4xl mt-3 font-black opacity-90 tracking-normal italic leading-none lowercase">
+                                        ({profileInfo.shortTitle})
+                                    </span>
+                                </h2>
                             </div>
-                            <p className="text-2xl font-bold text-slate-300 leading-tight">
-                                {profileInfo.description}
-                            </p>
-                            <p className="text-slate-400">
-                                Esta analise reflete o comportamento predominante observado nas respostas fornecidas pelo colaborador.
-                            </p>
+
+                            <div className="space-y-6">
+                                <p className="text-3xl font-bold text-slate-100 leading-tight border-l-4 border-primary pl-6">
+                                    "{profileInfo.description}"
+                                </p>
+                                <p className="text-xl text-slate-400 font-medium leading-relaxed max-w-xl">
+                                    Padrão baseado na metodologia DISC, identificando as tendências naturais de resposta a desafios, pessoas, ritmo e regras.
+                                </p>
+                            </div>
+
+                            <div className="pt-6 flex gap-6">
+                                <div className="flex items-center gap-3">
+                                    <div className="h-12 w-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
+                                        <Zap className="h-5 w-5 text-primary" />
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] uppercase font-black text-slate-500 tracking-widest leading-none">Status</p>
+                                        <p className="font-bold text-slate-200">Finalizado</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="h-12 w-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
+                                        <Target className="h-5 w-5 text-green-400" />
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] uppercase font-black text-slate-500 tracking-widest leading-none">Precisão</p>
+                                        <p className="font-bold text-slate-200">Alta Performance</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div className="bg-slate-800/50 p-10 flex items-center justify-center border-l border-white/5 min-h-[400px]">
-                            <ResponsiveContainer width="100%" height={300}>
+
+                        <div className="lg:col-span-6 bg-[#020617] p-10 lg:p-20 flex items-center justify-center border-l border-white/5 relative overflow-hidden">
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-primary/20 blur-[120px] rounded-full animate-pulse pointer-events-none" />
+
+                            <ResponsiveContainer width="100%" height={450}>
                                 <RadarChart cx="50%" cy="50%" outerRadius="80%" data={chartData}>
-                                    <PolarGrid stroke="#475569" />
-                                    <PolarAngleAxis dataKey="subject" tick={{ fill: '#94a3b8', fontWeight: 'bold', fontSize: 12 }} />
-                                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} stroke="#475569" />
+                                    <PolarGrid stroke="#1e293b" strokeWidth={1.5} />
+                                    <PolarAngleAxis
+                                        dataKey="subject"
+                                        tick={{ fill: '#64748b', fontWeight: '900', fontSize: 10, letterSpacing: '0.2em' }}
+                                    />
+                                    <PolarRadiusAxis
+                                        angle={30}
+                                        domain={[0, 100]}
+                                        tick={false}
+                                        axisLine={false}
+                                    />
                                     <Radar
                                         name="Perfil"
                                         dataKey="A"
                                         stroke={profileInfo.color}
+                                        strokeWidth={5}
                                         fill={profileInfo.color}
-                                        fillOpacity={0.6}
+                                        fillOpacity={0.4}
+                                        dot={{ r: 7, fill: '#fff', strokeWidth: 3, fillOpacity: 1, stroke: profileInfo.color }}
+                                        activeDot={{ r: 10, fill: '#fff', strokeWidth: 4 }}
                                     />
                                     <Tooltip
-                                        contentStyle={{ backgroundColor: '#0f172a', border: 'none', borderRadius: '12px', fontWeight: 'bold' }}
-                                        itemStyle={{ color: '#fff' }}
+                                        contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', fontWeight: '900', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.8)', padding: '15px' }}
+                                        itemStyle={{ color: '#fff', fontSize: '14px' }}
                                     />
                                 </RadarChart>
                             </ResponsiveContainer>
@@ -220,61 +271,87 @@ export default function DiscResultPage() {
                 </CardContent>
             </Card>
 
-            {/* Score Details + Strengths */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="border-none shadow-xl">
-                    <CardHeader>
-                        <CardTitle className="font-black uppercase tracking-tight text-slate-400 text-sm">Detalhamento de Scores</CardTitle>
+            {/* Score Details + Insights Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                {/* Detailed Scores */}
+                <Card className="lg:col-span-4 border-none shadow-2xl rounded-[2.5rem] overflow-hidden bg-white">
+                    <CardHeader className="bg-slate-50/50 pb-8 pt-10 px-10 border-b border-slate-100 flex flex-row items-center justify-between">
+                        <CardTitle className="font-black uppercase tracking-[0.2em] text-slate-400 text-[10px]">Scores Detalhados</CardTitle>
+                        <Badge variant="outline" className="rounded-lg font-black text-[9px] px-2 py-0 border-slate-200">100% TOTAL</Badge>
                     </CardHeader>
-                    <CardContent className="space-y-6">
+                    <CardContent className="space-y-10 pt-10 px-10 pb-12">
                         {[
-                            { label: 'Dominancia (D)', value: dVal, color: '#ef4444' },
-                            { label: 'Influencia (I)', value: iVal, color: '#eab308' },
-                            { label: 'Estabilidade (S)', value: sVal, color: '#22c55e' },
-                            { label: 'Conformidade (C)', value: cVal, color: '#3b82f6' },
+                            { label: 'Dominância (D)', value: dVal, color: '#ef4444', desc: 'Diretividade e resultados' },
+                            { label: 'Influência (I)', value: iVal, color: '#eab308', desc: 'Comunicação e entusiasmo' },
+                            { label: 'Estabilidade (S)', value: sVal, color: '#22c55e', desc: 'Paciência e harmonia' },
+                            { label: 'Conformidade (C)', value: cVal, color: '#3b82f6', desc: 'Precisão e regras' },
                         ].map((item) => (
-                            <div key={item.label}>
-                                <div className="flex justify-between mb-2">
-                                    <span className="font-bold text-slate-700">{item.label}</span>
-                                    <span className="font-black" style={{ color: item.color }}>{item.value}%</span>
+                            <div key={item.label} className="group cursor-default">
+                                <div className="flex justify-between items-end mb-3">
+                                    <div>
+                                        <p className="font-black text-slate-900 uppercase text-sm tracking-tight group-hover:text-primary transition-colors">{item.label}</p>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide">{item.desc}</p>
+                                    </div>
+                                    <span className="font-black text-2xl tabular-nums leading-none" style={{ color: item.color }}>{item.value}%</span>
                                 </div>
-                                <Progress value={item.value} className="h-2" />
+                                <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden p-1 shadow-inner relative">
+                                    <div
+                                        className="h-full rounded-full shadow-lg transition-all duration-1000 ease-out relative z-10"
+                                        style={{ width: `${item.value}%`, backgroundColor: item.color }}
+                                    />
+                                    <div className="absolute top-1/2 right-1 -translate-y-1/2 h-1 w-1 bg-slate-300 rounded-full" />
+                                </div>
                             </div>
                         ))}
                     </CardContent>
                 </Card>
 
-                <Card className="border-none shadow-xl">
-                    <CardHeader>
-                        <CardTitle className="font-black uppercase tracking-tight text-slate-400 text-sm">Pontos Fortes Sugeridos</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-3">
-                            {profileInfo.strengths.map((strength, idx) => (
-                                <div key={idx} className="flex items-center gap-3 p-3 rounded-xl bg-green-50 border border-green-100">
-                                    <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
-                                    <span className="font-medium text-slate-700">{strength}</span>
+                {/* Strengths & Tips */}
+                <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* Strengths */}
+                    <Card className="border-none shadow-2xl rounded-[2.5rem] bg-emerald-50/30 border border-emerald-100/50">
+                        <CardHeader className="pt-10 px-10 pb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-xl bg-emerald-100 text-emerald-600">
+                                    <CheckCircle2 className="h-5 w-5" />
                                 </div>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
+                                <CardTitle className="font-black uppercase tracking-[0.15em] text-emerald-800/60 text-[10px]">Pontos Fortes Sugeridos</CardTitle>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="px-10 pb-12">
+                            <div className="space-y-4">
+                                {profileInfo.strengths.map((strength, idx) => (
+                                    <div key={idx} className="flex items-center gap-4 p-5 rounded-2xl bg-white border border-emerald-100 shadow-sm group hover:scale-[1.02] transition-all">
+                                        <div className="h-2 w-2 rounded-full bg-emerald-400 group-hover:scale-150 transition-all" />
+                                        <span className="font-bold text-slate-700 leading-tight">{strength}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
 
-                <Card className="border-none shadow-xl">
-                    <CardHeader>
-                        <CardTitle className="font-black uppercase tracking-tight text-slate-400 text-sm">Sugestoes de Gestao</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-3">
-                            {profileInfo.tips.map((tip, idx) => (
-                                <div key={idx} className="flex items-start gap-3 p-3 rounded-xl bg-blue-50 border border-blue-100">
-                                    <ArrowRight className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                                    <span className="text-sm font-medium text-slate-700">{tip}</span>
+                    {/* Management Tips */}
+                    <Card className="border-none shadow-2xl rounded-[2.5rem] bg-blue-50/30 border border-blue-100/50">
+                        <CardHeader className="pt-10 px-10 pb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-xl bg-blue-100 text-blue-600">
+                                    <MessageSquare className="h-5 w-5" />
                                 </div>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
+                                <CardTitle className="font-black uppercase tracking-[0.15em] text-blue-800/60 text-[10px]">Dicas para Desenvolvimento</CardTitle>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="px-10 pb-12">
+                            <div className="space-y-4">
+                                {profileInfo.tips.map((tip, idx) => (
+                                    <div key={idx} className="flex items-start gap-4 p-5 rounded-2xl bg-white border border-blue-100 shadow-sm group hover:scale-[1.02] transition-all">
+                                        <ArrowRight className="h-4 w-4 text-blue-500 mt-1 flex-shrink-0 group-hover:translate-x-1 transition-all" />
+                                        <span className="font-bold text-slate-700 leading-tight">{tip}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
         </div>
     );

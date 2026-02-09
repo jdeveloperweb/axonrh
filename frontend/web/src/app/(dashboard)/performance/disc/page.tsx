@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -366,13 +367,14 @@ const MOCK_QUESTIONS: DiscQuestion[] = [
     },
 ];
 
-export default function DiscPage() {
+function DiscContent() {
     const { user } = useAuthStore();
     const { toast } = useToast();
     const [result, setResult] = useState<DiscEvaluation | null>(null);
     const [history, setHistory] = useState<DiscEvaluation[]>([]);
     const [loading, setLoading] = useState(true);
-    const [isTakingAssessment, setIsTakingAssessment] = useState(false);
+    const searchParams = useSearchParams();
+    const [isTakingAssessment, setIsTakingAssessment] = useState(searchParams.get('take') === 'true');
     const [questions, setQuestions] = useState<DiscQuestion[]>([]);
     const [answers, setAnswers] = useState<Record<string, string>>({});
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -886,5 +888,17 @@ export default function DiscPage() {
                 </CardContent>
             </Card>
         </div>
+    );
+}
+
+export default function DiscPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-[60vh]">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        }>
+            <DiscContent />
+        </Suspense>
     );
 }
