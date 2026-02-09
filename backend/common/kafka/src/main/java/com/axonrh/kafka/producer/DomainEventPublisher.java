@@ -134,6 +134,6 @@ public class DomainEventPublisher {
                 event.getEventType().getBytes(StandardCharsets.UTF_8)));
 
         record.headers().add(new RecordHeader("schemaVersion",
-                (event.getSchemaVersion() != null ? event.getSchemaVersion() : 1).toString().getBytes(StandardCharsets.UTF_8)));
+                String.valueOf(event.getSchemaVersion() != null ? event.getSchemaVersion() : 1).getBytes(StandardCharsets.UTF_8)));
     }
 }
