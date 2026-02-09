@@ -153,7 +153,7 @@ export default function PDIDetailPage() {
   const [newActionOpen, setNewActionOpen] = useState(false);
   const [completeActionOpen, setCompleteActionOpen] = useState(false);
   const [selectedAction, setSelectedAction] = useState<PDIAction | null>(null);
-  const [actionFilter, setActionFilter] = useState<string>('ALL');
+  const [actionFilter, setActionFilter] = useState<string>('all');
   const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(null);
 
   const handleDeletePDI = async () => {
@@ -384,7 +384,7 @@ export default function PDIDetailPage() {
   const isEditable = pdi.status === 'DRAFT' || pdi.status === 'ACTIVE';
   const statusConfig = STATUS_CONFIG[pdi.status] || STATUS_CONFIG['DRAFT'];
 
-  const filteredActions = actionFilter === 'ALL'
+  const filteredActions = actionFilter === 'all'
     ? pdi.actions
     : pdi.actions.filter(a => a.status === actionFilter);
 
@@ -606,13 +606,13 @@ export default function PDIDetailPage() {
                 {pdi.actions.length} ações planejadas - {completedActions} concluídas
               </CardDescription>
             </div>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
               <Select value={actionFilter} onValueChange={setActionFilter}>
                 <SelectTrigger className="w-[160px] bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 h-9">
                   <SelectValue placeholder="Filtrar" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ALL">Todas</SelectItem>
+                  <SelectItem value="all">Todas</SelectItem>
                   <SelectItem value="PENDING">Pendentes</SelectItem>
                   <SelectItem value="IN_PROGRESS">Em Andamento</SelectItem>
                   <SelectItem value="COMPLETED">Concluídas</SelectItem>
