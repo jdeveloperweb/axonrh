@@ -360,19 +360,19 @@ export function EmployeePerformanceView() {
                 <div className="space-y-8">
 
                     {/* Card DISC */}
-                    <Card className="border-none shadow-premium overflow-hidden bg-[#0f172a] text-white relative group">
+                    <Card className="border-none shadow-2xl overflow-hidden bg-[#0f172a] text-white relative group">
                         {/* Efeito de brilho no fundo */}
                         <div className="absolute -right-20 -top-20 w-64 h-64 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all duration-500"></div>
 
-                        <CardHeader className="relative">
-                            <CardTitle className="flex items-center gap-2 text-lg font-bold">
-                                <div className="p-2 bg-amber-500/10 rounded-lg">
-                                    <BrainCircuit className="h-5 w-5 text-amber-400" />
+                        <CardHeader className="relative pb-2">
+                            <CardTitle className="flex items-center gap-3 text-xl font-black text-white">
+                                <div className="p-2.5 bg-amber-500/20 rounded-xl shadow-lg shadow-amber-500/10 ring-1 ring-amber-500/20">
+                                    <BrainCircuit className="h-6 w-6 text-amber-400" />
                                 </div>
-                                Perfil DISC
+                                <span className="tracking-tight">Perfil DISC</span>
                             </CardTitle>
-                            <CardDescription className="text-slate-400">
-                                Seu perfil comportamental mapeado pela AxonIA
+                            <CardDescription className="text-slate-300 font-medium ml-12 -mt-2.5">
+                                Seu mapeamento comportamental pela AxonIA
                             </CardDescription>
                         </CardHeader>
 
@@ -427,15 +427,15 @@ export function EmployeePerformanceView() {
                                                 </svg>
                                             </div>
 
-                                            <div className="text-center z-10">
-                                                <span className="text-5xl font-black" style={{ color: profileLabels[latestDisc.primaryProfile]?.color || '#eab308', filter: `drop-shadow(0 0 10px ${profileLabels[latestDisc.primaryProfile]?.color || '#eab308'}80)` }}>
+                                            <div className="text-center z-10 bg-[#0f172a]/80 backdrop-blur-sm p-4 rounded-3xl border border-white/5 shadow-2xl">
+                                                <span className="text-6xl font-black" style={{ color: profileLabels[latestDisc.primaryProfile]?.color || '#eab308', filter: `drop-shadow(0 0 15px ${profileLabels[latestDisc.primaryProfile]?.color || '#eab308'}60)` }}>
                                                     {profileLabels[latestDisc.primaryProfile]?.letter || 'I'}
                                                 </span>
-                                                <div className="mt-1">
-                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none">
+                                                <div className="mt-2">
+                                                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/90">
                                                         {profileLabels[latestDisc.primaryProfile]?.title || 'Influente'}
                                                     </p>
-                                                    <p className="text-lg font-bold text-white mt-1">
+                                                    <p className="text-2xl font-black text-white mt-1">
                                                         {latestDisc[latestDisc.primaryProfile === 'DOMINANCE' ? 'dScore' : latestDisc.primaryProfile === 'INFLUENCE' ? 'iScore' : latestDisc.primaryProfile === 'STEADINESS' ? 'sScore' : 'cScore'] || 0}%
                                                     </p>
                                                 </div>
@@ -457,15 +457,15 @@ export function EmployeePerformanceView() {
                                         </div>
                                     </div>
 
-                                    <div className="bg-slate-800/40 rounded-2xl p-4 border border-slate-700/50">
-                                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Principais Características</p>
-                                        <div className="grid grid-cols-2 gap-3">
+                                    <div className="bg-slate-800/60 rounded-[2rem] p-6 border border-white/5 shadow-inner">
+                                        <p className="text-[10px] font-black text-amber-400/80 uppercase tracking-[0.2em] mb-4 text-center">Principais Características</p>
+                                        <div className="grid grid-cols-2 gap-4">
                                             {(profileLabels[latestDisc.primaryProfile]?.traits || []).map((trait, i) => (
-                                                <div key={i} className="flex items-center gap-2 group/trait">
-                                                    <div className="p-1 rounded bg-slate-800 group-hover/trait:bg-slate-700 transition-colors">
-                                                        <CheckCircle2 className="h-3 w-3" style={{ color: profileLabels[latestDisc.primaryProfile]?.color || '#eab308' }} />
+                                                <div key={i} className="flex items-center gap-3 group/trait">
+                                                    <div className="p-1.5 rounded-lg bg-slate-900/80 border border-white/10 group-hover/trait:border-amber-500/50 transition-all shadow-sm">
+                                                        <CheckCircle2 className="h-3.5 w-3.5 text-amber-500/70 group-hover/trait:text-amber-400 transition-all group-hover/trait:scale-110" />
                                                     </div>
-                                                    <span className="text-xs text-slate-300 group-hover/trait:text-white transition-colors">
+                                                    <span className="text-sm font-bold text-slate-100 group-hover/trait:text-white transition-colors leading-tight">
                                                         {trait}
                                                     </span>
                                                 </div>
@@ -473,11 +473,17 @@ export function EmployeePerformanceView() {
                                         </div>
                                     </div>
 
-                                    <div className="flex flex-col gap-3">
-                                        <Link href="/performance/disc/profile">
-                                            <Button className="w-full bg-white/10 hover:bg-white/20 text-white border-white/20 transition-all py-6 font-bold shadow-sm">
-                                                Ver Detalhes do Perfil
+                                    <div className="flex flex-col gap-3 pt-2">
+                                        <Link href="/performance/disc/profile" className="w-full">
+                                            <Button className="w-full bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 text-white border border-white/10 transition-all py-7 font-black uppercase tracking-widest text-xs shadow-2xl rounded-2xl">
+                                                Ver Relatório Completo
+                                                <ArrowRight className="ml-2 h-4 w-4" />
                                             </Button>
+                                        </Link>
+                                        <Link href="/performance/disc?take=true" className="w-full text-center">
+                                            <button className="text-slate-400 hover:text-amber-400 transition-all py-2 font-bold text-[10px] uppercase tracking-[0.2em]">
+                                                Refazer Teste DISC
+                                            </button>
                                         </Link>
                                     </div>
                                 </div>

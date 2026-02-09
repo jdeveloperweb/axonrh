@@ -32,25 +32,25 @@ const profileDescriptions: Record<string, { title: string; description: string; 
     DOMINANCE: {
         title: 'Dominante (D)',
         description: 'Você é focado em resultados, direto e assertivo. Gosta de desafios e de assumir o controle das situações.',
-        color: '#ef4444',
+        color: '#ff5a5a',
         strengths: ['Tomada de decisão rápida', 'Visão orientada a metas', 'Disposição para assumir riscos', 'Capacidade de liderar sob pressão'],
     },
     INFLUENCE: {
         title: 'Influente (I)',
         description: 'Você é comunicativo, entusiasta e persuasivo. Gosta de interagir com pessoas e criar um ambiente positivo.',
-        color: '#eab308',
+        color: '#ffcc33',
         strengths: ['Otimismo e entusiasmo', 'Facilidade em persuadir', 'Criatividade na solução de problemas', 'Habilidade de networking'],
     },
     STEADINESS: {
         title: 'Estável (S)',
         description: 'Você é calmo, paciente e leal. Valoriza a cooperação e a estabilidade no ambiente de trabalho.',
-        color: '#22c55e',
+        color: '#4ade80',
         strengths: ['Excelente ouvinte', 'Persistência e consistência', 'Habilidade conciliadora', 'Confiável e leal'],
     },
     CONSCIENTIOUSNESS: {
         title: 'Conforme (C)',
         description: 'Você é analítico, preciso e detalhista. Valoriza a qualidade, regras e procedimentos.',
-        color: '#3b82f6',
+        color: '#60a5fa',
         strengths: ['Análise profunda', 'Padrões elevados de qualidade', 'Planejamento sistemático', 'Atenção aos detalhes'],
     },
 };
@@ -383,47 +383,34 @@ function DiscContent() {
 
     const isAdmin = user?.roles?.some((role: string) => ['ADMIN', 'RH', 'GESTOR_RH', 'ANALISTA_DP'].includes(role));
 
-    useEffect(() => {
-        if (user?.id) {
-            loadData();
-        }
-    }, [user?.id]);
-
     const loadData = async () => {
         try {
             setLoading(true);
             if (!user?.id) return;
 
-            // BUSCAR O ID DO COLABORADOR
             const employee = await employeesApi.getMe().catch(() => null);
             if (!employee) {
-                console.warn('Colaborador não encontrado para este usuário.');
                 setLoading(false);
                 return;
             }
 
             const employeeId = employee.id;
 
-            // Load questions
-            try {
-                const questionsRes = await discApi.getQuestions();
-                setQuestions(questionsRes.length > 0 ? questionsRes : MOCK_QUESTIONS);
-            } catch {
-                console.log('Using mock questions');
-                setQuestions(MOCK_QUESTIONS);
-            }
+            // Load everything in parallel
+            const [questionsRes, latestResult, historyRes, pendingAssignments] = await Promise.all([
+                discApi.getQuestions().catch(() => MOCK_QUESTIONS),
+                discApi.getLatest(employeeId).catch(() => null),
+                discApi.getHistory(employeeId).catch(() => []),
+                discApi.getPendingForEmployee(employeeId).catch(() => [])
+            ]);
 
-            // Load latest result and history
-            try {
-                const res = await discApi.getLatest(employeeId);
-                setResult(res);
+            setQuestions(questionsRes.length > 0 ? questionsRes : MOCK_QUESTIONS);
+            setResult(latestResult);
+            setHistory(historyRes);
 
-                const historyRes = await discApi.getHistory(employeeId);
-                setHistory(historyRes);
-            } catch {
-                console.log('Nenhum resultado DISC encontrado');
-                setResult(null);
-                setHistory([]);
+            // Se houver pendente, PRIORIZAR o início do teste
+            if (pendingAssignments.length > 0 && searchParams.get('take') !== 'false') {
+                setIsTakingAssessment(true);
             }
         } catch (error) {
             console.error('Error loading data:', error);
@@ -431,6 +418,12 @@ function DiscContent() {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        if (user?.id) {
+            loadData();
+        }
+    }, [user?.id]);
 
     const handleStart = () => {
         setIsTakingAssessment(true);
@@ -541,70 +534,74 @@ function DiscContent() {
         const progress = ((currentQuestionIndex) / questions.length) * 100;
 
         return (
-            <div className="max-w-3xl mx-auto space-y-8 py-12">
+            <div className="max-w-3xl mx-auto space-y-8 py-12 animate-in fade-in zoom-in duration-500">
                 <div className="text-center space-y-4">
-                    <h2 className="text-2xl font-black uppercase tracking-tighter text-slate-400">Avaliação Comportamental</h2>
-                    <h1 className="text-4xl font-black">Mapeando seu Perfil</h1>
+                    <Badge variant="outline" className="px-4 py-1 text-xs font-black uppercase tracking-widest text-primary border-primary/20 bg-primary/5">
+                        Mapeamento AxonIA
+                    </Badge>
+                    <h1 className="text-5xl font-black tracking-tight text-slate-900">Teste Comportamental</h1>
                 </div>
 
-                <div className="space-y-3">
+                <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 shadow-inner space-y-4">
                     <div className="flex justify-between text-xs font-black uppercase tracking-widest text-slate-500">
-                        <span>Questão {currentQuestionIndex + 1} de {questions.length}</span>
+                        <span>Questão <span className="text-slate-900">{currentQuestionIndex + 1}</span> de {questions.length}</span>
                         <span className="text-primary">{Math.round(progress)}% Concluído</span>
                     </div>
-                    <Progress value={progress} className="h-3 rounded-full shadow-inner" />
+                    <Progress value={progress} className="h-2.5 rounded-full shadow-inner bg-slate-200" />
                 </div>
 
-                <Card className="border-none shadow-2xl bg-white overflow-hidden">
-                    <div className="h-2 bg-primary" />
-                    <CardHeader className="pb-8 pt-10 px-10">
+                <Card className="border-none shadow-2xl bg-white overflow-hidden rounded-[2.5rem]">
+                    <div className="h-1.5 bg-gradient-to-r from-primary to-blue-600" />
+                    <CardHeader className="pb-8 pt-12 px-10 text-center">
+                        <CardDescription className="text-sm font-bold uppercase tracking-widest text-primary/60 mb-2">Comportamento Natural</CardDescription>
                         <CardTitle className="text-2xl font-black leading-tight text-slate-900">{currentQ.text}</CardTitle>
-                        <CardDescription className="text-lg">Escolha a alternativa que mais ressoa com sua forma natural de agir:</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4 px-10 pb-12">
-                        {currentQ.options.map((opt) => (
-                            <button
-                                key={opt.id}
-                                onClick={() => handleAnswer(currentQ.id.toString(), opt.value)}
-                                className={`w-full text-left p-6 border-2 rounded-2xl transition-all duration-300 flex items-center gap-4 group ${answers[currentQ.id.toString()] === opt.value
-                                    ? 'bg-primary/5 border-primary shadow-lg shadow-primary/10'
-                                    : 'hover:border-slate-300 hover:bg-slate-50 border-slate-100'
-                                    }`}
-                            >
-                                <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold transition-all ${answers[currentQ.id.toString()] === opt.value
-                                    ? 'bg-primary border-primary text-white scale-110'
-                                    : 'border-slate-200 text-slate-400 group-hover:border-slate-300'
-                                    }`}>
-                                    {answers[currentQ.id.toString()] === opt.value && <CheckCircle2 className="h-5 w-5" />}
-                                </div>
-                                <span className={`text-lg font-bold transition-all ${answers[currentQ.id.toString()] === opt.value ? 'text-primary' : 'text-slate-600'}`}>
-                                    {opt.text}
-                                </span>
-                            </button>
-                        ))}
+                        <div className="grid grid-cols-1 gap-4">
+                            {currentQ.options.map((opt) => (
+                                <button
+                                    key={opt.id}
+                                    onClick={() => handleAnswer(currentQ.id.toString(), opt.value)}
+                                    className={`w-full text-left p-6 border-2 rounded-2xl transition-all duration-300 flex items-center gap-4 group ${answers[currentQ.id.toString()] === opt.value
+                                        ? 'bg-primary/5 border-primary shadow-lg shadow-primary/10'
+                                        : 'hover:border-slate-300 hover:bg-slate-50 border-slate-100 bg-white'
+                                        }`}
+                                >
+                                    <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center font-bold transition-all ${answers[currentQ.id.toString()] === opt.value
+                                        ? 'bg-primary border-primary text-white scale-110 shadow-lg shadow-primary/40'
+                                        : 'border-slate-200 text-slate-400 group-hover:border-slate-300'
+                                        }`}>
+                                        {answers[currentQ.id.toString()] === opt.value ? <CheckCircle2 className="h-6 w-6" /> : (currentQuestionIndex + 1)}
+                                    </div>
+                                    <span className={`text-lg font-black transition-all ${answers[currentQ.id.toString()] === opt.value ? 'text-primary' : 'text-slate-700'}`}>
+                                        {opt.text}
+                                    </span>
+                                </button>
+                            ))}
+                        </div>
                     </CardContent>
                 </Card>
 
-                <div className="flex justify-between items-center px-4">
+                <div className="flex justify-between items-center px-4 pt-4">
                     <Button
-                        variant="outline"
+                        variant="ghost"
                         onClick={handlePrevious}
                         disabled={currentQuestionIndex === 0}
-                        className="font-bold text-slate-500 hover:text-slate-900"
+                        className="font-black text-slate-400 hover:text-slate-700 uppercase tracking-widest text-xs"
                     >
                         <ArrowLeft className="h-4 w-4 mr-2" />
-                        Anterior
+                        Questão Anterior
                     </Button>
                     <Button
                         onClick={handleNext}
                         disabled={!answers[currentQ.id.toString()] || submitting}
-                        className="h-14 px-10 text-lg font-black shadow-xl shadow-primary/20 hover:scale-105 transition-all"
+                        className="h-16 px-12 text-lg font-black rounded-2xl shadow-xl shadow-primary/30 hover:scale-105 transition-all bg-primary hover:bg-primary/90 text-white"
                     >
-                        {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                        {submitting && <Loader2 className="h-5 w-5 mr-3 animate-spin" />}
                         {currentQuestionIndex === questions.length - 1
-                            ? (submitting ? 'Analisando perfil...' : 'Finalizar Análise')
+                            ? (submitting ? 'Gerando Laudo...' : 'Ver Meu Perfil')
                             : 'Próxima Questão'}
-                        {!submitting && <ArrowRight className="ml-2 h-5 w-5" />}
+                        {!submitting && <ArrowRight className="ml-3 h-5 w-5" />}
                     </Button>
                 </div>
             </div>
