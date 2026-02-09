@@ -96,10 +96,7 @@ public class NotificationEvent extends DomainEvent {
         return "Notification";
     }
 
-    @Override
-    public String getEventType() {
-        return EVENT_TYPE;
-    }
+
 
     public static NotificationEventBuilder<?, ?> create() {
         return NotificationEvent.builder()
