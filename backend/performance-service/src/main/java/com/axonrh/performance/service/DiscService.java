@@ -141,10 +141,8 @@ public class DiscService {
             evaluation.setEmployeeName(employeeName);
         }
 
-        log.info("Processing DISC evaluation for employee: {}. Total answers: {}", employeeName, answers.size());
-        if (log.isDebugEnabled()) {
-            log.debug("Answers: {}", answers);
-        }
+        log.info("Processing DISC evaluation for employee: {}. Total answers: {}. Answers: {}", 
+            employeeName, answers.size(), answers);
 
         // Calculate scores
         int dCount = 0, iCount = 0, sCount = 0, cCount = 0;
@@ -362,12 +360,31 @@ public class DiscService {
     public void deleteEvaluation(UUID tenantId, UUID evaluationId) {
         DiscEvaluation evaluation = evaluationRepository.findByTenantIdAndId(tenantId, evaluationId)
             .orElseThrow(() -> new EntityNotFoundException("Avaliacao DISC nao encontrada"));
+        
+        // Find if there's an assignment pointing to this evaluation and delete it too
+        assignmentRepository.findByTenantIdAndEmployeeIdAndStatus(tenantId, evaluation.getEmployeeId(), DiscAssessmentStatus.COMPLETED)
+            .stream()
+            .filter(a -> evaluationId.equals(a.getEvaluationId()))
+            .forEach(assignmentRepository::delete);
+
         evaluationRepository.delete(evaluation);
     }
 
     public void deleteAssignment(UUID tenantId, UUID assignmentId) {
         DiscAssignment assignment = assignmentRepository.findByTenantIdAndId(tenantId, assignmentId)
             .orElseThrow(() -> new EntityNotFoundException("Atribuicao DISC nao encontrada"));
+        
+        // If it has an evaluation, delete it too
+        if (assignment.getEvaluationId() != null) {
+            evaluationRepository.findByTenantIdAndId(tenantId, assignment.getEvaluationId())
+                .ifPresent(evaluationRepository::delete);
+        } else {
+            // Also try to find any pending/in_progress evaluation for this employee that was created for this assignment
+            evaluationRepository.findFirstByTenantIdAndEmployeeIdAndStatusIn(tenantId, assignment.getEmployeeId(),
+                    Arrays.asList(DiscAssessmentStatus.PENDING, DiscAssessmentStatus.IN_PROGRESS, DiscAssessmentStatus.EXPIRED))
+                .ifPresent(evaluationRepository::delete);
+        }
+
         assignmentRepository.delete(assignment);
     }
 

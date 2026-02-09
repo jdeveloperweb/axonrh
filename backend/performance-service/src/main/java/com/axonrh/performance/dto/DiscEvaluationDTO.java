@@ -2,6 +2,7 @@ package com.axonrh.performance.dto;
 
 import com.axonrh.performance.entity.DiscEvaluation;
 import com.axonrh.performance.entity.enums.DiscAssessmentStatus;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.LocalDateTime;
 
@@ -10,9 +11,13 @@ public class DiscEvaluationDTO {
     private String id;
     private String employeeId;
     private String employeeName;
+    @JsonProperty("dScore")
     private Integer dScore;
+    @JsonProperty("iScore")
     private Integer iScore;
+    @JsonProperty("sScore")
     private Integer sScore;
+    @JsonProperty("cScore")
     private Integer cScore;
     private String primaryProfile;
     private String secondaryProfile;
@@ -68,34 +73,42 @@ public class DiscEvaluationDTO {
         this.employeeName = employeeName;
     }
 
+    @JsonProperty("dScore")
     public Integer getDScore() {
         return dScore;
     }
 
+    @JsonProperty("dScore")
     public void setDScore(Integer dScore) {
         this.dScore = dScore;
     }
 
+    @JsonProperty("iScore")
     public Integer getIScore() {
         return iScore;
     }
 
+    @JsonProperty("iScore")
     public void setIScore(Integer iScore) {
         this.iScore = iScore;
     }
 
+    @JsonProperty("sScore")
     public Integer getSScore() {
         return sScore;
     }
 
+    @JsonProperty("sScore")
     public void setSScore(Integer sScore) {
         this.sScore = sScore;
     }
 
+    @JsonProperty("cScore")
     public Integer getCScore() {
         return cScore;
     }
 
+    @JsonProperty("cScore")
     public void setCScore(Integer cScore) {
         this.cScore = cScore;
     }

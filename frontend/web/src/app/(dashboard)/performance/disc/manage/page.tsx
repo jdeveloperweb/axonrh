@@ -750,44 +750,50 @@ export default function DiscManagePage() {
                       </TableCell>
                       <TableCell>{formatDate(assignment.createdAt)}</TableCell>
                       <TableCell className="text-right">
-                        {assignment.status === 'PENDING' && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleCancelAssignment(assignment.id)}
-                            title="Cancelar Atribuicao"
-                          >
-                            <XCircle className="h-4 w-4 text-red-500" />
-                          </Button>
-                        )}
-                        {assignment.status === 'CANCELLED' && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteAssignment(assignment.id)}
-                            title="Excluir Atribuicao"
-                          >
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                          </Button>
-                        )}
-                        {assignment.evaluationId && (
-                          <div className="flex justify-end gap-1">
+                        <div className="flex justify-end gap-1">
+                          {assignment.status === 'PENDING' && (
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => window.open(`/performance/disc/result/${assignment.evaluationId}`, '_blank')}
+                              onClick={() => handleCancelAssignment(assignment.id)}
+                              title="Cancelar Atribuicao"
                             >
-                              <Eye className="h-4 w-4" />
+                              <XCircle className="h-4 w-4 text-orange-500" />
                             </Button>
+                          )}
+
+                          {(assignment.status === 'PENDING' || assignment.status === 'IN_PROGRESS' || assignment.status === 'EXPIRED' || assignment.status === 'CANCELLED') && (
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleDeleteEvaluation(assignment.evaluationId!)}
+                              onClick={() => handleDeleteAssignment(assignment.id)}
+                              title="Excluir Registro"
                             >
                               <Trash2 className="h-4 w-4 text-red-500" />
                             </Button>
-                          </div>
-                        )}
+                          )}
+
+                          {assignment.evaluationId && (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => window.open(`/performance/disc/result/${assignment.evaluationId}`, '_blank')}
+                                title="Visualizar Resultado"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteAssignment(assignment.id)}
+                                title="Excluir Avaliacao e Atribuicao"
+                              >
+                                <Trash2 className="h-4 w-4 text-red-500" />
+                              </Button>
+                            </>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
