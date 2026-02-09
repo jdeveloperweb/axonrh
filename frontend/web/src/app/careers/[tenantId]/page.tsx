@@ -439,8 +439,8 @@ export default function CareersPage() {
                             <div className="aspect-square bg-gradient-to-br from-[var(--color-primary)]/10 to-blue-600/10 rounded-full flex items-center justify-center p-12">
                                 <div className="w-full h-full bg-white rounded-3xl shadow-2xl overflow-hidden relative group">
                                     <Image
-                                        src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80"
-                                        alt="Equipe colaborando e aproveitando o ambiente de trabalho"
+                                        src="https://images.unsplash.com/photo-1576091160550-2187580018f7?auto=format&fit=crop&w=800&q=80"
+                                        alt="Time de saúde realizando monitoramento proativo e gestão de custos"
                                         fill
                                         className="object-cover group-hover:scale-110 transition-transform duration-700"
                                     />
