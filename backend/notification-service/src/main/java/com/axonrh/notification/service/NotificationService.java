@@ -55,6 +55,8 @@ public class NotificationService {
         // 1. Get user preferences
         var prefs = preferenceService.getPreferences(tenantId, userId);
         
+        log.info("Preferencias do usuario {}: inApp={}, push={}", userId, prefs.isInAppEnabled(), prefs.isPushEnabled());
+        
         // 2. Check category-specific preferences if category is provided
         boolean inAppEnabled = prefs.isInAppEnabled();
         boolean pushEnabled = prefs.isPushEnabled() && sendPush;
@@ -64,8 +66,11 @@ public class NotificationService {
             if (catPrefs != null) {
                 inAppEnabled = inAppEnabled && catPrefs.isInApp();
                 pushEnabled = pushEnabled && catPrefs.isPush();
+                log.info("Preferencias da categoria {}: inApp={}, push={}", category, catPrefs.isInApp(), catPrefs.isPush());
             }
         }
+
+        log.info("Notificacao sera criada? inApp={}, push={}", inAppEnabled, pushEnabled);
 
         Notification saved = null;
         
@@ -89,9 +94,13 @@ public class NotificationService {
             notification.setSourceId(sourceId);
 
             saved = notificationRepository.save(notification);
+            
+            log.info("Notificacao salva com ID: {} para usuario: {}", saved.getId(), userId);
 
             // Send via WebSocket
             sendWebSocketNotification(userId, saved);
+        } else {
+            log.warn("Notificacao NAO foi salva - inAppEnabled=false para usuario: {}", userId);
         }
 
         // 4. Send push notification if enabled
