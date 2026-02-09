@@ -283,7 +283,7 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
                             </h2>
                             <div className="space-y-4">
                                 {pendingDisc.map((disc) => (
-                                    <div key={disc.id} className="flex items-start gap-4 p-5 bg-white rounded-2xl shadow-sm border-l-4 border-l-orange-500 border-orange-100 hover:border-orange-200 transition-all cursor-pointer" onClick={() => router.push(`/performance/disc`)}>
+                                    <div key={disc.id} className="flex items-start gap-4 p-5 bg-white rounded-2xl shadow-sm border-l-4 border-l-orange-500 border-orange-100 hover:border-orange-200 transition-all cursor-pointer" onClick={() => router.push(`/performance/disc?take=true`)}>
                                         <div className="p-3 bg-orange-50 rounded-xl text-orange-600">
                                             <BrainCircuit className="w-6 h-6" />
                                         </div>

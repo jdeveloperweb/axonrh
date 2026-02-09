@@ -43,10 +43,10 @@ import { useAuthStore } from '@/stores/auth-store';
 import { cn } from '@/lib/utils';
 
 const profileLabels: Record<string, { title: string; letter: string; color: string; traits: string[] }> = {
-    DOMINANCE: { title: 'Dominante', letter: 'D', color: '#ef4444', traits: ['Decisivo', 'Assertivo', 'Orientado a resultados', 'Competitivo'] },
-    INFLUENCE: { title: 'Influente', letter: 'I', color: '#eab308', traits: ['Comunicativo', 'Persuasivo', 'Otimista', 'Entusiasta'] },
-    STEADINESS: { title: 'Estavel', letter: 'S', color: '#22c55e', traits: ['Paciente', 'Confiavel', 'Leal', 'Cooperativo'] },
-    CONSCIENTIOUSNESS: { title: 'Conforme', letter: 'C', color: '#3b82f6', traits: ['Analitico', 'Preciso', 'Sistematico', 'Detalhista'] },
+    DOMINANCE: { title: 'Dominante', letter: 'D', color: '#ff5a5a', traits: ['Decisivo', 'Assertivo', 'Orientado a resultados', 'Competitivo'] },
+    INFLUENCE: { title: 'Influente', letter: 'I', color: '#ffcc33', traits: ['Comunicativo', 'Persuasivo', 'Otimista', 'Entusiasta'] },
+    STEADINESS: { title: 'Estavel', letter: 'S', color: '#4ade80', traits: ['Paciente', 'Confiavel', 'Leal', 'Cooperativo'] },
+    CONSCIENTIOUSNESS: { title: 'Conforme', letter: 'C', color: '#60a5fa', traits: ['Analitico', 'Preciso', 'Sistematico', 'Detalhista'] },
 };
 
 export function EmployeePerformanceView() {
@@ -180,7 +180,7 @@ export function EmployeePerformanceView() {
                                 key={discItem.id}
                                 variant="outline"
                                 className="bg-white/50 backdrop-blur-sm border-amber-200 hover:bg-amber-100 transition-all text-amber-900"
-                                onClick={() => router.push(`/performance/disc`)}
+                                onClick={() => router.push(`/performance/disc?take=true`)}
                             >
                                 <BrainCircuit className="mr-2 h-4 w-4" />
                                 Realizar Teste DISC
@@ -384,7 +384,7 @@ export function EmployeePerformanceView() {
                                             Você tem uma avaliação DISC pendente. Descubra seus motivadores, medos e estilo de comunicação para evoluir em sua carreira.
                                         </p>
                                     </div>
-                                    <Link href="/performance/disc">
+                                    <Link href="/performance/disc?take=true">
                                         <Button className="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold shadow-lg shadow-amber-500/20 py-6 transition-all transform hover:scale-[1.02]">
                                             Começar Teste Agora
                                             <ArrowRight className="ml-2 h-4 w-4" />
@@ -397,8 +397,8 @@ export function EmployeePerformanceView() {
                                     <div className="flex items-center justify-around py-2">
                                         <div className="relative w-36 h-36 flex items-center justify-center">
                                             {/* Rings decorativos com animação de pulso suave */}
-                                            <div className="absolute inset-0 border-2 rounded-full opacity-20 animate-pulse" style={{ borderColor: profileLabels[latestDisc.primaryProfile]?.color || '#eab308' }}></div>
-                                            <div className="absolute inset-2 border-2 rounded-full opacity-40" style={{ borderColor: (profileLabels[latestDisc.primaryProfile]?.color || '#eab308') + '88' }}></div>
+                                            <div className="absolute inset-0 border-[3px] rounded-full opacity-30 animate-pulse" style={{ borderColor: profileLabels[latestDisc.primaryProfile]?.color || '#eab308' }}></div>
+                                            <div className="absolute inset-2 border-2 rounded-full opacity-50 bg-white/5" style={{ borderColor: (profileLabels[latestDisc.primaryProfile]?.color || '#eab308') + 'aa' }}></div>
 
                                             {/* Semicírculo de progresso */}
                                             <div className="absolute inset-0">
@@ -428,7 +428,7 @@ export function EmployeePerformanceView() {
                                             </div>
 
                                             <div className="text-center z-10">
-                                                <span className="text-5xl font-black drop-shadow-glow" style={{ color: profileLabels[latestDisc.primaryProfile]?.color || '#eab308' }}>
+                                                <span className="text-5xl font-black" style={{ color: profileLabels[latestDisc.primaryProfile]?.color || '#eab308', filter: `drop-shadow(0 0 10px ${profileLabels[latestDisc.primaryProfile]?.color || '#eab308'}80)` }}>
                                                     {profileLabels[latestDisc.primaryProfile]?.letter || 'I'}
                                                 </span>
                                                 <div className="mt-1">
@@ -448,9 +448,9 @@ export function EmployeePerformanceView() {
                                                 const score = latestDisc[key === 'DOMINANCE' ? 'dScore' : key === 'INFLUENCE' ? 'iScore' : key === 'STEADINESS' ? 'sScore' : 'cScore'] || 0;
                                                 return (
                                                     <div key={key} className="flex items-center gap-2">
-                                                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: label.color }}></div>
-                                                        <span className="text-[10px] font-bold text-slate-500 w-3">{label.letter}</span>
-                                                        <span className="text-[11px] font-medium text-slate-300">{score}%</span>
+                                                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: label.color, boxShadow: `0 0 8px ${label.color}80` }}></div>
+                                                        <span className="text-[11px] font-black text-white w-3">{label.letter}</span>
+                                                        <span className="text-xs font-bold text-slate-200 tabular-nums">{score}%</span>
                                                     </div>
                                                 );
                                             })}
@@ -475,7 +475,7 @@ export function EmployeePerformanceView() {
 
                                     <div className="flex flex-col gap-3">
                                         <Link href="/performance/disc/profile">
-                                            <Button className="w-full bg-white/5 hover:bg-white/10 text-white border-slate-700 transition-all py-6">
+                                            <Button className="w-full bg-white/10 hover:bg-white/20 text-white border-white/20 transition-all py-6 font-bold shadow-sm">
                                                 Ver Detalhes do Perfil
                                             </Button>
                                         </Link>
@@ -488,7 +488,7 @@ export function EmployeePerformanceView() {
                                             Descubra seu perfil comportamental DISC e entenda melhor como você interage com o time.
                                         </p>
                                     </div>
-                                    <Link href="/performance/disc">
+                                    <Link href="/performance/disc?take=true">
                                         <Button className="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold shadow-lg shadow-amber-500/20">
                                             Realizar Teste DISC
                                         </Button>

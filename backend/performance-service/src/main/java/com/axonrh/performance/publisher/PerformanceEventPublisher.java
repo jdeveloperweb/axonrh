@@ -179,7 +179,7 @@ public class PerformanceEventPublisher {
                     .body("Você possui um teste DISC pendente. Por favor, reserve um tempo para realizá-lo.")
                     .category("PERFORMANCE")
                     .priority("HIGH")
-                    .actionUrl("/performance/disc")
+                    .actionUrl("/performance/disc?take=true")
                     .sourceType("DISC_ASSIGNMENT")
                     .sourceId(assignment.getId())
                     .build();
