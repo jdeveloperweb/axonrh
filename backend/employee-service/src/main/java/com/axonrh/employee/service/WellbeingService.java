@@ -49,15 +49,18 @@ public class WellbeingService {
             }
         }
 
-        Employee employee = empOpt
-                .orElseThrow(() -> new IllegalArgumentException("Colaborador não encontrado: " + request.getEmployeeId()));
+        UUID resolvedEmployeeId = empOpt.map(Employee::getId).orElse(request.getEmployeeId());
         
-        log.info("Check-in processed. Resolved Employee ID: {}", employee.getId());
+        if (empOpt.isPresent()) {
+            log.info("Check-in processed. Resolved Employee ID: {}", resolvedEmployeeId);
+        } else {
+            log.warn("Employee record not found for ID: {}. Using request ID as employeeId.", request.getEmployeeId());
+        }
 
         EmployeeWellbeing.EmployeeWellbeingBuilder builder = EmployeeWellbeing.builder()
                 .tenantId(tenantId)
-                // Use o ID resolvido da entidade Employee, nao o user ID do request
-                .employeeId(employee.getId())
+                // Use o ID resolvido ou o do request se não houver registro formal
+                .employeeId(resolvedEmployeeId)
                 .score(request.getScore())
                 .notes(request.getNotes())
                 .wantsEapContact(request.isWantsEapContact())
