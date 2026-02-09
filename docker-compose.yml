@@ -272,6 +272,7 @@ services:
       <<: *backend-env
       SPRING_FLYWAY_ENABLED: "true"
       SERVER_PORT: 8086
+      APPLICATION_SERVICES_EMPLOYEE_URL: http://employee-service:8083
 
   learning-service:
     <<: *backend-service
