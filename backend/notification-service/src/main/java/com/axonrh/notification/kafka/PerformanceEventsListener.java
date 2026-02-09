@@ -1,13 +1,12 @@
 package com.axonrh.notification.kafka;
 
+import com.axonrh.kafka.event.notification.NotificationEvent;
 import com.axonrh.notification.service.NotificationService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
-import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -16,28 +15,24 @@ import java.util.UUID;
 public class PerformanceEventsListener {
 
     private final NotificationService notificationService;
-    private final ObjectMapper objectMapper;
 
     @KafkaListener(topics = "performance.domain.events", groupId = "notification-service")
-    public void handlePerformanceEvent(Map<String, Object> event) {
+    public void handlePerformanceEvent(NotificationEvent event) {
         try {
-            String eventType = (String) event.get("eventType");
-            Object tenantIdObj = event.get("tenantId");
-            Object userIdObj = event.get("userId");
+            String eventType = event.getEventType();
+            UUID tenantId = event.getTenantId();
+            UUID userId = event.getUserId();
 
-            if (tenantIdObj == null || userIdObj == null) {
+            if (tenantId == null || userId == null) {
                 log.warn("Evento de performance recebido sem tenantId ou userId: {}", event);
                 return;
             }
 
-            UUID tenantId = UUID.fromString(tenantIdObj.toString());
-            UUID userId = UUID.fromString(userIdObj.toString());
-            String title = (String) event.get("title");
-            String body = (String) event.get("body");
-            String actionUrl = (String) event.get("actionUrl");
-            String sourceType = (String) event.get("sourceType");
-            Object sourceIdObj = event.get("sourceId");
-            UUID sourceId = sourceIdObj != null ? UUID.fromString(sourceIdObj.toString()) : null;
+            String title = event.getTitle();
+            String body = event.getBody();
+            String actionUrl = event.getActionUrl();
+            String sourceType = event.getSourceType();
+            UUID sourceId = event.getSourceId();
 
             log.info("Recebido evento de performance: {} para usuario {}", eventType, userId);
 
