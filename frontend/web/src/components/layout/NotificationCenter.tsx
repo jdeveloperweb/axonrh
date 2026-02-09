@@ -138,7 +138,7 @@ export function NotificationCenter({ onClose }: NotificationCenterProps) {
                                             )}>
                                                 {notification.title}
                                             </h4>
-                                            <span className="text-[10px] text-[var(--color-text-secondary)] whitespace-nowrap">
+                                            <span className="text-[10px] text-[var(--color-text-secondary)] whitespace-nowrap group-hover:opacity-0 transition-opacity ml-2">
                                                 {formatNotificationTime(notification.createdAt)}
                                             </span>
                                         </div>
@@ -163,11 +163,11 @@ export function NotificationCenter({ onClose }: NotificationCenterProps) {
                                 </div>
 
                                 {/* Quick Actions */}
-                                <div className="absolute top-4 right-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div className="absolute top-2.5 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all bg-[var(--color-surface)] shadow-md rounded-lg border border-[var(--color-border)] p-0.5 z-10">
                                     {showArchived ? (
                                         <button
                                             onClick={() => deleteNotification(notification.id)}
-                                            className="p-1.5 rounded-full hover:bg-[var(--color-surface-variant)] text-[var(--color-text-secondary)] hover:text-red-600"
+                                            className="p-1.5 rounded-md hover:bg-red-50 text-[var(--color-text-secondary)] hover:text-red-600 transition-colors"
                                             title="Excluir permanentemente"
                                         >
                                             <Trash2 className="w-4 h-4" />
@@ -177,7 +177,7 @@ export function NotificationCenter({ onClose }: NotificationCenterProps) {
                                             {!notification.isRead && (
                                                 <button
                                                     onClick={() => markAsRead(notification.id)}
-                                                    className="p-1.5 rounded-full hover:bg-[var(--color-surface-variant)] text-[var(--color-text-secondary)] hover:text-green-600"
+                                                    className="p-1.5 rounded-md hover:bg-green-50 text-[var(--color-text-secondary)] hover:text-green-600 transition-colors"
                                                     title="Marcar como lida"
                                                 >
                                                     <Check className="w-4 h-4" />
@@ -185,7 +185,7 @@ export function NotificationCenter({ onClose }: NotificationCenterProps) {
                                             )}
                                             <button
                                                 onClick={() => archiveNotification(notification.id)}
-                                                className="p-1.5 rounded-full hover:bg-[var(--color-surface-variant)] text-[var(--color-text-secondary)] hover:text-orange-600"
+                                                className="p-1.5 rounded-md hover:bg-orange-50 text-[var(--color-text-secondary)] hover:text-orange-600 transition-colors"
                                                 title="Arquivar"
                                             >
                                                 <Archive className="w-4 h-4" />
