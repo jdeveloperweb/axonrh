@@ -403,11 +403,14 @@ export default function PDIDetailPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <Link href="/performance/pdi">
-            <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
-              <ArrowLeft className="h-5 w-5 text-slate-500" />
-            </Button>
-          </Link>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
+            onClick={() => router.back()}
+          >
+            <ArrowLeft className="h-5 w-5 text-slate-500" />
+          </Button>
           <div>
             <div className="flex items-center gap-3 mb-1">
               <Badge className={`${statusConfig.bgColor} ${statusConfig.textColor} hover:${statusConfig.bgColor} px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide border-0`}>
