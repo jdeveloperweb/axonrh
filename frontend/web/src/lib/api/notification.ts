@@ -242,24 +242,89 @@ export interface UseNotificationSocketOptions {
   onUpdate?: (update: { type: string; data: unknown }) => void;
 }
 
-export function createNotificationSocket(userId: string, _options: UseNotificationSocketOptions = {}) {
-  // In production, this would connect to WebSocket
-  // For now, return a mock implementation
-  const socket = {
-    connect: () => {
-      console.log('Connecting to notification WebSocket for user:', userId);
-      // Suppress unused variable warning by effectively "using" it
-      if (_options.onNotification) {
-        /* placeholder for future implementation */
+export function createNotificationSocket(userId: string, options: UseNotificationSocketOptions = {}) {
+  // Constrói a URL do WebSocket a partir da URL da API
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8180/api/v1';
+  const wsBase = apiBase.replace('/api/v1', '').replace('http', 'ws');
+  // O Spring Boot com withSockJS e roteamento no Gateway precisa desse path
+  const wsUrl = `${wsBase}/ws-notifications/websocket`;
+
+  let socket: WebSocket | null = null;
+  let connected = false;
+  let reconnectTimeout: NodeJS.Timeout | null = null;
+
+  const connect = () => {
+    if (socket || !userId) return;
+
+    console.log('Connecting to notification WebSocket:', wsUrl);
+    socket = new WebSocket(wsUrl);
+
+    socket.onopen = () => {
+      console.log('WebSocket connection opened');
+      // Protocolo STOMP Manual (Minimalista)
+      socket?.send('CONNECT\naccept-version:1.1,1.2\nheart-beat:10000,10000\n\n\0');
+    };
+
+    socket.onmessage = (event) => {
+      const data = event.data as string;
+
+      // Heartbeat
+      if (data === '\n' || data === '\r\n') return;
+
+      if (data.includes('CONNECTED')) {
+        connected = true;
+        console.log('STOMP Connected');
+        // Subscreve ao tópico do usuário
+        socket?.send(`SUBSCRIBE\nid:sub-${userId}\ndestination:/user/queue/notifications\n\n\0`);
+      } else if (data.startsWith('MESSAGE')) {
+        // Extrai o body do frame STOMP
+        const bodyStart = data.indexOf('\n\n');
+        const bodyEnd = data.lastIndexOf('\0');
+
+        if (bodyStart !== -1 && bodyEnd !== -1) {
+          const body = data.substring(bodyStart + 2, bodyEnd);
+          try {
+            const notification = JSON.parse(body);
+            console.log('Nova notificação recebida via WS:', notification);
+            options.onNotification?.(notification);
+          } catch (e) {
+            console.error('Erro ao processar mensagem WS:', e);
+          }
+        }
+      } else if (data.includes('ERROR')) {
+        console.error('STOMP Error:', data);
       }
-    },
-    disconnect: () => {
-      console.log('Disconnecting from notification WebSocket');
-    },
-    isConnected: () => false,
+    };
+
+    socket.onclose = (event) => {
+      console.log('WebSocket closed:', event.code, event.reason);
+      connected = false;
+      socket = null;
+
+      // Tenta reconectar após 5 segundos
+      if (userId) {
+        reconnectTimeout = setTimeout(connect, 5000);
+      }
+    };
+
+    socket.onerror = (error) => {
+      console.error('WebSocket Error:', error);
+    };
   };
 
-  return socket;
+  const disconnect = () => {
+    if (reconnectTimeout) clearTimeout(reconnectTimeout);
+    if (socket) {
+      socket.close();
+      socket = null;
+    }
+  };
+
+  return {
+    connect,
+    disconnect,
+    isConnected: () => connected,
+  };
 }
 
 // ==================== Notification Helpers ====================

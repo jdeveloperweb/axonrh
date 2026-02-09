@@ -122,6 +122,12 @@ spring:
             # - StripPrefix=2
             - name: JwtAuthFilter
 
+        # Notification WebSocket
+        - id: notification-websocket
+          uri: http://axonrh-notification-service:8089
+          predicates:
+            - Path=/ws-notifications/**
+
         # Notification Service
         - id: notification-service
           uri: http://axonrh-notification-service:8089

@@ -2,6 +2,8 @@
 
 import React from 'react';
 import { ConfirmProvider } from './ConfirmProvider';
+import { NotificationProvider } from './NotificationProvider';
+import { Toaster } from 'sonner';
 
 interface ClientProvidersProps {
     children: React.ReactNode;
@@ -10,7 +12,10 @@ interface ClientProvidersProps {
 export function ClientProviders({ children }: ClientProvidersProps) {
     return (
         <ConfirmProvider>
-            {children}
+            <NotificationProvider>
+                {children}
+                <Toaster richColors position="top-right" />
+            </NotificationProvider>
         </ConfirmProvider>
     );
 }
