@@ -43,6 +43,9 @@ public interface DiscAssignmentRepository extends JpaRepository<DiscAssignment, 
            "AND a.dueDate < :date AND a.status = 'PENDING'")
     List<DiscAssignment> findOverdue(@Param("tenantId") UUID tenantId, @Param("date") LocalDate date);
 
+    @Query("SELECT a FROM DiscAssignment a WHERE a.status = 'PENDING'")
+    List<DiscAssignment> findAllPending();
+
     // Estatisticas
     long countByTenantIdAndStatus(UUID tenantId, DiscAssessmentStatus status);
 }

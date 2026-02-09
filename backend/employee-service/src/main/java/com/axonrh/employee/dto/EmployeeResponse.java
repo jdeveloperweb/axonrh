@@ -24,6 +24,7 @@ public class EmployeeResponse implements Serializable {
 
     private UUID id;
     private UUID tenantId;
+    private UUID userId;
 
     // Dados Pessoais
     private String registrationNumber;

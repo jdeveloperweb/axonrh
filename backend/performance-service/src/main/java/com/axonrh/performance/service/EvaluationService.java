@@ -26,11 +26,14 @@ public class EvaluationService {
 
     private final EvaluationRepository evaluationRepository;
     private final EvaluationCycleRepository cycleRepository;
+    private final com.axonrh.performance.publisher.PerformanceEventPublisher eventPublisher;
 
     public EvaluationService(EvaluationRepository evaluationRepository,
-                            EvaluationCycleRepository cycleRepository) {
+                            EvaluationCycleRepository cycleRepository,
+                            com.axonrh.performance.publisher.PerformanceEventPublisher eventPublisher) {
         this.evaluationRepository = evaluationRepository;
         this.cycleRepository = cycleRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     // ==================== Cycles ====================
@@ -155,7 +158,14 @@ public class EvaluationService {
         }
 
         evaluation.setTenantId(tenantId);
-        return evaluationRepository.save(evaluation);
+        Evaluation saved = evaluationRepository.save(evaluation);
+        
+        // Notify evaluator
+        if (saved.getCycle() != null) {
+            eventPublisher.publishEvaluationCreated(saved, saved.getCycle().getName());
+        }
+        
+        return saved;
     }
 
     public Evaluation getEvaluation(UUID tenantId, UUID evaluationId) {
@@ -267,6 +277,27 @@ public class EvaluationService {
 
     public List<Evaluation> getOverdueEvaluations(UUID tenantId) {
         return evaluationRepository.findOverdue(tenantId, LocalDate.now());
+    }
+
+    /**
+     * Job agendado para enviar lembretes de avaliações atrasadas.
+     * Toda manhã de dia útil às 9h.
+     */
+    @org.springframework.scheduling.annotation.Scheduled(cron = "0 0 9 * * MON-FRI")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public void sendOverdueReminders() {
+        log.info("Iniciando envio de lembretes para avaliações atrasadas...");
+        List<Evaluation> overdue = evaluationRepository.findAllOverdue(LocalDate.now());
+        
+        for (Evaluation eval : overdue) {
+            try {
+                String cycleName = eval.getCycle() != null ? eval.getCycle().getName() : "Ciclo de Avaliação";
+                eventPublisher.publishEvaluationReminder(eval, cycleName);
+            } catch (Exception e) {
+                log.error("Erro ao enviar lembrete para avaliação {}: {}", eval.getId(), e.getMessage());
+            }
+        }
+        log.info("Finalizado envio de lembretes para {} avaliações atrasadas.", overdue.size());
     }
 
     public record EvaluationStatistics(

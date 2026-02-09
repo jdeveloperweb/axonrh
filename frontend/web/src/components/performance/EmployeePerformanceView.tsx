@@ -276,9 +276,9 @@ export function EmployeePerformanceView() {
                             </Link>
                         </div>
 
-                        {activePDIs.length > 0 ? (
+                        {activePDIs.filter(p => p.status === 'ACTIVE').length > 0 ? (
                             <div className="grid grid-cols-1 gap-4">
-                                {activePDIs.map(pdi => (
+                                {activePDIs.filter(p => p.status === 'ACTIVE').map(pdi => (
                                     <Card key={pdi.id} className="border-none shadow-sm hover:shadow-md transition-all overflow-hidden border-l-4 border-l-indigo-500">
                                         <CardContent className="p-6">
                                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">

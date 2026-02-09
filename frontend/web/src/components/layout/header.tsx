@@ -5,13 +5,16 @@ import { Bell, Search, Sun, Moon, Monitor, Sparkles, Bot, Menu } from 'lucide-re
 import { cn, getPhotoUrl } from '@/lib/utils';
 import { useThemeStore, type Theme } from '@/stores/theme-store';
 import { useLayoutStore } from '@/stores/layout-store';
+import { useNotificationStore } from '@/stores/notification-store';
 import { useRouter } from 'next/navigation';
+import { NotificationCenter } from './NotificationCenter';
 
 // ==================== Component ====================
 
 export function Header() {
   const { theme, setTheme } = useThemeStore();
   const { toggleMobileMenu } = useLayoutStore();
+  const { unreadCount, fetchUnreadCount } = useNotificationStore();
   const [showThemeMenu, setShowThemeMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [isAiMode, setIsAiMode] = useState(false);
@@ -168,7 +171,9 @@ export function Header() {
           >
             <Bell className="w-5 h-5" />
             {/* Badge */}
-            <span className="absolute top-1 right-1 w-2 h-2 bg-[var(--color-error)] rounded-full" />
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1 w-2 h-2 bg-[var(--color-error)] rounded-full animate-pulse" />
+            )}
           </button>
 
           {showNotifications && (
@@ -177,17 +182,7 @@ export function Header() {
                 className="fixed inset-0 z-40"
                 onClick={() => setShowNotifications(false)}
               />
-              <div className="absolute right-0 top-full mt-2 w-80 bg-[var(--color-surface)] rounded-[var(--radius-lg)] shadow-lg border border-[var(--color-border)] z-50 animate-scale-in">
-                <div className="p-4 border-b border-[var(--color-border)]">
-                  <h3 className="font-semibold">Notificacoes</h3>
-                </div>
-                <div className="max-h-96 overflow-y-auto">
-                  {/* Placeholder notifications */}
-                  <div className="p-4 text-center text-[var(--color-text-secondary)]">
-                    Nenhuma notificacao
-                  </div>
-                </div>
-              </div>
+              <NotificationCenter onClose={() => setShowNotifications(false)} />
             </>
           )}
         </div>

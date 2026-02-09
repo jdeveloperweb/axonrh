@@ -637,12 +637,12 @@ export default function PDIDetailPage() {
               <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 max-w-sm mx-auto leading-relaxed">
                 Adicione ações de desenvolvimento para traçar o caminho até seus objetivos profissionais.
               </p>
-              {isEditable && (
+              <div className="flex justify-center">
                 <Button onClick={() => setNewActionOpen(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 shadow-md shadow-indigo-200">
                   <Plus className="h-4 w-4 mr-2" />
                   Adicionar primeira ação
                 </Button>
-              )}
+              </div>
             </div>
           ) : filteredActions.length === 0 ? (
             <div className="text-center py-12">

@@ -45,6 +45,10 @@ public interface EvaluationRepository extends JpaRepository<Evaluation, UUID> {
            "AND e.status NOT IN ('COMPLETED', 'CANCELLED')")
     List<Evaluation> findOverdue(@Param("tenantId") UUID tenantId, @Param("date") LocalDate date);
 
+    @Query("SELECT e FROM Evaluation e WHERE e.dueDate < :date " +
+           "AND e.status IN ('PENDING', 'IN_PROGRESS')")
+    List<Evaluation> findAllOverdue(@Param("date") LocalDate date);
+
     // Para matriz 9Box
     @Query("SELECT e FROM Evaluation e WHERE e.tenantId = :tenantId " +
            "AND e.cycle.id = :cycleId " +

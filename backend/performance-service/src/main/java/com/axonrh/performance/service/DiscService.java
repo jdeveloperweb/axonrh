@@ -39,17 +39,20 @@ public class DiscService {
     private final DiscEvaluationRepository evaluationRepository;
     private final DiscAssignmentRepository assignmentRepository;
     private final ObjectMapper objectMapper;
+    private final com.axonrh.performance.publisher.PerformanceEventPublisher eventPublisher;
 
     public DiscService(DiscQuestionnaireRepository questionnaireRepository,
                       DiscQuestionRepository questionRepository,
                       DiscEvaluationRepository evaluationRepository,
                       DiscAssignmentRepository assignmentRepository,
-                      ObjectMapper objectMapper) {
+                      ObjectMapper objectMapper,
+                      com.axonrh.performance.publisher.PerformanceEventPublisher eventPublisher) {
         this.questionnaireRepository = questionnaireRepository;
         this.questionRepository = questionRepository;
         this.evaluationRepository = evaluationRepository;
         this.assignmentRepository = assignmentRepository;
         this.objectMapper = objectMapper;
+        this.eventPublisher = eventPublisher;
     }
 
     // ==================== Questionnaire ====================
@@ -220,6 +223,13 @@ public class DiscService {
 
         assignment = assignmentRepository.save(assignment);
 
+    // Get questionnaire title for notification
+    String qTitle = questionnaireRepository.findById(questionnaireId)
+            .map(DiscQuestionnaire::getTitle)
+            .orElse("Avaliação DISC");
+
+    eventPublisher.publishDiscAssigned(assignment, qTitle);
+
         // Create corresponding evaluation in PENDING status
         DiscEvaluation evaluation = new DiscEvaluation();
         evaluation.setTenantId(tenantId);
@@ -312,6 +322,26 @@ public class DiscService {
             eval.expire();
             evaluationRepository.save(eval);
         }
+    }
+
+    /**
+     * Job agendado para enviar lembretes de testes DISC pendentes.
+     * Terças e Quintas às 10h.
+     */
+    @org.springframework.scheduling.annotation.Scheduled(cron = "0 0 10 * * TUE,THU")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public void sendPendingReminders() {
+        log.info("Iniciando envio de lembretes para testes DISC pendentes...");
+        List<DiscAssignment> pending = assignmentRepository.findAllPending();
+        
+        for (DiscAssignment assignment : pending) {
+            try {
+                eventPublisher.publishDiscReminder(assignment);
+            } catch (Exception e) {
+                log.error("Erro ao enviar lembrete DISC para atribuição {}: {}", assignment.getId(), e.getMessage());
+            }
+        }
+        log.info("Finalizado envio de lembretes para {} testes DISC pendentes.", pending.size());
     }
 
     public void deleteEvaluation(UUID tenantId, UUID evaluationId) {

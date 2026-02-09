@@ -21,9 +21,11 @@ public class PDIService {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PDIService.class);
 
     private final PDIRepository pdiRepository;
+    private final com.axonrh.performance.publisher.PerformanceEventPublisher eventPublisher;
 
-    public PDIService(PDIRepository pdiRepository) {
+    public PDIService(PDIRepository pdiRepository, com.axonrh.performance.publisher.PerformanceEventPublisher eventPublisher) {
         this.pdiRepository = pdiRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     // ==================== CRUD ====================
@@ -39,7 +41,11 @@ public class PDIService {
             pdi.calculateProgress();
         }
         
-        return pdiRepository.save(pdi);
+        PDI saved = pdiRepository.save(pdi);
+        if (saved.getStatus() == PDIStatus.ACTIVE) {
+            eventPublisher.publishPDICreated(saved);
+        }
+        return saved;
     }
 
     public PDI getPDI(UUID tenantId, UUID pdiId) {
@@ -127,13 +133,17 @@ public class PDIService {
     public PDI approvePDI(UUID tenantId, UUID pdiId, UUID approverId) {
         PDI pdi = getPDI(tenantId, pdiId);
         pdi.approve(approverId);
-        return pdiRepository.save(pdi);
+        PDI saved = pdiRepository.save(pdi);
+        eventPublisher.publishPDICreated(saved);
+        return saved;
     }
 
     public PDI activatePDI(UUID tenantId, UUID pdiId) {
         PDI pdi = getPDI(tenantId, pdiId);
         pdi.activate();
-        return pdiRepository.save(pdi);
+        PDI saved = pdiRepository.save(pdi);
+        eventPublisher.publishPDICreated(saved);
+        return saved;
     }
 
     public PDI completePDI(UUID tenantId, UUID pdiId) {
@@ -218,7 +228,9 @@ public class PDIService {
         pdi.setEndDate(LocalDate.now().plusMonths(6));
         pdi.setStatus(PDIStatus.ACTIVE);
 
-        return pdiRepository.save(pdi);
+        PDI saved = pdiRepository.save(pdi);
+        eventPublisher.publishPDICreated(saved);
+        return saved;
     }
 
     // ==================== Statistics ====================

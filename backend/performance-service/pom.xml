@@ -104,6 +104,13 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- Common module -->
+        <dependency>
+            <groupId>com.axonrh</groupId>
+            <artifactId>kafka-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- Actuator -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
