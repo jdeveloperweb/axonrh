@@ -628,48 +628,48 @@ export default function DiscManagePage() {
 
       {/* Profile Distribution Section - Refined & Elegant Version */}
       {pieChartData.length > 0 && (
-        <Card className="border-none shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] bg-slate-900 text-white overflow-hidden rounded-[3rem] relative">
+        <Card className="border-none shadow-[0_24px_48px_-12px_rgba(0,0,0,0.3)] bg-slate-900 text-white overflow-hidden rounded-[2rem] relative">
           {/* Subtle Atmosphere Glows */}
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] -mr-64 -mt-64 animate-pulse" />
-          <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-blue-500/5 rounded-full blur-[100px] -ml-48 -mb-48" />
+          <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[100px] -mr-48 -mt-48 animate-pulse" />
+          <div className="absolute bottom-0 left-0 w-[250px] h-[250px] bg-blue-500/5 rounded-full blur-[80px] -ml-40 -mb-40" />
 
-          <CardHeader className="pb-0 pt-10 px-10 relative z-10">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-              <div className="flex items-center gap-5">
-                <div className="w-14 h-14 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center text-primary backdrop-blur-md shadow-2xl">
-                  <BarChart3 className="h-7 w-7" />
+          <CardHeader className="pb-0 pt-6 px-8 relative z-10">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-11 h-11 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center text-primary backdrop-blur-md">
+                  <BarChart3 className="h-6 w-6" />
                 </div>
                 <div>
-                  <CardTitle className="text-3xl font-black uppercase tracking-tight leading-none mb-2">
+                  <CardTitle className="text-xl font-black uppercase tracking-tight leading-none mb-1">
                     Ecossistema de Talentos
                   </CardTitle>
-                  <CardDescription className="text-slate-500 font-medium text-base">
-                    Equilíbrio dinâmico dos perfis comportamentais da equipe
+                  <CardDescription className="text-slate-500 font-medium text-xs">
+                    Equilíbrio dinâmico dos perfis comportamentais
                   </CardDescription>
                 </div>
               </div>
-              <div className="px-6 py-3 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-sm">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1">Base de Dados</p>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-black text-white">{statistics?.completedEvaluations || 0}</span>
-                  <span className="text-xs font-bold text-primary italic">colaboradores ativos</span>
+              <div className="px-5 py-2 rounded-xl bg-white/[0.03] border border-white/10 backdrop-blur-sm">
+                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">Base de Dados</p>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-lg font-black text-white">{statistics?.completedEvaluations || 0}</span>
+                  <span className="text-[10px] font-bold text-primary italic">ativos</span>
                 </div>
               </div>
             </div>
           </CardHeader>
 
-          <CardContent className="p-10 relative z-10">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          <CardContent className="p-8 pt-4 relative z-10">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
 
-              {/* Refined Radial Indicator */}
-              <div className="lg:col-span-5 h-[400px] relative flex items-center justify-center">
+              {/* Refined Radial Indicator - Compact */}
+              <div className="lg:col-span-4 h-[280px] relative flex items-center justify-center">
                 <ResponsiveContainer width="100%" height="100%">
                   <RadialBarChart
                     cx="50%"
                     cy="50%"
-                    innerRadius="45%"
+                    innerRadius="50%"
                     outerRadius="100%"
-                    barSize={8}
+                    barSize={6}
                     data={pieChartData.map(d => ({ ...d, fill: d.color }))}
                     startAngle={220}
                     endAngle={-40}
@@ -677,11 +677,11 @@ export default function DiscManagePage() {
                     <RadialBar
                       background={{ fill: 'rgba(255,255,255,0.03)' }}
                       dataKey="value"
-                      cornerRadius={10}
+                      cornerRadius={8}
                     />
                     <PolarAngleAxis
                       type="number"
-                      domain={[0, Math.max(...pieChartData.map(d => d.value)) * 1.2]}
+                      domain={[0, Math.max(...pieChartData.map(d => d.value)) * 1.1]}
                       tick={false}
                     />
                     <Tooltip
@@ -690,16 +690,11 @@ export default function DiscManagePage() {
                         if (active && payload && payload.length) {
                           const data = payload[0].payload;
                           return (
-                            <div className="bg-slate-950/90 border border-white/20 p-4 rounded-2xl shadow-2xl backdrop-blur-2xl animate-in fade-in zoom-in duration-300">
-                              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">{data.name}</p>
-                              <div className="flex items-center gap-3">
-                                <div className="p-2 rounded-lg" style={{ backgroundColor: `${data.color}20` }}>
-                                  <Users className="h-4 w-4" style={{ color: data.color }} />
-                                </div>
-                                <div>
-                                  <span className="text-2xl font-black text-white">{data.value}</span>
-                                  <span className="text-xs font-bold text-slate-400 ml-2">Membros</span>
-                                </div>
+                            <div className="bg-slate-950/90 border border-white/20 p-3 rounded-xl shadow-2xl backdrop-blur-2xl">
+                              <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">{data.name}</p>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xl font-black text-white">{data.value}</span>
+                                <span className="text-xs font-bold text-slate-400">Membros</span>
                               </div>
                             </div>
                           );
@@ -710,51 +705,48 @@ export default function DiscManagePage() {
                   </RadialBarChart>
                 </ResponsiveContainer>
 
-                {/* Central Statistics - More Minimal */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mt-4">
-                  <div className="w-32 h-32 rounded-full border border-white/5 flex flex-col items-center justify-center backdrop-blur-sm bg-white/[0.01]">
-                    <span className="text-4xl font-black tracking-tighter text-white">
+                {/* Central Statistics - Compact */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mt-2">
+                  <div className="w-24 h-24 rounded-full border border-white/5 flex flex-col items-center justify-center backdrop-blur-sm">
+                    <span className="text-3xl font-black tracking-tighter text-white">
                       {pieChartData.length}
                     </span>
-                    <p className="text-[9px] font-black uppercase text-slate-500 tracking-tighter">Perfis Identificados</p>
+                    <p className="text-[8px] font-black uppercase text-slate-500 tracking-tighter">Perfis</p>
                   </div>
                 </div>
               </div>
 
-              {/* Sophisticated Data List */}
-              <div className="lg:col-span-7 space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Sophisticated Data List - Optimized */}
+              <div className="lg:col-span-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {pieChartData.map((profile, idx) => (
                     <div
                       key={idx}
-                      className="relative group p-6 rounded-[2.5rem] bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] hover:border-white/10 transition-all duration-500"
+                      className="relative group p-4 rounded-[1.5rem] bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] hover:border-white/10 transition-all duration-300"
                     >
-                      <div className="flex items-center justify-between mb-5">
+                      <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/[0.03] border border-white/10">
-                            <div className="w-3 h-3 rounded-full shadow-[0_0_12px_rgba(255,255,255,0.2)]" style={{ backgroundColor: profile.color }} />
+                          <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/[0.03] border border-white/10">
+                            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: profile.color, boxShadow: `0 0 8px ${profile.color}60` }} />
                           </div>
                           <div>
-                            <h4 className="text-xs font-black uppercase tracking-widest text-slate-400">{profile.name}</h4>
-                            <p className="text-2xl font-black text-white">{profile.value}</p>
+                            <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">{profile.name}</h4>
+                            <p className="text-xl font-black text-white">{profile.value}</p>
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="text-[10px] font-black text-slate-500 uppercase mb-1">Incidência</p>
-                          <span className="text-sm font-black text-primary px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
+                          <span className="text-[11px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded-md">
                             {statistics ? ((profile.value / statistics.completedEvaluations) * 100).toFixed(0) : 0}%
                           </span>
                         </div>
                       </div>
 
-                      {/* Thinner, elegant progress indicator within card */}
                       <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
                         <div
                           className="h-full rounded-full transition-all duration-1000 ease-out"
                           style={{
                             width: statistics ? `${(profile.value / statistics.completedEvaluations) * 100}%` : '0%',
-                            backgroundColor: profile.color,
-                            boxShadow: `0 0 10px ${profile.color}40`
+                            backgroundColor: profile.color
                           }}
                         />
                       </div>
@@ -762,15 +754,15 @@ export default function DiscManagePage() {
                   ))}
                 </div>
 
-                {/* Visual Legend / Context */}
-                <div className="pt-4 flex items-center gap-6 px-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Dados em Tempo Real</span>
+                {/* Visual Legend / Context - Minimal */}
+                <div className="mt-4 flex items-center gap-4 px-2">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-[9px] font-black uppercase text-slate-500 tracking-wider">Live</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-3 w-3 text-primary" />
-                    <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Validação AxonIA</span>
+                  <div className="flex items-center gap-1.5">
+                    <CheckCircle2 className="h-2.5 w-2.5 text-primary" />
+                    <span className="text-[9px] font-black uppercase text-slate-500 tracking-wider">AxonIA Verified</span>
                   </div>
                 </div>
               </div>
