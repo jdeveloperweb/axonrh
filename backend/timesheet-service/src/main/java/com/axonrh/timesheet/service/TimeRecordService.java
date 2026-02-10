@@ -184,13 +184,13 @@ public class TimeRecordService {
 
         if (canApprove || isLider) {
             String email = jwt.getClaimAsString("email");
-            List<UUID> subordinateUserIds = getSubordinateUserIds(userId, email);
-            if (!subordinateUserIds.isEmpty()) {
-                log.debug("Lider/Aprovador visualizando registros pendentes de {} subordinados", subordinateUserIds.size());
-                return timeRecordRepository.findPendingByEmployees(tenantId, subordinateUserIds, pageable)
+            List<UUID> subordinateEmployeeIds = getSubordinateEmployeeIds(userId, email);
+            if (!subordinateEmployeeIds.isEmpty()) {
+                log.debug("Lider/Aprovador visualizando registros pendentes de {} subordinados", subordinateEmployeeIds.size());
+                return timeRecordRepository.findPendingByEmployees(tenantId, subordinateEmployeeIds, pageable)
                         .map(this::toResponse);
             } else {
-                log.warn("Lider/Aprovador {} nao possui subordinados com UserID vinculado", userId);
+                log.warn("Lider/Aprovador {} nao possui subordinados", userId);
             }
         }
 
@@ -325,9 +325,9 @@ public class TimeRecordService {
 
         if (canApprove || isLider) {
             String email = jwt.getClaimAsString("email");
-            List<UUID> subordinateUserIds = getSubordinateUserIds(userId, email);
-            if (!subordinateUserIds.isEmpty()) {
-                return timeRecordRepository.countPendingByEmployees(tenantId, subordinateUserIds);
+            List<UUID> subordinateEmployeeIds = getSubordinateEmployeeIds(userId, email);
+            if (!subordinateEmployeeIds.isEmpty()) {
+                return timeRecordRepository.countPendingByEmployees(tenantId, subordinateEmployeeIds);
             }
         }
 
@@ -473,26 +473,26 @@ public class TimeRecordService {
         }
     }
 
-    private List<UUID> getSubordinateUserIds(UUID leaderUserId, String email) {
+    private List<UUID> getSubordinateEmployeeIds(UUID leaderUserId, String email) {
         try {
             log.debug("Buscando subordinados para o UserID do lider: {} (email: {})", leaderUserId, email);
             com.axonrh.timesheet.dto.EmployeeDTO leader = employeeClient.getEmployeeByUserId(leaderUserId, email);
             if (leader != null) {
                 log.debug("Lider encontrado: {} (ID: {})", leader.getFullName(), leader.getId());
                 
-                Set<UUID> subordinateUserIds = new HashSet<>();
+                Set<UUID> subordinateIds = new HashSet<>();
                 
                 // 1. Busca subordinados diretos
                 List<com.axonrh.timesheet.dto.EmployeeDTO> directSubordinates = employeeClient.getSubordinates(leader.getId());
                 if (directSubordinates != null) {
                     directSubordinates.stream()
-                            .map(com.axonrh.timesheet.dto.EmployeeDTO::getUserId)
+                            .map(com.axonrh.timesheet.dto.EmployeeDTO::getId)
                             .filter(Objects::nonNull)
-                            .forEach(subordinateUserIds::add);
+                            .forEach(subordinateIds::add);
                 }
 
-                log.debug("Total de subordinados encontrados com UserID: {}", subordinateUserIds.size());
-                return new ArrayList<>(subordinateUserIds);
+                log.debug("Total de subordinados encontrados: {}", subordinateIds.size());
+                return new ArrayList<>(subordinateIds);
             } else {
                 log.warn("Nenhum registro de colaborador para o UserID: {}. O gestor pode nao estar vinculado.", leaderUserId);
             }

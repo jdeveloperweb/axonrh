@@ -49,6 +49,7 @@ public class DailySummaryService {
     private final OvertimeBankService overtimeBankService;
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final ObjectMapper objectMapper;
+    private final com.axonrh.timesheet.client.EmployeeServiceClient employeeClient;
 
     public DailySummaryService(
             DailySummaryRepository dailySummaryRepository,
@@ -57,7 +58,8 @@ public class DailySummaryService {
             HolidayRepository holidayRepository,
             OvertimeBankService overtimeBankService,
             @Qualifier("timesheetKafkaTemplate") KafkaTemplate<String, Object> kafkaTemplate,
-            ObjectMapper objectMapper) {
+            ObjectMapper objectMapper,
+            com.axonrh.timesheet.client.EmployeeServiceClient employeeClient) {
         this.dailySummaryRepository = dailySummaryRepository;
         this.timeRecordRepository = timeRecordRepository;
         this.employeeScheduleRepository = employeeScheduleRepository;
@@ -65,6 +67,7 @@ public class DailySummaryService {
         this.overtimeBankService = overtimeBankService;
         this.kafkaTemplate = kafkaTemplate;
         this.objectMapper = objectMapper;
+        this.employeeClient = employeeClient;
     }
 
     @Value("${timesheet.night-shift.start-hour:22}")
@@ -147,16 +150,40 @@ public class DailySummaryService {
         if (currentTenant != null) {
             try {
                 UUID tenantId = UUID.fromString(currentTenant);
+                
+                // Buscar UserID para lidar com dados historicos (salvos com UserID incorretamente)
+                List<UUID> idsToSearch = new java.util.ArrayList<>();
+                idsToSearch.add(employeeId);
+                
+                try {
+                    com.axonrh.timesheet.dto.EmployeeDTO employee = employeeClient.getEmployee(employeeId);
+                    if (employee != null && employee.getUserId() != null && !employee.getUserId().equals(employeeId)) {
+                        idsToSearch.add(employee.getUserId());
+                        log.info("Adicionado UserID {} a busca de espelho para colaborador {}", employee.getUserId(), employeeId);
+                    }
+                } catch (Exception ex) {
+                    log.warn("Erro ao buscar UserID para colaborador {}: {}", employeeId, ex.getMessage());
+                }
+
                 List<DailySummary> summaries = dailySummaryRepository
-                        .findByTenantIdAndEmployeeIdAndSummaryDateBetweenOrderBySummaryDateAsc(
-                                tenantId, employeeId, startDate, endDate);
+                        .findByTenantIdAndEmployeeIdInAndSummaryDateBetweenOrderBySummaryDateAsc(
+                                tenantId, idsToSearch, startDate, endDate);
 
                 for (DailySummary s : summaries) {
                     if (s.getSummaryDate() != null) {
-                        summaryMap.put(s.getSummaryDate(), s);
+                        // Se ja existe (preferencia pelo EmployeeID se houver duplicata no mesmo dia)
+                        // A lista vem ordenada por data, mas a ordem entre empId e userId e indefinida.
+                        // Mas como o map sobrescreve, o ultimo ganha.
+                        // Idealmente deveriamos mesclar, mas assumimos que nao ha sobreposicao valida.
+                        // Se houver registro com EmployeeId (valid) e UserId (invalido/antigo), queremos o EmployeeId?
+                        // Ou se for inconsistencia, apenas mostramos um deles.
+                        
+                        if (!summaryMap.containsKey(s.getSummaryDate()) || s.getEmployeeId().equals(employeeId)) {
+                            summaryMap.put(s.getSummaryDate(), s);
+                        }
                     }
                 }
-                log.info("Encontrados {} registros de sumário no banco para o período", summaries.size());
+                log.info("Encontrados {} registros de sumário no banco para o período (IDs: {})", summaries.size(), idsToSearch);
             } catch (Exception e) {
                 log.error("Erro ao buscar sumários no banco para colaborador {} no tenant {}: {}", 
                         employeeId, currentTenant, e.getMessage());
@@ -276,7 +303,20 @@ public class DailySummaryService {
         
         UUID tenantId = UUID.fromString(tenantStr);
 
-        List<Object[]> results = dailySummaryRepository.getTotalsInPeriod(tenantId, employeeId, startDate, endDate);
+        // Buscar UserID para lidar com dados historicos
+        List<UUID> idsToSearch = new java.util.ArrayList<>();
+        idsToSearch.add(employeeId);
+        
+        try {
+            com.axonrh.timesheet.dto.EmployeeDTO employee = employeeClient.getEmployee(employeeId);
+            if (employee != null && employee.getUserId() != null && !employee.getUserId().equals(employeeId)) {
+                idsToSearch.add(employee.getUserId());
+            }
+        } catch (Exception ex) {
+            log.warn("Erro ao buscar UserID para totais do colaborador {}: {}", employeeId, ex.getMessage());
+        }
+
+        List<Object[]> results = dailySummaryRepository.getTotalsInPeriodByList(tenantId, idsToSearch, startDate, endDate);
 
         if (results == null || results.isEmpty()) {
             return new PeriodTotals(0, "00:00", 0, "00:00", 0, "00:00", 0, "00:00", 0, "00:00", 0);

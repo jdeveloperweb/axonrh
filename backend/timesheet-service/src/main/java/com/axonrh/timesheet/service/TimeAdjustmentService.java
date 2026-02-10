@@ -251,11 +251,11 @@ public class TimeAdjustmentService {
 
         if (canApprove || isLider) {
             String email = jwt.getClaimAsString("email");
-            List<UUID> subordinateUserIds = getSubordinateUserIds(userId, email);
-            log.debug("Usuario e LIDER/Aprovador. Subordinados encontrados: {}", subordinateUserIds.size());
-            if (!subordinateUserIds.isEmpty()) {
+            List<UUID> subordinateEmployeeIds = getSubordinateEmployeeIds(userId, email);
+            log.debug("Usuario e LIDER/Aprovador. Subordinados encontrados: {}", subordinateEmployeeIds.size());
+            if (!subordinateEmployeeIds.isEmpty()) {
                 return adjustmentRepository
-                        .findByEmployeesAndStatus(tenantId, subordinateUserIds, AdjustmentStatus.PENDING, pageable)
+                        .findByEmployeesAndStatus(tenantId, subordinateEmployeeIds, AdjustmentStatus.PENDING, pageable)
                         .map(this::toResponse);
             }
         }
@@ -264,38 +264,28 @@ public class TimeAdjustmentService {
         return Page.empty(pageable);
     }
 
-    private List<UUID> getSubordinateUserIds(UUID leaderUserId, String email) {
+    private List<UUID> getSubordinateEmployeeIds(UUID leaderUserId, String email) {
         try {
             log.debug("Buscando subordinados para o UserID do lider: {} (email: {})", leaderUserId, email);
             EmployeeDTO leader = employeeClient.getEmployeeByUserId(leaderUserId, email);
             if (leader != null) {
                 log.debug("Lider encontrado no employee-service: {} (ID: {})", leader.getFullName(), leader.getId());
                 
-                Set<UUID> subordinateUserIds = new HashSet<>();
+                Set<UUID> subordinateIds = new HashSet<>();
                 
                 // 1. Busca subordinados diretos
                 List<EmployeeDTO> directSubordinates = employeeClient.getSubordinates(leader.getId());
-                int totalDirect = directSubordinates != null ? directSubordinates.size() : 0;
-                log.debug("Gestor {} possui {} subordinados diretos cadastrados.", leader.getFullName(), totalDirect);
-                
                 if (directSubordinates != null) {
-                    long withUser = directSubordinates.stream()
-                            .filter(s -> s.getUserId() != null)
-                            .count();
-                    log.debug("Dos {} subordinados, {} possuem User ID vinculado.", totalDirect, withUser);
+                    log.debug("Gestor {} possui {} subordinados diretos cadastrados.", leader.getFullName(), directSubordinates.size());
                     
                     directSubordinates.stream()
-                            .map(EmployeeDTO::getUserId)
+                            .map(EmployeeDTO::getId)
                             .filter(java.util.Objects::nonNull)
-                            .forEach(subordinateUserIds::add);
+                            .forEach(subordinateIds::add);
                 }
 
-                if (subordinateUserIds.isEmpty()) {
-                    log.warn("ATENCAO: Gestor {} possui subordinados, mas nenhum deles tem um User ID vinculado no RH.", leader.getFullName());
-                }
-
-                log.debug("Total final de subordinados unicos com UserID: {}", subordinateUserIds.size());
-                return new ArrayList<>(subordinateUserIds);
+                log.debug("Total final de subordinados unicos: {}", subordinateIds.size());
+                return new ArrayList<>(subordinateIds);
             } else {
                 log.warn("Nenhum registro de colaborador encontrado para o UserID: {}. O gestor pode nao estar vinculado ao seu registro de colaborador.", leaderUserId);
             }
@@ -344,9 +334,9 @@ public class TimeAdjustmentService {
 
         if (canApprove || isLider) {
             String email = jwt.getClaimAsString("email");
-            List<UUID> subordinateUserIds = getSubordinateUserIds(userId, email);
-            if (!subordinateUserIds.isEmpty()) {
-                return adjustmentRepository.countByEmployeesAndStatus(tenantId, subordinateUserIds, AdjustmentStatus.PENDING);
+            List<UUID> subordinateEmployeeIds = getSubordinateEmployeeIds(userId, email);
+            if (!subordinateEmployeeIds.isEmpty()) {
+                return adjustmentRepository.countByEmployeesAndStatus(tenantId, subordinateEmployeeIds, AdjustmentStatus.PENDING);
             }
         }
 

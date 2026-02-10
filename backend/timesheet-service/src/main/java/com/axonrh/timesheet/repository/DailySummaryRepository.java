@@ -24,6 +24,10 @@ public interface DailySummaryRepository extends JpaRepository<DailySummary, UUID
     List<DailySummary> findByTenantIdAndEmployeeIdAndSummaryDateBetweenOrderBySummaryDateAsc(
             UUID tenantId, UUID employeeId, LocalDate startDate, LocalDate endDate);
 
+    // Espelho de ponto em periodo (multiplos IDs - para lidar com migracao user->employee)
+    List<DailySummary> findByTenantIdAndEmployeeIdInAndSummaryDateBetweenOrderBySummaryDateAsc(
+            UUID tenantId, List<UUID> employeeIds, LocalDate startDate, LocalDate endDate);
+
     // Dias com pendencias
     @Query("""
         SELECT ds FROM DailySummary ds
@@ -79,6 +83,26 @@ public interface DailySummaryRepository extends JpaRepository<DailySummary, UUID
     List<Object[]> getTotalsInPeriod(
             @Param("tenantId") UUID tenantId,
             @Param("employeeId") UUID employeeId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate);
+
+    // Totais em periodo (multiplos IDs)
+    @Query("""
+        SELECT
+            SUM(ds.workedMinutes),
+            SUM(ds.overtimeMinutes),
+            SUM(ds.deficitMinutes),
+            SUM(ds.nightShiftMinutes),
+            SUM(ds.lateArrivalMinutes),
+            COUNT(CASE WHEN ds.isAbsent = true THEN 1 END)
+        FROM DailySummary ds
+        WHERE ds.tenantId = :tenantId
+        AND ds.employeeId IN :employeeIds
+        AND ds.summaryDate BETWEEN :startDate AND :endDate
+        """)
+    List<Object[]> getTotalsInPeriodByList(
+            @Param("tenantId") UUID tenantId,
+            @Param("employeeIds") List<UUID> employeeIds,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate);
 
