@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import com.axonrh.timesheet.client.EmployeeServiceClient;
 import com.axonrh.timesheet.dto.EmployeeDTO;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -214,15 +215,56 @@ public class TimeAdjustmentService {
     }
 
     /**
-     * Busca ajustes pendentes.
+     * Busca ajustes pendentes com filtro por permissao.
      */
     @Transactional(readOnly = true)
-    public Page<TimeAdjustmentResponse> getPendingAdjustments(Pageable pageable) {
+    public Page<TimeAdjustmentResponse> getPendingAdjustments(Jwt jwt, Pageable pageable) {
         UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        UUID userId = UUID.fromString(jwt.getSubject());
 
-        return adjustmentRepository
-                .findByTenantIdAndStatusOrderByCreatedAtAsc(tenantId, AdjustmentStatus.PENDING, pageable)
-                .map(this::toResponse);
+        // Extrai roles do JWT ou do contexto
+        List<String> roles = jwt.getClaimAsStringList("roles");
+        if (roles == null) roles = Collections.emptyList();
+
+        boolean hasBroadAccess = roles.stream()
+                .anyMatch(role -> List.of("ADMIN", "RH", "GESTOR_RH", "ANALISTA_DP").contains(role));
+
+        if (hasBroadAccess) {
+            return adjustmentRepository
+                    .findByTenantIdAndStatusOrderByCreatedAtAsc(tenantId, AdjustmentStatus.PENDING, pageable)
+                    .map(this::toResponse);
+        }
+
+        // Para LIDER, filtra pelos subordinados
+        boolean isLider = roles.contains("LIDER");
+        if (isLider) {
+            List<UUID> subordinateUserIds = getSubordinateUserIds(userId);
+            if (!subordinateUserIds.isEmpty()) {
+                return adjustmentRepository
+                        .findByEmployeesAndStatus(tenantId, subordinateUserIds, AdjustmentStatus.PENDING, pageable)
+                        .map(this::toResponse);
+            }
+        }
+
+        return Page.empty(pageable);
+    }
+
+    private List<UUID> getSubordinateUserIds(UUID leaderUserId) {
+        try {
+            EmployeeDTO leader = employeeClient.getEmployeeByUserId(leaderUserId);
+            if (leader != null) {
+                List<EmployeeDTO> subordinates = employeeClient.getSubordinates(leader.getId());
+                if (subordinates != null && !subordinates.isEmpty()) {
+                    return subordinates.stream()
+                            .map(EmployeeDTO::getUserId)
+                            .filter(java.util.Objects::nonNull)
+                            .toList();
+                }
+            }
+        } catch (Exception e) {
+            log.error("Erro ao buscar subordinados para o lider {}: {}", leaderUserId, e.getMessage());
+        }
+        return Collections.emptyList();
     }
 
     /**
@@ -238,12 +280,31 @@ public class TimeAdjustmentService {
     }
 
     /**
-     * Contagem de ajustes pendentes.
+     * Contagem de ajustes pendentes com filtro.
      */
     @Transactional(readOnly = true)
-    public long countPendingAdjustments() {
+    public long countPendingAdjustments(Jwt jwt) {
         UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
-        return adjustmentRepository.countByTenantIdAndStatus(tenantId, AdjustmentStatus.PENDING);
+        UUID userId = UUID.fromString(jwt.getSubject());
+
+        List<String> roles = jwt.getClaimAsStringList("roles");
+        if (roles == null) roles = Collections.emptyList();
+
+        boolean hasBroadAccess = roles.stream()
+                .anyMatch(role -> List.of("ADMIN", "RH", "GESTOR_RH", "ANALISTA_DP").contains(role));
+
+        if (hasBroadAccess) {
+            return adjustmentRepository.countByTenantIdAndStatus(tenantId, AdjustmentStatus.PENDING);
+        }
+
+        if (roles.contains("LIDER")) {
+            List<UUID> subordinateUserIds = getSubordinateUserIds(userId);
+            if (!subordinateUserIds.isEmpty()) {
+                return adjustmentRepository.countByEmployeesAndStatus(tenantId, subordinateUserIds, AdjustmentStatus.PENDING);
+            }
+        }
+
+        return 0L;
     }
 
     // ==================== Metodos Privados ====================

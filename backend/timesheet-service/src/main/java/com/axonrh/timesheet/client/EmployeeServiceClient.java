@@ -12,4 +12,10 @@ public interface EmployeeServiceClient {
 
     @GetMapping("/api/v1/employees/{id}")
     EmployeeDTO getEmployee(@PathVariable("id") UUID id);
+
+    @GetMapping("/api/v1/managers/{id}/subordinates")
+    java.util.List<EmployeeDTO> getSubordinates(@PathVariable("id") UUID id);
+
+    @GetMapping("/api/v1/employees/user/{userId}")
+    EmployeeDTO getEmployeeByUserId(@PathVariable("userId") UUID userId);
 }

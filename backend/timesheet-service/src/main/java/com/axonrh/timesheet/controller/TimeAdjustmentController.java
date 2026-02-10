@@ -47,8 +47,10 @@ public class TimeAdjustmentController {
     @GetMapping("/pending")
     @Operation(summary = "Ajustes pendentes", description = "Lista ajustes pendentes de aprovacao")
     @PreAuthorize("hasAnyAuthority('TIMESHEET:UPDATE', 'TIMESHEET:APPROVE', 'TIMESHEET:READ', 'ADMIN')")
-    public ResponseEntity<Page<TimeAdjustmentResponse>> getPendingAdjustments(Pageable pageable) {
-        Page<TimeAdjustmentResponse> adjustments = adjustmentService.getPendingAdjustments(pageable);
+    public ResponseEntity<Page<TimeAdjustmentResponse>> getPendingAdjustments(
+            @AuthenticationPrincipal Jwt jwt,
+            Pageable pageable) {
+        Page<TimeAdjustmentResponse> adjustments = adjustmentService.getPendingAdjustments(jwt, pageable);
         return ResponseEntity.ok(adjustments);
     }
 
@@ -124,8 +126,8 @@ public class TimeAdjustmentController {
     @GetMapping("/pending/count")
     @Operation(summary = "Contagem de pendentes", description = "Retorna quantidade de ajustes pendentes")
     @PreAuthorize("hasAnyAuthority('TIMESHEET:READ', 'TIMESHEET:UPDATE', 'ADMIN')")
-    public ResponseEntity<Map<String, Long>> countPendingAdjustments() {
-        long count = adjustmentService.countPendingAdjustments();
+    public ResponseEntity<Map<String, Long>> countPendingAdjustments(@AuthenticationPrincipal Jwt jwt) {
+        long count = adjustmentService.countPendingAdjustments(jwt);
         return ResponseEntity.ok(Map.of("count", count));
     }
 

@@ -345,7 +345,7 @@ export default function TimeRecordPage() {
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto">
           <Button variant="outline" size="sm" onClick={() => router.push('/timesheet/adjustments')} className="flex-1 md:flex-none border-orange-200 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300 shadow-sm transition-all">
-            {user?.roles?.some((role: string) => ['ADMIN', 'RH', 'GESTOR_RH', 'ANALISTA_DP'].includes(role)) ? (
+            {user?.roles?.some((role: string) => ['ADMIN', 'RH', 'GESTOR_RH', 'ANALISTA_DP', 'LIDER'].includes(role)) ? (
               <>
                 <FileCheck className="mr-2 h-4 w-4" />
                 Aprovar Ajustes

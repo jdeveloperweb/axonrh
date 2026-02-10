@@ -58,9 +58,9 @@ function AdjustmentsPageContent() {
   const { confirm } = useConfirm();
   const user = useAuthStore((state) => state.user);
 
-  // Role based access: Admins, HR, Managers can approve
+  // Role based access: Admins, HR, Managers and Leaders can approve
   const canApprove = user?.roles?.some(role =>
-    ['ADMIN', 'RH', 'GESTOR_RH', 'ANALISTA_DP'].includes(role)
+    ['ADMIN', 'RH', 'GESTOR_RH', 'ANALISTA_DP', 'LIDER'].includes(role)
   ) ?? false;
 
   const [loading, setLoading] = useState(true);

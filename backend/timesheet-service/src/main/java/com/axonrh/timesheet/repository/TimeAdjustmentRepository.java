@@ -46,6 +46,18 @@ public interface TimeAdjustmentRepository extends JpaRepository<TimeAdjustment, 
             @Param("status") AdjustmentStatus status,
             Pageable pageable);
 
+    // Contagem pendentes por lista de colaboradores
+    @Query("""
+        SELECT COUNT(ta) FROM TimeAdjustment ta
+        WHERE ta.tenantId = :tenantId
+        AND ta.status = :status
+        AND ta.employeeId IN :employeeIds
+        """)
+    long countByEmployeesAndStatus(
+            @Param("tenantId") UUID tenantId,
+            @Param("employeeIds") List<UUID> employeeIds,
+            @Param("status") AdjustmentStatus status);
+
     // Ajustes em um periodo
     List<TimeAdjustment> findByTenantIdAndEmployeeIdAndRecordDateBetween(
             UUID tenantId, UUID employeeId, LocalDate startDate, LocalDate endDate);
