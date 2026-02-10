@@ -394,4 +394,9 @@ export const employeesApi = {
       throw new Error('Falha ao buscar CEP na ViaCEP');
     }
   },
+
+  // Get subordinates
+  getSubordinates: async (managerId: string): Promise<Employee[]> => {
+    return api.get<Employee[], Employee[]>(`/managers/${managerId}/subordinates`);
+  },
 };

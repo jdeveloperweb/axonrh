@@ -63,9 +63,16 @@ export default function TimesheetMirrorPage() {
   const user = useAuthStore(state => state.user);
 
   // Check permissions
-  const canViewOthers = user?.roles?.some(role =>
-    ['ADMIN', 'MANAGER', 'HR', 'GESTOR', 'RH', 'GESTOR_RH', 'ANALISTA_DP', 'LIDER'].includes(role.toUpperCase())
+  // Check permissions
+  const canViewAll = user?.roles?.some(role =>
+    ['ADMIN', 'RH', 'GESTOR_RH', 'ANALISTA_DP'].includes(role.toUpperCase())
   ) ?? false;
+
+  const canViewTeam = !canViewAll && (user?.roles?.some(role =>
+    ['MANAGER', 'GESTOR', 'LIDER'].includes(role.toUpperCase())
+  ) ?? false);
+
+  const canViewOthers = canViewAll || canViewTeam;
 
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
@@ -76,20 +83,26 @@ export default function TimesheetMirrorPage() {
   const [timesheet, setTimesheet] = useState<DailySummary[]>([]);
   const [totals, setTotals] = useState<PeriodTotals | null>(null);
 
-  // Load employees list (Only for admins/managers)
+  // Load employees list (All for admins, Subordinates for managers)
   useEffect(() => {
     const loadEmployees = async () => {
       if (!canViewOthers) return;
 
       try {
-        const response = await employeesApi.list({ status: 'ACTIVE', size: 1000 });
-        setEmployees(response.content);
+        if (canViewAll) {
+          const response = await employeesApi.list({ status: 'ACTIVE', size: 1000 });
+          setEmployees(response.content);
+        } else if (canViewTeam && user?.id) {
+          const subs = await employeesApi.getSubordinates(user.id);
+          setEmployees(subs);
+        }
       } catch (error) {
         console.error('Erro ao carregar colaboradores:', error);
+        toast.error('Erro ao carregar lista de colaboradores.');
       }
     };
     loadEmployees();
-  }, [canViewOthers]);
+  }, [canViewOthers, canViewAll, canViewTeam, user?.id]);
 
   // Force selectedEmployee to 'me' if lacking permissions
   useEffect(() => {
@@ -167,8 +180,11 @@ export default function TimesheetMirrorPage() {
       const { startDate, endDate } = getDateRange();
       const employeeId = selectedEmployee || 'me';
 
+      // Se for exportação em massa e for apenas gestor (não admin/rh), filtra pelo ID do gestor
+      const managerIdFilter = (isMass && canViewTeam && !canViewAll) ? user?.id : undefined;
+
       const blob = await (isMass
-        ? timesheetApi.exportMassTimesheet(startDate, endDate, format)
+        ? timesheetApi.exportMassTimesheet(startDate, endDate, format, managerIdFilter)
         : timesheetApi.exportTimesheet(employeeId, startDate, endDate, format));
 
       if (blob) {
