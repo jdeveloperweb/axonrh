@@ -42,6 +42,8 @@
     --color-success-foreground: #FFFFFF;
     --color-info: #1976D2;
     --color-info-foreground: #FFFFFF;
+    --color-text-on-primary: #FFFFFF;
+    --color-text-on-secondary: #FFFFFF;
 
     /* Cores de suporte shadcn */
     --color-destructive: var(--color-error);
@@ -190,11 +192,15 @@
   }
 
   .btn-primary {
-    @apply btn bg-[var(--color-button-primary, var(--color-primary))] text-[var(--color-button-primary-text, #FFFFFF)] hover:opacity-90 active:scale-[0.98];
+    @apply btn hover:opacity-90 active:scale-[0.98];
+    background-color: var(--color-button-primary, var(--color-primary));
+    color: var(--color-button-primary-text, #FFFFFF);
   }
 
   .btn-secondary {
-    @apply btn bg-[var(--color-button-secondary, var(--color-secondary))] text-[var(--color-button-secondary-text, #FFFFFF)] hover:opacity-90 active:scale-[0.98];
+    @apply btn hover:opacity-90 active:scale-[0.98];
+    background-color: var(--color-button-secondary, var(--color-secondary));
+    color: var(--color-button-secondary-text, #FFFFFF);
   }
 
   .btn-outline {
