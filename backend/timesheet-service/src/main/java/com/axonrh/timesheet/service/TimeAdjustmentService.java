@@ -222,14 +222,18 @@ public class TimeAdjustmentService {
         UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
         UUID userId = UUID.fromString(jwt.getSubject());
 
-        // Extrai roles do JWT ou do contexto
+        // Extrai permissões e roles do JWT
         List<String> roles = jwt.getClaimAsStringList("roles");
         if (roles == null) roles = Collections.emptyList();
+        
+        List<String> permissions = jwt.getClaimAsStringList("permissions");
+        if (permissions == null) permissions = Collections.emptyList();
 
-        log.debug("Buscando ajustes pendentes - Usuario: {}, Roles: {}", userId, roles);
+        log.debug("Buscando ajustes pendentes - Usuario: {}, Roles: {}, Permissions: {}", userId, roles, permissions);
 
         boolean hasBroadAccess = roles.stream()
-                .anyMatch(role -> List.of("ROLE_ADMIN", "ROLE_RH", "ROLE_GESTOR_RH", "ROLE_ANALISTA_DP").contains(role));
+                .anyMatch(role -> List.of("ROLE_ADMIN", "ROLE_RH", "ROLE_GESTOR_RH", "ROLE_ANALISTA_DP").contains(role))
+                || permissions.contains("ADMIN");
 
         if (hasBroadAccess) {
             log.debug("Usuario possui acesso amplo. Retornando todas as pendencias do tenant {}", tenantId);
@@ -238,11 +242,13 @@ public class TimeAdjustmentService {
                     .map(this::toResponse);
         }
 
-        // Para LIDER, filtra pelos subordinados
+        // Se tem permissão de aprovar ou é identificado como líder, filtra pelos subordinados
+        boolean canApprove = permissions.contains("TIMESHEET:APPROVE") || permissions.contains("APPROVE");
         boolean isLider = roles.contains("ROLE_LIDER") || roles.contains("LIDER") || roles.contains("GESTOR") || roles.contains("ROLE_GESTOR");
-        if (isLider) {
+
+        if (canApprove || isLider) {
             List<UUID> subordinateUserIds = getSubordinateUserIds(userId);
-            log.debug("Usuario e LIDER. Subordinados encontrados: {}", subordinateUserIds.size());
+            log.debug("Usuario e LIDER/Aprovador. Subordinados encontrados: {}", subordinateUserIds.size());
             if (!subordinateUserIds.isEmpty()) {
                 return adjustmentRepository
                         .findByEmployeesAndStatus(tenantId, subordinateUserIds, AdjustmentStatus.PENDING, pageable)
@@ -250,7 +256,7 @@ public class TimeAdjustmentService {
             }
         }
 
-        log.warn("Nenhum ajuste pendente encontrado ou usuario sem permissao de gestao. Roles: {}", roles);
+        log.warn("Nenhum ajuste pendente encontrado ou usuario sem permissao de gestao. Roles: {}, Perms: {}", roles, permissions);
         return Page.empty(pageable);
     }
 
@@ -300,17 +306,21 @@ public class TimeAdjustmentService {
         UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
         UUID userId = UUID.fromString(jwt.getSubject());
 
-        List<String> roles = jwt.getClaimAsStringList("roles");
-        if (roles == null) roles = Collections.emptyList();
+        List<String> permissions = jwt.getClaimAsStringList("permissions");
+        if (permissions == null) permissions = Collections.emptyList();
 
         boolean hasBroadAccess = roles.stream()
-                .anyMatch(role -> List.of("ROLE_ADMIN", "ROLE_RH", "ROLE_GESTOR_RH", "ROLE_ANALISTA_DP").contains(role));
+                .anyMatch(role -> List.of("ROLE_ADMIN", "ROLE_RH", "ROLE_GESTOR_RH", "ROLE_ANALISTA_DP").contains(role))
+                || permissions.contains("ADMIN");
 
         if (hasBroadAccess) {
             return adjustmentRepository.countByTenantIdAndStatus(tenantId, AdjustmentStatus.PENDING);
         }
 
-        if (roles.contains("ROLE_LIDER") || roles.contains("LIDER") || roles.contains("GESTOR") || roles.contains("ROLE_GESTOR")) {
+        boolean canApprove = permissions.contains("TIMESHEET:APPROVE") || permissions.contains("APPROVE");
+        boolean isLider = roles.contains("ROLE_LIDER") || roles.contains("LIDER") || roles.contains("GESTOR") || roles.contains("ROLE_GESTOR");
+
+        if (canApprove || isLider) {
             List<UUID> subordinateUserIds = getSubordinateUserIds(userId);
             if (!subordinateUserIds.isEmpty()) {
                 return adjustmentRepository.countByEmployeesAndStatus(tenantId, subordinateUserIds, AdjustmentStatus.PENDING);

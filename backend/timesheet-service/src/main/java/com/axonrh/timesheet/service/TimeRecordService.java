@@ -159,11 +159,18 @@ public class TimeRecordService {
         UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
         UUID userId = UUID.fromString(jwt.getSubject());
 
+        // Extrai permissões e roles do JWT
         List<String> roles = jwt.getClaimAsStringList("roles");
         if (roles == null) roles = Collections.emptyList();
+        
+        List<String> permissions = jwt.getClaimAsStringList("permissions");
+        if (permissions == null) permissions = Collections.emptyList();
+
+        log.debug("Buscando registros pendentes - Usuario: {}, Roles: {}, Permissions: {}", userId, roles, permissions);
 
         boolean hasBroadAccess = roles.stream()
-                .anyMatch(role -> List.of("ROLE_ADMIN", "ROLE_RH", "ROLE_GESTOR_RH", "ROLE_ANALISTA_DP").contains(role));
+                .anyMatch(role -> List.of("ROLE_ADMIN", "ROLE_RH", "ROLE_GESTOR_RH", "ROLE_ANALISTA_DP").contains(role))
+                || permissions.contains("ADMIN");
 
         if (hasBroadAccess) {
             Page<TimeRecord> records = timeRecordRepository
@@ -171,17 +178,22 @@ public class TimeRecordService {
             return records.map(this::toResponse);
         }
 
-        if (roles.contains("ROLE_LIDER") || roles.contains("LIDER") || roles.contains("GESTOR") || roles.contains("ROLE_GESTOR")) {
+        // Se tem permissão de aprovar ou é identificado como líder, filtra pelos subordinados
+        boolean canApprove = permissions.contains("TIMESHEET:APPROVE") || permissions.contains("APPROVE");
+        boolean isLider = roles.contains("ROLE_LIDER") || roles.contains("LIDER") || roles.contains("GESTOR") || roles.contains("ROLE_GESTOR");
+
+        if (canApprove || isLider) {
             List<UUID> subordinateUserIds = getSubordinateUserIds(userId);
             if (!subordinateUserIds.isEmpty()) {
-                log.debug("Lider visualizando registros pendentes de {} subordinados", subordinateUserIds.size());
+                log.debug("Lider/Aprovador visualizando registros pendentes de {} subordinados", subordinateUserIds.size());
                 return timeRecordRepository.findPendingByEmployees(tenantId, subordinateUserIds, pageable)
                         .map(this::toResponse);
             } else {
-                log.warn("Lider {} nao possui subordinados com UserID vinculado", userId);
+                log.warn("Lider/Aprovador {} nao possui subordinados com UserID vinculado", userId);
             }
         }
 
+        log.warn("Nenhum registro pendente encontrado ou usuario sem permissao de gestao. Roles: {}, Perms: {}", roles, permissions);
         return Page.empty(pageable);
     }
 
@@ -296,14 +308,21 @@ public class TimeRecordService {
         List<String> roles = jwt.getClaimAsStringList("roles");
         if (roles == null) roles = Collections.emptyList();
 
+        List<String> permissions = jwt.getClaimAsStringList("permissions");
+        if (permissions == null) permissions = Collections.emptyList();
+
         boolean hasBroadAccess = roles.stream()
-                .anyMatch(role -> List.of("ROLE_ADMIN", "ROLE_RH", "ROLE_GESTOR_RH", "ROLE_ANALISTA_DP").contains(role));
+                .anyMatch(role -> List.of("ROLE_ADMIN", "ROLE_RH", "ROLE_GESTOR_RH", "ROLE_ANALISTA_DP").contains(role))
+                || permissions.contains("ADMIN");
 
         if (hasBroadAccess) {
             return timeRecordRepository.countByTenantIdAndStatus(tenantId, RecordStatus.PENDING_APPROVAL);
         }
 
-        if (roles.contains("ROLE_LIDER") || roles.contains("LIDER") || roles.contains("GESTOR") || roles.contains("ROLE_GESTOR")) {
+        boolean canApprove = permissions.contains("TIMESHEET:APPROVE") || permissions.contains("APPROVE");
+        boolean isLider = roles.contains("ROLE_LIDER") || roles.contains("LIDER") || roles.contains("GESTOR") || roles.contains("ROLE_GESTOR");
+
+        if (canApprove || isLider) {
             List<UUID> subordinateUserIds = getSubordinateUserIds(userId);
             if (!subordinateUserIds.isEmpty()) {
                 return timeRecordRepository.countPendingByEmployees(tenantId, subordinateUserIds);
