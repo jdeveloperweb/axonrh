@@ -263,7 +263,7 @@ function AdjustmentsPageContent() {
     };
     const { label, className, icon: Icon } = config[status];
     return (
-      <Badge variant="outline" className={`flex items-center gap-1.5 px-2.5 py-0.5 font-medium ${className}`}>
+      <Badge variant="outline" className={`gap-1.5 px-2.5 py-0.5 font-medium ${className}`}>
         <Icon className="h-3.5 w-3.5" />
         {label}
       </Badge>
