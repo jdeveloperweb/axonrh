@@ -171,6 +171,11 @@ function AdjustmentsPageContent() {
       return;
     }
 
+    if (['MODIFY', 'DELETE'].includes(newAdjustment.adjustmentType || '') && !newAdjustment.originalRecordId) {
+      toast.warning('Por favor, selecione o registro original que deseja ajustar.');
+      return;
+    }
+
     try {
       setSubmitting(true);
       await timesheetApi.createAdjustment(newAdjustment as TimeAdjustmentRequest);

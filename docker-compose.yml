@@ -250,6 +250,7 @@ services:
       <<: *backend-env
       SPRING_FLYWAY_ENABLED: "true"
       SERVER_PORT: 8084
+      EMPLOYEE_SERVICE_URL: http://employee-service:8083
 
   vacation-service:
     <<: *backend-service
@@ -261,6 +262,7 @@ services:
       <<: *backend-env
       SPRING_FLYWAY_ENABLED: "true"
       SERVER_PORT: 8085
+      EMPLOYEE_SERVICE_URL: http://employee-service:8083
 
   performance-service:
     <<: *backend-service

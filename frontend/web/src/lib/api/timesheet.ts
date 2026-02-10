@@ -288,9 +288,7 @@ export const timesheetApi = {
    * Get records for a specific date
    */
   getRecordsByDate: async (employeeId: string, date: string): Promise<TimeRecord[]> => {
-    return api.get<TimeRecord[], TimeRecord[]>(`/timesheet/records/employee/${employeeId}`, {
-      params: { date }
-    });
+    return api.get<TimeRecord[], TimeRecord[]>(`/timesheet/records/employee/${employeeId}/date/${date}`);
   },
 
   /**
