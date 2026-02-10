@@ -259,7 +259,7 @@ public class TimeAdjustmentService {
             log.debug("Buscando subordinados para o UserID do lider: {}", leaderUserId);
             EmployeeDTO leader = employeeClient.getEmployeeByUserId(leaderUserId);
             if (leader != null) {
-                log.debug("Lider encontrado no employee-service: {} (ID: {})", leader.getName(), leader.getId());
+                log.debug("Lider encontrado no employee-service: {} (ID: {})", leader.getFullName(), leader.getId());
                 List<EmployeeDTO> subordinates = employeeClient.getSubordinates(leader.getId());
                 if (subordinates != null && !subordinates.isEmpty()) {
                     List<UUID> userIds = subordinates.stream()
@@ -269,7 +269,7 @@ public class TimeAdjustmentService {
                     log.debug("Total de subordinados: {}. Subordinados com UserID: {}", subordinates.size(), userIds.size());
                     return userIds;
                 } else {
-                    log.warn("Lider {} nao possui subordinados diretos no sistema.", leader.getName());
+                    log.warn("Lider {} nao possui subordinados diretos no sistema.", leader.getFullName());
                 }
             } else {
                 log.warn("Nenhum registro de colaborador encontrado para o UserID: {}", leaderUserId);

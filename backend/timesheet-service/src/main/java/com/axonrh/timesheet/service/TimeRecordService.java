@@ -457,7 +457,7 @@ public class TimeRecordService {
             log.debug("Buscando subordinados para o UserID do lider: {}", leaderUserId);
             com.axonrh.timesheet.dto.EmployeeDTO leader = employeeClient.getEmployeeByUserId(leaderUserId);
             if (leader != null) {
-                log.debug("Lider encontrado: {} (ID: {})", leader.getName(), leader.getId());
+                log.debug("Lider encontrado: {} (ID: {})", leader.getFullName(), leader.getId());
                 List<com.axonrh.timesheet.dto.EmployeeDTO> subordinates = employeeClient.getSubordinates(leader.getId());
                 if (subordinates != null && !subordinates.isEmpty()) {
                     List<UUID> userIds = subordinates.stream()
