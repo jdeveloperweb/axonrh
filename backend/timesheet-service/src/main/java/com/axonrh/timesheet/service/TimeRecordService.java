@@ -183,7 +183,8 @@ public class TimeRecordService {
         boolean isLider = roles.contains("ROLE_LIDER") || roles.contains("LIDER") || roles.contains("GESTOR") || roles.contains("ROLE_GESTOR");
 
         if (canApprove || isLider) {
-            List<UUID> subordinateUserIds = getSubordinateUserIds(userId);
+            String email = jwt.getClaimAsString("email");
+            List<UUID> subordinateUserIds = getSubordinateUserIds(userId, email);
             if (!subordinateUserIds.isEmpty()) {
                 log.debug("Lider/Aprovador visualizando registros pendentes de {} subordinados", subordinateUserIds.size());
                 return timeRecordRepository.findPendingByEmployees(tenantId, subordinateUserIds, pageable)
@@ -323,7 +324,8 @@ public class TimeRecordService {
         boolean isLider = roles.contains("ROLE_LIDER") || roles.contains("LIDER") || roles.contains("GESTOR") || roles.contains("ROLE_GESTOR");
 
         if (canApprove || isLider) {
-            List<UUID> subordinateUserIds = getSubordinateUserIds(userId);
+            String email = jwt.getClaimAsString("email");
+            List<UUID> subordinateUserIds = getSubordinateUserIds(userId, email);
             if (!subordinateUserIds.isEmpty()) {
                 return timeRecordRepository.countPendingByEmployees(tenantId, subordinateUserIds);
             }
@@ -471,10 +473,10 @@ public class TimeRecordService {
         }
     }
 
-    private List<UUID> getSubordinateUserIds(UUID leaderUserId) {
+    private List<UUID> getSubordinateUserIds(UUID leaderUserId, String email) {
         try {
-            log.debug("Buscando subordinados para o UserID do lider: {}", leaderUserId);
-            com.axonrh.timesheet.dto.EmployeeDTO leader = employeeClient.getEmployeeByUserId(leaderUserId);
+            log.debug("Buscando subordinados para o UserID do lider: {} (email: {})", leaderUserId, email);
+            com.axonrh.timesheet.dto.EmployeeDTO leader = employeeClient.getEmployeeByUserId(leaderUserId, email);
             if (leader != null) {
                 log.debug("Lider encontrado: {} (ID: {})", leader.getFullName(), leader.getId());
                 
