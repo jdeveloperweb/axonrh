@@ -150,8 +150,10 @@ public class TimeRecordController {
     @GetMapping("/records/pending")
     @Operation(summary = "Registros pendentes", description = "Lista registros pendentes de aprovacao")
     @PreAuthorize("hasAnyAuthority('TIMESHEET:UPDATE', 'TIMESHEET:APPROVE', 'ADMIN')")
-    public ResponseEntity<Page<TimeRecordResponse>> getPendingRecords(Pageable pageable) {
-        Page<TimeRecordResponse> records = timeRecordService.getPendingRecords(pageable);
+    public ResponseEntity<Page<TimeRecordResponse>> getPendingRecords(
+            Pageable pageable,
+            @AuthenticationPrincipal Jwt jwt) {
+        Page<TimeRecordResponse> records = timeRecordService.getPendingRecords(jwt, pageable);
         return ResponseEntity.ok(records);
     }
 
@@ -184,8 +186,8 @@ public class TimeRecordController {
     @GetMapping("/records/pending/count")
     @Operation(summary = "Contagem de pendentes", description = "Retorna quantidade de registros pendentes")
     @PreAuthorize("hasAnyAuthority('TIMESHEET:READ', 'TIMESHEET:UPDATE', 'ADMIN')")
-    public ResponseEntity<Map<String, Long>> countPendingRecords() {
-        long count = timeRecordService.countPendingRecords();
+    public ResponseEntity<Map<String, Long>> countPendingRecords(@AuthenticationPrincipal Jwt jwt) {
+        long count = timeRecordService.countPendingRecords(jwt);
         return ResponseEntity.ok(Map.of("count", count));
     }
 
@@ -237,8 +239,8 @@ public class TimeRecordController {
     @GetMapping("/statistics")
     @Operation(summary = "Estatisticas", description = "Retorna estatisticas de ponto para o dashboard")
     @PreAuthorize("hasAnyAuthority('TIMESHEET:READ', 'TIMESHEET:UPDATE', 'ADMIN')")
-    public ResponseEntity<Map<String, Long>> getStatistics() {
-        Map<String, Long> stats = timeRecordService.getStatistics();
+    public ResponseEntity<Map<String, Long>> getStatistics(@AuthenticationPrincipal Jwt jwt) {
+        Map<String, Long> stats = timeRecordService.getStatistics(jwt);
         return ResponseEntity.ok(stats);
     }
 

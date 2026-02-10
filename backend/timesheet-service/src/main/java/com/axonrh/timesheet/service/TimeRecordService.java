@@ -19,6 +19,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,6 +41,7 @@ public class TimeRecordService {
     private final GeofenceService geofenceService;
     private final DailySummaryService dailySummaryService;
     private final TimeAdjustmentService adjustmentService;
+    private final com.axonrh.timesheet.client.EmployeeServiceClient employeeClient;
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @Value("${timesheet.tolerance.default-minutes:5}")
@@ -150,16 +152,34 @@ public class TimeRecordService {
     }
 
     /**
-     * Busca registros pendentes de aprovacao.
+     * Busca registros pendentes de aprovacao com filtro.
      */
     @Transactional(readOnly = true)
-    public Page<TimeRecordResponse> getPendingRecords(Pageable pageable) {
+    public Page<TimeRecordResponse> getPendingRecords(Jwt jwt, Pageable pageable) {
         UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        UUID userId = UUID.fromString(jwt.getSubject());
 
-        Page<TimeRecord> records = timeRecordRepository
-                .findByTenantIdAndStatusOrderByRecordDatetimeDesc(tenantId, RecordStatus.PENDING_APPROVAL, pageable);
+        List<String> roles = jwt.getClaimAsStringList("roles");
+        if (roles == null) roles = Collections.emptyList();
 
-        return records.map(this::toResponse);
+        boolean hasBroadAccess = roles.stream()
+                .anyMatch(role -> List.of("ROLE_ADMIN", "ROLE_RH", "ROLE_GESTOR_RH", "ROLE_ANALISTA_DP").contains(role));
+
+        if (hasBroadAccess) {
+            Page<TimeRecord> records = timeRecordRepository
+                    .findByTenantIdAndStatusOrderByRecordDatetimeDesc(tenantId, RecordStatus.PENDING_APPROVAL, pageable);
+            return records.map(this::toResponse);
+        }
+
+        if (roles.contains("ROLE_LIDER") || roles.contains("LIDER")) {
+            List<UUID> subordinateUserIds = getSubordinateUserIds(userId);
+            if (!subordinateUserIds.isEmpty()) {
+                return timeRecordRepository.findPendingByEmployees(tenantId, subordinateUserIds, pageable)
+                        .map(this::toResponse);
+            }
+        }
+
+        return Page.empty(pageable);
     }
 
     /**
@@ -263,25 +283,45 @@ public class TimeRecordService {
     }
 
     /**
-     * Contagem de registros pendentes.
+     * Contagem de registros pendentes com filtro.
      */
     @Transactional(readOnly = true)
-    public long countPendingRecords() {
+    public long countPendingRecords(Jwt jwt) {
         UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
-        return timeRecordRepository.countByTenantIdAndStatus(tenantId, RecordStatus.PENDING_APPROVAL);
+        UUID userId = UUID.fromString(jwt.getSubject());
+
+        List<String> roles = jwt.getClaimAsStringList("roles");
+        if (roles == null) roles = Collections.emptyList();
+
+        boolean hasBroadAccess = roles.stream()
+                .anyMatch(role -> List.of("ROLE_ADMIN", "ROLE_RH", "ROLE_GESTOR_RH", "ROLE_ANALISTA_DP").contains(role));
+
+        if (hasBroadAccess) {
+            return timeRecordRepository.countByTenantIdAndStatus(tenantId, RecordStatus.PENDING_APPROVAL);
+        }
+
+        if (roles.contains("ROLE_LIDER") || roles.contains("LIDER")) {
+            List<UUID> subordinateUserIds = getSubordinateUserIds(userId);
+            if (!subordinateUserIds.isEmpty()) {
+                // Precisamos adicionar este metodo no repositorio
+                return timeRecordRepository.countPendingByEmployees(tenantId, subordinateUserIds);
+            }
+        }
+
+        return 0L;
     }
 
     /**
      * Estatisticas para o dashboard.
      */
     @Transactional(readOnly = true)
-    public Map<String, Long> getStatistics() {
+    public Map<String, Long> getStatistics(Jwt jwt) {
         UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
         LocalDate today = LocalDate.now();
 
         Map<String, Long> stats = new HashMap<>();
-        stats.put("pendingRecords", countPendingRecords());
-        stats.put("pendingAdjustments", adjustmentService.countPendingAdjustments());
+        stats.put("pendingRecords", countPendingRecords(jwt));
+        stats.put("pendingAdjustments", adjustmentService.countPendingAdjustments(jwt));
         stats.put("todayRecords", timeRecordRepository.countByTenantIdAndRecordDate(tenantId, today));
         stats.put("employeesWithIssues", 0L); // TODO: Implementar logica de inconsistencias
 
@@ -408,6 +448,24 @@ public class TimeRecordService {
         } catch (Exception e) {
             log.error("Erro ao publicar evento Kafka: {}", e.getMessage());
         }
+    }
+
+    private List<UUID> getSubordinateUserIds(UUID leaderUserId) {
+        try {
+            com.axonrh.timesheet.dto.EmployeeDTO leader = employeeClient.getEmployeeByUserId(leaderUserId);
+            if (leader != null) {
+                List<com.axonrh.timesheet.dto.EmployeeDTO> subordinates = employeeClient.getSubordinates(leader.getId());
+                if (subordinates != null && !subordinates.isEmpty()) {
+                    return subordinates.stream()
+                            .map(com.axonrh.timesheet.dto.EmployeeDTO::getUserId)
+                            .filter(Objects::nonNull)
+                            .toList();
+                }
+            }
+        } catch (Exception e) {
+            log.error("Erro ao buscar subordinados para o lider {}: {}", leaderUserId, e.getMessage());
+        }
+        return Collections.emptyList();
     }
 
     public record GeofenceValidationResult(boolean isWithin, UUID geofenceId, String geofenceName) {}

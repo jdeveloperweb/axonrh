@@ -154,13 +154,13 @@ export default function RolesPage() {
                                         <TableCell>{role.description || "-"}</TableCell>
                                         <TableCell>
                                             {role.systemRole ? (
-                                                <Badge variant="secondary">Sistema</Badge>
+                                                <Badge variant="warning">Sistema</Badge>
                                             ) : (
                                                 <Badge variant="outline">Personalizado</Badge>
                                             )}
                                         </TableCell>
                                         <TableCell>
-                                            <Badge variant={role.active ? "default" : "destructive"}>
+                                            <Badge variant={role.active ? "success" : "destructive"}>
                                                 {role.active ? "Ativo" : "Inativo"}
                                             </Badge>
                                         </TableCell>

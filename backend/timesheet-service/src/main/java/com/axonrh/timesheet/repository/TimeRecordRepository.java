@@ -47,6 +47,17 @@ public interface TimeRecordRepository extends JpaRepository<TimeRecord, UUID> {
             @Param("employeeIds") List<UUID> employeeIds,
             Pageable pageable);
 
+    // Contagem de registros pendentes para subordinados
+    @Query("""
+        SELECT COUNT(tr) FROM TimeRecord tr
+        WHERE tr.tenantId = :tenantId
+        AND tr.status = 'PENDING_APPROVAL'
+        AND tr.employeeId IN :employeeIds
+        """)
+    long countPendingByEmployees(
+            @Param("tenantId") UUID tenantId,
+            @Param("employeeIds") List<UUID> employeeIds);
+
     // Ultimo registro do colaborador
     Optional<TimeRecord> findFirstByTenantIdAndEmployeeIdOrderByRecordDatetimeDesc(
             UUID tenantId, UUID employeeId);
