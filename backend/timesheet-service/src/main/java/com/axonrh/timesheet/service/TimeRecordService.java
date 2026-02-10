@@ -477,17 +477,22 @@ public class TimeRecordService {
             com.axonrh.timesheet.dto.EmployeeDTO leader = employeeClient.getEmployeeByUserId(leaderUserId);
             if (leader != null) {
                 log.debug("Lider encontrado: {} (ID: {})", leader.getFullName(), leader.getId());
-                List<com.axonrh.timesheet.dto.EmployeeDTO> subordinates = employeeClient.getSubordinates(leader.getId());
-                if (subordinates != null && !subordinates.isEmpty()) {
-                    List<UUID> userIds = subordinates.stream()
+                
+                Set<UUID> subordinateUserIds = new HashSet<>();
+                
+                // 1. Busca subordinados diretos
+                List<com.axonrh.timesheet.dto.EmployeeDTO> directSubordinates = employeeClient.getSubordinates(leader.getId());
+                if (directSubordinates != null) {
+                    directSubordinates.stream()
                             .map(com.axonrh.timesheet.dto.EmployeeDTO::getUserId)
                             .filter(Objects::nonNull)
-                            .toList();
-                    log.debug("Total de subordinados: {}. Com UserID: {}", subordinates.size(), userIds.size());
-                    return userIds;
+                            .forEach(subordinateUserIds::add);
                 }
+
+                log.debug("Total de subordinados encontrados com UserID: {}", subordinateUserIds.size());
+                return new ArrayList<>(subordinateUserIds);
             } else {
-                log.warn("Nenhum registro de colaborador para o UserID: {}", leaderUserId);
+                log.warn("Nenhum registro de colaborador para o UserID: {}. O gestor pode nao estar vinculado.", leaderUserId);
             }
         } catch (Exception e) {
             log.error("Erro ao buscar subordinados para o lider {}: {}", leaderUserId, e.getMessage());

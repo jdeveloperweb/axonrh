@@ -266,19 +266,34 @@ public class TimeAdjustmentService {
             EmployeeDTO leader = employeeClient.getEmployeeByUserId(leaderUserId);
             if (leader != null) {
                 log.debug("Lider encontrado no employee-service: {} (ID: {})", leader.getFullName(), leader.getId());
-                List<EmployeeDTO> subordinates = employeeClient.getSubordinates(leader.getId());
-                if (subordinates != null && !subordinates.isEmpty()) {
-                    List<UUID> userIds = subordinates.stream()
+                
+                Set<UUID> subordinateUserIds = new HashSet<>();
+                
+                // 1. Busca subordinados diretos
+                List<EmployeeDTO> directSubordinates = employeeClient.getSubordinates(leader.getId());
+                int totalDirect = directSubordinates != null ? directSubordinates.size() : 0;
+                log.debug("Gestor {} possui {} subordinados diretos cadastrados.", leader.getFullName(), totalDirect);
+                
+                if (directSubordinates != null) {
+                    long withUser = directSubordinates.stream()
+                            .filter(s -> s.getUserId() != null)
+                            .count();
+                    log.debug("Dos {} subordinados, {} possuem User ID vinculado.", totalDirect, withUser);
+                    
+                    directSubordinates.stream()
                             .map(EmployeeDTO::getUserId)
                             .filter(java.util.Objects::nonNull)
-                            .toList();
-                    log.debug("Total de subordinados: {}. Subordinados com UserID: {}", subordinates.size(), userIds.size());
-                    return userIds;
-                } else {
-                    log.warn("Lider {} nao possui subordinados diretos no sistema.", leader.getFullName());
+                            .forEach(subordinateUserIds::add);
                 }
+
+                if (subordinateUserIds.isEmpty()) {
+                    log.warn("ATENCAO: Gestor {} possui subordinados, mas nenhum deles tem um User ID vinculado no RH.", leader.getFullName());
+                }
+
+                log.debug("Total final de subordinados unicos com UserID: {}", subordinateUserIds.size());
+                return new ArrayList<>(subordinateUserIds);
             } else {
-                log.warn("Nenhum registro de colaborador encontrado para o UserID: {}", leaderUserId);
+                log.warn("Nenhum registro de colaborador encontrado para o UserID: {}. O gestor pode nao estar vinculado ao seu registro de colaborador.", leaderUserId);
             }
         } catch (Exception e) {
             log.error("Erro ao buscar subordinados para o lider {}: {}", leaderUserId, e.getMessage());
