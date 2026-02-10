@@ -333,7 +333,7 @@ public class EmployeeService {
         }
 
         // Registra historico
-        saveHistory(saved, "CREATE", null, null, "Colaborador criado", userId);
+        saveHistory(saved, "CADASTRO", null, null, "Colaborador cadastrado no sistema", userId);
 
         // Publica evento
         publishCreatedEvent(saved);
@@ -406,7 +406,18 @@ public class EmployeeService {
         Map<String, Object> newValues = captureCurrentValues(saved);
         Map<String, Object> changes = findChanges(oldValues, newValues);
         if (!changes.isEmpty()) {
-            saveHistory(saved, "UPDATE", oldValues.toString(), newValues.toString(), null, userId);
+            StringBuilder description = new StringBuilder("Campos alterados: ");
+            changes.forEach((field, oldVal) -> {
+                Object newVal = newValues.get(field);
+                description.append(translateField(field))
+                           .append(" (")
+                           .append(oldVal != null ? oldVal : "vazio")
+                           .append(" -> ")
+                           .append(newVal != null ? newVal : "vazio")
+                           .append("), ");
+            });
+            String finalDesc = description.substring(0, description.length() - 2);
+            saveHistory(saved, "ATUALIZACAO", oldValues.toString(), newValues.toString(), finalDesc, userId);
             publishUpdatedEvent(saved, changes, newValues);
         }
 
@@ -431,7 +442,7 @@ public class EmployeeService {
         employee.setUpdatedBy(userId);
 
         employeeRepository.save(employee);
-        saveHistory(employee, "DEACTIVATE", "true", "false", "Colaborador desativado", userId);
+        saveHistory(employee, "DESATIVACAO", "Ativo", "Inativo", "Colaborador desativado", userId);
 
         log.info("Colaborador desativado: {}", id);
     }
@@ -452,7 +463,7 @@ public class EmployeeService {
         employee.setUpdatedBy(userId);
 
         Employee saved = employeeRepository.save(employee);
-        saveHistory(saved, "TERMINATION", null, terminationDate.toString(), reason, userId);
+        saveHistory(saved, "DESLIGAMENTO", null, terminationDate.toString(), "Motivo: " + reason, userId);
         publishTerminatedEvent(saved, terminationDate, reason);
 
         log.info("Colaborador desligado: {} - data: {}", id, terminationDate);
@@ -492,10 +503,53 @@ public class EmployeeService {
         Employee saved = employeeRepository.save(employee);
         
         // Registra historico
-        saveHistory(saved, "PHOTO_UPDATE", null, photoUrl, "Foto atualizada", userId);
+        saveHistory(saved, "FOTO_ATUALIZADA", null, photoUrl, "Foto de perfil atualizada", userId);
 
         log.info("Foto do colaborador atualizada: {}", id);
         return employeeMapper.toResponse(saved);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> getHistory(UUID employeeId) {
+        UUID tenantId = getTenantId();
+        List<EmployeeHistory> histories = historyRepository.findByTenantIdAndEmployeeIdOrderByChangedAtDesc(
+                tenantId, employeeId, org.springframework.data.domain.PageRequest.of(0, 50)).getContent();
+
+        return histories.stream().map(h -> {
+            Map<String, Object> map = new java.util.HashMap<>();
+            map.put("action", h.getChangeType());
+            map.put("description", h.getChangeReason() != null ? h.getChangeReason() : "Nenhuma descrição");
+            map.put("createdAt", h.getChangedAt());
+            
+            // Resolve nome de quem fez a alteracao
+            String authorName = "Sistema";
+            if (h.getChangedBy() != null) {
+                authorName = employeeRepository.findByUserIdWithRelations(tenantId, h.getChangedBy())
+                        .map(e -> e.getFullName())
+                        .orElse("Admin " + h.getChangedBy().toString().substring(0, 4));
+            }
+            map.put("createdBy", authorName);
+            
+            // Campos extras se necessario para o frontend
+            map.put("oldValue", h.getOldValue());
+            map.put("newValue", h.getNewValue());
+            map.put("changedField", h.getChangedField());
+            
+            return map;
+        }).collect(java.util.stream.Collectors.toList());
+    }
+
+    private String translateField(String field) {
+        switch (field) {
+            case "fullName": return "Nome";
+            case "email": return "E-mail";
+            case "departmentId": return "Departamento";
+            case "positionId": return "Cargo";
+            case "baseSalary": return "Salário";
+            case "status": return "Status";
+            case "hireDate": return "Data de Admissão";
+            default: return field;
+        }
     }
 
 
@@ -560,6 +614,9 @@ public class EmployeeService {
         
         // Save new ones
         saveDependents(employee, requests, userId);
+        
+        // Registra historico
+        saveHistory(employee, "DEPENDENTES_ATUALIZADOS", null, null, "Lista de dependentes atualizada", userId);
     }
 
     private void saveHistory(Employee employee, String changeType, String oldValue,

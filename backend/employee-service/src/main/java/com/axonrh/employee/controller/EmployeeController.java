@@ -123,9 +123,7 @@ public class EmployeeController {
             @Parameter(description = "ID do colaborador") @PathVariable UUID id) {
 
         log.info("Buscando histórico do colaborador: {}", id);
-        // TODO: Implementar auditoria de histórico quando necessário
-        // Por enquanto, retorna lista vazia para evitar erro 404
-        return ResponseEntity.ok(java.util.Collections.emptyList());
+        return ResponseEntity.ok(employeeService.getHistory(id));
     }
 
 

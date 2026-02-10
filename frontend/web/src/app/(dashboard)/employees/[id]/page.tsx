@@ -892,7 +892,7 @@ export default function EmployeeDetailPage() {
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Only show configuration for Admins or RH */}
-                {user?.roles?.some((role: string) => ['ADMIN', 'RH'].includes(role)) ? (
+                {user?.roles?.some((role: string) => ['ADMIN', 'RH', 'GESTOR_RH', 'ANALISTA_DP'].includes(role)) ? (
                   <>
                     <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl flex items-start gap-4">
                       <AlertTriangle className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
