@@ -25,35 +25,35 @@ public class RoleController {
 
     @GetMapping
     @Operation(summary = "Listar perfis", description = "Lista todos os perfis de acesso")
-    @PreAuthorize("hasAnyAuthority('ROLE:READ', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE:READ', 'ROLE_ADMIN')")
     public ResponseEntity<List<RoleResponse>> listRoles() {
         return ResponseEntity.ok(roleService.findAll());
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Buscar perfil", description = "Busca um perfil pelo ID")
-    @PreAuthorize("hasAnyAuthority('ROLE:READ', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE:READ', 'ROLE_ADMIN')")
     public ResponseEntity<RoleResponse> getRole(@PathVariable UUID id) {
         return ResponseEntity.ok(roleService.findById(id));
     }
 
     @PostMapping
     @Operation(summary = "Criar perfil", description = "Cria um novo perfil de acesso")
-    @PreAuthorize("hasAnyAuthority('ROLE:CREATE', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE:CREATE', 'ROLE_ADMIN')")
     public ResponseEntity<RoleResponse> createRole(@Valid @RequestBody RoleRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(roleService.create(request));
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Atualizar perfil", description = "Atualiza um perfil existente e suas permissoes")
-    @PreAuthorize("hasAnyAuthority('ROLE:UPDATE', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE:UPDATE', 'ROLE_ADMIN')")
     public ResponseEntity<RoleResponse> updateRole(@PathVariable UUID id, @Valid @RequestBody RoleRequest request) {
         return ResponseEntity.ok(roleService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Excluir perfil", description = "Exclui um perfil de acesso")
-    @PreAuthorize("hasAnyAuthority('ROLE:DELETE', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE:DELETE', 'ROLE_ADMIN')")
     public ResponseEntity<Void> deleteRole(@PathVariable UUID id) {
         roleService.delete(id);
         return ResponseEntity.noContent().build();

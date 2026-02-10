@@ -24,14 +24,14 @@ public class PermissionController {
 
     @GetMapping
     @Operation(summary = "Listar permissoes", description = "Lista todas as permissoes disponiveis")
-    @PreAuthorize("hasAnyAuthority('ROLE:READ', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE:READ', 'ROLE_ADMIN')")
     public ResponseEntity<List<PermissionDTO>> listPermissions() {
         return ResponseEntity.ok(permissionService.findAll());
     }
 
     @GetMapping("/grouped")
     @Operation(summary = "Listar permissoes agrupadas", description = "Lista permissoes agrupadas por modulo")
-    @PreAuthorize("hasAnyAuthority('ROLE:READ', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE:READ', 'ROLE_ADMIN')")
     public ResponseEntity<Map<String, List<PermissionDTO>>> listPermissionsGrouped() {
         return ResponseEntity.ok(permissionService.findAllGroupedByModule());
     }
