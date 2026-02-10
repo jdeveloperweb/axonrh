@@ -171,11 +171,14 @@ public class TimeRecordService {
             return records.map(this::toResponse);
         }
 
-        if (roles.contains("ROLE_LIDER") || roles.contains("LIDER")) {
+        if (roles.contains("ROLE_LIDER") || roles.contains("LIDER") || roles.contains("GESTOR") || roles.contains("ROLE_GESTOR")) {
             List<UUID> subordinateUserIds = getSubordinateUserIds(userId);
             if (!subordinateUserIds.isEmpty()) {
+                log.debug("Lider visualizando registros pendentes de {} subordinados", subordinateUserIds.size());
                 return timeRecordRepository.findPendingByEmployees(tenantId, subordinateUserIds, pageable)
                         .map(this::toResponse);
+            } else {
+                log.warn("Lider {} nao possui subordinados com UserID vinculado", userId);
             }
         }
 
@@ -300,10 +303,9 @@ public class TimeRecordService {
             return timeRecordRepository.countByTenantIdAndStatus(tenantId, RecordStatus.PENDING_APPROVAL);
         }
 
-        if (roles.contains("ROLE_LIDER") || roles.contains("LIDER")) {
+        if (roles.contains("ROLE_LIDER") || roles.contains("LIDER") || roles.contains("GESTOR") || roles.contains("ROLE_GESTOR")) {
             List<UUID> subordinateUserIds = getSubordinateUserIds(userId);
             if (!subordinateUserIds.isEmpty()) {
-                // Precisamos adicionar este metodo no repositorio
                 return timeRecordRepository.countPendingByEmployees(tenantId, subordinateUserIds);
             }
         }
@@ -452,15 +454,21 @@ public class TimeRecordService {
 
     private List<UUID> getSubordinateUserIds(UUID leaderUserId) {
         try {
+            log.debug("Buscando subordinados para o UserID do lider: {}", leaderUserId);
             com.axonrh.timesheet.dto.EmployeeDTO leader = employeeClient.getEmployeeByUserId(leaderUserId);
             if (leader != null) {
+                log.debug("Lider encontrado: {} (ID: {})", leader.getName(), leader.getId());
                 List<com.axonrh.timesheet.dto.EmployeeDTO> subordinates = employeeClient.getSubordinates(leader.getId());
                 if (subordinates != null && !subordinates.isEmpty()) {
-                    return subordinates.stream()
+                    List<UUID> userIds = subordinates.stream()
                             .map(com.axonrh.timesheet.dto.EmployeeDTO::getUserId)
                             .filter(Objects::nonNull)
                             .toList();
+                    log.debug("Total de subordinados: {}. Com UserID: {}", subordinates.size(), userIds.size());
+                    return userIds;
                 }
+            } else {
+                log.warn("Nenhum registro de colaborador para o UserID: {}", leaderUserId);
             }
         } catch (Exception e) {
             log.error("Erro ao buscar subordinados para o lider {}: {}", leaderUserId, e.getMessage());

@@ -226,19 +226,23 @@ public class TimeAdjustmentService {
         List<String> roles = jwt.getClaimAsStringList("roles");
         if (roles == null) roles = Collections.emptyList();
 
+        log.debug("Buscando ajustes pendentes - Usuario: {}, Roles: {}", userId, roles);
+
         boolean hasBroadAccess = roles.stream()
                 .anyMatch(role -> List.of("ROLE_ADMIN", "ROLE_RH", "ROLE_GESTOR_RH", "ROLE_ANALISTA_DP").contains(role));
 
         if (hasBroadAccess) {
+            log.debug("Usuario possui acesso amplo. Retornando todas as pendencias do tenant {}", tenantId);
             return adjustmentRepository
                     .findByTenantIdAndStatusOrderByCreatedAtAsc(tenantId, AdjustmentStatus.PENDING, pageable)
                     .map(this::toResponse);
         }
 
         // Para LIDER, filtra pelos subordinados
-        boolean isLider = roles.contains("ROLE_LIDER") || roles.contains("LIDER");
+        boolean isLider = roles.contains("ROLE_LIDER") || roles.contains("LIDER") || roles.contains("GESTOR") || roles.contains("ROLE_GESTOR");
         if (isLider) {
             List<UUID> subordinateUserIds = getSubordinateUserIds(userId);
+            log.debug("Usuario e LIDER. Subordinados encontrados: {}", subordinateUserIds.size());
             if (!subordinateUserIds.isEmpty()) {
                 return adjustmentRepository
                         .findByEmployeesAndStatus(tenantId, subordinateUserIds, AdjustmentStatus.PENDING, pageable)
@@ -246,20 +250,29 @@ public class TimeAdjustmentService {
             }
         }
 
+        log.warn("Nenhum ajuste pendente encontrado ou usuario sem permissao de gestao. Roles: {}", roles);
         return Page.empty(pageable);
     }
 
     private List<UUID> getSubordinateUserIds(UUID leaderUserId) {
         try {
+            log.debug("Buscando subordinados para o UserID do lider: {}", leaderUserId);
             EmployeeDTO leader = employeeClient.getEmployeeByUserId(leaderUserId);
             if (leader != null) {
+                log.debug("Lider encontrado no employee-service: {} (ID: {})", leader.getName(), leader.getId());
                 List<EmployeeDTO> subordinates = employeeClient.getSubordinates(leader.getId());
                 if (subordinates != null && !subordinates.isEmpty()) {
-                    return subordinates.stream()
+                    List<UUID> userIds = subordinates.stream()
                             .map(EmployeeDTO::getUserId)
                             .filter(java.util.Objects::nonNull)
                             .toList();
+                    log.debug("Total de subordinados: {}. Subordinados com UserID: {}", subordinates.size(), userIds.size());
+                    return userIds;
+                } else {
+                    log.warn("Lider {} nao possui subordinados diretos no sistema.", leader.getName());
                 }
+            } else {
+                log.warn("Nenhum registro de colaborador encontrado para o UserID: {}", leaderUserId);
             }
         } catch (Exception e) {
             log.error("Erro ao buscar subordinados para o lider {}: {}", leaderUserId, e.getMessage());
@@ -297,7 +310,7 @@ public class TimeAdjustmentService {
             return adjustmentRepository.countByTenantIdAndStatus(tenantId, AdjustmentStatus.PENDING);
         }
 
-        if (roles.contains("ROLE_LIDER") || roles.contains("LIDER")) {
+        if (roles.contains("ROLE_LIDER") || roles.contains("LIDER") || roles.contains("GESTOR") || roles.contains("ROLE_GESTOR")) {
             List<UUID> subordinateUserIds = getSubordinateUserIds(userId);
             if (!subordinateUserIds.isEmpty()) {
                 return adjustmentRepository.countByEmployeesAndStatus(tenantId, subordinateUserIds, AdjustmentStatus.PENDING);

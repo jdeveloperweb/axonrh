@@ -28,22 +28,20 @@
     --color-text-primary: #212121;
     --color-text-secondary: #757575;
     --color-text-disabled: #9E9E9E;
-    --color-primary-foreground: #FFFFFF;
+    --color-primary-foreground: #212121;
+    /* Texto escuro para melhor contraste em badges */
     --color-secondary-foreground: #FFFFFF;
     --color-accent-foreground: #FFFFFF;
 
     /* Estados */
-    --color-error: #C62828;
+    --color-error: #D32F2F;
     --color-error-foreground: #FFFFFF;
-    --color-warning: #E65100;
-    /* Laranja mais escuro para contraste com texto branco */
-    --color-warning-foreground: #FFFFFF;
-    --color-success: #2E7D32;
+    --color-warning: #F57C00;
+    --color-warning-foreground: #212121;
+    --color-success: #388E3C;
     --color-success-foreground: #FFFFFF;
-    --color-info: #1565C0;
+    --color-info: #1976D2;
     --color-info-foreground: #FFFFFF;
-    --color-primary: #1565C0;
-    --color-primary-foreground: #FFFFFF;
 
     /* Cores de suporte shadcn */
     --color-destructive: var(--color-error);

@@ -160,7 +160,7 @@ export default function RolesPage() {
                                             )}
                                         </TableCell>
                                         <TableCell>
-                                            <Badge variant={role.active ? "success" : "destructive"}>
+                                            <Badge variant={role.active ? "default" : "destructive"}>
                                                 {role.active ? "Ativo" : "Inativo"}
                                             </Badge>
                                         </TableCell>
