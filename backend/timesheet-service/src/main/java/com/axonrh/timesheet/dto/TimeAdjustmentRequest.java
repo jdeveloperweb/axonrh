@@ -1,6 +1,7 @@
 package com.axonrh.timesheet.dto;
 
 import com.axonrh.timesheet.entity.enums.RecordType;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -21,6 +22,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class TimeAdjustmentRequest {
 
     @NotNull(message = "Tipo de ajuste e obrigatorio")
@@ -41,6 +43,10 @@ public class TimeAdjustmentRequest {
     @NotBlank(message = "Justificativa e obrigatoria")
     @Size(min = 10, max = 1000, message = "Justificativa deve ter entre 10 e 1000 caracteres")
     private String justification;
+
+    // Identificacao do colaborador (opcional no request, extraido do token no service)
+    private UUID employeeId;
+    private String employeeName;
 
     // URLs de anexos (comprovantes)
     private List<String> attachmentUrls;
