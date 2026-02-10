@@ -23,8 +23,9 @@ import { vacationApi, VacationPeriod } from '@/lib/api/vacation';
 import { enrollmentsApi, Enrollment } from '@/lib/api/learning';
 import { Progress } from '@/components/ui/progress';
 import { useRouter } from 'next/navigation';
-import { pdisApi, PDI, discApi, DiscAssignment } from '@/lib/api/performance';
+import { pdisApi, PDI, discApi, DiscAssignment, DiscEvaluation } from '@/lib/api/performance';
 import { employeesApi } from '@/lib/api/employees';
+import { AxonIATip } from '@/components/performance/AxonIATip';
 
 interface CollaboratorDashboardProps {
     extraHeaderContent?: React.ReactNode;
@@ -38,6 +39,7 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
     const [activeEnrollments, setActiveEnrollments] = useState<Enrollment[]>([]);
     const [activePDIs, setActivePDIs] = useState<PDI[]>([]);
     const [pendingDisc, setPendingDisc] = useState<DiscAssignment[]>([]);
+    const [latestDisc, setLatestDisc] = useState<DiscEvaluation | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -47,12 +49,13 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
                 const employee = await employeesApi.getMe().catch(() => null);
                 const employeeId = employee?.id;
 
-                const [records, periods, enrollments, pdis, disc] = await Promise.all([
+                const [records, periods, enrollments, pdis, disc, latestDiscRes] = await Promise.all([
                     timesheetApi.getTodayRecords().catch(() => [] as TimeRecord[]),
                     vacationApi.getMyPeriods().catch(() => [] as VacationPeriod[]),
                     employeeId ? enrollmentsApi.getActiveByEmployee(employeeId).catch(() => [] as Enrollment[]) : Promise.resolve([] as Enrollment[]),
                     employeeId ? pdisApi.getByEmployee(employeeId).catch(() => [] as PDI[]) : Promise.resolve([] as PDI[]),
-                    employeeId ? discApi.getPendingForEmployee(employeeId).catch(() => [] as DiscAssignment[]) : Promise.resolve([] as DiscAssignment[])
+                    employeeId ? discApi.getPendingForEmployee(employeeId).catch(() => [] as DiscAssignment[]) : Promise.resolve([] as DiscAssignment[]),
+                    employeeId ? discApi.getLatest(employeeId).catch(() => null) : Promise.resolve(null)
                 ]);
 
                 setTodayRecords(Array.isArray(records) ? records : []);
@@ -64,6 +67,7 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
                 const relevantPDIs = allPDIs.filter(p => ['ACTIVE', 'DRAFT', 'PENDING_APPROVAL'].includes(p.status));
                 setActivePDIs(relevantPDIs);
                 setPendingDisc(Array.isArray(disc) ? disc : []);
+                setLatestDisc(latestDiscRes);
             } catch (error) {
                 console.error('Error loading collaborator dashboard data:', error);
             } finally {
@@ -371,6 +375,8 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
                             </div>
                         </CardContent>
                     </Card>
+
+                    <AxonIATip latestDisc={latestDisc} />
 
                     <Card className="border-none shadow-[0_20px_50px_rgba(37,99,235,0.15)] bg-[var(--color-primary)] text-white overflow-hidden relative border border-white/10">
                         <div className="absolute top-0 right-0 p-4 opacity-10 rotate-12">

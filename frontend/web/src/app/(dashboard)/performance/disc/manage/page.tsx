@@ -58,7 +58,7 @@ import { employeesApi, Employee } from '@/lib/api/employees';
 import { useAuthStore } from '@/stores/auth-store';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/utils';
-import { RadialBarChart, RadialBar, PolarAngleAxis, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend } from 'recharts';
+import { RadarChart, Radar, PolarGrid, PolarRadiusAxis, RadialBarChart, RadialBar, PolarAngleAxis, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend } from 'recharts';
 
 const statusColors: Record<DiscAssessmentStatus, { bg: string; text: string; label: string }> = {
   PENDING: { bg: 'bg-amber-50', text: 'text-amber-700', label: 'Pendente' },
@@ -626,7 +626,7 @@ export default function DiscManagePage() {
         </div>
       )}
 
-      {/* Profile Distribution Section - Light & Modern Version */}
+      {/* Profile Distribution Section - Radar Version */}
       {pieChartData.length > 0 && (
         <Card className="border-none shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white overflow-hidden rounded-[2.5rem] relative">
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32" />
@@ -642,7 +642,7 @@ export default function DiscManagePage() {
                     Equilíbrio de Talentos
                   </CardTitle>
                   <CardDescription className="text-slate-400 font-medium text-sm">
-                    Panorama comportamental da equipe em tempo real
+                    Distribuição multidimensional do DNA comportamental da empresa
                   </CardDescription>
                 </div>
               </div>
@@ -659,34 +659,40 @@ export default function DiscManagePage() {
           <CardContent className="p-8 pt-6 relative z-10">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
 
-              {/* Refined Minimalist Radial Area */}
-              <div className="lg:col-span-5 h-[320px] relative flex items-center justify-center">
+              {/* Radar Chart Area */}
+              <div className="lg:col-span-5 h-[350px] relative flex items-center justify-center">
                 <ResponsiveContainer width="100%" height="100%">
-                  <RadialBarChart
-                    cx="50%"
-                    cy="50%"
-                    innerRadius="50%"
-                    outerRadius="100%"
-                    barSize={10}
-                    data={pieChartData.map(d => ({ ...d, fill: d.color }))}
-                    startAngle={90}
-                    endAngle={450}
-                  >
-                    <RadialBar
-                      background={{ fill: '#f8fafc' }}
+                  <RadarChart cx="50%" cy="50%" outerRadius="80%" data={[
+                    { subject: 'Dominância', value: pieChartData.find(d => d.name.toLowerCase().includes('domin'))?.value || 0 },
+                    { subject: 'Influência', value: pieChartData.find(d => d.name.toLowerCase().includes('influenc'))?.value || 0 },
+                    { subject: 'Estabilidade', value: pieChartData.find(d => d.name.toLowerCase().includes('estav'))?.value || 0 },
+                    { subject: 'Conformidade', value: pieChartData.find(d => d.name.toLowerCase().includes('confor'))?.value || 0 },
+                  ]}>
+                    <PolarGrid stroke="#e2e8f0" />
+                    <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 12, fontWeight: 'bold' }} />
+                    <PolarRadiusAxis
+                      angle={30}
+                      domain={[0, Math.max(...pieChartData.map(d => d.value)) * 1.2]}
+                      tick={false}
+                      axisLine={false}
+                    />
+                    <Radar
+                      name="Escopo da Empresa"
                       dataKey="value"
-                      cornerRadius={10}
+                      stroke="#4F46E5"
+                      fill="#4F46E5"
+                      fillOpacity={0.15}
+                      dot={{ r: 4, fill: '#4F46E5', strokeWidth: 2, stroke: '#fff' }}
                     />
                     <Tooltip
                       content={({ active, payload }) => {
                         if (active && payload && payload.length) {
                           const data = payload[0].payload;
                           return (
-                            <div className="bg-white border border-slate-100 p-4 rounded-2xl shadow-xl animate-in fade-in slide-in-from-bottom-2">
-                              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">{data.name}</p>
+                            <div className="bg-white border border-slate-100 p-3 rounded-xl shadow-xl">
+                              <p className="text-[10px] font-black uppercase text-slate-400 mb-1">{data.subject}</p>
                               <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: data.color }} />
-                                <span className="text-2xl font-black text-slate-900">{data.value}</span>
+                                <span className="text-xl font-black text-slate-900">{data.value}</span>
                                 <span className="text-xs font-bold text-slate-500">Membros</span>
                               </div>
                             </div>
@@ -695,18 +701,8 @@ export default function DiscManagePage() {
                         return null;
                       }}
                     />
-                  </RadialBarChart>
+                  </RadarChart>
                 </ResponsiveContainer>
-
-                {/* Visual Center Piece */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <div className="w-28 h-28 rounded-full bg-white shadow-[0_0_40px_rgba(0,0,0,0.03)] border border-slate-50 flex flex-col items-center justify-center">
-                    <span className="text-4xl font-black text-slate-900 tracking-tighter">
-                      {pieChartData.length}
-                    </span>
-                    <p className="text-[9px] font-black uppercase text-slate-400">Categorias</p>
-                  </div>
-                </div>
               </div>
 
               {/* Elegant Statistics Grid */}

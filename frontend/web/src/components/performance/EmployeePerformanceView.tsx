@@ -41,6 +41,7 @@ import {
 import { employeesApi, Employee } from '@/lib/api/employees';
 import { useAuthStore } from '@/stores/auth-store';
 import { cn } from '@/lib/utils';
+import { AxonIATip } from './AxonIATip';
 
 const profileLabels: Record<string, { title: string; letter: string; color: string; traits: string[] }> = {
     DOMINANCE: { title: 'Dominante', letter: 'D', color: '#ff5a5a', traits: ['Decisivo', 'Assertivo', 'Orientado a resultados', 'Competitivo'] },
@@ -505,24 +506,7 @@ export function EmployeePerformanceView() {
                     </Card>
 
                     {/* Card de Insight da IA Revisitado */}
-                    <div className="relative overflow-hidden rounded-3xl p-[1px] bg-gradient-to-br from-blue-400/50 via-indigo-500/50 to-purple-600/50 shadow-lg">
-                        <div className="relative bg-white dark:bg-[#0f172a] rounded-[23px] p-6 h-full">
-                            <div className="flex items-start gap-4">
-                                <div className="p-3 bg-blue-500/10 rounded-2xl">
-                                    <Sparkles className="h-5 w-5 text-blue-500 animate-pulse" />
-                                </div>
-                                <div className="space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tighter">Dica da AxonIA</h4>
-                                        <Badge variant="secondary" className="bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border-none text-[10px]">Insight IA</Badge>
-                                    </div>
-                                    <p className="text-sm text-slate-600 dark:text-slate-400 italic leading-relaxed">
-                                        "Baseado no seu perfil <span className="font-bold text-blue-500">{latestDisc?.primaryProfile === 'INFLUENCE' ? 'Influente' : profileLabels[latestDisc?.primaryProfile || '']?.title || 'Influente'}</span>, você se sai muito bem em atividades colaborativas. Tente focar um pouco mais nos detalhes técnicos da sua meta de 'Otimização de Processos' esta semana."
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <AxonIATip latestDisc={latestDisc} />
 
                 </div>
             </div>
