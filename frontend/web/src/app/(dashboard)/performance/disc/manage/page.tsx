@@ -626,119 +626,158 @@ export default function DiscManagePage() {
         </div>
       )}
 
-      {/* Profile Distribution Section - Innovative Version */}
+      {/* Profile Distribution Section - Refined & Elegant Version */}
       {pieChartData.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <Card className="lg:col-span-4 border-none shadow-2xl bg-slate-900 text-white overflow-hidden rounded-[2.5rem] relative">
-            <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-[100px] -mr-48 -mt-48" />
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-600/10 rounded-full blur-[80px] -ml-32 -mb-32" />
+        <Card className="border-none shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] bg-slate-900 text-white overflow-hidden rounded-[3rem] relative">
+          {/* Subtle Atmosphere Glows */}
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] -mr-64 -mt-64 animate-pulse" />
+          <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-blue-500/5 rounded-full blur-[100px] -ml-48 -mb-48" />
 
-            <CardHeader className="pb-0 pt-8 px-8 relative z-10">
-              <div className="flex items-center gap-4 mb-2">
-                <div className="p-3 rounded-2xl bg-white/5 border border-white/10 text-primary shadow-inner">
-                  <BarChart3 className="h-6 w-6" />
+          <CardHeader className="pb-0 pt-10 px-10 relative z-10">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div className="flex items-center gap-5">
+                <div className="w-14 h-14 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center text-primary backdrop-blur-md shadow-2xl">
+                  <BarChart3 className="h-7 w-7" />
                 </div>
                 <div>
-                  <CardTitle className="text-2xl font-black uppercase tracking-tighter">
-                    Mapa de Talentos da Equipe
+                  <CardTitle className="text-3xl font-black uppercase tracking-tight leading-none mb-2">
+                    Ecossistema de Talentos
                   </CardTitle>
-                  <CardDescription className="text-slate-400 font-bold">
-                    Análise holística da predominância comportamental
+                  <CardDescription className="text-slate-500 font-medium text-base">
+                    Equilíbrio dinâmico dos perfis comportamentais da equipe
                   </CardDescription>
                 </div>
               </div>
-            </CardHeader>
+              <div className="px-6 py-3 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-sm">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1">Base de Dados</p>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-black text-white">{statistics?.completedEvaluations || 0}</span>
+                  <span className="text-xs font-bold text-primary italic">colaboradores ativos</span>
+                </div>
+              </div>
+            </div>
+          </CardHeader>
 
-            <CardContent className="p-8 pt-0 relative z-10">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-                {/* Visual Component: Radial Bar Chart */}
-                <div className="h-[450px] relative flex items-center justify-center">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <RadialBarChart
-                      cx="50%"
-                      cy="50%"
-                      innerRadius="30%"
-                      outerRadius="100%"
-                      barSize={15}
-                      data={pieChartData.map(d => ({ ...d, fill: d.color }))}
-                      startAngle={180}
-                      endAngle={-180}
-                    >
-                      <RadialBar
-                        label={{ position: 'insideStart', fill: '#fff', fontSize: 10, fontWeight: 'bold' }}
-                        background={{ fill: 'rgba(255,255,255,0.05)' }}
-                        dataKey="value"
-                        cornerRadius={20}
-                      />
-                      <PolarAngleAxis
-                        type="number"
-                        domain={[0, statistics?.completedEvaluations || 10]}
-                        angleAxisId={0}
-                        tick={false}
-                      />
-                      <Tooltip
-                        content={({ active, payload }) => {
-                          if (active && payload && payload.length) {
-                            const data = payload[0].payload;
-                            return (
-                              <div className="bg-slate-800 border border-white/10 p-4 rounded-2xl shadow-2xl backdrop-blur-xl">
-                                <p className="text-xs font-black uppercase tracking-widest text-slate-400 mb-1">{data.name}</p>
-                                <div className="flex items-center gap-2">
-                                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: data.color }} />
-                                  <span className="text-2xl font-black">{data.value}</span>
-                                  <span className="text-xs font-bold text-slate-500">Colaboradores</span>
+          <CardContent className="p-10 relative z-10">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+
+              {/* Refined Radial Indicator */}
+              <div className="lg:col-span-5 h-[400px] relative flex items-center justify-center">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadialBarChart
+                    cx="50%"
+                    cy="50%"
+                    innerRadius="45%"
+                    outerRadius="100%"
+                    barSize={8}
+                    data={pieChartData.map(d => ({ ...d, fill: d.color }))}
+                    startAngle={220}
+                    endAngle={-40}
+                  >
+                    <RadialBar
+                      background={{ fill: 'rgba(255,255,255,0.03)' }}
+                      dataKey="value"
+                      cornerRadius={10}
+                    />
+                    <PolarAngleAxis
+                      type="number"
+                      domain={[0, Math.max(...pieChartData.map(d => d.value)) * 1.2]}
+                      tick={false}
+                    />
+                    <Tooltip
+                      cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }}
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload;
+                          return (
+                            <div className="bg-slate-950/90 border border-white/20 p-4 rounded-2xl shadow-2xl backdrop-blur-2xl animate-in fade-in zoom-in duration-300">
+                              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">{data.name}</p>
+                              <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-lg" style={{ backgroundColor: `${data.color}20` }}>
+                                  <Users className="h-4 w-4" style={{ color: data.color }} />
+                                </div>
+                                <div>
+                                  <span className="text-2xl font-black text-white">{data.value}</span>
+                                  <span className="text-xs font-bold text-slate-400 ml-2">Membros</span>
                                 </div>
                               </div>
-                            );
-                          }
-                          return null;
-                        }}
-                      />
-                    </RadialBarChart>
-                  </ResponsiveContainer>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                  </RadialBarChart>
+                </ResponsiveContainer>
 
-                  {/* Central Statistics Display */}
-                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                    <p className="text-xs font-black uppercase tracking-widest text-slate-500">Amostragem</p>
-                    <span className="text-5xl font-black tracking-tighter">{statistics?.completedEvaluations || 0}</span>
-                    <p className="text-[10px] font-black uppercase bg-primary/20 text-primary px-2 py-0.5 rounded-full">Perfis Mapeados</p>
+                {/* Central Statistics - More Minimal */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mt-4">
+                  <div className="w-32 h-32 rounded-full border border-white/5 flex flex-col items-center justify-center backdrop-blur-sm bg-white/[0.01]">
+                    <span className="text-4xl font-black tracking-tighter text-white">
+                      {pieChartData.length}
+                    </span>
+                    <p className="text-[9px] font-black uppercase text-slate-500 tracking-tighter">Perfis Identificados</p>
                   </div>
                 </div>
+              </div>
 
-                {/* Info Panel: Stats Grid */}
+              {/* Sophisticated Data List */}
+              <div className="lg:col-span-7 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {pieChartData.map((profile, idx) => (
-                    <div key={idx} className="group p-6 rounded-[2rem] bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300 relative overflow-hidden">
-                      <div className="absolute top-0 right-0 w-24 h-24 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
-                        <BarChart3 className="w-full h-full text-white rotate-12 translate-x-4 -translate-y-4" />
-                      </div>
-
-                      <div className="flex items-start justify-between mb-4 relative z-10">
+                    <div
+                      key={idx}
+                      className="relative group p-6 rounded-[2.5rem] bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] hover:border-white/10 transition-all duration-500"
+                    >
+                      <div className="flex items-center justify-between mb-5">
                         <div className="flex items-center gap-3">
-                          <div className="w-1.5 h-6 rounded-full" style={{ backgroundColor: profile.color }} />
-                          <h4 className="text-sm font-black uppercase tracking-wider text-slate-400">{profile.name}</h4>
+                          <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/[0.03] border border-white/10">
+                            <div className="w-3 h-3 rounded-full shadow-[0_0_12px_rgba(255,255,255,0.2)]" style={{ backgroundColor: profile.color }} />
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-black uppercase tracking-widest text-slate-400">{profile.name}</h4>
+                            <p className="text-2xl font-black text-white">{profile.value}</p>
+                          </div>
                         </div>
-                        <span className="text-xs font-black bg-white/10 px-2 py-1 rounded-lg">
-                          {statistics ? ((profile.value / statistics.completedEvaluations) * 100).toFixed(0) : 0}%
-                        </span>
+                        <div className="text-right">
+                          <p className="text-[10px] font-black text-slate-500 uppercase mb-1">Incidência</p>
+                          <span className="text-sm font-black text-primary px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
+                            {statistics ? ((profile.value / statistics.completedEvaluations) * 100).toFixed(0) : 0}%
+                          </span>
+                        </div>
                       </div>
 
-                      <div className="flex items-end justify-between relative z-10">
-                        <div>
-                          <p className="text-4xl font-black tracking-tighter mb-1">{profile.value}</p>
-                          <p className="text-[10px] font-bold text-slate-500 uppercase">Membros de Equipe</p>
-                        </div>
-                        <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-white/5 border border-white/10">
-                          <Users className="h-5 w-5 text-slate-400" />
-                        </div>
+                      {/* Thinner, elegant progress indicator within card */}
+                      <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all duration-1000 ease-out"
+                          style={{
+                            width: statistics ? `${(profile.value / statistics.completedEvaluations) * 100}%` : '0%',
+                            backgroundColor: profile.color,
+                            boxShadow: `0 0 10px ${profile.color}40`
+                          }}
+                        />
                       </div>
                     </div>
                   ))}
                 </div>
+
+                {/* Visual Legend / Context */}
+                <div className="pt-4 flex items-center gap-6 px-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Dados em Tempo Real</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-3 w-3 text-primary" />
+                    <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Validação AxonIA</span>
+                  </div>
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+
+            </div>
+          </CardContent>
+        </Card>
       )}
 
 
