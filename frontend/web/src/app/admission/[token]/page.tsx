@@ -50,6 +50,7 @@ export default function AdmissionWizardPage() {
   const [process, setProcess] = useState<AdmissionProcess | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [loadingCep, setLoadingCep] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
 
   // Form data
@@ -236,6 +237,7 @@ export default function AdmissionWizardPage() {
     const cep = addressData.cep.replace(/\D/g, '');
     if (cep.length === 8) {
       try {
+        setLoadingCep(true);
         const address = await employeesApi.searchCep(cep);
         setAddressData(prev => ({
           ...prev,
@@ -246,6 +248,8 @@ export default function AdmissionWizardPage() {
         }));
       } catch (error) {
         console.error('Erro ao buscar CEP:', error);
+      } finally {
+        setLoadingCep(false);
       }
     }
   };
@@ -540,14 +544,21 @@ export default function AdmissionWizardPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     CEP *
                   </label>
-                  <input
-                    type="text"
-                    value={addressData.cep}
-                    onChange={(e) => setAddressData(prev => ({ ...prev, cep: e.target.value }))}
-                    onBlur={handleCepBlur}
-                    placeholder="00000-000"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={addressData.cep}
+                      onChange={(e) => setAddressData(prev => ({ ...prev, cep: e.target.value }))}
+                      onBlur={handleCepBlur}
+                      placeholder="00000-000"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    {loadingCep && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-600">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="md:col-span-2">

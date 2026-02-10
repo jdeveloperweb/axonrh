@@ -107,7 +107,7 @@ export function DocumentsTab({ employeeId }: DocumentsTabProps) {
                     <CardTitle>Novo Documento</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <form onSubmit={handleUpload} className="flex gap-4 items-end">
+                    <div className="flex gap-4 items-end">
                         <div className="flex-1">
                             <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
                                 Tipo de Documento
@@ -138,14 +138,15 @@ export function DocumentsTab({ employeeId }: DocumentsTabProps) {
                             />
                         </div>
                         <button
-                            type="submit"
+                            type="button"
+                            onClick={(e) => handleUpload(e as any)}
                             disabled={uploading || !selectedFile || !newDocType}
                             className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
                         >
                             {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
                             Enviar
                         </button>
-                    </form>
+                    </div>
                 </CardContent>
             </Card>
 
