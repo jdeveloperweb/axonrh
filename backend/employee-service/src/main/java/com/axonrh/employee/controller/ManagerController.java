@@ -1,6 +1,7 @@
 package com.axonrh.employee.controller;
 
 import com.axonrh.employee.dto.ManagerDTO;
+import com.axonrh.employee.dto.EmployeeResponse;
 import com.axonrh.employee.entity.Employee;
 import com.axonrh.employee.service.ManagerService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -56,9 +57,9 @@ public class ManagerController {
     @GetMapping("/{id}/subordinates")
     @PreAuthorize("hasAuthority('EMPLOYEE:READ')")
     @Operation(summary = "Lista subordinados de um gestor")
-    public ResponseEntity<List<Employee>> getSubordinates(@PathVariable UUID id) {
+    public ResponseEntity<List<EmployeeResponse>> getSubordinates(@PathVariable UUID id) {
         log.info("Buscando subordinados do gestor: {}", id);
-        List<Employee> subordinates = managerService.getSubordinates(id);
+        List<EmployeeResponse> subordinates = managerService.getSubordinates(id);
         return ResponseEntity.ok(subordinates);
     }
 }

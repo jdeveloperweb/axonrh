@@ -250,7 +250,8 @@ public class TimeAdjustmentService {
         boolean isLider = roles.contains("ROLE_LIDER") || roles.contains("LIDER") || roles.contains("GESTOR") || roles.contains("ROLE_GESTOR");
 
         if (canApprove || isLider) {
-            List<UUID> subordinateUserIds = getSubordinateUserIds(userId);
+            String email = jwt.getClaimAsString("email");
+            List<UUID> subordinateUserIds = getSubordinateUserIds(userId, email);
             log.debug("Usuario e LIDER/Aprovador. Subordinados encontrados: {}", subordinateUserIds.size());
             if (!subordinateUserIds.isEmpty()) {
                 return adjustmentRepository
@@ -263,10 +264,10 @@ public class TimeAdjustmentService {
         return Page.empty(pageable);
     }
 
-    private List<UUID> getSubordinateUserIds(UUID leaderUserId) {
+    private List<UUID> getSubordinateUserIds(UUID leaderUserId, String email) {
         try {
-            log.debug("Buscando subordinados para o UserID do lider: {}", leaderUserId);
-            EmployeeDTO leader = employeeClient.getEmployeeByUserId(leaderUserId);
+            log.debug("Buscando subordinados para o UserID do lider: {} (email: {})", leaderUserId, email);
+            EmployeeDTO leader = employeeClient.getEmployeeByUserId(leaderUserId, email);
             if (leader != null) {
                 log.debug("Lider encontrado no employee-service: {} (ID: {})", leader.getFullName(), leader.getId());
                 
@@ -342,7 +343,8 @@ public class TimeAdjustmentService {
         boolean isLider = roles.contains("ROLE_LIDER") || roles.contains("LIDER") || roles.contains("GESTOR") || roles.contains("ROLE_GESTOR");
 
         if (canApprove || isLider) {
-            List<UUID> subordinateUserIds = getSubordinateUserIds(userId);
+            String email = jwt.getClaimAsString("email");
+            List<UUID> subordinateUserIds = getSubordinateUserIds(userId, email);
             if (!subordinateUserIds.isEmpty()) {
                 return adjustmentRepository.countByEmployeesAndStatus(tenantId, subordinateUserIds, AdjustmentStatus.PENDING);
             }

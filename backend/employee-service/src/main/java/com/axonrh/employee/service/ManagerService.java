@@ -25,6 +25,7 @@ public class ManagerService {
 
     private final EmployeeRepository employeeRepository;
     private final DepartmentRepository departmentRepository;
+    private final EmployeeMapper employeeMapper;
 
     @Transactional(readOnly = true)
     public List<ManagerDTO> findAllManagers() {
@@ -86,9 +87,12 @@ public class ManagerService {
     }
 
     @Transactional(readOnly = true)
-    public List<Employee> getSubordinates(UUID managerId) {
+    public List<EmployeeResponse> getSubordinates(UUID managerId) {
         UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
-        return employeeRepository.findByTenantIdAndManagerIdAndIsActiveTrue(tenantId, managerId);
+        return employeeRepository.findByManagementSpan(tenantId, managerId)
+                .stream()
+                .map(employeeMapper::toResponse)
+                .collect(Collectors.toList());
     }
 
     private ManagerDTO convertToDTO(Employee employee) {

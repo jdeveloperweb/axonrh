@@ -60,6 +60,10 @@ public interface EmployeeRepository extends JpaRepository<Employee, UUID>, JpaSp
 
     List<Employee> findByTenantIdAndManagerIdAndIsActiveTrue(UUID tenantId, UUID managerId);
 
+    @Query("SELECT e FROM Employee e WHERE e.tenantId = :tenantId AND e.isActive = true " +
+           "AND (e.manager.id = :managerId OR e.department.id IN (SELECT d.id FROM Department d WHERE d.tenantId = :tenantId AND d.managerId = :managerId))")
+    List<Employee> findByManagementSpan(@Param("tenantId") UUID tenantId, @Param("managerId") UUID managerId);
+
     // ==================== Busca por Nome ====================
 
     @Query("SELECT e FROM Employee e WHERE e.tenantId = :tenantId AND e.isActive = true " +
