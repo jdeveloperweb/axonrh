@@ -227,7 +227,7 @@ public class TimeAdjustmentService {
         if (roles == null) roles = Collections.emptyList();
 
         boolean hasBroadAccess = roles.stream()
-                .anyMatch(role -> List.of("ADMIN", "RH", "GESTOR_RH", "ANALISTA_DP").contains(role));
+                .anyMatch(role -> List.of("ROLE_ADMIN", "ROLE_RH", "ROLE_GESTOR_RH", "ROLE_ANALISTA_DP").contains(role));
 
         if (hasBroadAccess) {
             return adjustmentRepository
@@ -236,7 +236,7 @@ public class TimeAdjustmentService {
         }
 
         // Para LIDER, filtra pelos subordinados
-        boolean isLider = roles.contains("LIDER");
+        boolean isLider = roles.contains("ROLE_LIDER") || roles.contains("LIDER");
         if (isLider) {
             List<UUID> subordinateUserIds = getSubordinateUserIds(userId);
             if (!subordinateUserIds.isEmpty()) {
@@ -291,13 +291,13 @@ public class TimeAdjustmentService {
         if (roles == null) roles = Collections.emptyList();
 
         boolean hasBroadAccess = roles.stream()
-                .anyMatch(role -> List.of("ADMIN", "RH", "GESTOR_RH", "ANALISTA_DP").contains(role));
+                .anyMatch(role -> List.of("ROLE_ADMIN", "ROLE_RH", "ROLE_GESTOR_RH", "ROLE_ANALISTA_DP").contains(role));
 
         if (hasBroadAccess) {
             return adjustmentRepository.countByTenantIdAndStatus(tenantId, AdjustmentStatus.PENDING);
         }
 
-        if (roles.contains("LIDER")) {
+        if (roles.contains("ROLE_LIDER") || roles.contains("LIDER")) {
             List<UUID> subordinateUserIds = getSubordinateUserIds(userId);
             if (!subordinateUserIds.isEmpty()) {
                 return adjustmentRepository.countByEmployeesAndStatus(tenantId, subordinateUserIds, AdjustmentStatus.PENDING);
