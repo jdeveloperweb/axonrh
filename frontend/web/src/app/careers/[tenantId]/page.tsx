@@ -488,22 +488,61 @@ export default function CareersPage() {
 
             {/* CTA Section */}
             <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-24">
-                <div className="bg-gray-900 rounded-[2.5rem] p-8 sm:p-16 text-center overflow-hidden relative">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--color-primary)]/20 rounded-full blur-[100px]" />
-                    <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-600/10 rounded-full blur-[100px]" />
+                <div className="relative group">
+                    {/* Background Glow Effect */}
+                    <div
+                        className="absolute -inset-1 rounded-[3rem] blur-2xl opacity-20 group-hover:opacity-30 transition-opacity duration-500"
+                        style={{ background: `linear-gradient(135deg, ${primaryColor}, #4f46e5)` }}
+                    />
 
-                    <div className="relative z-10">
-                        <h3 className="text-3xl sm:text-4xl font-bold text-white mb-6">Não encontrou o que procurava?</h3>
-                        <p className="text-gray-400 text-lg max-w-2xl mx-auto mb-10">
-                            Mesmo se não houver uma vaga aberta hoje que seja a sua cara, adoraríamos conhecer você para futuras oportunidades.
-                        </p>
-                        <button
-                            onClick={() => setIsModalOpen(true)}
-                            className="px-8 py-4 rounded-2xl font-bold text-white transition-all shadow-xl hover:scale-105"
-                            style={{ backgroundColor: primaryColor }}
-                        >
-                            Cadastrar no Banco de Talentos
-                        </button>
+                    <div className="relative bg-slate-950 rounded-[2.5rem] p-10 sm:p-20 text-center overflow-hidden border border-white/10 shadow-2xl">
+                        {/* Decorative Background Elements */}
+                        <div
+                            className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full blur-[120px] opacity-20 transition-all duration-700"
+                            style={{ background: primaryColor }}
+                        />
+                        <div
+                            className="absolute -bottom-20 -left-20 w-[300px] h-[300px] rounded-full blur-[100px] opacity-10 bg-blue-600"
+                        />
+
+                        <div className="relative z-10 max-w-3xl mx-auto">
+                            <div className="inline-flex items-center justify-center p-3 mb-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl">
+                                <Sparkles className="w-8 h-8 text-yellow-400 animate-pulse" />
+                            </div>
+
+                            <h3 className="text-4xl sm:text-5xl font-extrabold text-white mb-6 tracking-tight leading-tight">
+                                Não encontrou o <br className="hidden sm:block" />
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-white/60">que procurava?</span>
+                            </h3>
+
+                            <p className="text-slate-400 text-lg sm:text-xl max-w-2xl mx-auto mb-12 font-medium leading-relaxed">
+                                Mesmo que não haja uma vaga aberta hoje que seja a sua cara, adoraríamos conhecer seu talento para futuras oportunidades.
+                            </p>
+
+                            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                                <button
+                                    onClick={() => setIsModalOpen(true)}
+                                    className="group/btn relative px-10 py-5 rounded-2xl font-bold text-white transition-all overflow-hidden shadow-2xl hover:scale-105 active:scale-95"
+                                    style={{ backgroundColor: primaryColor }}
+                                >
+                                    <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300" />
+                                    <span className="relative flex items-center gap-2">
+                                        Cadastrar no Banco de Talentos
+                                        <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
+                                    </span>
+                                </button>
+
+                                <a
+                                    href="#vagas"
+                                    className="px-8 py-5 rounded-2xl font-bold text-white/70 hover:text-white hover:bg-white/5 transition-all"
+                                >
+                                    Ver todas as vagas
+                                </a>
+                            </div>
+                        </div>
+
+                        {/* Subtle Mesh Pattern */}
+                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03] pointer-events-none" />
                     </div>
                 </div>
             </section>
