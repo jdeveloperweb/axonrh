@@ -223,7 +223,7 @@ function AdjustmentsPageContent() {
 
   const getStatusBadge = (status: TimeAdjustment['status']) => {
     const config = {
-      PENDING: { label: 'Pendente', className: 'bg-yellow-100/50 text-yellow-700 border-yellow-200 hover:bg-yellow-100', icon: AlertTriangle },
+      PENDING: { label: 'Pendente', className: 'bg-amber-100/60 text-amber-700 border-amber-200 hover:bg-amber-100', icon: Clock },
       APPROVED: { label: 'Aprovado', className: 'bg-green-100/50 text-green-700 border-green-200 hover:bg-green-100', icon: CheckCircle },
       REJECTED: { label: 'Rejeitado', className: 'bg-red-100/50 text-red-700 border-red-200 hover:bg-red-100', icon: XCircle },
       CANCELLED: { label: 'Cancelado', className: 'bg-gray-100/50 text-gray-700 border-gray-200 hover:bg-gray-100', icon: XCircle },
@@ -411,8 +411,8 @@ function AdjustmentsPageContent() {
                   <span className="text-sm text-muted-foreground font-medium">solicitações</span>
                 </div>
               </div>
-              <div className="h-10 w-10 rounded-lg bg-yellow-100/80 flex items-center justify-center">
-                <AlertTriangle className="h-5 w-5 text-yellow-700" />
+              <div className="h-10 w-10 rounded-lg bg-amber-100/80 flex items-center justify-center">
+                <Clock className="h-5 w-5 text-amber-700" />
               </div>
             </div>
           </CardContent>
@@ -795,7 +795,7 @@ function AdjustmentsPageContent() {
 
                     <div className="flex justify-end gap-3 pt-2">
                       <Button
-                        variant="destructive"
+                        variant="danger"
                         onClick={() => handleReject(selectedAdjustment)}
                         disabled={approving || !rejectReason}
                         className="flex-1 sm:flex-none"
