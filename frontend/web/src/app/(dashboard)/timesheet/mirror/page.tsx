@@ -240,6 +240,10 @@ export default function TimesheetMirrorPage() {
           </div>
         </div>
         <div className="flex items-center gap-2 w-full md:w-auto">
+          <Button variant="outline" size="sm" onClick={() => (window.location.href = '/timesheet/adjustments?new=true')} className="flex-1 md:flex-none border-orange-200 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300">
+            <Clock className="mr-2 h-4 w-4" />
+            Solicitar Ajuste
+          </Button>
           {canViewOthers && (
             <Button variant="outline" size="sm" onClick={() => handleExport('pdf', true)} disabled={exporting} className="flex-1 md:flex-none">
               <Download className="mr-2 h-4 w-4" />
@@ -391,7 +395,7 @@ export default function TimesheetMirrorPage() {
                     <TableHead className="text-center font-semibold">1ª Saída</TableHead>
                     <TableHead className="text-center font-semibold text-primary">Saldo</TableHead>
                     <TableHead className="text-center font-semibold">Status</TableHead>
-                    {canViewOthers && <TableHead className="text-right font-semibold">Ações</TableHead>}
+                    <TableHead className="text-right font-semibold">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -499,21 +503,19 @@ export default function TimesheetMirrorPage() {
                             </Tooltip>
                           </TableCell>
                           <TableCell className="text-right">
-                            {canViewOthers && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="opacity-0 group-hover:opacity-100 transition-opacity"
-                                onClick={() => {
-                                  // Redireciona para a página de ajustes com os parâmetros pré-preenchidos
-                                  const empId = selectedEmployee || 'me';
-                                  window.location.href = `/timesheet/adjustments?employee=${empId}&date=${day.summaryDate}`;
-                                }}
-                              >
-                                <Clock className="h-4 w-4 mr-1" />
-                                Ajustar
-                              </Button>
-                            )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="opacity-0 group-hover:opacity-100 transition-opacity text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                              onClick={() => {
+                                // Redireciona para a página de ajustes com os parâmetros pré-preenchidos
+                                const empId = selectedEmployee || 'me';
+                                window.location.href = `/timesheet/adjustments?employee=${empId}&date=${day.summaryDate}`;
+                              }}
+                            >
+                              <Clock className="h-4 w-4 mr-1" />
+                              Ajustar
+                            </Button>
                           </TableCell>
                         </TableRow>
                       );
