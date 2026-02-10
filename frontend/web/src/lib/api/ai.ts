@@ -167,6 +167,17 @@ export const chatApi = {
   send: (message: string, conversationId?: string) =>
     api.post<ChatResponse>('/ai/chat', { message, conversationId }),
 
+  getBehavioralInsight: (data: {
+    employeeId?: string;
+    employeeName?: string;
+    dScore?: number;
+    iScore?: number;
+    sScore?: number;
+    cScore?: number;
+    primaryProfile?: string;
+    secondaryProfile?: string;
+  }) => api.post<string>('/ai/chat/behavioral-insight', data),
+
   createConversation: (context?: ConversationContext) =>
     api.post<Conversation>('/ai/chat/conversations', context),
 

@@ -2,7 +2,9 @@ package com.axonrh.ai.controller;
 
 import com.axonrh.ai.dto.ChatResponse;
 import com.axonrh.ai.dto.StreamChunk;
+import com.axonrh.ai.dto.DiscInsightRequest;
 import com.axonrh.ai.entity.Conversation;
+import com.axonrh.ai.service.BehavioralInsightService;
 import com.axonrh.ai.service.ConversationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +26,7 @@ import java.util.UUID;
 public class ChatController {
 
     private final ConversationService conversationService;
+    private final BehavioralInsightService behavioralInsightService;
 
     @PostMapping
     public ResponseEntity<ChatResponse> chat(
@@ -39,6 +42,14 @@ public class ChatController {
         );
 
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/behavioral-insight")
+    public ResponseEntity<String> getBehavioralInsight(
+            @RequestHeader("X-Tenant-ID") UUID tenantId,
+            @RequestBody DiscInsightRequest request) {
+        String insight = behavioralInsightService.generateDiscInsight(tenantId, request);
+        return ResponseEntity.ok(insight);
     }
 
     @PostMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
