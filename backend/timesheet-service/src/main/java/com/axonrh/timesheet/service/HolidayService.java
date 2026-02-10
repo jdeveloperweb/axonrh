@@ -7,6 +7,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.http.ResponseEntity;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
@@ -58,11 +61,18 @@ public class HolidayService {
         
         try {
             log.info("Buscando feriados nacionais na BrasilAPI: {}", url);
-            Map<String, Object>[] response = restTemplate.getForObject(url, Map[].class);
+            ResponseEntity<List<Map<String, Object>>> responseEntity = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<Map<String, Object>>>() {}
+            );
             
-            if (response != null && response.length > 0) {
-                log.info("Recebidos {} feriados da API", response.length);
-                for (Map<String, Object> h : response) {
+            List<Map<String, Object>> holidaysList = responseEntity.getBody();
+            
+            if (holidaysList != null && !holidaysList.isEmpty()) {
+                log.info("Recebidos {} feriados da API", holidaysList.size());
+                for (Map<String, Object> h : holidaysList) {
                     try {
                         LocalDate date = LocalDate.parse((String) h.get("date"));
                         String name = (String) h.get("name");
