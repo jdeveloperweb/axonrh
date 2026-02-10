@@ -117,14 +117,13 @@ const SelectContent = React.forwardRef<
     }
   }, [open, setOpen, id])
 
-  if (!open) return null
-
   return (
     <div
       ref={ref}
       id={id}
       className={cn(
         "absolute z-[100] mt-1 max-h-60 w-full overflow-auto rounded-xl border border-slate-200 bg-white p-1 text-slate-900 shadow-2xl animate-in fade-in zoom-in-95 duration-200",
+        !open && "hidden",
         className
       )}
       onClick={(e) => e.stopPropagation()}

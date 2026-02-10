@@ -233,6 +233,7 @@ public class NotificationService {
      * Exclui todas as notificacoes (ativas ou arquivadas).
      */
     public void deleteAll(UUID tenantId, UUID userId, boolean archived) {
+        log.info("Excluindo todas as notificacoes do usuario {} no tenant {} (arquivadas={})", userId, tenantId, archived);
         notificationRepository.deleteAllByUser(tenantId, userId, archived);
         sendWebSocketUpdate(userId, "all_deleted", Map.of("archived", archived));
     }

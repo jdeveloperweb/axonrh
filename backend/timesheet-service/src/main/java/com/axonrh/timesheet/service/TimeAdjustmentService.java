@@ -516,16 +516,37 @@ public class TimeAdjustmentService {
                         event.put("requesterUserId", employee.getUserId().toString());
                     }
                     
-                    // Fetch manager
-                    if (employee.getManager() != null && employee.getManager().getId() != null) {
+                    UUID managerId = null;
+                    UUID managerUserId = null;
+
+                    // 1. Prioridade: Gestor Direto
+                    if (employee.getManager() != null) {
+                        managerId = employee.getManager().getId();
+                        managerUserId = employee.getManager().getUserId();
+                    }
+                    
+                    // 2. Fallback: Gestor do Departamento
+                    if (managerUserId == null && employee.getDepartment() != null) {
+                        managerId = employee.getDepartment().getManagerId();
+                    }
+
+                    // Se temos um ID de gestor mas não temos o userId ainda, buscamos o colaborador completo dele
+                    if (managerUserId == null && managerId != null) {
                         try {
-                            EmployeeDTO manager = employeeClient.getEmployee(employee.getManager().getId());
-                            if (manager != null && manager.getUserId() != null) {
-                                event.put("managerUserId", manager.getUserId().toString());
+                            EmployeeDTO manager = employeeClient.getEmployee(managerId);
+                            if (manager != null) {
+                                managerUserId = manager.getUserId();
+                                log.debug("Gestor identificado para solicitacao: {} (UserID: {})", manager.getFullName(), managerUserId);
                             }
                         } catch (Exception ex) {
-                            log.warn("Erro ao buscar gerente: {}", ex.getMessage());
+                            log.warn("Erro ao buscar detalhes do gestor {}: {}", managerId, ex.getMessage());
                         }
+                    }
+
+                    if (managerUserId != null) {
+                        event.put("managerUserId", managerUserId.toString());
+                    } else {
+                        log.warn("Nenhum gestor (direto ou de departamento) com UserID encontrado para o colaborador {}", adjustment.getEmployeeName());
                     }
                 }
             } catch (Exception e) {

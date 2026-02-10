@@ -112,6 +112,7 @@ public class EmployeeResponse implements Serializable {
         private UUID id;
         private String code;
         private String name;
+        private UUID managerId;
     }
 
     @Data
@@ -143,6 +144,7 @@ public class EmployeeResponse implements Serializable {
     public static class EmployeeSummary implements Serializable {
         private static final long serialVersionUID = 1L;
         private UUID id;
+        private UUID userId;
         private String name;
         private String email;
         private String photoUrl;

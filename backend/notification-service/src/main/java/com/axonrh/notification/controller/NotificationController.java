@@ -26,8 +26,8 @@ public class NotificationController {
 
     @GetMapping
     public ResponseEntity<Page<Notification>> getNotifications(
-            @RequestHeader("X-Tenant-ID") UUID tenantId,
-            @RequestHeader("X-User-ID") UUID userId,
+            @RequestHeader("X-Tenant-Id") UUID tenantId,
+            @RequestHeader("X-User-Id") UUID userId,
             @RequestParam(defaultValue = "false") boolean archived,
             Pageable pageable) {
 
@@ -36,16 +36,16 @@ public class NotificationController {
 
     @GetMapping("/unread")
     public ResponseEntity<List<Notification>> getUnreadNotifications(
-            @RequestHeader("X-Tenant-ID") UUID tenantId,
-            @RequestHeader("X-User-ID") UUID userId) {
+            @RequestHeader("X-Tenant-Id") UUID tenantId,
+            @RequestHeader("X-User-Id") UUID userId) {
 
         return ResponseEntity.ok(notificationService.getUnreadNotifications(tenantId, userId));
     }
 
     @GetMapping("/unread/count")
     public ResponseEntity<Map<String, Long>> getUnreadCount(
-            @RequestHeader("X-Tenant-ID") UUID tenantId,
-            @RequestHeader("X-User-ID") UUID userId) {
+            @RequestHeader("X-Tenant-Id") UUID tenantId,
+            @RequestHeader("X-User-Id") UUID userId) {
 
         long count = notificationService.countUnread(tenantId, userId);
         return ResponseEntity.ok(Map.of("count", count));
@@ -53,7 +53,7 @@ public class NotificationController {
 
     @PostMapping
     public ResponseEntity<Notification> createNotification(
-            @RequestHeader("X-Tenant-ID") UUID tenantId,
+            @RequestHeader("X-Tenant-Id") UUID tenantId,
             @RequestBody CreateNotificationRequest request) {
 
         Notification notification = notificationService.createNotification(
@@ -79,8 +79,8 @@ public class NotificationController {
 
     @PostMapping("/{notificationId}/read")
     public ResponseEntity<Notification> markAsRead(
-            @RequestHeader("X-Tenant-ID") UUID tenantId,
-            @RequestHeader("X-User-ID") UUID userId,
+            @RequestHeader("X-Tenant-Id") UUID tenantId,
+            @RequestHeader("X-User-Id") UUID userId,
             @PathVariable UUID notificationId) {
 
         return notificationService.markAsRead(tenantId, userId, notificationId)
@@ -90,8 +90,8 @@ public class NotificationController {
 
     @PostMapping("/read-all")
     public ResponseEntity<Void> markAllAsRead(
-            @RequestHeader("X-Tenant-ID") UUID tenantId,
-            @RequestHeader("X-User-ID") UUID userId) {
+            @RequestHeader("X-Tenant-Id") UUID tenantId,
+            @RequestHeader("X-User-Id") UUID userId) {
 
         notificationService.markAllAsRead(tenantId, userId);
         return ResponseEntity.ok().build();
@@ -99,8 +99,8 @@ public class NotificationController {
 
     @PostMapping("/archive-all")
     public ResponseEntity<Void> archiveAll(
-            @RequestHeader("X-Tenant-ID") UUID tenantId,
-            @RequestHeader("X-User-ID") UUID userId) {
+            @RequestHeader("X-Tenant-Id") UUID tenantId,
+            @RequestHeader("X-User-Id") UUID userId) {
 
         notificationService.archiveAll(tenantId, userId);
         return ResponseEntity.ok().build();
@@ -108,8 +108,8 @@ public class NotificationController {
 
     @DeleteMapping("/all")
     public ResponseEntity<Void> deleteAll(
-            @RequestHeader("X-Tenant-ID") UUID tenantId,
-            @RequestHeader("X-User-ID") UUID userId,
+            @RequestHeader("X-Tenant-Id") UUID tenantId,
+            @RequestHeader("X-User-Id") UUID userId,
             @RequestParam(defaultValue = "false") boolean archived) {
 
         notificationService.deleteAll(tenantId, userId, archived);
@@ -118,8 +118,8 @@ public class NotificationController {
 
     @PostMapping("/{notificationId}/archive")
     public ResponseEntity<Notification> archiveNotification(
-            @RequestHeader("X-Tenant-ID") UUID tenantId,
-            @RequestHeader("X-User-ID") UUID userId,
+            @RequestHeader("X-Tenant-Id") UUID tenantId,
+            @RequestHeader("X-User-Id") UUID userId,
             @PathVariable UUID notificationId) {
 
         return notificationService.archive(tenantId, userId, notificationId)
@@ -129,8 +129,8 @@ public class NotificationController {
 
     @DeleteMapping("/{notificationId}")
     public ResponseEntity<Void> deleteNotification(
-            @RequestHeader("X-Tenant-ID") UUID tenantId,
-            @RequestHeader("X-User-ID") UUID userId,
+            @RequestHeader("X-Tenant-Id") UUID tenantId,
+            @RequestHeader("X-User-Id") UUID userId,
             @PathVariable UUID notificationId) {
 
         notificationService.delete(tenantId, userId, notificationId);
@@ -139,7 +139,7 @@ public class NotificationController {
 
     @PostMapping("/bulk")
     public ResponseEntity<Void> sendBulkNotification(
-            @RequestHeader("X-Tenant-ID") UUID tenantId,
+            @RequestHeader("X-Tenant-Id") UUID tenantId,
             @RequestBody BulkNotificationRequest request) {
 
         notificationService.notifyMultipleUsers(

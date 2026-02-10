@@ -14,9 +14,8 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class EmployeeSummaryDTO implements Serializable {
+public class DepartmentDTO implements Serializable {
     private UUID id;
-    private UUID userId;
     private String name;
-    private String email;
+    private UUID managerId;
 }

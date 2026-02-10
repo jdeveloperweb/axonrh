@@ -24,14 +24,14 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
     Page<Notification> findByTenantIdAndUserId(UUID tenantId, UUID userId, Pageable pageable);
 
     @Query("SELECT n FROM Notification n WHERE n.tenantId = :tenantId " +
-           "AND n.userId = :userId AND n.isRead = false " +
+           "AND n.userId = :userId AND n.isRead = false AND n.isArchived = false " +
            "AND (n.expiresAt IS NULL OR n.expiresAt > CURRENT_TIMESTAMP) " +
            "ORDER BY n.createdAt DESC")
     List<Notification> findUnreadByUser(@Param("tenantId") UUID tenantId,
                                         @Param("userId") UUID userId);
 
     @Query("SELECT COUNT(n) FROM Notification n WHERE n.tenantId = :tenantId " +
-           "AND n.userId = :userId AND n.isRead = false " +
+           "AND n.userId = :userId AND n.isRead = false AND n.isArchived = false " +
            "AND (n.expiresAt IS NULL OR n.expiresAt > CURRENT_TIMESTAMP)")
     long countUnreadByUser(@Param("tenantId") UUID tenantId, @Param("userId") UUID userId);
 
@@ -61,21 +61,21 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
     List<Notification> findBySource(@Param("sourceType") String sourceType,
                                     @Param("sourceId") UUID sourceId);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Notification n SET n.isRead = true, n.readAt = :readAt " +
            "WHERE n.tenantId = :tenantId AND n.userId = :userId AND n.isRead = false")
     void markAllAsRead(@Param("tenantId") UUID tenantId,
                        @Param("userId") UUID userId,
                        @Param("readAt") LocalDateTime readAt);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Notification n SET n.isArchived = true, n.archivedAt = :archivedAt " +
            "WHERE n.tenantId = :tenantId AND n.userId = :userId AND n.isArchived = false")
     void archiveAllByUser(@Param("tenantId") UUID tenantId,
                           @Param("userId") UUID userId,
                           @Param("archivedAt") LocalDateTime archivedAt);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("DELETE FROM Notification n WHERE n.tenantId = :tenantId " +
            "AND n.userId = :userId AND n.isArchived = :archived")
     void deleteAllByUser(@Param("tenantId") UUID tenantId,
