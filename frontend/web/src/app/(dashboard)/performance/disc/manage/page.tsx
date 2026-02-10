@@ -175,6 +175,7 @@ export default function DiscManagePage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [dialogSearchTerm, setDialogSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [profileFilter, setProfileFilter] = useState<string>('all');
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
   const [dueDate, setDueDate] = useState('');
@@ -404,7 +405,8 @@ export default function DiscManagePage() {
   const filteredEvaluations = evaluations.filter(e => {
     const matchesSearch = e.employeeName?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || e.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesProfile = profileFilter === 'all' || e.primaryProfile === profileFilter;
+    return matchesSearch && matchesStatus && matchesProfile;
   });
 
   const filteredDialogEmployees = employees.filter(emp =>
@@ -819,6 +821,20 @@ export default function DiscManagePage() {
             <SelectItem value="CANCELLED">Cancelado</SelectItem>
           </SelectContent>
         </Select>
+        {activeTab === 'results' && (
+          <Select value={profileFilter} onValueChange={setProfileFilter}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Filtrar por perfil" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os Perfis</SelectItem>
+              <SelectItem value="DOMINANCE">Dominante</SelectItem>
+              <SelectItem value="INFLUENCE">Influente</SelectItem>
+              <SelectItem value="STEADINESS">Estável</SelectItem>
+              <SelectItem value="CONSCIENTIOUSNESS">Conforme</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       {/* Table */}
