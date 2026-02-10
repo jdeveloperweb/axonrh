@@ -319,10 +319,10 @@ public class DiscService {
             + evaluationRepository.countByTenantIdAndStatus(tenantId, DiscAssessmentStatus.IN_PROGRESS);
         long overdue = evaluationRepository.countOverdue(tenantId, LocalDate.now());
 
-        int dCount = (int) evaluationRepository.countByPrimaryProfile(tenantId, DiscProfileType.DOMINANCE);
-        int iCount = (int) evaluationRepository.countByPrimaryProfile(tenantId, DiscProfileType.INFLUENCE);
-        int sCount = (int) evaluationRepository.countByPrimaryProfile(tenantId, DiscProfileType.STEADINESS);
-        int cCount = (int) evaluationRepository.countByPrimaryProfile(tenantId, DiscProfileType.CONSCIENTIOUSNESS);
+        int dCount = (int) evaluationRepository.countLatestByPrimaryProfile(tenantId, DiscProfileType.DOMINANCE);
+        int iCount = (int) evaluationRepository.countLatestByPrimaryProfile(tenantId, DiscProfileType.INFLUENCE);
+        int sCount = (int) evaluationRepository.countLatestByPrimaryProfile(tenantId, DiscProfileType.STEADINESS);
+        int cCount = (int) evaluationRepository.countLatestByPrimaryProfile(tenantId, DiscProfileType.CONSCIENTIOUSNESS);
 
         return new DiscStatisticsDTO(total, completed, pending, overdue, dCount, iCount, sCount, cCount);
     }

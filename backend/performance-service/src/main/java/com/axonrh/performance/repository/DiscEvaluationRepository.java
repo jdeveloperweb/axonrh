@@ -51,6 +51,13 @@ public interface DiscEvaluationRepository extends JpaRepository<DiscEvaluation, 
            "AND e.status = 'COMPLETED' AND e.primaryProfile = :profileType")
     long countByPrimaryProfile(@Param("tenantId") UUID tenantId, @Param("profileType") DiscProfileType profileType);
 
+    // Conta apenas a avaliacao mais recente de cada colaborador por perfil
+    @Query("SELECT COUNT(DISTINCT e.employeeId) FROM DiscEvaluation e WHERE e.tenantId = :tenantId " +
+           "AND e.status = 'COMPLETED' AND e.primaryProfile = :profileType " +
+           "AND e.completedAt = (SELECT MAX(e2.completedAt) FROM DiscEvaluation e2 " +
+           "WHERE e2.tenantId = e.tenantId AND e2.employeeId = e.employeeId AND e2.status = 'COMPLETED')")
+    long countLatestByPrimaryProfile(@Param("tenantId") UUID tenantId, @Param("profileType") DiscProfileType profileType);
+
     // Avaliacoes atrasadas
     @Query("SELECT e FROM DiscEvaluation e WHERE e.tenantId = :tenantId " +
            "AND e.dueDate < :date AND e.status IN ('PENDING', 'IN_PROGRESS')")
