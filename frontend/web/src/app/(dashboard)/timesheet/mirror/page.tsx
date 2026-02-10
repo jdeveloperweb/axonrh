@@ -532,19 +532,23 @@ export default function TimesheetMirrorPage() {
           <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-              <span>Dia Completo</span>
+              <span>Dia OK</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-primary" />
+              <span>Hoje</span>
             </div>
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-amber-500" />
               <span>Pendente/Ajuste</span>
             </div>
             <div className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-orange-500" />
-              <span>Incompleto</span>
+              <div className="h-3 w-3 rounded-full bg-rose-400" />
+              <span>Falta / Ausência</span>
             </div>
             <div className="flex items-center gap-2">
-              <XCircle className="h-4 w-4 text-rose-500" />
-              <span>Falta</span>
+              <div className="h-3 w-3 rounded-full bg-amber-400/50" />
+              <span>Feriado</span>
             </div>
           </div>
         </CardContent>
