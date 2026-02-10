@@ -11,8 +11,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 
+import org.springframework.jdbc.core.JdbcTemplate;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.Query;
+import org.springframework.dao.EmptyResultDataAccessException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -23,7 +24,7 @@ import java.util.*;
 public class HolidayService {
 
     private final HolidayRepository holidayRepository;
-    private final EntityManager entityManager;
+    private final JdbcTemplate jdbcTemplate;
     private final RestTemplate restTemplate;
 
     @Transactional
@@ -32,26 +33,27 @@ public class HolidayService {
         
         try {
             // 1. Obter endereço da empresa (para feriados estaduais/municipais se disponível)
-            Map<String, String> companyLocation = getCompanyLocation(tenantId);
-            String state = companyLocation.get("state");
-            String city = companyLocation.get("city");
-            
-            log.info("Localização da empresa: {} - {}", city, state);
+            // Feito de forma segura usando JdbcTemplate para não quebrar a transação principal se falhar
+            try {
+                Map<String, String> companyLocation = getCompanyLocation(tenantId);
+                log.info("Localização da empresa: {} - {}", companyLocation.get("city"), companyLocation.get("state"));
+            } catch (Exception e) {
+                log.warn("Não foi possível obter localização da empresa: {}", e.getMessage());
+            }
 
-            int count = 0;
-            
-            // 2. Importar Feriados Nacionais (BrasilAPI)
-            count += importNationalHolidays(tenantId, year);
-            
-            // 3. TODO: Implementar feriados estaduais e municipais
-            // Por enquanto, BrasilAPI só fornece nacionais de forma fácil.
-            // Poderíamos adicionar aqui outros provedores ou uma lista estática de feriados estaduais comuns.
+            // 2. Tornar a importação idempotente deletando feriados nacionais já existentes para o ano
+            LocalDate startOfYear = LocalDate.of(year, 1, 1);
+            LocalDate endOfYear = LocalDate.of(year, 12, 31);
+            int deleted = holidayRepository.deleteByTenantIdAndTypeAndDateBetween(tenantId, "NATIONAL", startOfYear, endOfYear);
+            log.info("Removidos {} feriados nacionais antigos para o ano {}", deleted, year);
+
+            int count = importNationalHolidays(tenantId, year);
             
             log.info("Importação concluída. Total de {} feriados importados", count);
             return count;
         } catch (Exception e) {
-            log.error("Erro ao importar feriados para tenant {}: {}", tenantId, e.getMessage(), e);
-            throw new RuntimeException("Erro ao importar feriados: " + e.getMessage(), e);
+            log.error("Erro fatal na importação de feriados: {}", e.getMessage(), e);
+            throw new RuntimeException("Falha ao importar feriados: " + e.getMessage(), e);
         }
     }
 
@@ -120,19 +122,18 @@ public class HolidayService {
     private Map<String, String> getCompanyLocation(UUID tenantId) {
         Map<String, String> location = new HashMap<>();
         try {
-            Query query = entityManager.createNativeQuery(
-                "SELECT address_city, address_state FROM shared.company_profiles WHERE tenant_id = :tenantId"
-            );
-            query.setParameter("tenantId", tenantId);
-            
-            List<Object[]> results = query.getResultList();
-            if (!results.isEmpty()) {
-                Object[] row = results.get(0);
-                location.put("city", (String) row[0]);
-                location.put("state", (String) row[1]);
-            }
+            // Usando JdbcTemplate para evitar problemas com o EntityManager e transações em consultas nativas
+            String sql = "SELECT address_city, address_state FROM shared.company_profiles WHERE tenant_id = ?";
+            return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
+                Map<String, String> map = new HashMap<>();
+                map.put("city", rs.getString("address_city"));
+                map.put("state", rs.getString("address_state"));
+                return map;
+            }, tenantId);
+        } catch (EmptyResultDataAccessException e) {
+            log.debug("Nenhum perfil de empresa encontrado para o tenant {}", tenantId);
         } catch (Exception e) {
-            log.warn("Não foi possível obter localização da empresa: {}", e.getMessage());
+            log.warn("Erro ao buscar localização da empresa: {}", e.getMessage());
         }
         return location;
     }

@@ -13,5 +13,6 @@ import java.util.UUID;
 public interface HolidayRepository extends JpaRepository<Holiday, UUID> {
     List<Holiday> findAllByTenantId(UUID tenantId);
     Optional<Holiday> findByTenantIdAndDate(UUID tenantId, LocalDate date);
+    int deleteByTenantIdAndTypeAndDateBetween(UUID tenantId, String type, LocalDate start, LocalDate end);
     void deleteAllByTenantId(UUID tenantId);
 }
