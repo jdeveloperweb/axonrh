@@ -44,6 +44,7 @@ public class DailySummaryService {
     private final DailySummaryRepository dailySummaryRepository;
     private final TimeRecordRepository timeRecordRepository;
     private final EmployeeScheduleRepository employeeScheduleRepository;
+    private final HolidayRepository holidayRepository;
     private final OvertimeBankService overtimeBankService;
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final ObjectMapper objectMapper;
@@ -52,12 +53,14 @@ public class DailySummaryService {
             DailySummaryRepository dailySummaryRepository,
             TimeRecordRepository timeRecordRepository,
             EmployeeScheduleRepository employeeScheduleRepository,
+            HolidayRepository holidayRepository,
             OvertimeBankService overtimeBankService,
             @Qualifier("timesheetKafkaTemplate") KafkaTemplate<String, Object> kafkaTemplate,
             ObjectMapper objectMapper) {
         this.dailySummaryRepository = dailySummaryRepository;
         this.timeRecordRepository = timeRecordRepository;
         this.employeeScheduleRepository = employeeScheduleRepository;
+        this.holidayRepository = holidayRepository;
         this.overtimeBankService = overtimeBankService;
         this.kafkaTemplate = kafkaTemplate;
         this.objectMapper = objectMapper;
@@ -83,6 +86,16 @@ public class DailySummaryService {
                         .employeeId(employeeId)
                         .summaryDate(date)
                         .build());
+
+        // Verificar feriado
+        Optional<com.axonrh.timesheet.entity.Holiday> holiday = holidayRepository.findByTenantIdAndDate(tenantId, date);
+        if (holiday.isPresent()) {
+            summary.setIsHoliday(true);
+            summary.setHolidayName(holiday.get().getName());
+        } else {
+            summary.setIsHoliday(false);
+            summary.setHolidayName(null);
+        }
 
         // Buscar escala ativa para o dia
         Optional<EmployeeSchedule> activeSchedule = employeeScheduleRepository.findActiveSchedule(tenantId, employeeId, date);
@@ -257,7 +270,7 @@ public class DailySummaryService {
         String tenantStr = TenantContext.getCurrentTenant();
         if (tenantStr == null) {
             log.warn("getPeriodTotals chamado sem Tenant ID no contexto");
-            return new PeriodTotals(0, 0, 0, 0, 0, 0);
+            return new PeriodTotals(0, "00:00", 0, "00:00", 0, "00:00", 0, "00:00", 0, "00:00", 0);
         }
         
         UUID tenantId = UUID.fromString(tenantStr);
@@ -265,17 +278,22 @@ public class DailySummaryService {
         List<Object[]> results = dailySummaryRepository.getTotalsInPeriod(tenantId, employeeId, startDate, endDate);
 
         if (results == null || results.isEmpty()) {
-            return new PeriodTotals(0, 0, 0, 0, 0, 0);
+            return new PeriodTotals(0, "00:00", 0, "00:00", 0, "00:00", 0, "00:00", 0, "00:00", 0);
         }
 
         Object[] totals = results.get(0);
 
         return new PeriodTotals(
                 safeInt(totals[0]), // workedMinutes
+                formatMinutes(safeInt(totals[0])),
                 safeInt(totals[1]), // overtimeMinutes
+                formatMinutes(safeInt(totals[1])),
                 safeInt(totals[2]), // deficitMinutes
+                formatMinutes(safeInt(totals[2])),
                 safeInt(totals[3]), // nightShiftMinutes
+                formatMinutes(safeInt(totals[3])),
                 safeInt(totals[4]), // lateArrivalMinutes
+                formatMinutes(safeInt(totals[4])),
                 safeInt(totals[5])  // absences
         );
     }
@@ -398,6 +416,16 @@ public class DailySummaryService {
     }
 
     private int getExpectedMinutes(LocalDate date, EmployeeSchedule schedule) {
+        // Se for feriado, não espera horas (a menos que seja escala 12x36 ou algo similar, 
+        // mas por padrão feriado é folga)
+        String currentTenant = TenantContext.getCurrentTenant();
+        if (currentTenant != null) {
+            UUID tenantId = UUID.fromString(currentTenant);
+            if (holidayRepository.findByTenantIdAndDate(tenantId, date).isPresent()) {
+                return 0;
+            }
+        }
+
         if (schedule == null || schedule.getWorkSchedule() == null) {
             // Fallback: 8h em dias de semana
             return (date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY) ? 0 : 480;
@@ -412,31 +440,51 @@ public class DailySummaryService {
     }
 
     /**
-     * Calcula minutos de adicional noturno.
+     * Calcula minutos de adicional noturno (CLT: 22h às 05h).
      */
     private int calculateNightShiftMinutes(LocalTime entry, LocalTime exit, LocalTime breakStart, LocalTime breakEnd) {
-        LocalTime nightStart = LocalTime.of(nightShiftStartHour, 0);
-        LocalTime nightEnd = LocalTime.of(nightShiftEndHour, 0);
+        LocalTime nightStart = LocalTime.of(22, 0);
+        LocalTime nightEnd = LocalTime.of(5, 0);
 
         int nightMinutes = 0;
 
-        // Verificar periodo da noite (22h-05h)
-        if (entry.isBefore(nightStart) && exit.isAfter(nightStart)) {
-            // Trabalhou apos 22h
-            LocalTime effectiveExit = exit.isBefore(LocalTime.of(6, 0)) ? exit : LocalTime.of(23, 59);
-            nightMinutes += (int) ChronoUnit.MINUTES.between(nightStart, effectiveExit);
-        }
+        // Intervalo 1: Entrada até Início do Intervalo
+        nightMinutes += getMinutesInNightRange(entry, (breakStart != null ? breakStart : exit), nightStart, nightEnd);
 
-        if (entry.isBefore(nightEnd) || entry.isAfter(nightStart)) {
-            // Entrada no periodo noturno
-            LocalTime effectiveStart = entry.isAfter(nightStart) ? entry : LocalTime.MIDNIGHT;
-            LocalTime effectiveEnd = exit.isBefore(nightEnd) ? exit : nightEnd;
-            if (effectiveEnd.isAfter(effectiveStart)) {
-                nightMinutes += (int) ChronoUnit.MINUTES.between(effectiveStart, effectiveEnd);
-            }
+        // Intervalo 2: Fim do Intervalo até Saída (se houver intervalo)
+        if (breakEnd != null && exit.isAfter(breakEnd)) {
+            nightMinutes += getMinutesInNightRange(breakEnd, exit, nightStart, nightEnd);
         }
 
         return nightMinutes;
+    }
+
+    private int getMinutesInNightRange(LocalTime start, LocalTime end, LocalTime nightStart, LocalTime nightEnd) {
+        int minutes = 0;
+        
+        // Se o horário de saída for menor que o de entrada (virou o dia)
+        if (end.isBefore(start)) {
+            // Dividir em [start, 23:59:59] e [00:00, end]
+            minutes += getIntersectionMinutes(start, LocalTime.MAX, nightStart, LocalTime.MAX);
+            minutes += getIntersectionMinutes(LocalTime.MIDNIGHT, end, LocalTime.MIDNIGHT, nightEnd);
+        } else {
+            // Intersecção com 22:00 - 23:59
+            minutes += getIntersectionMinutes(start, end, nightStart, LocalTime.MAX);
+            // Intersecção com 00:00 - 05:00
+            minutes += getIntersectionMinutes(start, end, LocalTime.MIDNIGHT, nightEnd);
+        }
+        
+        return minutes;
+    }
+
+    private int getIntersectionMinutes(LocalTime start1, LocalTime end1, LocalTime start2, LocalTime end2) {
+        LocalTime latestStart = start1.isAfter(start2) ? start1 : start2;
+        LocalTime earliestEnd = (end1.isBefore(end2) && !end1.equals(LocalTime.MIDNIGHT)) ? end1 : end2;
+
+        if (latestStart.isBefore(earliestEnd)) {
+            return (int) ChronoUnit.MINUTES.between(latestStart, earliestEnd);
+        }
+        return 0;
     }
 
     private DailySummaryResponse toResponse(DailySummary summary, EmployeeSchedule employeeSchedule) {
@@ -529,10 +577,15 @@ public class DailySummaryService {
 
     public record PeriodTotals(
             int workedMinutes,
+            String workedFormatted,
             int overtimeMinutes,
+            String overtimeFormatted,
             int deficitMinutes,
+            String deficitFormatted,
             int nightShiftMinutes,
+            String nightShiftFormatted,
             int lateArrivalMinutes,
+            String lateArrivalFormatted,
             int absences
     ) {}
 }

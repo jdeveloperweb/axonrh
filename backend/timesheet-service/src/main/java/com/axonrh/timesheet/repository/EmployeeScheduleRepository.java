@@ -22,4 +22,7 @@ public interface EmployeeScheduleRepository extends JpaRepository<EmployeeSchedu
             @Param("tenantId") UUID tenantId,
             @Param("employeeId") UUID employeeId,
             @Param("date") LocalDate date);
+
+    @Query("SELECT DISTINCT es.employeeId FROM EmployeeSchedule es WHERE es.tenantId = :tenantId")
+    List<UUID> findDistinctEmployeeIdsByTenantId(@Param("tenantId") UUID tenantId);
 }

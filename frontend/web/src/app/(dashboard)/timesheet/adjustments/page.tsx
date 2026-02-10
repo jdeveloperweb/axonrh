@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useConfirm } from '@/components/providers/ConfirmProvider';
 import {
   Plus,
@@ -47,7 +48,8 @@ import {
 } from '@/components/ui/table';
 import { timesheetApi, TimeAdjustment, TimeAdjustmentRequest } from '@/lib/api/timesheet';
 
-export default function AdjustmentsPage() {
+function AdjustmentsPageContent() {
+  const searchParams = useSearchParams();
   const { confirm } = useConfirm();
   const [loading, setLoading] = useState(true);
   const [myAdjustments, setMyAdjustments] = useState<TimeAdjustment[]>([]);
@@ -98,7 +100,20 @@ export default function AdjustmentsPage() {
 
   useEffect(() => {
     loadData();
-  }, [loadData]);
+
+    // Handle query params
+    const dateParam = searchParams.get('date');
+    const employeeParam = searchParams.get('employee');
+
+    if (dateParam) {
+      setNewAdjustment(prev => ({
+        ...prev,
+        recordDate: dateParam,
+        employeeId: employeeParam || undefined
+      }));
+      setShowNewDialog(true);
+    }
+  }, [loadData, searchParams]);
 
   const handleSubmitAdjustment = async () => {
     if (!newAdjustment.recordDate || !newAdjustment.requestedTime || !newAdjustment.justification) {
@@ -683,5 +698,16 @@ export default function AdjustmentsPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+export default function AdjustmentsPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    }>
+      <AdjustmentsPageContent />
+    </Suspense>
   );
 }

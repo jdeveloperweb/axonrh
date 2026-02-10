@@ -161,26 +161,33 @@ export default function TimesheetMirrorPage() {
     }
   };
 
-  const handleExport = async (format: 'pdf' | 'excel') => {
+  const handleExport = async (format: 'pdf' | 'excel', isMass: boolean = false) => {
     try {
       setExporting(true);
       const { startDate, endDate } = getDateRange();
       const employeeId = selectedEmployee || 'me';
 
-      const response = await fetch(
-        `/api/v1/timesheet/timesheet/employee/${employeeId}/export?startDate=${startDate}&endDate=${endDate}&format=${format}`,
-        { headers: { Accept: format === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' } }
-      );
+      const url = isMass
+        ? `/api/v1/timesheet/timesheet/export/mass?startDate=${startDate}&endDate=${endDate}&format=${format}`
+        : `/api/v1/timesheet/timesheet/employee/${employeeId}/export?startDate=${startDate}&endDate=${endDate}&format=${format}`;
+
+      const response = await fetch(url, {
+        headers: {
+          Accept: format === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        }
+      });
 
       if (response.ok) {
         const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
+        const downloadUrl = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url;
-        a.download = `espelho-ponto-${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}.${format === 'pdf' ? 'pdf' : 'xlsx'}`;
+        a.href = downloadUrl;
+        a.download = isMass
+          ? `espelho-ponto-massa-${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}.${format === 'pdf' ? 'pdf' : 'xlsx'}`
+          : `espelho-ponto-${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}.${format === 'pdf' ? 'pdf' : 'xlsx'}`;
         document.body.appendChild(a);
         a.click();
-        window.URL.revokeObjectURL(url);
+        window.URL.revokeObjectURL(downloadUrl);
         document.body.removeChild(a);
         toast.success(`Exportação ${format.toUpperCase()} concluída.`);
       } else {
@@ -233,6 +240,12 @@ export default function TimesheetMirrorPage() {
           </div>
         </div>
         <div className="flex items-center gap-2 w-full md:w-auto">
+          {canViewOthers && (
+            <Button variant="outline" size="sm" onClick={() => handleExport('pdf', true)} disabled={exporting} className="flex-1 md:flex-none">
+              <Download className="mr-2 h-4 w-4" />
+              Exportação em Massa (PDF)
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={() => handleExport('excel')} disabled={exporting} className="flex-1 md:flex-none">
             <Download className="mr-2 h-4 w-4" />
             Excel
@@ -378,6 +391,7 @@ export default function TimesheetMirrorPage() {
                     <TableHead className="text-center font-semibold">1ª Saída</TableHead>
                     <TableHead className="text-center font-semibold text-primary">Saldo</TableHead>
                     <TableHead className="text-center font-semibold">Status</TableHead>
+                    {canViewOthers && <TableHead className="text-right font-semibold">Ações</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -390,7 +404,8 @@ export default function TimesheetMirrorPage() {
                         <TableRow
                           key={day.id}
                           className={cn(
-                            "transition-colors",
+                            "transition-colors group",
+                            day.summaryDate === new Date().toISOString().split('T')[0] && "bg-primary/5 ring-1 ring-primary/20 ring-inset",
                             weekend ? 'bg-muted/20 hover:bg-muted/40' : 'hover:bg-muted/30',
                             (day.isHoliday || day.isAbsent) && "bg-muted/30"
                           )}
@@ -482,6 +497,23 @@ export default function TimesheetMirrorPage() {
                                   'Dia OK'}
                               </TooltipContent>
                             </Tooltip>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {canViewOthers && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={() => {
+                                  // Redireciona para a página de ajustes com os parâmetros pré-preenchidos
+                                  const empId = selectedEmployee || 'me';
+                                  window.location.href = `/timesheet/adjustments?employee=${empId}&date=${day.summaryDate}`;
+                                }}
+                              >
+                                <Clock className="h-4 w-4 mr-1" />
+                                Ajustar
+                              </Button>
+                            )}
                           </TableCell>
                         </TableRow>
                       );
