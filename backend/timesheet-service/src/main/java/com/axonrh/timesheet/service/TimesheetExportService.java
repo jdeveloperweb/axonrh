@@ -132,21 +132,6 @@ public class TimesheetExportService {
         }
     }
 
-    private String generateHtml(List<DailySummaryResponse> timesheet, DailySummaryService.PeriodTotals totals, LocalDate start, LocalDate end, String title) {
-        StringBuilder html = new StringBuilder();
-        html.append("<html><head><style>")
-                .append("body { font-family: 'Helvetica', sans-serif; color: #333; margin: 20px; }")
-                .append("h1 { color: #000; text-align: center; font-size: 18px; margin-bottom: 5px; }")
-                .append(".subtitle { text-align: center; font-size: 14px; margin-bottom: 20px; color: #666; }")
-                .append("table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }")
-                .append("th, td { border: 1px solid #ccc; padding: 6px 4px; text-align: center; font-size: 10px; }")
-                .append("th { background-color: #f9f9f9; font-weight: bold; }")
-                .append(".weekend { background-color: #f2f2f2; }")
-                .append(".summary { margin-top: 10px; border: 1px solid #eee; padding: 10px; border-radius: 4px; }")
-                .append(".summary-title { font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }")
-                .append(".summary-grid { display: block; }")
-                .append(".summary-item { margin-bottom: 5px; font-size: 11px; }")
-                .append("</style></head><body>");
 
     private String getEmployeeName(UUID tenantId, UUID employeeId) {
         return adjustmentRepository.findByTenantIdAndEmployeeIdOrderByCreatedAtDesc(
