@@ -25,53 +25,42 @@ interface DiscTabProps {
   employeeName: string;
 }
 
-const profileDescriptions: Record<string, { title: string; subtitle: string; description: string; color: string }> = {
+const profileDescriptions: Record<string, { title: string; shortTitle: string; subtitle: string; description: string; color: string; strengths: string[]; tips: string[] }> = {
   DOMINANCE: {
-    title: 'Dominância (D)',
+    title: 'Dominante',
+    shortTitle: 'D',
     subtitle: 'Foco em Resultados e Controle',
-    description: 'Pessoas com perfil D tendem a ser diretas, assertivas e focadas em resultados. São motivadas por desafios e gostam de assumir o comando da situação.',
+    description: 'Focado em resultados, direto e assertivo. Gosta de desafios e de assumir o controle das situacoes.',
     color: '#ef4444',
+    strengths: ['Tomada de decisao rapida', 'Visao orientada a metas', 'Disposicao para assumir riscos', 'Capacidade de liderar sob pressao'],
+    tips: ['Pratique ouvir mais os outros', 'Seja paciente com processos detalhados', 'Delegue e confie na equipe', 'Celebre os pequenos progressos'],
   },
   INFLUENCE: {
-    title: 'Influência (I)',
+    title: 'Influente',
+    shortTitle: 'I',
     subtitle: 'Foco em Pessoas e Persuasão',
-    description: 'Pessoas com perfil I são comunicativas, entusiastas e otimistas. Valorizam relacionamentos interpessoais e têm facilidade em persuadir e motivar outros.',
+    description: 'Comunicativo, entusiasta e persuasivo. Gosta de interagir com pessoas e criar um ambiente positivo.',
     color: '#eab308',
+    strengths: ['Otimismo e entusiasmo', 'Facilidade em persuadir', 'Criatividade na solucao de problemas', 'Habilidade de networking'],
+    tips: ['Foque nos detalhes e follow-up', 'Gerencie melhor seu tempo', 'Conclua projetos antes de iniciar novos', 'Documente decisoes importantes'],
   },
   STEADINESS: {
-    title: 'Estabilidade (S)',
+    title: 'Estável',
+    shortTitle: 'S',
     subtitle: 'Foco em Colaboração e Ritmo',
-    description: 'Pessoas com perfil S são calmas, pacientes e ótimas ouvintes. Valorizam a estabilidade, a cooperação e o trabalho em equipe constante.',
+    description: 'Calmo, paciente e leal. Valoriza a cooperacao e a estabilidade no ambiente de trabalho.',
     color: '#22c55e',
+    strengths: ['Excelente ouvinte', 'Persistencia e consistencia', 'Habilidade conciliadora', 'Confiavel e leal'],
+    tips: ['Aceite mudancas com mais abertura', 'Expresse suas opinioes com mais frequencia', 'Nao evite conflitos necessarios', 'Busque novos desafios'],
   },
   CONSCIENTIOUSNESS: {
-    title: 'Conformidade (C)',
+    title: 'Conforme',
+    shortTitle: 'C',
     subtitle: 'Foco em Detalhes e Qualidade',
-    description: 'Pessoas com perfil C são analíticas, precisas e cautelosas. Valorizam a qualidade, o cumprimento de normas e a lógica fundamentada em dados.',
+    description: 'Analitico, preciso e detalhista. Valoriza a qualidade, regras e procedimentos.',
     color: '#3b82f6',
-  },
-};
-
-const profileInsights: Record<string, { communication: string; motivators: string; fears: string }> = {
-  DOMINANCE: {
-    communication: 'Seja direto, breve e foque nos resultados. Evite rodeios e detalhes excessivos.',
-    motivators: 'Desafios, autoridade, prestígio e liberdade para agir de forma independente.',
-    fears: 'Falha em atingir objetivos, perda de controle ou ser visto como vulnerável.',
-  },
-  INFLUENCE: {
-    communication: 'Seja entusiasta, amigável e valorize suas ideias. Dê espaço para expressarem sua criatividade.',
-    motivators: 'Reconhecimento social, aprovação pública e oportunidade de interagir com novos grupos.',
-    fears: 'Rejeição social, perda de influência ou ser forçado a trabalhar em isolamento.',
-  },
-  STEADINESS: {
-    communication: 'Seja calmo, sincero e demonstre paciência. Explique as mudanças com antecedência e ofereça suporte.',
-    motivators: 'Estabilidade, ambientes previsíveis, harmonia no time e reconhecimento pela lealdade.',
-    fears: 'Instabilidade, mudanças bruscas sem planejamento ou conflitos interpessoais.',
-  },
-  CONSCIENTIOUSNESS: {
-    communication: 'Seja preciso, organizado e use dados. Valide as informações com fatos e dê tempo para análise.',
-    motivators: 'Qualidade, precisão técnica, processos claros e ser reconhecido como especialista.',
-    fears: 'Críticas à qualidade do seu trabalho, tomada de decisões sem dados ou erros em procedimentos.',
+    strengths: ['Analise profunda', 'Padroes elevados de qualidade', 'Planejamento sistematico', 'Atencao aos detalhes'],
+    tips: ['Nao busque a perfeicao absoluta', 'Tome decisoes com informacoes suficientes', 'Foque no quadro geral', 'Seja mais flexivel com processos'],
   },
 };
 
@@ -221,199 +210,182 @@ export function DiscTab({ employeeId, employeeName }: DiscTabProps) {
   }
 
   // Show result
-  const profileInfo = profileDescriptions[latestResult.primaryProfile];
+  const profileInfo = profileDescriptions[latestResult.primaryProfile] || profileDescriptions['DOMINANCE'];
   const chartData = [
-    { subject: 'Dominancia', A: latestResult.dScore, fullMark: 100 },
-    { subject: 'Influencia', A: latestResult.iScore, fullMark: 100 },
-    { subject: 'Estabilidade', A: latestResult.sScore, fullMark: 100 },
-    { subject: 'Conformidade', A: latestResult.cScore, fullMark: 100 },
+    { subject: 'DOMINÂNCIA', A: latestResult.dScore, fullMark: 100 },
+    { subject: 'INFLUÊNCIA', A: latestResult.iScore, fullMark: 100 },
+    { subject: 'ESTABILIDADE', A: latestResult.sScore, fullMark: 100 },
+    { subject: 'CONFORMIDADE', A: latestResult.cScore, fullMark: 100 },
   ];
 
   return (
     <div className="space-y-6">
       {/* Main Result Card */}
-      <Card className="bg-gradient-to-br from-primary/5 to-background border-primary/20">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <BrainCircuit className="h-5 w-5" />
-                Perfil DISC
-              </CardTitle>
-              <CardDescription>
-                Ultima avaliacao: {formatDate(latestResult.completedAt)}
-              </CardDescription>
-            </div>
-            <Button variant="outline" size="sm" onClick={handleSendEvaluation} disabled={sending}>
-              <Send className="h-4 w-4 mr-2" />
-              Nova Avaliacao
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Profile Badge */}
-            <div className="space-y-4">
-              <div className="flex items-start gap-4">
-                <div
-                  className="p-3 rounded-lg"
-                  style={{ backgroundColor: profileInfo?.color + '20' }}
-                >
-                  <BrainCircuit className="h-6 w-6" style={{ color: profileInfo?.color }} />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <Badge
-                      style={{ backgroundColor: profileInfo?.color + '20', color: profileInfo?.color }}
-                    >
-                      {profileInfo?.title}
-                    </Badge>
-                    <span className="text-sm font-bold text-muted-foreground">{profileInfo?.subtitle}</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {latestResult.profileDescription || profileInfo?.description}
-                  </p>
-                </div>
+      <Card className="overflow-hidden border-none shadow-2xl bg-slate-950 text-white rounded-[2.5rem] relative">
+        <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-primary/5 to-transparent pointer-events-none" />
+        <CardContent className="p-0">
+          <div className="grid grid-cols-1 lg:grid-cols-2">
+            <div className="p-10 flex flex-col justify-center space-y-6">
+              <div className="space-y-4">
+                <Badge className="text-[10px] font-black uppercase tracking-widest bg-primary hover:bg-primary border-none text-white px-3 py-1">
+                  Perfil Predominante
+                </Badge>
+                <h2 className="text-5xl font-black tracking-tighter uppercase leading-[0.85]">
+                  {profileInfo.title}
+                  <span className="block text-primary text-2xl mt-2 font-black opacity-90 tracking-normal italic leading-none lowercase">
+                    ({profileInfo.shortTitle.toLowerCase()})
+                  </span>
+                </h2>
               </div>
 
-              {latestResult.secondaryProfile && (
-                <div className="p-3 bg-muted rounded-lg">
-                  <p className="text-xs text-muted-foreground mb-1">Perfil Secundario</p>
-                  <Badge variant="outline">
-                    {profileDescriptions[latestResult.secondaryProfile]?.title}
-                  </Badge>
-                </div>
-              )}
+              <div className="space-y-4">
+                <p className="text-xl font-bold text-slate-100 leading-tight border-l-4 border-primary pl-4">
+                  "{profileInfo.description}"
+                </p>
+                <p className="text-sm text-slate-400 font-medium leading-relaxed">
+                  Avaliação concluída em {formatDate(latestResult.completedAt)}
+                </p>
+              </div>
 
-              {/* Score Bars */}
-              <div className="space-y-3">
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="font-medium" style={{ color: '#ef4444' }}>Dominancia (D)</span>
-                    <span>{latestResult.dScore}%</span>
-                  </div>
-                  <Progress value={latestResult.dScore} className="h-2" />
-                </div>
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="font-medium" style={{ color: '#eab308' }}>Influencia (I)</span>
-                    <span>{latestResult.iScore}%</span>
-                  </div>
-                  <Progress value={latestResult.iScore} className="h-2" />
-                </div>
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="font-medium" style={{ color: '#22c55e' }}>Estabilidade (S)</span>
-                    <span>{latestResult.sScore}%</span>
-                  </div>
-                  <Progress value={latestResult.sScore} className="h-2" />
-                </div>
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="font-medium" style={{ color: '#3b82f6' }}>Conformidade (C)</span>
-                    <span>{latestResult.cScore}%</span>
-                  </div>
-                  <Progress value={latestResult.cScore} className="h-2" />
-                </div>
+              <div className="pt-2">
+                <Button variant="outline" size="sm" onClick={handleSendEvaluation} disabled={sending} className="text-white border-white/20 hover:bg-white/10 h-10 rounded-xl font-bold">
+                  <Send className="h-4 w-4 mr-2" />
+                  Solicitar Nova Avaliação
+                </Button>
               </div>
             </div>
 
-            {/* Radar Chart */}
-            <div className="h-72 bg-white/50 rounded-2xl p-4 border border-dashed flex flex-col items-center justify-center">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="bg-[#020617] p-8 flex items-center justify-center border-l border-white/5 relative overflow-hidden min-h-[350px]">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[250px] h-[250px] bg-primary/20 blur-[80px] rounded-full animate-pulse pointer-events-none" />
+
+              <ResponsiveContainer width="100%" height={300}>
                 <RadarChart cx="50%" cy="50%" outerRadius="80%" data={chartData}>
-                  <PolarGrid />
-                  <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fontWeight: 'bold' }} />
-                  <PolarRadiusAxis angle={30} domain={[0, 100]} />
+                  <PolarGrid stroke="#1e293b" strokeWidth={1} />
+                  <PolarAngleAxis
+                    dataKey="subject"
+                    tick={{ fill: '#64748b', fontWeight: '900', fontSize: 9, letterSpacing: '0.1em' }}
+                  />
+                  <PolarRadiusAxis
+                    angle={30}
+                    domain={[0, 100]}
+                    tick={false}
+                    axisLine={false}
+                  />
                   <Radar
                     name="Perfil"
                     dataKey="A"
-                    stroke={profileInfo?.color}
-                    fill={profileInfo?.color}
-                    fillOpacity={0.5}
+                    stroke={profileInfo.color}
+                    strokeWidth={4}
+                    fill={profileInfo.color}
+                    fillOpacity={0.4}
+                    dot={{ r: 5, fill: '#fff', strokeWidth: 2, fillOpacity: 1, stroke: profileInfo.color }}
                   />
                 </RadarChart>
               </ResponsiveContainer>
-              <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mt-2">Distribuição Comportamental</p>
-            </div>
-          </div>
-
-          {/* New Insight Section */}
-          <div className="mt-8 pt-8 border-t">
-            <h4 className="text-sm font-black uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2">
-              <History className="h-4 w-4" />
-              Guia de Gestão e Comunicação
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100">
-                <p className="text-[10px] font-black uppercase text-blue-600 mb-2">Comunicação</p>
-                <p className="text-sm text-slate-700">{profileInsights[latestResult.primaryProfile].communication}</p>
-              </div>
-              <div className="p-4 bg-emerald-50/50 rounded-xl border border-emerald-100">
-                <p className="text-[10px] font-black uppercase text-emerald-600 mb-2">Motivadores</p>
-                <p className="text-sm text-slate-700">{profileInsights[latestResult.primaryProfile].motivators}</p>
-              </div>
-              <div className="p-4 bg-rose-50/50 rounded-xl border border-rose-100">
-                <p className="text-[10px] font-black uppercase text-rose-600 mb-2">Medos/Bloqueios</p>
-                <p className="text-sm text-slate-700">{profileInsights[latestResult.primaryProfile].fears}</p>
-              </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
+      {/* Detail Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="p-6 border-none shadow-xl bg-white rounded-[2rem]">
+          <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6 border-b pb-3">Scores Detalhados</h4>
+          <div className="space-y-6">
+            {[
+              { label: 'DOMINÂNCIA (D)', value: latestResult.dScore, color: '#ef4444' },
+              { label: 'INFLUÊNCIA (I)', value: latestResult.iScore, color: '#eab308' },
+              { label: 'ESTABILIDADE (S)', value: latestResult.sScore, color: '#22c55e' },
+              { label: 'CONFORMIDADE (C)', value: latestResult.cScore, color: '#3b82f6' },
+            ].map((item) => (
+              <div key={item.label}>
+                <div className="flex justify-between items-end mb-1.5">
+                  <span className="font-black text-slate-900 text-[10px] tracking-tight">{item.label}</span>
+                  <span className="font-black text-lg tabular-nums leading-none" style={{ color: item.color }}>{item.value}%</span>
+                </div>
+                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-1000"
+                    style={{ width: `${item.value}%`, backgroundColor: item.color }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <Card className="p-6 border-none shadow-xl bg-emerald-50/30 border border-emerald-100/50 rounded-[2rem]">
+          <h4 className="text-[10px] font-black uppercase tracking-widest text-emerald-600/60 mb-6 flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4" />
+            Principais Pontos Fortes
+          </h4>
+          <div className="space-y-3">
+            {profileInfo.strengths.slice(0, 4).map((strength, idx) => (
+              <div key={idx} className="flex items-center gap-3 p-3 rounded-xl bg-white border border-emerald-100 shadow-sm">
+                <div className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                <span className="font-bold text-slate-700 text-xs">{strength}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+
       {/* History Toggle */}
-      {history.length > 1 && (
-        <Button
-          variant="ghost"
-          onClick={() => setShowHistory(!showHistory)}
-          className="w-full"
-        >
-          <History className="h-4 w-4 mr-2" />
-          {showHistory ? 'Ocultar Historico' : `Ver Historico (${history.length - 1} anteriores)`}
-          <ArrowRight className={`h-4 w-4 ml-2 transition-transform ${showHistory ? 'rotate-90' : ''}`} />
-        </Button>
-      )}
+      {
+        history.length > 1 && (
+          <Button
+            variant="ghost"
+            onClick={() => setShowHistory(!showHistory)}
+            className="w-full"
+          >
+            <History className="h-4 w-4 mr-2" />
+            {showHistory ? 'Ocultar Historico' : `Ver Historico (${history.length - 1} anteriores)`}
+            <ArrowRight className={`h-4 w-4 ml-2 transition-transform ${showHistory ? 'rotate-90' : ''}`} />
+          </Button>
+        )
+      }
 
       {/* History */}
-      {showHistory && history.length > 1 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Historico de Avaliacoes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {history.slice(1).map((evaluation) => {
-                const evalProfile = profileDescriptions[evaluation.primaryProfile];
-                return (
-                  <div
-                    key={evaluation.id}
-                    className="flex items-center justify-between p-4 border rounded-lg"
-                  >
-                    <div className="flex items-center gap-4">
-                      <Badge style={{ backgroundColor: evalProfile?.color + '20', color: evalProfile?.color }}>
-                        {evalProfile?.title}
-                      </Badge>
-                      <div className="text-sm">
-                        <span className="text-muted-foreground">D: {evaluation.dScore}%</span>
-                        <span className="mx-2 text-muted-foreground">|</span>
-                        <span className="text-muted-foreground">I: {evaluation.iScore}%</span>
-                        <span className="mx-2 text-muted-foreground">|</span>
-                        <span className="text-muted-foreground">S: {evaluation.sScore}%</span>
-                        <span className="mx-2 text-muted-foreground">|</span>
-                        <span className="text-muted-foreground">C: {evaluation.cScore}%</span>
+      {
+        showHistory && history.length > 1 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Historico de Avaliacoes</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {history.slice(1).map((evaluation) => {
+                  const evalProfile = profileDescriptions[evaluation.primaryProfile];
+                  return (
+                    <div
+                      key={evaluation.id}
+                      className="flex items-center justify-between p-4 border rounded-lg"
+                    >
+                      <div className="flex items-center gap-4">
+                        <Badge style={{ backgroundColor: evalProfile?.color + '20', color: evalProfile?.color }}>
+                          {evalProfile?.title}
+                        </Badge>
+                        <div className="text-sm">
+                          <span className="text-muted-foreground">D: {evaluation.dScore}%</span>
+                          <span className="mx-2 text-muted-foreground">|</span>
+                          <span className="text-muted-foreground">I: {evaluation.iScore}%</span>
+                          <span className="mx-2 text-muted-foreground">|</span>
+                          <span className="text-muted-foreground">S: {evaluation.sScore}%</span>
+                          <span className="mx-2 text-muted-foreground">|</span>
+                          <span className="text-muted-foreground">C: {evaluation.cScore}%</span>
+                        </div>
                       </div>
+                      <span className="text-sm text-muted-foreground">
+                        {formatDate(evaluation.completedAt)}
+                      </span>
                     </div>
-                    <span className="text-sm text-muted-foreground">
-                      {formatDate(evaluation.completedAt)}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )
+      }
     </div>
   );
 }

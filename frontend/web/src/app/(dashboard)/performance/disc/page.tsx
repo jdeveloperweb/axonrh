@@ -14,6 +14,8 @@ import {
     History,
     Loader2,
     Settings,
+    Target,
+    Zap,
 } from 'lucide-react';
 import {
     discApi,
@@ -28,30 +30,38 @@ import { formatDate } from '@/lib/utils';
 import Link from 'next/link';
 import { employeesApi } from '@/lib/api/employees';
 
-const profileDescriptions: Record<string, { title: string; description: string; color: string; strengths: string[] }> = {
+const profileDescriptions: Record<string, { title: string; shortTitle: string; description: string; color: string; strengths: string[]; tips: string[] }> = {
     DOMINANCE: {
         title: 'Dominante (D)',
-        description: 'Você é focado em resultados, direto e assertivo. Gosta de desafios e de assumir o controle das situações.',
-        color: '#ff5a5a',
-        strengths: ['Tomada de decisão rápida', 'Visão orientada a metas', 'Disposição para assumir riscos', 'Capacidade de liderar sob pressão'],
+        shortTitle: 'D',
+        description: 'Focado em resultados, direto e assertivo. Gosta de desafios e de assumir o controle das situacoes.',
+        color: '#ef4444',
+        strengths: ['Tomada de decisao rapida', 'Visao orientada a metas', 'Disposicao para assumir riscos', 'Capacidade de liderar sob pressao'],
+        tips: ['Pratique ouvir mais os outros', 'Seja paciente com processos detalhados', 'Delegue e confie na equipe', 'Celebre os pequenos progressos'],
     },
     INFLUENCE: {
         title: 'Influente (I)',
-        description: 'Você é comunicativo, entusiasta e persuasivo. Gosta de interagir com pessoas e criar um ambiente positivo.',
-        color: '#ffcc33',
-        strengths: ['Otimismo e entusiasmo', 'Facilidade em persuadir', 'Criatividade na solução de problemas', 'Habilidade de networking'],
+        shortTitle: 'I',
+        description: 'Comunicativo, entusiasta e persuasivo. Gosta de interagir com pessoas e criar um ambiente positivo.',
+        color: '#eab308',
+        strengths: ['Otimismo e entusiasmo', 'Facilidade em persuadir', 'Criatividade na solucao de problemas', 'Habilidade de networking'],
+        tips: ['Foque nos detalhes e follow-up', 'Gerencie melhor seu tempo', 'Conclua projetos antes de iniciar novos', 'Documente decisoes importantes'],
     },
     STEADINESS: {
-        title: 'Estável (S)',
-        description: 'Você é calmo, paciente e leal. Valoriza a cooperação e a estabilidade no ambiente de trabalho.',
-        color: '#4ade80',
-        strengths: ['Excelente ouvinte', 'Persistência e consistência', 'Habilidade conciliadora', 'Confiável e leal'],
+        title: 'Estavel (S)',
+        shortTitle: 'S',
+        description: 'Calmo, paciente e leal. Valoriza a cooperacao e a estabilidade no ambiente de trabalho.',
+        color: '#22c55e',
+        strengths: ['Excelente ouvinte', 'Persistencia e consistencia', 'Habilidade conciliadora', 'Confiavel e leal'],
+        tips: ['Aceite mudancas com mais abertura', 'Expresse suas opinioes com mais frequencia', 'Nao evite conflitos necessarios', 'Busque novos desafios'],
     },
     CONSCIENTIOUSNESS: {
         title: 'Conforme (C)',
-        description: 'Você é analítico, preciso e detalhista. Valoriza a qualidade, regras e procedimentos.',
-        color: '#60a5fa',
-        strengths: ['Análise profunda', 'Padrões elevados de qualidade', 'Planejamento sistemático', 'Atenção aos detalhes'],
+        shortTitle: 'C',
+        description: 'Analitico, preciso e detalhista. Valoriza a qualidade, regras e procedimentos.',
+        color: '#3b82f6',
+        strengths: ['Analise profunda', 'Padroes elevados de qualidade', 'Planejamento sistematico', 'Atencao aos detalhes'],
+        tips: ['Nao busque a perfeicao absoluta', 'Tome decisoes com informacoes suficientes', 'Foque no quadro geral', 'Seja mais flexivel com processos'],
     },
 };
 
@@ -612,149 +622,184 @@ function DiscContent() {
     if (result) {
         const profileInfo = profileDescriptions[result.primaryProfile] || profileDescriptions['DOMINANCE'];
         const chartData = [
-            { subject: 'D', A: result.dScore, fullMark: 100 },
-            { subject: 'I', A: result.iScore, fullMark: 100 },
-            { subject: 'S', A: result.sScore, fullMark: 100 },
-            { subject: 'C', A: result.cScore, fullMark: 100 },
+            { subject: 'DOMINÂNCIA', A: result.dScore, fullMark: 100 },
+            { subject: 'INFLUÊNCIA', A: result.iScore, fullMark: 100 },
+            { subject: 'ESTABILIDADE', A: result.sScore, fullMark: 100 },
+            { subject: 'CONFORMIDADE', A: result.cScore, fullMark: 100 },
         ];
 
         return (
             <div className="space-y-8 pb-12">
-                <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-1">
-                            <div className="p-3 rounded-2xl bg-primary/10 text-primary">
-                                <BrainCircuit className="h-8 w-8" />
-                            </div>
-                            <div>
-                                <h1 className="text-4xl font-black tracking-tight">Seu Perfil Comportamental</h1>
-                                <p className="text-muted-foreground text-lg italic">Análise clínica baseada na metodologia Marston</p>
-                            </div>
+                <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                        <div className="p-3 rounded-2xl bg-primary/10 text-primary">
+                            <BrainCircuit className="h-8 w-8" />
+                        </div>
+                        <div>
+                            <h1 className="text-4xl font-black tracking-tight uppercase">Seu Relatório</h1>
+                            <p className="text-muted-foreground text-sm font-bold uppercase tracking-widest opacity-60">Análise Comportamental AxonIA</p>
                         </div>
                     </div>
                     <div className="flex gap-2">
-                        <Button variant="outline" className="h-11 font-bold border-2" onClick={handleStart}>
-                            Refazer Análise
+                        <Button variant="outline" className="h-11 font-bold border-2 rounded-xl" onClick={handleStart}>
+                            Refazer Teste
                         </Button>
                         {isAdmin && (
                             <Link href="/performance/disc/manage">
-                                <Button className="h-11 font-bold shadow-lg shadow-primary/20">
+                                <Button className="h-11 font-bold shadow-lg shadow-primary/20 rounded-xl">
                                     <Settings className="h-4 w-4 mr-2" />
-                                    Gerenciar Avaliações
+                                    Gerenciar
                                 </Button>
                             </Link>
                         )}
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* Main Result Card - Premium Version */}
-                    <Card className="md:col-span-3 overflow-hidden border-none shadow-2xl bg-slate-900 text-white">
-                        <CardContent className="p-0">
-                            <div className="grid grid-cols-1 lg:grid-cols-2">
-                                <div className="p-10 flex flex-col justify-center space-y-6">
-                                    <div className="space-y-2">
-                                        <Badge className="text-xs font-black uppercase tracking-widest bg-primary hover:bg-primary border-none text-white px-3 py-1">
-                                            Perfil Predominante
-                                        </Badge>
-                                        <h2 className="text-5xl font-black tracking-tighter uppercase">{profileInfo.title}</h2>
-                                    </div>
-                                    <p className="text-2xl font-bold text-slate-300 leading-tight">
-                                        {profileInfo.description}
+                {/* Hero Result Section - Premium Dark Mode */}
+                <Card className="overflow-hidden border-none shadow-3xl bg-slate-950 text-white rounded-[3rem] relative">
+                    <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-primary/5 to-transparent pointer-events-none" />
+                    <CardContent className="p-0">
+                        <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[500px]">
+                            <div className="lg:col-span-6 p-12 lg:p-16 flex flex-col justify-center space-y-8 relative z-10">
+                                <div className="space-y-4">
+                                    <Badge className="text-[10px] font-black uppercase tracking-[0.3em] bg-primary hover:bg-primary border-none text-white px-5 py-2 rounded-full">
+                                        Perfil Identificado
+                                    </Badge>
+                                    <h2 className="text-7xl font-black tracking-tighter uppercase leading-[0.85]">
+                                        {profileInfo.title.split(' (')[0]}
+                                        <span className="block text-primary text-4xl mt-3 font-black opacity-90 tracking-normal italic leading-none lowercase">
+                                            ({profileInfo.shortTitle.toLowerCase()})
+                                        </span>
+                                    </h2>
+                                </div>
+
+                                <div className="space-y-6">
+                                    <p className="text-2xl font-bold text-slate-100 leading-tight border-l-4 border-primary pl-6">
+                                        "{profileInfo.description}"
                                     </p>
-                                    <p className="text-lg text-slate-400 font-medium leading-relaxed">
+                                    <p className="text-lg text-slate-400 font-medium leading-relaxed max-w-xl">
                                         Este diagnóstico identifica suas tendências naturais de comportamento sob pressão, em equipe e na tomada de decisões.
                                     </p>
-                                    <div className="pt-4 flex gap-4">
-                                        <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex-1">
-                                            <p className="text-[10px] uppercase font-black text-slate-500 mb-1">Concluído em</p>
-                                            <p className="font-bold text-slate-200">{formatDate(result.completedAt)}</p>
+                                </div>
+
+                                <div className="pt-4 flex gap-6">
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-12 w-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
+                                            <Zap className="h-5 w-5 text-primary" />
                                         </div>
-                                        <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex-1">
-                                            <p className="text-[10px] uppercase font-black text-slate-500 mb-1">Precisão Estimada</p>
-                                            <p className="font-bold text-primary">Alta (Clínica)</p>
+                                        <div>
+                                            <p className="text-[10px] uppercase font-black text-slate-500 tracking-widest leading-none">Status</p>
+                                            <p className="font-bold text-slate-200">Finalizado</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-12 w-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
+                                            <Target className="h-5 w-5 text-green-400" />
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] uppercase font-black text-slate-500 tracking-widest leading-none">Precisão</p>
+                                            <p className="font-bold text-slate-200">Alta Performance</p>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="bg-slate-800/50 p-10 flex items-center justify-center border-l border-white/5 min-h-[400px]">
-                                    <ResponsiveContainer width="100%" height={300}>
-                                        <RadarChart cx="50%" cy="50%" outerRadius="80%" data={chartData}>
-                                            <PolarGrid stroke="#475569" />
-                                            <PolarAngleAxis dataKey="subject" tick={{ fill: '#94a3b8', fontWeight: 'black', fontSize: 16 }} />
-                                            <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} stroke="#475569" />
-                                            <Radar
-                                                name="Perfil"
-                                                dataKey="A"
-                                                stroke={profileInfo.color}
-                                                fill={profileInfo.color}
-                                                fillOpacity={0.6}
-                                            />
-                                            <Tooltip
-                                                contentStyle={{ backgroundColor: '#0f172a', border: 'none', borderRadius: '12px', fontWeight: 'bold' }}
-                                                itemStyle={{ color: '#fff' }}
-                                            />
-                                        </RadarChart>
-                                    </ResponsiveContainer>
-                                </div>
                             </div>
-                        </CardContent>
+
+                            <div className="lg:col-span-6 bg-[#020617] p-8 lg:p-12 flex items-center justify-center border-l border-white/5 relative overflow-hidden">
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-primary/20 blur-[100px] rounded-full animate-pulse pointer-events-none" />
+
+                                <ResponsiveContainer width="100%" height={400}>
+                                    <RadarChart cx="50%" cy="50%" outerRadius="80%" data={chartData}>
+                                        <PolarGrid stroke="#1e293b" strokeWidth={1.5} />
+                                        <PolarAngleAxis
+                                            dataKey="subject"
+                                            tick={{ fill: '#64748b', fontWeight: '900', fontSize: 10, letterSpacing: '0.2em' }}
+                                        />
+                                        <PolarRadiusAxis
+                                            angle={30}
+                                            domain={[0, 100]}
+                                            tick={false}
+                                            axisLine={false}
+                                        />
+                                        <Radar
+                                            name="Perfil"
+                                            dataKey="A"
+                                            stroke={profileInfo.color}
+                                            strokeWidth={5}
+                                            fill={profileInfo.color}
+                                            fillOpacity={0.4}
+                                            dot={{ r: 6, fill: '#fff', strokeWidth: 3, fillOpacity: 1, stroke: profileInfo.color }}
+                                            activeDot={{ r: 8, fill: '#fff', strokeWidth: 4 }}
+                                        />
+                                        <Tooltip
+                                            contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '15px', fontWeight: '900' }}
+                                            itemStyle={{ color: '#fff', fontSize: '12px' }}
+                                        />
+                                    </RadarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    {/* Scores Progress */}
+                    <Card className="lg:col-span-4 border-none shadow-2xl rounded-[2.5rem] bg-white p-8">
+                        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-8 border-b pb-4">Detalhamento</h3>
+                        <div className="space-y-8">
+                            {[
+                                { label: 'DOMINÂNCIA (D)', value: result.dScore, color: '#ef4444' },
+                                { label: 'INFLUÊNCIA (I)', value: result.iScore, color: '#eab308' },
+                                { label: 'ESTABILIDADE (S)', value: result.sScore, color: '#22c55e' },
+                                { label: 'CONFORMIDADE (C)', value: result.cScore, color: '#3b82f6' },
+                            ].map((item) => (
+                                <div key={item.label}>
+                                    <div className="flex justify-between items-end mb-2">
+                                        <span className="font-black text-slate-900 text-xs tracking-tight">{item.label}</span>
+                                        <span className="font-black text-xl tabular-nums leading-none" style={{ color: item.color }}>{item.value}%</span>
+                                    </div>
+                                    <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full rounded-full transition-all duration-1000 ease-out"
+                                            style={{ width: `${item.value}%`, backgroundColor: item.color }}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </Card>
 
-                    {/* Score Details */}
-                    <Card className="border-none shadow-xl">
-                        <CardHeader>
-                            <CardTitle className="font-black uppercase tracking-tight text-slate-400 text-sm">Detalhamento de Scores</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                            <div>
-                                <div className="flex justify-between mb-2">
-                                    <span className="font-bold text-slate-700">Dominância (D)</span>
-                                    <span className="font-black text-primary">{result.dScore}%</span>
-                                </div>
-                                <Progress value={result.dScore} className="h-2" />
-                            </div>
-                            <div>
-                                <div className="flex justify-between mb-2">
-                                    <span className="font-bold text-slate-700">Influência (I)</span>
-                                    <span className="font-black text-primary">{result.iScore}%</span>
-                                </div>
-                                <Progress value={result.iScore} className="h-2" />
-                            </div>
-                            <div>
-                                <div className="flex justify-between mb-2">
-                                    <span className="font-bold text-slate-700">Estabilidade (S)</span>
-                                    <span className="font-black text-primary">{result.sScore}%</span>
-                                </div>
-                                <Progress value={result.sScore} className="h-2" />
-                            </div>
-                            <div>
-                                <div className="flex justify-between mb-2">
-                                    <span className="font-bold text-slate-700">Conformidade (C)</span>
-                                    <span className="font-black text-primary">{result.cScore}%</span>
-                                </div>
-                                <Progress value={result.cScore} className="h-2" />
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    {/* Strengths */}
-                    <Card className="border-none shadow-xl md:col-span-2">
-                        <CardHeader>
-                            <CardTitle className="font-black uppercase tracking-tight text-slate-400 text-sm">Pontos Fortes do seu Perfil</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Insights */}
+                    <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <Card className="border-none shadow-2xl rounded-[2.5rem] bg-emerald-50/30 p-8 border border-emerald-100/50">
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600/60 mb-6 flex items-center gap-2">
+                                <CheckCircle2 className="h-4 w-4" />
+                                Pontos Fortes
+                            </h3>
+                            <div className="space-y-3">
                                 {profileInfo.strengths.map((strength, idx) => (
-                                    <div key={idx} className="flex items-center gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                                        <div className="p-2 rounded-full bg-green-100 text-green-600">
-                                            <CheckCircle2 className="h-5 w-5" />
-                                        </div>
-                                        <span className="font-bold text-slate-700">{strength}</span>
+                                    <div key={idx} className="flex items-center gap-3 p-4 rounded-xl bg-white border border-emerald-100 shadow-sm">
+                                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                                        <span className="font-bold text-slate-700 text-sm">{strength}</span>
                                     </div>
                                 ))}
                             </div>
-                        </CardContent>
-                    </Card>
+                        </Card>
+
+                        <Card className="border-none shadow-2xl rounded-[2.5rem] bg-blue-50/30 p-8 border border-blue-100/50">
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600/60 mb-6 flex items-center gap-2">
+                                <ArrowRight className="h-4 w-4" />
+                                Desenvolvimento
+                            </h3>
+                            <div className="space-y-3">
+                                {profileInfo.tips.map((tip, idx) => (
+                                    <div key={idx} className="flex items-start gap-3 p-4 rounded-xl bg-white border border-blue-100 shadow-sm">
+                                        <div className="h-1.5 w-1.5 rounded-full bg-blue-400 mt-1.5" />
+                                        <span className="font-bold text-slate-700 text-sm">{tip}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </Card>
+                    </div>
                 </div>
 
                 {/* History Section */}

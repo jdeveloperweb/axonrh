@@ -58,7 +58,7 @@ import { employeesApi, Employee } from '@/lib/api/employees';
 import { useAuthStore } from '@/stores/auth-store';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/utils';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend } from 'recharts';
+import { RadialBarChart, RadialBar, PolarAngleAxis, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend } from 'recharts';
 
 const statusColors: Record<DiscAssessmentStatus, { bg: string; text: string; label: string }> = {
   PENDING: { bg: 'bg-amber-50', text: 'text-amber-700', label: 'Pendente' },
@@ -626,99 +626,116 @@ export default function DiscManagePage() {
         </div>
       )}
 
-      {/* Profile Distribution Chart */}
+      {/* Profile Distribution Section - Innovative Version */}
       {pieChartData.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card className="lg:col-span-2 border-none shadow-xl bg-white overflow-hidden rounded-[2rem]">
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-primary/10 text-primary">
-                  <BarChart3 className="h-5 w-5" />
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <Card className="lg:col-span-4 border-none shadow-2xl bg-slate-900 text-white overflow-hidden rounded-[2.5rem] relative">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-[100px] -mr-48 -mt-48" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-600/10 rounded-full blur-[80px] -ml-32 -mb-32" />
+
+            <CardHeader className="pb-0 pt-8 px-8 relative z-10">
+              <div className="flex items-center gap-4 mb-2">
+                <div className="p-3 rounded-2xl bg-white/5 border border-white/10 text-primary shadow-inner">
+                  <BarChart3 className="h-6 w-6" />
                 </div>
                 <div>
-                  <CardTitle className="text-xl font-black text-slate-900 uppercase tracking-tight">
-                    Distribuição de Perfis
+                  <CardTitle className="text-2xl font-black uppercase tracking-tighter">
+                    Mapa de Talentos da Equipe
                   </CardTitle>
-                  <CardDescription className="font-medium text-slate-500">
-                    Ocorrência predominante de comportamentos na equipe
+                  <CardDescription className="text-slate-400 font-bold">
+                    Análise holística da predominância comportamental
                   </CardDescription>
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="h-[300px] w-full pt-4">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={pieChartData}
-                    layout="vertical"
-                    margin={{ top: 5, right: 30, left: 40, bottom: 5 }}
-                    barSize={32}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
-                    <XAxis type="number" hide />
-                    <YAxis
-                      dataKey="name"
-                      type="category"
-                      tick={{ fill: '#64748b', fontSize: 12, fontWeight: 700 }}
-                      axisLine={false}
-                      tickLine={false}
-                      width={100}
-                    />
-                    <Tooltip
-                      cursor={{ fill: '#f8fafc' }}
-                      content={({ active, payload }) => {
-                        if (active && payload && payload.length) {
-                          const data = payload[0].payload;
-                          return (
-                            <div className="bg-slate-900 text-white p-3 rounded-xl shadow-2xl border border-white/10 animate-in fade-in zoom-in duration-200">
-                              <p className="text-xs font-black uppercase tracking-widest opacity-60 mb-1">{data.name}</p>
-                              <div className="flex items-center gap-2">
-                                <span className="text-xl font-black">{data.value}</span>
-                                <span className="text-xs font-bold text-slate-400">Colaboradores</span>
-                              </div>
-                            </div>
-                          );
-                        }
-                        return null;
-                      }}
-                    />
-                    <Bar
-                      dataKey="value"
-                      radius={[0, 12, 12, 0]}
-                    >
-                      {pieChartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
 
-          {/* Quick Stats Summary */}
-          <Card className="border-none shadow-xl bg-slate-900 text-white rounded-[2rem] overflow-hidden">
-            <CardHeader>
-              <CardTitle className="text-sm font-black uppercase tracking-widest text-slate-400">Resumo de Talentos</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {pieChartData.map((profile, idx) => (
-                <div key={idx} className="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/10 group hover:bg-white/10 transition-all">
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-8 rounded-full" style={{ backgroundColor: profile.color }} />
-                    <div>
-                      <p className="text-xs font-black uppercase tracking-tight text-slate-400">{profile.name}</p>
-                      <p className="text-lg font-black">{profile.value}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[10px] font-black uppercase text-slate-500">Representação</p>
-                    <p className="font-black text-primary">
-                      {statistics ? ((profile.value / statistics.completedEvaluations) * 100).toFixed(0) : 0}%
-                    </p>
+            <CardContent className="p-8 pt-0 relative z-10">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                {/* Visual Component: Radial Bar Chart */}
+                <div className="h-[450px] relative flex items-center justify-center">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RadialBarChart
+                      cx="50%"
+                      cy="50%"
+                      innerRadius="30%"
+                      outerRadius="100%"
+                      barSize={15}
+                      data={pieChartData.map(d => ({ ...d, fill: d.color }))}
+                      startAngle={180}
+                      endAngle={-180}
+                    >
+                      <RadialBar
+                        label={{ position: 'insideStart', fill: '#fff', fontSize: 10, fontWeight: 'bold' }}
+                        background={{ fill: 'rgba(255,255,255,0.05)' }}
+                        dataKey="value"
+                        cornerRadius={20}
+                      />
+                      <PolarAngleAxis
+                        type="number"
+                        domain={[0, statistics?.completedEvaluations || 10]}
+                        angleAxisId={0}
+                        tick={false}
+                      />
+                      <Tooltip
+                        content={({ active, payload }) => {
+                          if (active && payload && payload.length) {
+                            const data = payload[0].payload;
+                            return (
+                              <div className="bg-slate-800 border border-white/10 p-4 rounded-2xl shadow-2xl backdrop-blur-xl">
+                                <p className="text-xs font-black uppercase tracking-widest text-slate-400 mb-1">{data.name}</p>
+                                <div className="flex items-center gap-2">
+                                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: data.color }} />
+                                  <span className="text-2xl font-black">{data.value}</span>
+                                  <span className="text-xs font-bold text-slate-500">Colaboradores</span>
+                                </div>
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
+                      />
+                    </RadialBarChart>
+                  </ResponsiveContainer>
+
+                  {/* Central Statistics Display */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <p className="text-xs font-black uppercase tracking-widest text-slate-500">Amostragem</p>
+                    <span className="text-5xl font-black tracking-tighter">{statistics?.completedEvaluations || 0}</span>
+                    <p className="text-[10px] font-black uppercase bg-primary/20 text-primary px-2 py-0.5 rounded-full">Perfis Mapeados</p>
                   </div>
                 </div>
-              ))}
+
+                {/* Info Panel: Stats Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {pieChartData.map((profile, idx) => (
+                    <div key={idx} className="group p-6 rounded-[2rem] bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300 relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-24 h-24 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
+                        <BarChart3 className="w-full h-full text-white rotate-12 translate-x-4 -translate-y-4" />
+                      </div>
+
+                      <div className="flex items-start justify-between mb-4 relative z-10">
+                        <div className="flex items-center gap-3">
+                          <div className="w-1.5 h-6 rounded-full" style={{ backgroundColor: profile.color }} />
+                          <h4 className="text-sm font-black uppercase tracking-wider text-slate-400">{profile.name}</h4>
+                        </div>
+                        <span className="text-xs font-black bg-white/10 px-2 py-1 rounded-lg">
+                          {statistics ? ((profile.value / statistics.completedEvaluations) * 100).toFixed(0) : 0}%
+                        </span>
+                      </div>
+
+                      <div className="flex items-end justify-between relative z-10">
+                        <div>
+                          <p className="text-4xl font-black tracking-tighter mb-1">{profile.value}</p>
+                          <p className="text-[10px] font-bold text-slate-500 uppercase">Membros de Equipe</p>
+                        </div>
+                        <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-white/5 border border-white/10">
+                          <Users className="h-5 w-5 text-slate-400" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
