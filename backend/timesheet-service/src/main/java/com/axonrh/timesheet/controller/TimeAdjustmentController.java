@@ -29,15 +29,17 @@ import java.util.UUID;
 public class TimeAdjustmentController {
 
     private final TimeAdjustmentService adjustmentService;
+    private final com.axonrh.timesheet.client.EmployeeServiceClient employeeClient;
 
     @PostMapping
     @Operation(summary = "Solicitar ajuste", description = "Cria uma solicitacao de ajuste de ponto")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:CREATE', 'ADMIN')")
     @PreAuthorize("hasAnyAuthority('TIMESHEET:CREATE', 'ADMIN')")
     public ResponseEntity<TimeAdjustmentResponse> createAdjustment(
             @Valid @RequestBody TimeAdjustmentRequest request,
             @AuthenticationPrincipal Jwt jwt) {
 
-        UUID employeeId = UUID.fromString(jwt.getSubject());
+        UUID employeeId = resolveEmployeeId("me", jwt);
         String employeeName = jwt.getClaimAsString("name");
 
         TimeAdjustmentResponse response = adjustmentService.createAdjustment(request, employeeId, employeeName);
@@ -61,7 +63,7 @@ public class TimeAdjustmentController {
             @AuthenticationPrincipal Jwt jwt,
             Pageable pageable) {
 
-        UUID employeeId = UUID.fromString(jwt.getSubject());
+        UUID employeeId = resolveEmployeeId("me", jwt);
         Page<TimeAdjustmentResponse> adjustments = adjustmentService.getEmployeeAdjustments(employeeId, pageable);
         return ResponseEntity.ok(adjustments);
     }
@@ -118,7 +120,7 @@ public class TimeAdjustmentController {
             @PathVariable UUID adjustmentId,
             @AuthenticationPrincipal Jwt jwt) {
 
-        UUID employeeId = UUID.fromString(jwt.getSubject());
+        UUID employeeId = resolveEmployeeId("me", jwt);
         TimeAdjustmentResponse response = adjustmentService.cancelAdjustment(adjustmentId, employeeId);
         return ResponseEntity.ok(response);
     }
@@ -133,7 +135,17 @@ public class TimeAdjustmentController {
 
     private UUID resolveEmployeeId(String employeeId, Jwt jwt) {
         if ("me".equalsIgnoreCase(employeeId)) {
-            return UUID.fromString(jwt.getSubject());
+            UUID userId = UUID.fromString(jwt.getSubject());
+            try {
+                String email = jwt.getClaimAsString("email");
+                com.axonrh.timesheet.dto.EmployeeDTO employee = employeeClient.getEmployeeByUserId(userId, email);
+                if (employee != null) {
+                    return employee.getId();
+                }
+                return userId;
+            } catch (Exception e) {
+                return userId;
+            }
         }
         return UUID.fromString(employeeId);
     }

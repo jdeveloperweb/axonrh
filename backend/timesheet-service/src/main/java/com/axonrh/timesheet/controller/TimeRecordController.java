@@ -38,6 +38,7 @@ public class TimeRecordController {
 
     private final TimeRecordService timeRecordService;
     private final DailySummaryService dailySummaryService;
+    private final com.axonrh.timesheet.client.EmployeeServiceClient employeeClient;
 
     // ==================== Registro de Ponto ====================
 
@@ -49,6 +50,16 @@ public class TimeRecordController {
             @AuthenticationPrincipal Jwt jwt) {
 
         UUID userId = UUID.fromString(jwt.getSubject());
+        
+        // Se o employeeId for igual ao userId, tenta resolver para o EmployeeID correto
+        if (request.getEmployeeId().equals(userId)) {
+            UUID resolvedId = resolveEmployeeId("me", jwt);
+            if (!resolvedId.equals(userId)) {
+                log.info("Corrigindo employeeId no request: {} -> {}", userId, resolvedId);
+                request.setEmployeeId(resolvedId);
+            }
+        }
+
         TimeRecordResponse response = timeRecordService.registerTimeRecord(request, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -62,14 +73,24 @@ public class TimeRecordController {
             @RequestParam(required = false) Double longitude,
             @RequestParam(required = false) String deviceId,
             @AuthenticationPrincipal Jwt jwt) {
-
+        
         UUID userId = UUID.fromString(jwt.getSubject());
+        UUID targetEmployeeId = employeeId;
+
+        // Se o employeeId for igual ao userId, tenta resolver para o EmployeeID correto
+        if (employeeId.equals(userId)) {
+            UUID resolvedId = resolveEmployeeId("me", jwt);
+            if (!resolvedId.equals(userId)) {
+                log.info("Corrigindo employeeId no quickRecord: {} -> {}", userId, resolvedId);
+                targetEmployeeId = resolvedId;
+            }
+        }
 
         // Determinar proximo tipo de registro
-        RecordType nextType = timeRecordService.getExpectedNextRecordType(employeeId);
+        RecordType nextType = timeRecordService.getExpectedNextRecordType(targetEmployeeId);
 
         TimeRecordRequest request = TimeRecordRequest.builder()
-                .employeeId(employeeId)
+                .employeeId(targetEmployeeId)
                 .recordType(nextType)
                 .source(com.axonrh.timesheet.entity.enums.RecordSource.WEB)
                 .latitude(latitude)
@@ -125,7 +146,7 @@ public class TimeRecordController {
     @Operation(summary = "Registros de hoje", description = "Retorna registros de hoje do colaborador logado")
     @PreAuthorize("hasAnyAuthority('TIMESHEET:CREATE', 'ADMIN')")
     public ResponseEntity<List<TimeRecordResponse>> getTodayRecords(@AuthenticationPrincipal Jwt jwt) {
-        UUID employeeId = UUID.fromString(jwt.getSubject());
+        UUID employeeId = resolveEmployeeId("me", jwt);
         List<TimeRecordResponse> records = timeRecordService.getRecordsByDate(employeeId, LocalDate.now());
         return ResponseEntity.ok(records);
     }
@@ -246,7 +267,20 @@ public class TimeRecordController {
 
     private UUID resolveEmployeeId(String employeeId, Jwt jwt) {
         if ("me".equalsIgnoreCase(employeeId)) {
-            return UUID.fromString(jwt.getSubject());
+            UUID userId = UUID.fromString(jwt.getSubject());
+            try {
+                String email = jwt.getClaimAsString("email");
+                com.axonrh.timesheet.dto.EmployeeDTO employee = employeeClient.getEmployeeByUserId(userId, email);
+                if (employee != null) {
+                    log.debug("Resolvido usuario {} para funcionario {}", userId, employee.getId());
+                    return employee.getId();
+                }
+                log.warn("Funcionario nao encontrado para o usuario {}. Usando ID do usuario.", userId);
+                return userId;
+            } catch (Exception e) {
+                log.error("Erro ao resolver funcionario para usuario {}: {}", userId, e.getMessage());
+                return userId;
+            }
         }
         return UUID.fromString(employeeId);
     }

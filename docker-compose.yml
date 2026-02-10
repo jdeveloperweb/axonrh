@@ -15,7 +15,7 @@ x-backend-env: &backend-env
   SPRING_FLYWAY_ENABLED: "false"
   SPRING_LIQUIBASE_ENABLED: "false"
   SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-  JAVA_OPTS: "-Xms128m -Xmx512m"
+  JAVA_TOOL_OPTIONS: "-Xms256m -Xmx768m"
 
 x-backend-service: &backend-service
   image: maven:3.9.6-eclipse-temurin-21
