@@ -296,19 +296,19 @@ public class DataModificationService {
             }
 
             // Fallback: Ensure search_value is available if referenced in query but missing in params
-            if (!validationParams.containsKey("search_value") && analysis.has("entity_identifier")) {
-                JsonNode identifier = analysis.get("entity_identifier");
-                if (identifier.has("search_value")) {
-                    String value = identifier.get("search_value").asText();
-                    String type = identifier.path("search_type").asText("CONTAINS");
+            if (!validationParams.containsKey("search_value")) {
+                if (analysis.has("entity_identifier") && analysis.get("entity_identifier").has("search_value")) {
+                    String value = analysis.get("entity_identifier").get("search_value").asText();
+                    String type = analysis.get("entity_identifier").path("search_type").asText("CONTAINS");
 
                     if ("CONTAINS".equalsIgnoreCase(type) && !value.contains("%")) {
                         value = "%" + value + "%";
                     } else if ("STARTS_WITH".equalsIgnoreCase(type) && !value.endsWith("%")) {
                         value = value + "%";
                     }
-
                     validationParams.put("search_value", value);
+                } else if (analysis.has("parameters") && analysis.get("parameters").has("search_value")) {
+                     validationParams.put("search_value", analysis.get("parameters").get("search_value").asText());
                 }
             }
 
@@ -415,6 +415,15 @@ public class DataModificationService {
                     sqlParams.put(entry.getKey(), value.asText());
                 }
             });
+        }
+
+        // Add search_value fallback if used in SQL but missing from parameters
+        if (!sqlParams.containsKey("search_value")) {
+            if (analysis.has("validation_params") && analysis.get("validation_params").has("search_value")) {
+                sqlParams.put("search_value", analysis.get("validation_params").get("search_value").asText());
+            } else if (analysis.has("entity_identifier") && analysis.get("entity_identifier").has("search_value")) {
+                sqlParams.put("search_value", analysis.get("entity_identifier").get("search_value").asText());
+            }
         }
         sqlParams.put("entity_id", entityId);
 
