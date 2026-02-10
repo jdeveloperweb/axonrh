@@ -3,6 +3,7 @@ package com.axonrh.timesheet.service;
 import com.axonrh.timesheet.config.TenantContext;
 import com.axonrh.timesheet.dto.DailySummaryResponse;
 import com.axonrh.timesheet.repository.EmployeeScheduleRepository;
+import com.axonrh.timesheet.repository.TimeAdjustmentRepository;
 import com.itextpdf.html2pdf.HtmlConverter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -146,27 +147,27 @@ public class TimesheetExportService {
 
     private String generateHtmlContent(List<ExportData> dataList, LocalDate startDate, LocalDate endDate) {
         StringBuilder sb = new StringBuilder();
-        sb.append("<html><head><style>")
-                .append("body { font-family: 'Helvetica', sans-serif; color: #333; margin: 0; padding: 20px; }")
-                .append(".page { page-break-after: always; display: flex; flex-direction: column; min-height: 98vh; position: relative; }")
-                .append(".header { text-align: center; margin-bottom: 15px; border-bottom: 2px solid #3b82f6; padding-bottom: 10px; }")
-                .append("h1 { color: #1e3a8a; font-size: 20px; margin: 0; text-transform: uppercase; letter-spacing: 1px; }")
-                .append(".company-info { font-size: 11px; color: #64748b; margin-top: 4px; font-weight: bold; }")
-                .append(".subtitle { font-size: 13px; margin-bottom: 15px; background: #eff6ff; padding: 12px; border-radius: 6px; border: 1px solid #bfdbfe; display: flex; justify-content: space-between; }")
-                .append("table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 10px; table-layout: fixed; }")
-                .append("th, td { border: 1px solid #e2e8f0; padding: 5px 3px; text-align: center; overflow: hidden; }")
-                .append("th { background-color: #f8fafc; font-weight: bold; text-transform: uppercase; font-size: 9px; color: #475569; }")
-                .append(".weekend { background-color: #f1f5f9; color: #94a3b8; }")
-                .append(".holiday { background-color: #fef3c7; color: #92400e; }")
-                .append(".absent { color: #be123c; font-weight: bold; }")
-                .append(".summary-container { display: flex; justify-content: space-between; margin-top: auto; padding-top: 15px; border-top: 1px solid #e2e8f0; }")
-                .append(".summary-box { width: 48%; border: 1px solid #e2e8f0; padding: 10px; border-radius: 6px; background: #fdfdfd; }")
-                .append(".summary-title { font-weight: bold; margin-bottom: 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; font-size: 11px; color: #1e3a8a; }")
-                .append(".summary-row { display: flex; justify-content: space-between; margin-bottom: 3px; font-size: 10px; }")
-                .append(".signatures { margin-top: 30px; display: flex; justify-content: space-between; width: 100%; }")
-                .append(".signature-line { width: 45%; border-top: 1px solid #64748b; text-align: center; padding-top: 5px; font-size: 10px; color: #475569; margin-top: 30px; }")
-                .append(".footer { text-align: center; font-size: 8px; color: #94a3b8; position: absolute; bottom: 0; width: 100%; }")
-                .append("</style></head><body>");
+        sb.append("<html><head><style>");
+        sb.append("body { font-family: 'Helvetica', sans-serif; color: #333; margin: 0; padding: 20px; }");
+        sb.append(".page { page-break-after: always; display: flex; flex-direction: column; min-height: 98vh; position: relative; }");
+        sb.append(".header { text-align: center; margin-bottom: 15px; border-bottom: 2px solid #3b82f6; padding-bottom: 10px; }");
+        sb.append("h1 { color: #1e3a8a; font-size: 20px; margin: 0; text-transform: uppercase; letter-spacing: 1px; }");
+        sb.append(".company-info { font-size: 11px; color: #64748b; margin-top: 4px; font-weight: bold; }");
+        sb.append(".subtitle { font-size: 13px; margin-bottom: 15px; background: #eff6ff; padding: 12px; border-radius: 6px; border: 1px solid #bfdbfe; display: flex; justify-content: space-between; }");
+        sb.append("table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 10px; table-layout: fixed; }");
+        sb.append("th, td { border: 1px solid #e2e8f0; padding: 5px 3px; text-align: center; overflow: hidden; }");
+        sb.append("th { background-color: #f8fafc; font-weight: bold; text-transform: uppercase; font-size: 9px; color: #475569; }");
+        sb.append(".weekend { background-color: #f1f5f9; color: #94a3b8; }");
+        sb.append(".holiday { background-color: #fef3c7; color: #92400e; }");
+        sb.append(".absent { color: #be123c; font-weight: bold; }");
+        sb.append(".summary-container { display: flex; justify-content: space-between; margin-top: auto; padding-top: 15px; border-top: 1px solid #e2e8f0; }");
+        sb.append(".summary-box { width: 48%; border: 1px solid #e2e8f0; padding: 10px; border-radius: 6px; background: #fdfdfd; }");
+        sb.append(".summary-title { font-weight: bold; margin-bottom: 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; font-size: 11px; color: #1e3a8a; }");
+        sb.append(".summary-row { display: flex; justify-content: space-between; margin-bottom: 3px; font-size: 10px; }");
+        sb.append(".signatures { margin-top: 30px; display: flex; justify-content: space-between; width: 100%; }");
+        sb.append(".signature-line { width: 45%; border-top: 1px solid #64748b; text-align: center; padding-top: 5px; font-size: 10px; color: #475569; margin-top: 30px; }");
+        sb.append(".footer { text-align: center; font-size: 8px; color: #94a3b8; position: absolute; bottom: 0; width: 100%; }");
+        sb.append("</style></head><body>");
 
         for (ExportData data : dataList) {
             sb.append("<div class='page'>");
