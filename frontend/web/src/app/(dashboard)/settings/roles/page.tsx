@@ -14,7 +14,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, Plus, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -29,11 +29,13 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
+import { isAxiosError } from "@/lib/api/client";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function RolesPage() {
     const [roles, setRoles] = useState<Role[]>([]);
     const [loading, setLoading] = useState(true);
+    const [backendError, setBackendError] = useState(false);
     const { toast } = useToast();
     const router = useRouter();
 
@@ -46,13 +48,24 @@ export default function RolesPage() {
             setLoading(true);
             const data = await rolesApi.list();
             setRoles(data);
+            setBackendError(false);
         } catch (error) {
             console.error("Failed to load roles", error);
-            toast({
-                variant: "destructive",
-                title: "Erro ao carregar perfis",
-                description: "Não foi possível carregar a lista de perfis. Tente reiniciar o backend.",
-            });
+
+            if (isAxiosError(error) && error.response?.status === 404) {
+                setBackendError(true);
+                toast({
+                    variant: "destructive",
+                    title: "Backend Desatualizado",
+                    description: "Os novos endpoints de perfil não foram encontrados no servidor.",
+                });
+            } else {
+                toast({
+                    variant: "destructive",
+                    title: "Erro ao carregar perfis",
+                    description: "Não foi possível carregar a lista de perfis.",
+                });
+            }
         } finally {
             setLoading(false);
         }
@@ -84,11 +97,22 @@ export default function RolesPage() {
                         Gerencie os perfis de acesso e suas permissões no sistema.
                     </p>
                 </div>
-                <Button onClick={() => router.push("/settings/roles/new")}>
+                <Button onClick={() => router.push("/settings/roles/new")} disabled={backendError}>
                     <Plus className="mr-2 h-4 w-4" />
                     Novo Perfil
                 </Button>
             </div>
+
+            {backendError && (
+                <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>Erro de Versão do Backend</AlertTitle>
+                    <AlertDescription>
+                        O servidor backend não possui os endpoints necessários para gerenciar perfis (Erro 404).
+                        Por favor, realize o DEPLOY da aplicação backend com as novas classes (RoleController, PermissionController).
+                    </AlertDescription>
+                </Alert>
+            )}
 
             <Card>
                 <CardHeader>
@@ -118,7 +142,9 @@ export default function RolesPage() {
                             ) : roles.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={5} className="text-center py-8">
-                                        Nenhum perfil encontrado. Tente reiniciar o backend se os perfis iniciais não aparecerem.
+                                        {backendError
+                                            ? "Funcionalidade indisponível até a atualização do backend."
+                                            : "Nenhum perfil encontrado."}
                                     </TableCell>
                                 </TableRow>
                             ) : (
