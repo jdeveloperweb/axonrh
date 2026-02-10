@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -13,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { UserDTO, userApi } from '@/lib/api/users';
+import { rolesApi } from '@/lib/api/roles';
 import { getErrorMessage } from '@/lib/api/client';
 import { Loader2, Eye, EyeOff, Wand2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -24,19 +26,22 @@ interface UserDialogProps {
     onSuccess: () => void;
 }
 
-const AVAILABLE_ROLES = [
-    { value: 'ADMIN', label: 'Administrador' },
-    { value: 'GESTOR_RH', label: 'Gestor de RH' },
-    { value: 'ANALISTA_DP', label: 'Analista de DP' },
-    { value: 'LIDER', label: 'Líder' },
-    { value: 'COLABORADOR', label: 'Colaborador' },
-    { value: 'CONTADOR', label: 'Contador' },
-];
-
 export function UserDialog({ open, onOpenChange, userToEdit, onSuccess }: UserDialogProps) {
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [availableRoles, setAvailableRoles] = useState<{ value: string; label: string }[]>([]);
+
+    // Fallback roles in case API fails or loading
+    const FALLBACK_ROLES = [
+        { value: 'ADMIN', label: 'Administrador' },
+        { value: 'GESTOR_RH', label: 'Gestor de RH' },
+        { value: 'ANALISTA_DP', label: 'Analista de DP' },
+        { value: 'LIDER', label: 'Líder' },
+        { value: 'COLABORADOR', label: 'Colaborador' },
+        { value: 'CONTADOR', label: 'Contador' },
+    ];
+
     const [formData, setFormData] = useState<UserDTO>({
         name: '',
         email: '',
@@ -44,6 +49,24 @@ export function UserDialog({ open, onOpenChange, userToEdit, onSuccess }: UserDi
         roles: [],
         password: '',
     });
+
+    // Load available roles
+    useEffect(() => {
+        if (open) {
+            rolesApi.list()
+                .then(roles => {
+                    const mappedRoles = roles.map(r => ({
+                        value: r.name,
+                        label: r.name // You might want to map system roles to friendly names if needed
+                    }));
+                    setAvailableRoles(mappedRoles);
+                })
+                .catch(err => {
+                    console.error("Failed to load roles", err);
+                    setAvailableRoles(FALLBACK_ROLES);
+                });
+        }
+    }, [open]);
 
     useEffect(() => {
         if (open) {
@@ -166,8 +189,8 @@ export function UserDialog({ open, onOpenChange, userToEdit, onSuccess }: UserDi
 
                         <div className="space-y-2">
                             <Label>Perfil de Acesso</Label>
-                            <div className="grid grid-cols-2 gap-2 p-3 border rounded-md bg-[var(--color-surface-variant)]/30">
-                                {AVAILABLE_ROLES.map(role => (
+                            <div className="grid grid-cols-2 gap-2 p-3 border rounded-md bg-[var(--color-surface-variant)]/30 max-h-40 overflow-y-auto">
+                                {(availableRoles.length > 0 ? availableRoles : FALLBACK_ROLES).map(role => (
                                     <label key={role.value} className="flex items-center space-x-2 cursor-pointer hover:bg-black/5 p-1 rounded transition-colors">
                                         <input
                                             type="checkbox"

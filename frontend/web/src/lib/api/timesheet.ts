@@ -212,6 +212,7 @@ export interface TimeRecordRequest {
 
 export interface TimeAdjustmentRequest {
   adjustmentType: 'ADD' | 'MODIFY' | 'DELETE';
+  employeeId?: string;
   originalRecordId?: string;
   recordDate: string;
   recordType: 'ENTRY' | 'EXIT' | 'BREAK_START' | 'BREAK_END';

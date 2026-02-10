@@ -50,7 +50,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { timesheetApi, TimeAdjustment, TimeAdjustmentRequest } from '@/lib/api/timesheet';
+import { timesheetApi, TimeAdjustment, TimeAdjustmentRequest, TimeRecord } from '@/lib/api/timesheet';
 import { toast } from 'sonner';
 
 function AdjustmentsPageContent() {
@@ -81,6 +81,34 @@ function AdjustmentsPageContent() {
     requestedTime: '',
     justification: '',
   });
+
+  const [dayRecords, setDayRecords] = useState<TimeRecord[]>([]);
+  const [loadingRecords, setLoadingRecords] = useState(false);
+
+  // Fetch records when date changes for MODIFY/DELETE
+  useEffect(() => {
+    const fetchDayRecords = async () => {
+      const { adjustmentType, recordDate, employeeId } = newAdjustment;
+
+      if (['MODIFY', 'DELETE'].includes(adjustmentType || '') && recordDate) {
+        try {
+          setLoadingRecords(true);
+          const targetEmployeeId = employeeId || user?.id || 'me';
+          const records = await timesheetApi.getRecordsByDate(targetEmployeeId, recordDate);
+          setDayRecords(records);
+        } catch (error) {
+          console.error('Erro ao buscar registros do dia:', error);
+          toast.error('Erro ao carregar registros do dia selecionado.');
+        } finally {
+          setLoadingRecords(false);
+        }
+      } else {
+        setDayRecords([]);
+      }
+    };
+
+    fetchDayRecords();
+  }, [newAdjustment.adjustmentType, newAdjustment.recordDate, newAdjustment.employeeId, user?.id]);
 
   // Approval form
   const [approvalNotes, setApprovalNotes] = useState('');
@@ -297,7 +325,11 @@ function AdjustmentsPageContent() {
                   <Select
                     value={newAdjustment.adjustmentType}
                     onValueChange={(value) =>
-                      setNewAdjustment({ ...newAdjustment, adjustmentType: value as TimeAdjustmentRequest['adjustmentType'] })
+                      setNewAdjustment({
+                        ...newAdjustment,
+                        adjustmentType: value as TimeAdjustmentRequest['adjustmentType'],
+                        originalRecordId: undefined // Reset when type changes
+                      })
                     }
                   >
                     <SelectTrigger>
@@ -311,28 +343,6 @@ function AdjustmentsPageContent() {
                   </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Tipo de Registro</Label>
-                  <Select
-                    value={newAdjustment.recordType}
-                    onValueChange={(value) =>
-                      setNewAdjustment({ ...newAdjustment, recordType: value as TimeAdjustmentRequest['recordType'] })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ENTRY">Entrada</SelectItem>
-                      <SelectItem value="BREAK_START">Início Intervalo</SelectItem>
-                      <SelectItem value="BREAK_END">Fim Intervalo</SelectItem>
-                      <SelectItem value="EXIT">Saída</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Data do Ocorrido</Label>
                   <div className="relative">
@@ -348,22 +358,93 @@ function AdjustmentsPageContent() {
                     />
                   </div>
                 </div>
+              </div>
 
-                <div className="space-y-2">
-                  <Label>Horário Correto</Label>
-                  <div className="relative">
-                    <Timer className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      type="time"
-                      className="pl-9"
-                      value={newAdjustment.requestedTime}
-                      onChange={(e) =>
-                        setNewAdjustment({ ...newAdjustment, requestedTime: e.target.value })
+              {/* Dynamic Fields based on Type */}
+              {newAdjustment.adjustmentType === 'ADD' ? (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Tipo de Registro</Label>
+                    <Select
+                      value={newAdjustment.recordType}
+                      onValueChange={(value) =>
+                        setNewAdjustment({ ...newAdjustment, recordType: value as TimeAdjustmentRequest['recordType'] })
                       }
-                    />
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ENTRY">Entrada</SelectItem>
+                        <SelectItem value="BREAK_START">Início Intervalo</SelectItem>
+                        <SelectItem value="BREAK_END">Fim Intervalo</SelectItem>
+                        <SelectItem value="EXIT">Saída</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Horário</Label>
+                    <div className="relative">
+                      <Timer className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        type="time"
+                        className="pl-9"
+                        value={newAdjustment.requestedTime}
+                        onChange={(e) =>
+                          setNewAdjustment({ ...newAdjustment, requestedTime: e.target.value })
+                        }
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Registro Original para {newAdjustment.adjustmentType === 'MODIFY' ? 'Alterar' : 'Excluir'}</Label>
+                    <Select
+                      value={newAdjustment.originalRecordId}
+                      onValueChange={(value) => {
+                        const record = dayRecords.find(r => r.id === value);
+                        setNewAdjustment({
+                          ...newAdjustment,
+                          originalRecordId: value,
+                          recordType: record?.recordType, // Auto-fill type from record
+                          requestedTime: newAdjustment.adjustmentType === 'MODIFY' ? (newAdjustment.requestedTime || record?.recordTime) : record?.recordTime
+                        });
+                      }}
+                    >
+                      <SelectTrigger disabled={loadingRecords || dayRecords.length === 0}>
+                        <SelectValue placeholder={loadingRecords ? "Carregando registros..." : dayRecords.length === 0 ? "Nenhum registro encontrado" : "Selecione o registro"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {dayRecords.map((record) => (
+                          <SelectItem key={record.id} value={record.id}>
+                            {record.recordTime} - {record.recordTypeLabel} ({record.sourceLabel})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {newAdjustment.adjustmentType === 'MODIFY' && (
+                    <div className="space-y-2">
+                      <Label>Novo Horário Correto</Label>
+                      <div className="relative">
+                        <Timer className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          type="time"
+                          className="pl-9"
+                          value={newAdjustment.requestedTime}
+                          onChange={(e) =>
+                            setNewAdjustment({ ...newAdjustment, requestedTime: e.target.value })
+                          }
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label>Justificativa</Label>

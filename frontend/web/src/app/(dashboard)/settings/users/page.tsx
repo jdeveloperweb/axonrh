@@ -15,10 +15,12 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { userApi, UserDTO } from '@/lib/api/users';
 import { useToast } from '@/hooks/use-toast';
 import { UserDialog } from '@/components/users/user-dialog';
+import { useRouter } from 'next/navigation';
 
 export default function UsersPage() {
     const { confirm } = useConfirm();
     const { toast } = useToast();
+    const router = useRouter(); // Add router
     const [users, setUsers] = useState<UserDTO[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -88,13 +90,22 @@ export default function UsersPage() {
                     <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Usuários do Sistema</h1>
                     <p className="text-[var(--color-text-secondary)]">Gerencie os administradores e acessos ao painel de RH</p>
                 </div>
-                <button
-                    className="btn-primary flex items-center gap-2"
-                    onClick={handleCreate}
-                >
-                    <UserPlus className="w-4 h-4" />
-                    Novo Usuário
-                </button>
+                <div className="flex gap-2">
+                    <button
+                        className="btn-secondary flex items-center gap-2"
+                        onClick={() => router.push('/settings/roles')}
+                    >
+                        <Shield className="w-4 h-4" />
+                        Gerenciar Perfis
+                    </button>
+                    <button
+                        className="btn-primary flex items-center gap-2"
+                        onClick={handleCreate}
+                    >
+                        <UserPlus className="w-4 h-4" />
+                        Novo Usuário
+                    </button>
+                </div>
             </div>
 
             <Card>
