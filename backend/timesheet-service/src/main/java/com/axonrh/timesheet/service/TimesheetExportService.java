@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
@@ -234,14 +236,14 @@ public class TimesheetExportService {
             sb.append("<div class='signatures'><div class='signature-line'>Assinatura do Colaborador</div>")
                 .append("<div class='signature-line'>Assinatura do Responsável</div></div>");
 
-            sb.append("<div class='footer'>Gerado em ").append(java.time.LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))).append("</div></div>");
+            sb.append("<div class='footer'>Gerado em ").append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))).append("</div></div>");
         }
 
         sb.append("</body></html>");
         return sb.toString();
     }
 
-    private String getString(java.time.LocalTime val) {
+    private String getString(LocalTime val) {
         return val == null ? "" : val.toString();
     }
 
