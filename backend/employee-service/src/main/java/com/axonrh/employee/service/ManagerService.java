@@ -91,7 +91,23 @@ public class ManagerService {
     @Transactional(readOnly = true)
     public List<EmployeeResponse> getSubordinates(UUID managerId) {
         UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
-        return employeeRepository.findByManagementSpan(tenantId, managerId)
+        
+        // Tenta resolver o ID. Pode ser um EmployeeID ou um UserID (vindo do frontend).
+        UUID resolvedManagerId = managerId;
+        
+        // Verifica se existe um colaborador com este ID
+        if (employeeRepository.findByTenantIdAndId(tenantId, managerId).isEmpty()) {
+            // Se não encontrar por ID, tenta buscar pelo User ID
+            resolvedManagerId = employeeRepository.findByTenantIdAndUserId(tenantId, managerId)
+                    .map(Employee::getId)
+                    .orElse(managerId); // Se não encontrar nenhum, mantem o original para retornar vazio na busca
+            
+            if (!resolvedManagerId.equals(managerId)) {
+                log.debug("Resolvido UserID {} para EmployeeID {} na busca de subordinados", managerId, resolvedManagerId);
+            }
+        }
+
+        return employeeRepository.findByManagementSpan(tenantId, resolvedManagerId)
                 .stream()
                 .map(employeeMapper::toResponse)
                 .collect(Collectors.toList());
