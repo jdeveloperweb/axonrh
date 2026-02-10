@@ -306,6 +306,9 @@ public class TimeAdjustmentService {
         UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
         UUID userId = UUID.fromString(jwt.getSubject());
 
+        List<String> roles = jwt.getClaimAsStringList("roles");
+        if (roles == null) roles = Collections.emptyList();
+
         List<String> permissions = jwt.getClaimAsStringList("permissions");
         if (permissions == null) permissions = Collections.emptyList();
 
