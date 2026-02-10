@@ -360,6 +360,41 @@ export const timesheetApi = {
     });
   },
 
+  /**
+   * Export timesheet (PDF/Excel)
+   */
+  exportTimesheet: async (
+    employeeId: string,
+    startDate: string,
+    endDate: string,
+    format: 'pdf' | 'excel'
+  ): Promise<Blob> => {
+    return api.get(`/timesheet/timesheet/employee/${employeeId}/export`, {
+      params: { startDate, endDate, format },
+      responseType: 'blob',
+      headers: {
+        Accept: format === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      }
+    });
+  },
+
+  /**
+   * Export mass timesheet (PDF/Excel)
+   */
+  exportMassTimesheet: async (
+    startDate: string,
+    endDate: string,
+    format: 'pdf' | 'excel'
+  ): Promise<Blob> => {
+    return api.get('/timesheet/timesheet/export/mass', {
+      params: { startDate, endDate, format },
+      responseType: 'blob',
+      headers: {
+        Accept: format === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      }
+    });
+  },
+
   // ==================== Adjustments ====================
 
   /**

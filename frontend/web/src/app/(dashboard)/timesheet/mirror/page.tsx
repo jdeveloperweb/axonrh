@@ -167,18 +167,11 @@ export default function TimesheetMirrorPage() {
       const { startDate, endDate } = getDateRange();
       const employeeId = selectedEmployee || 'me';
 
-      const url = isMass
-        ? `/api/v1/timesheet/timesheet/export/mass?startDate=${startDate}&endDate=${endDate}&format=${format}`
-        : `/api/v1/timesheet/timesheet/employee/${employeeId}/export?startDate=${startDate}&endDate=${endDate}&format=${format}`;
+      const blob = await (isMass
+        ? timesheetApi.exportMassTimesheet(startDate, endDate, format)
+        : timesheetApi.exportTimesheet(employeeId, startDate, endDate, format));
 
-      const response = await fetch(url, {
-        headers: {
-          Accept: format === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        }
-      });
-
-      if (response.ok) {
-        const blob = await response.blob();
+      if (blob) {
         const downloadUrl = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = downloadUrl;
@@ -190,8 +183,6 @@ export default function TimesheetMirrorPage() {
         window.URL.revokeObjectURL(downloadUrl);
         document.body.removeChild(a);
         toast.success(`Exportação ${format.toUpperCase()} concluída.`);
-      } else {
-        toast.error("Falha na exportação.");
       }
     } catch (error) {
       console.error('Erro ao exportar:', error);

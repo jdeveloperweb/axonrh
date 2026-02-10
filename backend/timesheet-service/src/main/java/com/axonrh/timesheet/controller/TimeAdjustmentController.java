@@ -46,7 +46,7 @@ public class TimeAdjustmentController {
 
     @GetMapping("/pending")
     @Operation(summary = "Ajustes pendentes", description = "Lista ajustes pendentes de aprovacao")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET:UPDATE', 'TIMESHEET:APPROVE', 'ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TIMESHEET:UPDATE', 'TIMESHEET:APPROVE', 'TIMESHEET:READ', 'ADMIN')")
     public ResponseEntity<Page<TimeAdjustmentResponse>> getPendingAdjustments(Pageable pageable) {
         Page<TimeAdjustmentResponse> adjustments = adjustmentService.getPendingAdjustments(pageable);
         return ResponseEntity.ok(adjustments);

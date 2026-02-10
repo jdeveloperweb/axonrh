@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.UUID;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 @RestController
 @RequestMapping("/api/v1/timesheet/timesheet")
@@ -26,22 +27,24 @@ public class TimesheetExportController {
     @Operation(summary = "Exportar espelho individual", description = "Gera PDF ou Excel do espelho de ponto de um colaborador")
     @PreAuthorize("hasAnyAuthority('TIMESHEET:READ', 'ADMIN')")
     public ResponseEntity<byte[]> exportIndividual(
-            @PathVariable UUID employeeId,
+            @PathVariable String employeeId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-            @RequestParam(defaultValue = "pdf") String format) {
+            @RequestParam(defaultValue = "pdf") String format,
+            @AuthenticationPrincipal org.springframework.security.oauth2.jwt.Jwt jwt) {
 
+        java.util.UUID resolvedId = resolveEmployeeId(employeeId, jwt);
         byte[] data;
         String filename;
         MediaType mediaType;
 
         if ("excel".equalsIgnoreCase(format)) {
-            data = exportService.exportToExcel(employeeId, startDate, endDate);
-            filename = "espelho-ponto-" + employeeId + ".xlsx";
+            data = exportService.exportToExcel(resolvedId, startDate, endDate);
+            filename = "espelho-ponto-" + resolvedId + ".xlsx";
             mediaType = MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         } else {
-            data = exportService.exportToPdf(employeeId, startDate, endDate);
-            filename = "espelho-ponto-" + employeeId + ".pdf";
+            data = exportService.exportToPdf(resolvedId, startDate, endDate);
+            filename = "espelho-ponto-" + resolvedId + ".pdf";
             mediaType = MediaType.APPLICATION_PDF;
         }
 
@@ -65,5 +68,12 @@ public class TimesheetExportController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(data);
+    }
+
+    private java.util.UUID resolveEmployeeId(String employeeId, org.springframework.security.oauth2.jwt.Jwt jwt) {
+        if ("me".equalsIgnoreCase(employeeId)) {
+            return java.util.UUID.fromString(jwt.getSubject());
+        }
+        return java.util.UUID.fromString(employeeId);
     }
 }
