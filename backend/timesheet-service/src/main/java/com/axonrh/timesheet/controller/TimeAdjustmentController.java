@@ -34,7 +34,6 @@ public class TimeAdjustmentController {
     @PostMapping
     @Operation(summary = "Solicitar ajuste", description = "Cria uma solicitacao de ajuste de ponto")
     @PreAuthorize("hasAnyAuthority('TIMESHEET:CREATE', 'ADMIN')")
-    @PreAuthorize("hasAnyAuthority('TIMESHEET:CREATE', 'ADMIN')")
     public ResponseEntity<TimeAdjustmentResponse> createAdjustment(
             @Valid @RequestBody TimeAdjustmentRequest request,
             @AuthenticationPrincipal Jwt jwt) {
