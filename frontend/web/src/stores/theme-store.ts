@@ -11,6 +11,10 @@ interface ThemeColors {
   surface: string;
   textPrimary: string;
   textSecondary: string;
+  buttonPrimary?: string;
+  buttonPrimaryText?: string;
+  buttonSecondary?: string;
+  buttonSecondaryText?: string;
 }
 
 interface TenantTheme {
@@ -48,6 +52,10 @@ const defaultColors: ThemeColors = {
   surface: '#FAFAFA',
   textPrimary: '#212121',
   textSecondary: '#757575',
+  buttonPrimary: '#1976D2',
+  buttonPrimaryText: '#FFFFFF',
+  buttonSecondary: '#424242',
+  buttonSecondaryText: '#FFFFFF',
 };
 
 export const SUPPORTED_FONTS = [
@@ -173,6 +181,10 @@ export const useThemeStore = create<ThemeState>()(
               surface: config.surfaceColor || defaultColors.surface,
               textPrimary: config.textPrimaryColor || defaultColors.textPrimary,
               textSecondary: config.textSecondaryColor || defaultColors.textSecondary,
+              buttonPrimary: (config.extraSettings?.buttonPrimary as string) || config.primaryColor || defaultColors.buttonPrimary,
+              buttonPrimaryText: (config.extraSettings?.buttonPrimaryText as string) || '#FFFFFF',
+              buttonSecondary: (config.extraSettings?.buttonSecondary as string) || config.secondaryColor || defaultColors.buttonSecondary,
+              buttonSecondaryText: (config.extraSettings?.buttonSecondaryText as string) || '#FFFFFF',
             };
 
             const tenantTheme: TenantTheme = {
@@ -314,6 +326,12 @@ function applyColorsToDocument(colors: ThemeColors) {
   root.style.setProperty('--color-surface', colors.surface);
   root.style.setProperty('--color-text-primary', colors.textPrimary);
   root.style.setProperty('--color-text-secondary', colors.textSecondary);
+
+  // Cores de Botões
+  root.style.setProperty('--color-button-primary', colors.buttonPrimary || colors.primary);
+  root.style.setProperty('--color-button-primary-text', colors.buttonPrimaryText || '#FFFFFF');
+  root.style.setProperty('--color-button-secondary', colors.buttonSecondary || colors.secondary);
+  root.style.setProperty('--color-button-secondary-text', colors.buttonSecondaryText || '#FFFFFF');
 }
 
 function applyCustomCss(css: string) {

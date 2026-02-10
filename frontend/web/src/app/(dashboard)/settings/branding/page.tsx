@@ -105,6 +105,10 @@ export default function BrandingPage() {
                     surface: config.surfaceColor || '#FAFAFA',
                     textPrimary: config.textPrimaryColor || '#212121',
                     textSecondary: config.textSecondaryColor || '#757575',
+                    buttonPrimary: (config.extraSettings?.buttonPrimary as string) || config.primaryColor || '#1976D2',
+                    buttonPrimaryText: (config.extraSettings?.buttonPrimaryText as string) || '#FFFFFF',
+                    buttonSecondary: (config.extraSettings?.buttonSecondary as string) || config.secondaryColor || '#424242',
+                    buttonSecondaryText: (config.extraSettings?.buttonSecondaryText as string) || '#FFFFFF',
                 },
                 baseFontSize: (config.extraSettings?.baseFontSize as number) || 16,
                 fontFamily: (config.extraSettings?.fontFamily as string) || 'Plus Jakarta Sans',
@@ -143,6 +147,10 @@ export default function BrandingPage() {
                 surface: config.surfaceColor || '#FAFAFA',
                 textPrimary: config.textPrimaryColor || '#212121',
                 textSecondary: config.textSecondaryColor || '#757575',
+                buttonPrimary: (config.extraSettings?.buttonPrimary as string) || config.primaryColor || '#1976D2',
+                buttonPrimaryText: (config.extraSettings?.buttonPrimaryText as string) || '#FFFFFF',
+                buttonSecondary: (config.extraSettings?.buttonSecondary as string) || config.secondaryColor || '#424242',
+                buttonSecondaryText: (config.extraSettings?.buttonSecondaryText as string) || '#FFFFFF',
             },
             baseFontSize: config.extraSettings?.baseFontSize || 16,
             fontFamily: config.extraSettings?.fontFamily || 'Plus Jakarta Sans',
@@ -168,6 +176,10 @@ export default function BrandingPage() {
         config.extraSettings?.logoWidth,
         config.extraSettings?.baseFontSize,
         config.extraSettings?.fontFamily,
+        config.extraSettings?.buttonPrimary,
+        config.extraSettings?.buttonPrimaryText,
+        config.extraSettings?.buttonSecondary,
+        config.extraSettings?.buttonSecondaryText,
         updateGlobalTheme
     ]);
 
@@ -380,6 +392,149 @@ export default function BrandingPage() {
                                     </div>
                                 </div>
                             </div>
+
+                            <div className="pt-6 border-t border-[var(--color-border)]">
+                                <h4 className="text-sm font-bold mb-4">Cores de Texto</h4>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="text-sm font-semibold mb-2 block">Texto Principal</label>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="color"
+                                                className="w-10 h-10 rounded-lg cursor-pointer border-none p-0 overflow-hidden"
+                                                value={config.textPrimaryColor}
+                                                onChange={(e) => setConfig({ ...config, textPrimaryColor: e.target.value })}
+                                            />
+                                            <input
+                                                type="text"
+                                                className="flex-1 px-3 py-2 bg-[var(--color-surface-variant)] rounded border-none text-xs font-mono uppercase"
+                                                value={config.textPrimaryColor}
+                                                onChange={(e) => setConfig({ ...config, textPrimaryColor: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-semibold mb-2 block">Texto Secundário</label>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="color"
+                                                className="w-10 h-10 rounded-lg cursor-pointer border-none p-0 overflow-hidden"
+                                                value={config.textSecondaryColor}
+                                                onChange={(e) => setConfig({ ...config, textSecondaryColor: e.target.value })}
+                                            />
+                                            <input
+                                                type="text"
+                                                className="flex-1 px-3 py-2 bg-[var(--color-surface-variant)] rounded border-none text-xs font-mono uppercase"
+                                                value={config.textSecondaryColor}
+                                                onChange={(e) => setConfig({ ...config, textSecondaryColor: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="pt-6 border-t border-[var(--color-border)]">
+                                <h4 className="text-sm font-bold mb-4">Cores de Botões</h4>
+                                <div className="space-y-6">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                        <div>
+                                            <label className="text-sm font-semibold mb-2 block">Botão Primário (Fundo)</label>
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="color"
+                                                    className="w-10 h-10 rounded-lg cursor-pointer border-none p-0 overflow-hidden"
+                                                    value={config.extraSettings?.buttonPrimary || config.primaryColor}
+                                                    onChange={(e) => setConfig({
+                                                        ...config,
+                                                        extraSettings: { ...config.extraSettings, buttonPrimary: e.target.value }
+                                                    })}
+                                                />
+                                                <input
+                                                    type="text"
+                                                    className="flex-1 px-3 py-2 bg-[var(--color-surface-variant)] rounded border-none text-xs font-mono uppercase"
+                                                    value={config.extraSettings?.buttonPrimary || config.primaryColor}
+                                                    onChange={(e) => setConfig({
+                                                        ...config,
+                                                        extraSettings: { ...config.extraSettings, buttonPrimary: e.target.value }
+                                                    })}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="text-sm font-semibold mb-2 block">Botão Primário (Texto)</label>
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="color"
+                                                    className="w-10 h-10 rounded-lg cursor-pointer border-none p-0 overflow-hidden"
+                                                    value={config.extraSettings?.buttonPrimaryText || '#FFFFFF'}
+                                                    onChange={(e) => setConfig({
+                                                        ...config,
+                                                        extraSettings: { ...config.extraSettings, buttonPrimaryText: e.target.value }
+                                                    })}
+                                                />
+                                                <input
+                                                    type="text"
+                                                    className="flex-1 px-3 py-2 bg-[var(--color-surface-variant)] rounded border-none text-xs font-mono uppercase"
+                                                    value={config.extraSettings?.buttonPrimaryText || '#FFFFFF'}
+                                                    onChange={(e) => setConfig({
+                                                        ...config,
+                                                        extraSettings: { ...config.extraSettings, buttonPrimaryText: e.target.value }
+                                                    })}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                        <div>
+                                            <label className="text-sm font-semibold mb-2 block">Botão Secundário (Fundo)</label>
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="color"
+                                                    className="w-10 h-10 rounded-lg cursor-pointer border-none p-0 overflow-hidden"
+                                                    value={config.extraSettings?.buttonSecondary || config.secondaryColor}
+                                                    onChange={(e) => setConfig({
+                                                        ...config,
+                                                        extraSettings: { ...config.extraSettings, buttonSecondary: e.target.value }
+                                                    })}
+                                                />
+                                                <input
+                                                    type="text"
+                                                    className="flex-1 px-3 py-2 bg-[var(--color-surface-variant)] rounded border-none text-xs font-mono uppercase"
+                                                    value={config.extraSettings?.buttonSecondary || config.secondaryColor}
+                                                    onChange={(e) => setConfig({
+                                                        ...config,
+                                                        extraSettings: { ...config.extraSettings, buttonSecondary: e.target.value }
+                                                    })}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="text-sm font-semibold mb-2 block">Botão Secundário (Texto)</label>
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="color"
+                                                    className="w-10 h-10 rounded-lg cursor-pointer border-none p-0 overflow-hidden"
+                                                    value={config.extraSettings?.buttonSecondaryText || '#FFFFFF'}
+                                                    onChange={(e) => setConfig({
+                                                        ...config,
+                                                        extraSettings: { ...config.extraSettings, buttonSecondaryText: e.target.value }
+                                                    })}
+                                                />
+                                                <input
+                                                    type="text"
+                                                    className="flex-1 px-3 py-2 bg-[var(--color-surface-variant)] rounded border-none text-xs font-mono uppercase"
+                                                    value={config.extraSettings?.buttonSecondaryText || '#FFFFFF'}
+                                                    onChange={(e) => setConfig({
+                                                        ...config,
+                                                        extraSettings: { ...config.extraSettings, buttonSecondaryText: e.target.value }
+                                                    })}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </CardContent>
                     </Card>
 
@@ -464,13 +619,20 @@ export default function BrandingPage() {
                             </div>
                             <div className="p-6 space-y-4" style={{ fontSize: config.extraSettings?.baseFontSize }}>
                                 <div className="space-y-2">
-                                    <h4 className="font-bold text-lg" style={{ color: config.secondaryColor }}>Bem-vindo ao AxonRH</h4>
+                                    <h4 className="font-bold text-lg" style={{ color: config.textPrimaryColor }}>Bem-vindo ao AxonRH</h4>
+                                    <p className="text-[10px]" style={{ color: config.textSecondaryColor }}>Gerencie seus talentos de forma inteligente.</p>
                                     <div className="h-2 w-full bg-gray-100 rounded" />
                                     <div className="h-2 w-2/3 bg-gray-100 rounded" />
                                 </div>
                                 <div className="flex gap-2 mt-6">
-                                    <div className="px-4 py-2 rounded-lg text-[10px] text-white font-bold shadow-md shadow-inner" style={{ backgroundColor: config.primaryColor }}>BOTÃO PRIMÁRIO</div>
-                                    <div className="px-4 py-2 rounded-lg text-[10px] text-gray-400 border border-gray-200 font-bold bg-white">SECUNDÁRIO</div>
+                                    <div className="px-4 py-2 rounded-lg text-[10px] font-bold shadow-md" style={{
+                                        backgroundColor: config.extraSettings?.buttonPrimary || config.primaryColor,
+                                        color: config.extraSettings?.buttonPrimaryText || '#FFFFFF'
+                                    }}>BOTÃO PRIMÁRIO</div>
+                                    <div className="px-4 py-2 rounded-lg text-[10px] font-bold border border-gray-100" style={{
+                                        backgroundColor: config.extraSettings?.buttonSecondary || config.secondaryColor,
+                                        color: config.extraSettings?.buttonSecondaryText || '#FFFFFF'
+                                    }}>SECUNDÁRIO</div>
                                 </div>
                                 <div className="pt-4 border-t mt-4">
                                     <div className="flex items-center justify-between mb-2">

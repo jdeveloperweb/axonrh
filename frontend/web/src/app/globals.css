@@ -192,11 +192,11 @@
   }
 
   .btn-primary {
-    @apply btn bg-[var(--color-primary)] text-[var(--color-text-on-primary)] hover:bg-[var(--color-primary-dark)] active:scale-[0.98];
+    @apply btn bg-[var(--color-button-primary, var(--color-primary))] text-[var(--color-button-primary-text, #FFFFFF)] hover:opacity-90 active:scale-[0.98];
   }
 
   .btn-secondary {
-    @apply btn bg-[var(--color-secondary)] text-[var(--color-text-on-secondary)] hover:bg-[var(--color-secondary-dark)] active:scale-[0.98];
+    @apply btn bg-[var(--color-button-secondary, var(--color-secondary))] text-[var(--color-button-secondary-text, #FFFFFF)] hover:opacity-90 active:scale-[0.98];
   }
 
   .btn-outline {
