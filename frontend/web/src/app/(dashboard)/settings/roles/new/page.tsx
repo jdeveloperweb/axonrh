@@ -1,12 +1,10 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
-import { Permission, rolesApi } from "@/lib/api/roles";
+import { Permission, Role, rolesApi } from "@/lib/api/roles";
 import { RoleForm } from "@/components/roles/role-form";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -23,10 +21,11 @@ export default function NewRolePage() {
                 const data = await rolesApi.listPermissionsGrouped();
                 setPermissionsGrouped(data);
             } catch (error) {
+                console.error("Failed to load permissions:", error);
                 toast({
                     variant: "destructive",
                     title: "Erro ao carregar permissões",
-                    description: "Não foi possível carregar a lista de permissões.",
+                    description: "Não foi possível carregar a lista de permissões. Tente reiniciar o backend.",
                 });
             } finally {
                 setLoading(false);

@@ -14,8 +14,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { formatDate } from "@/lib/utils/date";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -30,6 +29,7 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useRouter } from "next/navigation";
+import { Plus } from "lucide-react";
 
 export default function RolesPage() {
     const [roles, setRoles] = useState<Role[]>([]);
@@ -47,10 +47,11 @@ export default function RolesPage() {
             const data = await rolesApi.list();
             setRoles(data);
         } catch (error) {
+            console.error("Failed to load roles", error);
             toast({
                 variant: "destructive",
                 title: "Erro ao carregar perfis",
-                description: "Não foi possível carregar a lista de perfis.",
+                description: "Não foi possível carregar a lista de perfis. Tente reiniciar o backend.",
             });
         } finally {
             setLoading(false);
@@ -117,7 +118,7 @@ export default function RolesPage() {
                             ) : roles.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={5} className="text-center py-8">
-                                        Nenhum perfil encontrado.
+                                        Nenhum perfil encontrado. Tente reiniciar o backend se os perfis iniciais não aparecerem.
                                     </TableCell>
                                 </TableRow>
                             ) : (
@@ -142,11 +143,9 @@ export default function RolesPage() {
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    asChild
+                                                    onClick={() => router.push(`/settings/roles/${role.id}`)}
                                                 >
-                                                    <Link href={`/settings/roles/${role.id}`}>
-                                                        <Edit className="h-4 w-4" />
-                                                    </Link>
+                                                    <Edit className="h-4 w-4" />
                                                 </Button>
 
                                                 {!role.systemRole && (
