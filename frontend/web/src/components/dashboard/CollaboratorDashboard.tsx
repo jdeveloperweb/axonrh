@@ -13,7 +13,8 @@ import {
     ArrowRight,
     FileText,
     HelpCircle,
-    BrainCircuit
+    BrainCircuit,
+    FileEdit
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -41,6 +42,9 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
     const [pendingDisc, setPendingDisc] = useState<DiscAssignment[]>([]);
     const [latestDisc, setLatestDisc] = useState<DiscEvaluation | null>(null);
     const [loading, setLoading] = useState(true);
+
+    const roles = user?.roles || [];
+    const isManagement = roles.includes('ADMIN') || roles.includes('RH') || roles.includes('GESTOR_RH') || roles.includes('ANALISTA_DP');
 
     useEffect(() => {
         async function loadData() {
@@ -118,7 +122,7 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
                 </div>
                 <div className="flex flex-col md:flex-row items-center gap-3">
                     {extraHeaderContent}
-                    <div className="grid grid-cols-2 md:flex items-center gap-3 w-full md:w-auto">
+                    <div className="grid grid-cols-2 md:grid-cols-3 items-center gap-3 w-full md:w-auto">
                         <Button
                             variant="outline"
                             className="border-gray-200 hover:bg-white hover:text-[var(--color-primary)] hover:border-[var(--color-primary)] transition-all text-xs sm:text-sm"
@@ -128,8 +132,19 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
                             <span className="hidden sm:inline">Falar com AxonIA</span>
                             <span className="sm:hidden">AxonIA</span>
                         </Button>
+
                         <Button
-                            className="bg-[var(--color-primary)] hover:bg-[var(--color-primary)]/90 shadow-sm shadow-[var(--color-primary)]/20 text-white text-xs sm:text-sm"
+                            variant="outline"
+                            className="border-gray-200 hover:bg-white text-gray-700 transition-all text-xs sm:text-sm"
+                            onClick={() => router.push(`/timesheet/adjustments${isManagement ? '' : '?new=true'}`)}
+                        >
+                            <FileEdit className={`w-4 h-4 mr-0 sm:mr-2 ${isManagement ? 'text-indigo-500' : 'text-orange-500'}`} />
+                            <span className="hidden sm:inline">{isManagement ? 'Ajustar Ponto' : 'Solicitar Correção'}</span>
+                            <span className="sm:hidden">Ajustar</span>
+                        </Button>
+
+                        <Button
+                            className="bg-[var(--color-primary)] hover:bg-[var(--color-primary)]/90 shadow-sm shadow-[var(--color-primary)]/20 text-white text-xs sm:text-sm col-span-2 md:col-span-1"
                             onClick={() => router.push('/timesheet/record')}
                         >
                             <Clock className="w-4 h-4 mr-0 sm:mr-2" />

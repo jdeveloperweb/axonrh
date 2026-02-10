@@ -22,6 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.beans.factory.annotation.Qualifier;
+import com.axonrh.timesheet.client.EmployeeServiceClient;
+import com.axonrh.timesheet.dto.EmployeeDTO;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,18 +47,21 @@ public class TimeAdjustmentService {
     private final DailySummaryService dailySummaryService;
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final ObjectMapper objectMapper;
+    private final EmployeeServiceClient employeeClient;
 
     public TimeAdjustmentService(
             TimeAdjustmentRepository adjustmentRepository,
             TimeRecordRepository timeRecordRepository,
             DailySummaryService dailySummaryService,
             @Qualifier("timesheetKafkaTemplate") KafkaTemplate<String, Object> kafkaTemplate,
-            ObjectMapper objectMapper) {
+            ObjectMapper objectMapper,
+            EmployeeServiceClient employeeClient) {
         this.adjustmentRepository = adjustmentRepository;
         this.timeRecordRepository = timeRecordRepository;
         this.dailySummaryService = dailySummaryService;
         this.kafkaTemplate = kafkaTemplate;
         this.objectMapper = objectMapper;
+        this.employeeClient = employeeClient;
     }
 
     /**
@@ -391,8 +396,34 @@ public class TimeAdjustmentService {
             event.put("tenantId", adjustment.getTenantId().toString());
             event.put("adjustmentId", adjustment.getId().toString());
             event.put("employeeId", adjustment.getEmployeeId().toString());
+            event.put("employeeName", adjustment.getEmployeeName());
+            event.put("recordDate", adjustment.getRecordDate().toString());
             event.put("status", adjustment.getStatus().name());
             event.put("timestamp", LocalDateTime.now().toString());
+
+            // Fetch User IDs
+            try {
+                EmployeeDTO employee = employeeClient.getEmployee(adjustment.getEmployeeId());
+                if (employee != null) {
+                    if (employee.getUserId() != null) {
+                        event.put("requesterUserId", employee.getUserId().toString());
+                    }
+                    
+                    // Fetch manager
+                    if (employee.getManager() != null && employee.getManager().getId() != null) {
+                        try {
+                            EmployeeDTO manager = employeeClient.getEmployee(employee.getManager().getId());
+                            if (manager != null && manager.getUserId() != null) {
+                                event.put("managerUserId", manager.getUserId().toString());
+                            }
+                        } catch (Exception ex) {
+                            log.warn("Erro ao buscar gerente: {}", ex.getMessage());
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                 log.warn("Erro ao buscar dados do colaborador para evento: {}", e.getMessage());
+            }
 
             kafkaTemplate.send("timesheet.domain.events", adjustment.getEmployeeId().toString(), event);
         } catch (Exception e) {

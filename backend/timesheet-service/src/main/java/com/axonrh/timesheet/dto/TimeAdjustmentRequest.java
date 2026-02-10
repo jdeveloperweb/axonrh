@@ -45,7 +45,7 @@ public class TimeAdjustmentRequest {
     private String justification;
 
     // Identificacao do colaborador (opcional no request, extraido do token no service)
-    private UUID employeeId;
+    private String employeeId;
     private String employeeName;
 
     // URLs de anexos (comprovantes)
