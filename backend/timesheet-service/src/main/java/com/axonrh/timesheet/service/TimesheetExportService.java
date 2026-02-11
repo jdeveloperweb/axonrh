@@ -33,6 +33,7 @@ public class TimesheetExportService {
     private final TimeAdjustmentRepository adjustmentRepository;
     private final com.axonrh.timesheet.client.EmployeeServiceClient employeeClient;
     private final com.axonrh.timesheet.repository.DailySummaryRepository dailySummaryRepository;
+    private final com.axonrh.timesheet.client.ConfigServiceClient configServiceClient;
 
     public byte[] exportToPdf(UUID employeeId, LocalDate startDate, LocalDate endDate) {
         UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
@@ -141,7 +142,14 @@ public class TimesheetExportService {
                 row.createCell(8).setCellValue(day.getDeficitFormatted());
                 row.createCell(9).setCellValue(day.getNightShiftFormatted());
                 row.createCell(10).setCellValue((Boolean.TRUE.equals(day.getIsPositive()) ? "+" : "-") + day.getBalanceFormatted());
-                row.createCell(11).setCellValue(Boolean.TRUE.equals(day.getIsHoliday()) ? "Feriado" : Boolean.TRUE.equals(day.getIsAbsent()) ? "Falta" : "OK");
+                
+                // Lógica de Ocorrência melhorada
+                String occurrence = "OK";
+                if (Boolean.TRUE.equals(day.getIsHoliday())) occurrence = "Feriado";
+                else if (Boolean.TRUE.equals(day.getIsAbsent())) occurrence = "Falta";
+                else if (day.getDeficitMinutes() != null && day.getDeficitMinutes() > 0) occurrence = "Falta não OK";
+                
+                row.createCell(11).setCellValue(occurrence);
             }
             
             // Column widths
@@ -226,11 +234,47 @@ public class TimesheetExportService {
         sb.append("</style></head><body>");
 
         for (ExportData data : dataList) {
+            String logoUrl = null;
+            try {
+                UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+                com.axonrh.timesheet.client.ConfigServiceClient.LogoUrlResponse logoResp = configServiceClient.getLogoUrl(tenantId);
+                if (logoResp != null && logoResp.logoUrl() != null) {
+                    // Tentar usar URL do gateway para o renderer de PDF
+                    logoUrl = "http://api-gateway:8080" + logoResp.logoUrl();
+                }
+            } catch (Exception e) {
+                log.debug("Nao foi possivel obter logo do tenant: {}", e.getMessage());
+            }
+
+            // Buscar horario contratual (escala)
+            String workSchedule = "Não definido";
+            if (data.timesheet() != null && !data.timesheet().isEmpty()) {
+                DailySummaryResponse firstDayWithSchedule = data.timesheet().stream()
+                        .filter(d -> d.getScheduledEntry() != null && d.getScheduledExit() != null)
+                        .findFirst()
+                        .orElse(null);
+                
+                if (firstDayWithSchedule != null) {
+                    workSchedule = formatTime(firstDayWithSchedule.getScheduledEntry()) + " às " + 
+                                  formatTime(firstDayWithSchedule.getScheduledExit());
+                    if (firstDayWithSchedule.getScheduledBreakStart() != null) {
+                        workSchedule += " (Intervalo: " + formatTime(firstDayWithSchedule.getScheduledBreakStart()) + 
+                                       " às " + formatTime(firstDayWithSchedule.getScheduledBreakEnd()) + ")";
+                    }
+                }
+            }
+
             sb.append("<div class='page'>");
             
             // Header Section
             sb.append("<div class='report-header'>");
-            sb.append("<div class='header-left'><h1>Espelho de Ponto</h1><div class='company-info'>AxonRH - Sistema de Gestão de Pessoas</div></div>");
+            sb.append("<div class='header-left'>");
+            if (logoUrl != null) {
+                sb.append("<img src='").append(logoUrl).append("' style='max-height: 50px; margin-bottom: 10px;' />");
+            } else {
+                sb.append("<h1 style='color: #2563eb; margin-bottom: 5px;'>AxonRH</h1>");
+            }
+            sb.append("<h1>Espelho de Ponto</h1><div class='company-info'>Sistema de Gestão de Pessoas</div></div>");
             sb.append("<div class='header-right'><div style='font-size: 12px; font-weight: bold;'>Data de Emissão</div><div style='font-size: 14px;'>")
               .append(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))).append("</div></div>");
             sb.append("</div>");
@@ -243,6 +287,7 @@ public class TimesheetExportService {
               .append(" a ")
               .append(endDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
               .append("</div></td>");
+            sb.append("<td><div class='info-label'>Horário</div><div class='info-value'>").append(workSchedule).append("</div></td>");
             sb.append("<td><div class='info-label'>ID Registro</div><div class='info-value'>").append(data.id().toString().substring(0, 8).toUpperCase()).append("</div></td>");
             sb.append("</tr></table>");
 
@@ -276,11 +321,17 @@ public class TimesheetExportService {
                       .append("<td>").append(formatTime(day.getLastExit())).append("</td>");
                 }
 
+                String occurrence = "OK";
+                if (Boolean.TRUE.equals(day.getIsHoliday())) occurrence = "Feriado";
+                else if (Boolean.TRUE.equals(day.getIsAbsent())) occurrence = "Falta";
+                else if (day.getDeficitMinutes() != null && day.getDeficitMinutes() > 0) occurrence = "Falta não OK";
+
                 sb.append("<td class='col-total'>").append(day.getWorkedFormatted()).append("</td>")
                     .append("<td>").append(day.getOvertimeFormatted()).append("</td>")
                     .append("<td style='color: #dc2626'>").append(day.getDeficitFormatted()).append("</td>")
                     .append("<td style='font-weight: bold;'>").append(Boolean.TRUE.equals(day.getIsPositive()) ? "+" : "-").append(day.getBalanceFormatted()).append("</td>")
-                    .append("<td style='font-size: 9px;'>").append(day.getIsHoliday() ? "Feriado" : day.getIsAbsent() ? "Falta" : "OK").append("</td>")
+                    .append("<td style='font-size: 9px; font-weight: ").append("OK".equals(occurrence) ? "normal" : "bold").append(";'>")
+                    .append(occurrence).append("</td>")
                     .append("</tr>");
             }
             sb.append("</tbody></table>");

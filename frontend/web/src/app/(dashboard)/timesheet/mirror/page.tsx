@@ -225,6 +225,7 @@ export default function TimesheetMirrorPage() {
     if (day.isAbsent) return <XCircle className="h-4 w-4 text-rose-500" />;
     if (day.hasPendingRecords) return <AlertTriangle className="h-4 w-4 text-amber-500" />;
     if (day.hasMissingRecords) return <AlertTriangle className="h-4 w-4 text-orange-500" />;
+    if (day.deficitMinutes > 0) return <AlertTriangle className="h-4 w-4 text-rose-400" />;
     if (day.workedMinutes > 0) return <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
     return null;
   };
@@ -415,21 +416,34 @@ export default function TimesheetMirrorPage() {
                       const weekend = isWeekend(day.summaryDate);
                       const balance = day.overtimeMinutes - day.deficitMinutes;
 
+                      const today = new Date();
+                      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                      const isToday = day.summaryDate === todayStr;
+
                       return (
                         <TableRow
                           key={day.id}
                           className={cn(
-                            "transition-colors group",
-                            day.summaryDate === new Date().toISOString().split('T')[0] && "bg-primary/5 ring-1 ring-primary/20 ring-inset",
+                            "transition-colors group relative",
+                            isToday && "bg-primary/[0.07] border-l-4 border-l-primary shadow-sm z-10",
                             weekend ? 'bg-muted/20 hover:bg-muted/40' : 'hover:bg-muted/30',
-                            (day.isHoliday || day.isAbsent) && "bg-muted/30"
+                            (day.isHoliday || day.isAbsent) && "bg-muted/30",
+                            isToday && "hover:bg-primary/[0.1]"
                           )}
                         >
                           <TableCell className="font-medium">
-                            {new Date(day.summaryDate + 'T00:00:00').toLocaleDateString('pt-BR', {
-                              day: '2-digit',
-                              month: '2-digit',
-                            })}
+                            <div className="flex items-center gap-2">
+                              {new Date(day.summaryDate + 'T00:00:00').toLocaleDateString('pt-BR', {
+                                day: '2-digit',
+                                month: '2-digit',
+                              })}
+                              {isToday && (
+                                <Badge variant="secondary" className="text-[10px] h-5 px-1.5 bg-primary/20 text-primary hover:bg-primary/20 border-none font-bold uppercase tracking-wider flex items-center gap-1">
+                                  <Clock className="w-3 h-3" />
+                                  Hoje
+                                </Badge>
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell className="capitalize text-muted-foreground text-xs">
                             {day.dayOfWeek.substring(0, 3)}
@@ -504,11 +518,13 @@ export default function TimesheetMirrorPage() {
                                 {day.isAbsent && (day.absenceType || 'Falta')}
                                 {day.hasPendingRecords && 'Registros pendentes de aprovação'}
                                 {day.hasMissingRecords && 'Registros incompletos'}
+                                {!day.isHoliday && !day.isAbsent && day.deficitMinutes > 0 && 'Falta não OK (Déficit)'}
                                 {!day.isHoliday &&
                                   !day.isAbsent &&
                                   !day.hasPendingRecords &&
                                   !day.hasMissingRecords &&
                                   day.workedMinutes > 0 &&
+                                  day.deficitMinutes === 0 &&
                                   'Dia OK'}
                               </TooltipContent>
                             </Tooltip>
