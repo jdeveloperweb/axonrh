@@ -24,7 +24,8 @@ import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend,
   ComposedChart, Line, AreaChart, Area,
-  Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis
+  Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
+  ReferenceArea
 } from 'recharts';
 
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -758,6 +759,9 @@ export default function DashboardPage() {
                         return null;
                       }}
                     />
+                    <ReferenceArea y1={0} y2={2.9} fill="#fee2e2" fillOpacity={0.4} />
+                    <ReferenceArea y1={2.9} y2={3.9} fill="#fef9c3" fillOpacity={0.4} />
+                    <ReferenceArea y1={3.9} y2={5} fill="#f0fdf4" fillOpacity={0.4} />
                     <Area
                       type="monotone"
                       dataKey="score"
