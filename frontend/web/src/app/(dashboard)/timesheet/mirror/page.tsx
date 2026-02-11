@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import {
   Calendar as CalendarIcon,
   Download,
@@ -20,7 +20,8 @@ import {
   Filter,
   Clock,
   Briefcase,
-  Hourglass
+  Hourglass,
+  FileEdit
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -58,6 +59,7 @@ import { useAuthStore } from '@/stores/auth-store';
 // ... existing code ...
 
 export default function TimesheetMirrorPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const employeeIdParam = searchParams.get('employee');
   const user = useAuthStore(state => state.user);
@@ -285,11 +287,13 @@ export default function TimesheetMirrorPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="me">Meu espelho de ponto</SelectItem>
-                    {employees.map((emp) => (
-                      <SelectItem key={emp.id} value={emp.id}>
-                        {emp.fullName}
-                      </SelectItem>
-                    ))}
+                    {employees
+                      .filter((emp) => emp.id !== user?.id)
+                      .map((emp) => (
+                        <SelectItem key={emp.id} value={emp.id}>
+                          {emp.fullName}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -510,19 +514,26 @@ export default function TimesheetMirrorPage() {
                             </Tooltip>
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="opacity-0 group-hover:opacity-100 transition-opacity text-orange-600 hover:text-orange-700 hover:bg-orange-50"
-                              onClick={() => {
-                                // Redireciona para a página de ajustes com os parâmetros pré-preenchidos
-                                const empId = selectedEmployee || 'me';
-                                window.location.href = `/timesheet/adjustments?employee=${empId}&date=${day.summaryDate}`;
-                              }}
-                            >
-                              <Clock className="h-4 w-4 mr-1" />
-                              Ajustar
-                            </Button>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                                  onClick={() => {
+                                    // Redireciona para a página de ajustes com os parâmetros pré-preenchidos
+                                    const empId = selectedEmployee || 'me';
+                                    router.push(`/timesheet/adjustments?employee=${empId}&date=${day.summaryDate}`);
+                                  }}
+                                >
+                                  <FileEdit className="h-4 w-4 mr-1" />
+                                  Ajustar
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                Solicitar ajuste para este dia
+                              </TooltipContent>
+                            </Tooltip>
                           </TableCell>
                         </TableRow>
                       );

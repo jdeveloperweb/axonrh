@@ -236,14 +236,9 @@ public class DailySummaryService {
                 scheduledBreakStart = daySpec.getBreakStartTime();
                 scheduledBreakEnd = daySpec.getBreakEndTime();
             }
-        } else if (date.getDayOfWeek() != DayOfWeek.SATURDAY && date.getDayOfWeek() != DayOfWeek.SUNDAY) {
-            // Se não tem escala e é dia de semana, assume 8h como fallback
-            expectedMinutes = 480; 
-            scheduledEntry = LocalTime.of(8, 0);
-            scheduledExit = LocalTime.of(17, 0);
-            scheduledBreakStart = LocalTime.of(12, 0);
-            scheduledBreakEnd = LocalTime.of(13, 0);
         }
+        // Fallback removido: Se não tem escala, não assume horários padrão.
+        // O sistema deve respeitar apenas a escala configurada.
 
         int balance = -expectedMinutes;
 
@@ -268,6 +263,10 @@ public class DailySummaryService {
                 .balanceMinutes(balance)
                 .balanceFormatted(formatMinutes(Math.abs(balance)))
                 .isPositive(balance >= 0)
+                .scheduleType(schedule != null && schedule.getWorkSchedule() != null && schedule.getWorkSchedule().getScheduleType() != null 
+                        ? schedule.getWorkSchedule().getScheduleType().name() : null)
+                .workRegime(schedule != null && schedule.getWorkSchedule() != null && schedule.getWorkSchedule().getWorkRegime() != null 
+                        ? schedule.getWorkSchedule().getWorkRegime().name() : null)
                 .build();
     }
 
@@ -441,7 +440,7 @@ public class DailySummaryService {
         if (employeeSchedule != null && employeeSchedule.getWorkSchedule() != null) {
             // Se a escala define tolerância diferente, respeita
             tolerance = employeeSchedule.getWorkSchedule().getToleranceMinutes() != null ? 
-                    employeeSchedule.getWorkSchedule().getToleranceMinutes() * 2 : 10;
+                    employeeSchedule.getWorkSchedule().getToleranceMinutes() : 10;
         }
 
         if (Math.abs(diff) <= tolerance) {
@@ -468,8 +467,8 @@ public class DailySummaryService {
         }
 
         if (schedule == null || schedule.getWorkSchedule() == null) {
-            // Fallback: 8h em dias de semana
-            return (date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY) ? 0 : 480;
+            // Fallback removido: Se não tem escala, espera 0 minutos
+            return 0;
         }
         
         return schedule.getWorkSchedule().getScheduleDays().stream()
@@ -559,6 +558,10 @@ public class DailySummaryService {
                 .dayOfWeek(getDayOfWeekLabel(summary.getSummaryDate().getDayOfWeek()))
                 .workScheduleId(summary.getWorkScheduleId())
                 .workScheduleName(employeeSchedule != null ? employeeSchedule.getWorkSchedule().getName() : null)
+                .scheduleType(employeeSchedule != null && employeeSchedule.getWorkSchedule().getScheduleType() != null ? 
+                        employeeSchedule.getWorkSchedule().getScheduleType().name() : null)
+                .workRegime(employeeSchedule != null && employeeSchedule.getWorkSchedule().getWorkRegime() != null ? 
+                        employeeSchedule.getWorkSchedule().getWorkRegime().name() : null)
                 .firstEntry(summary.getFirstEntry())
                 .lastExit(summary.getLastExit())
                 .breakStart(summary.getBreakStart())

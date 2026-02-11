@@ -31,6 +31,8 @@ public class DailySummaryResponse implements Serializable {
     // Escala
     private UUID workScheduleId;
     private String workScheduleName;
+    private String scheduleType;
+    private String workRegime;
 
     // Horarios registrados
     private LocalTime firstEntry;
