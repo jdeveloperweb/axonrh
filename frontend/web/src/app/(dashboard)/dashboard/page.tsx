@@ -14,7 +14,11 @@ import {
   BookOpen,
   Clock as ClockIcon,
   ShieldCheck,
-  LineChart
+  LineChart,
+  Smile,
+  Meh,
+  Frown,
+  Activity
 } from 'lucide-react';
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
@@ -24,6 +28,7 @@ import {
 } from 'recharts';
 
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { useAuthStore } from '@/stores/auth-store';
 import { dashboardApi, DashboardStats, LearningStats } from '@/lib/api/dashboard';
 import { wellbeingApi, WellbeingStats } from '@/lib/api/wellbeing';
