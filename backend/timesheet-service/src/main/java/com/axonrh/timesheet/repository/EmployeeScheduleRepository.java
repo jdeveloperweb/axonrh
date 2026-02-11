@@ -14,14 +14,14 @@ import java.util.UUID;
 @Repository
 public interface EmployeeScheduleRepository extends JpaRepository<EmployeeSchedule, UUID> {
 
-    @Query("SELECT es FROM EmployeeSchedule es " +
-           "WHERE es.tenantId = :tenantId AND es.employeeId = :employeeId " +
+    @Query("SELECT es FROM EmployeeSchedule es JOIN FETCH es.workSchedule " +
+           "WHERE es.tenantId = :tenantId AND es.employeeId IN :employeeIds " +
            "AND es.validFrom <= :date " +
            "AND (es.validUntil IS NULL OR es.validUntil >= :date) " +
            "ORDER BY es.validFrom DESC LIMIT 1")
     Optional<EmployeeSchedule> findActiveSchedule(
             @Param("tenantId") UUID tenantId,
-            @Param("employeeId") UUID employeeId,
+            @Param("employeeIds") List<UUID> employeeIds,
             @Param("date") LocalDate date);
 
     @Query("SELECT DISTINCT es.employeeId FROM EmployeeSchedule es WHERE es.tenantId = :tenantId")

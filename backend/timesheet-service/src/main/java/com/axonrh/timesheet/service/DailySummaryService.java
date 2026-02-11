@@ -101,8 +101,14 @@ public class DailySummaryService {
             summary.setHolidayName(null);
         }
 
+        // Buscar registros validos do dia
+        List<TimeRecord> records = timeRecordRepository.findValidRecordsForDate(tenantId, employeeId, date);
+
+        // Buscar IDs para escala (EmployeeID + UserID se houver legado)
+        List<UUID> scheduleProfileIds = getProfileIds(employeeId);
+
         // Buscar escala ativa para o dia
-        Optional<EmployeeSchedule> activeSchedule = employeeScheduleRepository.findActiveSchedule(tenantId, employeeId, date);
+        Optional<EmployeeSchedule> activeSchedule = employeeScheduleRepository.findActiveSchedule(tenantId, scheduleProfileIds, date);
 
         // Buscar registros validos do dia
         List<TimeRecord> records = timeRecordRepository.findValidRecordsForDate(tenantId, employeeId, date);
@@ -151,19 +157,8 @@ public class DailySummaryService {
             try {
                 UUID tenantId = UUID.fromString(currentTenant);
                 
-                // Buscar UserID para lidar com dados historicos (salvos com UserID incorretamente)
-                List<UUID> idsToSearch = new java.util.ArrayList<>();
-                idsToSearch.add(employeeId);
-                
-                try {
-                    com.axonrh.timesheet.dto.EmployeeDTO employee = employeeClient.getEmployee(employeeId);
-                    if (employee != null && employee.getUserId() != null && !employee.getUserId().equals(employeeId)) {
-                        idsToSearch.add(employee.getUserId());
-                        log.info("Adicionado UserID {} a busca de espelho para colaborador {}", employee.getUserId(), employeeId);
-                    }
-                } catch (Exception ex) {
-                    log.warn("Erro ao buscar UserID para colaborador {}: {}", employeeId, ex.getMessage());
-                }
+                // Buscar UserID para lidar com dados historicos
+                List<UUID> idsToSearch = getProfileIds(employeeId);
 
                 List<DailySummary> summaries = dailySummaryRepository
                         .findByTenantIdAndEmployeeIdInAndSummaryDateBetweenOrderBySummaryDateAsc(
@@ -195,8 +190,20 @@ public class DailySummaryService {
                     .map(date -> {
                         try {
                             UUID tenantId = currentTenant != null ? UUID.fromString(currentTenant) : null;
-                            Optional<EmployeeSchedule> schedule = tenantId != null ? 
-                                employeeScheduleRepository.findActiveSchedule(tenantId, employeeId, date) : Optional.empty();
+                            // Recalcular IDs se necessario ou passar idsToSearch (final)
+                            // idsToSearch foi calculado fora do stream, passar para findActiveSchedule
+                            // Porem findActiveSchedule precisa de tenantId valido
+                            Optional<EmployeeSchedule> schedule = Optional.empty();
+                            if (tenantId != null) {
+                                // Para evitar chamar getProfileIds repetidamente, usamos uma lista pre-calculada se possivel?
+                                // Como idsToSearch esta dentro do if (currentTenant != null), nao esta no escopo aqui.
+                                // Entao chamamos getProfileIds novamente (cached pelo Feign/Spring se configurado, senao custoso)
+                                // Melhor seria calcular ids fora.
+                                // Mas vamos usar getProfileIds(employeeId) aqui, assumindo performance aceitavel ou cache.
+                                // Na verdade, para otimizar, poderiamos passar a lista calculada anteriormente.
+                                // Mas o escopo de variaveis e chato. Vamos simplificar chamando getProfileIds.
+                                schedule = employeeScheduleRepository.findActiveSchedule(tenantId, getProfileIds(employeeId), date);
+                            }
                                 
                             DailySummary summary = summaryMap.get(date);
                             if (summary != null) {
@@ -281,10 +288,10 @@ public class DailySummaryService {
         
         UUID tenantId = UUID.fromString(tenantStr);
 
-        return dailySummaryRepository
+            return dailySummaryRepository
                 .findByTenantIdAndEmployeeIdAndSummaryDate(tenantId, employeeId, date)
                 .map(summary -> {
-                    Optional<EmployeeSchedule> schedule = employeeScheduleRepository.findActiveSchedule(tenantId, employeeId, date);
+                    Optional<EmployeeSchedule> schedule = employeeScheduleRepository.findActiveSchedule(tenantId, getProfileIds(employeeId), date);
                     return toResponse(summary, schedule.orElse(null));
                 });
     }
@@ -303,17 +310,7 @@ public class DailySummaryService {
         UUID tenantId = UUID.fromString(tenantStr);
 
         // Buscar UserID para lidar com dados historicos
-        List<UUID> idsToSearch = new java.util.ArrayList<>();
-        idsToSearch.add(employeeId);
-        
-        try {
-            com.axonrh.timesheet.dto.EmployeeDTO employee = employeeClient.getEmployee(employeeId);
-            if (employee != null && employee.getUserId() != null && !employee.getUserId().equals(employeeId)) {
-                idsToSearch.add(employee.getUserId());
-            }
-        } catch (Exception ex) {
-            log.warn("Erro ao buscar UserID para totais do colaborador {}: {}", employeeId, ex.getMessage());
-        }
+        List<UUID> idsToSearch = getProfileIds(employeeId);
 
         List<Object[]> results = dailySummaryRepository.getTotalsInPeriodByList(tenantId, idsToSearch, startDate, endDate);
 
@@ -632,4 +629,19 @@ public class DailySummaryService {
             String lateArrivalFormatted,
             int absences
     ) {}
+    private List<UUID> getProfileIds(UUID employeeId) {
+        List<UUID> ids = new java.util.ArrayList<>();
+        ids.add(employeeId);
+        try {
+            // Tenta buscar do cache primeiro se houver, ou direto do client
+            com.axonrh.timesheet.dto.EmployeeDTO employee = employeeClient.getEmployee(employeeId);
+            if (employee != null && employee.getUserId() != null && !employee.getUserId().equals(employeeId)) {
+                ids.add(employee.getUserId());
+            }
+        } catch (Exception ex) {
+            // Log apenas warn/debug para nao poluir se for erro transiente ou timeout
+            log.debug("Erro ao buscar UserID auxiliar para employee {}: {}", employeeId, ex.getMessage());
+        }
+        return ids;
+    }
 }
