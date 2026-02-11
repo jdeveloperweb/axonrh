@@ -108,9 +108,15 @@ public class DailySummaryService {
         List<TimeRecord> records = timeRecordRepository.findValidRecordsForDate(tenantId, employeeId, date);
 
         // Buscar escala ativa para o dia (EmployeeID + UserID se houver legado)
-        List<UUID> scheduleProfileIds = getProfileIds(employeeId);
+        com.axonrh.timesheet.dto.EmployeeDTO dto = getEmployeeDto(employeeId);
+        List<UUID> scheduleProfileIds = getProfileIds(employeeId, dto);
         List<EmployeeSchedule> schedules = employeeScheduleRepository.findActiveSchedules(tenantId, scheduleProfileIds, date);
         EmployeeSchedule activeSchedule = schedules.isEmpty() ? null : schedules.get(0);
+
+        // Fallback para escala fixa do cadastro se não houver registros históricos de vigência
+        if (activeSchedule == null) {
+            activeSchedule = resolveScheduleFallback(tenantId, employeeId, dto);
+        }
 
         if (activeSchedule != null && activeSchedule.getWorkSchedule() != null) {
             summary.setWorkScheduleId(activeSchedule.getWorkSchedule().getId());
@@ -156,8 +162,9 @@ public class DailySummaryService {
         String currentTenant = TenantContext.getCurrentTenant();
         java.util.Map<LocalDate, DailySummary> summaryMap = new java.util.HashMap<>();
         
-        // Buscar UserID para lidar com dados historicos
-        final List<UUID> idsToSearch = getProfileIds(employeeId);
+        // Buscar DTO para histórico e escalas fallback
+        com.axonrh.timesheet.dto.EmployeeDTO empDto = getEmployeeDto(employeeId);
+        final List<UUID> idsToSearch = getProfileIds(employeeId, empDto);
 
         UUID tenantId = currentTenant != null ? UUID.fromString(currentTenant) : null;
         if (tenantId != null) {
@@ -182,7 +189,7 @@ public class DailySummaryService {
 
         log.info("Buscando escalas para colaborador {} no Tenant {}. IDs: {}", employeeId, tenantId, idsToSearch);
 
-        // Buscar todas as escalas dos perfis envolvidos para otimizar e debugar
+        // Buscar escalas de vigência no banco
         List<EmployeeSchedule> allSchedules = tenantId != null ? 
                 employeeScheduleRepository.findAllByEmployeeIds(tenantId, idsToSearch) : java.util.Collections.emptyList();
         
@@ -201,18 +208,10 @@ public class DailySummaryService {
                 s.getId(), s.getValidFrom(), s.getValidUntil(), s.getWorkSchedule() != null ? s.getWorkSchedule().getName() : "N/A", s.getTenantId());
         }
 
-        // Tenta obter o DTO do funcionario para fallback de escala do cadastro principal
-        com.axonrh.timesheet.dto.EmployeeDTO mainEmployeeDto = null;
-        try {
-            mainEmployeeDto = employeeClient.getEmployeeByUserId(employeeId, null);
-            if (mainEmployeeDto == null) mainEmployeeDto = employeeClient.getEmployee(employeeId);
-        } catch (Exception e) {
-            log.debug("Nao foi possivel obter DTO principal para fallback de escala: {}", e.getMessage());
-        }
-        
-        final UUID fallbackWorkScheduleId = (mainEmployeeDto != null) ? mainEmployeeDto.getWorkScheduleId() : null;
-        if (fallbackWorkScheduleId != null && allSchedules.isEmpty()) {
-            log.info("Utilizando escala de fallback do cadastro do colaborador: {}", fallbackWorkScheduleId);
+        // Preparar fallback se necessário (carregado fora do map para performance)
+        final EmployeeSchedule fallbackSchedule = (allSchedules.isEmpty()) ? resolveScheduleFallback(tenantId, employeeId, empDto) : null;
+        if (fallbackSchedule != null) {
+            log.info("Diagnóstico: Utilizando fallback de escala fixed para o espelho: {}", fallbackSchedule.getWorkSchedule().getName());
         }
 
         try {
@@ -227,21 +226,9 @@ public class DailySummaryService {
                                     .findFirst()
                                     .orElse(null);
                             
-                            // 2. Fallback: Se não tem escala de vigência, mas o colaborador tem uma escala fixa no cadastro principal
-                            if (schedule == null && fallbackWorkScheduleId != null) {
-                                // Tenta buscar a regra da escala principal se não houver registros históricos
-                                try {
-                                    WorkSchedule ws = workScheduleRepository.findByTenantIdAndIdWithDays(tenantId, fallbackWorkScheduleId).orElse(null);
-                                    if (ws != null) {
-                                        schedule = EmployeeSchedule.builder()
-                                                .workSchedule(ws)
-                                                .employeeId(employeeId)
-                                                .tenantId(tenantId)
-                                                .build();
-                                    }
-                                } catch (Exception e) {
-                                    log.debug("Erro ao buscar escala de fallback {}: {}", fallbackWorkScheduleId, e.getMessage());
-                                }
+                            // 2. Fallback: Se não tem escala de vigência, usa a fixa do cadastro principal
+                            if (schedule == null) {
+                                schedule = fallbackSchedule;
                             }
 
                             if (summary != null) {
@@ -332,8 +319,13 @@ public class DailySummaryService {
             return dailySummaryRepository
                 .findByTenantIdAndEmployeeIdAndSummaryDate(tenantId, employeeId, date)
                 .map(summary -> {
-                    List<EmployeeSchedule> schedules = employeeScheduleRepository.findActiveSchedules(tenantId, getProfileIds(employeeId), date);
-                    return toResponse(summary, schedules.isEmpty() ? null : schedules.get(0));
+                    com.axonrh.timesheet.dto.EmployeeDTO dto = getEmployeeDto(employeeId);
+                    List<EmployeeSchedule> schedules = employeeScheduleRepository.findActiveSchedules(tenantId, getProfileIds(employeeId, dto), date);
+                    EmployeeSchedule activeSchedule = schedules.isEmpty() ? null : schedules.get(0);
+                    if (activeSchedule == null) {
+                        activeSchedule = resolveScheduleFallback(tenantId, employeeId, dto);
+                    }
+                    return toResponse(summary, activeSchedule);
                 });
     }
 
@@ -350,8 +342,9 @@ public class DailySummaryService {
         
         UUID tenantId = UUID.fromString(tenantStr);
 
-        // Buscar UserID para lidar com dados historicos
-        List<UUID> idsToSearch = getProfileIds(employeeId);
+        // Buscar DTO para histórico
+        com.axonrh.timesheet.dto.EmployeeDTO dto = getEmployeeDto(employeeId);
+        List<UUID> idsToSearch = getProfileIds(employeeId, dto);
 
         List<Object[]> results = dailySummaryRepository.getTotalsInPeriodByList(tenantId, idsToSearch, startDate, endDate);
 
@@ -670,36 +663,54 @@ public class DailySummaryService {
             String lateArrivalFormatted,
             int absences
     ) {}
-    private List<UUID> getProfileIds(UUID inputId) {
+    private com.axonrh.timesheet.dto.EmployeeDTO getEmployeeDto(UUID id) {
+        if (id == null) return null;
+        try {
+            // Tenta buscar por ID de colaborador
+            return employeeClient.getEmployee(id);
+        } catch (Exception e) {
+            try {
+                // Tenta buscar por ID de usuário (legado)
+                return employeeClient.getEmployeeByUserId(id, null);
+            } catch (Exception e2) {
+                log.debug("ID {} não resolvido como Employee ou User: {}", id, e2.getMessage());
+                return null;
+            }
+        }
+    }
+
+    private EmployeeSchedule resolveScheduleFallback(UUID tenantId, UUID employeeId, com.axonrh.timesheet.dto.EmployeeDTO dto) {
+        if (tenantId == null) return null;
+        
+        UUID scheduleId = (dto != null) ? dto.getWorkScheduleId() : null;
+        if (scheduleId == null) return null;
+
+        try {
+            return workScheduleRepository.findByTenantIdAndIdWithDays(tenantId, scheduleId)
+                    .map(ws -> EmployeeSchedule.builder()
+                            .workSchedule(ws)
+                            .employeeId(employeeId)
+                            .tenantId(tenantId)
+                            .build())
+                    .orElse(null);
+        } catch (Exception e) {
+            log.error("Erro ao buscar escala de fallback {} para {}: {}", scheduleId, employeeId, e.getMessage());
+            return null;
+        }
+    }
+
+    private List<UUID> getProfileIds(UUID inputId, com.axonrh.timesheet.dto.EmployeeDTO emp) {
         List<UUID> ids = new java.util.ArrayList<>();
         if (inputId == null) return ids;
         ids.add(inputId);
         
-        try {
-            // Tenta obter o DTO do funcionario para cruzar os IDs (EmployeeID <-> UserID)
-            // Primeiro assume que inputId eh EmployeeID
-            com.axonrh.timesheet.dto.EmployeeDTO emp = null;
-            try {
-                emp = employeeClient.getEmployee(inputId);
-            } catch (Exception e) {
-                // Se falhou, talvez seja UserID. Tenta buscar por UserID.
-                try {
-                    emp = employeeClient.getEmployeeByUserId(inputId, null);
-                } catch (Exception e2) {
-                    log.debug("Nao foi possivel resolver ID {} como EmployeeID ou UserID", inputId);
-                }
+        if (emp != null) {
+            if (emp.getId() != null && !ids.contains(emp.getId())) {
+                ids.add(emp.getId());
             }
-
-            if (emp != null) {
-                if (emp.getId() != null && !ids.contains(emp.getId())) {
-                    ids.add(emp.getId());
-                }
-                if (emp.getUserId() != null && !ids.contains(emp.getUserId())) {
-                    ids.add(emp.getUserId());
-                }
+            if (emp.getUserId() != null && !ids.contains(emp.getUserId())) {
+                ids.add(emp.getUserId());
             }
-        } catch (Exception ex) {
-            log.warn("Erro ao buscar IDs auxiliares para {}: {}", inputId, ex.getMessage());
         }
         return ids;
     }
