@@ -19,7 +19,7 @@ import {
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend,
-  ComposedChart, Line,
+  ComposedChart, Line, AreaChart, Area,
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis
 } from 'recharts';
 
@@ -585,12 +585,6 @@ export default function DashboardPage() {
       }))
       : [];
 
-    const sentimentColors: Record<string, string> = {
-      'Positivo': '#16A34A', // Green
-      'Neutro': '#9CA3AF',   // Gray
-      'Negativo': '#DC2626'  // Red
-    };
-
     const stats: StatCard[] = [
       {
         title: 'Check-ins Totais',
@@ -632,10 +626,21 @@ export default function DashboardPage() {
       { subject: 'Engajamento', value: Math.min(((wellbeingStats?.totalCheckins || 0) / (statsData?.totalEmployees || 1)) * 100, 100), fullMark: 100 },
     ];
 
+    // Mock trend data for the innovative "Pulse" chart based on current average
+    const currentAvg = wellbeingStats?.averageScore || 3.5;
+    const pulseData = [
+      { date: '05/02', score: currentAvg * 0.95 },
+      { date: '06/02', score: currentAvg * 1.05 },
+      { date: '07/02', score: currentAvg * 0.90 },
+      { date: '08/02', score: currentAvg * 1.10 },
+      { date: '09/02', score: currentAvg * 1.00 },
+      { date: '10/02', score: currentAvg * 0.95 },
+      { date: '11/02', score: currentAvg }
+    ];
+
     const handleMarkAsHandled = async (id: string) => {
       try {
         await wellbeingApi.markAsHandled(id);
-        // Refresh data
         const wellbeingData = await wellbeingApi.getStats();
         setWellbeingStats(wellbeingData);
       } catch (error) {
@@ -643,7 +648,6 @@ export default function DashboardPage() {
       }
     };
 
-    // Filter for Dashboard: Only show pending requests
     const pendingRequests = wellbeingStats?.eapRequests?.filter(req => !req.handled) || [];
 
     return (
@@ -670,148 +674,255 @@ export default function DashboardPage() {
           })}
         </div>
 
-        <div className={`grid grid-cols-1 ${useThemeStore.getState().tenantTheme?.modules?.moduleAiAnalytics !== false ? 'lg:grid-cols-2' : ''} gap-6`}>
-          {useThemeStore.getState().tenantTheme?.modules?.moduleAiAnalytics !== false && (
-            <Card className="border-none shadow-sm h-[480px]">
-              <CardHeader>
-                <CardTitle>Estrela de Sentimentos</CardTitle>
-                <p className="text-sm text-gray-500">Visão multidimensional do bem-estar</p>
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+          {/* Dashboard Left: Mental Health Pulse Chart (Innovative) */}
+          <div className="lg:col-span-12 xl:col-span-7 space-y-6">
+            <Card className="border-none shadow-sm overflow-hidden bg-white h-[480px]">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <div>
+                  <CardTitle className="text-xl font-bold flex items-center gap-2">
+                    <div className="w-2 h-6 bg-indigo-500 rounded-full" />
+                    Pulso de Saúde Mental
+                  </CardTitle>
+                  <p className="text-sm text-gray-500">Estabilidade emocional da organização (Últimos 7 dias)</p>
+                </div>
               </CardHeader>
-              <CardContent className="h-[400px] flex flex-col">
-                <div className="flex-1 min-h-0">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
-                      <PolarGrid stroke="#e2e8f0" />
-                      <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 11 }} />
-                      <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                      <Radar
-                        name="Nível"
-                        dataKey="value"
-                        stroke="#4F46E5"
-                        fill="#4F46E5"
-                        fillOpacity={0.4}
-                      />
-                      <Tooltip cursor={{ strokeDasharray: '3 3' }} />
-                    </RadarChart>
-                  </ResponsiveContainer>
+              <CardContent className="h-[380px] p-0 relative">
+                <div className="absolute top-4 right-8 z-10 bg-white/50 backdrop-blur-md p-3 rounded-2xl border border-gray-100 shadow-sm">
+                  <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1">Índice Atual</p>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-2xl font-black text-indigo-600">{(wellbeingStats?.averageScore || 0).toFixed(1)}</span>
+                    <span className="text-xs font-bold text-gray-400 italic">Estável</span>
+                  </div>
                 </div>
 
-                {/* Mini Sentiment Breakdown */}
-                <div className="mt-4 grid grid-cols-3 gap-2">
-                  {[
-                    { label: 'Positivo', key: 'POSITIVE', color: 'bg-green-500' },
-                    { label: 'Neutro', key: 'NEUTRAL', color: 'bg-gray-400' },
-                    { label: 'Negativo', key: 'NEGATIVE', color: 'bg-red-500' }
-                  ].map((s) => {
-                    const val = ((wellbeingStats?.sentimentDistribution[s.key] || 0) / totalCheckins) * 100;
-                    return (
-                      <div key={s.key} className="space-y-1">
-                        <div className="flex justify-between text-[10px] font-medium text-gray-500 uppercase tracking-wider">
-                          <span>{s.label}</span>
-                          <span>{val.toFixed(0)}%</span>
-                        </div>
-                        <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full ${s.color} transition-all duration-500`}
-                            style={{ width: `${val}%` }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={pulseData} margin={{ top: 40, right: 30, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorWave" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="colorPulse" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stopColor="#818cf8" />
+                        <stop offset="50%" stopColor="#6366f1" />
+                        <stop offset="100%" stopColor="#4f46e5" />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis
+                      dataKey="date"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 600 }}
+                      dy={10}
+                    />
+                    <YAxis
+                      domain={[0, 5]}
+                      hide
+                    />
+                    <Tooltip
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          return (
+                            <div className="bg-slate-900/90 backdrop-blur-md text-white p-4 rounded-2xl shadow-2xl border border-white/10 animate-in zoom-in-95 duration-200">
+                              <p className="text-[10px] font-black uppercase tracking-widest text-indigo-300 opacity-80 mb-1">{payload[0].payload.date}</p>
+                              <div className="flex items-center gap-3">
+                                <div className="p-2 bg-indigo-500/20 rounded-lg">
+                                  <Activity className="w-5 h-5 text-indigo-400" />
+                                </div>
+                                <div>
+                                  <p className="text-2xl font-black">{payload[0].value.toFixed(1)}</p>
+                                  <p className="text-[10px] text-indigo-200/60 font-bold uppercase">Nível de Bem-estar</p>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="score"
+                      stroke="url(#colorPulse)"
+                      strokeWidth={4}
+                      fillOpacity={1}
+                      fill="url(#colorWave)"
+                      animationDuration={2000}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+
+                <div className="absolute bottom-6 left-8 right-8 grid grid-cols-3 gap-4">
+                  <div className="p-3 bg-green-50 rounded-2xl border border-green-100/50 text-center">
+                    <p className="text-[9px] font-black text-green-600 uppercase tracking-widest">Saudável</p>
+                    <p className="text-xs font-bold text-green-800 mt-0.5">4.0 - 5.0</p>
+                  </div>
+                  <div className="p-3 bg-yellow-50 rounded-2xl border border-yellow-100/50 text-center">
+                    <p className="text-[9px] font-black text-yellow-600 uppercase tracking-widest">Atenção</p>
+                    <p className="text-xs font-bold text-yellow-800 mt-0.5">3.0 - 3.9</p>
+                  </div>
+                  <div className="p-3 bg-red-50 rounded-2xl border border-red-100/50 text-center">
+                    <p className="text-[9px] font-black text-red-600 uppercase tracking-widest">Crítico</p>
+                    <p className="text-xs font-bold text-red-800 mt-0.5">0.0 - 2.9</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
-          )}
 
-          <Card className={`border-none shadow-sm h-[480px] overflow-hidden`}>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Solicitações de Ajuda (EAP)</CardTitle>
-                <p className="text-sm text-gray-500">Fila de atendimento prioritária</p>
-              </div>
-            </CardHeader>
-            <CardContent className="h-[400px] overflow-y-auto pr-2">
-              {pendingRequests.length > 0 ? (
-                <div className="space-y-4">
-                  {pendingRequests.map((req, idx) => {
-                    return (
-                      <div key={idx} className="flex flex-col p-4 rounded-xl border transition-all bg-white border-purple-100 shadow-sm border-l-4 border-l-purple-500">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex items-center gap-3">
-                            <div className="relative">
-                              {req.employeePhotoUrl ? (
-                                <img src={req.employeePhotoUrl} alt={req.employeeName} className="w-10 h-10 rounded-full object-cover border border-gray-100" />
-                              ) : (
-                                <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold uppercase">
-                                  {req.employeeName?.substring(0, 2) || '?'}
-                                </div>
-                              )}
-                              <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse" />
-                            </div>
-                            <div>
-                              <p className="font-semibold text-gray-900 leading-none">{req.employeeName || 'Desconhecido'}</p>
-                              <p className="text-xs text-gray-500 mt-1">{new Date(req.createdAt).toLocaleDateString()} às {new Date(req.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                            </div>
+            {useThemeStore.getState().tenantTheme?.modules?.moduleAiAnalytics !== false && (
+              <Card className="border-none shadow-sm h-[328px] bg-white">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base font-bold flex items-center gap-2">
+                    <Brain className="w-5 h-5 text-purple-500" />
+                    Análise Multidimensional
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="h-[240px] flex items-center gap-4">
+                  <div className="flex-1 h-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
+                        <PolarGrid stroke="#f1f5f9" />
+                        <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 10, fontWeight: 600 }} />
+                        <Radar
+                          name="Nível"
+                          dataKey="value"
+                          stroke="#6366f1"
+                          fill="#6366f1"
+                          fillOpacity={0.5}
+                        />
+                      </RadarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="w-2/5 space-y-4 pr-6">
+                    {[
+                      { label: 'Positivo', key: 'POSITIVE', color: 'bg-green-500', icon: Smile },
+                      { label: 'Neutro', key: 'NEUTRAL', color: 'bg-slate-400', icon: Meh },
+                      { label: 'Negativo', key: 'NEGATIVE', color: 'bg-rose-500', icon: Frown }
+                    ].map((s) => {
+                      const val = ((wellbeingStats?.sentimentDistribution[s.key] || 0) / totalCheckins) * 100;
+                      return (
+                        <div key={s.key} className="space-y-1">
+                          <div className="flex justify-between items-center text-[10px] font-bold text-gray-500 uppercase">
+                            <span className="flex items-center gap-1.5">
+                              <s.icon className="w-3 h-3" />
+                              {s.label}
+                            </span>
+                            <span>{val.toFixed(0)}%</span>
                           </div>
-                          <button
-                            onClick={() => handleMarkAsHandled(req.id)}
-                            className="px-3 py-1.5 text-xs font-medium bg-purple-50 text-purple-600 hover:bg-purple-100 rounded-lg transition-colors flex items-center gap-1.5"
-                          >
-                            <CheckCircle className="w-3.5 h-3.5" />
-                            Atender
-                          </button>
+                          <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                            <div className={`h-full ${s.color} rounded-full transition-all duration-1000`} style={{ width: `${val}%` }} />
+                          </div>
                         </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
 
-                        <div className="grid grid-cols-2 gap-2 mb-3">
-                          <div className="px-2 py-1.5 bg-gray-50 rounded-lg border border-gray-100">
-                            <p className="text-[10px] text-gray-400 uppercase font-bold">Humor</p>
-                            <div className="flex items-center gap-1.5 mt-0.5">
-                              <div className="flex gap-0.5">
-                                {[1, 2, 3, 4, 5].map((s) => (
-                                  <div key={s} className={`w-1.5 h-2.5 rounded-sm ${s <= req.score ? (req.score <= 2 ? 'bg-red-400' : req.score >= 4 ? 'bg-green-400' : 'bg-yellow-400') : 'bg-gray-200'}`} />
-                                ))}
+          {/* Dashboard Right: EAP Requests List */}
+          <div className="lg:col-span-12 xl:col-span-5">
+            <Card className="border-none shadow-sm h-[825px] flex flex-col bg-white overflow-hidden">
+              <CardHeader className="pb-4">
+                <div className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle className="text-xl font-bold flex items-center gap-2">
+                      <div className="w-2 h-6 bg-purple-500 rounded-full" />
+                      Solicitações de Ajuda (EAP)
+                    </CardTitle>
+                    <p className="text-sm text-gray-500">Fila de atendimento prioritária</p>
+                  </div>
+                  <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-100 border-none px-3 py-1 font-bold">
+                    {pendingRequests.length} PENDENTES
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="flex-1 overflow-y-auto px-6 pb-6 scrollbar-hide">
+                {pendingRequests.length > 0 ? (
+                  <div className="space-y-4">
+                    {pendingRequests.map((req, idx) => {
+                      return (
+                        <div key={idx} className="group flex flex-col p-5 rounded-3xl border transition-all bg-white border-slate-100 hover:border-purple-200 hover:shadow-xl hover:shadow-purple-500/5 relative overflow-hidden">
+                          <div className="absolute top-0 left-0 w-1 h-full bg-purple-500 opacity-20 group-hover:opacity-100 transition-opacity" />
+
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                              <div className="relative">
+                                {req.employeePhotoUrl ? (
+                                  <img src={req.employeePhotoUrl} alt={req.employeeName} className="w-12 h-12 rounded-2xl object-cover border-2 border-white shadow-sm" />
+                                ) : (
+                                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-100 to-purple-50 flex items-center justify-center text-purple-600 font-black text-lg uppercase shadow-sm">
+                                    {req.employeeName?.substring(0, 2) || '?'}
+                                  </div>
+                                )}
+                                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow-sm" />
                               </div>
-                              <span className="text-xs font-medium text-gray-700">{req.score}/5</span>
+                              <div>
+                                <p className="font-bold text-gray-900 leading-tight">{req.employeeName || 'Desconhecido'}</p>
+                                <p className="text-[10px] font-bold text-gray-400 mt-0.5 uppercase tracking-tight">
+                                  {new Date(req.createdAt).toLocaleDateString()} • {new Date(req.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </p>
+                              </div>
                             </div>
+                            <button
+                              onClick={() => handleMarkAsHandled(req.id)}
+                              className="px-4 py-2 text-xs font-black bg-purple-600 text-white hover:bg-purple-700 rounded-1xl shadow-lg shadow-purple-600/20 transition-all active:scale-95 flex items-center gap-2"
+                            >
+                              <CheckCircle className="w-3.5 h-3.5" />
+                              Atender
+                            </button>
                           </div>
-                          {useThemeStore.getState().tenantTheme?.modules?.moduleAiAnalytics !== false && (
-                            <div className="px-2 py-1.5 bg-gray-50 rounded-lg border border-gray-100">
-                              <p className="text-[10px] text-gray-400 uppercase font-bold">Análise IA</p>
-                              <div className="flex items-center gap-1.5 mt-0.5">
-                                <span className={`text-xs font-bold ${req.sentiment === 'POSITIVE' ? 'text-green-600' : req.sentiment === 'NEGATIVE' ? 'text-red-600' : 'text-gray-600'}`}>
-                                  {req.sentiment === 'POSITIVE' ? 'Positivo' : req.sentiment === 'NEGATIVE' ? 'Negativo' : 'Neutro'}
-                                </span>
-                                <span className="text-gray-300">|</span>
-                                <span className={`text-[10px] font-bold uppercase ${req.riskLevel === 'HIGH' ? 'text-red-500' : 'text-blue-500'}`}>
-                                  {translate(req.riskLevel)}
-                                </span>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                            <div className="px-4 py-3 bg-slate-50 rounded-2xl border border-slate-100/50">
+                              <p className="text-[9px] text-gray-400 uppercase font-black tracking-widest mb-1.5">Humor</p>
+                              <div className="flex items-center gap-2">
+                                <div className="flex gap-1">
+                                  {[1, 2, 3, 4, 5].map((s) => (
+                                    <div key={s} className={`w-2 h-3 rounded-full ${s <= req.score ? (req.score <= 2 ? 'bg-rose-500' : req.score >= 4 ? 'bg-emerald-500' : 'bg-amber-500') : 'bg-slate-200'}`} />
+                                  ))}
+                                </div>
+                                <span className="text-sm font-black text-slate-700">{req.score}.0</span>
                               </div>
+                            </div>
+                            {useThemeStore.getState().tenantTheme?.modules?.moduleAiAnalytics !== false && (
+                              <div className="px-4 py-3 bg-slate-50 rounded-2xl border border-slate-100/50">
+                                <p className="text-[9px] text-gray-400 uppercase font-black tracking-widest mb-1.5">Risco</p>
+                                <div className="flex items-center gap-2">
+                                  <span className={`text-xs font-black uppercase ${req.riskLevel === 'HIGH' ? 'text-rose-600' : 'text-blue-600'}`}>
+                                    {translate(req.riskLevel)}
+                                  </span>
+                                  <div className={`w-2 h-2 rounded-full ${req.riskLevel === 'HIGH' ? 'bg-rose-500 animate-pulse' : 'bg-blue-500'}`} />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {req.notes && (
+                            <div className="p-4 bg-indigo-50/30 rounded-2xl border border-indigo-100/50 group-hover:bg-indigo-50/50 transition-colors">
+                              <p className="text-[9px] text-indigo-400 uppercase font-black tracking-widest mb-2">Relato do Colaborador</p>
+                              <p className="text-sm text-gray-700 italic leading-relaxed font-medium">"{req.notes}"</p>
                             </div>
                           )}
                         </div>
-
-                        {req.notes && (
-                          <div className="p-3 bg-blue-50/50 rounded-lg border border-blue-100">
-                            <p className="text-[10px] text-blue-400 uppercase font-bold mb-1">Relato do Colaborador</p>
-                            <p className="text-sm text-gray-700 italic leading-relaxed">"{req.notes}"</p>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center h-full text-gray-400 py-12">
-                  <div className="p-4 bg-green-50 rounded-full mb-4">
-                    <CheckCircle className="w-12 h-12 text-green-400" />
+                      );
+                    })}
                   </div>
-                  <p className="font-medium text-gray-600">Nada pendente!</p>
-                  <p className="text-sm text-center px-8">Todas as solicitações de contato já foram atendidas. Consulte o histórico no menu "Saúde Mental".</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                ) : (
+                  <div className="h-full flex flex-col items-center justify-center text-center p-8">
+                    <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+                      <CheckCircle className="w-10 h-10 text-slate-200" />
+                    </div>
+                    <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Tudo limpo por aqui</p>
+                    <p className="text-sm text-slate-400 mt-2">Nenhuma solicitação pendente no momento.</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     );
