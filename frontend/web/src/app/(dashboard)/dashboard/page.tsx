@@ -28,6 +28,7 @@ import { useAuthStore } from '@/stores/auth-store';
 import { dashboardApi, DashboardStats, LearningStats } from '@/lib/api/dashboard';
 import { wellbeingApi, WellbeingStats } from '@/lib/api/wellbeing';
 import { CollaboratorDashboard } from '@/components/dashboard/CollaboratorDashboard';
+import { useThemeStore } from '@/stores/theme-store';
 
 // ==================== Types ====================
 
@@ -669,59 +670,61 @@ export default function DashboardPage() {
           })}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="border-none shadow-sm h-[480px]">
-            <CardHeader>
-              <CardTitle>Estrela de Sentimentos</CardTitle>
-              <p className="text-sm text-gray-500">Visão multidimensional do bem-estar</p>
-            </CardHeader>
-            <CardContent className="h-[400px] flex flex-col">
-              <div className="flex-1 min-h-0">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
-                    <PolarGrid stroke="#e2e8f0" />
-                    <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 11 }} />
-                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                    <Radar
-                      name="Nível"
-                      dataKey="value"
-                      stroke="#4F46E5"
-                      fill="#4F46E5"
-                      fillOpacity={0.4}
-                    />
-                    <Tooltip cursor={{ strokeDasharray: '3 3' }} />
-                  </RadarChart>
-                </ResponsiveContainer>
-              </div>
+        <div className={`grid grid-cols-1 ${useThemeStore.getState().tenantTheme?.modules?.moduleAiAnalytics !== false ? 'lg:grid-cols-2' : ''} gap-6`}>
+          {useThemeStore.getState().tenantTheme?.modules?.moduleAiAnalytics !== false && (
+            <Card className="border-none shadow-sm h-[480px]">
+              <CardHeader>
+                <CardTitle>Estrela de Sentimentos</CardTitle>
+                <p className="text-sm text-gray-500">Visão multidimensional do bem-estar</p>
+              </CardHeader>
+              <CardContent className="h-[400px] flex flex-col">
+                <div className="flex-1 min-h-0">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
+                      <PolarGrid stroke="#e2e8f0" />
+                      <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 11 }} />
+                      <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                      <Radar
+                        name="Nível"
+                        dataKey="value"
+                        stroke="#4F46E5"
+                        fill="#4F46E5"
+                        fillOpacity={0.4}
+                      />
+                      <Tooltip cursor={{ strokeDasharray: '3 3' }} />
+                    </RadarChart>
+                  </ResponsiveContainer>
+                </div>
 
-              {/* Mini Sentiment Breakdown */}
-              <div className="mt-4 grid grid-cols-3 gap-2">
-                {[
-                  { label: 'Positivo', key: 'POSITIVE', color: 'bg-green-500' },
-                  { label: 'Neutro', key: 'NEUTRAL', color: 'bg-gray-400' },
-                  { label: 'Negativo', key: 'NEGATIVE', color: 'bg-red-500' }
-                ].map((s) => {
-                  const val = ((wellbeingStats?.sentimentDistribution[s.key] || 0) / totalCheckins) * 100;
-                  return (
-                    <div key={s.key} className="space-y-1">
-                      <div className="flex justify-between text-[10px] font-medium text-gray-500 uppercase tracking-wider">
-                        <span>{s.label}</span>
-                        <span>{val.toFixed(0)}%</span>
+                {/* Mini Sentiment Breakdown */}
+                <div className="mt-4 grid grid-cols-3 gap-2">
+                  {[
+                    { label: 'Positivo', key: 'POSITIVE', color: 'bg-green-500' },
+                    { label: 'Neutro', key: 'NEUTRAL', color: 'bg-gray-400' },
+                    { label: 'Negativo', key: 'NEGATIVE', color: 'bg-red-500' }
+                  ].map((s) => {
+                    const val = ((wellbeingStats?.sentimentDistribution[s.key] || 0) / totalCheckins) * 100;
+                    return (
+                      <div key={s.key} className="space-y-1">
+                        <div className="flex justify-between text-[10px] font-medium text-gray-500 uppercase tracking-wider">
+                          <span>{s.label}</span>
+                          <span>{val.toFixed(0)}%</span>
+                        </div>
+                        <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full ${s.color} transition-all duration-500`}
+                            style={{ width: `${val}%` }}
+                          />
+                        </div>
                       </div>
-                      <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full ${s.color} transition-all duration-500`}
-                          style={{ width: `${val}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
-          <Card className="border-none shadow-sm h-[480px] overflow-hidden">
+          <Card className={`border-none shadow-sm h-[480px] overflow-hidden`}>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle>Solicitações de Ajuda (EAP)</CardTitle>
@@ -772,18 +775,20 @@ export default function DashboardPage() {
                               <span className="text-xs font-medium text-gray-700">{req.score}/5</span>
                             </div>
                           </div>
-                          <div className="px-2 py-1.5 bg-gray-50 rounded-lg border border-gray-100">
-                            <p className="text-[10px] text-gray-400 uppercase font-bold">Análise IA</p>
-                            <div className="flex items-center gap-1.5 mt-0.5">
-                              <span className={`text-xs font-bold ${req.sentiment === 'POSITIVE' ? 'text-green-600' : req.sentiment === 'NEGATIVE' ? 'text-red-600' : 'text-gray-600'}`}>
-                                {req.sentiment === 'POSITIVE' ? 'Positivo' : req.sentiment === 'NEGATIVE' ? 'Negativo' : 'Neutro'}
-                              </span>
-                              <span className="text-gray-300">|</span>
-                              <span className={`text-[10px] font-bold uppercase ${req.riskLevel === 'HIGH' ? 'text-red-500' : 'text-blue-500'}`}>
-                                {translate(req.riskLevel)}
-                              </span>
+                          {useThemeStore.getState().tenantTheme?.modules?.moduleAiAnalytics !== false && (
+                            <div className="px-2 py-1.5 bg-gray-50 rounded-lg border border-gray-100">
+                              <p className="text-[10px] text-gray-400 uppercase font-bold">Análise IA</p>
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                <span className={`text-xs font-bold ${req.sentiment === 'POSITIVE' ? 'text-green-600' : req.sentiment === 'NEGATIVE' ? 'text-red-600' : 'text-gray-600'}`}>
+                                  {req.sentiment === 'POSITIVE' ? 'Positivo' : req.sentiment === 'NEGATIVE' ? 'Negativo' : 'Neutro'}
+                                </span>
+                                <span className="text-gray-300">|</span>
+                                <span className={`text-[10px] font-bold uppercase ${req.riskLevel === 'HIGH' ? 'text-red-500' : 'text-blue-500'}`}>
+                                  {translate(req.riskLevel)}
+                                </span>
+                              </div>
                             </div>
-                          </div>
+                          )}
                         </div>
 
                         {req.notes && (
@@ -913,9 +918,15 @@ export default function DashboardPage() {
           { id: 'geral', label: 'Geral', icon: BarChart3 },
           { id: 'hiring', label: 'Contratação & Retenção', icon: Users },
           { id: 'diversity', label: 'Diversidade', icon: Brain },
-          { id: 'learning', label: 'Aprendizagem', icon: GraduationCap },
-          { id: 'wellbeing', label: 'Bem-estar', icon: CheckCircle }
-        ].map((tab) => {
+          { id: 'learning', label: 'Aprendizagem', icon: GraduationCap, module: 'moduleLearning' },
+          { id: 'wellbeing', label: 'Bem-estar', icon: CheckCircle, module: 'modulePerformance' }
+        ].filter(tab => {
+          if (tab.module) {
+            const { tenantTheme } = useThemeStore.getState();
+            return tenantTheme?.modules?.[tab.module as keyof typeof tenantTheme.modules] !== false;
+          }
+          return true;
+        }).map((tab) => {
           const Icon = tab.icon;
           return (
             <button

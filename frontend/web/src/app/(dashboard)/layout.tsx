@@ -8,6 +8,7 @@ import { Header } from '@/components/layout/header';
 import { useLayoutStore } from '@/stores/layout-store';
 import { cn } from '@/lib/utils';
 import FloatingAssistant from '@/components/ai/FloatingAssistant';
+import { useThemeStore } from '@/stores/theme-store';
 
 export default function DashboardLayout({
   children,
@@ -63,7 +64,9 @@ export default function DashboardLayout({
       <main className="main-content animate-fade-in">
         {children}
       </main>
-      <FloatingAssistant />
+      {useThemeStore.getState().tenantTheme?.modules?.moduleAiAssistant !== false && (
+        <FloatingAssistant />
+      )}
     </div>
   );
 }
