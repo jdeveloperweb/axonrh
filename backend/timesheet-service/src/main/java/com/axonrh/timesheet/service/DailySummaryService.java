@@ -110,8 +110,7 @@ public class DailySummaryService {
         // Buscar escala ativa para o dia
         Optional<EmployeeSchedule> activeSchedule = employeeScheduleRepository.findActiveSchedule(tenantId, scheduleProfileIds, date);
 
-        // Buscar registros validos do dia
-        List<TimeRecord> records = timeRecordRepository.findValidRecordsForDate(tenantId, employeeId, date);
+
 
         // Calcular totais
         calculateTotals(summary, records, activeSchedule.orElse(null));
