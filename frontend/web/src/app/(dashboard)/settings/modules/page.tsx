@@ -28,6 +28,7 @@ import { setupApi, ModuleConfig } from '@/lib/api/setup';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { useThemeStore } from '@/stores/theme-store';
 
 const INITIAL_MODULES: ModuleConfig = {
     moduleEmployees: true,
@@ -164,6 +165,7 @@ export default function ModulesSettingsPage() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [modules, setModules] = useState<ModuleConfig>(INITIAL_MODULES);
+    const { fetchBranding } = useThemeStore();
 
     useEffect(() => {
         async function loadModules() {
@@ -191,6 +193,10 @@ export default function ModulesSettingsPage() {
         try {
             setSaving(true);
             await setupApi.saveStepData(5, modules as any);
+
+            // Recarrega as configurações para aplicar as mudanças no menu imediatamente
+            await fetchBranding();
+
             toast({
                 title: 'Configurações salvas',
                 description: 'Os recursos e módulos foram atualizados com sucesso.',

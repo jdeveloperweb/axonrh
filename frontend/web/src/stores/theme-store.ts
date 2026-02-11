@@ -28,6 +28,7 @@ interface TenantTheme {
   customCss?: string;
   baseFontSize?: number;
   fontFamily?: string;
+  modules?: Record<string, boolean>;
 }
 
 interface ThemeState {
@@ -195,7 +196,8 @@ export const useThemeStore = create<ThemeState>()(
               baseFontSize: (config.extraSettings?.baseFontSize as number) || 16,
               fontFamily: (config.extraSettings?.fontFamily as string) || 'Plus Jakarta Sans',
               customCss: config.customCss,
-              faviconUrl: config.faviconUrl
+              faviconUrl: config.faviconUrl,
+              modules: config.extraSettings?.modules as Record<string, boolean>
             };
 
             set({ tenantTheme });

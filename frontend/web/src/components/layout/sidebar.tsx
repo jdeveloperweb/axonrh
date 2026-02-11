@@ -37,6 +37,7 @@ interface NavItem {
   href: string;
   icon: React.ElementType;
   permission?: string;
+  module?: string;
 }
 
 // ==================== Navigation Items ====================
@@ -52,18 +53,18 @@ const navGroups: NavGroup[] = [
     title: 'PESSOAS',
     items: [
       { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-      { label: 'Colaboradores', href: '/employees', icon: Users, permission: 'EMPLOYEE:READ' },
+      { label: 'Colaboradores', href: '/employees', icon: Users, permission: 'EMPLOYEE:READ', module: 'moduleEmployees' },
       // { label: 'Organograma', href: '/org-chart', icon: Network }, // Future
       // { label: 'Departamentos', href: '/departments', icon: Building2 }, // Future
       // { label: 'Cargos', href: '/positions', icon: Briefcase }, // Future
       // { label: 'Vagas', href: '/vacancies', icon: Target }, // Future
-      { label: 'Ponto', href: '/timesheet/record', icon: Clock },
-      { label: 'Férias', href: '/vacation', icon: Calendar },
-      { label: 'Desempenho', href: '/performance', icon: BarChart3 },
-      { label: 'Treinamentos', href: '/learning', icon: BookOpen },
+      { label: 'Ponto', href: '/timesheet/record', icon: Clock, module: 'moduleTimesheet' },
+      { label: 'Férias', href: '/vacation', icon: Calendar, module: 'moduleVacation' },
+      { label: 'Desempenho', href: '/performance', icon: BarChart3, module: 'modulePerformance' },
+      { label: 'Treinamentos', href: '/learning', icon: BookOpen, module: 'moduleLearning' },
       { label: 'Processos RH', href: '/processes', icon: ClipboardCheck, permission: 'EMPLOYEE:READ' },
       { label: 'Saúde Mental', href: '/wellbeing', icon: HeartPulse, permission: 'EMPLOYEE:READ' }, // Visible to HR/Managers
-      { label: 'Assistente IA', href: '/assistant', icon: MessageSquare },
+      { label: 'Assistente IA', href: '/assistant', icon: MessageSquare, module: 'moduleAiAssistant' },
     ]
   },
   {
@@ -85,7 +86,7 @@ const navGroups: NavGroup[] = [
       { label: 'Organograma', href: '/organogram', icon: Users },
       { label: 'Departamentos', href: '/departments', icon: Building2 },
       { label: 'Cargos', href: '/positions', icon: Briefcase },
-      { label: 'Banco de Talentos', href: '/talent-pool', icon: UserPlus, permission: 'EMPLOYEE:READ' },
+      { label: 'Banco de Talentos', href: '/talent-pool', icon: UserPlus, permission: 'EMPLOYEE:READ', module: 'moduleRecruitment' },
       { label: 'Gestores', href: '/managers', icon: UserCog },
       { label: 'Configurações', href: '/settings', icon: Settings, permission: 'CONFIG:READ' },
     ]
@@ -180,9 +181,17 @@ export function Sidebar() {
               if (group.title === 'ADMINISTRAÇÃO' && !hasAdminAccess) return null;
 
               const groupFilteredItems = group.items.filter((item) => {
+                // 1. Check Module Activation
+                if (item.module && tenantTheme?.modules) {
+                  const isModuleActive = tenantTheme.modules[item.module as keyof typeof tenantTheme.modules];
+                  // Se o módulo está explicitamente desativado (false), removemos do menu
+                  if (isModuleActive === false) return false;
+                }
+
+                // 2. Check Permission
                 if (!hasPermission(item.permission)) return false;
 
-                // Filtros específicos: Administrador e RH vêem tudo.
+                // 3. Admin/RH Specific Access Filters
                 if (hasAdminAccess) return true;
 
                 // Colaboradores puros, Líderes e Gestores não vêem estas telas específicas de gestão

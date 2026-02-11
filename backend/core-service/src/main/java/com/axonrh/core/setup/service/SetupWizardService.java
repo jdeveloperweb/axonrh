@@ -97,6 +97,13 @@ public class SetupWizardService {
             log.info("Salvando dados da etapa {} do setup para tenant {}", step, effectiveTenantId);
             progress.setStepData(step, data);
             progress.setLastActivityAt(LocalDateTime.now());
+            
+            // Ativação imediata para certas etapas (Branding e Módulos)
+            // para que o usuário veja a mudança sem precisar completar o setup inteiro
+            if (step == 4 || step == 5) {
+                log.info("Processando ativação imediata para etapa {}", step);
+                processStepCompletion(effectiveTenantId, step, data);
+            }
 
             return progressRepository.save(progress);
         } catch (Exception e) {
@@ -672,8 +679,36 @@ public class SetupWizardService {
     }
 
     private void processModules(UUID tenantId, Map<String, Object> data) {
-        // Enable/disable modules
-            log.info("Processing modules for tenant: {}", tenantId);
+        log.info("Processando módulos para o tenant: {}", tenantId);
+        if (data == null || data.isEmpty()) {
+            log.warn("Nenhum dado de módulo fornecido para o tenant {}", tenantId);
+            return;
+        }
+
+        try {
+            // Salvar no shared.tenant_configs para que o front-end possa ler via ThemeStore
+            // Buscamos se já existe uma config para o tenant
+            
+            String modulesJson = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(data);
+            
+            log.info("Salvando configuração de módulos: {}", modulesJson);
+
+            // Atualizar o extra_settings do tenant_configs
+            // Usamos a função jsonb_set ou simplesmente sobrescrevemos se for o caso
+            // Para simplicidade e garantir que 'modules' existam dentro de extra_settings:
+            entityManager.createNativeQuery(
+                "UPDATE shared.tenant_configs " +
+                "SET extra_settings = COALESCE(extra_settings, '{}'::jsonb) || CAST(? AS jsonb), " +
+                "    updated_at = CURRENT_TIMESTAMP " +
+                "WHERE tenant_id = ?")
+                .setParameter(1, "{\"modules\": " + modulesJson + "}")
+                .setParameter(2, tenantId)
+                .executeUpdate();
+
+            log.info("Módulos processados com sucesso para o tenant {}", tenantId);
+        } catch (Exception e) {
+            log.error("Erro ao processar módulos para o tenant {}: {}", tenantId, e.getMessage());
+        }
     }
 
     private void processUsers(UUID tenantId, Map<String, Object> data) {
