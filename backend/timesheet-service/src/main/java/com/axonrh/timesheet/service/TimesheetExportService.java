@@ -120,7 +120,7 @@ public class TimesheetExportService {
                 row.createCell(8).setCellValue(day.getDeficitFormatted());
                 row.createCell(9).setCellValue(day.getNightShiftFormatted());
                 row.createCell(10).setCellValue((Boolean.TRUE.equals(day.getIsPositive()) ? "+" : "-") + day.getBalanceFormatted());
-                row.createCell(11).setCellValue(day.getIsHoliday() ? "Feriado" : day.getIsAbsent() ? "Falta" : "OK");
+                row.createCell(11).setCellValue(Boolean.TRUE.equals(day.getIsHoliday()) ? "Feriado" : Boolean.TRUE.equals(day.getIsAbsent()) ? "Falta" : "OK");
             }
             
             // Column widths
@@ -223,7 +223,7 @@ public class TimesheetExportService {
                     .append("<td>").append(day.getDeficitFormatted()).append("</td>")
                     .append("<td>").append(day.getNightShiftFormatted()).append("</td>")
                     .append("<td>").append(Boolean.TRUE.equals(day.getIsPositive()) ? "+" : "-").append(day.getBalanceFormatted()).append("</td>")
-                    .append("<td>").append(day.getIsHoliday() ? "Feriado" : day.getIsAbsent() ? "Falta" : "OK").append("</td>")
+                    .append("<td>").append(Boolean.TRUE.equals(day.getIsHoliday()) ? "Feriado" : Boolean.TRUE.equals(day.getIsAbsent()) ? "Falta" : "OK").append("</td>")
                     .append("</tr>");
             }
             sb.append("</tbody></table>");
