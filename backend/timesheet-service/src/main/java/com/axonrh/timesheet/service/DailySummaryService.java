@@ -109,7 +109,9 @@ public class DailySummaryService {
         List<EmployeeSchedule> schedules = employeeScheduleRepository.findActiveSchedules(tenantId, scheduleProfileIds, date);
         EmployeeSchedule activeSchedule = schedules.isEmpty() ? null : schedules.get(0);
 
-
+        if (activeSchedule != null && activeSchedule.getWorkSchedule() != null) {
+            summary.setWorkScheduleId(activeSchedule.getWorkSchedule().getId());
+        }
 
         // Calcular totais
         calculateTotals(summary, records, activeSchedule);
@@ -150,27 +152,20 @@ public class DailySummaryService {
         
         String currentTenant = TenantContext.getCurrentTenant();
         java.util.Map<LocalDate, DailySummary> summaryMap = new java.util.HashMap<>();
+        
+        // Buscar UserID para lidar com dados historicos
+        final List<UUID> idsToSearch = getProfileIds(employeeId);
 
         if (currentTenant != null) {
             try {
                 UUID tenantId = UUID.fromString(currentTenant);
                 
-                // Buscar UserID para lidar com dados historicos
-                List<UUID> idsToSearch = getProfileIds(employeeId);
-
                 List<DailySummary> summaries = dailySummaryRepository
                         .findByTenantIdAndEmployeeIdInAndSummaryDateBetweenOrderBySummaryDateAsc(
                                 tenantId, idsToSearch, startDate, endDate);
 
                 for (DailySummary s : summaries) {
                     if (s.getSummaryDate() != null) {
-                        // Se ja existe (preferencia pelo EmployeeID se houver duplicata no mesmo dia)
-                        // A lista vem ordenada por data, mas a ordem entre empId e userId e indefinida.
-                        // Mas como o map sobrescreve, o ultimo ganha.
-                        // Idealmente deveriamos mesclar, mas assumimos que nao ha sobreposicao valida.
-                        // Se houver registro com EmployeeId (valid) e UserId (invalido/antigo), queremos o EmployeeId?
-                        // Ou se for inconsistencia, apenas mostramos um deles.
-                        
                         if (!summaryMap.containsKey(s.getSummaryDate()) || s.getEmployeeId().equals(employeeId)) {
                             summaryMap.put(s.getSummaryDate(), s);
                         }
@@ -183,19 +178,19 @@ public class DailySummaryService {
             }
         }
 
-        final List<UUID> idsToSearchFinal = idsToSearch;
-        final String currentTenantFinal = currentTenant;
-
         try {
             return startDate.datesUntil(endDate.plusDays(1))
                     .map(date -> {
                         try {
-                            UUID tenantId = currentTenantFinal != null ? UUID.fromString(currentTenantFinal) : null;
+                            UUID tenantId = currentTenant != null ? UUID.fromString(currentTenant) : null;
                             EmployeeSchedule schedule = null;
                             if (tenantId != null) {
-                                List<EmployeeSchedule> schedules = employeeScheduleRepository.findActiveSchedules(tenantId, idsToSearchFinal, date);
+                                List<EmployeeSchedule> schedules = employeeScheduleRepository.findActiveSchedules(tenantId, idsToSearch, date);
                                 if (!schedules.isEmpty()) {
                                     schedule = schedules.get(0);
+                                    log.debug("Escala encontrada para {} em {}: {}", employeeId, date, schedule.getWorkSchedule().getName());
+                                } else {
+                                    log.debug("Nenhuma escala encontrada para {} em {}. IDs buscados: {}", employeeId, date, idsToSearch);
                                 }
                             }
                                 
@@ -623,18 +618,36 @@ public class DailySummaryService {
             String lateArrivalFormatted,
             int absences
     ) {}
-    private List<UUID> getProfileIds(UUID employeeId) {
+    private List<UUID> getProfileIds(UUID inputId) {
         List<UUID> ids = new java.util.ArrayList<>();
-        ids.add(employeeId);
+        if (inputId == null) return ids;
+        ids.add(inputId);
+        
         try {
-            // Tenta buscar do cache primeiro se houver, ou direto do client
-            com.axonrh.timesheet.dto.EmployeeDTO employee = employeeClient.getEmployee(employeeId);
-            if (employee != null && employee.getUserId() != null && !employee.getUserId().equals(employeeId)) {
-                ids.add(employee.getUserId());
+            // Tenta obter o DTO do funcionario para cruzar os IDs (EmployeeID <-> UserID)
+            // Primeiro assume que inputId eh EmployeeID
+            com.axonrh.timesheet.dto.EmployeeDTO emp = null;
+            try {
+                emp = employeeClient.getEmployee(inputId);
+            } catch (Exception e) {
+                // Se falhou, talvez seja UserID. Tenta buscar por UserID.
+                try {
+                    emp = employeeClient.getEmployeeByUserId(inputId, null);
+                } catch (Exception e2) {
+                    log.debug("Nao foi possivel resolver ID {} como EmployeeID ou UserID", inputId);
+                }
+            }
+
+            if (emp != null) {
+                if (emp.getId() != null && !ids.contains(emp.getId())) {
+                    ids.add(emp.getId());
+                }
+                if (emp.getUserId() != null && !ids.contains(emp.getUserId())) {
+                    ids.add(emp.getUserId());
+                }
             }
         } catch (Exception ex) {
-            // Log apenas warn/debug para nao poluir se for erro transiente ou timeout
-            log.debug("Erro ao buscar UserID auxiliar para employee {}: {}", employeeId, ex.getMessage());
+            log.warn("Erro ao buscar IDs auxiliares para {}: {}", inputId, ex.getMessage());
         }
         return ids;
     }
