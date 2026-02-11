@@ -34,6 +34,7 @@ import { dashboardApi, DashboardStats, LearningStats } from '@/lib/api/dashboard
 import { wellbeingApi, WellbeingStats } from '@/lib/api/wellbeing';
 import { CollaboratorDashboard } from '@/components/dashboard/CollaboratorDashboard';
 import { useThemeStore } from '@/stores/theme-store';
+import { cn } from '@/lib/utils';
 
 // ==================== Types ====================
 
@@ -62,6 +63,9 @@ const TRANSLATIONS: Record<string, string> = {
   'IN_PROGRESS': 'Em Andamento',
   'COMPLETED': 'Concluído',
   'NOT_STARTED': 'Não Iniciado',
+  'ENROLLED': 'Matriculado',
+  'FAILED': 'Reprovado',
+  'CANCELLED': 'Cancelado',
   'EXPIRED': 'Expirado',
   'PENDING': 'Pendente',
   // Niveis de Risco
@@ -697,7 +701,14 @@ export default function DashboardPage() {
                   <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1">Índice Atual</p>
                   <div className="flex items-baseline gap-1">
                     <span className="text-2xl font-black text-indigo-600">{(wellbeingStats?.averageScore || 0).toFixed(1)}</span>
-                    <span className="text-xs font-bold text-gray-400 italic">Estável</span>
+                    <span className={cn(
+                      "text-xs font-bold italic",
+                      (wellbeingStats?.averageScore || 0) >= 4 ? "text-green-500" :
+                        (wellbeingStats?.averageScore || 0) >= 3 ? "text-yellow-600" : "text-red-500"
+                    )}>
+                      {(wellbeingStats?.averageScore || 0) >= 4 ? 'Saudável' :
+                        (wellbeingStats?.averageScore || 0) >= 3 ? 'Atenção' : 'Crítico'}
+                    </span>
                   </div>
                 </div>
 
