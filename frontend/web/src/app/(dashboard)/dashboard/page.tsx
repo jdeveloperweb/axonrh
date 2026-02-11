@@ -714,7 +714,7 @@ export default function DashboardPage() {
                 </div>
 
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={pulseData} margin={{ top: 40, right: 30, left: 0, bottom: 0 }}>
+                  <AreaChart data={pulseData} margin={{ top: 40, right: 30, left: 60, bottom: 0 }}>
                     <defs>
                       <linearGradient id="colorWave" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
@@ -736,7 +736,24 @@ export default function DashboardPage() {
                     />
                     <YAxis
                       domain={[0, 5]}
-                      hide
+                      axisLine={false}
+                      tickLine={false}
+                      ticks={[1.5, 3.5, 4.5]}
+                      tick={(props) => {
+                        const { x, y, payload } = props;
+                        let label = "";
+                        let emoji = "";
+                        if (payload.value === 1.5) { emoji = "😟"; label = "1.0 - 2.9"; }
+                        if (payload.value === 3.5) { emoji = "😐"; label = "3.0 - 3.9"; }
+                        if (payload.value === 4.5) { emoji = "😊"; label = "4.0 - 5.0"; }
+
+                        return (
+                          <g transform={`translate(${x},${y})`}>
+                            <text x={-10} y={-5} textAnchor="end" fill="#64748b" fontSize="14">{emoji}</text>
+                            <text x={-10} y={10} textAnchor="end" fill="#94a3b8" fontSize="9" fontWeight="700">{label}</text>
+                          </g>
+                        );
+                      }}
                     />
                     <Tooltip
                       content={({ active, payload }) => {
