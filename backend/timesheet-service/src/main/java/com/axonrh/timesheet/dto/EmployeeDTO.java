@@ -21,4 +21,6 @@ public class EmployeeDTO implements Serializable {
     private String email;
     private EmployeeSummaryDTO manager;
     private DepartmentDTO department;
+    private UUID workScheduleId;
+    private String workRegime;
 }

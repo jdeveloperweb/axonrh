@@ -50,6 +50,7 @@ public class DailySummaryService {
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final ObjectMapper objectMapper;
     private final com.axonrh.timesheet.client.EmployeeServiceClient employeeClient;
+    private final com.axonrh.timesheet.repository.WorkScheduleRepository workScheduleRepository;
 
     public DailySummaryService(
             DailySummaryRepository dailySummaryRepository,
@@ -59,7 +60,8 @@ public class DailySummaryService {
             OvertimeBankService overtimeBankService,
             @Qualifier("timesheetKafkaTemplate") KafkaTemplate<String, Object> kafkaTemplate,
             ObjectMapper objectMapper,
-            com.axonrh.timesheet.client.EmployeeServiceClient employeeClient) {
+            com.axonrh.timesheet.client.EmployeeServiceClient employeeClient,
+            com.axonrh.timesheet.repository.WorkScheduleRepository workScheduleRepository) {
         this.dailySummaryRepository = dailySummaryRepository;
         this.timeRecordRepository = timeRecordRepository;
         this.employeeScheduleRepository = employeeScheduleRepository;
@@ -68,6 +70,7 @@ public class DailySummaryService {
         this.kafkaTemplate = kafkaTemplate;
         this.objectMapper = objectMapper;
         this.employeeClient = employeeClient;
+        this.workScheduleRepository = workScheduleRepository;
     }
 
     @Value("${timesheet.night-shift.start-hour:22}")
@@ -198,30 +201,55 @@ public class DailySummaryService {
                 s.getId(), s.getValidFrom(), s.getValidUntil(), s.getWorkSchedule() != null ? s.getWorkSchedule().getName() : "N/A", s.getTenantId());
         }
 
+        // Tenta obter o DTO do funcionario para fallback de escala do cadastro principal
+        com.axonrh.timesheet.dto.EmployeeDTO mainEmployeeDto = null;
+        try {
+            mainEmployeeDto = employeeClient.getEmployeeByUserId(employeeId, null);
+            if (mainEmployeeDto == null) mainEmployeeDto = employeeClient.getEmployee(employeeId);
+        } catch (Exception e) {
+            log.debug("Nao foi possivel obter DTO principal para fallback de escala: {}", e.getMessage());
+        }
+        
+        final UUID fallbackWorkScheduleId = (mainEmployeeDto != null) ? mainEmployeeDto.getWorkScheduleId() : null;
+        if (fallbackWorkScheduleId != null && allSchedules.isEmpty()) {
+            log.info("Utilizando escala de fallback do cadastro do colaborador: {}", fallbackWorkScheduleId);
+        }
+
         try {
             return startDate.datesUntil(endDate.plusDays(1))
                     .map(date -> {
                         try {
                             DailySummary summary = summaryMap.get(date);
+                            
+                            // 1. Tentar escala pela vigência (allSchedules)
+                            EmployeeSchedule schedule = allSchedules.stream()
+                                    .filter(s -> !date.isBefore(s.getValidFrom()) && (s.getValidUntil() == null || !date.isAfter(s.getValidUntil())))
+                                    .findFirst()
+                                    .orElse(null);
+                            
+                            // 2. Fallback: Se não tem escala de vigência, mas o colaborador tem uma escala fixa no cadastro principal
+                            if (schedule == null && fallbackWorkScheduleId != null) {
+                                // Tenta buscar a regra da escala principal se não houver registros históricos
+                                try {
+                                    WorkSchedule ws = workScheduleRepository.findByTenantIdAndIdWithDays(tenantId, fallbackWorkScheduleId).orElse(null);
+                                    if (ws != null) {
+                                        schedule = EmployeeSchedule.builder()
+                                                .workSchedule(ws)
+                                                .employeeId(employeeId)
+                                                .tenantId(tenantId)
+                                                .build();
+                                    }
+                                } catch (Exception e) {
+                                    log.debug("Erro ao buscar escala de fallback {}: {}", fallbackWorkScheduleId, e.getMessage());
+                                }
+                            }
+
                             if (summary != null) {
-                                // Encontrar escala vigente para este dia especifico na lista em memoria
-                                EmployeeSchedule schedule = allSchedules.stream()
-                                        .filter(s -> !date.isBefore(s.getValidFrom()) && (s.getValidUntil() == null || !date.isAfter(s.getValidUntil())))
-                                        .findFirst()
-                                        .orElse(null);
-                                
                                 if (schedule == null && !allSchedules.isEmpty()) {
                                     log.debug("Nenhuma escala oficial para {} em {}, mas existem escalas fora dessa vigencia.", employeeId, date);
                                 }
-                                
                                 return toResponse(summary, schedule);
                             } else {
-                                // Criar resumo virtual
-                                EmployeeSchedule schedule = allSchedules.stream()
-                                        .filter(s -> !date.isBefore(s.getValidFrom()) && (s.getValidUntil() == null || !date.isAfter(s.getValidUntil())))
-                                        .findFirst()
-                                        .orElse(null);
-                                
                                 return createVirtualSummary(employeeId, date, schedule);
                             }
                         } catch (Exception e) {
