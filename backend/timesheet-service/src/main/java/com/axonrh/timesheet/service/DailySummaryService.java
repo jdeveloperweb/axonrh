@@ -156,10 +156,9 @@ public class DailySummaryService {
         // Buscar UserID para lidar com dados historicos
         final List<UUID> idsToSearch = getProfileIds(employeeId);
 
-        if (currentTenant != null) {
+        UUID tenantId = currentTenant != null ? UUID.fromString(currentTenant) : null;
+        if (tenantId != null) {
             try {
-                UUID tenantId = UUID.fromString(currentTenant);
-                
                 List<DailySummary> summaries = dailySummaryRepository
                         .findByTenantIdAndEmployeeIdInAndSummaryDateBetweenOrderBySummaryDateAsc(
                                 tenantId, idsToSearch, startDate, endDate);
@@ -178,26 +177,51 @@ public class DailySummaryService {
             }
         }
 
+        log.info("Buscando escalas para colaborador {} no Tenant {}. IDs: {}", employeeId, tenantId, idsToSearch);
+
+        // Buscar todas as escalas dos perfis envolvidos para otimizar e debugar
+        List<EmployeeSchedule> allSchedules = tenantId != null ? 
+                employeeScheduleRepository.findAllByEmployeeIds(tenantId, idsToSearch) : java.util.Collections.emptyList();
+        
+        if (allSchedules.isEmpty() && !idsToSearch.isEmpty()) {
+            List<EmployeeSchedule> anyTenantSchedules = employeeScheduleRepository.findAllByEmployeeIdsAnyTenant(idsToSearch);
+            if (!anyTenantSchedules.isEmpty()) {
+                log.warn("ATENÇÃO: Foram encontradas {} escalas para os IDs {}, mas em OUTROS TENANTS. (Tenants encontrados: {})",
+                    anyTenantSchedules.size(), idsToSearch, 
+                    anyTenantSchedules.stream().map(s -> s.getTenantId().toString()).collect(java.util.stream.Collectors.joining(", ")));
+            }
+        }
+
+        log.info("Total de escalas vigentes encontradas no tenant {}: {}", tenantId, allSchedules.size());
+        for (EmployeeSchedule s : allSchedules) {
+            log.info(" - Escala [{}]: De {} ate {}, WorkSchedule: {}, Tenant: {}", 
+                s.getId(), s.getValidFrom(), s.getValidUntil(), s.getWorkSchedule() != null ? s.getWorkSchedule().getName() : "N/A", s.getTenantId());
+        }
+
         try {
             return startDate.datesUntil(endDate.plusDays(1))
                     .map(date -> {
                         try {
-                            UUID tenantId = currentTenant != null ? UUID.fromString(currentTenant) : null;
-                            EmployeeSchedule schedule = null;
-                            if (tenantId != null) {
-                                List<EmployeeSchedule> schedules = employeeScheduleRepository.findActiveSchedules(tenantId, idsToSearch, date);
-                                if (!schedules.isEmpty()) {
-                                    schedule = schedules.get(0);
-                                    log.debug("Escala encontrada para {} em {}: {}", employeeId, date, schedule.getWorkSchedule().getName());
-                                } else {
-                                    log.debug("Nenhuma escala encontrada para {} em {}. IDs buscados: {}", employeeId, date, idsToSearch);
-                                }
-                            }
-                                
                             DailySummary summary = summaryMap.get(date);
                             if (summary != null) {
+                                // Encontrar escala vigente para este dia especifico na lista em memoria
+                                EmployeeSchedule schedule = allSchedules.stream()
+                                        .filter(s -> !date.isBefore(s.getValidFrom()) && (s.getValidUntil() == null || !date.isAfter(s.getValidUntil())))
+                                        .findFirst()
+                                        .orElse(null);
+                                
+                                if (schedule == null && !allSchedules.isEmpty()) {
+                                    log.debug("Nenhuma escala oficial para {} em {}, mas existem escalas fora dessa vigencia.", employeeId, date);
+                                }
+                                
                                 return toResponse(summary, schedule);
                             } else {
+                                // Criar resumo virtual
+                                EmployeeSchedule schedule = allSchedules.stream()
+                                        .filter(s -> !date.isBefore(s.getValidFrom()) && (s.getValidUntil() == null || !date.isAfter(s.getValidUntil())))
+                                        .findFirst()
+                                        .orElse(null);
+                                
                                 return createVirtualSummary(employeeId, date, schedule);
                             }
                         } catch (Exception e) {
@@ -205,7 +229,7 @@ public class DailySummaryService {
                             return createVirtualSummary(employeeId, date, null);
                         }
                     })
-                    .toList();
+                    .collect(java.util.stream.Collectors.toList());
         } catch (Exception e) {
             log.error("Falha crítica ao gerar stream de datas para o espelho do colaborador {}: {}", employeeId, e.getMessage(), e);
             return java.util.Collections.emptyList();

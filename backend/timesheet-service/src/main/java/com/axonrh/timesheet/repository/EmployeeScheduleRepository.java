@@ -24,6 +24,19 @@ public interface EmployeeScheduleRepository extends JpaRepository<EmployeeSchedu
             @Param("employeeIds") List<UUID> employeeIds,
             @Param("date") LocalDate date);
 
+    @Query("SELECT es FROM EmployeeSchedule es JOIN FETCH es.workSchedule " +
+           "WHERE es.tenantId = :tenantId AND es.employeeId IN :employeeIds " +
+           "ORDER BY es.validFrom DESC")
+    List<EmployeeSchedule> findAllByEmployeeIds(
+            @Param("tenantId") UUID tenantId,
+            @Param("employeeIds") List<UUID> employeeIds);
+
+    @Query("SELECT es FROM EmployeeSchedule es JOIN FETCH es.workSchedule " +
+           "WHERE es.employeeId IN :employeeIds " +
+           "ORDER BY es.validFrom DESC")
+    List<EmployeeSchedule> findAllByEmployeeIdsAnyTenant(
+            @Param("employeeIds") List<UUID> employeeIds);
+
     @Query("SELECT DISTINCT es.employeeId FROM EmployeeSchedule es WHERE es.tenantId = :tenantId")
     List<UUID> findDistinctEmployeeIdsByTenantId(@Param("tenantId") UUID tenantId);
 }
