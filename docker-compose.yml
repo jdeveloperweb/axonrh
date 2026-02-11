@@ -323,6 +323,22 @@ services:
       SPRING_FLYWAY_ENABLED: "true"
       SERVER_PORT: 8090
 
+  payroll-service:
+    <<: *backend-service
+    container_name: axonrh-payroll-service
+    command: mvn -pl payroll-service -am spring-boot:run
+    ports:
+      - "8092:8092"
+    environment:
+      <<: *backend-env
+      SPRING_FLYWAY_ENABLED: "true"
+      SERVER_PORT: 8092
+      EMPLOYEE_SERVICE_URL: http://employee-service:8083
+      TIMESHEET_SERVICE_URL: http://timesheet-service:8084
+      VACATION_SERVICE_URL: http://vacation-service:8085
+      PERFORMANCE_SERVICE_URL: http://performance-service:8086
+      CONFIG_SERVICE_URL: http://config-service:8888
+
   api-gateway:
     <<: *backend-service
     container_name: axonrh-api-gateway

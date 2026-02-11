@@ -33,6 +33,7 @@
         <module>ai-assistant-service</module>
         <module>notification-service</module>
         <module>integration-service</module>
+        <module>payroll-service</module>
     </modules>
 
     <properties>

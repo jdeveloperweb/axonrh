@@ -146,6 +146,14 @@ spring:
             # - StripPrefix=2
             - name: JwtAuthFilter
 
+        # Payroll Service
+        - id: payroll-service
+          uri: http://axonrh-payroll-service:8092
+          predicates:
+            - Path=/api/v1/payroll/**
+          filters:
+            - name: JwtAuthFilter
+
         # Integration Service
         - id: integration-service
           uri: http://axonrh-integration-service:8090
