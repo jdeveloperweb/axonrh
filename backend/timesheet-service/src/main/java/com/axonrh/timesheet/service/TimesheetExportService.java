@@ -32,6 +32,7 @@ public class TimesheetExportService {
     private final EmployeeScheduleRepository employeeScheduleRepository;
     private final TimeAdjustmentRepository adjustmentRepository;
     private final com.axonrh.timesheet.client.EmployeeServiceClient employeeClient;
+    private final com.axonrh.timesheet.repository.DailySummaryRepository dailySummaryRepository;
 
     public byte[] exportToPdf(UUID employeeId, LocalDate startDate, LocalDate endDate) {
         UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
@@ -48,13 +49,33 @@ public class TimesheetExportService {
 
     public byte[] exportMassToPdf(LocalDate startDate, LocalDate endDate) {
         UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
-        List<UUID> employeeIds = employeeScheduleRepository.findDistinctEmployeeIdsByTenantId(tenantId);
+        
+        // Identificar todos os colaboradores que tiveram atividade (resumos) no período
+        List<com.axonrh.timesheet.entity.DailySummary> summaries = dailySummaryRepository
+                .findByTenantIdAndSummaryDateBetweenOrderBySummaryDateAsc(tenantId, startDate, endDate);
+        
+        List<UUID> employeeIds = summaries.stream()
+                .map(com.axonrh.timesheet.entity.DailySummary::getEmployeeId)
+                .distinct()
+                .toList();
+
+        if (employeeIds.isEmpty()) {
+            log.warn("Nenhum dado de ponto encontrado para exportacao em massa no periodo {} a {}", startDate, endDate);
+            return new byte[0];
+        }
+
+        log.info("Iniciando exportacao em massa para {} colaboradores", employeeIds.size());
         
         List<ExportData> exportList = employeeIds.stream().map(id -> {
-            List<DailySummaryResponse> timesheet = dailySummaryService.getTimesheetByPeriod(id, startDate, endDate);
-            DailySummaryService.PeriodTotals totals = dailySummaryService.getPeriodTotals(id, startDate, endDate);
-            return new ExportData(id, getEmployeeName(tenantId, id), timesheet, totals);
-        }).toList();
+            try {
+                List<DailySummaryResponse> timesheet = dailySummaryService.getTimesheetByPeriod(id, startDate, endDate);
+                DailySummaryService.PeriodTotals totals = dailySummaryService.getPeriodTotals(id, startDate, endDate);
+                return new ExportData(id, getEmployeeName(tenantId, id), timesheet, totals);
+            } catch (Exception e) {
+                log.error("Erro ao processar dados do colaborador {} para exportacao em massa: {}", id, e.getMessage());
+                return null;
+            }
+        }).filter(java.util.Objects::nonNull).toList();
 
         String html = generateHtmlContent(exportList, startDate, endDate);
         

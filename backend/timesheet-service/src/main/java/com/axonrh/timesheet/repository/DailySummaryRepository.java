@@ -24,6 +24,10 @@ public interface DailySummaryRepository extends JpaRepository<DailySummary, UUID
     List<DailySummary> findByTenantIdAndEmployeeIdAndSummaryDateBetweenOrderBySummaryDateAsc(
             UUID tenantId, UUID employeeId, LocalDate startDate, LocalDate endDate);
 
+    // Busca geral por periodo para todos os colaboradores do tenant
+    List<DailySummary> findByTenantIdAndSummaryDateBetweenOrderBySummaryDateAsc(
+            UUID tenantId, LocalDate startDate, LocalDate endDate);
+
     // Espelho de ponto em periodo (multiplos IDs - para lidar com migracao user->employee)
     List<DailySummary> findByTenantIdAndEmployeeIdInAndSummaryDateBetweenOrderBySummaryDateAsc(
             UUID tenantId, List<UUID> employeeIds, LocalDate startDate, LocalDate endDate);
