@@ -9,8 +9,16 @@ import java.util.UUID;
 @FeignClient(name = "config-service", url = "${application.clients.config-service:http://config-service:8888}")
 public interface ConfigServiceClient {
 
-    @GetMapping("/api/v1/config/logo/{tenantId}")
-    LogoUrlResponse getLogoUrl(@PathVariable("tenantId") UUID tenantId);
+    @GetMapping("/api/v1/config/theme/{tenantId}")
+    ThemeConfigResponse getThemeConfig(@PathVariable("tenantId") UUID tenantId);
 
-    record LogoUrlResponse(UUID tenantId, String logoUrl) {}
+    @GetMapping("/api/v1/config/logos/{tenantId}/{filename}")
+    byte[] getLogoBytes(@PathVariable("tenantId") UUID tenantId, @PathVariable("filename") String filename);
+
+    @lombok.Data
+    class ThemeConfigResponse {
+        private String logoUrl;
+        private String primaryColor;
+        private String secondaryColor;
+    }
 }
