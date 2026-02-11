@@ -1,0 +1,32 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        default_schema: PUBLIC
+  flyway:
+    enabled: false
+  kafka:
+    bootstrap-servers: localhost:9092
+  cache:
+    type: none
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          secret-key: axonrh-jwt-secret-key-change-in-production-2026
+          jws-algorithms: HS256
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+multitenancy:
+  default-schema: PUBLIC
+  tenant-schema-prefix: tenant_
