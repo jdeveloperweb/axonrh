@@ -31,6 +31,7 @@ public class TimesheetExportService {
     private final DailySummaryService dailySummaryService;
     private final EmployeeScheduleRepository employeeScheduleRepository;
     private final TimeAdjustmentRepository adjustmentRepository;
+    private final com.axonrh.timesheet.client.EmployeeServiceClient employeeClient;
 
     public byte[] exportToPdf(UUID employeeId, LocalDate startDate, LocalDate endDate) {
         UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
@@ -137,6 +138,13 @@ public class TimesheetExportService {
 
 
     private String getEmployeeName(UUID tenantId, UUID employeeId) {
+        try {
+            com.axonrh.timesheet.dto.EmployeeDTO emp = employeeClient.getEmployee(employeeId);
+            if (emp != null) return emp.getFullName();
+        } catch (Exception e) {
+            log.debug("Nao foi possivel obter nome do colaborador {} via client: {}", employeeId, e.getMessage());
+        }
+
         return adjustmentRepository.findByTenantIdAndEmployeeIdOrderByCreatedAtDesc(
                 tenantId, employeeId, org.springframework.data.domain.Pageable.ofSize(1))
                 .getContent().stream()

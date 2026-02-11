@@ -29,6 +29,8 @@ import java.util.UUID;
 public class OvertimeBankController {
 
     private final OvertimeBankService overtimeBankService;
+    private final com.axonrh.timesheet.client.EmployeeServiceClient employeeClient;
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(OvertimeBankController.class);
 
     @GetMapping("/employee/{employeeId}/balance")
     @Operation(summary = "Saldo atual", description = "Retorna o saldo atual do banco de horas")
@@ -127,7 +129,17 @@ public class OvertimeBankController {
 
     private UUID resolveEmployeeId(String employeeId, Jwt jwt) {
         if ("me".equalsIgnoreCase(employeeId)) {
-            return UUID.fromString(jwt.getSubject());
+            UUID userId = UUID.fromString(jwt.getSubject());
+            try {
+                String email = jwt.getClaimAsString("email");
+                com.axonrh.timesheet.dto.EmployeeDTO employee = employeeClient.getEmployeeByUserId(userId, email);
+                if (employee != null) {
+                    return employee.getId();
+                }
+            } catch (Exception e) {
+                log.error("Erro ao resolver funcionario para usuario {} no banco de horas: {}", userId, e.getMessage());
+            }
+            return userId;
         }
         return UUID.fromString(employeeId);
     }

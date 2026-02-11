@@ -22,6 +22,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 public class TimesheetExportController {
 
     private final TimesheetExportService exportService;
+    private final com.axonrh.timesheet.client.EmployeeServiceClient employeeClient;
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TimesheetExportController.class);
 
     @GetMapping("/employee/{employeeId}/export")
     @Operation(summary = "Exportar espelho individual", description = "Gera PDF ou Excel do espelho de ponto de um colaborador")
@@ -72,7 +74,18 @@ public class TimesheetExportController {
 
     private java.util.UUID resolveEmployeeId(String employeeId, org.springframework.security.oauth2.jwt.Jwt jwt) {
         if ("me".equalsIgnoreCase(employeeId)) {
-            return java.util.UUID.fromString(jwt.getSubject());
+            java.util.UUID userId = java.util.UUID.fromString(jwt.getSubject());
+            try {
+                String email = jwt.getClaimAsString("email");
+                com.axonrh.timesheet.dto.EmployeeDTO employee = employeeClient.getEmployeeByUserId(userId, email);
+                if (employee != null) {
+                    log.debug("Resolvido usuario {} para funcionario {} para exportacao", userId, employee.getId());
+                    return employee.getId();
+                }
+            } catch (Exception e) {
+                log.error("Erro ao resolver funcionario para usuario {} na exportacao: {}", userId, e.getMessage());
+            }
+            return userId;
         }
         return java.util.UUID.fromString(employeeId);
     }
