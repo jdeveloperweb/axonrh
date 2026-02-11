@@ -208,10 +208,13 @@ public class DailySummaryService {
                 s.getId(), s.getValidFrom(), s.getValidUntil(), s.getWorkSchedule() != null ? s.getWorkSchedule().getName() : "N/A", s.getTenantId());
         }
 
-        // Preparar fallback se necessário (carregado fora do map para performance)
-        final EmployeeSchedule fallbackSchedule = (allSchedules.isEmpty()) ? resolveScheduleFallback(tenantId, employeeId, empDto) : null;
+        // Preparar fallback (sempre carregar se não houver escala específica para o dia)
+        final EmployeeSchedule fallbackSchedule = resolveScheduleFallback(tenantId, employeeId, empDto);
         if (fallbackSchedule != null) {
-            log.info("Diagnóstico: Utilizando fallback de escala fixed para o espelho: {}", fallbackSchedule.getWorkSchedule().getName());
+            log.info("Diagnóstico Fallback OK: Utilizando escala '{}' (ID: {}) para colaborador {}", 
+                fallbackSchedule.getWorkSchedule().getName(), fallbackSchedule.getWorkSchedule().getId(), employeeId);
+        } else {
+            log.warn("Diagnóstico Fallback FALHOU: Nao foi possivel determinar escala fixa para colaborador {}", employeeId);
         }
 
         try {
@@ -680,14 +683,38 @@ public class DailySummaryService {
     }
 
     private EmployeeSchedule resolveScheduleFallback(UUID tenantId, UUID employeeId, com.axonrh.timesheet.dto.EmployeeDTO dto) {
-        if (tenantId == null) return null;
+        if (tenantId == null) {
+            log.warn("resolveScheduleFallback: tenantId is null for employee {}", employeeId);
+            return null;
+        }
         
         UUID scheduleId = (dto != null) ? dto.getWorkScheduleId() : null;
-        if (scheduleId == null) return null;
+        if (scheduleId == null) {
+            log.warn("resolveScheduleFallback: No workScheduleId found in DTO for employee {}", employeeId);
+            return null;
+        }
 
         try {
-            return workScheduleRepository.findByTenantIdAndIdWithDays(tenantId, scheduleId)
-                    .map(ws -> EmployeeSchedule.builder()
+            Optional<WorkSchedule> wsOpt = workScheduleRepository.findByTenantIdAndIdWithDays(tenantId, scheduleId);
+            
+            if (wsOpt.isEmpty()) {
+                log.warn("resolveScheduleFallback: WorkSchedule {} NOT FOUND for tenant {} (Employee {}). Checking other tenants...", 
+                    scheduleId, tenantId, employeeId);
+                
+                // Busca diagnóstica em qualquer tenant
+                List<WorkSchedule> anyTenantWS = workScheduleRepository.findAll().stream()
+                        .filter(ws -> ws.getId().equals(scheduleId))
+                        .toList();
+                
+                if (!anyTenantWS.isEmpty()) {
+                    log.error("resolveScheduleFallback: ATENÇÃO! Escala {} existe, mas pertence ao(s) tenant(s) {}. O colaborador {} pertence ao tenant {}.",
+                        scheduleId, 
+                        anyTenantWS.stream().map(ws -> ws.getTenantId().toString()).collect(java.util.stream.Collectors.joining(", ")),
+                        employeeId, tenantId);
+                }
+            }
+
+            return wsOpt.map(ws -> EmployeeSchedule.builder()
                             .workSchedule(ws)
                             .employeeId(employeeId)
                             .tenantId(tenantId)
