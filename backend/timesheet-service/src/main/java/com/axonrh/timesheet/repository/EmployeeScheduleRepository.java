@@ -18,8 +18,8 @@ public interface EmployeeScheduleRepository extends JpaRepository<EmployeeSchedu
            "WHERE es.tenantId = :tenantId AND es.employeeId IN :employeeIds " +
            "AND es.validFrom <= :date " +
            "AND (es.validUntil IS NULL OR es.validUntil >= :date) " +
-           "ORDER BY es.validFrom DESC LIMIT 1")
-    Optional<EmployeeSchedule> findActiveSchedule(
+           "ORDER BY es.validFrom DESC")
+    List<EmployeeSchedule> findActiveSchedules(
             @Param("tenantId") UUID tenantId,
             @Param("employeeIds") List<UUID> employeeIds,
             @Param("date") LocalDate date);

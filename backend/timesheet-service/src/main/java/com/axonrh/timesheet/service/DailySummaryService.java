@@ -104,16 +104,15 @@ public class DailySummaryService {
         // Buscar registros validos do dia
         List<TimeRecord> records = timeRecordRepository.findValidRecordsForDate(tenantId, employeeId, date);
 
-        // Buscar IDs para escala (EmployeeID + UserID se houver legado)
+        // Buscar escala ativa para o dia (EmployeeID + UserID se houver legado)
         List<UUID> scheduleProfileIds = getProfileIds(employeeId);
-
-        // Buscar escala ativa para o dia
-        Optional<EmployeeSchedule> activeSchedule = employeeScheduleRepository.findActiveSchedule(tenantId, scheduleProfileIds, date);
+        List<EmployeeSchedule> schedules = employeeScheduleRepository.findActiveSchedules(tenantId, scheduleProfileIds, date);
+        EmployeeSchedule activeSchedule = schedules.isEmpty() ? null : schedules.get(0);
 
 
 
         // Calcular totais
-        calculateTotals(summary, records, activeSchedule.orElse(null));
+        calculateTotals(summary, records, activeSchedule);
 
         DailySummary saved = dailySummaryRepository.save(summary);
 
@@ -184,31 +183,27 @@ public class DailySummaryService {
             }
         }
 
+        final List<UUID> idsToSearchFinal = idsToSearch;
+        final String currentTenantFinal = currentTenant;
+
         try {
             return startDate.datesUntil(endDate.plusDays(1))
                     .map(date -> {
                         try {
-                            UUID tenantId = currentTenant != null ? UUID.fromString(currentTenant) : null;
-                            // Recalcular IDs se necessario ou passar idsToSearch (final)
-                            // idsToSearch foi calculado fora do stream, passar para findActiveSchedule
-                            // Porem findActiveSchedule precisa de tenantId valido
-                            Optional<EmployeeSchedule> schedule = Optional.empty();
+                            UUID tenantId = currentTenantFinal != null ? UUID.fromString(currentTenantFinal) : null;
+                            EmployeeSchedule schedule = null;
                             if (tenantId != null) {
-                                // Para evitar chamar getProfileIds repetidamente, usamos uma lista pre-calculada se possivel?
-                                // Como idsToSearch esta dentro do if (currentTenant != null), nao esta no escopo aqui.
-                                // Entao chamamos getProfileIds novamente (cached pelo Feign/Spring se configurado, senao custoso)
-                                // Melhor seria calcular ids fora.
-                                // Mas vamos usar getProfileIds(employeeId) aqui, assumindo performance aceitavel ou cache.
-                                // Na verdade, para otimizar, poderiamos passar a lista calculada anteriormente.
-                                // Mas o escopo de variaveis e chato. Vamos simplificar chamando getProfileIds.
-                                schedule = employeeScheduleRepository.findActiveSchedule(tenantId, getProfileIds(employeeId), date);
+                                List<EmployeeSchedule> schedules = employeeScheduleRepository.findActiveSchedules(tenantId, idsToSearchFinal, date);
+                                if (!schedules.isEmpty()) {
+                                    schedule = schedules.get(0);
+                                }
                             }
                                 
                             DailySummary summary = summaryMap.get(date);
                             if (summary != null) {
-                                return toResponse(summary, schedule.orElse(null));
+                                return toResponse(summary, schedule);
                             } else {
-                                return createVirtualSummary(employeeId, date, schedule.orElse(null));
+                                return createVirtualSummary(employeeId, date, schedule);
                             }
                         } catch (Exception e) {
                             log.error("Erro ao converter resumo do dia {}: {}", date, e.getMessage());
@@ -290,8 +285,8 @@ public class DailySummaryService {
             return dailySummaryRepository
                 .findByTenantIdAndEmployeeIdAndSummaryDate(tenantId, employeeId, date)
                 .map(summary -> {
-                    Optional<EmployeeSchedule> schedule = employeeScheduleRepository.findActiveSchedule(tenantId, getProfileIds(employeeId), date);
-                    return toResponse(summary, schedule.orElse(null));
+                    List<EmployeeSchedule> schedules = employeeScheduleRepository.findActiveSchedules(tenantId, getProfileIds(employeeId), date);
+                    return toResponse(summary, schedules.isEmpty() ? null : schedules.get(0));
                 });
     }
 
