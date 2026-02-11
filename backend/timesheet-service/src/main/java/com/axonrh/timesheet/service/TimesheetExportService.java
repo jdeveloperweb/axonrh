@@ -109,10 +109,10 @@ public class TimesheetExportService {
                 } else if (Boolean.TRUE.equals(day.getIsHoliday())) {
                     row.createCell(2).setCellValue("FERIADO: " + (day.getHolidayName() != null ? day.getHolidayName() : ""));
                 } else {
-                    row.createCell(2).setCellValue(getString(day.getFirstEntry()));
-                    row.createCell(3).setCellValue(getString(day.getBreakStart()));
-                    row.createCell(4).setCellValue(getString(day.getBreakEnd()));
-                    row.createCell(5).setCellValue(getString(day.getLastExit()));
+                    row.createCell(2).setCellValue(formatTimeExcel(day.getFirstEntry()));
+                    row.createCell(3).setCellValue(formatTimeExcel(day.getBreakStart()));
+                    row.createCell(4).setCellValue(formatTimeExcel(day.getBreakEnd()));
+                    row.createCell(5).setCellValue(formatTimeExcel(day.getLastExit()));
                 }
                 
                 row.createCell(6).setCellValue(day.getWorkedFormatted());
@@ -157,45 +157,82 @@ public class TimesheetExportService {
 
     private String generateHtmlContent(List<ExportData> dataList, LocalDate startDate, LocalDate endDate) {
         StringBuilder sb = new StringBuilder();
-        sb.append("<html><head><style>");
-        sb.append("body { font-family: 'Helvetica', sans-serif; color: #333; margin: 0; padding: 20px; }");
-        sb.append(".page { page-break-after: always; display: flex; flex-direction: column; min-height: 98vh; position: relative; }");
-        sb.append(".header { text-align: center; margin-bottom: 15px; border-bottom: 2px solid #3b82f6; padding-bottom: 10px; }");
-        sb.append("h1 { color: #1e3a8a; font-size: 20px; margin: 0; text-transform: uppercase; letter-spacing: 1px; }");
-        sb.append(".company-info { font-size: 11px; color: #64748b; margin-top: 4px; font-weight: bold; }");
-        sb.append(".subtitle { font-size: 13px; margin-bottom: 15px; background: #eff6ff; padding: 12px; border-radius: 6px; border: 1px solid #bfdbfe; display: flex; justify-content: space-between; }");
-        sb.append("table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 10px; table-layout: fixed; }");
-        sb.append("th, td { border: 1px solid #e2e8f0; padding: 5px 3px; text-align: center; overflow: hidden; }");
-        sb.append("th { background-color: #f8fafc; font-weight: bold; text-transform: uppercase; font-size: 9px; color: #475569; }");
-        sb.append(".weekend { background-color: #f1f5f9; color: #94a3b8; }");
-        sb.append(".holiday { background-color: #fef3c7; color: #92400e; }");
-        sb.append(".absent { color: #be123c; font-weight: bold; }");
-        sb.append(".summary-container { display: flex; justify-content: space-between; margin-top: auto; padding-top: 15px; border-top: 1px solid #e2e8f0; }");
-        sb.append(".summary-box { width: 48%; border: 1px solid #e2e8f0; padding: 10px; border-radius: 6px; background: #fdfdfd; }");
-        sb.append(".summary-title { font-weight: bold; margin-bottom: 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; font-size: 11px; color: #1e3a8a; }");
-        sb.append(".summary-row { display: flex; justify-content: space-between; margin-bottom: 3px; font-size: 10px; }");
-        sb.append(".signatures { margin-top: 30px; display: flex; justify-content: space-between; width: 100%; }");
-        sb.append(".signature-line { width: 45%; border-top: 1px solid #64748b; text-align: center; padding-top: 5px; font-size: 10px; color: #475569; margin-top: 30px; }");
-        sb.append(".footer { text-align: center; font-size: 8px; color: #94a3b8; position: absolute; bottom: 0; width: 100%; }");
+        sb.append("<!DOCTYPE html><html><head><meta charset='UTF-8'><style>");
+        sb.append("body { font-family: 'Helvetica', 'Arial', sans-serif; color: #1e293b; margin: 0; padding: 0; background-color: #ffffff; }");
+        sb.append(".page { padding: 40px; page-break-after: always; min-height: 1000px; position: relative; }");
+        
+        // Header
+        sb.append(".report-header { border-bottom: 2px solid #2563eb; margin-bottom: 25px; padding-bottom: 15px; display: table; width: 100%; }");
+        sb.append(".header-left { display: table-cell; vertical-align: middle; }");
+        sb.append(".header-right { display: table-cell; vertical-align: middle; text-align: right; }");
+        sb.append("h1 { color: #1e3a8a; font-size: 24px; margin: 0; font-weight: 800; text-transform: uppercase; }");
+        sb.append(".company-info { font-size: 12px; color: #64748b; margin-top: 5px; font-weight: 600; }");
+        
+        // Employee Info Box
+        sb.append(".info-grid { width: 100%; border: 1px solid #e2e8f0; background: #f8fafc; border-radius: 8px; margin-bottom: 25px; border-collapse: separate; border-spacing: 15px; }");
+        sb.append(".info-item { font-size: 13px; color: #334155; }");
+        sb.append(".info-label { font-weight: bold; color: #64748b; font-size: 11px; text-transform: uppercase; margin-bottom: 2px; }");
+        sb.append(".info-value { font-size: 15px; font-weight: 700; color: #0f172a; }");
+        
+        // Table
+        sb.append("table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px; }");
+        sb.append("th { background-color: #f1f5f9; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 10px; padding: 10px 5px; border-bottom: 2px solid #e2e8f0; text-align: center; }");
+        sb.append("td { padding: 8px 4px; border-bottom: 1px solid #f1f5f9; text-align: center; color: #334155; }");
+        sb.append("tr:nth-child(even) { background-color: #fafafa; }");
+        sb.append(".weekend { background-color: #f8fafc; color: #94a3b8; }");
+        sb.append(".holiday { background-color: #fffbeb; color: #92400e; }");
+        sb.append(".absent { color: #dc2626; font-weight: 600; font-style: italic; }");
+        sb.append(".col-date { font-weight: 600; width: 65px; }");
+        sb.append(".col-time { width: 50px; }");
+        sb.append(".col-total { font-weight: 600; color: #0f172a; }");
+        
+        // Summary
+        sb.append(".footer-container { display: table; width: 100%; margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 20px; }");
+        sb.append(".summary-section { display: table-cell; width: 48%; vertical-align: top; }");
+        sb.append(".summary-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; background: #ffffff; margin-right: 15px; }");
+        sb.append(".summary-title { font-weight: 800; font-size: 12px; color: #1e3a8a; border-bottom: 1px solid #eee; padding-bottom: 8px; margin-bottom: 10px; text-transform: uppercase; }");
+        sb.append(".summary-row { display: table; width: 100%; margin-bottom: 6px; font-size: 12px; }");
+        sb.append(".summary-label { display: table-cell; text-align: left; color: #64748b; }");
+        sb.append(".summary-value { display: table-cell; text-align: right; font-weight: 700; color: #0f172a; }");
+        
+        // Signatures
+        sb.append(".signature-box { margin-top: 60px; display: table; width: 100%; border-spacing: 40px 0; }");
+        sb.append(".sig-line { display: table-cell; border-top: 1px solid #94a3b8; text-align: center; padding-top: 8px; font-size: 11px; color: #475569; width: 45%; }");
+        
+        // Meta
+        sb.append(".page-footer { position: absolute; bottom: 20px; left: 40px; right: 40px; border-top: 1px solid #f1f5f9; padding-top: 10px; font-size: 10px; color: #94a3b8; text-align: center; }");
+        
         sb.append("</style></head><body>");
 
         for (ExportData data : dataList) {
             sb.append("<div class='page'>");
-            sb.append("<div class='header'><h1>Espelho de Ponto Eletrônico</h1>")
-                .append("<div class='company-info'>AxonRH - Gestão Estratégica de Pessoas</div></div>");
+            
+            // Header Section
+            sb.append("<div class='report-header'>");
+            sb.append("<div class='header-left'><h1>Espelho de Ponto</h1><div class='company-info'>AxonRH - Sistema de Gestão de Pessoas</div></div>");
+            sb.append("<div class='header-right'><div style='font-size: 12px; font-weight: bold;'>Data de Emissão</div><div style='font-size: 14px;'>")
+              .append(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))).append("</div></div>");
+            sb.append("</div>");
 
-            sb.append("<div class='subtitle'>")
-                .append("<div><strong>Colaborador:</strong> ").append(data.name()).append("</div>")
-                .append("<div><strong>Período:</strong> ").append(startDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
-                .append(" a ").append(endDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))).append("</div></div>");
+            // Employee & Period Section
+            sb.append("<table class='info-grid'><tr>");
+            sb.append("<td><div class='info-label'>Colaborador</div><div class='info-value'>").append(data.name()).append("</div></td>");
+            sb.append("<td><div class='info-label'>Período de Apuração</div><div class='info-value'>")
+              .append(startDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+              .append(" a ")
+              .append(endDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+              .append("</div></td>");
+            sb.append("<td><div class='info-label'>ID Registro</div><div class='info-value'>").append(data.id().toString().substring(0, 8).toUpperCase()).append("</div></td>");
+            sb.append("</tr></table>");
 
+            // Main Table
             sb.append("<table><thead><tr>")
-                .append("<th style='width: 8%'>Data</th><th style='width: 6%'>Dia</th>")
-                .append("<th style='width: 8%'>Entrada</th><th style='width: 8%'>I. Início</th>")
-                .append("<th style='width: 8%'>I. Fim</th><th style='width: 8%'>Saída</th>")
-                .append("<th style='width: 9%'>Trab.</th><th style='width: 9%'>Extras</th>")
-                .append("<th style='width: 9%'>Faltas</th><th style='width: 9%'>Noturno</th>")
-                .append("<th style='width: 10%'>Saldo</th><th style='width: 10%'>Status</th>")
+                .append("<th class='col-date'>Data</th><th>Dia</th>")
+                .append("<th class='col-time'>Entrada</th><th class='col-time'>Intervalo</th>")
+                .append("<th class='col-time'>Retorno</th><th class='col-time'>Saída</th>")
+                .append("<th class='col-total'>Trabalhado</th><th>Extras</th>")
+                .append("<th>Faltas</th><th>Saldo</th>")
+                .append("<th>Ocorrência</th>")
                 .append("</tr></thead><tbody>");
 
             for (DailySummaryResponse day : data.timesheet()) {
@@ -203,56 +240,71 @@ public class TimesheetExportService {
                 if (Boolean.TRUE.equals(day.getIsHoliday())) rowClass = " class='holiday'";
                 else if (day.getDayOfWeek().equals("Sábado") || day.getDayOfWeek().equals("Domingo")) rowClass = " class='weekend'";
                 
-                sb.append("<tr").append(rowClass).append(">")
-                    .append("<td>").append(day.getSummaryDate().format(DateTimeFormatter.ofPattern("dd/MM/yy"))).append("</td>")
-                    .append("<td>").append(day.getDayOfWeek().substring(0, 3)).append("</td>");
+                sb.append("<tr").append(rowClass).append(">");
+                sb.append("<td class='col-date'>").append(day.getSummaryDate().format(DateTimeFormatter.ofPattern("dd/MM/yy"))).append("</td>")
+                  .append("<td>").append(day.getDayOfWeek().substring(0, 3)).append("</td>");
                 
                 if (Boolean.TRUE.equals(day.getIsAbsent())) {
-                    sb.append("<td colspan='4' class='absent'>").append(day.getAbsenceType() != null ? day.getAbsenceType() : "FALTA").append("</td>");
+                    sb.append("<td colspan='4' class='absent'>").append(day.getAbsenceType() != null ? day.getAbsenceType().toUpperCase() : "AUSÊNCIA NÃO JUSTIFICADA").append("</td>");
                 } else if (Boolean.TRUE.equals(day.getIsHoliday())) {
-                    sb.append("<td colspan='4'>FERIADO: ").append(day.getHolidayName() != null ? day.getHolidayName() : "").append("</td>");
+                    sb.append("<td colspan='4' style='font-style: italic; color: #92400e;'>FERIADO: ").append(day.getHolidayName() != null ? day.getHolidayName() : "").append("</td>");
                 } else {
-                    sb.append("<td>").append(getString(day.getFirstEntry())).append("</td>")
-                        .append("<td>").append(getString(day.getBreakStart())).append("</td>")
-                        .append("<td>").append(getString(day.getBreakEnd())).append("</td>")
-                        .append("<td>").append(getString(day.getLastExit())).append("</td>");
+                    sb.append("<td>").append(formatTime(day.getFirstEntry())).append("</td>")
+                      .append("<td>").append(formatTime(day.getBreakStart())).append("</td>")
+                      .append("<td>").append(formatTime(day.getBreakEnd())).append("</td>")
+                      .append("<td>").append(formatTime(day.getLastExit())).append("</td>");
                 }
 
-                sb.append("<td>").append(day.getWorkedFormatted()).append("</td>")
+                sb.append("<td class='col-total'>").append(day.getWorkedFormatted()).append("</td>")
                     .append("<td>").append(day.getOvertimeFormatted()).append("</td>")
-                    .append("<td>").append(day.getDeficitFormatted()).append("</td>")
-                    .append("<td>").append(day.getNightShiftFormatted()).append("</td>")
-                    .append("<td>").append(Boolean.TRUE.equals(day.getIsPositive()) ? "+" : "-").append(day.getBalanceFormatted()).append("</td>")
-                    .append("<td>").append(Boolean.TRUE.equals(day.getIsHoliday()) ? "Feriado" : Boolean.TRUE.equals(day.getIsAbsent()) ? "Falta" : "OK").append("</td>")
+                    .append("<td style='color: #dc2626'>").append(day.getDeficitFormatted()).append("</td>")
+                    .append("<td style='font-weight: bold;'>").append(Boolean.TRUE.equals(day.getIsPositive()) ? "+" : "-").append(day.getBalanceFormatted()).append("</td>")
+                    .append("<td style='font-size: 9px;'>").append(day.getIsHoliday() ? "Feriado" : day.getIsAbsent() ? "Falta" : "OK").append("</td>")
                     .append("</tr>");
             }
             sb.append("</tbody></table>");
 
-            sb.append("<div class='summary-container'>");
-            sb.append("<div class='summary-box'><div class='summary-title'>RESUMO DE HORAS</div>")
-                .append("<div class='summary-row'><span>Horas Trabalhadas:</span><strong>").append(data.totals().workedFormatted()).append("</strong></div>")
-                .append("<div class='summary-row'><span>Horas Extras:</span><strong>").append(data.totals().overtimeFormatted()).append("</strong></div>")
-                .append("<div class='summary-row'><span>Faltas / Débitos:</span><strong style='color:#be123c'>").append(data.totals().deficitFormatted()).append("</strong></div>")
-                .append("<div class='summary-row'><span>Adic. Noturno:</span><strong>").append(data.totals().nightShiftFormatted()).append("</strong></div>")
-                .append("</div>");
-
-            sb.append("<div class='summary-box'><div class='summary-title'>OCORRÊNCIAS</div>")
-                .append("<div class='summary-row'><span>Dias em Falta:</span><strong>").append(data.totals().absences()).append("</strong></div>")
-                .append("<div class='summary-row'><span>Atrasos (Min):</span><strong>").append(data.totals().lateArrivalFormatted()).append("</strong></div>")
+            // Summary Section
+            sb.append("<div class='footer-container'>");
+            
+            sb.append("<div class='summary-section'><div class='summary-card'>");
+            sb.append("<div class='summary-title'>Resumo do Período</div>")
+                .append("<div class='summary-row'><span class='summary-label'>Horas Trabalhadas:</span><span class='summary-value'>").append(data.totals().workedFormatted()).append("</span></div>")
+                .append("<div class='summary-row'><span class='summary-label'>Horas Extras:</span><span class='summary-value' style='color: #16a34a;'>").append(data.totals().overtimeFormatted()).append("</span></div>")
+                .append("<div class='summary-row'><span class='summary-label'>Faltas / Débitos:</span><span class='summary-value' style='color: #dc2626;'>").append(data.totals().deficitFormatted()).append("</span></div>")
+                .append("<div class='summary-row'><span class='summary-label'>Adic. Noturno:</span><span class='summary-value'>").append(data.totals().nightShiftFormatted()).append("</span></div>")
                 .append("</div></div>");
 
-            sb.append("<div class='signatures'><div class='signature-line'>Assinatura do Colaborador</div>")
-                .append("<div class='signature-line'>Assinatura do Responsável</div></div>");
+            sb.append("<div class='summary-section'><div class='summary-card'>");
+            sb.append("<div class='summary-title'>Estatísticas</div>")
+                .append("<div class='summary-row'><span class='summary-label'>Dias em Falta:</span><span class='summary-value'>").append(data.totals().absences()).append("</span></div>")
+                .append("<div class='summary-row'><span class='summary-label'>Atrasos Acumulados:</span><span class='summary-value'>").append(data.totals().lateArrivalFormatted()).append("</span></div>")
+                .append("<div class='summary-row'><span class='summary-label'>Total de Ocorrências:</span><span class='summary-value'>").append(data.totals().absences() > 0 ? "Atenção" : "Normal").append("</span></div>")
+                .append("</div></div>");
+            
+            sb.append("</div>");
 
-            sb.append("<div class='footer'>Gerado em ").append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))).append("</div></div>");
+            // Signatures
+            sb.append("<div class='signature-box'>")
+                .append("<div class='sig-line'>Assinatura do Colaborador (").append(data.name()).append(")</div>")
+                .append("<div class='sig-line'>Assinatura do Responsável / RH</div>")
+                .append("</div>");
+
+            sb.append("<div class='page-footer'>Este documento é um espelho de ponto eletrônico gerado pelo sistema AxonRH e serve como comprovante de jornada.</div></div>");
         }
 
         sb.append("</body></html>");
         return sb.toString();
     }
 
-    private String getString(LocalTime val) {
-        return val == null ? "" : val.toString();
+    private String formatTime(LocalTime val) {
+        if (val == null) return "--:--";
+        return val.format(DateTimeFormatter.ofPattern("HH:mm"));
+    }
+
+    private String formatTimeExcel(LocalTime val) {
+        if (val == null) return "";
+        return val.format(DateTimeFormatter.ofPattern("HH:mm"));
     }
 
     private String getString(String val) {
