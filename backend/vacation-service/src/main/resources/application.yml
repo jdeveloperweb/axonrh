@@ -107,3 +107,7 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
+# Clientes HTTP
+application:
+  clients:
+    employee-service: ${EMPLOYEE_SERVICE_URL:http://localhost:8083}

@@ -2,12 +2,11 @@ package com.axonrh.performance.service;
 
 import com.axonrh.performance.dto.NineBoxEmployee;
 import com.axonrh.performance.dto.NineBoxMatrix;
-import com.axonrh.performance.entity.Evaluation;
-import com.axonrh.performance.entity.EvaluationAnswer;
-import com.axonrh.performance.entity.EvaluationCycle;
+import com.axonrh.performance.entity.*;
 import com.axonrh.performance.entity.enums.EvaluationStatus;
 import com.axonrh.performance.entity.enums.EvaluatorType;
 import com.axonrh.performance.repository.EvaluationCycleRepository;
+import com.axonrh.performance.repository.EvaluationFormRepository;
 import com.axonrh.performance.repository.EvaluationRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
@@ -33,15 +32,18 @@ public class EvaluationService {
     private final EvaluationCycleRepository cycleRepository;
     private final com.axonrh.performance.publisher.PerformanceEventPublisher eventPublisher;
     private final com.axonrh.performance.client.EmployeeServiceClient employeeServiceClient;
+    private final com.axonrh.performance.repository.EvaluationFormRepository formRepository;
 
     public EvaluationService(EvaluationRepository evaluationRepository,
                             EvaluationCycleRepository cycleRepository,
                             com.axonrh.performance.publisher.PerformanceEventPublisher eventPublisher,
-                            com.axonrh.performance.client.EmployeeServiceClient employeeServiceClient) {
+                            com.axonrh.performance.client.EmployeeServiceClient employeeServiceClient,
+                            com.axonrh.performance.repository.EvaluationFormRepository formRepository) {
         this.evaluationRepository = evaluationRepository;
         this.cycleRepository = cycleRepository;
         this.eventPublisher = eventPublisher;
         this.employeeServiceClient = employeeServiceClient;
+        this.formRepository = formRepository;
     }
 
     // ==================== Cycles ====================
@@ -112,6 +114,15 @@ public class EvaluationService {
                 tenantId, cycle.getId(), employee.getId(), evaluatorId, type);
 
         if (!exists) {
+            EvaluationForm form = null;
+            if (cycle.getDefaultFormId() != null) {
+                form = formRepository.findById(cycle.getDefaultFormId()).orElse(null);
+            }
+            
+            if (form == null) {
+                form = getOrCreateDefaultForm(tenantId);
+            }
+            
             Evaluation evaluation = new Evaluation();
             evaluation.setTenantId(tenantId);
             evaluation.setCycle(cycle);
@@ -120,60 +131,129 @@ public class EvaluationService {
             evaluation.setEvaluatorId(evaluatorId);
             evaluation.setEvaluatorName(evaluatorName);
             evaluation.setEvaluatorType(type);
-            evaluation.setFormId(UUID.randomUUID()); // Using random ID until Form Management is implemented
+            evaluation.setFormId(form.getId());
             evaluation.setStatus(EvaluationStatus.PENDING);
             
-            // Adicionar perguntas padrao
-            addDefaultQuestions(evaluation);
+            // Adicionar perguntas do formulario
+            addQuestionsFromForm(evaluation, form);
 
             evaluationRepository.save(evaluation);
         }
     }
 
-    private void addDefaultQuestions(Evaluation evaluation) {
-        // Perguntas sao adicionadas como respostas vazias (unanswered)
-        List<EvaluationAnswer> questions = new ArrayList<>();
-        
-        // Competencias Tecnicas
-        addQuestion(questions, evaluation, "Demonstra conhecimento técnico adequado para suas funções?", "Competências Técnicas");
-        addQuestion(questions, evaluation, "Busca atualizar seus conhecimentos constantemente?", "Competências Técnicas");
-        
-        // Competencias Comportamentais
-        addQuestion(questions, evaluation, "Comunica-se de forma clara e objetiva?", "Competências Comportamentais");
-        addQuestion(questions, evaluation, "Trabalha bem em equipe e colabora com colegas?", "Competências Comportamentais");
-        addQuestion(questions, evaluation, "Demonstra inteligência emocional em situações de pressão?", "Competências Comportamentais");
-        
-        // Entregas e Resultados
-        addQuestion(questions, evaluation, "Entrega resultados dentro dos prazos estabelecidos?", "Entregas e Resultados");
-        addQuestion(questions, evaluation, "Demonstra proatividade e iniciativa?", "Entregas e Resultados");
-        addQuestion(questions, evaluation, "A qualidade das entregas atende às expectativas?", "Entregas e Resultados");
+    private EvaluationForm getOrCreateDefaultForm(UUID tenantId) {
+        List<EvaluationForm> forms = formRepository.findByTenantIdAndActiveTrue(tenantId);
+        if (!forms.isEmpty()) {
+            return forms.get(0);
+        }
 
-        // Perguntas de Texto (Peso 0)
-        addTextQuestion(questions, evaluation, "Quais foram as principais conquistas no período?", "Feedback Qualitativo");
-        addTextQuestion(questions, evaluation, "Quais áreas precisam de desenvolvimento?", "Feedback Qualitativo");
+        // Criar Formulario Padrao se nao existir
+        EvaluationForm defaultForm = EvaluationForm.builder()
+                .tenantId(tenantId)
+                .name("Formulário Padrão de Performance")
+                .description("Formulário padrão com competências técnicas, comportamentais e resultados.")
+                .formType("MIXED")
+                .active(true)
+                .isTemplate(true)
+                .sections(new java.util.ArrayList<>())
+                .build();
 
-        evaluation.setAnswers(questions);
+        // Secao 1: Tecnicas
+        FormSection technical = FormSection.builder()
+                .form(defaultForm)
+                .name("Competências Técnicas")
+                .sectionOrder(1)
+                .sectionType("COMPETENCIES")
+                .weight(new BigDecimal("30"))
+                .questions(new java.util.ArrayList<>())
+                .build();
+        addQuestionToSection(technical, "Demonstra conhecimento técnico adequado para suas funções?", 1);
+        addQuestionToSection(technical, "Busca atualizar seus conhecimentos constantemente?", 2);
+        defaultForm.getSections().add(technical);
+
+        // Secao 2: Comportamentais
+        FormSection behavioral = FormSection.builder()
+                .form(defaultForm)
+                .name("Competências Comportamentais")
+                .sectionOrder(2)
+                .sectionType("BEHAVIORS")
+                .weight(new BigDecimal("30"))
+                .questions(new java.util.ArrayList<>())
+                .build();
+        addQuestionToSection(behavioral, "Comunica-se de forma clara e objetiva?", 1);
+        addQuestionToSection(behavioral, "Trabalha bem em equipe e colabora com colegas?", 2);
+        addQuestionToSection(behavioral, "Demonstra inteligência emocional em situações de pressão?", 3);
+        defaultForm.getSections().add(behavioral);
+
+        // Secao 3: Resultados
+        FormSection results = FormSection.builder()
+                .form(defaultForm)
+                .name("Entregas e Resultados")
+                .sectionOrder(3)
+                .sectionType("GOALS")
+                .weight(new BigDecimal("40"))
+                .questions(new java.util.ArrayList<>())
+                .build();
+        addQuestionToSection(results, "Entrega resultados dentro dos prazos estabelecidos?", 1);
+        addQuestionToSection(results, "Demonstra proatividade e iniciativa?", 2);
+        addQuestionToSection(results, "A qualidade das entregas atende às expectativas?", 3);
+        defaultForm.getSections().add(results);
+
+        // Secao 4: Qualitativo
+        FormSection qualitative = FormSection.builder()
+                .form(defaultForm)
+                .name("Feedback Qualitativo")
+                .sectionOrder(4)
+                .sectionType("OPEN_QUESTIONS")
+                .weight(BigDecimal.ZERO)
+                .questions(new java.util.ArrayList<>())
+                .build();
+        addTextQuestionToSection(qualitative, "Quais foram as principais conquistas no período?", 1);
+        addTextQuestionToSection(qualitative, "Quais áreas precisam de desenvolvimento?", 2);
+        defaultForm.getSections().add(qualitative);
+
+        return formRepository.save(defaultForm);
     }
 
-    private void addQuestion(List<EvaluationAnswer> list, Evaluation evaluation, String text, String section) {
-        EvaluationAnswer a = new EvaluationAnswer();
-        a.setEvaluation(evaluation);
-        a.setQuestionId(UUID.randomUUID());
-        a.setQuestionText(text);
-        a.setSectionName(section);
-        a.setWeight(BigDecimal.ONE);
-        list.add(a);
+    private void addQuestionToSection(FormSection section, String text, int order) {
+        section.getQuestions().add(FormQuestion.builder()
+                .section(section)
+                .questionText(text)
+                .questionType("RATING")
+                .questionOrder(order)
+                .weight(BigDecimal.ONE)
+                .required(true)
+                .build());
     }
 
-    private void addTextQuestion(List<EvaluationAnswer> list, Evaluation evaluation, String text, String section) {
-        EvaluationAnswer a = new EvaluationAnswer();
-        a.setEvaluation(evaluation);
-        a.setQuestionId(UUID.randomUUID());
-        a.setQuestionText(text);
-        a.setSectionName(section);
-        a.setWeight(BigDecimal.ZERO);
-        list.add(a);
+    private void addTextQuestionToSection(FormSection section, String text, int order) {
+        section.getQuestions().add(FormQuestion.builder()
+                .section(section)
+                .questionText(text)
+                .questionType("TEXT")
+                .questionOrder(order)
+                .weight(BigDecimal.ZERO)
+                .required(false)
+                .build());
     }
+
+    private void addQuestionsFromForm(Evaluation evaluation, EvaluationForm form) {
+        List<EvaluationAnswer> answers = new java.util.ArrayList<>();
+        for (FormSection section : form.getSections()) {
+            for (FormQuestion question : section.getQuestions()) {
+                EvaluationAnswer a = new EvaluationAnswer();
+                a.setEvaluation(evaluation);
+                a.setQuestionId(question.getId());
+                a.setQuestionText(question.getQuestionText());
+                a.setSectionName(section.getName());
+                a.setWeight(question.getWeight());
+                answers.add(a);
+            }
+        }
+        evaluation.setAnswers(answers);
+    }
+
+
 
     public EvaluationCycle completeCycle(UUID tenantId, UUID cycleId) {
         EvaluationCycle cycle = getCycle(tenantId, cycleId);
