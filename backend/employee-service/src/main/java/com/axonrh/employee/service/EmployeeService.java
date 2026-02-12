@@ -59,6 +59,23 @@ public class EmployeeService {
      * Lista colaboradores com filtros dinamicos.
      */
     @Transactional(readOnly = true)
+    public List<EmployeeResponse> getActiveEmployees(UUID departmentId) {
+        UUID tenantId = getTenantId();
+        org.springframework.data.jpa.domain.Specification<Employee> spec = (root, query, cb) -> {
+            java.util.List<jakarta.persistence.criteria.Predicate> predicates = new java.util.ArrayList<>();
+            predicates.add(cb.equal(root.get("tenantId"), tenantId));
+            predicates.add(cb.equal(root.get("status"), EmployeeStatus.ACTIVE));
+            if (departmentId != null) {
+                predicates.add(cb.equal(root.get("department").get("id"), departmentId));
+            }
+            return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
+        };
+        return employeeRepository.findAll(spec).stream()
+                .map(employeeMapper::toResponse)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
     public Page<EmployeeResponse> findWithFilters(String search, EmployeeStatus status, UUID departmentId, UUID positionId, WorkRegime workRegime, String hybridDay, Pageable pageable) {
         UUID tenantId = getTenantId();
         log.info(">>> [DEBUG-TRACE] EmployeeService.findWithFilters - Search: {}, Status: {}, Dept: {}, Pos: {}, Regime: {}, Day: {}", 

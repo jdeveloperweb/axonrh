@@ -43,6 +43,14 @@ public class EmployeeController {
         return ResponseEntity.ok("Employee service is reachable");
     }
 
+    @GetMapping("/active")
+    @Operation(summary = "Lista todos colaboradores ativos (sem paginacao)", description = "Retorna lista de colaboradores ativos, opcionalmente filtrados por departamento")
+    public ResponseEntity<java.util.List<EmployeeResponse>> getActiveEmployees(
+            @RequestParam(required = false) UUID departmentId) {
+        log.info("Fetching all active employees for department: {}", departmentId);
+        return ResponseEntity.ok(employeeService.getActiveEmployees(departmentId));
+    }
+
     @GetMapping
     @PreAuthorize("hasAuthority('EMPLOYEE:READ')")
     @Operation(summary = "Lista colaboradores", description = "Retorna lista paginada de colaboradores com filtros opcionais")

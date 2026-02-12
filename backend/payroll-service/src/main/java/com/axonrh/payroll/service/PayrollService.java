@@ -148,7 +148,7 @@ public class PayrollService {
             employees = new ArrayList<>();
             for (UUID deptId : request.getDepartmentIds()) {
                 try {
-                    List<EmployeeDTO> deptEmployees = employeeServiceClient.getActiveEmployees("ACTIVE", deptId);
+                    List<EmployeeDTO> deptEmployees = employeeServiceClient.getActiveEmployees(deptId);
                     if (deptEmployees != null) {
                         employees.addAll(deptEmployees);
                     }
@@ -162,7 +162,7 @@ public class PayrollService {
                     .collect(Collectors.toMap(EmployeeDTO::getId, e -> e, (e1, e2) -> e1))
                     .values().stream().toList();
         } else {
-            employees = employeeServiceClient.getActiveEmployees("ACTIVE", null);
+            employees = employeeServiceClient.getActiveEmployees(null);
         }
 
         int failedCount = 0;
