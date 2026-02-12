@@ -297,7 +297,7 @@ public class PayrollService {
                 .totalEarnings(payroll.getTotalEarnings())
                 .totalDeductions(payroll.getTotalDeductions())
                 .netSalary(payroll.getNetSalary())
-                .fgtsBase(payroll.getFgtsBase())
+                .fgtsBase(payroll.getTotalEarnings())
                 .fgtsAmount(payroll.getFgtsAmount())
                 .inssBase(inssItem.map(i -> i.getReferenceValue()).orElse(BigDecimal.ZERO))
                 .inssAmount(inssItem.map(i -> i.getAmount()).orElse(BigDecimal.ZERO))

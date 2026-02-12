@@ -30,8 +30,8 @@ public class PayrollPdfService {
         
         // Cabeçalho com Logo ou Nome Estilizado
         String brandElement = (p.getLogoUrl() != null && !p.getLogoUrl().isEmpty()) 
-            ? "<img src='" + p.getLogoUrl() + "' style='max-height: 45px;' />" 
-            : "<div style='font-size: 14pt; font-weight: 900; color:" + brandColor + "'>" + p.getCompanyName() + "</div>";
+            ? "<img src='" + p.getLogoUrl() + "' style='max-height: 50px;' />" 
+            : "<div style='font-size: 18pt; font-weight: 900; color:" + brandColor + "; letter-spacing: -0.5px;'>" + p.getCompanyName() + "</div>";
 
         for (PayrollItemResponse item : p.getEarnings()) {
             itemsHtml.append(String.format(
