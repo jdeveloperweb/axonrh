@@ -25,10 +25,16 @@ public class TaxBracketController {
 
     @GetMapping
     @Operation(summary = "Listar faixas por tipo de imposto")
-    public ResponseEntity<List<TaxBracket>> findByType(@RequestParam String taxType) {
+    public ResponseEntity<List<TaxBracket>> findByType(@RequestParam(required = false) String taxType) {
         UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
-        List<TaxBracket> brackets = taxBracketRepository
+        List<TaxBracket> brackets;
+        if (taxType != null && !taxType.isBlank()) {
+            brackets = taxBracketRepository
                 .findByTenantIdAndTaxTypeAndIsActiveTrueOrderByBracketOrderAsc(tenantId, taxType);
+        } else {
+            // Se nao informar o tipo, traz tudo ordenado pelo limite inferior
+            brackets = taxBracketRepository.findByTenantIdAndIsActiveTrueOrderByMinValueAsc(tenantId);
+        }
         return ResponseEntity.ok(brackets);
     }
 

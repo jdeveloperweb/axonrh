@@ -1,4 +1,4 @@
-import { api } from './client';
+import { api, Page } from './client';
 
 // ==================== Types ====================
 
@@ -55,13 +55,13 @@ export interface TaxBracket {
     id: string;
     taxType: 'INSS' | 'IRRF';
     description: string;
-    minLimit: number;
-    maxLimit?: number;
+    minValue: number;
+    maxValue?: number;
     rate: number;
-    deductionValue: number;
+    deductionAmount: number;
     effectiveFrom: string;
     effectiveUntil?: string;
-    active: boolean;
+    isActive: boolean;
 }
 
 export interface PayslipResponse {
@@ -94,8 +94,10 @@ export interface PayrollRequest {
 export interface PayrollBatchRequest {
     month: number;
     year: number;
+    strategy: 'ALL' | 'DEPARTMENT' | 'SPECIFIC';
     departmentIds?: string[];
     employeeIds?: string[];
+    description?: string;
 }
 
 // ==================== API Client ====================
@@ -112,7 +114,13 @@ export const payrollApi = {
      * Process batch payroll
      */
     processBatch: async (data: PayrollBatchRequest): Promise<PayrollRun> => {
-        return api.post<PayrollBatchRequest, PayrollRun>('/payroll/process/batch', data);
+        return api.post<any, PayrollRun>('/payroll/process/batch', {
+            referenceMonth: data.month,
+            referenceYear: data.year,
+            employeeIds: data.employeeIds,
+            departmentIds: data.departmentIds,
+            description: data.description
+        });
     },
 
     /**

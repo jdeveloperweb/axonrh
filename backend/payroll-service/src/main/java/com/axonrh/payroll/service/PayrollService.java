@@ -144,8 +144,25 @@ public class PayrollService {
                     log.error("Erro ao buscar colaborador {}: {}", empId, e.getMessage());
                 }
             }
+        } else if (request.getDepartmentIds() != null && !request.getDepartmentIds().isEmpty()) {
+            employees = new ArrayList<>();
+            for (UUID deptId : request.getDepartmentIds()) {
+                try {
+                    List<EmployeeDTO> deptEmployees = employeeServiceClient.getActiveEmployees("ACTIVE", deptId);
+                    if (deptEmployees != null) {
+                        employees.addAll(deptEmployees);
+                    }
+                } catch (Exception e) {
+                    log.error("Erro ao buscar colaboradores do departamento {}: {}", deptId, e.getMessage());
+                }
+            }
+            // Distinct por ID
+            employees = employees.stream()
+                    .filter(e -> e.getId() != null)
+                    .collect(Collectors.toMap(EmployeeDTO::getId, e -> e, (e1, e2) -> e1))
+                    .values().stream().toList();
         } else {
-            employees = employeeServiceClient.getActiveEmployees("ACTIVE");
+            employees = employeeServiceClient.getActiveEmployees("ACTIVE", null);
         }
 
         int failedCount = 0;

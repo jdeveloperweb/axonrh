@@ -13,6 +13,17 @@ export const api = axios.create({
   },
 });
 
+// ==================== Types ====================
+export interface Page<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+}
+
 // Alias for backward compatibility
 export const apiClient = api;
 

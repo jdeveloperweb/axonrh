@@ -23,7 +23,15 @@ export default function TaxBracketsPage() {
     const [loading, setLoading] = useState(true);
     const [brackets, setBrackets] = useState<TaxBracket[]>([]);
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [isAdding, setIsAdding] = useState<'INSS' | 'IRRF' | null>(null);
     const [editFormData, setEditFormData] = useState<Partial<TaxBracket>>({});
+    const [addFormData, setAddFormData] = useState<Partial<TaxBracket>>({
+        minValue: 0,
+        rate: 0,
+        deductionAmount: 0,
+        isActive: true,
+        effectiveFrom: new Date().toISOString().split('T')[0]
+    });
 
     const fetchData = async () => {
         setLoading(true);
@@ -71,10 +79,31 @@ export default function TaxBracketsPage() {
         }
     };
 
+    const handleAdd = async () => {
+        if (!isAdding) return;
+        try {
+            await payrollApi.createTaxBracket({
+                ...addFormData,
+                taxType: isAdding
+            });
+            setIsAdding(null);
+            setAddFormData({
+                minValue: 0,
+                rate: 0,
+                deductionAmount: 0,
+                isActive: true,
+                effectiveFrom: new Date().toISOString().split('T')[0]
+            });
+            fetchData();
+        } catch (error) {
+            alert('Erro ao adicionar faixa');
+        }
+    };
+
     const brl = (val: number) => formatCurrency(val);
 
     const renderBracketTable = (type: 'INSS' | 'IRRF', title: string, colorClass: string) => {
-        const filtered = brackets.filter(b => b.taxType === type).sort((a, b) => a.minLimit - b.minLimit);
+        const filtered = brackets.filter(b => b.taxType === type).sort((a, b) => a.minValue - b.minValue);
 
         return (
             <div className="card overflow-hidden">
@@ -85,7 +114,12 @@ export default function TaxBracketsPage() {
                         </div>
                         <h3 className="font-bold text-white uppercase tracking-wider">{title}</h3>
                     </div>
-                    <Button variant="outline" size="sm" className="bg-white/10 border-white/20 text-white hover:bg-white/20 gap-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="bg-white/10 border-white/20 text-white hover:bg-white/20 gap-2"
+                        onClick={() => setIsAdding(type)}
+                    >
                         <Plus className="w-4 h-4" />
                         Nova Faixa
                     </Button>
@@ -102,14 +136,58 @@ export default function TaxBracketsPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y">
+                            {isAdding === type && (
+                                <tr className="bg-blue-50/50">
+                                    <td className="px-6 py-2">
+                                        <input
+                                            type="number"
+                                            className="input py-1"
+                                            placeholder="Min"
+                                            value={addFormData.minValue || ''}
+                                            onChange={e => setAddFormData({ ...addFormData, minValue: parseFloat(e.target.value) })}
+                                        />
+                                    </td>
+                                    <td className="px-6 py-2">
+                                        <input
+                                            type="number"
+                                            className="input py-1"
+                                            placeholder="Max (opcional)"
+                                            value={addFormData.maxValue || ''}
+                                            onChange={e => setAddFormData({ ...addFormData, maxValue: e.target.value ? parseFloat(e.target.value) : undefined })}
+                                        />
+                                    </td>
+                                    <td className="px-6 py-2 text-right">
+                                        <input
+                                            type="number"
+                                            className="input py-1 w-20 text-right"
+                                            placeholder="%"
+                                            value={addFormData.rate || ''}
+                                            onChange={e => setAddFormData({ ...addFormData, rate: parseFloat(e.target.value) || 0 })}
+                                        />
+                                    </td>
+                                    <td className="px-6 py-2 text-right">
+                                        <input
+                                            type="number"
+                                            className="input py-1 w-32 text-right"
+                                            placeholder="Dedução"
+                                            value={addFormData.deductionAmount || ''}
+                                            onChange={e => setAddFormData({ ...addFormData, deductionAmount: parseFloat(e.target.value) || 0 })}
+                                        />
+                                    </td>
+                                    <td className="px-6 py-2 text-right whitespace-nowrap">
+                                        <Button variant="ghost" size="sm" className="text-blue-600" onClick={handleAdd}><Save className="w-4 h-4" /></Button>
+                                        <Button variant="ghost" size="sm" className="text-[var(--color-text-tertiary)]" onClick={() => setIsAdding(null)}><X className="w-4 h-4" /></Button>
+                                    </td>
+                                </tr>
+                            )}
                             {filtered.map((b) => (
                                 <tr key={b.id} className="hover:bg-[var(--color-surface-variant)] transition-colors">
                                     {editingId === b.id ? (
                                         <>
-                                            <td className="px-6 py-2"><input type="number" className="input py-1" value={editFormData.minLimit} onChange={e => setEditFormData({ ...editFormData, minLimit: parseFloat(e.target.value) })} /></td>
-                                            <td className="px-6 py-2"><input type="number" className="input py-1" value={editFormData.maxLimit || ''} onChange={e => setEditFormData({ ...editFormData, maxLimit: e.target.value ? parseFloat(e.target.value) : undefined })} /></td>
+                                            <td className="px-6 py-2"><input type="number" className="input py-1" value={editFormData.minValue} onChange={e => setEditFormData({ ...editFormData, minValue: parseFloat(e.target.value) })} /></td>
+                                            <td className="px-6 py-2"><input type="number" className="input py-1" value={editFormData.maxValue || ''} onChange={e => setEditFormData({ ...editFormData, maxValue: e.target.value ? parseFloat(e.target.value) : undefined })} /></td>
                                             <td className="px-6 py-2 text-right"><input type="number" className="input py-1 w-20 text-right" value={editFormData.rate} onChange={e => setEditFormData({ ...editFormData, rate: parseFloat(e.target.value) })} /></td>
-                                            <td className="px-6 py-2 text-right"><input type="number" className="input py-1 w-32 text-right" value={editFormData.deductionValue} onChange={e => setEditFormData({ ...editFormData, deductionValue: parseFloat(e.target.value) })} /></td>
+                                            <td className="px-6 py-2 text-right"><input type="number" className="input py-1 w-32 text-right" value={editFormData.deductionAmount} onChange={e => setEditFormData({ ...editFormData, deductionAmount: parseFloat(e.target.value) })} /></td>
                                             <td className="px-6 py-2 text-right whitespace-nowrap">
                                                 <Button variant="ghost" size="sm" className="text-green-600" onClick={() => handleSave(b.id)}><Save className="w-4 h-4" /></Button>
                                                 <Button variant="ghost" size="sm" className="text-[var(--color-text-tertiary)]" onClick={handleCancel}><X className="w-4 h-4" /></Button>
@@ -117,14 +195,14 @@ export default function TaxBracketsPage() {
                                         </>
                                     ) : (
                                         <>
-                                            <td className="px-6 py-4 font-medium">{brl(b.minLimit)}</td>
-                                            <td className="px-6 py-4">{b.maxLimit ? brl(b.maxLimit) : 'Teto / Acima'}</td>
+                                            <td className="px-6 py-4 font-medium">{brl(b.minValue)}</td>
+                                            <td className="px-6 py-4">{b.maxValue ? brl(b.maxValue) : 'Teto / Acima'}</td>
                                             <td className="px-6 py-4 text-right">
                                                 <span className="px-2 py-1 bg-gray-100 rounded-md font-bold text-gray-700">
-                                                    {b.rate.toFixed(2)}%
+                                                    {b.rate}%
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 text-right text-[var(--color-text-secondary)]">{brl(b.deductionValue)}</td>
+                                            <td className="px-6 py-4 text-right text-[var(--color-text-secondary)]">{brl(b.deductionAmount)}</td>
                                             <td className="px-6 py-4 text-right whitespace-nowrap space-x-1">
                                                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => handleEdit(b)}>
                                                     <Pencil className="w-4 h-4" />

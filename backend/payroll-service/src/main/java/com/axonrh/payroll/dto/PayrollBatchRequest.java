@@ -28,5 +28,7 @@ public class PayrollBatchRequest {
 
     private List<UUID> employeeIds;
 
+    private List<UUID> departmentIds;
+
     private String description;
 }
