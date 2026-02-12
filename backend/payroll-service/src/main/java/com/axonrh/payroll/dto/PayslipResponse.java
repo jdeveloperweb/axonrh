@@ -13,16 +13,20 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class PayslipResponse {
-
     private String companyName;
     private String companyCnpj;
 
     private String employeeName;
     private String employeeCpf;
+    private String registrationNumber;
+    
+    @com.fasterxml.jackson.annotation.JsonProperty("employeeDepartment")
     private String department;
+    
+    @com.fasterxml.jackson.annotation.JsonProperty("employeeRole")
     private String position;
+    
     private String referenceLabel;
-
     private BigDecimal baseSalary;
 
     private List<PayrollItemResponse> earnings;
@@ -33,6 +37,8 @@ public class PayslipResponse {
     private BigDecimal netSalary;
 
     private BigDecimal fgtsBase;
+    
+    @com.fasterxml.jackson.annotation.JsonProperty("fgtsMonth")
     private BigDecimal fgtsAmount;
 
     private BigDecimal inssBase;

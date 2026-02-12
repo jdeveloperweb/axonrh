@@ -59,12 +59,38 @@ public class PayrollCalculationEngine {
 
         BigDecimal baseSalary = employee.getBaseSalary();
         BigDecimal hourlyRate = baseSalary.divide(MONTHLY_HOURS, 4, RoundingMode.HALF_UP);
+        
+        // --- Calculo de Pro-rata (Admissao no mes ou Faltas) ---
+        int daysInMonth = (timesheet != null && timesheet.getTotalDaysInMonth() != null) ? timesheet.getTotalDaysInMonth() : 30;
+        int effectiveWorkedDays = daysInMonth; // Padrao 30 dias se nao houver info contraria
+        
+        // Se temos info do timesheet sobre dias trabalhados de fato (admissao/demissao/afastamento no mes)
+        if (timesheet != null && timesheet.getWorkedDays() != null) {
+            effectiveWorkedDays = timesheet.getWorkedDays().intValue();
+        } else if (employee.getHireDate() != null) {
+            // Fallback para hireDate se o timesheet nao informou dias trabalhados
+            LocalDate startOfMonth = LocalDate.of(year, month, 1);
+            LocalDate endOfMonth = startOfMonth.plusMonths(1).minusDays(1);
+            
+            if (employee.getHireDate().isAfter(startOfMonth) && !employee.getHireDate().isAfter(endOfMonth)) {
+                int startDay = employee.getHireDate().getDayOfMonth();
+                effectiveWorkedDays = daysInMonth - startDay + 1;
+            }
+        }
+        
+        BigDecimal proportionalBaseSalary = baseSalary;
+        if (effectiveWorkedDays < daysInMonth) {
+            proportionalBaseSalary = baseSalary.divide(new BigDecimal(daysInMonth), 4, RoundingMode.HALF_UP)
+                    .multiply(new BigDecimal(effectiveWorkedDays))
+                    .setScale(2, RoundingMode.HALF_UP);
+        }
 
         Payroll payroll = Payroll.builder()
                 .tenantId(tenantId)
                 .employeeId(employee.getId())
                 .employeeName(employee.getFullName())
                 .employeeCpf(employee.getCpf())
+                .registrationNumber(employee.getRegistrationNumber())
                 .departmentName(employee.getDepartmentName())
                 .positionName(employee.getPositionName())
                 .referenceMonth(month)
@@ -77,10 +103,11 @@ public class PayrollCalculationEngine {
 
         // === PROVENTOS ===
 
-        // 1. Salario Base
+        // 1. Salario Base (ajustado por pro-rata se necessario)
         sortOrder++;
+        String baseDesc = effectiveWorkedDays < daysInMonth ? "Salário Proporcional (" + effectiveWorkedDays + " dias)" : "Salário Base";
         payroll.addItem(buildItem(tenantId, PayrollItemType.EARNING, PayrollItemCode.BASE_SALARY,
-                "Salario Base", baseSalary, null, null, baseSalary, sortOrder));
+                baseDesc, baseSalary, new BigDecimal(effectiveWorkedDays), null, proportionalBaseSalary, sortOrder));
 
         // 2. Horas Extras 50%
         if (timesheet != null && timesheet.getOvertime50Hours() != null
@@ -123,7 +150,7 @@ public class PayrollCalculationEngine {
                 && bonus.getBonusAmount().compareTo(BigDecimal.ZERO) > 0) {
             sortOrder++;
             payroll.addItem(buildItem(tenantId, PayrollItemType.EARNING, PayrollItemCode.BONUS,
-                    "Bonus - " + (bonus.getReason() != null ? bonus.getReason() : "Performance"),
+                    "Bônus - " + (bonus.getReason() != null ? bonus.getReason() : "Performance"),
                     null, null, null, bonus.getBonusAmount(), sortOrder));
         }
 
@@ -132,7 +159,7 @@ public class PayrollCalculationEngine {
                 && bonus.getCommissionAmount().compareTo(BigDecimal.ZERO) > 0) {
             sortOrder++;
             payroll.addItem(buildItem(tenantId, PayrollItemType.EARNING, PayrollItemCode.COMMISSION,
-                    "Comissao", null, null, null, bonus.getCommissionAmount(), sortOrder));
+                    "Comissão", null, null, null, bonus.getCommissionAmount(), sortOrder));
         }
 
         // 7. Ferias

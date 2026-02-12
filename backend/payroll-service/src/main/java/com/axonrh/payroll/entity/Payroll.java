@@ -41,6 +41,9 @@ public class Payroll {
     @Column(name = "employee_cpf")
     private String employeeCpf;
 
+    @Column(name = "registration_number")
+    private String registrationNumber;
+
     @Column(name = "department_name")
     private String departmentName;
 

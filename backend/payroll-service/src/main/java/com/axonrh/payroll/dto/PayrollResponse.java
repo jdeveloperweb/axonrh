@@ -22,33 +22,39 @@ public class PayrollResponse implements java.io.Serializable {
     private UUID employeeId;
     private String employeeName;
     private String employeeCpf;
+    private String registrationNumber;
     private String departmentName;
     private String positionName;
-    private Integer referenceMonth;
-    private Integer referenceYear;
     
-    // Alias para o frontend
-    public Integer getMonth() { return referenceMonth; }
-    public Integer getYear() { return referenceYear; }
+    @com.fasterxml.jackson.annotation.JsonProperty("month")
+    private Integer referenceMonth;
+    
+    @com.fasterxml.jackson.annotation.JsonProperty("year")
+    private Integer referenceYear;
 
     private PayrollStatus status;
     private BigDecimal baseSalary;
     private BigDecimal totalEarnings;
     private BigDecimal totalDeductions;
     
-    // Campos alinhados com o frontend
-    private BigDecimal netValue;
-    private BigDecimal fgtsValue;
+    @com.fasterxml.jackson.annotation.JsonProperty("netValue")
+    private BigDecimal netSalary;
     
-    // Mantendo originais para retrocompatibilidade interna se necessario
-    public BigDecimal getNetSalary() { return netValue; }
-    public void setNetSalary(BigDecimal val) { this.netValue = val; }
-    public BigDecimal getFgtsAmount() { return fgtsValue; }
-    public void setFgtsAmount(BigDecimal val) { this.fgtsValue = val; }
+    @com.fasterxml.jackson.annotation.JsonProperty("fgtsValue")
+    private BigDecimal fgtsAmount;
 
     private Integer calculationVersion;
     private String notes;
     private List<PayrollItemResponse> items;
-    private LocalDateTime createdAt;
+    
+    @com.fasterxml.jackson.annotation.JsonProperty("calculatedAt")
     private LocalDateTime updatedAt;
+    
+    private LocalDateTime createdAt;
+    
+    // Getters para compatibilidade interna se necessario
+    public BigDecimal getNetSalary() { return netSalary; }
+    public BigDecimal getFgtsAmount() { return fgtsAmount; }
+    public Integer getReferenceMonth() { return referenceMonth; }
+    public Integer getReferenceYear() { return referenceYear; }
 }

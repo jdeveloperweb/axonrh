@@ -249,6 +249,7 @@ public class PayrollService {
                 .companyCnpj("00.000.000/0001-00")
                 .employeeName(payroll.getEmployeeName())
                 .employeeCpf(payroll.getEmployeeCpf())
+                .registrationNumber(payroll.getRegistrationNumber())
                 .department(payroll.getDepartmentName())
                 .position(payroll.getPositionName())
                 .referenceLabel(String.format("%02d/%d", payroll.getReferenceMonth(), payroll.getReferenceYear()))
@@ -260,10 +261,10 @@ public class PayrollService {
                 .netSalary(payroll.getNetSalary())
                 .fgtsBase(payroll.getTotalEarnings())
                 .fgtsAmount(payroll.getFgtsAmount())
-                .inssBase(inssItem.map(i -> i.getReferenceValue()).orElse(null))
-                .inssAmount(inssItem.map(i -> i.getAmount()).orElse(null))
-                .irrfBase(irrfItem.map(i -> i.getReferenceValue()).orElse(null))
-                .irrfAmount(irrfItem.map(i -> i.getAmount()).orElse(null))
+                .inssBase(inssItem.map(i -> i.getReferenceValue()).orElse(BigDecimal.ZERO))
+                .inssAmount(inssItem.map(i -> i.getAmount()).orElse(BigDecimal.ZERO))
+                .irrfBase(irrfItem.map(i -> i.getReferenceValue()).orElse(BigDecimal.ZERO))
+                .irrfAmount(irrfItem.map(i -> i.getAmount()).orElse(BigDecimal.ZERO))
                 .build();
     }
 
