@@ -133,9 +133,10 @@ export const payrollApi = {
      * List payrolls by competency
      */
     getCompetencyPayrolls: async (month: number, year: number): Promise<Payroll[]> => {
-        return api.get<Payroll[], Payroll[]>('/payroll/competency', {
+        const response = await api.get<Page<Payroll>, Page<Payroll>>('/payroll/competency', {
             params: { month, year }
         });
+        return response.content;
     },
 
     /**
@@ -158,7 +159,8 @@ export const payrollApi = {
      * List payroll runs
      */
     getRuns: async (): Promise<PayrollRun[]> => {
-        return api.get<PayrollRun[], PayrollRun[]>('/payroll/runs');
+        const response = await api.get<Page<PayrollRun>, Page<PayrollRun>>('/payroll/runs');
+        return response.content;
     },
 
     // ==================== Tax Brackets ====================
