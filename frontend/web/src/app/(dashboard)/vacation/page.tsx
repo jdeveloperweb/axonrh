@@ -155,14 +155,27 @@ export default function VacationPage() {
             Planeje seu descanso, acompanhe prazos e gerencie solicitações.
           </p>
         </div>
-        <Button
-          onClick={() => router.push('/vacation/request')}
-          size="lg"
-          className="shadow-md hover:shadow-lg transition-all bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white border-0"
-        >
-          <Plus className="mr-2 h-5 w-5" />
-          Nova Solicitação
-        </Button>
+        <div className="flex items-center gap-3">
+          {(isAdmin || isRH) && (
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => router.push('/vacation/admin')}
+              className="border-primary text-primary hover:bg-primary/5 hidden sm:flex"
+            >
+              <Users className="mr-2 h-5 w-5" />
+              Administração
+            </Button>
+          )}
+          <Button
+            onClick={() => router.push('/vacation/request')}
+            size="lg"
+            className="shadow-md hover:shadow-lg transition-all bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white border-0"
+          >
+            <Plus className="mr-2 h-5 w-5" />
+            Nova Solicitação
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

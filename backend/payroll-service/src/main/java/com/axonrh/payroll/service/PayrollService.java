@@ -4,6 +4,7 @@ import com.axonrh.payroll.client.EmployeeServiceClient;
 import com.axonrh.payroll.client.PerformanceServiceClient;
 import com.axonrh.payroll.client.TimesheetServiceClient;
 import com.axonrh.payroll.client.VacationServiceClient;
+import com.axonrh.payroll.client.CoreServiceClient;
 import com.axonrh.payroll.config.TenantContext;
 import com.axonrh.payroll.dto.*;
 import com.axonrh.payroll.entity.Payroll;
@@ -48,6 +49,7 @@ public class PayrollService {
     private final TimesheetServiceClient timesheetServiceClient;
     private final VacationServiceClient vacationServiceClient;
     private final PerformanceServiceClient performanceServiceClient;
+    private final CoreServiceClient coreServiceClient;
     private final DomainEventPublisher eventPublisher;
 
     /**
@@ -245,14 +247,17 @@ public class PayrollService {
                 .filter(i -> i.getCode() == com.axonrh.payroll.enums.PayrollItemCode.IRRF)
                 .findFirst();
 
+        // Busca dados da empresa no core-service
+        var company = coreServiceClient.getCompanyProfile(tenantId);
+
         return PayslipResponse.builder()
-                .companyName("AxonRH") // TODO: Buscar do config-service
-                .companyCnpj("00.000.000/0001-00")
+                .companyName(company != null ? company.getLegalName() : "AxonRH")
+                .companyCnpj(company != null ? company.getCnpj() : "00.000.000/0001-00")
                 .employeeName(payroll.getEmployeeName())
                 .employeeCpf(payroll.getEmployeeCpf())
-                .registrationNumber(payroll.getRegistrationNumber())
-                .department(payroll.getDepartmentName())
-                .position(payroll.getPositionName())
+                .registrationNumber(payroll.getRegistrationNumber() != null ? payroll.getRegistrationNumber() : "-")
+                .department(payroll.getDepartmentName() != null ? payroll.getDepartmentName() : "Geral")
+                .position(payroll.getPositionName() != null ? payroll.getPositionName() : "Colaborador")
                 .month(payroll.getReferenceMonth())
                 .year(payroll.getReferenceYear())
                 .referenceLabel(String.format("%02d/%d", payroll.getReferenceMonth(), payroll.getReferenceYear()))

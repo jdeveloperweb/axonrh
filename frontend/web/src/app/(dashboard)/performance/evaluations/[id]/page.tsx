@@ -23,83 +23,16 @@ import { getErrorMessage } from '@/lib/api/client';
 import { useToast } from '@/hooks/use-toast';
 import { useConfirm } from '@/components/providers/ConfirmProvider';
 
+// FormQuestion interface defined locally for UI mapping
 interface FormQuestion {
-  id: string;
+  id: string; // This will map to questionId from backend answer
   text: string;
   section: string;
-  type: 'SCALE' | 'TEXT' | 'MULTIPLE_CHOICE';
+  type: 'SCALE' | 'TEXT';
   weight: number;
-  options?: string[];
   required: boolean;
+  answerId?: string; // ID of the answer record itself
 }
-
-// Mock de perguntas do formulario - em producao viriam do backend
-const mockQuestions: FormQuestion[] = [
-  {
-    id: '1',
-    text: 'Demonstra conhecimento tecnico adequado para suas funcoes?',
-    section: 'Competencias Tecnicas',
-    type: 'SCALE',
-    weight: 1,
-    required: true,
-  },
-  {
-    id: '2',
-    text: 'Busca atualizar seus conhecimentos constantemente?',
-    section: 'Competencias Tecnicas',
-    type: 'SCALE',
-    weight: 1,
-    required: true,
-  },
-  {
-    id: '3',
-    text: 'Comunica-se de forma clara e objetiva?',
-    section: 'Competencias Comportamentais',
-    type: 'SCALE',
-    weight: 1,
-    required: true,
-  },
-  {
-    id: '4',
-    text: 'Trabalha bem em equipe e colabora com colegas?',
-    section: 'Competencias Comportamentais',
-    type: 'SCALE',
-    weight: 1,
-    required: true,
-  },
-  {
-    id: '5',
-    text: 'Entrega resultados dentro dos prazos estabelecidos?',
-    section: 'Entregas e Resultados',
-    type: 'SCALE',
-    weight: 1.5,
-    required: true,
-  },
-  {
-    id: '6',
-    text: 'Demonstra proatividade e iniciativa?',
-    section: 'Entregas e Resultados',
-    type: 'SCALE',
-    weight: 1,
-    required: true,
-  },
-  {
-    id: '7',
-    text: 'Quais foram as principais conquistas no periodo?',
-    section: 'Feedback Qualitativo',
-    type: 'TEXT',
-    weight: 0,
-    required: false,
-  },
-  {
-    id: '8',
-    text: 'Quais areas precisam de desenvolvimento?',
-    section: 'Feedback Qualitativo',
-    type: 'TEXT',
-    weight: 0,
-    required: false,
-  },
-];
 
 export default function EvaluationPage() {
   const params = useParams();
@@ -109,6 +42,7 @@ export default function EvaluationPage() {
   const evaluationId = params.id as string;
 
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
+  const [questions, setQuestions] = useState<FormQuestion[]>([]);
   const [answers, setAnswers] = useState<Record<string, EvaluationAnswer>>({});
   const [feedback, setFeedback] = useState('');
   const [strengths, setStrengths] = useState('');
@@ -124,8 +58,26 @@ export default function EvaluationPage() {
         const data = await evaluationsApi.get(evaluationId);
         setEvaluation(data);
 
-        // Inicializar respostas existentes
-        if (data.answers) {
+        setEvaluation(data);
+
+        // Derivar perguntas das respostas retornadas pelo backend
+        if (data.answers && data.answers.length > 0) {
+          const derivedQuestions: FormQuestion[] = data.answers.map(ans => ({
+            id: ans.questionId,
+            text: ans.questionText,
+            section: ans.sectionName,
+            type: ans.weight > 0 ? 'SCALE' : 'TEXT',
+            weight: ans.weight,
+            required: ans.weight > 0, // Assumindo obrigatoriedade para questões de escala
+            answerId: ans.id
+          }));
+
+          // Ordenar por seção (simples)
+          // Em um cenario real, teriamos uma ordem definida
+
+          setQuestions(derivedQuestions);
+
+          // Inicializar respostas existentes
           const existingAnswers: Record<string, EvaluationAnswer> = {};
           data.answers.forEach((answer) => {
             existingAnswers[answer.questionId] = answer;
@@ -158,13 +110,14 @@ export default function EvaluationPage() {
   }, [evaluationId, toast]);
 
   const handleScoreChange = (questionId: string, score: number) => {
-    const question = mockQuestions.find((q) => q.id === questionId);
+    const question = questions.find((q) => q.id === questionId);
     if (!question) return;
 
     setAnswers((prev) => ({
       ...prev,
       [questionId]: {
         ...prev[questionId],
+        id: question.answerId, // Manter o ID da resposta original para update
         questionId,
         questionText: question.text,
         sectionName: question.section,
@@ -175,13 +128,14 @@ export default function EvaluationPage() {
   };
 
   const handleTextChange = (questionId: string, text: string) => {
-    const question = mockQuestions.find((q) => q.id === questionId);
+    const question = questions.find((q) => q.id === questionId);
     if (!question) return;
 
     setAnswers((prev) => ({
       ...prev,
       [questionId]: {
         ...prev[questionId],
+        id: question.answerId,
         questionId,
         questionText: question.text,
         sectionName: question.section,
@@ -246,7 +200,7 @@ export default function EvaluationPage() {
   };
 
   const calculateProgress = () => {
-    const required = mockQuestions.filter((q) => q.required);
+    const required = questions.filter((q) => q.required);
     const answered = required.filter((q) => answers[q.id]?.score !== undefined);
     return (answered.length / required.length) * 100;
   };
@@ -269,7 +223,7 @@ export default function EvaluationPage() {
   };
 
   // Agrupar perguntas por secao
-  const groupedQuestions = mockQuestions.reduce((acc, question) => {
+  const groupedQuestions = questions.reduce((acc, question) => {
     if (!acc[question.section]) {
       acc[question.section] = [];
     }

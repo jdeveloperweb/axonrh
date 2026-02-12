@@ -23,8 +23,34 @@ public class EmployeeDTO {
     private LocalDate hireDate;
     private String status;
     private BigDecimal baseSalary;
-    private String departmentName;
-    private String positionName;
+    
+    private DepartmentDTO department;
+    private PositionDTO position;
+    
+    public String getDepartmentName() {
+        return department != null ? department.getName() : null;
+    }
+    
+    public String getPositionName() {
+        return position != null ? position.getTitle() : null;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class DepartmentDTO {
+        private String name;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class PositionDTO {
+        private String title;
+    }
+    
     private Boolean hasTransportVoucher;
     private BigDecimal transportVoucherDiscount;
     private Boolean hasMealVoucher;

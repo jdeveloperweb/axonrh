@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -31,13 +32,16 @@ public class EvaluationService {
     private final EvaluationRepository evaluationRepository;
     private final EvaluationCycleRepository cycleRepository;
     private final com.axonrh.performance.publisher.PerformanceEventPublisher eventPublisher;
+    private final com.axonrh.performance.client.EmployeeServiceClient employeeServiceClient;
 
     public EvaluationService(EvaluationRepository evaluationRepository,
                             EvaluationCycleRepository cycleRepository,
-                            com.axonrh.performance.publisher.PerformanceEventPublisher eventPublisher) {
+                            com.axonrh.performance.publisher.PerformanceEventPublisher eventPublisher,
+                            com.axonrh.performance.client.EmployeeServiceClient employeeServiceClient) {
         this.evaluationRepository = evaluationRepository;
         this.cycleRepository = cycleRepository;
         this.eventPublisher = eventPublisher;
+        this.employeeServiceClient = employeeServiceClient;
     }
 
     // ==================== Cycles ====================
@@ -73,7 +77,102 @@ public class EvaluationService {
     public EvaluationCycle activateCycle(UUID tenantId, UUID cycleId) {
         EvaluationCycle cycle = getCycle(tenantId, cycleId);
         cycle.activate();
-        return cycleRepository.save(cycle);
+        EvaluationCycle saved = cycleRepository.save(cycle);
+        
+        // Gerar avaliacoes automaticamente para todos colaboradores ativos
+        generateEvaluations(tenantId, saved);
+        
+        return saved;
+    }
+
+    private void generateEvaluations(UUID tenantId, EvaluationCycle cycle) {
+        try {
+            List<com.axonrh.performance.dto.EmployeeDTO> employees = employeeServiceClient.getActiveEmployees();
+            log.info("Gerando avaliacoes para {} colaboradores no ciclo {}", employees.size(), cycle.getName());
+
+            for (com.axonrh.performance.dto.EmployeeDTO employee : employees) {
+                // 1. Autoavaliacao
+                if (Boolean.TRUE.equals(cycle.getIncludeSelfEvaluation()) && employee.getId() != null) {
+                    createEvaluationIfNotExists(tenantId, cycle, employee, employee.getId(), employee.getFullName(), EvaluatorType.SELF);
+                }
+
+                // 2. Avaliacao do Gestor
+                if (Boolean.TRUE.equals(cycle.getIncludeManagerEvaluation()) && employee.getManager() != null && employee.getManager().getId() != null) {
+                    createEvaluationIfNotExists(tenantId, cycle, employee, employee.getManager().getId(), employee.getManager().getName(), EvaluatorType.MANAGER);
+                }
+            }
+        } catch (Exception e) {
+            log.error("Erro ao gerar avaliacoes para o ciclo {}: {}", cycle.getId(), e.getMessage(), e);
+            // Nao relanca excecao para nao impedir ativacao do ciclo, mas loga erro grave
+        }
+    }
+
+    private void createEvaluationIfNotExists(UUID tenantId, EvaluationCycle cycle, com.axonrh.performance.dto.EmployeeDTO employee, UUID evaluatorId, String evaluatorName, EvaluatorType type) {
+        boolean exists = evaluationRepository.existsByTenantIdAndCycleIdAndEmployeeIdAndEvaluatorIdAndEvaluatorType(
+                tenantId, cycle.getId(), employee.getId(), evaluatorId, type);
+
+        if (!exists) {
+            Evaluation evaluation = new Evaluation();
+            evaluation.setTenantId(tenantId);
+            evaluation.setCycle(cycle);
+            evaluation.setEmployeeId(employee.getId());
+            evaluation.setEmployeeName(employee.getFullName());
+            evaluation.setEvaluatorId(evaluatorId);
+            evaluation.setEvaluatorName(evaluatorName);
+            evaluation.setEvaluatorType(type);
+            evaluation.setFormId(UUID.randomUUID()); // Using random ID until Form Management is implemented
+            evaluation.setStatus(EvaluationStatus.PENDING);
+            
+            // Adicionar perguntas padrao
+            addDefaultQuestions(evaluation);
+
+            evaluationRepository.save(evaluation);
+        }
+    }
+
+    private void addDefaultQuestions(Evaluation evaluation) {
+        // Perguntas sao adicionadas como respostas vazias (unanswered)
+        List<EvaluationAnswer> questions = new ArrayList<>();
+        
+        // Competencias Tecnicas
+        addQuestion(questions, evaluation, "Demonstra conhecimento técnico adequado para suas funções?", "Competências Técnicas");
+        addQuestion(questions, evaluation, "Busca atualizar seus conhecimentos constantemente?", "Competências Técnicas");
+        
+        // Competencias Comportamentais
+        addQuestion(questions, evaluation, "Comunica-se de forma clara e objetiva?", "Competências Comportamentais");
+        addQuestion(questions, evaluation, "Trabalha bem em equipe e colabora com colegas?", "Competências Comportamentais");
+        addQuestion(questions, evaluation, "Demonstra inteligência emocional em situações de pressão?", "Competências Comportamentais");
+        
+        // Entregas e Resultados
+        addQuestion(questions, evaluation, "Entrega resultados dentro dos prazos estabelecidos?", "Entregas e Resultados");
+        addQuestion(questions, evaluation, "Demonstra proatividade e iniciativa?", "Entregas e Resultados");
+        addQuestion(questions, evaluation, "A qualidade das entregas atende às expectativas?", "Entregas e Resultados");
+
+        // Perguntas de Texto (Peso 0)
+        addTextQuestion(questions, evaluation, "Quais foram as principais conquistas no período?", "Feedback Qualitativo");
+        addTextQuestion(questions, evaluation, "Quais áreas precisam de desenvolvimento?", "Feedback Qualitativo");
+
+        evaluation.setAnswers(questions);
+    }
+
+    private void addQuestion(List<EvaluationAnswer> list, Evaluation evaluation, String text, String section) {
+        EvaluationAnswer a = new EvaluationAnswer();
+        a.setEvaluation(evaluation);
+        a.setQuestionId(UUID.randomUUID());
+        a.setQuestionText(text);
+        a.setSectionName(section);
+        a.setWeight(BigDecimal.ONE);
+        list.add(a);
+    }
+
+    private void addTextQuestion(List<EvaluationAnswer> list, Evaluation evaluation, String text, String section) {
+        EvaluationAnswer a = new EvaluationAnswer();
+        a.setEvaluation(evaluation);
+        a.setQuestionId(UUID.randomUUID());
+        a.setQuestionText(text);
+        a.setSectionName(section);
+        a.setWeight(BigDecimal.ZERO);
+        list.add(a);
     }
 
     public EvaluationCycle completeCycle(UUID tenantId, UUID cycleId) {
@@ -198,10 +297,20 @@ public class EvaluationService {
     public Evaluation saveAnswers(UUID tenantId, UUID evaluationId, List<EvaluationAnswer> answers) {
         Evaluation evaluation = getEvaluation(tenantId, evaluationId);
 
-        evaluation.getAnswers().clear();
-        for (EvaluationAnswer answer : answers) {
-            answer.setEvaluation(evaluation);
-            evaluation.getAnswers().add(answer);
+        // Map existing answers by QuestionID for update
+        java.util.Map<UUID, EvaluationAnswer> existingMap = evaluation.getAnswers().stream()
+            .collect(java.util.stream.Collectors.toMap(EvaluationAnswer::getQuestionId, a -> a));
+
+        for (EvaluationAnswer newAns : answers) {
+            if (newAns.getQuestionId() != null && existingMap.containsKey(newAns.getQuestionId())) {
+                EvaluationAnswer existing = existingMap.get(newAns.getQuestionId());
+                existing.setScore(newAns.getScore());
+                existing.setTextAnswer(newAns.getTextAnswer());
+                existing.setComments(newAns.getComments());
+            } else {
+                newAns.setEvaluation(evaluation);
+                evaluation.getAnswers().add(newAns);
+            }
         }
 
         return evaluationRepository.save(evaluation);

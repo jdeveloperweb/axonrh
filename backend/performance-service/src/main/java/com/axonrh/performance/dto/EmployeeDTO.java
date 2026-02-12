@@ -18,4 +18,18 @@ public class EmployeeDTO {
     private UUID userId;
     private String fullName;
     private String email;
+    private ManagerDTO manager;
+    private String positionTitle;
+    private String departmentName;
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+    public static class ManagerDTO {
+        private UUID id;
+        private UUID userId;
+        private String name;
+        private String email;
+    }
 }

@@ -37,6 +37,8 @@ public class PayslipResponse {
 
     private BigDecimal totalEarnings;
     private BigDecimal totalDeductions;
+    
+    @com.fasterxml.jackson.annotation.JsonProperty("netValue")
     private BigDecimal netSalary;
 
     private BigDecimal fgtsBase;

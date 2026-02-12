@@ -38,6 +38,15 @@ import {
 } from 'chart.js';
 import { Doughnut, Bar } from 'react-chartjs-2';
 import { Separator } from '@/components/ui/separator';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import { evaluationsApi, Evaluation } from '@/lib/api/performance';
 
 ChartJS.register(
     ArcElement,
@@ -57,6 +66,7 @@ export default function CycleDashboardPage() {
     const [loading, setLoading] = useState(true);
     const [cycle, setCycle] = useState<EvaluationCycle | null>(null);
     const [stats, setStats] = useState<EvaluationStatistics | null>(null);
+    const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
     const [viewMode, setViewMode] = useState<'manager' | 'employee'>('manager');
 
     const loadData = useCallback(async () => {
@@ -64,9 +74,10 @@ export default function CycleDashboardPage() {
 
         try {
             setLoading(true);
-            const [cycleData, statsData] = await Promise.all([
+            const [cycleData, statsData, evaluationsData] = await Promise.all([
                 cyclesApi.get(id),
-                cyclesApi.getStatistics(id).catch(() => null)
+                cyclesApi.getStatistics(id).catch(() => null),
+                evaluationsApi.getByCycle(id, 0, 100).then(res => res.content).catch(() => [])
             ]);
 
             setCycle(cycleData);
@@ -79,6 +90,7 @@ export default function CycleDashboardPage() {
                 completed: 0,
                 completionRate: 0
             });
+            setEvaluations(evaluationsData);
 
         } catch (error) {
             console.error('Failed to load cycle data:', error);
@@ -506,16 +518,54 @@ export default function CycleDashboardPage() {
                                 <CardDescription>Lista de avaliações atribuídas a você neste ciclo</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                {/* Aqui entraria a lista de avaliações do colaborador */}
-                                <div className="flex flex-col items-center justify-center p-12 text-center border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50">
-                                    <div className="bg-white p-3 rounded-full mb-3 shadow-sm">
-                                        <UserCog className="h-8 w-8 text-slate-300" />
+                                {evaluations.length > 0 ? (
+                                    <div className="space-y-4">
+                                        {evaluations.filter(e => e.status !== 'COMPLETED' && e.status !== 'CALIBRATED').map(evaluation => (
+                                            <div key={evaluation.id} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-xl shadow-sm hover:border-blue-200 transition-all">
+                                                <div className="flex items-center gap-4">
+                                                    <div className={`p-3 rounded-full ${evaluation.evaluatorType === 'SELF' ? 'bg-blue-50 text-blue-600' : 'bg-purple-50 text-purple-600'
+                                                        }`}>
+                                                        {evaluation.evaluatorType === 'SELF' ? <User className="h-6 w-6" /> : <Users className="h-6 w-6" />}
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-bold text-slate-900">
+                                                            {evaluation.evaluatorType === 'SELF' ? 'Sua Autoavaliação' : `Avaliação de ${evaluation.employeeName}`}
+                                                        </h4>
+                                                        <p className="text-sm text-slate-500">
+                                                            {evaluation.status === 'PENDING' ? 'Não iniciada' : 'Em andamento'}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <Link href={`/performance/evaluations/${evaluation.id}`}>
+                                                    <Button variant={evaluation.status === 'PENDING' ? 'primary' : 'secondary'} className={evaluation.status === 'PENDING' ? 'bg-blue-600 hover:bg-blue-700' : ''}>
+                                                        {evaluation.status === 'PENDING' ? 'Iniciar' : 'Continuar'}
+                                                    </Button>
+                                                </Link>
+                                            </div>
+                                        ))}
+                                        {evaluations.filter(e => e.status !== 'COMPLETED' && e.status !== 'CALIBRATED').length === 0 && (
+                                            <div className="flex flex-col items-center justify-center p-12 text-center border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50">
+                                                <div className="bg-white p-3 rounded-full mb-3 shadow-sm">
+                                                    <UserCog className="h-8 w-8 text-slate-300" />
+                                                </div>
+                                                <h3 className="text-lg font-semibold text-slate-900">Tudo em dia!</h3>
+                                                <p className="text-slate-500 max-w-sm mt-1">
+                                                    Você não tem avaliações pendentes neste ciclo.
+                                                </p>
+                                            </div>
+                                        )}
                                     </div>
-                                    <h3 className="text-lg font-semibold text-slate-900">Você está em dia!</h3>
-                                    <p className="text-slate-500 max-w-sm mt-1">
-                                        Nenhuma avaliação pendente encontrada para este ciclo no momento.
-                                    </p>
-                                </div>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center p-12 text-center border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50">
+                                        <div className="bg-white p-3 rounded-full mb-3 shadow-sm">
+                                            <UserCog className="h-8 w-8 text-slate-300" />
+                                        </div>
+                                        <h3 className="text-lg font-semibold text-slate-900">Sem atividades</h3>
+                                        <p className="text-slate-500 max-w-sm mt-1">
+                                            Não foram encontradas avaliações para você neste ciclo.
+                                        </p>
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
                     </div>

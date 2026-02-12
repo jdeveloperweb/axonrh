@@ -13,6 +13,9 @@ public interface EmployeeServiceClient {
     @GetMapping("/{id}")
     EmployeeDTO getEmployee(@PathVariable("id") UUID id);
 
+    @GetMapping("/active")
+    java.util.List<EmployeeDTO> getActiveEmployees();
+
     @GetMapping("/user/{userId}")
     EmployeeDTO getEmployeeByUserId(@PathVariable("userId") UUID userId);
 }

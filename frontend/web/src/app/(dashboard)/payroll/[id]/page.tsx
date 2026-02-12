@@ -28,6 +28,7 @@ export default function PayrollDetailPage() {
     const [loading, setLoading] = useState(true);
     const [payroll, setPayroll] = useState<Payroll | null>(null);
     const [payslip, setPayslip] = useState<PayslipResponse | null>(null);
+    const [downloading, setDownloading] = useState(false);
 
     const fetchData = async () => {
         setLoading(true);
@@ -42,6 +43,17 @@ export default function PayrollDetailPage() {
             console.error('Error fetching payroll details:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDownloadPdf = async () => {
+        setDownloading(true);
+        try {
+            await payrollApi.downloadPayslipPdf(id);
+        } catch (error) {
+            console.error('Error downloading PDF:', error);
+        } finally {
+            setDownloading(false);
         }
     };
 
@@ -91,11 +103,16 @@ export default function PayrollDetailPage() {
                     </Button>
                     <Button
                         variant="outline"
-                        className="gap-2"
-                        onClick={() => payrollApi.downloadPayslipPdf(id)}
+                        className="gap-2 min-w-[130px]"
+                        onClick={handleDownloadPdf}
+                        disabled={downloading}
                     >
-                        <Download className="w-4 h-4" />
-                        Baixar PDF
+                        {downloading ? (
+                            <RefreshCw className="w-4 h-4 animate-spin" />
+                        ) : (
+                            <Download className="w-4 h-4" />
+                        )}
+                        {downloading ? 'Gerando...' : 'Baixar PDF'}
                     </Button>
                     <Button
                         className="gap-2 bg-[var(--color-primary)] text-white"
@@ -121,7 +138,7 @@ export default function PayrollDetailPage() {
                                 </div>
                                 <div>
                                     <p className="text-xs text-[var(--color-text-secondary)]">Matrícula</p>
-                                    <p className="font-medium">{payslip.registrationNumber}</p>
+                                    <p className="font-medium">{payslip.registrationNumber || '-'}</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">
@@ -130,7 +147,7 @@ export default function PayrollDetailPage() {
                                 </div>
                                 <div>
                                     <p className="text-xs text-[var(--color-text-secondary)]">Cargo</p>
-                                    <p className="font-medium">{payslip.employeeRole}</p>
+                                    <p className="font-medium">{payslip.employeeRole || 'Não informado'}</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">
@@ -139,7 +156,7 @@ export default function PayrollDetailPage() {
                                 </div>
                                 <div>
                                     <p className="text-xs text-[var(--color-text-secondary)]">Departamento</p>
-                                    <p className="font-medium">{payslip.employeeDepartment}</p>
+                                    <p className="font-medium">{payslip.employeeDepartment || 'Geral'}</p>
                                 </div>
                             </div>
                         </div>
