@@ -473,6 +473,23 @@ public class VacationService {
     }
 
     /**
+     * Lista todas as solicitacoes pendentes (para RH/Admin).
+     */
+    @Transactional(readOnly = true)
+    public Page<VacationRequestResponse> getAllPendingRequests(Pageable pageable) {
+        String tenantStr = TenantContext.getCurrentTenant();
+        if (tenantStr == null) {
+            log.error("Tentativa de buscar todas as pendencias sem contexto de Tenant!");
+            return Page.empty();
+        }
+        UUID tenantId = UUID.fromString(tenantStr);
+
+        return requestRepository
+                .findByTenantIdAndStatusOrderByCreatedAtAsc(tenantId, VacationRequestStatus.PENDING, pageable)
+                .map(this::toRequestResponse);
+    }
+
+    /**
      * Lista solicitacoes pendentes de subordinados (T162).
      */
     @Transactional(readOnly = true)

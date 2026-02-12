@@ -57,6 +57,14 @@ public class VacationRequestController {
     public ResponseEntity<Page<VacationRequestResponse>> getPendingRequests(
             Pageable pageable,
             @AuthenticationPrincipal Jwt jwt) {
+        
+        List<String> roles = getRoles(jwt);
+        boolean isAdminOrRH = roles.stream().anyMatch(r -> r.contains("ADMIN") || r.contains("RH"));
+
+        if (isAdminOrRH) {
+            return ResponseEntity.ok(service.getAllPendingRequests(pageable));
+        }
+
         UUID managerId = getUserId(jwt);
         return ResponseEntity.ok(service.getPendingRequestsForManager(managerId, pageable));
     }
@@ -109,5 +117,27 @@ public class VacationRequestController {
         if (jwt.hasClaim("name")) return jwt.getClaimAsString("name");
         if (jwt.hasClaim("fullName")) return jwt.getClaimAsString("fullName");
         return "User";
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<String> getRoles(Jwt jwt) {
+        if (jwt == null) return java.util.Collections.emptyList();
+        
+        try {
+            // Tentar 'realm_access.roles' (Keycloak)
+            if (jwt.hasClaim("realm_access")) {
+                java.util.Map<String, Object> realmAccess = jwt.getClaim("realm_access");
+                if (realmAccess != null && realmAccess.containsKey("roles")) {
+                    return (List<String>) realmAccess.get("roles");
+                }
+            }
+            // Tentar apenas 'roles'
+            if (jwt.hasClaim("roles")) {
+                return jwt.getClaimAsStringList("roles");
+            }
+        } catch (Exception e) {
+            log.warn("Erro ao extrair roles do token", e);
+        }
+        return java.util.Collections.emptyList();
     }
 }
