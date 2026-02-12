@@ -142,7 +142,7 @@ export default function TeamVacationPage() {
                         placeholder="Buscar por nome..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="h-16 pl-14 pr-6 rounded-2xl border-none bg-white shadow-xl shadow-slate-200/50 focus:ring-primary/20 transition-all font-medium"
+                        className="h-14 pl-14 pr-6 rounded-xl border-none bg-white shadow-xl shadow-slate-200/40 focus:ring-primary/20 transition-all font-medium"
                     />
                 </div>
             </div>
@@ -150,7 +150,7 @@ export default function TeamVacationPage() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
                 {/* Left Column: Calendar & Summary */}
                 <div className="lg:col-span-4 space-y-10">
-                    <Card className="border-none shadow-2xl shadow-slate-200/50 rounded-[2.5rem] overflow-hidden bg-white">
+                    <Card className="border border-slate-100 shadow-sm rounded-3xl overflow-hidden bg-white">
                         <CardHeader className="p-8 pb-0">
                             <CardTitle className="text-lg font-black uppercase text-slate-900 flex items-center gap-2">
                                 <CalendarIcon className="h-5 w-5 text-primary" />
@@ -168,7 +168,7 @@ export default function TeamVacationPage() {
                         </CardContent>
                     </Card>
 
-                    <Card className="border-none shadow-2xl shadow-slate-200/50 rounded-[2.5rem] overflow-hidden bg-slate-900 text-white">
+                    <Card className="border border-slate-100 shadow-sm rounded-3xl overflow-hidden bg-slate-900 text-white">
                         <CardHeader className="p-8 pb-4">
                             <div className="flex flex-col gap-1">
                                 <span className="text-[10px] font-black uppercase tracking-widest text-primary">Status Consolidado</span>
@@ -198,8 +198,8 @@ export default function TeamVacationPage() {
 
                 {/* Right Column: Detailed List */}
                 <div className="lg:col-span-8">
-                    <Card className="border-none shadow-2xl shadow-slate-200/50 rounded-[2.5rem] overflow-hidden bg-white h-full min-h-[600px]">
-                        <CardHeader className="p-10 pb-6 border-b border-slate-50">
+                    <Card className="border border-slate-100 shadow-sm rounded-3xl overflow-hidden bg-white h-full min-h-[600px]">
+                        <CardHeader className="p-8 pb-6 border-b border-slate-50">
                             <div className="flex items-center justify-between">
                                 <div className="space-y-1">
                                     <CardTitle className="text-xl font-black text-slate-900 uppercase">Detalhamento da Escala</CardTitle>

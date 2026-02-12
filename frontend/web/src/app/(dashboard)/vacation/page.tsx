@@ -152,7 +152,7 @@ export default function VacationPage() {
     <div className="w-full px-6 lg:px-10 py-10 space-y-10 animate-in fade-in duration-700">
 
       {/* New Professional Light Header */}
-      <div className="relative group overflow-hidden rounded-[2.5rem] bg-white border-2 border-slate-100 p-8 lg:p-12 shadow-xl shadow-slate-200/40">
+      <div className="relative group overflow-hidden rounded-3xl bg-white border border-slate-100 p-8 lg:p-10 shadow-sm">
         <div className="absolute top-0 right-0 p-8 text-primary/5 pointer-events-none">
           <Plane className="h-64 w-64 rotate-12" />
         </div>
@@ -176,10 +176,10 @@ export default function VacationPage() {
               <Button
                 onClick={() => router.push('/vacation/request')}
                 size="xl"
-                className="rounded-[1.5rem] shadow-xl shadow-primary/20 group h-16 px-10 text-sm font-black uppercase tracking-widest"
+                className="rounded-xl shadow-lg shadow-primary/10 group h-14 px-8 text-xs font-black uppercase tracking-widest"
               >
                 Nova Solicitação
-                <Plus className="ml-2 h-5 w-5 group-hover:rotate-90 transition-transform" />
+                <Plus className="ml-2 h-4 w-4 group-hover:rotate-90 transition-transform" />
               </Button>
 
               {(isAdmin || isRH) && (
@@ -187,9 +187,9 @@ export default function VacationPage() {
                   variant="outline"
                   size="xl"
                   onClick={() => router.push('/vacation/admin')}
-                  className="rounded-[1.5rem] border-slate-200 bg-white text-slate-600 hover:bg-slate-50 h-16 px-10 text-sm font-black uppercase tracking-widest"
+                  className="rounded-xl border-slate-200 bg-white text-slate-600 hover:bg-slate-50 h-14 px-8 text-xs font-black uppercase tracking-widest"
                 >
-                  <Users className="mr-2 h-5 w-5 text-primary" />
+                  <Users className="mr-2 h-4 w-4 text-primary" />
                   Administração RH
                 </Button>
               )}
@@ -197,16 +197,16 @@ export default function VacationPage() {
           </div>
 
           {/* Quick Balance Card - Light Version */}
-          <div className="relative lg:w-[400px]">
-            <div className="absolute -inset-4 bg-primary/5 rounded-[3rem] blur-2xl" />
-            <div className="relative bg-white border-2 border-slate-50 rounded-[2.5rem] p-10 shadow-lg flex flex-col items-center gap-8">
-              <div className="space-y-2 text-center">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Saldo Disponível</p>
-                <div className="flex items-baseline justify-center gap-3">
-                  <span className="text-8xl font-black tracking-tighter tabular-nums text-slate-900 leading-none">
+          <div className="relative lg:w-[360px]">
+            <div className="absolute -inset-2 bg-primary/5 rounded-3xl blur-xl" />
+            <div className="relative bg-white border border-slate-50 rounded-2xl p-8 shadow-sm flex flex-col items-center gap-6">
+              <div className="space-y-1 text-center">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em]">Saldo Disponível</p>
+                <div className="flex items-baseline justify-center gap-2">
+                  <span className="text-6xl font-black tracking-tighter tabular-nums text-slate-900 leading-none">
                     {activePeriod?.remainingDays || 0}
                   </span>
-                  <span className="text-2xl font-black text-primary uppercase tracking-widest">dias</span>
+                  <span className="text-lg font-black text-primary uppercase tracking-widest">dias</span>
                 </div>
               </div>
 
@@ -237,7 +237,7 @@ export default function VacationPage() {
           { icon: AlertTriangle, label: 'A Vencer', value: statistics.expiringPeriods, color: 'text-rose-500', bg: 'bg-rose-50', desc: 'Atenção aos prazos' },
           { icon: Sun, label: 'Em Férias', value: statistics.employeesOnVacation, color: 'text-emerald-500', bg: 'bg-emerald-50', desc: 'Equipe em descanso' },
         ].map((stat, i) => (
-          <Card key={i} className="group overflow-hidden bg-white rounded-[2rem] border-2 border-slate-50 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-500">
+          <Card key={i} className="group overflow-hidden bg-white rounded-2xl border border-slate-50 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-500">
             <CardContent className="p-8 flex items-center gap-6">
               <div className={cn("h-16 w-16 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110", stat.bg)}>
                 <stat.icon className={cn("h-8 w-8", stat.color)} />
@@ -260,8 +260,8 @@ export default function VacationPage() {
         <div className="xl:col-span-2 space-y-10">
           {/* Active Period Card - Enhanced Wide Design */}
           {activePeriod && (
-            <Card className="rounded-[3rem] border-none bg-slate-50/50 p-2 shadow-inner">
-              <div className="bg-white rounded-[2.5rem] border-2 border-slate-100 overflow-hidden shadow-sm">
+            <Card className="rounded-3xl border-none bg-slate-50/50 p-1 shadow-inner">
+              <div className="bg-white rounded-[1.5rem] border border-slate-100 overflow-hidden shadow-sm">
                 <div className="grid grid-cols-1 md:grid-cols-12">
                   <div className="md:col-span-7 p-10 lg:p-12 space-y-10 border-r border-slate-50">
                     <div className="flex items-center justify-between">
@@ -293,13 +293,13 @@ export default function VacationPage() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-6 p-6 bg-slate-50 rounded-3xl border-2 border-white group/banner">
-                      <div className="h-14 w-14 rounded-2xl bg-white flex items-center justify-center shadow-lg shadow-slate-200/50 transition-transform group-hover/banner:scale-110">
+                    <div className="flex items-center gap-6 p-6 bg-slate-50 rounded-2xl border border-white group/banner">
+                      <div className="h-14 w-14 rounded-xl bg-white flex items-center justify-center shadow-lg shadow-slate-200/50 transition-transform group-hover/banner:scale-110">
                         <CalendarCheck2 className="h-6 w-6 text-primary" />
                       </div>
                       <div className="flex-1">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Data Limite de Concessão</p>
-                        <p className="text-lg font-black text-slate-800">{formatDate(activePeriod.concessionEndDate)}</p>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Data Limite de Concessão</p>
+                        <p className="text-base font-black text-slate-800">{formatDate(activePeriod.concessionEndDate)}</p>
                       </div>
                       <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl text-[10px] font-black uppercase tracking-tighter">
                         Regular
@@ -326,7 +326,7 @@ export default function VacationPage() {
                     <Button
                       onClick={() => router.push('/vacation/request')}
                       size="xl"
-                      className="w-full rounded-2xl h-16 uppercase font-black tracking-widest text-xs shadow-xl shadow-primary/10 transition-transform active:scale-95 py-0"
+                      className="w-full rounded-xl h-14 uppercase font-black tracking-widest text-[10px] shadow-lg shadow-primary/10 transition-transform active:scale-95 py-0"
                     >
                       Agendar Agora
                       <ArrowRight className="ml-2 h-4 w-4" />
@@ -338,7 +338,7 @@ export default function VacationPage() {
           )}
 
           {/* Records & History - Expanded width layout */}
-          <Card className="bg-white border-2 border-slate-100 rounded-[3rem] p-1 shadow-sm overflow-hidden">
+          <Card className="bg-white border border-slate-100 rounded-3xl p-1 shadow-sm overflow-hidden">
             <div className="p-8 lg:p-12 space-y-10">
               <div className="flex items-center justify-between">
                 <div className="space-y-1 text-left">
@@ -349,9 +349,9 @@ export default function VacationPage() {
               </div>
 
               <Tabs defaultValue="requests" className="w-full">
-                <TabsList className="bg-slate-50 p-1.5 rounded-[1.5rem] mb-10 h-auto w-full max-w-md mx-auto flex">
-                  <TabsTrigger value="requests" className="flex-1 py-4 rounded-xl font-black text-xs uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">Solicitações</TabsTrigger>
-                  <TabsTrigger value="periods" className="flex-1 py-4 rounded-xl font-black text-xs uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">Períodos Aquisitivos</TabsTrigger>
+                <TabsList className="bg-slate-50 p-1 rounded-2xl mb-8 h-auto w-full max-w-md mx-auto flex">
+                  <TabsTrigger value="requests" className="flex-1 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-primary transition-all">Solicitações</TabsTrigger>
+                  <TabsTrigger value="periods" className="flex-1 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-primary transition-all">Períodos Aquisitivos</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="requests" className="animate-in fade-in zoom-in-95 duration-500">
@@ -363,7 +363,7 @@ export default function VacationPage() {
                       <p className="text-slate-400 font-bold max-w-xs uppercase text-[10px] tracking-widest leading-loose">Nenhuma solicitação ativa ou anterior registrada.</p>
                     </div>
                   ) : (
-                    <div className="rounded-[2.5rem] border-2 border-slate-50 overflow-hidden bg-white">
+                    <div className="rounded-2xl border border-slate-50 overflow-hidden bg-white">
                       <Table>
                         <TableHeader className="bg-slate-50/50 h-20 border-none">
                           <TableRow className="border-none hover:bg-transparent px-8">
@@ -401,10 +401,10 @@ export default function VacationPage() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-12 w-12 rounded-2xl hover:bg-primary/10 hover:text-primary transition-all"
+                                  className="h-10 w-10 rounded-xl hover:bg-primary/10 hover:text-primary transition-all"
                                   onClick={() => router.push(`/vacation/requests/${request.id}`)}
                                 >
-                                  <ArrowRight className="h-5 w-5" />
+                                  <ArrowRight className="h-4 w-4" />
                                 </Button>
                               </TableCell>
                             </TableRow>
@@ -419,7 +419,7 @@ export default function VacationPage() {
                   <div className="grid gap-8 md:grid-cols-2">
                     {periods.map((period) => (
                       <div key={period.id} className={cn(
-                        "relative group overflow-hidden rounded-[2rem] border-2 transition-all p-8 flex flex-col gap-10",
+                        "relative group overflow-hidden rounded-2xl border transition-all p-6 flex flex-col gap-8",
                         period.isExpired ? "opacity-60 bg-slate-50 border-slate-100" : "bg-white border-slate-50 shadow-sm hover:shadow-xl hover:border-primary/20"
                       )}>
                         <div className="flex justify-between items-start">
@@ -478,7 +478,7 @@ export default function VacationPage() {
                 <button
                   key={idx}
                   onClick={() => router.push(item.path)}
-                  className="group flex items-center gap-6 p-8 bg-white rounded-[2.5rem] border-2 border-slate-50 shadow-sm hover:shadow-2xl hover:border-primary/20 transition-all duration-300"
+                  className="group flex items-center gap-6 p-6 bg-white rounded-2xl border border-slate-50 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-300"
                 >
                   <div className={cn("h-16 w-16 rounded-2xl flex items-center justify-center shrink-0 transition-all group-hover:scale-110 shadow-lg shadow-slate-200/50", item.bg)}>
                     <item.icon className={cn("h-7 w-7", item.color)} />
@@ -497,14 +497,14 @@ export default function VacationPage() {
 
           {/* New Vibrant Info Component */}
           <div className="relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary to-orange-400 rounded-[3rem] shadow-2xl shadow-primary/30" />
+            <div className="absolute inset-0 bg-gradient-to-br from-primary to-orange-400 rounded-3xl shadow-xl shadow-primary/20" />
             <div className="absolute top-[-30%] right-[-10%] opacity-20 group-hover:rotate-12 group-hover:scale-110 transition-all duration-1000">
               <Briefcase className="h-80 w-80 text-white" />
             </div>
 
-            <div className="relative z-10 p-12 space-y-8 flex flex-col h-full text-white">
-              <div className="h-16 w-16 rounded-[1.5rem] bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30">
-                <Info className="h-8 w-8 text-white" />
+            <div className="relative z-10 p-10 space-y-8 flex flex-col h-full text-white">
+              <div className="h-14 w-14 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30">
+                <Info className="h-7 w-7 text-white" />
               </div>
               <div className="space-y-4">
                 <h4 className="text-3xl font-black tracking-tight leading-tight">Dica para seu <br /><span className="italic underline decoration-white/30 underline-offset-8">Abono</span></h4>
@@ -515,7 +515,7 @@ export default function VacationPage() {
               <Button
                 variant="outline"
                 onClick={() => router.push('/vacation/simulator')}
-                className="w-full h-16 rounded-2xl border-white/30 bg-white/10 text-white hover:bg-white/20 uppercase tracking-widest text-[11px] font-black backdrop-blur-sm"
+                className="w-full h-14 rounded-xl border-white/30 bg-white/10 text-white hover:bg-white/20 uppercase tracking-widest text-[10px] font-black backdrop-blur-sm"
               >
                 Abrir Simulador
               </Button>

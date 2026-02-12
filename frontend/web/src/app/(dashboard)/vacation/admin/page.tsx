@@ -118,7 +118,7 @@ export default function VacationAdminPage() {
                         variant="outline"
                         size="icon"
                         onClick={() => router.back()}
-                        className="h-14 w-14 rounded-2xl border-slate-100 bg-white shadow-sm hover:shadow-md transition-all"
+                        className="h-12 w-12 rounded-full border-slate-100 bg-white shadow-sm hover:shadow-md transition-all"
                     >
                         <ArrowLeft className="h-6 w-6 text-slate-600" />
                     </Button>
@@ -135,16 +135,16 @@ export default function VacationAdminPage() {
                     onClick={handleSync}
                     disabled={syncing}
                     size="xl"
-                    className="rounded-2xl shadow-xl shadow-primary/20 bg-slate-900 hover:bg-slate-800 text-white border-0 h-16 px-8 group"
+                    className="rounded-xl shadow-lg shadow-primary/10 bg-slate-900 hover:bg-slate-800 text-white border-0 h-14 px-8 group"
                 >
-                    <RefreshCw className={cn("mr-3 h-5 w-5 transition-transform group-hover:rotate-180 duration-500", syncing && "animate-spin")} />
+                    <RefreshCw className={cn("mr-3 h-4 w-4 transition-transform group-hover:rotate-180 duration-500", syncing && "animate-spin")} />
                     Sincronizar Dados
                 </Button>
             </div>
 
             {/* Main Content */}
-            <Card className="border-none shadow-2xl shadow-slate-200/50 rounded-[2.5rem] overflow-hidden bg-white">
-                <CardHeader className="p-10 pb-6 bg-slate-50/50">
+            <Card className="border border-slate-100 shadow-sm rounded-3xl overflow-hidden bg-white">
+                <CardHeader className="p-8 pb-6 bg-slate-50/50">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                         <div className="space-y-1">
                             <CardTitle className="text-xl font-black text-slate-900 uppercase flex items-center gap-3">
@@ -162,7 +162,7 @@ export default function VacationAdminPage() {
                                 placeholder="Buscar colaborador..."
                                 value={filter}
                                 onChange={(e) => setFilter(e.target.value)}
-                                className="h-14 pl-12 pr-4 rounded-2xl border-slate-200 bg-white focus:ring-primary/20 transition-all text-sm font-medium"
+                                className="h-12 pl-12 pr-4 rounded-xl border-slate-200 bg-white focus:ring-primary/20 transition-all text-sm font-medium"
                             />
                         </div>
                     </div>
@@ -176,8 +176,8 @@ export default function VacationAdminPage() {
                         </div>
                     ) : filteredPeriods.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-32 text-center space-y-6">
-                            <div className="h-24 w-24 rounded-[2rem] bg-emerald-50 flex items-center justify-center">
-                                <CheckCircle2 className="h-12 w-12 text-emerald-500" />
+                            <div className="h-20 w-20 rounded-2xl bg-emerald-50 flex items-center justify-center">
+                                <CheckCircle2 className="h-10 w-10 text-emerald-500" />
                             </div>
                             <div className="space-y-2">
                                 <h3 className="text-lg font-black text-slate-900">Operação Segura</h3>

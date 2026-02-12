@@ -144,19 +144,19 @@ export default function VacationSimulatorPage() {
           <div className="lg:col-span-12 xl:col-span-8">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
               <div className="md:col-span-12">
-                <Card className="border-2 border-slate-100 shadow-xl shadow-slate-200/40 rounded-[2.5rem] overflow-hidden bg-white">
-                  <CardHeader className="p-10 pb-6 border-b border-slate-50">
+                <Card className="border border-slate-100 shadow-sm rounded-2xl overflow-hidden bg-white">
+                  <CardHeader className="p-8 pb-4 border-b border-slate-50">
                     <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-2xl bg-[#FF7A00]/10 flex items-center justify-center">
-                        <Calculator className="h-6 w-6 text-[#FF7A00]" />
+                      <div className="h-10 w-10 rounded-xl bg-[#FF7A00]/10 flex items-center justify-center">
+                        <Calculator className="h-5 w-5 text-[#FF7A00]" />
                       </div>
                       <div>
-                        <CardTitle className="text-xl font-black text-slate-900 uppercase tracking-tight">Configurar Simulação</CardTitle>
-                        <CardDescription className="text-xs font-bold text-slate-400 uppercase tracking-widest">Ajuste os valores para visualizar a estimativa.</CardDescription>
+                        <CardTitle className="text-lg font-black text-slate-900 uppercase tracking-tight">Configurar Simulação</CardTitle>
+                        <CardDescription className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ajuste os valores para visualizar a estimativa.</CardDescription>
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent className="p-10 space-y-12">
+                  <CardContent className="p-8 space-y-10">
                     {/* Salário Base */}
                     <div className="space-y-4">
                       <div className="flex items-center justify-between ml-1">
@@ -167,7 +167,7 @@ export default function VacationSimulatorPage() {
                         <Input
                           id="salary"
                           type="number"
-                          className="h-24 pl-10 pr-10 text-4xl font-black bg-slate-50/50 border-transparent rounded-[1.5rem] focus:bg-white focus:border-[#FF7A00]/20 transition-all tabular-nums placeholder:text-slate-100"
+                          className="h-16 pl-6 pr-6 text-2xl font-black bg-slate-50/50 border-transparent rounded-xl focus:bg-white focus:border-[#FF7A00]/20 transition-all tabular-nums placeholder:text-slate-100"
                           value={baseSalary}
                           onChange={(e) => setBaseSalary(Number(e.target.value))}
                           min={0}
@@ -218,14 +218,14 @@ export default function VacationSimulatorPage() {
                     </div>
 
                     {/* Adiantamento 13º */}
-                    <div className="flex items-center justify-between p-10 rounded-[2.5rem] bg-slate-50/50 border-2 border-transparent hover:border-slate-100 transition-all group">
-                      <div className="flex items-center gap-8">
-                        <div className={cn("h-16 w-16 rounded-[1.5rem] flex items-center justify-center transition-all", advance13th ? "bg-[#FF7A00] text-white shadow-xl shadow-[#FF7A00]/30" : "bg-white text-slate-200 border border-slate-50 shadow-sm group-hover:scale-110")}>
-                          <Wallet className="h-6 w-6" />
+                    <div className="flex items-center justify-between p-8 rounded-2xl bg-slate-50/50 border border-transparent hover:border-slate-100 transition-all group">
+                      <div className="flex items-center gap-6">
+                        <div className={cn("h-12 w-12 rounded-xl flex items-center justify-center transition-all", advance13th ? "bg-[#FF7A00] text-white shadow-lg shadow-[#FF7A00]/30" : "bg-white text-slate-200 border border-slate-50 shadow-sm group-hover:scale-110")}>
+                          <Wallet className="h-5 w-5" />
                         </div>
                         <div className="space-y-1">
-                          <p className="font-black text-slate-900 uppercase text-xs tracking-widest">Adiantar 13º Salário</p>
-                          <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.05em]">Receba 50% da gratificação agora.</p>
+                          <p className="font-black text-slate-900 uppercase text-[10px] tracking-widest">Adiantar 13º Salário</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.05em]">Receba 50% da gratificação agora.</p>
                         </div>
                       </div>
                       <Switch
@@ -237,11 +237,11 @@ export default function VacationSimulatorPage() {
 
                     <Button
                       size="xl"
-                      className="w-full rounded-[1.5rem] h-20 uppercase font-black tracking-[0.2em] shadow-2xl shadow-[#FF7A00]/20 transition-all active:scale-95 text-sm bg-[#FF7A00] hover:bg-[#FF7A00]/90"
+                      className="w-full rounded-xl h-16 uppercase font-black tracking-widest shadow-xl shadow-[#FF7A00]/10 transition-all active:scale-95 text-xs bg-[#FF7A00] hover:bg-[#FF7A00]/90"
                       onClick={calculateSimulation}
                     >
                       Calcular Estimativa
-                      <ChevronRight className="ml-3 h-5 w-5" />
+                      <ChevronRight className="ml-2 h-4 w-4" />
                     </Button>
                   </CardContent>
                 </Card>
@@ -254,12 +254,12 @@ export default function VacationSimulatorPage() {
             {result ? (
               <div className="space-y-8 animate-in zoom-in-95 duration-500">
                 <div className="relative group">
-                  <div className="absolute -inset-2 bg-[#FF7A00]/20 rounded-[3rem] blur-xl opacity-50" />
-                  <Card className="relative border-none bg-slate-900 rounded-[3rem] text-white overflow-hidden shadow-2xl">
-                    <div className="p-12 space-y-12">
+                  <div className="absolute -inset-1 bg-[#FF7A00]/10 rounded-3xl blur-lg opacity-30" />
+                  <Card className="relative border-none bg-slate-900 rounded-3xl text-white overflow-hidden shadow-xl">
+                    <div className="p-10 space-y-10">
                       <div className="space-y-2 text-center">
-                        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-[#FF7A00]">Líquido Estimado</p>
-                        <h2 className="text-6xl font-black tracking-tighter tabular-nums">
+                        <p className="text-[9px] font-black uppercase tracking-[0.3em] text-[#FF7A00]">Líquido Estimado</p>
+                        <h2 className="text-4xl font-black tracking-tighter tabular-nums">
                           {formatCurrency(result.netTotal)}
                         </h2>
                       </div>
@@ -308,13 +308,13 @@ export default function VacationSimulatorPage() {
                         </div>
                       </div>
 
-                      <div className="p-8 bg-white/5 rounded-[2rem] border border-white/5 flex items-center gap-6">
-                        <div className="h-12 w-12 rounded-2xl bg-white/10 flex items-center justify-center shrink-0">
-                          <ShieldCheck className="h-6 w-6 text-primary" />
+                      <div className="p-6 bg-white/5 rounded-2xl border border-white/5 flex items-center gap-4">
+                        <div className="h-10 w-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+                          <ShieldCheck className="h-5 w-5 text-primary" />
                         </div>
                         <div className="space-y-0.5">
                           <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Data Estimada</p>
-                          <p className="font-black text-sm">2 dias antes do início</p>
+                          <p className="font-black text-xs">2 dias antes do início</p>
                         </div>
                       </div>
                     </div>
@@ -322,13 +322,13 @@ export default function VacationSimulatorPage() {
                 </div>
               </div>
             ) : (
-              <div className="h-full min-h-[500px] flex flex-col items-center justify-center p-12 text-center rounded-[3rem] border-4 border-dashed border-slate-100 bg-slate-50/20 group">
-                <div className="h-24 w-24 rounded-[2rem] bg-white shadow-xl shadow-slate-200/50 flex items-center justify-center mb-10 transition-transform group-hover:scale-110">
-                  <Calculator className="h-10 w-10 text-slate-100" />
+              <div className="h-full min-h-[400px] flex flex-col items-center justify-center p-12 text-center rounded-3xl border border-dashed border-slate-200 bg-slate-50/20 group">
+                <div className="h-20 w-20 rounded-2xl bg-white shadow-sm flex items-center justify-center mb-8 transition-transform group-hover:scale-110">
+                  <Calculator className="h-8 w-8 text-slate-100" />
                 </div>
                 <div className="space-y-4">
-                  <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Resultado Pendente</h3>
-                  <p className="text-sm font-bold text-slate-300 max-w-[240px] mx-auto leading-relaxed uppercase tracking-widest">Preencha seus dados ao lado e clique em calcular.</p>
+                  <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Resultado Pendente</h3>
+                  <p className="text-xs font-bold text-slate-300 max-w-[200px] mx-auto leading-relaxed uppercase tracking-widest">Preencha seus dados e clique em calcular.</p>
                 </div>
               </div>
             )}
@@ -357,12 +357,12 @@ export default function VacationSimulatorPage() {
               color: 'text-blue-500'
             }
           ].map((item, i) => (
-            <div key={i} className="group p-10 rounded-[2.5rem] bg-white border-2 border-slate-50 shadow-sm hover:shadow-2xl transition-all">
-              <div className={cn("h-16 w-16 rounded-2xl flex items-center justify-center mb-8 transition-transform group-hover:scale-110", item.color === 'text-[#FF7A00]' ? 'bg-[#FF7A00]/5' : item.color === 'text-emerald-500' ? 'bg-emerald-50' : 'bg-blue-50')}>
-                <item.icon className={cn("h-7 w-7", item.color)} />
+            <div key={i} className="group p-8 rounded-2xl bg-white border border-slate-50 shadow-sm hover:shadow-xl transition-all">
+              <div className={cn("h-12 w-12 rounded-xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110", item.color === 'text-[#FF7A00]' ? 'bg-[#FF7A00]/5' : item.color === 'text-emerald-500' ? 'bg-emerald-50' : 'bg-blue-50')}>
+                <item.icon className={cn("h-6 w-6", item.color)} />
               </div>
-              <h4 className="text-xl font-black text-slate-900 mb-2 uppercase tracking-tight">{item.title}</h4>
-              <p className="text-xs font-bold text-slate-400 leading-relaxed uppercase tracking-widest">{item.desc}</p>
+              <h4 className="text-lg font-black text-slate-900 mb-2 uppercase tracking-tight">{item.title}</h4>
+              <p className="text-[10px] font-bold text-slate-400 leading-relaxed uppercase tracking-widest">{item.desc}</p>
             </div>
           ))}
         </div>

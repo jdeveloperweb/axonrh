@@ -107,7 +107,7 @@ export default function VacationApprovalsPage() {
                         variant="outline"
                         size="icon"
                         onClick={() => router.back()}
-                        className="h-14 w-14 rounded-2xl border-slate-100 bg-white shadow-sm hover:shadow-md transition-all"
+                        className="h-12 w-12 rounded-full border-slate-100 bg-white shadow-sm hover:shadow-md transition-all"
                     >
                         <ArrowLeft className="h-6 w-6 text-slate-600" />
                     </Button>
@@ -126,14 +126,14 @@ export default function VacationApprovalsPage() {
                         placeholder="Buscar colaborador..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="h-14 pl-12 pr-4 rounded-2xl border-slate-100 bg-white shadow-sm focus:ring-primary/20 transition-all text-sm font-medium"
+                        className="h-12 pl-12 pr-4 rounded-xl border-slate-100 bg-white shadow-sm focus:ring-primary/20 transition-all text-sm font-medium"
                     />
                 </div>
             </div>
 
             {/* List Section */}
-            <Card className="border-none shadow-2xl shadow-slate-200/50 rounded-[2.5rem] overflow-hidden bg-white">
-                <CardHeader className="p-10 pb-0">
+            <Card className="border border-slate-100 shadow-sm rounded-3xl overflow-hidden bg-white">
+                <CardHeader className="p-8 pb-0">
                     <div className="flex items-center justify-between">
                         <div className="space-y-1">
                             <CardTitle className="text-xl font-black text-slate-900 uppercase">Solicitações Aguardando Ação</CardTitle>
@@ -147,7 +147,7 @@ export default function VacationApprovalsPage() {
                     </div>
                 </CardHeader>
 
-                <CardContent className="p-10">
+                <CardContent className="p-8">
                     {loading ? (
                         <div className="flex flex-col items-center justify-center py-20 gap-4">
                             <Loader2 className="h-12 w-12 animate-spin text-primary opacity-20" />
@@ -164,7 +164,7 @@ export default function VacationApprovalsPage() {
                             </div>
                         </div>
                     ) : (
-                        <div className="rounded-[2rem] border-2 border-slate-50 overflow-hidden">
+                        <div className="rounded-2xl border border-slate-50 overflow-hidden">
                             <Table>
                                 <TableHeader className="bg-slate-50/50 h-16">
                                     <TableRow className="border-none">
