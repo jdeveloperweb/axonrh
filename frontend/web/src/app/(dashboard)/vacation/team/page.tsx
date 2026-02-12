@@ -123,7 +123,7 @@ export default function TeamVacationPage() {
                         variant="outline"
                         size="icon"
                         onClick={() => router.back()}
-                        className="h-14 w-14 rounded-2xl border-slate-100 bg-white shadow-sm hover:shadow-md transition-all"
+                        className="h-12 w-12 rounded-full border-slate-100 bg-white shadow-xl shadow-slate-200/40 hover:shadow-2xl hover:scale-105 transition-all flex items-center justify-center p-0"
                     >
                         <ArrowLeft className="h-6 w-6 text-slate-600" />
                     </Button>

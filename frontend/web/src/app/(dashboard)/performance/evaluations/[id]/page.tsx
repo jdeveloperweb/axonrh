@@ -16,12 +16,14 @@ import {
   User,
   Calendar,
   CheckCircle2,
+  Sparkles,
 } from 'lucide-react';
 import Link from 'next/link';
 import { evaluationsApi, Evaluation, EvaluationAnswer } from '@/lib/api/performance';
 import { getErrorMessage } from '@/lib/api/client';
 import { useToast } from '@/hooks/use-toast';
 import { useConfirm } from '@/components/providers/ConfirmProvider';
+import { cn } from '@/lib/utils';
 
 // FormQuestion interface defined locally for UI mapping
 interface FormQuestion {
@@ -253,28 +255,42 @@ export default function EvaluationPage() {
   const isReadOnly = evaluation.status === 'COMPLETED' || evaluation.status === 'SUBMITTED';
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link href="/performance">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-5 w-5" />
+    <div className="w-full px-6 lg:px-10 py-10 space-y-10 animate-in fade-in duration-700">
+
+      {/* Design System Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-6">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => router.back()}
+            className="h-12 w-12 rounded-full border-slate-100 bg-white shadow-xl shadow-slate-200/40 hover:shadow-2xl hover:scale-105 transition-all flex items-center justify-center p-0"
+          >
+            <ArrowLeft className="h-5 w-5 text-slate-600" />
           </Button>
-        </Link>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold">Avaliacao de Desempenho</h1>
-          <p className="text-muted-foreground">
-            {evaluation.evaluatorType === 'SELF' ? 'Autoavaliacao' :
-              evaluation.evaluatorType === 'MANAGER' ? 'Avaliacao de Gestor' :
-                'Avaliacao de Pares'}
-          </p>
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-indigo-500" />
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Crescimento & Carreira</span>
+            </div>
+            <h1 className="text-3xl lg:text-4xl font-black text-slate-900 leading-tight tracking-tighter">
+              Avaliação de <span className="text-indigo-600 italic">Desempenho</span>
+            </h1>
+          </div>
         </div>
-        <Badge variant={evaluation.status === 'COMPLETED' ? 'outline' : 'default'}>
-          {evaluation.status === 'PENDING' ? 'Pendente' :
-            evaluation.status === 'IN_PROGRESS' ? 'Em Andamento' :
-              evaluation.status === 'SUBMITTED' ? 'Submetida' :
-                evaluation.status === 'COMPLETED' ? 'Concluida' : evaluation.status}
-        </Badge>
+        <div className="flex items-center gap-4">
+          <Badge variant="outline" className={cn(
+            "px-4 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest border-2 shadow-sm",
+            evaluation.status === 'PENDING' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+              evaluation.status === 'IN_PROGRESS' ? 'bg-blue-50 text-blue-600 border-blue-100' :
+                'bg-emerald-50 text-emerald-600 border-emerald-100'
+          )}>
+            {evaluation.status === 'PENDING' ? 'PENDENTE' :
+              evaluation.status === 'IN_PROGRESS' ? 'EM ANDAMENTO' :
+                evaluation.status === 'SUBMITTED' ? 'SUBMETIDA' :
+                  evaluation.status === 'COMPLETED' ? 'CONCLUÍDA' : evaluation.status}
+          </Badge>
+        </div>
       </div>
 
       {/* Info do Avaliado */}
