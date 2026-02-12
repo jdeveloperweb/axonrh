@@ -329,9 +329,6 @@ public class VacationService {
     }
 
     /**
-     * Aprova solicitacao de ferias (T162).
-     */
-    /**
      * Aprova solicitacao de ferias (T162) - Fluxo de 2 Etapas.
      */
     @Transactional
