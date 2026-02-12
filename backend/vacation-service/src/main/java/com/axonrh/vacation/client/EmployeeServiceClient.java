@@ -21,5 +21,6 @@ public interface EmployeeServiceClient {
     List<EmployeeDTO> getActiveEmployees();
 
     @GetMapping("/api/v1/employees/user/{userId}")
-    EmployeeDTO getEmployeeByUserId(@PathVariable("userId") UUID userId);
+    EmployeeDTO getEmployeeByUserId(@PathVariable("userId") UUID userId, @RequestParam(value = "email", required = false) String email);
 }
+

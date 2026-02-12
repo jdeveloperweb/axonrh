@@ -189,8 +189,19 @@ public class VacationService {
     public UUID resolveEmployeeId(UUID userId) {
         if (userId == null) return null;
         log.debug("Resolvendo employeeId para userId: {}", userId);
+        
+        String email = null;
         try {
-            EmployeeDTO employee = employeeServiceClient.getEmployeeByUserId(userId);
+            org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            if (auth instanceof org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken jwt) {
+                email = (String) jwt.getTokenAttributes().get("email");
+            }
+        } catch (Exception e) {
+            log.warn("Nao foi possivel obter email do contexto de seguranca: {}", e.getMessage());
+        }
+
+        try {
+            EmployeeDTO employee = employeeServiceClient.getEmployeeByUserId(userId, email);
             if (employee != null) {
                 log.debug("Colaborador encontrado: {} (ID: {})", employee.getFullName(), employee.getId());
                 return employee.getId();
@@ -201,6 +212,7 @@ public class VacationService {
         }
         return userId;
     }
+
 
     /**
      * Lista periodos de um colaborador.
