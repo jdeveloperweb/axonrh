@@ -89,6 +89,15 @@ public class VacationService {
      */
     @Transactional
     public VacationPeriod createPeriod(UUID tenantId, UUID employeeId, String employeeName, LocalDate admissionDate) {
+        // Verificar se ja existe periodo para esta data de inicio
+        Optional<VacationPeriod> existing = periodRepository
+                .findByTenantIdAndEmployeeIdAndAcquisitionStartDate(tenantId, employeeId, admissionDate);
+        
+        if (existing.isPresent()) {
+            log.info("Periodo aquisitivo ja existe para o colaborador: {} na data: {}", employeeName, admissionDate);
+            return existing.get();
+        }
+
         // Calcular datas do periodo aquisitivo
         LocalDate acquisitionStart = admissionDate;
         LocalDate acquisitionEnd = admissionDate.plusYears(1).minusDays(1);

@@ -22,6 +22,8 @@ public interface VacationPeriodRepository extends JpaRepository<VacationPeriod, 
             UUID employeeId
     );
 
+    Optional<VacationPeriod> findByTenantIdAndEmployeeIdAndAcquisitionStartDate(UUID tenantId, UUID employeeId, LocalDate acquisitionStartDate);
+
     Optional<VacationPeriod> findByTenantIdAndId(UUID tenantId, UUID id);
 
     @Query("""
