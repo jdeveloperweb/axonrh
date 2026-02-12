@@ -25,6 +25,9 @@ public class PayslipResponse {
     
     @com.fasterxml.jackson.annotation.JsonProperty("employeeRole")
     private String position;
+
+    private Integer month;
+    private Integer year;
     
     private String referenceLabel;
     private BigDecimal baseSalary;

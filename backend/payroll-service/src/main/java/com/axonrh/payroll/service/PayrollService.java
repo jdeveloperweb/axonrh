@@ -253,6 +253,8 @@ public class PayrollService {
                 .registrationNumber(payroll.getRegistrationNumber())
                 .department(payroll.getDepartmentName())
                 .position(payroll.getPositionName())
+                .month(payroll.getReferenceMonth())
+                .year(payroll.getReferenceYear())
                 .referenceLabel(String.format("%02d/%d", payroll.getReferenceMonth(), payroll.getReferenceYear()))
                 .baseSalary(payroll.getBaseSalary())
                 .earnings(earnings)

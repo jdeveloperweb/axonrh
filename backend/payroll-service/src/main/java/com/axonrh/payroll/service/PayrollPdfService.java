@@ -70,8 +70,8 @@ public class PayrollPdfService {
                 "      <td><span class='label'>Mês/Ano:</span><br/><span class='value'>" + String.format("%02d/%d", p.getMonth(), p.getYear()) + "</span></td></tr>" +
                 "  <tr><td><span class='label'>Registro:</span><br/><span class='value'>" + p.getRegistrationNumber() + "</span></td>" +
                 "      <td><span class='label'>CBO:</span><br/><span class='value'>-</span></td>" +
-                "      <td><span class='label'>Função:</span><br/><span class='value'>" + p.getEmployeeRole() + "</span></td>" +
-                "      <td><span class='label'>Depto:</span><br/><span class='value'>" + p.getEmployeeDepartment() + "</span></td></tr>" +
+                "      <td><span class='label'>Função:</span><br/><span class='value'>" + p.getPosition() + "</span></td>" +
+                "      <td><span class='label'>Depto:</span><br/><span class='value'>" + p.getDepartment() + "</span></td></tr>" +
                 "</table>" +
                 "<table>" +
                 "  <thead><tr><th>Cód.</th><th>Descrição</th><th>Ref.</th><th>Proventos</th><th>Descontos</th></tr></thead>" +
@@ -80,14 +80,14 @@ public class PayrollPdfService {
                 "<table style='margin-left: auto; width: 300px;'>" +
                 "  <tr><td>Total Proventos</td><td class='right'>" + formatCurrency(p.getTotalEarnings()) + "</td></tr>" +
                 "  <tr><td>Total Descontos</td><td class='right'>" + formatCurrency(p.getTotalDeductions()) + "</td></tr>" +
-                "  <tr style='font-weight:bold; background:#eee;'><td>LÍQUIDO A RECEBER</td><td class='right'>" + formatCurrency(p.getNetValue()) + "</td></tr>" +
+                "  <tr style='font-weight:bold; background:#eee;'><td>LÍQUIDO A RECEBER</td><td class='right'>" + formatCurrency(p.getNetSalary()) + "</td></tr>" +
                 "</table>" +
                 "<table>" +
                 "  <tr><td>Salário Base: " + formatCurrency(p.getBaseSalary()) + "</td>" +
                 "      <td>Base INSS: " + formatCurrency(p.getInssBase()) + "</td>" +
                 "      <td>Base IRRF: " + formatCurrency(p.getIrrfBase()) + "</td>" +
                 "      <td>Base FGTS: " + formatCurrency(p.getFgtsBase()) + "</td>" +
-                "      <td>FGTS Mês: " + formatCurrency(p.getFgtsMonth()) + "</td></tr>" +
+                "      <td>FGTS Mês: " + formatCurrency(p.getFgtsAmount()) + "</td></tr>" +
                 "</table>" +
                 "<div style='margin-top: 50px;'>" +
                 "  <div style='display:inline-block; width: 45%; border-top: 1px solid #000; text-align:center;'>Data ___/___/___</div>" +
