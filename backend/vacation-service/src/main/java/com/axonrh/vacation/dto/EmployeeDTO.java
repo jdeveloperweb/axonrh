@@ -16,5 +16,6 @@ public class EmployeeDTO {
     private UUID userId;
     private String fullName;
     private String email;
+    private java.time.LocalDate hireDate;
     private EmployeeDTO manager;
 }
