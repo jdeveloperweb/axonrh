@@ -24,7 +24,10 @@ export default function MyPayslipsPage() {
 
     useEffect(() => {
         const fetchData = async () => {
-            if (!user?.employeeId) return;
+            if (!user?.employeeId) {
+                setLoading(false);
+                return;
+            }
             setLoading(true);
             try {
                 const data = await payrollApi.getEmployeeHistory(user.employeeId);
@@ -37,6 +40,10 @@ export default function MyPayslipsPage() {
         };
         fetchData();
     }, [user]);
+
+    const displayPayrolls = payrolls.filter(p =>
+        ['CLOSED', 'APPROVED', 'CALCULATED', 'RECALCULATED'].includes(p.status)
+    );
 
     return (
         <div className="space-y-6">
@@ -63,13 +70,13 @@ export default function MyPayslipsPage() {
                             <div className="h-4 bg-gray-100 rounded w-full"></div>
                         </div>
                     ))
-                ) : payrolls.length === 0 ? (
+                ) : displayPayrolls.length === 0 ? (
                     <div className="col-span-full card p-20 text-center flex flex-col items-center gap-4">
                         <FileText className="w-16 h-16 opacity-10" />
                         <p className="text-[var(--color-text-secondary)]">Nenhum holerite disponível no momento.</p>
                     </div>
                 ) : (
-                    payrolls.filter(p => ['CLOSED', 'APPROVED', 'CALCULATED'].includes(p.status)).map((payroll) => (
+                    displayPayrolls.map((payroll) => (
                         <div key={payroll.id} className="card p-6 hover:shadow-lg transition-all group border-l-4 border-l-[var(--color-primary)]">
                             <div className="flex justify-between items-start mb-4">
                                 <div>
@@ -90,7 +97,7 @@ export default function MyPayslipsPage() {
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-[var(--color-text-secondary)]">Data Pagamento:</span>
-                                    <span>{new Date(payroll.calculatedAt).toLocaleDateString()}</span>
+                                    <span>{payroll.calculatedAt ? new Date(payroll.calculatedAt).toLocaleDateString() : '—'}</span>
                                 </div>
                             </div>
 

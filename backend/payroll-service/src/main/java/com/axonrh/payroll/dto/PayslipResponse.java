@@ -15,6 +15,8 @@ import java.util.List;
 public class PayslipResponse {
     private String companyName;
     private String companyCnpj;
+    private String logoUrl;
+    private String primaryColor;
 
     private String employeeName;
     private String employeeCpf;

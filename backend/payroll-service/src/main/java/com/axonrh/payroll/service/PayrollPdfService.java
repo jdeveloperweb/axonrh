@@ -26,103 +26,116 @@ public class PayrollPdfService {
 
     private String generatePayslipHtml(PayslipResponse p) {
         StringBuilder itemsHtml = new StringBuilder();
+        String brandColor = p.getPrimaryColor() != null ? p.getPrimaryColor() : "#FF8000";
+        String logoHtml = (p.getLogoUrl() != null && !p.getLogoUrl().isEmpty()) 
+            ? "<img src='" + p.getLogoUrl() + "' style='max-height: 50px; margin-bottom: 10px;' />" 
+            : "<div style='font-size: 20pt; font-weight: 800; color: " + brandColor + "; margin-bottom: 10px;'>" + p.getCompanyName() + "</div>";
         
-        // Vencimentos
+        // Vencimentos e Descontos consolidados
         for (PayrollItemResponse item : p.getEarnings()) {
             itemsHtml.append(String.format(
-                "<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td></td></tr>",
+                "<tr><td class='code'>%s</td><td class='desc'>%s</td><td class='ref text-center'>%s</td><td class='val text-right'>%s</td><td class='val'></td></tr>",
                 item.getCode(), item.getDescription(), 
-                item.getQuantity() != null ? item.getQuantity() : "",
+                item.getQuantity() != null ? item.getQuantity() : "-",
                 formatCurrency(item.getAmount())
             ));
         }
         
-        // Descontos
         for (PayrollItemResponse item : p.getDeductions()) {
             itemsHtml.append(String.format(
-                "<tr><td>%s</td><td>%s</td><td>%s</td><td></td><td>%s</td></tr>",
+                "<tr><td class='code'>%s</td><td class='desc'>%s</td><td class='ref text-center'>%s</td><td class='val'></td><td class='val text-right text-red'>%s</td></tr>",
                 item.getCode(), item.getDescription(),
-                item.getQuantity() != null ? item.getQuantity() : "",
+                item.getQuantity() != null ? item.getQuantity() : "-",
                 formatCurrency(item.getAmount())
             ));
         }
 
-        return "<!DOCTYPE html><html><head><style>" +
-                "body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 9pt; color: #2C3E50; margin: 0; padding: 25px; background: #fff; }" +
-                ".container { width: 100%; border: 2px solid #34495E; }" +
-                ".header { padding: 15px; border-bottom: 2px solid #34495E; display: flex; justify-content: space-between; }" +
-                ".company-info { width: 70%; }" +
-                ".company-name { font-weight: bold; font-size: 16pt; color: #1A252F; text-transform: uppercase; }" +
-                ".company-cnpj { font-size: 10pt; color: #7F8C8D; margin-top: 5px; }" +
-                ".payslip-title { text-align: center; font-weight: bold; font-size: 13pt; padding: 10px; background: #ECF0F1; border-bottom: 2px solid #34495E; color: #2C3E50; }" +
-                "table { width: 100%; border-collapse: collapse; }" +
-                "th, td { border: 1px solid #BDC3C7; padding: 8px 12px; text-align: left; }" +
-                "th { background: #F8F9F9; font-weight: bold; color: #34495E; text-transform: uppercase; font-size: 8pt; }" +
-                ".emp-info th { text-align: left; background: #F8F9F9; border-bottom: 1px solid #BDC3C7; }" +
-                ".label { font-size: 7pt; color: #7F8C8D; display: block; margin-bottom: 2px; text-transform: uppercase; }" +
-                ".value { font-weight: bold; font-size: 10pt; color: #2C3E50; }" +
-                ".items-table thead th { border-bottom: 2px solid #34495E; }" +
-                ".items-table tbody tr:nth-child(even) { background: #FBFCFC; }" +
-                ".text-right { text-align: right; }" +
-                ".money { font-family: 'Courier', monospace; font-weight: bold; }" +
-                ".summary-row { background: #F4F6F7; font-weight: bold; }" +
-                ".net-pay-row { background: #2C3E50; color: #FFFFFF; font-size: 14pt; }" +
-                ".net-pay-row td { border-color: #2C3E50; padding: 15px; }" +
-                ".bases-table td { font-size: 8pt; }" +
-                ".footer { margin-top: 60px; display: flex; justify-content: space-between; align-items: flex-end; }" +
-                ".signature-box { width: 45%; border-top: 1px solid #34495E; text-align: center; padding-top: 5px; font-size: 8pt; }" +
+        return "<!DOCTYPE html><html><head><meta charset='utf-8'/><style>" +
+                "body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 9pt; color: #333; margin: 0; padding: 30px; background: #fff; }" +
+                ".page-wrapper { border: 1px solid #eee; padding: 20px; position: relative; }" +
+                ".brand-header { margin-bottom: 25px; display: flex; justify-content: space-between; align-items: flex-start; }" +
+                ".employer-card { background: #fdfdfd; padding: 15px; border-radius: 12px; border: 1px solid #efefef; width: 45%; }" +
+                ".employer-label { font-size: 8pt; color: #888; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #eee; margin-bottom: 8px; padding-bottom: 4px; font-weight: bold;}" +
+                ".employer-name { font-weight: 800; font-size: 11pt; color: #1a1a1a; }" +
+                ".title-card { text-align: right; width: 50%; }" +
+                ".main-title { font-size: 18pt; font-weight: 900; color: #1a1a1a; margin-bottom: 2px; }" +
+                ".subtitle { font-size: 10pt; color: #666; font-weight: 500; }" +
+                ".emp-info-grid { display: table; width: 100%; border-collapse: separate; border-spacing: 10px 0; margin-bottom: 20px; }" +
+                ".emp-info-col { display: table-cell; background: #fdfdfd; border: 1px solid #efefef; border-radius: 10px; padding: 10px 15px; }" +
+                ".label { font-size: 7pt; color: #999; text-transform: uppercase; font-weight: bold; margin-bottom: 3px; display: block; }" +
+                ".value { font-size: 10pt; color: #222; font-weight: 600; }" +
+                ".items-container { border: 1px solid " + brandColor + "66; border-radius: 14px; overflow: hidden; margin-bottom: 20px; }" +
+                ".items-table { width: 100%; border-collapse: collapse; }" +
+                "thead th { background: " + brandColor + "11; color: " + brandColor + "; border-bottom: 2px solid " + brandColor + "; padding: 12px 15px; font-size: 8pt; text-transform: uppercase; font-weight: 800; }" +
+                "tbody td { padding: 10px 15px; border-bottom: 1px solid #f0f0f0; }" +
+                ".code { color: #999; font-family: monospace; font-size: 8pt; }" +
+                ".desc { font-weight: 500; color: #1a1a1a; }" +
+                ".text-red { color: #dc2626; }" +
+                ".totals-row { background: #fafafa; font-weight: bold; }" +
+                ".totals-row td { border-top: 1px solid #eee; padding: 15px; }" +
+                ".net-pay-card { background: " + brandColor + "; color: #fff; padding: 20px; border-radius: 12px; margin-top: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px " + brandColor + "44; }" +
+                ".net-pay-label { font-size: 10pt; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }" +
+                ".net-pay-value { font-size: 22pt; font-weight: 900; }" +
+                ".bases-grid { display: table; width: 100%; margin-top: 25px; border-collapse: collapse; background: #f8f9fa; border-radius: 8px; overflow: hidden; }" +
+                ".base-item { display: table-cell; padding: 12px; text-align: center; border: 1px solid #eee; }" +
+                ".base-label { font-size: 6.5pt; color: #777; text-transform: uppercase; display: block; margin-bottom: 4px; }" +
+                ".base-value { font-size: 9pt; color: #333; font-weight: bold; }" +
+                ".sidebar-note { position: absolute; right: -80px; top: 100px; transform: rotate(90deg); color: #bbb; font-size: 6.5pt; width: 400px; text-transform: uppercase; letter-spacing: 1px; }" +
+                ".signatures { margin-top: 50px; display: flex; justify-content: space-between; align-items: flex-end; }" +
+                ".sign-box { width: 40%; border-top: 1px solid #ccc; text-align: center; padding-top: 8px; font-size: 8pt; color: #666; }" +
+                ".date-box { width: 15%; text-align: center; font-size: 12pt; color: #ddd; }" +
                 "</style></head><body>" +
-                "<div class='container'>" +
-                "  <div class='header'>" +
-                "    <div class='company-info'>" +
-                "      <div class='company-name'>" + p.getCompanyName() + "</div>" +
-                "      <div class='company-cnpj'>CNPJ: " + p.getCompanyCnpj() + "</div>" +
+                "<div class='page-wrapper'>" +
+                "  <div class='sidebar-note'>Declaro ter recebido a importância líquida discriminada neste recibo</div>" +
+                "  <div class='brand-header'>" +
+                "    <div class='employer-card'>" +
+                "      <div class='employer-label'>Empregador</div>" +
+                "      " + logoHtml +
+                "      <div class='employer-name'>" + p.getCompanyName() + "</div>" +
+                "      <div style='font-size: 8pt; color: #666; margin-top: 3px;'>" + p.getCompanyCnpj() + "</div>" +
+                "    </div>" +
+                "    <div class='title-card'>" +
+                "      <div class='main-title'>Recibo de Pagamento</div>" +
+                "      <div class='subtitle'>Competência: <strong>" + String.format("%02d/%d", p.getMonth(), p.getYear()) + "</strong></div>" +
                 "    </div>" +
                 "  </div>" +
-                "  <div class='payslip-title'>RECIBO DE PAGAMENTO DE SALÁRIO</div>" +
-                "  <table class='emp-info'>" +
-                "    <tr>" +
-                "      <td colspan='3'><span class='label'>Nome do Funcionário</span><span class='value'>" + p.getEmployeeName() + "</span></td>" +
-                "      <td width='25%'><span class='label'>Competência</span><span class='value'>" + String.format("%02d/%d", p.getMonth(), p.getYear()) + "</span></td>" +
-                "    </tr>" +
-                "    <tr>" +
-                "      <td width='25%'><span class='label'>Registro</span><span class='value'>" + p.getRegistrationNumber() + "</span></td>" +
-                "      <td width='25%'><span class='label'>CPF</span><span class='value'>" + p.getEmployeeCpf() + "</span></td>" +
-                "      <td width='25%'><span class='label'>Função</span><span class='value'>" + p.getPosition() + "</span></td>" +
-                "      <td width='25%'><span class='label'>Departamento</span><span class='value'>" + p.getDepartment() + "</span></td>" +
-                "    </tr>" +
-                "  </table>" +
-                "  <table class='items-table'>" +
-                "    <thead>" +
-                "      <tr><th width='10%'>Cód.</th><th>Descrição</th><th width='15%' class='text-right'>Referência</th><th width='15%' class='text-right'>Vencimentos</th><th width='15%' class='text-right'>Descontos</th></tr>" +
-                "    </thead>" +
-                "    <tbody>" + itemsHtml.toString() + "</tbody>" +
-                "    <tfoot>" +
-                "      <tr class='summary-row'>" +
-                "        <td colspan='3' class='text-right'>TOTAIS</td>" +
-                "        <td class='text-right money'>" + formatCurrency(p.getTotalEarnings()) + "</td>" +
-                "        <td class='text-right money'>" + formatCurrency(p.getTotalDeductions()) + "</td>" +
+                "  <div class='emp-info-grid'>" +
+                "    <div class='emp-info-col' style='width: 40%;'><span class='label'>Colaborador</span><span class='value'>" + p.getEmployeeName() + "</span></div>" +
+                "    <div class='emp-info-col'><span class='label'>Matrícula</span><span class='value'>" + p.getRegistrationNumber() + "</span></div>" +
+                "    <div class='emp-info-col'><span class='label'>CPF</span><span class='value'>" + p.getEmployeeCpf() + "</span></div>" +
+                "  </div>" +
+                "  <div class='emp-info-grid'>" +
+                "    <div class='emp-info-col' style='width: 45%;'><span class='label'>Cargo</span><span class='value'>" + p.getPosition() + "</span></div>" +
+                "    <div class='emp-info-col'><span class='label'>Departamento</span><span class='value'>" + p.getDepartment() + "</span></div>" +
+                "  </div>" +
+                "  <div class='items-container'>" +
+                "    <table class='items-table'>" +
+                "      <thead>" +
+                "        <tr><th width='80'>Cod.</th><th>Descrição</th><th class='text-center'>Ref.</th><th class='text-right'>Vencimentos</th><th class='text-right'>Descontos</th></tr>" +
+                "      </thead>" +
+                "      <tbody>" + itemsHtml.toString() + "</tbody>" +
+                "      <tr class='totals-row'>" +
+                "        <td colspan='3' class='text-right' style='color:" + brandColor + ";'>TOTAIS</td>" +
+                "        <td class='text-right' style='color:" + brandColor + ";'>" + formatCurrency(p.getTotalEarnings()) + "</td>" +
+                "        <td class='text-right text-red'>" + formatCurrency(p.getTotalDeductions()) + "</td>" +
                 "      </tr>" +
-                "      <tr class='net-pay-row'>" +
-                "        <td colspan='3' class='text-right' style='border:none;'>LÍQUIDO A RECEBER</td>" +
-                "        <td colspan='2' class='text-right money' style='border:none;'>" + formatCurrency(p.getNetSalary()) + "</td>" +
-                "      </tr>" +
-                "    </tfoot>" +
-                "  </table>" +
-                "  <table class='bases-table'>" +
-                "    <thead><tr><th>Salário Base</th><th>Base INSS</th><th>Base IRRF</th><th>Base FGTS</th><th>FGTS do Mês</th></tr></thead>" +
-                "    <tr>" +
-                "      <td class='money'>" + formatCurrency(p.getBaseSalary()) + "</td>" +
-                "      <td class='money'>" + formatCurrency(p.getInssBase()) + "</td>" +
-                "      <td class='money'>" + formatCurrency(p.getIrrfBase()) + "</td>" +
-                "      <td class='money'>" + formatCurrency(p.getFgtsBase()) + "</td>" +
-                "      <td class='money'>" + formatCurrency(p.getFgtsAmount()) + "</td>" +
-                "    </tr>" +
-                "  </table>" +
-                "</div>" +
-                "<div class='footer'>" +
-                "  <div class='signature-box'>____/____/____<br/>DATA</div>" +
-                "  <div class='signature-box'>Assinatura do Funcionário</div>" +
+                "    </table>" +
+                "  </div>" +
+                "  <div class='net-pay-card'>" +
+                "    <div class='net-pay-label'>Líquido a Receber</div>" +
+                "    <div class='net-pay-value'>" + formatCurrency(p.getNetSalary()) + "</div>" +
+                "  </div>" +
+                "  <div class='bases-grid'>" +
+                "    <div class='base-item'><span class='base-label'>Salário Base</span><span class='base-value'>" + formatCurrency(p.getBaseSalary()) + "</span></div>" +
+                "    <div class='base-item'><span class='base-label'>Base INSS</span><span class='base-value'>" + formatCurrency(p.getInssBase()) + "</span></div>" +
+                "    <div class='base-item'><span class='base-label'>Base IRRF</span><span class='base-value'>" + formatCurrency(p.getIrrfBase()) + "</span></div>" +
+                "    <div class='base-item'><span class='base-label'>Base FGTS</span><span class='base-value'>" + formatCurrency(p.getFgtsBase()) + "</span></div>" +
+                "    <div class='base-item'><span class='base-label'>FGTS Mês</span><span class='base-value'>" + formatCurrency(p.getFgtsAmount()) + "</span></div>" +
+                "  </div>" +
+                "  <div class='signatures'>" +
+                "    <div class='date-box'>___/___/___</div>" +
+                "    <div class='sign-box'>Assinatura do Funcionário</div>" +
+                "  </div>" +
                 "</div>" +
                 "</body></html>";
     }

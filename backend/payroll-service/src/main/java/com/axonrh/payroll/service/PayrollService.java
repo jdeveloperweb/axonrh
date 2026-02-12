@@ -4,6 +4,7 @@ import com.axonrh.payroll.client.EmployeeServiceClient;
 import com.axonrh.payroll.client.PerformanceServiceClient;
 import com.axonrh.payroll.client.TimesheetServiceClient;
 import com.axonrh.payroll.client.VacationServiceClient;
+import com.axonrh.payroll.client.ConfigServiceClient;
 import com.axonrh.payroll.client.CoreServiceClient;
 import com.axonrh.payroll.config.TenantContext;
 import com.axonrh.payroll.dto.*;
@@ -50,6 +51,7 @@ public class PayrollService {
     private final VacationServiceClient vacationServiceClient;
     private final PerformanceServiceClient performanceServiceClient;
     private final CoreServiceClient coreServiceClient;
+    private final ConfigServiceClient configServiceClient;
     private final DomainEventPublisher eventPublisher;
 
     /**
@@ -263,9 +265,24 @@ public class PayrollService {
             log.warn("Erro ao buscar dados do colaborador: {}", e.getMessage());
         }
 
+        // Busca branding do config-service
+        String logoUrl = null;
+        String primaryColor = "#FF8000"; // Fallback para o laranja da AxonRH/B2X
+        try {
+            var theme = configServiceClient.getThemeConfig(tenantId);
+            if (theme != null) {
+                primaryColor = theme.getPrimaryColor();
+                logoUrl = theme.getLogoUrl();
+            }
+        } catch (Exception e) {
+            log.warn("Erro ao buscar branding: {}", e.getMessage());
+        }
+
         return PayslipResponse.builder()
                 .companyName(company != null && company.getLegalName() != null ? company.getLegalName() : "AXONRH")
                 .companyCnpj(company != null && company.getCnpj() != null ? company.getCnpj() : "00.000.000/0001-00")
+                .logoUrl(logoUrl)
+                .primaryColor(primaryColor)
                 .employeeName(employee != null ? employee.getFullName() : payroll.getEmployeeName())
                 .employeeCpf(employee != null ? employee.getCpf() : payroll.getEmployeeCpf())
                 .registrationNumber(employee != null && employee.getRegistrationNumber() != null ? employee.getRegistrationNumber() : payroll.getRegistrationNumber())
