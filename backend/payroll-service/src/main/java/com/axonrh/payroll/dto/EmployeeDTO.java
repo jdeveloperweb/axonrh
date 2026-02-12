@@ -17,21 +17,38 @@ import java.util.UUID;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EmployeeDTO {
     private UUID id;
+    
+    @JsonAlias({"fullName", "full_name"})
     private String fullName;
+    
+    @JsonAlias({"cpf"})
     private String cpf;
+    
+    @JsonAlias({"registrationNumber", "registration_number"})
     private String registrationNumber;
+    
     private LocalDate hireDate;
     private String status;
+    
+    @JsonAlias({"baseSalary", "base_salary"})
     private BigDecimal baseSalary;
     
     private DepartmentDTO department;
     private PositionDTO position;
+
+    @JsonAlias({"departmentName", "department_name"})
+    private String departmentNameAlias;
+
+    @JsonAlias({"positionName", "position_name", "positionTitle", "position_title", "title"})
+    private String positionNameAlias;
     
     public String getDepartmentName() {
+        if (departmentNameAlias != null && !departmentNameAlias.isBlank()) return departmentNameAlias;
         return department != null ? department.getName() : null;
     }
     
     public String getPositionName() {
+        if (positionNameAlias != null && !positionNameAlias.isBlank()) return positionNameAlias;
         return position != null ? position.getTitle() : null;
     }
 
@@ -40,6 +57,7 @@ public class EmployeeDTO {
     @AllArgsConstructor
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class DepartmentDTO {
+        @JsonAlias({"name", "departmentName", "department_name"})
         private String name;
     }
 
@@ -48,6 +66,7 @@ public class EmployeeDTO {
     @AllArgsConstructor
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class PositionDTO {
+        @JsonAlias({"title", "name", "positionName", "position_title"})
         private String title;
     }
     

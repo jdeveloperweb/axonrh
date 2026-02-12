@@ -80,7 +80,11 @@ public class VacationService {
      */
     @Transactional
     public VacationPeriod createPeriod(UUID employeeId, String employeeName, LocalDate admissionDate) {
-        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        String tenantStr = TenantContext.getCurrentTenant();
+        if (tenantStr == null) {
+            throw new InvalidOperationException("Tenant context missing");
+        }
+        UUID tenantId = UUID.fromString(tenantStr);
         return createPeriod(tenantId, employeeId, employeeName, admissionDate);
     }
 
@@ -130,7 +134,11 @@ public class VacationService {
      */
     @Transactional
     public VacationPeriod createNextPeriod(UUID employeeId, String employeeName) {
-        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        String tenantStr = TenantContext.getCurrentTenant();
+        if (tenantStr == null) {
+            throw new InvalidOperationException("Tenant context missing");
+        }
+        UUID tenantId = UUID.fromString(tenantStr);
 
         // Buscar ultimo periodo
         VacationPeriod lastPeriod = periodRepository
@@ -149,7 +157,11 @@ public class VacationService {
      */
     @Transactional
     public void syncPeriods() {
-        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        String tenantStr = TenantContext.getCurrentTenant();
+        if (tenantStr == null) {
+            throw new InvalidOperationException("Tenant context missing");
+        }
+        UUID tenantId = UUID.fromString(tenantStr);
         log.info("Iniciando sincronizacao de periodos para tenant: {}", tenantId);
 
         try {
@@ -213,7 +225,12 @@ public class VacationService {
      */
     @Transactional(readOnly = true)
     public List<VacationPeriodResponse> getExpiringPeriods(int daysThreshold) {
-        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        String tenantStr = TenantContext.getCurrentTenant();
+        if (tenantStr == null) {
+            log.error("Tentativa de buscar periodos expirando sem contexto de Tenant!");
+            return Collections.emptyList();
+        }
+        UUID tenantId = UUID.fromString(tenantStr);
         LocalDate thresholdDate = LocalDate.now().plusDays(daysThreshold);
 
         List<VacationPeriod> periods = periodRepository
@@ -229,7 +246,11 @@ public class VacationService {
      */
     @Transactional
     public VacationRequestResponse createRequest(VacationRequestCreateDTO dto, UUID employeeId, String employeeName) {
-        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        String tenantStr = TenantContext.getCurrentTenant();
+        if (tenantStr == null) {
+            throw new InvalidOperationException("Tenant context missing");
+        }
+        UUID tenantId = UUID.fromString(tenantStr);
 
         // Buscar periodo aquisitivo
         VacationPeriod period = periodRepository.findByTenantIdAndId(tenantId, dto.getVacationPeriodId())
@@ -300,7 +321,11 @@ public class VacationService {
      */
     @Transactional
     public VacationRequestResponse approveRequest(UUID requestId, String notes, UUID approverId, String approverName) {
-        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        String tenantStr = TenantContext.getCurrentTenant();
+        if (tenantStr == null) {
+            throw new InvalidOperationException("Tenant context missing");
+        }
+        UUID tenantId = UUID.fromString(tenantStr);
 
         VacationRequest request = requestRepository.findByTenantIdAndId(tenantId, requestId)
                 .orElseThrow(() -> new ResourceNotFoundException("Solicitacao nao encontrada"));
@@ -348,7 +373,11 @@ public class VacationService {
      */
     @Transactional
     public VacationRequestResponse rejectRequest(UUID requestId, String reason, UUID approverId, String approverName) {
-        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        String tenantStr = TenantContext.getCurrentTenant();
+        if (tenantStr == null) {
+            throw new InvalidOperationException("Tenant context missing");
+        }
+        UUID tenantId = UUID.fromString(tenantStr);
 
         VacationRequest request = requestRepository.findByTenantIdAndId(tenantId, requestId)
                 .orElseThrow(() -> new ResourceNotFoundException("Solicitacao nao encontrada"));
@@ -377,7 +406,11 @@ public class VacationService {
      */
     @Transactional
     public VacationRequestResponse cancelRequest(UUID requestId, UUID employeeId) {
-        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        String tenantStr = TenantContext.getCurrentTenant();
+        if (tenantStr == null) {
+            throw new InvalidOperationException("Tenant context missing");
+        }
+        UUID tenantId = UUID.fromString(tenantStr);
 
         VacationRequest request = requestRepository.findByTenantIdAndId(tenantId, requestId)
                 .orElseThrow(() -> new ResourceNotFoundException("Solicitacao nao encontrada"));
@@ -415,7 +448,12 @@ public class VacationService {
      */
     @Transactional(readOnly = true)
     public Page<VacationRequestResponse> getPendingRequests(Pageable pageable) {
-        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        String tenantStr = TenantContext.getCurrentTenant();
+        if (tenantStr == null) {
+            log.error("Tentativa de buscar pendencias sem contexto de Tenant!");
+            return Page.empty();
+        }
+        UUID tenantId = UUID.fromString(tenantStr);
 
         return requestRepository
                 .findByTenantIdAndStatusOrderByCreatedAtAsc(tenantId, VacationRequestStatus.PENDING, pageable)
@@ -427,7 +465,12 @@ public class VacationService {
      */
     @Transactional(readOnly = true)
     public Page<VacationRequestResponse> getPendingRequestsForManager(UUID managerId, Pageable pageable) {
-        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        String tenantStr = TenantContext.getCurrentTenant();
+        if (tenantStr == null) {
+            log.error("Tentativa de buscar pendencias do gestor sem contexto de Tenant!");
+            return Page.empty();
+        }
+        UUID tenantId = UUID.fromString(tenantStr);
         
         List<UUID> subordinateIds = new ArrayList<>();
         try {
@@ -458,7 +501,12 @@ public class VacationService {
      */
     @Transactional(readOnly = true)
     public List<VacationRequestResponse> getEmployeeRequests(UUID employeeId) {
-        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        String tenantStr = TenantContext.getCurrentTenant();
+        if (tenantStr == null) {
+            log.error("Tentativa de buscar solicitacoes sem contexto de Tenant!");
+            return Collections.emptyList();
+        }
+        UUID tenantId = UUID.fromString(tenantStr);
 
         return requestRepository
                 .findByTenantIdAndEmployeeIdOrderByCreatedAtDesc(tenantId, employeeId)
@@ -472,7 +520,12 @@ public class VacationService {
      */
     @Transactional(readOnly = true)
     public List<VacationRequestResponse> getCalendarRequests(LocalDate from, LocalDate to) {
-        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        String tenantStr = TenantContext.getCurrentTenant();
+        if (tenantStr == null) {
+            log.error("Tentativa de buscar calendario sem contexto de Tenant!");
+            return Collections.emptyList();
+        }
+        UUID tenantId = UUID.fromString(tenantStr);
 
         return requestRepository
                 .findByTenantIdAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
@@ -530,7 +583,11 @@ public class VacationService {
      */
     @Transactional
     public String generateNotice(UUID requestId) {
-        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        String tenantStr = TenantContext.getCurrentTenant();
+        if (tenantStr == null) {
+            throw new InvalidOperationException("Tenant context missing");
+        }
+        UUID tenantId = UUID.fromString(tenantStr);
 
         VacationRequest request = requestRepository.findByTenantIdAndId(tenantId, requestId)
                 .orElseThrow(() -> new ResourceNotFoundException("Solicitacao nao encontrada"));
@@ -551,7 +608,11 @@ public class VacationService {
      */
     @Transactional
     public String generateReceipt(UUID requestId) {
-        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        String tenantStr = TenantContext.getCurrentTenant();
+        if (tenantStr == null) {
+            throw new InvalidOperationException("Tenant context missing");
+        }
+        UUID tenantId = UUID.fromString(tenantStr);
 
         VacationRequest request = requestRepository.findByTenantIdAndId(tenantId, requestId)
                 .orElseThrow(() -> new ResourceNotFoundException("Solicitacao nao encontrada"));
@@ -626,7 +687,11 @@ public class VacationService {
 
     private void validateFractioning(VacationPeriod period, VacationRequestCreateDTO dto, int requestedDays) {
         // Contar fracoes ja existentes
-        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        String tenantStr = TenantContext.getCurrentTenant();
+        if (tenantStr == null) {
+            throw new InvalidOperationException("Tenant context missing");
+        }
+        UUID tenantId = UUID.fromString(tenantStr);
         long existingFractions = requestRepository.countByVacationPeriodIdAndStatusNot(
                 period.getId(), VacationRequestStatus.CANCELLED);
 

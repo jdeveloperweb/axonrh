@@ -247,23 +247,30 @@ public class PayrollService {
                 .filter(i -> i.getCode() == com.axonrh.payroll.enums.PayrollItemCode.IRRF)
                 .findFirst();
 
-        // Busca dados da empresa no core-service (com fallback)
+        // Busca dados da empresa no core-service (com fallback para o nome padrão do sistema)
         com.axonrh.payroll.client.CoreServiceClient.CompanyProfileDTO company = null;
         try {
             company = coreServiceClient.getCompanyProfile(tenantId);
         } catch (Exception e) {
-            log.warn("Erro ao buscar dados da empresa no core-service: {}", e.getMessage());
-            // Fallback silencioso para defaults
+            log.warn("Erro ao buscar dados da empresa: {}", e.getMessage());
+        }
+
+        // Busca dados do colaborador atualizados
+        EmployeeDTO employee = null;
+        try {
+            employee = employeeServiceClient.getEmployee(payroll.getEmployeeId());
+        } catch (Exception e) {
+            log.warn("Erro ao buscar dados do colaborador: {}", e.getMessage());
         }
 
         return PayslipResponse.builder()
-                .companyName(company != null ? company.getLegalName() : "AxonRH")
-                .companyCnpj(company != null ? company.getCnpj() : "00.000.000/0001-00")
-                .employeeName(payroll.getEmployeeName())
-                .employeeCpf(payroll.getEmployeeCpf())
-                .registrationNumber(payroll.getRegistrationNumber() != null ? payroll.getRegistrationNumber() : "-")
-                .department(payroll.getDepartmentName() != null ? payroll.getDepartmentName() : "Geral")
-                .position(payroll.getPositionName() != null ? payroll.getPositionName() : "Colaborador")
+                .companyName(company != null && company.getLegalName() != null ? company.getLegalName() : "AXONRH")
+                .companyCnpj(company != null && company.getCnpj() != null ? company.getCnpj() : "00.000.000/0001-00")
+                .employeeName(employee != null ? employee.getFullName() : payroll.getEmployeeName())
+                .employeeCpf(employee != null ? employee.getCpf() : payroll.getEmployeeCpf())
+                .registrationNumber(employee != null && employee.getRegistrationNumber() != null ? employee.getRegistrationNumber() : payroll.getRegistrationNumber())
+                .department(employee != null && employee.getDepartmentName() != null ? employee.getDepartmentName() : payroll.getDepartmentName())
+                .position(employee != null && employee.getPositionName() != null ? employee.getPositionName() : payroll.getPositionName())
                 .month(payroll.getReferenceMonth())
                 .year(payroll.getReferenceYear())
                 .referenceLabel(String.format("%02d/%d", payroll.getReferenceMonth(), payroll.getReferenceYear()))
