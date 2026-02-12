@@ -17,7 +17,7 @@ import com.axonrh.payroll.mapper.PayrollMapper;
 import com.axonrh.payroll.repository.PayrollRepository;
 import com.axonrh.payroll.repository.PayrollRunRepository;
 import com.axonrh.kafka.event.DomainEvent;
-import com.axonrh.kafka.publisher.DomainEventPublisher;
+import com.axonrh.kafka.producer.DomainEventPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
