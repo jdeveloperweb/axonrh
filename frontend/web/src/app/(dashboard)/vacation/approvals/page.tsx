@@ -12,9 +12,8 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Calendar, Loader2, CheckCircle2, XCircle, Clock, ShieldCheck, UserCheck, Search, Filter } from 'lucide-react';
+import { ArrowLeft, Calendar, Loader2, UserCheck, Search } from 'lucide-react';
 import { vacationApi, VacationRequest } from '@/lib/api/vacation';
 import { ReviewVacationDialog } from '@/components/vacation/ReviewVacationDialog';
 import { cn } from '@/lib/utils';
@@ -29,7 +28,6 @@ export default function VacationApprovalsPage() {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
 
-    // Pagination (simplified for now)
     const [page] = useState(0);
 
     const loadRequests = useCallback(async () => {
@@ -73,7 +71,6 @@ export default function VacationApprovalsPage() {
                     description: 'Solicitação de férias rejeitada.',
                 });
             }
-            // Refresh list
             loadRequests();
         } catch (error) {
             console.error('Error reviewing request:', error);
@@ -99,119 +96,113 @@ export default function VacationApprovalsPage() {
     );
 
     return (
-        <div className="container max-w-6xl py-10 space-y-10 animate-in fade-in duration-700">
-            {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div className="flex items-center gap-6">
-                    <Button
-                        variant="outline"
-                        size="icon"
+        <div className="p-6 space-y-6 animate-in fade-in duration-500">
+            {/* Page Header */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                    <button
                         onClick={() => router.back()}
-                        className="h-12 w-12 rounded-full border-slate-100 bg-white shadow-sm hover:shadow-md transition-all"
+                        className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                     >
-                        <ArrowLeft className="h-6 w-6 text-slate-600" />
-                    </Button>
-                    <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                            <ShieldCheck className="h-5 w-5 text-primary" />
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Gestão de Equipe</span>
-                        </div>
-                        <h1 className="text-4xl font-black tracking-tight text-slate-900">Aprovações <span className="text-primary italic">Pendentes</span></h1>
+                        <ArrowLeft className="h-5 w-5 text-gray-600" />
+                    </button>
+                    <div>
+                        <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Aprovações Pendentes</h1>
+                        <p className="text-[var(--color-text-secondary)]">
+                            Revise as solicitações de férias da sua equipe.
+                        </p>
                     </div>
                 </div>
 
-                <div className="relative group min-w-[300px]">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-primary transition-colors" />
+                <div className="relative min-w-[280px]">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input
                         placeholder="Buscar colaborador..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="h-12 pl-12 pr-4 rounded-xl border-slate-100 bg-white shadow-sm focus:ring-primary/20 transition-all text-sm font-medium"
+                        className="h-10 pl-10 pr-4 rounded-lg border-gray-200 bg-white text-sm"
                     />
                 </div>
             </div>
 
             {/* List Section */}
-            <Card className="border border-slate-100 shadow-sm rounded-3xl overflow-hidden bg-white">
-                <CardHeader className="p-8 pb-0">
+            <Card className="border-none shadow-sm bg-white overflow-hidden">
+                <CardHeader className="pb-4">
                     <div className="flex items-center justify-between">
-                        <div className="space-y-1">
-                            <CardTitle className="text-xl font-black text-slate-900 uppercase">Solicitações Aguardando Ação</CardTitle>
-                            <CardDescription className="font-medium">
-                                Você tem <span className="text-primary font-bold">{requests.length}</span> pedido(s) aguardando sua revisão profissional.
+                        <div>
+                            <CardTitle className="text-lg font-bold">Solicitações Aguardando Ação</CardTitle>
+                            <CardDescription>
+                                Você tem <span className="text-[var(--color-primary)] font-bold">{requests.length}</span> pedido(s) aguardando sua revisão.
                             </CardDescription>
-                        </div>
-                        <div className="hidden md:flex p-2 bg-slate-50 rounded-xl">
-                            <Filter className="h-5 w-5 text-slate-400" />
                         </div>
                     </div>
                 </CardHeader>
 
-                <CardContent className="p-8">
+                <CardContent className="p-0">
                     {loading ? (
-                        <div className="flex flex-col items-center justify-center py-20 gap-4">
-                            <Loader2 className="h-12 w-12 animate-spin text-primary opacity-20" />
-                            <p className="text-xs font-black text-slate-400 uppercase tracking-widest animate-pulse">Carregando solicitações...</p>
+                        <div className="flex flex-col items-center justify-center py-20 gap-3">
+                            <Loader2 className="h-8 w-8 animate-spin text-[var(--color-primary)]" />
+                            <p className="text-sm text-gray-500">Carregando solicitações...</p>
                         </div>
                     ) : filteredRequests.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-24 text-center space-y-6">
-                            <div className="h-24 w-24 rounded-full bg-slate-50 flex items-center justify-center">
-                                <UserCheck className="h-10 w-10 text-slate-200" />
+                        <div className="flex flex-col items-center justify-center py-20 text-center space-y-3">
+                            <div className="h-14 w-14 rounded-xl bg-gray-100 flex items-center justify-center">
+                                <UserCheck className="h-7 w-7 text-gray-300" />
                             </div>
-                            <div className="space-y-2">
-                                <h3 className="text-lg font-black text-slate-900">Tudo em dia!</h3>
-                                <p className="text-slate-400 font-medium max-w-sm">Não encontramos solicitações pendentes {searchTerm ? 'para esta busca' : 'no momento'}.</p>
+                            <div>
+                                <h3 className="text-base font-bold text-gray-900">Tudo em dia!</h3>
+                                <p className="text-sm text-gray-400 max-w-sm">Não encontramos solicitações pendentes {searchTerm ? 'para esta busca' : 'no momento'}.</p>
                             </div>
                         </div>
                     ) : (
-                        <div className="rounded-2xl border border-slate-50 overflow-hidden">
+                        <div className="overflow-x-auto">
                             <Table>
-                                <TableHeader className="bg-slate-50/50 h-16">
-                                    <TableRow className="border-none">
-                                        <TableHead className="font-black text-[10px] uppercase tracking-widest px-8">Colaborador</TableHead>
-                                        <TableHead className="font-black text-[10px] uppercase tracking-widest">Período Solicitado</TableHead>
-                                        <TableHead className="font-black text-[10px] uppercase tracking-widest text-center">Dias</TableHead>
-                                        <TableHead className="font-black text-[10px] uppercase tracking-widest text-right px-8">Ação</TableHead>
+                                <TableHeader className="bg-gray-50/50">
+                                    <TableRow className="border-b border-gray-100">
+                                        <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-6">Colaborador</TableHead>
+                                        <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Período Solicitado</TableHead>
+                                        <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Dias</TableHead>
+                                        <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wider text-right px-6">Ação</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {filteredRequests.map((request) => (
-                                        <TableRow key={request.id} className="h-24 hover:bg-slate-50/30 transition-colors border-none group">
-                                            <TableCell className="px-8">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black text-sm">
+                                        <TableRow key={request.id} className="hover:bg-gray-50/50 transition-colors border-b border-gray-50">
+                                            <TableCell className="px-6">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="h-10 w-10 rounded-lg bg-[var(--color-primary)]/10 flex items-center justify-center text-[var(--color-primary)] font-bold text-sm">
                                                         {request.employeeName?.[0]}
                                                     </div>
-                                                    <div className="space-y-0.5">
-                                                        <p className="font-black text-slate-900 leading-none">{request.employeeName}</p>
-                                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Solicitado em {new Date(request.createdAt).toLocaleDateString('pt-BR')}</p>
+                                                    <div>
+                                                        <p className="font-bold text-gray-900 text-sm">{request.employeeName}</p>
+                                                        <p className="text-xs text-gray-400">Solicitado em {new Date(request.createdAt).toLocaleDateString('pt-BR')}</p>
                                                     </div>
                                                 </div>
                                             </TableCell>
                                             <TableCell>
                                                 <div className="space-y-1">
-                                                    <div className="flex items-center gap-2 font-bold text-slate-700">
-                                                        <Calendar className="h-4 w-4 text-primary" />
+                                                    <div className="flex items-center gap-2 font-medium text-gray-700 text-sm">
+                                                        <Calendar className="h-4 w-4 text-[var(--color-primary)]" />
                                                         {formatDate(request.startDate)} — {formatDate(request.endDate)}
                                                     </div>
                                                     {request.sellDays && (
-                                                        <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50 text-[9px] font-black uppercase tracking-widest rounded-lg">
+                                                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700">
                                                             + {request.soldDaysCount} dias de abono
-                                                        </Badge>
+                                                        </span>
                                                     )}
                                                 </div>
                                             </TableCell>
                                             <TableCell className="text-center">
                                                 <div className="inline-flex flex-col items-center">
-                                                    <span className="text-lg font-black text-slate-900 leading-none">{request.daysCount}</span>
-                                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">DIAS</span>
+                                                    <span className="text-base font-bold text-gray-900 tabular-nums">{request.daysCount}</span>
+                                                    <span className="text-[10px] text-gray-400">dias</span>
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="text-right px-8">
+                                            <TableCell className="text-right px-6">
                                                 <Button
                                                     onClick={() => handleReview(request)}
-                                                    size="lg"
-                                                    className="rounded-xl h-12 px-6 font-black text-xs uppercase tracking-widest shadow-lg shadow-primary/10 transition-transform active:scale-95"
+                                                    size="sm"
+                                                    className="rounded-lg h-9 px-4 font-bold text-sm bg-[var(--color-primary)] hover:opacity-90 transition-opacity"
                                                 >
                                                     Revisar
                                                 </Button>
@@ -234,4 +225,3 @@ export default function VacationApprovalsPage() {
         </div>
     );
 }
-

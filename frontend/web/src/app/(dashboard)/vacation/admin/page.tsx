@@ -19,13 +19,10 @@ import {
     ArrowLeft,
     Bell,
     Loader2,
-    Calendar,
     Search,
     RefreshCw,
-    ShieldAlert,
     UserCircle2,
     CheckCircle2,
-    Zap
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { vacationApi, VacationPeriod } from '@/lib/api/vacation';
@@ -42,7 +39,7 @@ export default function VacationAdminPage() {
     const loadData = useCallback(async () => {
         try {
             setLoading(true);
-            const data = await vacationApi.getExpiringPeriods(60); // 60 days threshold
+            const data = await vacationApi.getExpiringPeriods(60);
             setExpiringPeriods(data);
         } catch (error) {
             console.error('Error loading admin data:', error);
@@ -110,59 +107,55 @@ export default function VacationAdminPage() {
     };
 
     return (
-        <div className="container max-w-7xl py-10 space-y-10 animate-in fade-in duration-700">
-            {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div className="flex items-center gap-6">
-                    <Button
-                        variant="outline"
-                        size="icon"
+        <div className="p-6 space-y-6 animate-in fade-in duration-500">
+            {/* Page Header */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                    <button
                         onClick={() => router.back()}
-                        className="h-12 w-12 rounded-full border-slate-100 bg-white shadow-sm hover:shadow-md transition-all"
+                        className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                     >
-                        <ArrowLeft className="h-6 w-6 text-slate-600" />
-                    </Button>
-                    <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                            <ShieldAlert className="h-5 w-5 text-rose-500" />
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Painel de Controle RH</span>
-                        </div>
-                        <h1 className="text-4xl font-black tracking-tight text-slate-900">Monitoramento de <span className="text-rose-500 italic">Prazos</span></h1>
+                        <ArrowLeft className="h-5 w-5 text-gray-600" />
+                    </button>
+                    <div>
+                        <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Monitoramento de Prazos</h1>
+                        <p className="text-[var(--color-text-secondary)]">
+                            Colaboradores com períodos vencendo nos próximos 60 dias.
+                        </p>
                     </div>
                 </div>
 
                 <Button
                     onClick={handleSync}
                     disabled={syncing}
-                    size="xl"
-                    className="rounded-xl shadow-lg shadow-primary/10 bg-slate-900 hover:bg-slate-800 text-white border-0 h-14 px-8 group"
+                    className="flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 transition-opacity"
                 >
-                    <RefreshCw className={cn("mr-3 h-4 w-4 transition-transform group-hover:rotate-180 duration-500", syncing && "animate-spin")} />
+                    <RefreshCw className={cn("h-4 w-4", syncing && "animate-spin")} />
                     Sincronizar Dados
                 </Button>
             </div>
 
             {/* Main Content */}
-            <Card className="border border-slate-100 shadow-sm rounded-3xl overflow-hidden bg-white">
-                <CardHeader className="p-8 pb-6 bg-slate-50/50">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                        <div className="space-y-1">
-                            <CardTitle className="text-xl font-black text-slate-900 uppercase flex items-center gap-3">
-                                <Zap className="h-5 w-5 text-amber-500" />
+            <Card className="border-none shadow-sm bg-white overflow-hidden">
+                <CardHeader className="pb-4 bg-gray-50/50">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <CardTitle className="text-lg font-bold flex items-center gap-2">
+                                <AlertTriangle className="h-5 w-5 text-amber-500" />
                                 Períodos em Risco
                             </CardTitle>
-                            <CardDescription className="font-medium text-slate-500">
-                                Colaboradores com períodos vencendo nos próximos <span className="text-rose-600 font-black">60 dias</span>.
+                            <CardDescription>
+                                {filteredPeriods.length} período(s) requerem atenção.
                             </CardDescription>
                         </div>
 
-                        <div className="relative group min-w-[320px]">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-primary transition-colors" />
+                        <div className="relative min-w-[280px]">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                             <Input
                                 placeholder="Buscar colaborador..."
                                 value={filter}
                                 onChange={(e) => setFilter(e.target.value)}
-                                className="h-12 pl-12 pr-4 rounded-xl border-slate-200 bg-white focus:ring-primary/20 transition-all text-sm font-medium"
+                                className="h-10 pl-10 pr-4 rounded-lg border-gray-200 bg-white text-sm"
                             />
                         </div>
                     </div>
@@ -170,71 +163,71 @@ export default function VacationAdminPage() {
 
                 <CardContent className="p-0">
                     {loading ? (
-                        <div className="flex flex-col items-center justify-center py-32 gap-4">
-                            <Loader2 className="h-12 w-12 animate-spin text-primary opacity-20" />
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest animate-pulse">Analisando prazos...</p>
+                        <div className="flex flex-col items-center justify-center py-20 gap-3">
+                            <Loader2 className="h-8 w-8 animate-spin text-[var(--color-primary)]" />
+                            <p className="text-sm text-gray-500">Analisando prazos...</p>
                         </div>
                     ) : filteredPeriods.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-32 text-center space-y-6">
-                            <div className="h-20 w-20 rounded-2xl bg-emerald-50 flex items-center justify-center">
-                                <CheckCircle2 className="h-10 w-10 text-emerald-500" />
+                        <div className="flex flex-col items-center justify-center py-20 text-center space-y-3">
+                            <div className="h-14 w-14 rounded-xl bg-emerald-50 flex items-center justify-center">
+                                <CheckCircle2 className="h-7 w-7 text-emerald-500" />
                             </div>
-                            <div className="space-y-2">
-                                <h3 className="text-lg font-black text-slate-900">Operação Segura</h3>
-                                <p className="text-slate-400 font-medium max-w-sm">Nenhum período exige atenção imediata no momento.</p>
+                            <div>
+                                <h3 className="text-base font-bold text-gray-900">Operação Segura</h3>
+                                <p className="text-sm text-gray-400 max-w-sm">Nenhum período exige atenção imediata no momento.</p>
                             </div>
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
                             <Table>
-                                <TableHeader className="bg-slate-50/80 h-16">
-                                    <TableRow className="border-none">
-                                        <TableHead className="font-black text-[10px] uppercase tracking-widest px-10">Colaborador</TableHead>
-                                        <TableHead className="font-black text-[10px] uppercase tracking-widest">Fim Aquisitivo</TableHead>
-                                        <TableHead className="font-black text-[10px] uppercase tracking-widest text-rose-600">Limite Crítico</TableHead>
-                                        <TableHead className="font-black text-[10px] uppercase tracking-widest text-center">Saldo</TableHead>
-                                        <TableHead className="font-black text-[10px] uppercase tracking-widest text-right px-10">Status & Ação</TableHead>
+                                <TableHeader className="bg-gray-50/50">
+                                    <TableRow className="border-b border-gray-100">
+                                        <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-6">Colaborador</TableHead>
+                                        <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Fim Aquisitivo</TableHead>
+                                        <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wider text-red-600">Limite Crítico</TableHead>
+                                        <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Saldo</TableHead>
+                                        <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wider text-right px-6">Ação</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {filteredPeriods.map((period) => (
-                                        <TableRow key={period.id} className="h-24 hover:bg-slate-50/50 transition-colors border-none group">
-                                            <TableCell className="px-10">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="h-12 w-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400">
-                                                        <UserCircle2 className="h-7 w-7" />
+                                        <TableRow key={period.id} className="hover:bg-gray-50/50 transition-colors border-b border-gray-50">
+                                            <TableCell className="px-6">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="h-10 w-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400">
+                                                        <UserCircle2 className="h-5 w-5" />
                                                     </div>
-                                                    <p className="font-black text-slate-900 text-base">{period.employeeName}</p>
+                                                    <p className="font-bold text-gray-900 text-sm">{period.employeeName}</p>
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="font-bold text-slate-600">
+                                            <TableCell className="font-medium text-gray-600 text-sm">
                                                 {formatDate(period.acquisitionEndDate)}
                                             </TableCell>
                                             <TableCell>
-                                                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-rose-50 border border-rose-100">
-                                                    <AlertTriangle className="h-4 w-4 text-rose-500" />
-                                                    <span className="font-black text-rose-600 tabular-nums">{formatDate(period.concessionEndDate)}</span>
+                                                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg bg-red-50 border border-red-100">
+                                                    <AlertTriangle className="h-3.5 w-3.5 text-red-500" />
+                                                    <span className="font-bold text-red-600 tabular-nums text-sm">{formatDate(period.concessionEndDate)}</span>
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="text-center font-black text-slate-900 tabular-nums text-lg">
+                                            <TableCell className="text-center font-bold text-gray-900 tabular-nums">
                                                 {period.remainingDays}d
                                             </TableCell>
-                                            <TableCell className="text-right px-10">
-                                                <div className="flex items-center justify-end gap-4">
+                                            <TableCell className="text-right px-6">
+                                                <div className="flex items-center justify-end gap-3">
                                                     {period.isExpired ? (
-                                                        <Badge variant="destructive" className="h-8 rounded-lg px-3 font-black text-[10px] uppercase tracking-wider">Expirado</Badge>
+                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-red-100 text-red-800">Expirado</span>
                                                     ) : (
-                                                        <Badge className="h-8 rounded-lg px-3 font-black text-[10px] uppercase tracking-wider bg-amber-100 text-amber-700 hover:bg-amber-100 border-none">
+                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-amber-100 text-amber-700">
                                                             {period.daysUntilExpiration} dias restantes
-                                                        </Badge>
+                                                        </span>
                                                     )}
                                                     <Button
-                                                        size="lg"
+                                                        size="sm"
                                                         variant="outline"
                                                         onClick={() => handleNotify(period)}
-                                                        className="rounded-xl h-11 border-slate-200 hover:bg-slate-900 hover:text-white transition-all group/btn"
+                                                        className="rounded-lg h-9 border-gray-200 hover:bg-gray-50 transition-all"
                                                     >
-                                                        <Bell className="mr-2 h-4 w-4 transition-transform group-hover/btn:rotate-12" />
+                                                        <Bell className="mr-2 h-3.5 w-3.5" />
                                                         Notificar
                                                     </Button>
                                                 </div>
@@ -250,4 +243,3 @@ export default function VacationAdminPage() {
         </div>
     );
 }
-

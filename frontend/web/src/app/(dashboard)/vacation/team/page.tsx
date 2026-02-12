@@ -20,15 +20,11 @@ import {
     Users,
     MapPin,
     Search,
-    Filter,
-    Sparkles,
-    UserCheck,
     Coffee
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
 
@@ -51,7 +47,6 @@ export default function TeamVacationPage() {
     const [departmentId] = useState<string>('all');
     const [searchTerm, setSearchTerm] = useState('');
 
-    // Load Data
     const loadData = useCallback(async () => {
         try {
             setLoading(true);
@@ -74,7 +69,6 @@ export default function TeamVacationPage() {
         loadData();
     }, [loadData]);
 
-    // Calculate Status for the selected Date
     const teamStatus = useMemo(() => {
         const dayOfWeekMap = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
         const currentDayOfWeek = dayOfWeekMap[getDay(date)];
@@ -114,82 +108,84 @@ export default function TeamVacationPage() {
         };
     }, [teamStatus]);
 
+    const statusConfig = {
+        OFFICE: { label: 'Presencial', color: 'bg-blue-500', badgeCls: 'bg-blue-50 text-blue-600' },
+        REMOTE: { label: 'Home Office', color: 'bg-purple-500', badgeCls: 'bg-purple-50 text-purple-600' },
+        VACATION: { label: 'Em Férias', color: 'bg-amber-500', badgeCls: 'bg-amber-50 text-amber-600' },
+        OFF: { label: 'Folga', color: 'bg-gray-400', badgeCls: 'bg-gray-100 text-gray-500' },
+    };
+
     return (
-        <div className="container max-w-7xl py-10 space-y-12 animate-in fade-in duration-700">
-            {/* Premium Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
-                <div className="flex items-center gap-6">
-                    <Button
-                        variant="outline"
-                        size="icon"
+        <div className="p-6 space-y-6 animate-in fade-in duration-500">
+            {/* Page Header */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                    <button
                         onClick={() => router.back()}
-                        className="h-12 w-12 rounded-full border-slate-100 bg-white shadow-xl shadow-slate-200/40 hover:shadow-2xl hover:scale-105 transition-all flex items-center justify-center p-0"
+                        className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                     >
-                        <ArrowLeft className="h-6 w-6 text-slate-600" />
-                    </Button>
-                    <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                            <Users className="h-5 w-5 text-primary" />
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Escala Corporativa</span>
-                        </div>
-                        <h1 className="text-4xl font-black tracking-tight text-slate-900">Onde está a <span className="text-primary italic">Equipe?</span></h1>
+                        <ArrowLeft className="h-5 w-5 text-gray-600" />
+                    </button>
+                    <div>
+                        <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Escala da Equipe</h1>
+                        <p className="text-[var(--color-text-secondary)]">
+                            Visualize onde estão os colaboradores em cada dia.
+                        </p>
                     </div>
                 </div>
 
-                <div className="relative group min-w-[320px]">
-                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-primary transition-colors" />
+                <div className="relative min-w-[280px]">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input
                         placeholder="Buscar por nome..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="h-14 pl-14 pr-6 rounded-xl border-none bg-white shadow-xl shadow-slate-200/40 focus:ring-primary/20 transition-all font-medium"
+                        className="h-10 pl-10 pr-4 rounded-lg border-gray-200 bg-white text-sm"
                     />
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 {/* Left Column: Calendar & Summary */}
-                <div className="lg:col-span-4 space-y-10">
-                    <Card className="border border-slate-100 shadow-sm rounded-3xl overflow-hidden bg-white">
-                        <CardHeader className="p-8 pb-0">
-                            <CardTitle className="text-lg font-black uppercase text-slate-900 flex items-center gap-2">
-                                <CalendarIcon className="h-5 w-5 text-primary" />
+                <div className="lg:col-span-4 space-y-6">
+                    <Card className="border-none shadow-sm bg-white">
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-lg font-bold flex items-center gap-2">
+                                <CalendarIcon className="h-5 w-5 text-[var(--color-primary)]" />
                                 Escolha a Data
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="p-8">
+                        <CardContent className="p-4">
                             <Calendar
                                 mode="single"
                                 selected={date}
                                 onSelect={(d) => d && setDate(d)}
-                                className="rounded-2xl border-2 border-slate-50 p-4"
+                                className="rounded-lg border border-gray-200 p-3"
                                 locale={ptBR}
                             />
                         </CardContent>
                     </Card>
 
-                    <Card className="border border-slate-100 shadow-sm rounded-3xl overflow-hidden bg-slate-900 text-white">
-                        <CardHeader className="p-8 pb-4">
-                            <div className="flex flex-col gap-1">
-                                <span className="text-[10px] font-black uppercase tracking-widest text-primary">Status Consolidado</span>
-                                <CardTitle className="text-2xl font-black capitalize">{format(date, "EEEE, d 'de' MMMM", { locale: ptBR })}</CardTitle>
-                            </div>
+                    <Card className="border-none shadow-sm bg-gray-900 text-white">
+                        <CardHeader className="pb-2">
+                            <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-primary)]">Status Consolidado</p>
+                            <CardTitle className="text-xl font-bold capitalize">{format(date, "EEEE, d 'de' MMMM", { locale: ptBR })}</CardTitle>
                         </CardHeader>
-                        <CardContent className="p-8 pt-4 space-y-6">
+                        <CardContent className="space-y-3">
                             {[
                                 { icon: Building, label: 'No Escritório', value: stats.office, color: 'bg-blue-500' },
                                 { icon: Home, label: 'Em Home Office', value: stats.remote, color: 'bg-purple-500' },
                                 { icon: Sun, label: 'Em Férias', value: stats.vacation, color: 'bg-amber-500' },
-                                { icon: Coffee, label: 'Folga/Descanso', value: stats.off, color: 'bg-slate-500' },
+                                { icon: Coffee, label: 'Folga/Descanso', value: stats.off, color: 'bg-gray-500' },
                             ].map((stat, i) => (
-                                <div key={i} className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/10">
-                                    <div className="flex items-center gap-4">
-                                        <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center", stat.color)}>
-                                            <stat.icon className="h-5 w-5 text-white" />
+                                <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10">
+                                    <div className="flex items-center gap-3">
+                                        <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center", stat.color)}>
+                                            <stat.icon className="h-4 w-4 text-white" />
                                         </div>
-                                        <span className="text-sm font-bold text-slate-300">{stat.label}</span>
+                                        <span className="text-sm text-gray-300">{stat.label}</span>
                                     </div>
-                                    <span className="text-xl font-black tabular-nums">{stat.value}</span>
+                                    <span className="text-lg font-bold tabular-nums">{stat.value}</span>
                                 </div>
                             ))}
                         </CardContent>
@@ -198,53 +194,46 @@ export default function TeamVacationPage() {
 
                 {/* Right Column: Detailed List */}
                 <div className="lg:col-span-8">
-                    <Card className="border border-slate-100 shadow-sm rounded-3xl overflow-hidden bg-white h-full min-h-[600px]">
-                        <CardHeader className="p-8 pb-6 border-b border-slate-50">
+                    <Card className="border-none shadow-sm bg-white h-full min-h-[600px]">
+                        <CardHeader className="pb-4 border-b border-gray-100">
                             <div className="flex items-center justify-between">
-                                <div className="space-y-1">
-                                    <CardTitle className="text-xl font-black text-slate-900 uppercase">Detalhamento da Escala</CardTitle>
-                                    <CardDescription className="font-medium">
-                                        Visualizando disponibilidades para {teamStatus.length} colaboradores
+                                <div>
+                                    <CardTitle className="text-lg font-bold">Detalhamento da Escala</CardTitle>
+                                    <CardDescription>
+                                        Visualizando {teamStatus.length} colaboradores
                                     </CardDescription>
-                                </div>
-                                <div className="hidden md:flex p-3 bg-slate-50 rounded-2xl">
-                                    <Filter className="h-5 w-5 text-slate-300" />
                                 </div>
                             </div>
                         </CardHeader>
                         <CardContent className="p-0">
                             {loading ? (
-                                <div className="flex flex-col items-center justify-center py-40 gap-4">
-                                    <Loader2 className="h-12 w-12 animate-spin text-primary opacity-20" />
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest animate-pulse">Sincronizando escalas...</p>
+                                <div className="flex flex-col items-center justify-center py-20 gap-3">
+                                    <Loader2 className="h-8 w-8 animate-spin text-[var(--color-primary)]" />
+                                    <p className="text-sm text-gray-500">Sincronizando escalas...</p>
                                 </div>
                             ) : teamStatus.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center py-40 text-center space-y-6">
-                                    <div className="h-24 w-24 rounded-full bg-slate-50 flex items-center justify-center">
-                                        <Sparkles className="h-10 w-10 text-slate-200" />
-                                    </div>
-                                    <p className="text-slate-400 font-bold max-w-xs uppercase text-[10px] tracking-widest">Nenhum registro encontrado para esta busca.</p>
+                                <div className="flex flex-col items-center justify-center py-20 text-center space-y-3">
+                                    <Users className="h-10 w-10 text-gray-200" />
+                                    <p className="text-sm text-gray-400">Nenhum registro encontrado para esta busca.</p>
                                 </div>
                             ) : (
-                                <div className="divide-y divide-slate-50">
+                                <div className="divide-y divide-gray-50">
                                     {teamStatus.map((item) => (
                                         <div
                                             key={item.employee.id}
-                                            className="group flex flex-col md:flex-row md:items-center justify-between p-10 hover:bg-slate-50/50 transition-all"
+                                            className="flex flex-col md:flex-row md:items-center justify-between p-5 hover:bg-gray-50/50 transition-colors"
                                         >
-                                            <div className="flex items-center gap-6">
+                                            <div className="flex items-center gap-4">
                                                 <div className="relative">
-                                                    <Avatar className="h-16 w-16 rounded-[1.25rem] shadow-xl">
+                                                    <Avatar className="h-12 w-12 rounded-lg">
                                                         <AvatarImage src={item.employee.photoUrl} />
-                                                        <AvatarFallback className="bg-primary/10 text-primary font-black text-xl">
+                                                        <AvatarFallback className="bg-[var(--color-primary)]/10 text-[var(--color-primary)] font-bold text-sm rounded-lg">
                                                             {item.employee.fullName.charAt(0)}
                                                         </AvatarFallback>
                                                     </Avatar>
                                                     <div className={cn(
-                                                        "absolute -bottom-1 -right-1 h-6 w-6 rounded-lg border-4 border-white flex items-center justify-center",
-                                                        item.status === 'OFFICE' ? 'bg-blue-500' :
-                                                            item.status === 'REMOTE' ? 'bg-purple-500' :
-                                                                item.status === 'VACATION' ? 'bg-amber-500' : 'bg-slate-500'
+                                                        "absolute -bottom-1 -right-1 h-5 w-5 rounded border-2 border-white flex items-center justify-center",
+                                                        statusConfig[item.status].color
                                                     )}>
                                                         {item.status === 'OFFICE' ? <Building className="h-2.5 w-2.5 text-white" /> :
                                                             item.status === 'REMOTE' ? <Home className="h-2.5 w-2.5 text-white" /> :
@@ -252,29 +241,26 @@ export default function TeamVacationPage() {
                                                                     <Coffee className="h-2.5 w-2.5 text-white" />}
                                                     </div>
                                                 </div>
-                                                <div className="space-y-1">
-                                                    <p className="text-lg font-black text-slate-900 leading-tight group-hover:text-primary transition-colors">{item.employee.fullName}</p>
-                                                    <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
+                                                <div>
+                                                    <p className="text-sm font-bold text-gray-900">{item.employee.fullName}</p>
+                                                    <div className="flex items-center gap-1 text-xs text-gray-400">
                                                         <MapPin className="h-3 w-3" />
                                                         {item.employee.position?.name || 'Cargo não definido'}
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <div className="mt-6 md:mt-0 flex items-center gap-4">
+                                            <div className="mt-3 md:mt-0 flex items-center gap-3">
                                                 <div className="text-right hidden md:block">
-                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Status Hoje</p>
-                                                    <p className="text-sm font-black text-slate-700">{item.note}</p>
+                                                    <p className="text-xs text-gray-400">Status Hoje</p>
+                                                    <p className="text-sm font-medium text-gray-700">{item.note}</p>
                                                 </div>
-                                                <Badge className={cn(
-                                                    "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm",
-                                                    item.status === 'OFFICE' ? 'bg-blue-50 text-blue-600 hover:bg-blue-50' :
-                                                        item.status === 'REMOTE' ? 'bg-purple-50 text-purple-600 hover:bg-purple-50' :
-                                                            item.status === 'VACATION' ? 'bg-amber-50 text-amber-600 hover:bg-amber-100' :
-                                                                'bg-slate-100 text-slate-500 hover:bg-slate-100'
+                                                <span className={cn(
+                                                    "inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold",
+                                                    statusConfig[item.status].badgeCls
                                                 )}>
-                                                    {item.status}
-                                                </Badge>
+                                                    {statusConfig[item.status].label}
+                                                </span>
                                             </div>
                                         </div>
                                     ))}
@@ -287,4 +273,3 @@ export default function TeamVacationPage() {
         </div>
     );
 }
-
