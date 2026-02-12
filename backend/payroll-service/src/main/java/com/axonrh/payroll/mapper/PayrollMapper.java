@@ -14,11 +14,15 @@ import java.util.List;
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface PayrollMapper {
 
+    @org.mapstruct.Mapping(target = "netValue", source = "netSalary")
+    @org.mapstruct.Mapping(target = "fgtsValue", source = "fgtsAmount")
     PayrollResponse toResponse(Payroll payroll);
 
     PayrollItemResponse toItemResponse(PayrollItem item);
 
     List<PayrollItemResponse> toItemResponseList(List<PayrollItem> items);
 
+    @org.mapstruct.Mapping(target = "totalNetValue", source = "totalNetSalary")
+    @org.mapstruct.Mapping(target = "totalFgtsValue", source = "totalFgts")
     PayrollRunResponse toRunResponse(PayrollRun payrollRun);
 }

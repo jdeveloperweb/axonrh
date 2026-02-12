@@ -14,7 +14,8 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class PayrollItemResponse {
+public class PayrollItemResponse implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
     private UUID id;
     private PayrollItemType type;
     private PayrollItemCode code;

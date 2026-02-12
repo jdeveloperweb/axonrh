@@ -179,6 +179,9 @@ public class PayrollService {
                         .ifPresent(existing -> {
                             if (existing.getStatus() != PayrollStatus.CLOSED) {
                                 payrollRepository.delete(existing);
+                                // Força o delete no banco antes de tentar inserir a nova, 
+                                // para evitar ConstraintViolation na mesma transação.
+                                payrollRepository.flush();
                             }
                         });
 
@@ -188,6 +191,9 @@ public class PayrollService {
 
                 payroll.setPayrollRun(run);
                 payrollRepository.save(payroll);
+                // Flush logo após salvar para pegar erros de constraint dentro do try-catch
+                payrollRepository.flush();
+                
                 run.getPayrolls().add(payroll);
 
             } catch (Exception e) {

@@ -14,10 +14,17 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class PayrollRunResponse {
+public class PayrollRunResponse implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
+
     private UUID id;
     private Integer referenceMonth;
     private Integer referenceYear;
+    
+    // Alias para frontend
+    public Integer getMonth() { return referenceMonth; }
+    public Integer getYear() { return referenceYear; }
+
     private String description;
     private PayrollRunStatus status;
     private Integer totalEmployees;
@@ -25,8 +32,17 @@ public class PayrollRunResponse {
     private Integer failedEmployees;
     private BigDecimal totalEarnings;
     private BigDecimal totalDeductions;
-    private BigDecimal totalNetSalary;
-    private BigDecimal totalFgts;
+    
+    // Campos alinhados com frontend
+    private BigDecimal totalNetValue;
+    private BigDecimal totalFgtsValue;
+    
+    // Retrocompatibilidade
+    public BigDecimal getTotalNetSalary() { return totalNetValue; }
+    public void setTotalNetSalary(BigDecimal val) { this.totalNetValue = val; }
+    public BigDecimal getTotalFgts() { return totalFgtsValue; }
+    public void setTotalFgts(BigDecimal val) { this.totalFgtsValue = val; }
+
     private LocalDateTime startedAt;
     private LocalDateTime finishedAt;
     private LocalDateTime closedAt;

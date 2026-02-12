@@ -15,7 +15,9 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class PayrollResponse {
+public class PayrollResponse implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
+
     private UUID id;
     private UUID employeeId;
     private String employeeName;
@@ -24,12 +26,26 @@ public class PayrollResponse {
     private String positionName;
     private Integer referenceMonth;
     private Integer referenceYear;
+    
+    // Alias para o frontend
+    public Integer getMonth() { return referenceMonth; }
+    public Integer getYear() { return referenceYear; }
+
     private PayrollStatus status;
     private BigDecimal baseSalary;
     private BigDecimal totalEarnings;
     private BigDecimal totalDeductions;
-    private BigDecimal netSalary;
-    private BigDecimal fgtsAmount;
+    
+    // Campos alinhados com o frontend
+    private BigDecimal netValue;
+    private BigDecimal fgtsValue;
+    
+    // Mantendo originais para retrocompatibilidade interna se necessario
+    public BigDecimal getNetSalary() { return netValue; }
+    public void setNetSalary(BigDecimal val) { this.netValue = val; }
+    public BigDecimal getFgtsAmount() { return fgtsValue; }
+    public void setFgtsAmount(BigDecimal val) { this.fgtsValue = val; }
+
     private Integer calculationVersion;
     private String notes;
     private List<PayrollItemResponse> items;
