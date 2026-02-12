@@ -12,6 +12,7 @@ import {
   BookOpen,
   Settings,
   MessageSquare,
+  FileText,
   ChevronLeft,
   ChevronRight,
   LogOut,
@@ -23,6 +24,7 @@ import {
   ClipboardCheck,
   UserPlus,
   HeartPulse,
+  Banknote,
 } from 'lucide-react';
 import { cn, getPhotoUrl } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
@@ -61,6 +63,7 @@ const navGroups: NavGroup[] = [
       { label: 'Ponto', href: '/timesheet/record', icon: Clock, module: 'moduleTimesheet' },
       { label: 'Férias', href: '/vacation', icon: Calendar, module: 'moduleVacation' },
       { label: 'Desempenho', href: '/performance', icon: BarChart3, module: 'modulePerformance' },
+      { label: 'Folha de Pagamento', href: '/payroll', icon: Banknote, module: 'modulePayroll' },
       { label: 'Treinamentos', href: '/learning', icon: BookOpen, module: 'moduleLearning' },
       { label: 'Processos RH', href: '/processes', icon: ClipboardCheck, permission: 'EMPLOYEE:READ' },
       { label: 'Saúde Mental', href: '/wellbeing', icon: HeartPulse, permission: 'EMPLOYEE:READ' }, // Visible to HR/Managers
@@ -195,12 +198,22 @@ export function Sidebar() {
                 if (hasAdminAccess) return true;
 
                 // Colaboradores puros, Líderes e Gestores não vêem estas telas específicas de gestão
-                if (item.label === 'Colaboradores' || item.label === 'Processos RH') {
+                if (item.label === 'Colaboradores' || item.label === 'Processos RH' || item.label === 'Folha de Pagamento') {
                   return false;
                 }
 
                 return true;
               });
+
+              // Para colaboradores comuns, garantir que eles vejam "Meus Holerites" se o módulo estiver ativo
+              if (!hasAdminAccess && group.title === 'PESSOAS') {
+                groupFilteredItems.push({
+                  label: 'Meus Holerites',
+                  href: '/payroll/my-payslips',
+                  icon: FileText,
+                  module: 'modulePayroll'
+                });
+              }
 
               if (groupFilteredItems.length === 0) return null;
 

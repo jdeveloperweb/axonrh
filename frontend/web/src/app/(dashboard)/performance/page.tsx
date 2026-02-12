@@ -145,7 +145,7 @@ export default function PerformancePage() {
                 </Link>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
                 <Link href="/performance/disc/manage">
                   <Card className="group cursor-pointer border-0 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden bg-white ring-1 ring-slate-100 h-full">
                     <CardHeader className="pb-2">
@@ -219,6 +219,32 @@ export default function PerformancePage() {
                         <span>Ciclos Ativos</span>
                         <div className="h-1 w-1 rounded-full bg-blue-200" />
                         <span className="text-slate-400">Configuração</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+
+                <Link href="/performance/ninebox">
+                  <Card className="group cursor-pointer border-0 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden bg-white ring-1 ring-slate-100 h-full">
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="p-3 rounded-2xl bg-orange-50 text-orange-600 group-hover:scale-110 group-hover:bg-orange-600 group-hover:text-white transition-all duration-500">
+                          <LayoutDashboard className="h-7 w-7" />
+                        </div>
+                        <div className="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-orange-50 transition-colors">
+                          <ArrowRight className="h-4 w-4 text-slate-300 group-hover:text-orange-500 group-hover:translate-x-1 transition-all" />
+                        </div>
+                      </div>
+                      <CardTitle className="text-xl font-black group-hover:text-orange-600 transition-colors">Matriz 9-Box</CardTitle>
+                      <CardDescription className="text-sm font-medium leading-relaxed">
+                        Visualize a distribuição de talentos (Desempenho x Potencial).
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-4 border-t border-slate-50">
+                      <div className="flex items-center gap-2 text-orange-600 font-bold text-sm">
+                        <span>Acessar Matriz</span>
+                        <div className="h-1 w-1 rounded-full bg-orange-200" />
+                        <span className="text-slate-400">Análise</span>
                       </div>
                     </CardContent>
                   </Card>

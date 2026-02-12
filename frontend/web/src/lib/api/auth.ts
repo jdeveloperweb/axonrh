@@ -10,6 +10,7 @@ export interface User {
   avatarUrl?: string;
   roles: string[];
   permissions: string[];
+  employeeId?: string;
 }
 
 export interface LoginRequest {
