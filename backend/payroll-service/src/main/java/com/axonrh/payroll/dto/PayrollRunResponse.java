@@ -18,12 +18,8 @@ public class PayrollRunResponse implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
 
     private UUID id;
-    private Integer referenceMonth;
-    private Integer referenceYear;
-    
-    // Alias para frontend
-    public Integer getMonth() { return referenceMonth; }
-    public Integer getYear() { return referenceYear; }
+    private Integer month;
+    private Integer year;
 
     private String description;
     private PayrollRunStatus status;
@@ -37,11 +33,11 @@ public class PayrollRunResponse implements java.io.Serializable {
     private BigDecimal totalNetValue;
     private BigDecimal totalFgtsValue;
     
-    // Retrocompatibilidade
+    // Getters para compatibilidade
     public BigDecimal getTotalNetSalary() { return totalNetValue; }
-    public void setTotalNetSalary(BigDecimal val) { this.totalNetValue = val; }
     public BigDecimal getTotalFgts() { return totalFgtsValue; }
-    public void setTotalFgts(BigDecimal val) { this.totalFgtsValue = val; }
+    public Integer getReferenceMonth() { return month; }
+    public Integer getReferenceYear() { return year; }
 
     private LocalDateTime startedAt;
     private LocalDateTime finishedAt;

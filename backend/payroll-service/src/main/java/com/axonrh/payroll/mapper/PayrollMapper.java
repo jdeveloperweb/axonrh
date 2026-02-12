@@ -16,6 +16,9 @@ public interface PayrollMapper {
 
     @org.mapstruct.Mapping(target = "netValue", source = "netSalary")
     @org.mapstruct.Mapping(target = "fgtsValue", source = "fgtsAmount")
+    @org.mapstruct.Mapping(target = "month", source = "referenceMonth")
+    @org.mapstruct.Mapping(target = "year", source = "referenceYear")
+    @org.mapstruct.Mapping(target = "calculatedAt", source = "updatedAt")
     PayrollResponse toResponse(Payroll payroll);
 
     PayrollItemResponse toItemResponse(PayrollItem item);
@@ -24,5 +27,7 @@ public interface PayrollMapper {
 
     @org.mapstruct.Mapping(target = "totalNetValue", source = "totalNetSalary")
     @org.mapstruct.Mapping(target = "totalFgtsValue", source = "totalFgts")
+    @org.mapstruct.Mapping(target = "month", source = "referenceMonth")
+    @org.mapstruct.Mapping(target = "year", source = "referenceYear")
     PayrollRunResponse toRunResponse(PayrollRun payrollRun);
 }

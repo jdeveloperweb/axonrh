@@ -26,35 +26,28 @@ public class PayrollResponse implements java.io.Serializable {
     private String departmentName;
     private String positionName;
     
-    @com.fasterxml.jackson.annotation.JsonProperty("month")
-    private Integer referenceMonth;
-    
-    @com.fasterxml.jackson.annotation.JsonProperty("year")
-    private Integer referenceYear;
+    private Integer month;
+    private Integer year;
 
     private PayrollStatus status;
     private BigDecimal baseSalary;
     private BigDecimal totalEarnings;
     private BigDecimal totalDeductions;
     
-    @com.fasterxml.jackson.annotation.JsonProperty("netValue")
-    private BigDecimal netSalary;
-    
-    @com.fasterxml.jackson.annotation.JsonProperty("fgtsValue")
-    private BigDecimal fgtsAmount;
+    private BigDecimal netValue;
+    private BigDecimal fgtsValue;
 
     private Integer calculationVersion;
     private String notes;
     private List<PayrollItemResponse> items;
     
-    @com.fasterxml.jackson.annotation.JsonProperty("calculatedAt")
-    private LocalDateTime updatedAt;
-    
+    private LocalDateTime calculatedAt;
     private LocalDateTime createdAt;
     
     // Getters para compatibilidade interna se necessario
-    public BigDecimal getNetSalary() { return netSalary; }
-    public BigDecimal getFgtsAmount() { return fgtsAmount; }
-    public Integer getReferenceMonth() { return referenceMonth; }
-    public Integer getReferenceYear() { return referenceYear; }
+    public BigDecimal getNetSalary() { return netValue; }
+    public BigDecimal getFgtsAmount() { return fgtsValue; }
+    public Integer getReferenceMonth() { return month; }
+    public Integer getReferenceYear() { return year; }
+    public LocalDateTime getUpdatedAt() { return calculatedAt; }
 }
