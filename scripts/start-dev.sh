@@ -67,6 +67,7 @@ logs_menu() {
         "axonrh-ai-assistant-service"
         "axonrh-notification-service"
         "axonrh-integration-service"
+        "axonrh-payroll-service"
         "axonrh-api-gateway"
         "axonrh-frontend"
     )
@@ -199,6 +200,7 @@ select_backend_service() {
         "ai-assistant-service"
         "notification-service"
         "integration-service"
+        "payroll-service"
         "api-gateway"
     )
 
