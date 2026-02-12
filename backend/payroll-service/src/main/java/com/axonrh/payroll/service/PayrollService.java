@@ -247,8 +247,14 @@ public class PayrollService {
                 .filter(i -> i.getCode() == com.axonrh.payroll.enums.PayrollItemCode.IRRF)
                 .findFirst();
 
-        // Busca dados da empresa no core-service
-        var company = coreServiceClient.getCompanyProfile(tenantId);
+        // Busca dados da empresa no core-service (com fallback)
+        com.axonrh.payroll.client.CoreServiceClient.CompanyProfileDTO company = null;
+        try {
+            company = coreServiceClient.getCompanyProfile(tenantId);
+        } catch (Exception e) {
+            log.warn("Erro ao buscar dados da empresa no core-service: {}", e.getMessage());
+            // Fallback silencioso para defaults
+        }
 
         return PayslipResponse.builder()
                 .companyName(company != null ? company.getLegalName() : "AxonRH")
