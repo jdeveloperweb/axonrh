@@ -13,7 +13,9 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -77,6 +79,8 @@ public class VacationRequestController {
         String approverName = getUserName(jwt);
         List<String> roles = getRoles(jwt);
 
+        log.info("Usuario {} tentando aprovar solicitacao {} com roles: {}", approverId, id, roles);
+
         return ResponseEntity.ok(service.approveRequest(id, review.getNotes(), approverId, approverName, roles));
     }
 
@@ -120,23 +124,40 @@ public class VacationRequestController {
 
     @SuppressWarnings("unchecked")
     private List<String> getRoles(Jwt jwt) {
-        if (jwt == null) return java.util.Collections.emptyList();
+        List<String> allRoles = new ArrayList<>();
+        if (jwt == null) return allRoles;
         
         try {
-            // Tentar 'realm_access.roles' (Keycloak)
+            // Realm Roles
             if (jwt.hasClaim("realm_access")) {
-                java.util.Map<String, Object> realmAccess = jwt.getClaim("realm_access");
+                Map<String, Object> realmAccess = jwt.getClaim("realm_access");
                 if (realmAccess != null && realmAccess.containsKey("roles")) {
-                    return (List<String>) realmAccess.get("roles");
+                    allRoles.addAll((List<String>) realmAccess.get("roles"));
                 }
             }
-            // Tentar apenas 'roles'
+            
+            // Resource/Client Roles
+            if (jwt.hasClaim("resource_access")) {
+                Map<String, Object> resourceAccess = jwt.getClaim("resource_access");
+                if (resourceAccess != null) {
+                    resourceAccess.values().forEach(obj -> {
+                        if (obj instanceof Map) {
+                            Map<String, Object> clientAccess = (Map<String, Object>) obj;
+                            if (clientAccess.containsKey("roles")) {
+                                allRoles.addAll((List<String>) clientAccess.get("roles"));
+                            }
+                        }
+                    });
+                }
+            }
+
+            // Flat roles claim
             if (jwt.hasClaim("roles")) {
-                return jwt.getClaimAsStringList("roles");
+                allRoles.addAll(jwt.getClaimAsStringList("roles"));
             }
         } catch (Exception e) {
             log.warn("Erro ao extrair roles do token", e);
         }
-        return java.util.Collections.emptyList();
+        return allRoles;
     }
 }
