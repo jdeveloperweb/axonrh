@@ -175,20 +175,20 @@ export default function VacationPage() {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { icon: Clock, label: 'Pendentes', value: statistics.pendingRequests, color: '#CA8A04', bg: 'from-yellow-50 to-white', border: 'border-yellow-100', desc: 'Aguardando aprovação' },
-          { icon: CalendarCheck2, label: 'Agendadas', value: statistics.upcomingVacations, color: '#2563EB', bg: 'from-blue-50 to-white', border: 'border-blue-100', desc: 'Próximas férias' },
-          { icon: AlertTriangle, label: 'A Vencer', value: statistics.expiringPeriods, color: '#DC2626', bg: 'from-red-50 to-white', border: 'border-red-100', desc: 'Atenção aos prazos' },
-          { icon: Sun, label: 'Em Férias', value: statistics.employeesOnVacation, color: '#16A34A', bg: 'from-emerald-50 to-white', border: 'border-emerald-100', desc: 'Equipe em descanso' },
+          { icon: Clock, label: 'Pendentes', value: statistics.pendingRequests, desc: 'Aguardando aprovação' },
+          { icon: CalendarCheck2, label: 'Agendadas', value: statistics.upcomingVacations, desc: 'Próximas férias' },
+          { icon: AlertTriangle, label: 'A Vencer', value: statistics.expiringPeriods, desc: 'Atenção aos prazos' },
+          { icon: Sun, label: 'Em Férias', value: statistics.employeesOnVacation, desc: 'Equipe em descanso' },
         ].map((stat, i) => (
-          <Card key={i} className={cn("bg-gradient-to-br hover:shadow-md transition-all border-none shadow-sm", stat.bg, stat.border)}>
+          <Card key={i} className="border-none shadow-sm bg-white hover:shadow-md transition-all">
             <CardContent className="p-4 flex items-center justify-between">
               <div className="space-y-1">
-                <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: stat.color }}>{stat.label}</p>
+                <p className="text-xs font-medium text-gray-500">{stat.label}</p>
                 <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
                 <p className="text-xs text-gray-400">{stat.desc}</p>
               </div>
-              <div className="p-3 rounded-xl shadow-lg" style={{ backgroundColor: stat.color }}>
-                <stat.icon className="w-6 h-6 text-white" />
+              <div className="p-3 rounded-lg bg-gray-100">
+                <stat.icon className="w-5 h-5 text-gray-500" />
               </div>
             </CardContent>
           </Card>
@@ -412,24 +412,22 @@ export default function VacationPage() {
           </Card>
 
           {/* Info Card */}
-          <Card className="border-none shadow-sm bg-gradient-to-br from-[var(--color-primary)] to-blue-700 text-white overflow-hidden relative">
-            <div className="absolute top-[-20%] right-[-10%] opacity-10">
-              <Briefcase className="h-48 w-48" />
-            </div>
-            <CardContent className="p-6 relative z-10 space-y-4">
-              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-lg w-fit">
-                <Info className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <h4 className="text-lg font-bold mb-2">Dica: Abono Pecuniário</h4>
-                <p className="text-sm text-white/80 leading-relaxed">
-                  Sabia que você pode vender até 10 dias e receber um dinheiro extra? Use nosso simulador para ver quanto você ganha!
-                </p>
+          <Card className="border-none shadow-sm bg-white">
+            <CardContent className="p-5 space-y-3">
+              <div className="flex items-start gap-3">
+                <Info className="h-5 w-5 text-gray-400 mt-0.5 shrink-0" />
+                <div>
+                  <h4 className="text-sm font-bold text-gray-900 mb-1">Dica: Abono Pecuniário</h4>
+                  <p className="text-xs text-gray-500 leading-relaxed">
+                    Você pode vender até 10 dias e receber um dinheiro extra. Use o simulador para calcular.
+                  </p>
+                </div>
               </div>
               <Button
                 variant="outline"
+                size="sm"
                 onClick={() => router.push('/vacation/simulator')}
-                className="w-full rounded-lg border-white/30 bg-white/10 text-white hover:bg-white/20 text-sm font-medium"
+                className="w-full rounded-lg border-gray-200 text-gray-700 hover:bg-gray-50 text-xs font-medium"
               >
                 Abrir Simulador
               </Button>
