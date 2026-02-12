@@ -180,10 +180,12 @@ public class VacationService {
         try {
             EmployeeDTO employee = employeeServiceClient.getEmployeeByUserId(userId);
             if (employee != null) {
+                log.debug("Colaborador encontrado: {} (ID: {})", employee.getFullName(), employee.getId());
                 return employee.getId();
             }
         } catch (Exception e) {
-            log.warn("Nao foi possivel encontrar colaborador para o userId: {}. Usando proprio ID como fallback.", userId);
+            log.warn("Nao foi possivel encontrar colaborador para o userId: {}. Causa: {}. Usando proprio ID como fallback.", 
+                userId, e.getMessage());
         }
         return userId;
     }
@@ -193,7 +195,12 @@ public class VacationService {
      */
     @Transactional(readOnly = true)
     public List<VacationPeriodResponse> getEmployeePeriods(UUID employeeId) {
-        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        String tenantStr = TenantContext.getCurrentTenant();
+        if (tenantStr == null) {
+            log.error("Tentativa de buscar periodos sem contexto de Tenant!");
+            return Collections.emptyList();
+        }
+        UUID tenantId = UUID.fromString(tenantStr);
 
         List<VacationPeriod> periods = periodRepository
                 .findByTenantIdAndEmployeeIdOrderByAcquisitionStartDateDesc(tenantId, employeeId);
@@ -490,7 +497,12 @@ public class VacationService {
      */
     @Transactional(readOnly = true)
     public VacationStatisticsResponse getStatistics() {
-        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        String tenantStr = TenantContext.getCurrentTenant();
+        if (tenantStr == null) {
+            log.error("Tentativa de buscar estatisticas sem contexto de Tenant!");
+            return VacationStatisticsResponse.builder().build();
+        }
+        UUID tenantId = UUID.fromString(tenantStr);
         LocalDate today = LocalDate.now();
 
         long pending = requestRepository.countByTenantIdAndStatus(tenantId, VacationRequestStatus.PENDING);
