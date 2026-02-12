@@ -51,6 +51,7 @@ public class PayrollService {
 
     /**
      * Processa folha de pagamento individual.
+     *
      */
     @Transactional
     @CacheEvict(value = "payrolls", allEntries = true)
