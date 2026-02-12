@@ -98,7 +98,7 @@ export function EmployeePerformanceView() {
                     console.error('AXON_DEBUG: Error fetching PDIs:', err);
                     return [];
                 }),
-                evaluationsApi.getPending(empId).catch(() => []),
+                evaluationsApi.getPending(user!.id).catch(() => []),
                 evaluationsApi.getByEmployee(empId).catch(() => []),
                 discApi.getPendingForEmployee(empId).catch(() => []),
                 discApi.getLatest(empId).catch(() => null),

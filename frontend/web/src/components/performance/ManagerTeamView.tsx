@@ -58,7 +58,7 @@ export function ManagerTeamView() {
                 pdisApi.getByTeam(managerId).catch(() => []),
                 pdisApi.getManagerStatistics(managerId).catch(() => null),
                 pdisApi.getPendingApproval(managerId).catch(() => []),
-                evaluationsApi.getPending(managerId).catch(() => []),
+                evaluationsApi.getPending(user!.id).catch(() => []),
                 cyclesApi.getActive().catch(() => [])
             ]);
 

@@ -249,7 +249,7 @@ public class PayrollService {
                 .filter(i -> i.getCode() == com.axonrh.payroll.enums.PayrollItemCode.IRRF)
                 .findFirst();
 
-        // Busca dados da empresa no core-service (com fallback para o nome padrão do sistema)
+        // Busca dados da empresa no core-service
         com.axonrh.payroll.client.CoreServiceClient.CompanyProfileDTO company = null;
         try {
             company = coreServiceClient.getCompanyProfile(tenantId);
@@ -265,20 +265,23 @@ public class PayrollService {
             log.warn("Erro ao buscar dados do colaborador: {}", e.getMessage());
         }
 
-        // Busca branding do config-service
+        // Busca branding do config-service (Fica aqui para garantir o BRANDING da empresa)
         String logoUrl = null;
-        String primaryColor = "#FF8000"; // Fallback para o laranja da AxonRH/B2X
+        String primaryColor = "#FF8000"; // Fallback AxonRH
         try {
             var theme = configServiceClient.getThemeConfig(tenantId);
             if (theme != null) {
-                primaryColor = theme.getPrimaryColor();
                 logoUrl = theme.getLogoUrl();
+                primaryColor = theme.getPrimaryColor();
             }
         } catch (Exception e) {
             log.warn("Erro ao buscar branding: {}", e.getMessage());
         }
 
         return PayslipResponse.builder()
+                .month(payroll.getReferenceMonth())
+                .year(payroll.getReferenceYear())
+                .referenceLabel(String.format("%02d/%d", payroll.getReferenceMonth(), payroll.getReferenceYear()))
                 .companyName(company != null && company.getLegalName() != null ? company.getLegalName() : "AXONRH")
                 .companyCnpj(company != null && company.getCnpj() != null ? company.getCnpj() : "00.000.000/0001-00")
                 .logoUrl(logoUrl)
@@ -288,16 +291,13 @@ public class PayrollService {
                 .registrationNumber(employee != null && employee.getRegistrationNumber() != null ? employee.getRegistrationNumber() : payroll.getRegistrationNumber())
                 .department(employee != null && employee.getDepartmentName() != null ? employee.getDepartmentName() : payroll.getDepartmentName())
                 .position(employee != null && employee.getPositionName() != null ? employee.getPositionName() : payroll.getPositionName())
-                .month(payroll.getReferenceMonth())
-                .year(payroll.getReferenceYear())
-                .referenceLabel(String.format("%02d/%d", payroll.getReferenceMonth(), payroll.getReferenceYear()))
                 .baseSalary(payroll.getBaseSalary())
                 .earnings(earnings)
                 .deductions(deductions)
                 .totalEarnings(payroll.getTotalEarnings())
                 .totalDeductions(payroll.getTotalDeductions())
                 .netSalary(payroll.getNetSalary())
-                .fgtsBase(payroll.getTotalEarnings())
+                .fgtsBase(payroll.getFgtsBase())
                 .fgtsAmount(payroll.getFgtsAmount())
                 .inssBase(inssItem.map(i -> i.getReferenceValue()).orElse(BigDecimal.ZERO))
                 .inssAmount(inssItem.map(i -> i.getAmount()).orElse(BigDecimal.ZERO))

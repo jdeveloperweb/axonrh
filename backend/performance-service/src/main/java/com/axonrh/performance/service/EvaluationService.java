@@ -93,14 +93,14 @@ public class EvaluationService {
             log.info("Gerando avaliacoes para {} colaboradores no ciclo {}", employees.size(), cycle.getName());
 
             for (com.axonrh.performance.dto.EmployeeDTO employee : employees) {
-                // 1. Autoavaliacao
-                if (Boolean.TRUE.equals(cycle.getIncludeSelfEvaluation()) && employee.getId() != null) {
-                    createEvaluationIfNotExists(tenantId, cycle, employee, employee.getId(), employee.getFullName(), EvaluatorType.SELF);
+                // 1. Autoavaliacao - Usa o USER ID para o avaliador (quem acessa o sistema)
+                if (Boolean.TRUE.equals(cycle.getIncludeSelfEvaluation()) && employee.getUserId() != null) {
+                    createEvaluationIfNotExists(tenantId, cycle, employee, employee.getUserId(), employee.getFullName(), EvaluatorType.SELF);
                 }
 
-                // 2. Avaliacao do Gestor
-                if (Boolean.TRUE.equals(cycle.getIncludeManagerEvaluation()) && employee.getManager() != null && employee.getManager().getId() != null) {
-                    createEvaluationIfNotExists(tenantId, cycle, employee, employee.getManager().getId(), employee.getManager().getName(), EvaluatorType.MANAGER);
+                // 2. Avaliacao do Gestor - Usa o USER ID do gestor para o avaliador
+                if (Boolean.TRUE.equals(cycle.getIncludeManagerEvaluation()) && employee.getManager() != null && employee.getManager().getUserId() != null) {
+                    createEvaluationIfNotExists(tenantId, cycle, employee, employee.getManager().getUserId(), employee.getManager().getName(), EvaluatorType.MANAGER);
                 }
             }
         } catch (Exception e) {

@@ -95,24 +95,41 @@ export default function ProcessBatchPage() {
             </div>
 
             {/* Progress Steps */}
-            <div className="flex items-center justify-center mb-8">
-                {[1, 2, 3].map((s) => (
-                    <div key={s} className="flex items-center">
-                        <div className={cn(
-                            "w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all",
-                            step === s ? "bg-[var(--color-primary)] text-white shadow-lg scale-110" :
-                                step > s ? "bg-green-500 text-white" : "bg-[var(--color-surface-variant)] text-[var(--color-text-tertiary)]"
-                        )}>
-                            {step > s ? <CheckCircle2 className="w-6 h-6" /> : s}
-                        </div>
-                        {s < 3 && (
-                            <div className={cn(
-                                "w-20 h-1 mx-2 rounded-full",
-                                step > s ? "bg-green-500" : "bg-[var(--color-surface-variant)]"
-                            )} />
-                        )}
-                    </div>
-                ))}
+            <div className="flex flex-col items-center mb-8">
+                <div className="flex items-center justify-center">
+                    {[1, 2, 3].map((s) => {
+                        const isCompleted = step > s || (step === 3 && s === 3 && processingResult);
+                        const isActive = step === s && !isCompleted;
+
+                        return (
+                            <div key={s} className="flex items-center">
+                                <div className="flex flex-col items-center relative">
+                                    <div className={cn(
+                                        "w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all z-10",
+                                        isCompleted ? "bg-green-500 text-white" :
+                                            isActive ? "bg-[var(--color-primary)] text-white shadow-lg scale-110" :
+                                                "bg-[var(--color-surface-variant)] text-[var(--color-text-tertiary)]"
+                                    )}>
+                                        {isCompleted ? <CheckCircle2 className="w-6 h-6" /> : s}
+                                    </div>
+                                    <span className={cn(
+                                        "absolute -bottom-6 text-xs font-medium whitespace-nowrap",
+                                        isActive ? "text-[var(--color-primary)] font-bold" :
+                                            isCompleted ? "text-green-600" : "text-[var(--color-text-tertiary)]"
+                                    )}>
+                                        {s === 1 ? 'Período' : s === 2 ? 'Seleção' : 'Conclusão'}
+                                    </span>
+                                </div>
+                                {s < 3 && (
+                                    <div className={cn(
+                                        "w-24 h-1 mx-2 rounded-full",
+                                        step > s ? "bg-green-500" : "bg-[var(--color-surface-variant)]"
+                                    )} />
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
 
             {/* Step Contents */}
