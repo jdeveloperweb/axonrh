@@ -42,4 +42,8 @@ public interface VacationRequestRepository extends JpaRepository<VacationRequest
             java.time.LocalDate endDate,
             java.time.LocalDate startDate
     );
+
+    long countByTenantIdAndStatus(UUID tenantId, VacationRequestStatus status);
+
+    long countByTenantIdAndStatusAndStartDateAfter(UUID tenantId, VacationRequestStatus status, java.time.LocalDate date);
 }

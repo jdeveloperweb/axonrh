@@ -90,6 +90,11 @@ public class VacationRequestController {
         return ResponseEntity.ok(service.getEmployeeRequests(employeeId));
     }
 
+    @GetMapping("/statistics")
+    public ResponseEntity<com.axonrh.vacation.dto.VacationStatisticsResponse> getStatistics() {
+        return ResponseEntity.ok(service.getStatistics());
+    }
+
     // --- Helpers ---
 
     private UUID getUserId(Jwt jwt) {

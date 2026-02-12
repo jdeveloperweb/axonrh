@@ -127,6 +127,13 @@ export const vacationApi = {
   },
 
   /**
+   * Sync periods for all employees
+   */
+  syncPeriods: async (): Promise<void> => {
+    return api.post<unknown, void>('/vacations/periods/sync', {});
+  },
+
+  /**
    * Notify expiration
    */
   notifyExpiration: async (periodId: string): Promise<void> => {
@@ -226,7 +233,7 @@ export const vacationApi = {
    * Simulate vacation values
    */
   simulate: async (data: VacationSimulationRequest): Promise<VacationSimulation> => {
-    return api.post<VacationSimulationRequest, VacationSimulation>('/vacation/simulate', data);
+    return api.post<VacationSimulationRequest, VacationSimulation>('/vacations/periods/simulate', data);
   },
 
   // ==================== Statistics ====================
@@ -245,7 +252,7 @@ export const vacationApi = {
       expiringPeriods: number;
       employeesOnVacation: number;
       upcomingVacations: number;
-    }>('/vacation/statistics');
+    }>('/vacations/requests/statistics');
   },
 };
 

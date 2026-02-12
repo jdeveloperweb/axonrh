@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { vacationApi, VacationPeriod } from '@/lib/api/vacation';
+import { cn } from '@/lib/utils';
 
 export default function VacationAdminPage() {
     const router = useRouter();
@@ -80,14 +81,42 @@ export default function VacationAdminPage() {
 
     return (
         <div className="container mx-auto py-6 space-y-6">
-            <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" onClick={() => router.back()}>
-                    <ArrowLeft className="h-4 w-4" />
-                </Button>
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Administração de Férias</h1>
-                    <p className="text-muted-foreground">Painel de controle do RH</p>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                    <Button variant="ghost" size="icon" onClick={() => router.back()}>
+                        <ArrowLeft className="h-4 w-4" />
+                    </Button>
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight">Administração de Férias</h1>
+                        <p className="text-muted-foreground">Painel de controle do RH</p>
+                    </div>
                 </div>
+                <Button
+                    onClick={async () => {
+                        try {
+                            setLoading(true);
+                            await vacationApi.syncPeriods();
+                            toast({
+                                title: 'Sincronização Concluída',
+                                description: 'Períodos aquisitivos gerados para novos colaboradores.',
+                            });
+                            loadData();
+                        } catch (err) {
+                            toast({
+                                title: 'Erro na Sincronização',
+                                description: 'Não foi possível sincronizar os dados.',
+                                variant: 'destructive'
+                            });
+                        } finally {
+                            setLoading(false);
+                        }
+                    }}
+                    disabled={loading}
+                    className="bg-primary hover:bg-primary/90"
+                >
+                    <Loader2 className={cn("mr-2 h-4 w-4 animate-spin", !loading && "hidden")} />
+                    Sincronizar Períodos (Legado)
+                </Button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

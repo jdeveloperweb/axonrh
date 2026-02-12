@@ -343,7 +343,7 @@ export default function VacationPage() {
             </button>
 
             <button
-              onClick={() => router.push('/vacation/calendar')}
+              onClick={() => router.push('/vacation/team')}
               className="group flex items-center gap-4 p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-all border border-transparent hover:border-primary/20 text-left"
             >
               <div className="bg-blue-100 p-3 rounded-lg group-hover:bg-blue-200 transition-colors">
@@ -357,15 +357,15 @@ export default function VacationPage() {
             </button>
 
             <button
-              onClick={() => router.push('/vacation/documents')}
+              onClick={() => router.push('/vacation/request')}
               className="group flex items-center gap-4 p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-all border border-transparent hover:border-primary/20 text-left"
             >
               <div className="bg-purple-100 p-3 rounded-lg group-hover:bg-purple-200 transition-colors">
                 <FileText className="h-6 w-6 text-purple-700" />
               </div>
               <div>
-                <div className="font-semibold text-foreground">Documentos</div>
-                <div className="text-xs text-muted-foreground">Avisos e recibos assinados</div>
+                <div className="font-semibold text-foreground">Minhas Solicitações</div>
+                <div className="text-xs text-muted-foreground">Acompanhe seus pedidos</div>
               </div>
               <ChevronRight className="ml-auto h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
             </button>

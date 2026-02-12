@@ -43,6 +43,12 @@ public class VacationPeriodController {
         return ResponseEntity.ok(service.simulate(request));
     }
 
+    @PostMapping("/sync")
+    public ResponseEntity<Void> syncPeriods() {
+        service.syncPeriods();
+        return ResponseEntity.ok().build();
+    }
+
     @PostMapping("/{id}/notify")
     public ResponseEntity<Void> notifyExpiration(@PathVariable UUID id) {
         service.sendPeriodExpirationNotification(id);

@@ -135,6 +135,33 @@ public class VacationService {
     }
 
     /**
+     * Sincroniza periodos aquisitivos para todos os colaboradores do tenant.
+     * Util para quando o servico e ativado apos a admissao de funcionarios.
+     */
+    @Transactional
+    public void syncPeriods() {
+        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        log.info("Iniciando sincronizacao de periodos para tenant: {}", tenantId);
+
+        try {
+            List<EmployeeDTO> employees = employeeServiceClient.getEmployees(0, 1000).getContent();
+            for (EmployeeDTO emp : employees) {
+                // Verificar se ja tem periodo
+                Optional<VacationPeriod> existing = periodRepository
+                        .findTopByTenantIdAndEmployeeIdOrderByAcquisitionEndDateDesc(tenantId, emp.getId());
+                
+                if (existing.isEmpty() && emp.getHireDate() != null) {
+                    log.info("Criando periodo inicial para colaborador sincronizado: {}", emp.getFullName());
+                    createPeriod(tenantId, emp.getId(), emp.getFullName(), emp.getHireDate());
+                }
+            }
+        } catch (Exception e) {
+            log.error("Erro ao sincronizar periodos", e);
+            throw new InvalidOperationException("Falha ao sincronizar periodos com o Employee Service");
+        }
+    }
+
+    /**
      * Lista periodos de um colaborador.
      */
     @Transactional(readOnly = true)
@@ -429,6 +456,32 @@ public class VacationService {
     @Transactional(readOnly = true)
     public VacationSimulationResponse simulate(VacationSimulationRequest request) {
         return calculationService.simulate(request);
+    }
+
+    /**
+     * Busca estatísticas gerais de férias para o tenant.
+     */
+    @Transactional(readOnly = true)
+    public VacationStatisticsResponse getStatistics() {
+        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        LocalDate today = LocalDate.now();
+
+        long pending = requestRepository.countByTenantIdAndStatus(tenantId, VacationRequestStatus.PENDING);
+        
+        long expiring = periodRepository.findExpiringPeriods(tenantId, today, today.plusDays(60)).size();
+        
+        long onVacation = requestRepository.findByTenantIdAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+                tenantId, VacationRequestStatus.APPROVED, today, today).size();
+        
+        long upcoming = requestRepository.countByTenantIdAndStatusAndStartDateAfter(
+                tenantId, VacationRequestStatus.APPROVED, today);
+
+        return VacationStatisticsResponse.builder()
+                .pendingRequests(pending)
+                .expiringPeriods(expiring)
+                .employeesOnVacation(onVacation)
+                .upcomingVacations(upcoming)
+                .build();
     }
 
     // ==================== Geracao de Documentos (T163) ====================
