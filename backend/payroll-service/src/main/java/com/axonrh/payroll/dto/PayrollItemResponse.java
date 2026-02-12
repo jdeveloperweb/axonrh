@@ -28,6 +28,8 @@ public class PayrollItemResponse implements java.io.Serializable {
     private BigDecimal referenceValue;
 
     private BigDecimal quantity;
+    
+    @com.fasterxml.jackson.annotation.JsonProperty("multiplier")
     private BigDecimal percentage;
     
     @com.fasterxml.jackson.annotation.JsonProperty("calculatedValue")

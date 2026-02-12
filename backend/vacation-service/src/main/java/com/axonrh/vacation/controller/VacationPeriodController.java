@@ -24,7 +24,8 @@ public class VacationPeriodController {
 
     @GetMapping("/my-periods")
     public ResponseEntity<List<VacationPeriodResponse>> getMyPeriods(@AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(service.getEmployeePeriods(getUserId(jwt)));
+        UUID employeeId = service.resolveEmployeeId(getUserId(jwt));
+        return ResponseEntity.ok(service.getEmployeePeriods(employeeId));
     }
 
     @GetMapping("/employee/{employeeId}")

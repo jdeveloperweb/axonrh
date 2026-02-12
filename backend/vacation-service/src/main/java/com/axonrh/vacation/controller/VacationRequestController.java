@@ -31,7 +31,8 @@ public class VacationRequestController {
             @RequestBody VacationRequestCreateDTO dto,
             @AuthenticationPrincipal Jwt jwt) {
         
-        UUID employeeId = getUserId(jwt);
+        UUID userId = getUserId(jwt);
+        UUID employeeId = service.resolveEmployeeId(userId);
         String employeeName = getUserName(jwt);
 
         return ResponseEntity.ok(service.createRequest(dto, employeeId, employeeName));
@@ -39,7 +40,8 @@ public class VacationRequestController {
 
     @GetMapping("/my-requests")
     public ResponseEntity<List<VacationRequestResponse>> getMyRequests(@AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(service.getEmployeeRequests(getUserId(jwt)));
+        UUID employeeId = service.resolveEmployeeId(getUserId(jwt));
+        return ResponseEntity.ok(service.getEmployeeRequests(employeeId));
     }
 
     @PutMapping("/{id}/cancel")

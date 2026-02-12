@@ -25,6 +25,7 @@ import java.util.UUID;
 public class PayrollController {
 
     private final PayrollService payrollService;
+    private final PayrollPdfService payrollPdfService;
 
     @PostMapping("/process")
     @Operation(summary = "Processar folha individual",
@@ -61,6 +62,20 @@ public class PayrollController {
         log.info("GET /api/v1/payroll/{}/payslip", id);
         PayslipResponse response = payrollService.generatePayslip(id);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{id}/export/pdf")
+    @Operation(summary = "Exportar holerite em PDF",
+               description = "Gera o arquivo PDF do holerite para download")
+    public ResponseEntity<byte[]> exportPayslipPdf(@PathVariable UUID id) {
+        log.info("GET /api/v1/payroll/{}/export/pdf", id);
+        PayslipResponse payslip = payrollService.generatePayslip(id);
+        byte[] pdf = payrollPdfService.generatePayslipPdf(payslip);
+        
+        return ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=holerite_" + id + ".pdf")
+                .contentType(org.springframework.http.MediaType.APPLICATION_PDF)
+                .body(pdf);
     }
 
     @GetMapping("/competency")

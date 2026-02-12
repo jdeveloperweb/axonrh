@@ -375,6 +375,29 @@ public class DailySummaryService {
         );
     }
 
+    @Transactional(readOnly = true)
+    public com.axonrh.timesheet.dto.TimesheetSummaryDTO getMonthSummary(UUID employeeId, Integer month, Integer year) {
+        LocalDate start = LocalDate.of(year, month, 1);
+        LocalDate end = start.plusMonths(1).minusDays(1);
+        
+        PeriodTotals totals = getPeriodTotals(employeeId, start, end);
+        
+        // Conversao de minutos para horas em BigDecimal
+        BigDecimal regularHours = new BigDecimal("220"); // Padrao se nao houver escala?
+        
+        // TODO: Buscar horas esperadas reais do periodo
+        
+        return com.axonrh.timesheet.dto.TimesheetSummaryDTO.builder()
+                .regularHours(regularHours)
+                .overtime50Hours(BigDecimal.valueOf(totals.overtimeMinutes()).divide(new BigDecimal("60"), 2, java.math.RoundingMode.HALF_UP))
+                .overtime100Hours(BigDecimal.ZERO) // Por enquanto tudo eh 50% ou buscar do banco?
+                .nightShiftHours(BigDecimal.valueOf(totals.nightShiftMinutes()).divide(new BigDecimal("60"), 2, java.math.RoundingMode.HALF_UP))
+                .absenceDays(BigDecimal.valueOf(totals.absences()))
+                .workedDays(BigDecimal.valueOf(end.getDayOfMonth() - totals.absences())) // Simplificacao
+                .totalDaysInMonth(end.getDayOfMonth())
+                .build();
+    }
+
     private int safeInt(Object value) {
         if (value instanceof Number) {
             return ((Number) value).intValue();

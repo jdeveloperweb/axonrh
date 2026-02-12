@@ -189,6 +189,23 @@ export const payrollApi = {
     deleteTaxBracket: async (id: string): Promise<void> => {
         await api.delete(`/payroll/tax-brackets/${id}`);
     },
+
+    /**
+     * Download payslip PDF
+     */
+    downloadPayslipPdf: async (id: string): Promise<void> => {
+        const response = await api.get(`/payroll/${id}/export/pdf`, {
+            responseType: 'blob'
+        });
+
+        const url = window.URL.createObjectURL(new Blob([response as any]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `holerite_${id}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+    }
 };
 
 export default payrollApi;

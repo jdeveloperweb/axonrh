@@ -89,7 +89,11 @@ export default function PayrollDetailPage() {
                         <Printer className="w-4 h-4" />
                         Imprimir
                     </Button>
-                    <Button variant="outline" className="gap-2">
+                    <Button
+                        variant="outline"
+                        className="gap-2"
+                        onClick={() => payrollApi.downloadPayslipPdf(id)}
+                    >
                         <Download className="w-4 h-4" />
                         Baixar PDF
                     </Button>

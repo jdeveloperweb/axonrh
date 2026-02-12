@@ -171,6 +171,24 @@ public class VacationService {
     }
 
     /**
+     * Resolve o employeeId a partir do userId.
+     */
+    @Transactional(readOnly = true)
+    public UUID resolveEmployeeId(UUID userId) {
+        if (userId == null) return null;
+        log.debug("Resolvendo employeeId para userId: {}", userId);
+        try {
+            EmployeeDTO employee = employeeServiceClient.getEmployeeByUserId(userId);
+            if (employee != null) {
+                return employee.getId();
+            }
+        } catch (Exception e) {
+            log.warn("Nao foi possivel encontrar colaborador para o userId: {}. Usando proprio ID como fallback.", userId);
+        }
+        return userId;
+    }
+
+    /**
      * Lista periodos de um colaborador.
      */
     @Transactional(readOnly = true)

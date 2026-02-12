@@ -257,6 +257,15 @@ public class TimeRecordController {
         return ResponseEntity.ok(totals);
     }
 
+    @GetMapping("/employees/{employeeId}/summary")
+    @Operation(summary = "Resumo mensal para folha", description = "Retorna totais de horas e dias formatados para o modulo de folha")
+    public ResponseEntity<com.axonrh.timesheet.dto.TimesheetSummaryDTO> getMonthSummary(
+            @PathVariable UUID employeeId,
+            @RequestParam Integer month,
+            @RequestParam Integer year) {
+        return ResponseEntity.ok(dailySummaryService.getMonthSummary(employeeId, month, year));
+    }
+
     @GetMapping("/statistics")
     @Operation(summary = "Estatisticas", description = "Retorna estatisticas de ponto para o dashboard")
     @PreAuthorize("hasAnyAuthority('TIMESHEET:READ', 'TIMESHEET:UPDATE', 'ADMIN')")

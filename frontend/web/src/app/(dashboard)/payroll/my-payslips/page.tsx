@@ -69,7 +69,7 @@ export default function MyPayslipsPage() {
                         <p className="text-[var(--color-text-secondary)]">Nenhum holerite disponível no momento.</p>
                     </div>
                 ) : (
-                    payrolls.filter(p => p.status === 'CLOSED').map((payroll) => (
+                    payrolls.filter(p => ['CLOSED', 'APPROVED', 'CALCULATED'].includes(p.status)).map((payroll) => (
                         <div key={payroll.id} className="card p-6 hover:shadow-lg transition-all group border-l-4 border-l-[var(--color-primary)]">
                             <div className="flex justify-between items-start mb-4">
                                 <div>
