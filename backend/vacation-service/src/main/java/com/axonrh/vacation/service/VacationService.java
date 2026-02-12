@@ -331,53 +331,85 @@ public class VacationService {
     /**
      * Aprova solicitacao de ferias (T162).
      */
+    /**
+     * Aprova solicitacao de ferias (T162) - Fluxo de 2 Etapas.
+     */
     @Transactional
-    public VacationRequestResponse approveRequest(UUID requestId, String notes, UUID approverId, String approverName) {
+    public VacationRequestResponse approveRequest(UUID requestId, String notes, UUID approverId, String approverName, List<String> userRoles) {
         String tenantStr = TenantContext.getCurrentTenant();
         if (tenantStr == null) {
             throw new InvalidOperationException("Tenant context missing");
         }
         UUID tenantId = UUID.fromString(tenantStr);
 
+        boolean isRH = userRoles != null && (userRoles.contains("ROLE_RH") || userRoles.contains("ROLE_ADMIN"));
+
         VacationRequest request = requestRepository.findByTenantIdAndId(tenantId, requestId)
                 .orElseThrow(() -> new ResourceNotFoundException("Solicitacao nao encontrada"));
 
-        if (request.getStatus() != VacationRequestStatus.PENDING) {
-            throw new InvalidOperationException("Solicitacao nao esta pendente");
-        }
-
-        // Atualizar dias usados no periodo
         VacationPeriod period = request.getVacationPeriod();
-        period.setUsedDays(period.getUsedDays() + request.getDaysCount());
-        if (request.getSellDays() && request.getSoldDaysCount() > 0) {
-            period.setSoldDays(period.getSoldDays() + request.getSoldDaysCount());
-        }
-        periodRepository.save(period);
 
-        // Calcular data de pagamento (2 dias antes do inicio - CLT)
-        LocalDate paymentDate = request.getStartDate().minusDays(2);
-        if (paymentDate.isBefore(LocalDate.now())) {
-            paymentDate = LocalDate.now();
-        }
+        if (request.getStatus() == VacationRequestStatus.PENDING) {
+            // Fase 1: Aprovação do Gestor
+            request.setStatus(VacationRequestStatus.MANAGER_APPROVED);
+            request.setApprovalNotes(notes != null ? "Gestor: " + notes : null);
+            // Não desconta dias nem finaliza ainda
+            
+            log.info("Ferias aprovadas pelo gestor - solicitacao: {}, aprovador: {}", requestId, approverId);
 
-        // Atualizar solicitacao
-        request.setStatus(VacationRequestStatus.APPROVED);
-        request.setApproverId(approverId);
-        request.setApproverName(approverName);
-        request.setApprovedAt(LocalDateTime.now());
-        request.setApprovalNotes(notes);
-        request.setPaymentDate(paymentDate);
+        } else if (request.getStatus() == VacationRequestStatus.MANAGER_APPROVED) {
+            // Fase 2: Aprovação Final do RH
+            if (!isRH) {
+                throw new InvalidOperationException("Apenas RH pode realizar a aprovacao final.");
+            }
+
+            request.setStatus(VacationRequestStatus.APPROVED);
+            String currentNotes = request.getApprovalNotes() != null ? request.getApprovalNotes() : "";
+            request.setApprovalNotes(currentNotes + (notes != null ? " | RH: " + notes : ""));
+            
+            request.setApproverId(approverId);
+            request.setApproverName(approverName);
+            request.setApprovedAt(LocalDateTime.now());
+
+            // Atualizar dias usados no periodo (Só agora desconta)
+            period.setUsedDays(period.getUsedDays() + request.getDaysCount());
+            if (request.getSellDays() && request.getSoldDaysCount() > 0) {
+                period.setSoldDays(period.getSoldDays() + request.getSoldDaysCount());
+            }
+            periodRepository.save(period);
+            updatePeriodStatus(period);
+
+            // Calcular data de pagamento (2 dias antes do inicio - CLT)
+            LocalDate paymentDate = request.getStartDate().minusDays(2);
+            if (paymentDate.isBefore(LocalDate.now())) {
+                paymentDate = LocalDate.now();
+            }
+            request.setPaymentDate(paymentDate);
+
+            log.info("Ferias aprovadas final (RH) - solicitacao: {}, aprovador: {}", requestId, approverId);
+        } else {
+            throw new InvalidOperationException("Solicitacao nao esta pendente de aprovacao");
+        }
 
         VacationRequest saved = requestRepository.save(request);
 
-        // Atualizar status do periodo
-        updatePeriodStatus(period);
-
         publishEvent("VACATION_APPROVED", saved, null, null);
 
-        log.info("Ferias aprovadas - solicitacao: {}, aprovador: {}", requestId, approverId);
-
         return toRequestResponse(saved);
+    }
+    
+    /**
+     * Lista solicitacoes aguardando aprovacao do RH (MANAGER_APPROVED).
+     */
+    @Transactional(readOnly = true)
+    public Page<VacationRequestResponse> getManagerApprovedRequests(Pageable pageable) {
+        String tenantStr = TenantContext.getCurrentTenant();
+        if (tenantStr == null) return Page.empty();
+        UUID tenantId = UUID.fromString(tenantStr);
+
+        return requestRepository
+                .findByTenantIdAndStatusOrderByCreatedAtAsc(tenantId, VacationRequestStatus.MANAGER_APPROVED, pageable)
+                .map(this::toRequestResponse);
     }
 
     /**
@@ -839,8 +871,9 @@ public class VacationService {
 
     private String getRequestStatusLabel(VacationRequestStatus status) {
         return switch (status) {
-            case PENDING -> "Pendente";
-            case APPROVED -> "Aprovada";
+            case PENDING -> "Pendente (Gestor)";
+            case MANAGER_APPROVED -> "Aprovado pelo Gestor (RH)";
+            case APPROVED -> " Aprovada";
             case REJECTED -> "Rejeitada";
             case CANCELLED -> "Cancelada";
             case SCHEDULED -> "Agendada";

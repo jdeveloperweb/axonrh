@@ -57,16 +57,14 @@ public class VacationRequestController {
     public ResponseEntity<Page<VacationRequestResponse>> getPendingRequests(
             Pageable pageable,
             @AuthenticationPrincipal Jwt jwt) {
-        
-        List<String> roles = getRoles(jwt);
-        boolean isAdminOrRH = roles.stream().anyMatch(r -> r.contains("ADMIN") || r.contains("RH"));
-
-        if (isAdminOrRH) {
-            return ResponseEntity.ok(service.getAllPendingRequests(pageable));
-        }
-
         UUID managerId = getUserId(jwt);
         return ResponseEntity.ok(service.getPendingRequestsForManager(managerId, pageable));
+    }
+
+    @GetMapping("/pending/rh")
+    public ResponseEntity<Page<VacationRequestResponse>> getPendingRequestsRH(
+            Pageable pageable) {
+        return ResponseEntity.ok(service.getManagerApprovedRequests(pageable));
     }
 
     @PutMapping("/{id}/approve")
@@ -77,8 +75,9 @@ public class VacationRequestController {
         
         UUID approverId = getUserId(jwt);
         String approverName = getUserName(jwt);
+        List<String> roles = getRoles(jwt);
 
-        return ResponseEntity.ok(service.approveRequest(id, review.getNotes(), approverId, approverName));
+        return ResponseEntity.ok(service.approveRequest(id, review.getNotes(), approverId, approverName, roles));
     }
 
     @PutMapping("/{id}/reject")

@@ -51,12 +51,23 @@ public class VacationEventsListener {
                     }
                     break;
                 case "VACATION_APPROVED":
-                    notificationService.success(
-                            tenantId,
-                            getUUID(event, "requesterUserId"),
-                            "Férias Aprovadas",
-                            "Sua solicitação de férias foi aprovada!"
-                    );
+                    String status = (String) event.get("status");
+                    if ("MANAGER_APPROVED".equals(status)) {
+                        notificationService.notify(
+                                tenantId,
+                                getUUID(event, "requesterUserId"),
+                                "Aprovação do Gestor",
+                                "Sua solicitação foi aprovada pelo gestor e está aguardando análise do RH."
+                        );
+                        // TODO: Implementar notificacao para o grupo de RH
+                    } else {
+                        notificationService.success(
+                                tenantId,
+                                getUUID(event, "requesterUserId"),
+                                "Férias Aprovadas",
+                                "Sua solicitação de férias foi aprovada e agendada!"
+                        );
+                    }
                     break;
                 case "VACATION_REJECTED":
                      notificationService.alert(

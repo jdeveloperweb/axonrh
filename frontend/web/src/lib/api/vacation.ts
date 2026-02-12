@@ -35,7 +35,7 @@ export interface VacationRequest {
   sellDays: boolean;
   soldDaysCount: number;
   advance13thSalary: boolean;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED';
+  status: 'PENDING' | 'MANAGER_APPROVED' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED';
   statusLabel: string;
   approverId?: string;
   approverName?: string;
@@ -161,6 +161,15 @@ export const vacationApi = {
    */
   getPendingRequests: async (page = 0, size = 20): Promise<{ content: VacationRequest[]; totalElements: number }> => {
     return api.get<unknown, { content: VacationRequest[]; totalElements: number }>('/vacations/requests/pending', {
+      params: { page, size }
+    });
+  },
+
+  /**
+   * Get pending requests for RH (MANAGER_APPROVED)
+   */
+  getPendingRequestsRH: async (page = 0, size = 20): Promise<{ content: VacationRequest[]; totalElements: number }> => {
+    return api.get<unknown, { content: VacationRequest[]; totalElements: number }>('/vacations/requests/pending/rh', {
       params: { page, size }
     });
   },
