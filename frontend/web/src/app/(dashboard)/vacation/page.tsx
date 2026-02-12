@@ -88,6 +88,7 @@ export default function VacationPage() {
   const getStatusBadge = (status: VacationRequest['status']) => {
     const config = {
       PENDING: { label: 'Pendente', className: 'bg-yellow-100 text-yellow-800', icon: Clock },
+      MANAGER_APPROVED: { label: 'Aprovado Gestor', className: 'bg-indigo-100 text-indigo-800', icon: CheckCircle2 },
       APPROVED: { label: 'Aprovada', className: 'bg-green-100 text-green-800', icon: CheckCircle2 },
       REJECTED: { label: 'Rejeitada', className: 'bg-red-100 text-red-800', icon: XCircle },
       CANCELLED: { label: 'Cancelada', className: 'bg-gray-100 text-gray-800', icon: XCircle },
@@ -158,6 +159,17 @@ export default function VacationPage() {
             <Plus className="w-4 h-4" />
             Nova Solicitação
           </Button>
+
+          {(isManager || isRH) && (
+            <Button
+              variant="outline"
+              onClick={() => router.push('/vacation/approvals')}
+              className="flex items-center gap-2 border-gray-200 hover:bg-gray-50 text-gray-700"
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              Aprovações
+            </Button>
+          )}
 
           {(isAdmin || isRH) && (
             <Button
@@ -389,6 +401,14 @@ export default function VacationPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               {[
+                ...(isManager || isRH ? [{
+                  icon: CheckCircle2,
+                  label: 'Aprovações',
+                  desc: 'Gerenciar solicitações',
+                  path: '/vacation/approvals',
+                  color: 'text-orange-600',
+                  bg: 'bg-orange-50'
+                }] : []),
                 { icon: DollarSign, label: 'Simulador', desc: 'Cálculos de férias', path: '/vacation/simulator', color: 'text-emerald-600', bg: 'bg-emerald-50' },
                 { icon: Users, label: 'Escala Equipe', desc: 'Ausências de colegas', path: '/vacation/team', color: 'text-blue-600', bg: 'bg-blue-50' },
                 { icon: FileText, label: 'Políticas', desc: 'Regras de férias', path: '#', color: 'text-purple-600', bg: 'bg-purple-50' },
