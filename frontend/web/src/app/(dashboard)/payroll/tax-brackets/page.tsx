@@ -82,9 +82,11 @@ export default function TaxBracketsPage() {
     const handleAdd = async () => {
         if (!isAdding) return;
         try {
+            const nextOrder = brackets.filter(b => b.taxType === isAdding).length + 1;
             await payrollApi.createTaxBracket({
                 ...addFormData,
-                taxType: isAdding
+                taxType: isAdding,
+                bracketOrder: nextOrder
             });
             setIsAdding(null);
             setAddFormData({

@@ -43,6 +43,12 @@ public class TaxBracketController {
     public ResponseEntity<TaxBracket> create(@RequestBody TaxBracket bracket) {
         UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
         bracket.setTenantId(tenantId);
+        
+        if (bracket.getBracketOrder() == null) {
+            long count = taxBracketRepository.countByTenantIdAndTaxType(tenantId, bracket.getTaxType());
+            bracket.setBracketOrder((int) count + 1);
+        }
+        
         TaxBracket saved = taxBracketRepository.save(bracket);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }

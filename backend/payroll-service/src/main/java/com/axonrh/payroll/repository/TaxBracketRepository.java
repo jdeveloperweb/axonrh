@@ -26,4 +26,6 @@ public interface TaxBracketRepository extends JpaRepository<TaxBracket, UUID> {
             UUID tenantId, String taxType);
 
     List<TaxBracket> findByTenantIdAndIsActiveTrueOrderByMinValueAsc(UUID tenantId);
+
+    long countByTenantIdAndTaxType(UUID tenantId, String taxType);
 }

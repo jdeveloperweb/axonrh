@@ -54,7 +54,8 @@ export interface PayrollRun {
 export interface TaxBracket {
     id: string;
     taxType: 'INSS' | 'IRRF';
-    description: string;
+    bracketOrder: number;
+    description?: string;
     minValue: number;
     maxValue?: number;
     rate: number;
