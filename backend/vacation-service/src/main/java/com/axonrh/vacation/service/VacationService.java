@@ -144,7 +144,7 @@ public class VacationService {
         log.info("Iniciando sincronizacao de periodos para tenant: {}", tenantId);
 
         try {
-            List<EmployeeDTO> employees = employeeServiceClient.getEmployees(0, 1000).getContent();
+            List<EmployeeDTO> employees = employeeServiceClient.getActiveEmployees();
             for (EmployeeDTO emp : employees) {
                 // Verificar se ja tem periodo
                 Optional<VacationPeriod> existing = periodRepository
