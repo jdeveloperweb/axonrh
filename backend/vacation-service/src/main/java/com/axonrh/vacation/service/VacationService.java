@@ -339,7 +339,12 @@ public class VacationService {
         }
         UUID tenantId = UUID.fromString(tenantStr);
 
-        boolean isRH = userRoles != null && (userRoles.contains("ROLE_RH") || userRoles.contains("ROLE_ADMIN"));
+        boolean isRH = userRoles != null && userRoles.stream()
+                .anyMatch(r -> r.equalsIgnoreCase("RH") || 
+                               r.equalsIgnoreCase("ROLE_RH") || 
+                               r.equalsIgnoreCase("ADMIN") || 
+                               r.equalsIgnoreCase("ROLE_ADMIN") ||
+                               r.equalsIgnoreCase("GESTOR_RH"));
 
         VacationRequest request = requestRepository.findByTenantIdAndId(tenantId, requestId)
                 .orElseThrow(() -> new ResourceNotFoundException("Solicitacao nao encontrada"));
@@ -532,7 +537,9 @@ public class VacationService {
         
         List<UUID> subordinateIds = new ArrayList<>();
         try {
-            List<EmployeeDTO> subordinates = employeeServiceClient.getSubordinates(managerId);
+            // Resolver o employeeId do gestor (pois managerId aqui eh o userId)
+            UUID managerEmployeeId = resolveEmployeeId(managerId);
+            List<EmployeeDTO> subordinates = employeeServiceClient.getSubordinates(managerEmployeeId);
             if (subordinates != null) {
                 subordinateIds = subordinates.stream()
                         .map(EmployeeDTO::getId)
