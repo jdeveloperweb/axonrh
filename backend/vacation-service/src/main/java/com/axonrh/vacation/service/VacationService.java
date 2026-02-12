@@ -344,7 +344,8 @@ public class VacationService {
                                r.equalsIgnoreCase("ROLE_RH") || 
                                r.equalsIgnoreCase("ADMIN") || 
                                r.equalsIgnoreCase("ROLE_ADMIN") ||
-                               r.equalsIgnoreCase("GESTOR_RH"));
+                               r.equalsIgnoreCase("GESTOR_RH") ||
+                               r.equalsIgnoreCase("ROLE_GESTOR_RH"));
 
         VacationRequest request = requestRepository.findByTenantIdAndId(tenantId, requestId)
                 .orElseThrow(() -> new ResourceNotFoundException("Solicitacao nao encontrada"));
