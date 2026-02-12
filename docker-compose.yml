@@ -338,6 +338,7 @@ services:
       VACATION_SERVICE_URL: http://vacation-service:8085
       PERFORMANCE_SERVICE_URL: http://performance-service:8086
       CONFIG_SERVICE_URL: http://config-service:8888
+      CORE_SERVICE_URL: http://core-service:8082
 
   api-gateway:
     <<: *backend-service

@@ -4,15 +4,22 @@ import com.axonrh.payroll.dto.PayrollItemResponse;
 import com.axonrh.payroll.dto.PayslipResponse;
 import com.itextpdf.html2pdf.HtmlConverter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.text.NumberFormat;
+import java.util.Base64;
 import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PayrollPdfService {
 
     private final NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
@@ -29,9 +36,19 @@ public class PayrollPdfService {
         String brandColor = p.getPrimaryColor() != null ? p.getPrimaryColor() : "#FF8000";
         
         // Cabeçalho com Logo ou Nome Estilizado
-        String brandElement = (p.getLogoUrl() != null && !p.getLogoUrl().isEmpty()) 
-            ? "<img src='" + p.getLogoUrl() + "' style='max-height: 50px;' />" 
-            : "<div style='font-size: 18pt; font-weight: 900; color:" + brandColor + "; letter-spacing: -0.5px;'>" + p.getCompanyName() + "</div>";
+        String brandElement;
+        if (p.getLogoUrl() != null && !p.getLogoUrl().isEmpty()) {
+            // Tenta baixar a logo e converter para base64 (iTextPDF não carrega URLs externas)
+            String base64Logo = downloadImageAsBase64(p.getLogoUrl());
+            if (base64Logo != null) {
+                brandElement = "<img src='" + base64Logo + "' style='max-height: 50px;' />";
+            } else {
+                brandElement = "<div style='font-size: 18pt; font-weight: 900; color:" + brandColor + "; letter-spacing: -0.5px;'>" + p.getCompanyName() + "</div>";
+            }
+        } else {
+            brandElement = "<div style='font-size: 18pt; font-weight: 900; color:" + brandColor + "; letter-spacing: -0.5px;'>" + p.getCompanyName() + "</div>";
+        }
+
 
         for (PayrollItemResponse item : p.getEarnings()) {
             itemsHtml.append(String.format(
@@ -155,5 +172,35 @@ public class PayrollPdfService {
     private String formatCurrency(BigDecimal value) {
         if (value == null) return "R$ 0,00";
         return currencyFormatter.format(value);
+    }
+
+    /**
+     * Baixa a imagem da URL e converte para data URI base64.
+     * Necessário porque o iTextPDF não carrega URLs externas.
+     */
+    private String downloadImageAsBase64(String imageUrl) {
+        try {
+            HttpClient client = HttpClient.newBuilder()
+                    .followRedirects(HttpClient.Redirect.ALWAYS)
+                    .build();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(imageUrl))
+                    .timeout(java.time.Duration.ofSeconds(5))
+                    .build();
+            HttpResponse<byte[]> response = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
+            
+            if (response.statusCode() == 200) {
+                String contentType = response.headers().firstValue("content-type").orElse("image/png");
+                String base64 = Base64.getEncoder().encodeToString(response.body());
+                log.info("Logo baixada com sucesso: {} bytes, tipo: {}", response.body().length, contentType);
+                return "data:" + contentType + ";base64," + base64;
+            } else {
+                log.warn("Falha ao baixar logo, status: {}", response.statusCode());
+                return null;
+            }
+        } catch (Exception e) {
+            log.warn("Erro ao baixar logo de {}: {}", imageUrl, e.getMessage());
+            return null;
+        }
     }
 }

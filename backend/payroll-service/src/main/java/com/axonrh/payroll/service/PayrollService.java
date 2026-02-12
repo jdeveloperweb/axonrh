@@ -253,8 +253,11 @@ public class PayrollService {
         com.axonrh.payroll.client.CoreServiceClient.CompanyProfileDTO company = null;
         try {
             company = coreServiceClient.getCompanyProfile(tenantId);
+            log.info("Dados da empresa obtidos com sucesso: legalName={}, cnpj={}", 
+                    company != null ? company.getLegalName() : "null",
+                    company != null ? company.getCnpj() : "null");
         } catch (Exception e) {
-            log.warn("Erro ao buscar dados da empresa: {}", e.getMessage());
+            log.error("ERRO ao buscar dados da empresa para tenant {}: {} - {}", tenantId, e.getClass().getSimpleName(), e.getMessage());
         }
 
         // Busca dados do colaborador atualizados
@@ -272,10 +275,26 @@ public class PayrollService {
             var theme = configServiceClient.getThemeConfig(tenantId);
             if (theme != null) {
                 logoUrl = theme.getLogoUrl();
-                primaryColor = theme.getPrimaryColor();
+                if (theme.getPrimaryColor() != null && !theme.getPrimaryColor().isEmpty()) {
+                    primaryColor = theme.getPrimaryColor();
+                }
+                log.info("Branding obtido: logoUrl={}, primaryColor={}", logoUrl, primaryColor);
             }
         } catch (Exception e) {
-            log.warn("Erro ao buscar branding: {}", e.getMessage());
+            log.error("ERRO ao buscar branding para tenant {}: {} - {}", tenantId, e.getClass().getSimpleName(), e.getMessage());
+        }
+
+        // Fallback: tenta buscar logo diretamente do endpoint de logo
+        if (logoUrl == null || logoUrl.isEmpty()) {
+            try {
+                var logoResponse = configServiceClient.getLogoUrl(tenantId);
+                if (logoResponse != null && logoResponse.getLogoUrl() != null && !logoResponse.getLogoUrl().isEmpty()) {
+                    logoUrl = logoResponse.getLogoUrl();
+                    log.info("Logo obtida via endpoint direto: {}", logoUrl);
+                }
+            } catch (Exception e) {
+                log.warn("Logo nao encontrada via endpoint direto: {}", e.getMessage());
+            }
         }
 
         return PayslipResponse.builder()

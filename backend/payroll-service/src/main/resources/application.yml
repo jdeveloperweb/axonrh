@@ -129,4 +129,4 @@ application:
     vacation-service: ${VACATION_SERVICE_URL:http://localhost:8085}
     performance-service: ${PERFORMANCE_SERVICE_URL:http://localhost:8086}
     config-service: ${CONFIG_SERVICE_URL:http://localhost:8888}
-    core-service: ${CORE_SERVICE_URL:http://localhost:8081}
+    core-service: ${CORE_SERVICE_URL:http://localhost:8082}
