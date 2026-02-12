@@ -2,6 +2,7 @@ package com.axonrh.payroll.controller;
 
 import com.axonrh.payroll.dto.*;
 import com.axonrh.payroll.service.PayrollService;
+import com.axonrh.payroll.service.PayrollPdfService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

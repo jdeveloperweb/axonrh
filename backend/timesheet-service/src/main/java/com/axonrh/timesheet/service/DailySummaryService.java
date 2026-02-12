@@ -25,6 +25,7 @@ import com.axonrh.timesheet.repository.EmployeeScheduleRepository;
 import com.axonrh.timesheet.repository.HolidayRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
