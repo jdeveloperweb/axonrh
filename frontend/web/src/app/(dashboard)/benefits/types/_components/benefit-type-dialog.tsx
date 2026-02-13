@@ -73,7 +73,8 @@ export function BenefitTypeDialog({
                 incidenceFgts: selectedType.incidenceFgts || false,
                 incidenceIrrf: selectedType.incidenceIrrf || false,
                 externalProvider: selectedType.externalProvider || 'NONE',
-                integrationConfig: selectedType.integrationConfig || ''
+                integrationConfig: selectedType.integrationConfig || '',
+                rules: selectedType.rules
             });
         } else {
             setFormData({
@@ -89,7 +90,8 @@ export function BenefitTypeDialog({
                 incidenceFgts: false,
                 incidenceIrrf: false,
                 externalProvider: 'NONE',
-                integrationConfig: ''
+                integrationConfig: '',
+                rules: undefined
             });
         }
     }, [selectedType, isOpen]);
@@ -242,23 +244,31 @@ export function BenefitTypeDialog({
                                         value={formData.rules?.ruleType || 'STANDARD'}
                                         onValueChange={(val: any) => {
                                             if (val === 'STANDARD') {
-                                                const { rules, ...rest } = formData;
-                                                // We need to explicitly set rules to undefined or null to clear it
-                                                // but BenefitTypeRequest defines it as optional.
-                                                // Let's set it to undefined in the state.
-                                                setFormData({ ...rest, rules: undefined });
+                                                setFormData({ ...formData, rules: undefined });
                                             } else {
                                                 const currentRules: any = formData.rules || {};
+
+                                                // Defaults for specific rule types
+                                                let category = formData.category;
+                                                let calcType = formData.calculationType;
+
+                                                if (val === 'TRANSPORT_VOUCHER') {
+                                                    category = 'DEDUCTION';
+                                                    calcType = 'SALARY_PERCENTAGE';
+                                                }
+
                                                 setFormData({
                                                     ...formData,
+                                                    category,
+                                                    calculationType: calcType,
                                                     rules: {
                                                         ...currentRules,
                                                         ruleType: val,
                                                         // Initialize defaults if switching types
-                                                        percentage: val === 'TRANSPORT_VOUCHER' ? (currentRules.percentage || 6) : undefined,
-                                                        employeeFixedValue: val === 'HEALTH_PLAN' ? (currentRules.employeeFixedValue || 0) : undefined,
-                                                        dependentFixedValue: val === 'HEALTH_PLAN' ? (currentRules.dependentFixedValue || 0) : undefined,
-                                                        ageRules: val === 'HEALTH_PLAN' ? (currentRules.ageRules || []) : undefined
+                                                        percentage: val === 'TRANSPORT_VOUCHER' ? (currentRules.percentage ?? 6) : undefined,
+                                                        employeeFixedValue: val === 'HEALTH_PLAN' ? (currentRules.employeeFixedValue ?? 0) : undefined,
+                                                        dependentFixedValue: val === 'HEALTH_PLAN' ? (currentRules.dependentFixedValue ?? 0) : undefined,
+                                                        ageRules: val === 'HEALTH_PLAN' ? (currentRules.ageRules ?? []) : undefined
                                                     }
                                                 });
                                             }
@@ -286,10 +296,10 @@ export function BenefitTypeDialog({
                                                 id="vtPercentage"
                                                 type="number"
                                                 step="0.01"
-                                                value={formData.rules.percentage || 6}
+                                                value={formData.rules.percentage ?? 6}
                                                 onChange={e => setFormData({
                                                     ...formData,
-                                                    rules: { ...formData.rules!, percentage: parseFloat(e.target.value) }
+                                                    rules: { ...formData.rules!, percentage: parseFloat(e.target.value) || 0 }
                                                 })}
                                             />
                                         </div>
@@ -305,10 +315,10 @@ export function BenefitTypeDialog({
                                                     id="employeeCost"
                                                     type="number"
                                                     step="0.01"
-                                                    value={formData.rules.employeeFixedValue || 0}
+                                                    value={formData.rules.employeeFixedValue ?? 0}
                                                     onChange={e => setFormData({
                                                         ...formData,
-                                                        rules: { ...formData.rules!, employeeFixedValue: parseFloat(e.target.value) }
+                                                        rules: { ...formData.rules!, employeeFixedValue: parseFloat(e.target.value) || 0 }
                                                     })}
                                                 />
                                             </div>
@@ -318,10 +328,10 @@ export function BenefitTypeDialog({
                                                     id="depCost"
                                                     type="number"
                                                     step="0.01"
-                                                    value={formData.rules.dependentFixedValue || 0}
+                                                    value={formData.rules.dependentFixedValue ?? 0}
                                                     onChange={e => setFormData({
                                                         ...formData,
-                                                        rules: { ...formData.rules!, dependentFixedValue: parseFloat(e.target.value) }
+                                                        rules: { ...formData.rules!, dependentFixedValue: parseFloat(e.target.value) || 0 }
                                                     })}
                                                 />
                                             </div>
