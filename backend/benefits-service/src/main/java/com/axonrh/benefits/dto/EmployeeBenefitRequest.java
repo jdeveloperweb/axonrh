@@ -29,10 +29,10 @@ public class EmployeeBenefitRequest {
     @NotNull(message = "ID do tipo de beneficio e obrigatorio")
     private UUID benefitTypeId;
 
-    @DecimalMin(value = "0.01", message = "Valor fixo deve ser maior que zero")
+    @DecimalMin(value = "0.00", message = "Valor fixo nao pode ser negativo")
     private BigDecimal fixedValue;
 
-    @DecimalMin(value = "0.01", message = "Percentual deve ser maior que zero")
+    @DecimalMin(value = "0.00", message = "Percentual nao pode ser negativo")
     private BigDecimal percentage;
 
     @NotNull(message = "Data de inicio e obrigatoria")

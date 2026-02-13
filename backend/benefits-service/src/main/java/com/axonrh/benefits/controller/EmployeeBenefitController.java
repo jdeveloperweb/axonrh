@@ -34,6 +34,7 @@ public class EmployeeBenefitController {
             @Valid @RequestBody EmployeeBenefitRequest request) {
         log.info("POST /api/v1/benefits/employees - Atribuindo beneficio ao colaborador: {}",
                 request.getEmployeeId());
+        log.info("Payload: {}", request);
         EmployeeBenefitResponse response = employeeBenefitService.assign(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

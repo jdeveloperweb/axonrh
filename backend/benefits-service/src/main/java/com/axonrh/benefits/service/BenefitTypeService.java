@@ -46,6 +46,7 @@ public class BenefitTypeService {
         }
 
         BenefitType entity = benefitTypeMapper.toEntity(request);
+        log.info("Entidade mapeada (antes do save) - rules: {}", entity.getRules());
         entity.setTenantId(tenantId);
         entity.setIsActive(true);
 
@@ -68,6 +69,7 @@ public class BenefitTypeService {
         }
 
         benefitTypeMapper.updateEntity(entity, request);
+        log.info("Entidade atualizada (antes do save) - rules: {}", entity.getRules());
         BenefitType saved = benefitTypeRepository.save(entity);
 
         return benefitTypeMapper.toResponse(saved);

@@ -34,6 +34,7 @@ public class BenefitTypeController {
     public ResponseEntity<BenefitTypeResponse> create(
             @Valid @RequestBody BenefitTypeRequest request) {
         log.info("POST /api/v1/benefits/types - Criando tipo de beneficio: {}", request.getName());
+        log.info("Rules payload: {}", request.getRules());
         BenefitTypeResponse response = benefitTypeService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -43,7 +44,7 @@ public class BenefitTypeController {
     public ResponseEntity<BenefitTypeResponse> update(
             @Parameter(description = "ID do tipo de beneficio") @PathVariable UUID id,
             @Valid @RequestBody BenefitTypeRequest request) {
-        log.info("PUT /api/v1/benefits/types/{} - Atualizando tipo de beneficio", id);
+        log.info("PUT /api/v1/benefits/types/{} - Atualizando tipo de beneficio - rules: {}", id, request.getRules());
         return ResponseEntity.ok(benefitTypeService.update(id, request));
     }
 

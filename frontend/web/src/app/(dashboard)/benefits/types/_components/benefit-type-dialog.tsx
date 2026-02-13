@@ -25,7 +25,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BenefitType, BenefitTypeRequest } from '@/types/benefits';
 import { benefitsApi } from '@/lib/api/benefits';
 import { useToast } from '@/hooks/use-toast';
-import { CreditCard, FileText, Settings2 } from 'lucide-react';
+import { CreditCard, FileText, Settings2, Plus, Trash, Trash2 } from 'lucide-react';
 
 interface BenefitTypeDialogProps {
     isOpen: boolean;
@@ -290,32 +290,135 @@ export function BenefitTypeDialog({
                                 )}
 
                                 {formData.rules?.ruleType === 'HEALTH_PLAN' && (
-                                    <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="employeeCost">Custo Titular (R$)</Label>
-                                            <Input
-                                                id="employeeCost"
-                                                type="number"
-                                                step="0.01"
-                                                value={formData.rules.employeeFixedValue || 0}
-                                                onChange={e => setFormData({
-                                                    ...formData,
-                                                    rules: { ...formData.rules!, employeeFixedValue: parseFloat(e.target.value) }
-                                                })}
-                                            />
+                                    <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="employeeCost">Custo Titular (R$)</Label>
+                                                <Input
+                                                    id="employeeCost"
+                                                    type="number"
+                                                    step="0.01"
+                                                    value={formData.rules.employeeFixedValue || 0}
+                                                    onChange={e => setFormData({
+                                                        ...formData,
+                                                        rules: { ...formData.rules!, employeeFixedValue: parseFloat(e.target.value) }
+                                                    })}
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="depCost">Custo Base Dependente (R$)</Label>
+                                                <Input
+                                                    id="depCost"
+                                                    type="number"
+                                                    step="0.01"
+                                                    value={formData.rules.dependentFixedValue || 0}
+                                                    onChange={e => setFormData({
+                                                        ...formData,
+                                                        rules: { ...formData.rules!, dependentFixedValue: parseFloat(e.target.value) }
+                                                    })}
+                                                />
+                                            </div>
                                         </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="depCost">Custo p/ Dependente (R$)</Label>
-                                            <Input
-                                                id="depCost"
-                                                type="number"
-                                                step="0.01"
-                                                value={formData.rules.dependentFixedValue || 0}
-                                                onChange={e => setFormData({
-                                                    ...formData,
-                                                    rules: { ...formData.rules!, dependentFixedValue: parseFloat(e.target.value) }
-                                                })}
-                                            />
+
+                                        <div className="space-y-2 pt-2 border-t border-gray-100">
+                                            <div className="flex items-center justify-between">
+                                                <Label>Regras por Idade (Dependentes)</Label>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="h-7 text-xs"
+                                                    onClick={() => {
+                                                        const currentRules = formData.rules?.ageRules || [];
+                                                        setFormData({
+                                                            ...formData,
+                                                            rules: {
+                                                                ...formData.rules!,
+                                                                ageRules: [
+                                                                    ...currentRules,
+                                                                    { minAge: 0, maxAge: 18, value: 0, exempt: false }
+                                                                ]
+                                                            }
+                                                        });
+                                                    }}
+                                                >
+                                                    <Plus className="w-3 h-3 mr-1" /> Adicionar Faixa
+                                                </Button>
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                {formData.rules.ageRules?.map((rule, index) => (
+                                                    <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded-md">
+                                                        <div className="grid grid-cols-2 gap-2 w-32">
+                                                            <Input
+                                                                placeholder="Min"
+                                                                type="number"
+                                                                className="h-8 text-xs"
+                                                                value={rule.minAge}
+                                                                onChange={e => {
+                                                                    const newRules = [...(formData.rules?.ageRules || [])];
+                                                                    newRules[index].minAge = parseInt(e.target.value) || 0;
+                                                                    setFormData({ ...formData, rules: { ...formData.rules!, ageRules: newRules } });
+                                                                }}
+                                                            />
+                                                            <Input
+                                                                placeholder="Max"
+                                                                type="number"
+                                                                className="h-8 text-xs"
+                                                                value={rule.maxAge}
+                                                                onChange={e => {
+                                                                    const newRules = [...(formData.rules?.ageRules || [])];
+                                                                    newRules[index].maxAge = parseInt(e.target.value) || 0;
+                                                                    setFormData({ ...formData, rules: { ...formData.rules!, ageRules: newRules } });
+                                                                }}
+                                                            />
+                                                        </div>
+                                                        <div className="flex-1 flex items-center gap-2">
+                                                            <Checkbox
+                                                                id={`exempt-${index}`}
+                                                                checked={rule.exempt}
+                                                                onCheckedChange={(checked: boolean) => {
+                                                                    const newRules = [...(formData.rules?.ageRules || [])];
+                                                                    newRules[index].exempt = checked;
+                                                                    setFormData({ ...formData, rules: { ...formData.rules!, ageRules: newRules } });
+                                                                }}
+                                                            />
+                                                            <Label htmlFor={`exempt-${index}`} className="text-xs cursor-pointer">Isento</Label>
+                                                        </div>
+                                                        <div className="w-24">
+                                                            <Input
+                                                                placeholder="Valor"
+                                                                type="number"
+                                                                disabled={rule.exempt}
+                                                                className="h-8 text-xs"
+                                                                value={rule.value || 0}
+                                                                onChange={e => {
+                                                                    const newRules = [...(formData.rules?.ageRules || [])];
+                                                                    newRules[index].value = parseFloat(e.target.value) || 0;
+                                                                    setFormData({ ...formData, rules: { ...formData.rules!, ageRules: newRules } });
+                                                                }}
+                                                            />
+                                                        </div>
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                                            onClick={() => {
+                                                                const newRules = formData.rules?.ageRules?.filter((_, i) => i !== index);
+                                                                setFormData({ ...formData, rules: { ...formData.rules!, ageRules: newRules } });
+                                                            }}
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </Button>
+                                                    </div>
+                                                ))}
+                                                {(!formData.rules.ageRules || formData.rules.ageRules.length === 0) && (
+                                                    <p className="text-xs text-muted-foreground text-center py-2">
+                                                        Nenhuma regra de idade configurada. O custo base será aplicado a todos os dependentes.
+                                                    </p>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 )}
