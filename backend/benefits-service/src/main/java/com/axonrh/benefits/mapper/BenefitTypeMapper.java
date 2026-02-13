@@ -29,7 +29,8 @@ public abstract class BenefitTypeMapper {
     @Mapping(target = "createdBy", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "updatedBy", ignore = true)
-    @Mapping(target = "rules", source = "rules", qualifiedByName = "objectToString")
+    @Mapping(target = "rules", source = "rules", qualifiedByName = "objectToString", 
+             nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_NULL)
     public abstract void updateEntity(@MappingTarget BenefitType entity, BenefitTypeRequest request);
 
     @Mapping(target = "rules", source = "rules", qualifiedByName = "stringToObject")
@@ -41,6 +42,7 @@ public abstract class BenefitTypeMapper {
         try {
             return objectMapper.writeValueAsString(rule);
         } catch (Exception e) {
+            // Log error?
             return null;
         }
     }

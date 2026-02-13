@@ -18,6 +18,7 @@ import {
     ArrowRight
 } from 'lucide-react';
 import { payrollApi, Payroll, PayslipResponse } from '@/lib/api/payroll';
+import { useAuthStore } from '@/stores/auth-store';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -29,6 +30,7 @@ export default function PayrollDetailPage() {
     const [payroll, setPayroll] = useState<Payroll | null>(null);
     const [payslip, setPayslip] = useState<PayslipResponse | null>(null);
     const [downloading, setDownloading] = useState(false);
+    const { user } = useAuthStore();
 
     const fetchData = async () => {
         setLoading(true);
@@ -114,13 +116,15 @@ export default function PayrollDetailPage() {
                         )}
                         {downloading ? 'Gerando...' : 'Baixar PDF'}
                     </Button>
-                    <Button
-                        className="gap-2 bg-[var(--color-primary)] text-white"
-                        onClick={fetchData}
-                    >
-                        <RefreshCw className="w-4 h-4" />
-                        Recalcular
-                    </Button>
+                    {user?.roles?.some((role: string) => ['ADMIN', 'CONTADOR'].includes(role)) && (
+                        <Button
+                            className="gap-2 bg-[var(--color-primary)] text-white"
+                            onClick={fetchData}
+                        >
+                            <RefreshCw className="w-4 h-4" />
+                            Recalcular
+                        </Button>
+                    )}
                 </div>
             </div>
 
