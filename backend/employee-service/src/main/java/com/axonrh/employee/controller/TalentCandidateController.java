@@ -109,6 +109,13 @@ public class TalentCandidateController {
         return ResponseEntity.ok(talentPoolService.uploadResume(id, resumeFile));
     }
 
+    @PostMapping("/{id}/analyze")
+    @PreAuthorize("hasAuthority('EMPLOYEE:WRITE')")
+    @Operation(summary = "Acionar análise por IA manualmente")
+    public ResponseEntity<TalentCandidateResponse> analyze(@PathVariable UUID id) {
+        return ResponseEntity.ok(talentPoolService.analyzeCandidateResume(id));
+    }
+
     @GetMapping("/{id}/resume/download")
     @PreAuthorize("hasAuthority('EMPLOYEE:READ')")
     @Operation(summary = "Download de currículo")

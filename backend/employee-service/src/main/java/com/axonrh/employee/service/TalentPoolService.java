@@ -396,7 +396,7 @@ public class TalentPoolService {
 
         // Processa currículo se fornecido
         if (resumeFile != null && !resumeFile.isEmpty()) {
-            processResume(candidate, resumeFile, vacancy.getRequirements());
+            processResume(candidate, resumeFile, vacancy.getRequirements(), vacancy.getAiAnalysisEnabled() != null ? vacancy.getAiAnalysisEnabled() : true);
         }
 
         candidate = candidateRepository.save(candidate);
@@ -425,7 +425,7 @@ public class TalentPoolService {
 
         // Processa currículo se fornecido
         if (resumeFile != null && !resumeFile.isEmpty()) {
-            processResume(candidate, resumeFile, vacancy.getRequirements());
+            processResume(candidate, resumeFile, vacancy.getRequirements(), vacancy.getAiAnalysisEnabled() != null ? vacancy.getAiAnalysisEnabled() : true);
         }
 
         candidate = candidateRepository.save(candidate);
@@ -622,7 +622,7 @@ public class TalentPoolService {
         return response;
     }
 
-    private void processResume(TalentCandidate candidate, MultipartFile file, String vacancyRequirements) {
+    private void processResume(TalentCandidate candidate, MultipartFile file, String vacancyRequirements, boolean aiEnabled) {
         try {
             // Valida tipo de arquivo
             String contentType = file.getContentType();
@@ -658,76 +658,8 @@ public class TalentPoolService {
             String resumeText = extractTextFromFile(file, isPdf);
 
             // Tenta análise via IA
-            try {
-                ResumeAnalysisRequest analysisRequest = ResumeAnalysisRequest.builder()
-                        .resumeText(resumeText)
-                        .fileName(originalFilename)
-                        .fileType(isPdf ? "PDF" : "WORD")
-                        .vacancyRequirements(vacancyRequirements)
-                        .build();
-
-                ResumeAnalysisResponse analysis = resumeAnalysisClient.analyzeResume(analysisRequest);
-
-                if (analysis != null) {
-                    // Preenche campos extraídos
-                    if (analysis.getSkills() != null && !analysis.getSkills().isEmpty()) {
-                        candidate.setSkills(String.join(", ", analysis.getSkills()));
-                    }
-
-                    if (analysis.getEducation() != null && !analysis.getEducation().isEmpty()) {
-                        StringBuilder edu = new StringBuilder();
-                        for (ResumeAnalysisResponse.EducationEntry entry : analysis.getEducation()) {
-                            if (edu.length() > 0) edu.append("; ");
-                            edu.append(entry.getDegree()).append(" em ").append(entry.getField())
-                                    .append(" - ").append(entry.getInstitution());
-                        }
-                        candidate.setEducation(edu.toString());
-                    }
-
-                    if (analysis.getExperiences() != null && !analysis.getExperiences().isEmpty()) {
-                        StringBuilder exp = new StringBuilder();
-                        for (ResumeAnalysisResponse.ExperienceEntry entry : analysis.getExperiences()) {
-                            if (exp.length() > 0) exp.append("; ");
-                            exp.append(entry.getPosition()).append(" na ").append(entry.getCompany());
-                        }
-                        candidate.setExperienceSummary(exp.toString());
-                    }
-
-                    if (analysis.getCertifications() != null && !analysis.getCertifications().isEmpty()) {
-                        candidate.setCertifications(String.join(", ", analysis.getCertifications()));
-                    }
-
-                    if (analysis.getLanguages() != null && !analysis.getLanguages().isEmpty()) {
-                        StringBuilder langs = new StringBuilder();
-                        for (ResumeAnalysisResponse.LanguageEntry entry : analysis.getLanguages()) {
-                            if (langs.length() > 0) langs.append(", ");
-                            langs.append(entry.getLanguage()).append(" (").append(entry.getLevel()).append(")");
-                        }
-                        candidate.setLanguages(langs.toString());
-                    }
-
-                    // Armazena dados brutos
-                    Map<String, Object> parsedData = new HashMap<>();
-                    parsedData.put("profileSummary", analysis.getProfileSummary());
-                    parsedData.put("compatibilityScore", analysis.getCompatibilityScore());
-                    parsedData.put("strengths", analysis.getStrengths());
-                    parsedData.put("concerns", analysis.getConcerns());
-                    parsedData.put("rawData", analysis.getRawData());
-                    candidate.setResumeParsedData(parsedData);
-                    
-                    // Armazena insight IA
-                    if (analysis.getAiInsight() != null) {
-                        candidate.setAiInsight(analysis.getAiInsight());
-                    }
-
-                    log.info("Currículo analisado com sucesso via IA para candidato");
-                }
-            } catch (Exception e) {
-                log.warn("Falha na análise do currículo via IA, usando extração básica: {}", e.getMessage());
-                // Fallback: armazena texto extraído
-                Map<String, Object> parsedData = new HashMap<>();
-                parsedData.put("rawText", resumeText.substring(0, Math.min(5000, resumeText.length())));
-                candidate.setResumeParsedData(parsedData);
+            if (aiEnabled) {
+                performAiAnalysis(candidate, resumeText, originalFilename, isPdf, vacancyRequirements);
             }
 
         } catch (IOException e) {
@@ -736,11 +668,119 @@ public class TalentPoolService {
         }
     }
 
+    private void performAiAnalysis(TalentCandidate candidate, String resumeText, String originalFilename, boolean isPdf, String vacancyRequirements) {
+        try {
+            ResumeAnalysisRequest analysisRequest = ResumeAnalysisRequest.builder()
+                    .resumeText(resumeText)
+                    .fileName(originalFilename)
+                    .fileType(isPdf ? "PDF" : "WORD")
+                    .vacancyRequirements(vacancyRequirements)
+                    .build();
+
+            ResumeAnalysisResponse analysis = resumeAnalysisClient.analyzeResume(analysisRequest);
+
+            if (analysis != null) {
+                // Preenche campos extraídos
+                if (analysis.getSkills() != null && !analysis.getSkills().isEmpty()) {
+                    candidate.setSkills(String.join(", ", analysis.getSkills()));
+                }
+
+                if (analysis.getEducation() != null && !analysis.getEducation().isEmpty()) {
+                    StringBuilder edu = new StringBuilder();
+                    for (ResumeAnalysisResponse.EducationEntry entry : analysis.getEducation()) {
+                        if (edu.length() > 0) edu.append("; ");
+                        edu.append(entry.getDegree()).append(" em ").append(entry.getField())
+                                .append(" - ").append(entry.getInstitution());
+                    }
+                    candidate.setEducation(edu.toString());
+                }
+
+                if (analysis.getExperiences() != null && !analysis.getExperiences().isEmpty()) {
+                    StringBuilder exp = new StringBuilder();
+                    for (ResumeAnalysisResponse.ExperienceEntry entry : analysis.getExperiences()) {
+                        if (exp.length() > 0) exp.append("; ");
+                        exp.append(entry.getPosition()).append(" na ").append(entry.getCompany());
+                    }
+                    candidate.setExperienceSummary(exp.toString());
+                }
+
+                if (analysis.getCertifications() != null && !analysis.getCertifications().isEmpty()) {
+                    candidate.setCertifications(String.join(", ", analysis.getCertifications()));
+                }
+
+                if (analysis.getLanguages() != null && !analysis.getLanguages().isEmpty()) {
+                    StringBuilder langs = new StringBuilder();
+                    for (ResumeAnalysisResponse.LanguageEntry entry : analysis.getLanguages()) {
+                        if (langs.length() > 0) langs.append(", ");
+                        langs.append(entry.getLanguage()).append(" (").append(entry.getLevel()).append(")");
+                    }
+                    candidate.setLanguages(langs.toString());
+                }
+
+                // Armazena dados brutos
+                Map<String, Object> parsedData = new HashMap<>();
+                parsedData.put("profileSummary", analysis.getProfileSummary());
+                parsedData.put("compatibilityScore", analysis.getCompatibilityScore());
+                parsedData.put("strengths", analysis.getStrengths());
+                parsedData.put("concerns", analysis.getConcerns());
+                parsedData.put("rawData", analysis.getRawData());
+                candidate.setResumeParsedData(parsedData);
+
+                // Armazena insight IA
+                if (analysis.getAiInsight() != null) {
+                    candidate.setAiInsight(analysis.getAiInsight());
+                }
+
+                log.info("Currículo analisado com sucesso via IA para candidato: {}", candidate.getId());
+            }
+        } catch (Exception e) {
+            log.warn("Falha na análise do currículo via IA para o candidato {}: {}", candidate.getId(), e.getMessage());
+            // Fallback: armazena texto extraído se não houver dados
+            if (candidate.getResumeParsedData() == null || candidate.getResumeParsedData().isEmpty()) {
+                Map<String, Object> parsedData = new HashMap<>();
+                parsedData.put("rawText", resumeText.substring(0, Math.min(5000, resumeText.length())));
+                candidate.setResumeParsedData(parsedData);
+            }
+        }
+    }
+
+    /**
+     * Aciona manualmente a análise por IA para um candidato existente
+     */
+    public TalentCandidateResponse analyzeCandidateResume(UUID id) {
+        UUID tenantId = getTenantId();
+        TalentCandidate candidate = candidateRepository.findByTenantIdAndId(tenantId, id)
+                .orElseThrow(() -> new ResourceNotFoundException("Candidato não encontrado: " + id));
+
+        if (candidate.getResumeFilePath() == null) {
+            throw new InvalidOperationException("Candidato não possui currículo anexado");
+        }
+
+        try {
+            Path filePath = Paths.get(candidate.getResumeFilePath());
+            boolean isPdf = "PDF".equalsIgnoreCase(candidate.getResumeFileType());
+            
+            String resumeText;
+            try (InputStream is = Files.newInputStream(filePath)) {
+                resumeText = isPdf ? extractTextFromPdf(is) : extractTextFromWord(is);
+            }
+
+            String requirements = candidate.getVacancy() != null ? candidate.getVacancy().getRequirements() : null;
+            
+            performAiAnalysis(candidate, resumeText, candidate.getResumeFileName(), isPdf, requirements);
+            
+            candidate = candidateRepository.save(candidate);
+            return candidateMapper.toResponse(candidate);
+            
+        } catch (IOException e) {
+            log.error("Erro ao analisar currículo manualmente", e);
+            throw new InvalidOperationException("Erro ao processar arquivo para análise: " + e.getMessage());
+        }
+    }
+
     private String extractTextFromFile(MultipartFile file, boolean isPdf) throws IOException {
-        if (isPdf) {
-            return extractTextFromPdf(file.getInputStream());
-        } else {
-            return extractTextFromWord(file.getInputStream());
+        try (InputStream is = file.getInputStream()) {
+            return isPdf ? extractTextFromPdf(is) : extractTextFromWord(is);
         }
     }
 

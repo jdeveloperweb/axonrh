@@ -25,6 +25,7 @@ import {
     Clock,
     Award,
     Upload,
+    Sparkles,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -96,6 +97,7 @@ export default function TalentPoolPage() {
         hideSalary: false,
         maxCandidates: 0,
         deadline: '',
+        aiAnalysisEnabled: true,
     });
 
     const [candidateForm, setCandidateForm] = useState<CreateCandidateData>({
@@ -191,6 +193,7 @@ export default function TalentPoolPage() {
                 hideSalary: vacancy.hideSalary || false,
                 maxCandidates: vacancy.maxCandidates || 0,
                 deadline: vacancy.deadline || '',
+                aiAnalysisEnabled: vacancy.aiAnalysisEnabled ?? true,
             });
         } else {
             setEditingVacancy(null);
@@ -272,6 +275,7 @@ export default function TalentPoolPage() {
             hideSalary: vacancyForm.hideSalary,
             maxCandidates: vacancyForm.maxCandidates,
             deadline: vacancyForm.deadline || undefined,
+            aiAnalysisEnabled: vacancyForm.aiAnalysisEnabled,
         };
 
         try {
@@ -474,6 +478,27 @@ export default function TalentPoolPage() {
         if (resumeUrl) {
             window.URL.revokeObjectURL(resumeUrl);
             setResumeUrl(null);
+        }
+    };
+
+    const handleAnalyzeCandidate = async (candidateId: string) => {
+        try {
+            setLoading(true);
+            const updated = await talentPoolApi.analyzeCandidate(candidateId);
+            setCandidates(prev => prev.map(c => c.id === updated.id ? updated : c));
+            setSelectedCandidate(updated);
+            toast({
+                title: 'Sucesso',
+                description: 'Candidato analisado com IA com sucesso',
+            });
+        } catch {
+            toast({
+                title: 'Erro',
+                description: 'Falha ao analisar candidato com IA',
+                variant: 'destructive',
+            });
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -1206,6 +1231,28 @@ export default function TalentPoolPage() {
                                 />
                             </div>
 
+                            {/* IA Toggle */}
+                            <div className="p-4 bg-purple-50 rounded-xl border border-purple-100 flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-1.5 bg-purple-100 rounded-lg">
+                                        <Star className="w-5 h-5 text-purple-600 fill-purple-600" />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-sm font-bold text-purple-900 leading-none mb-1">Processamento com IA</h4>
+                                        <p className="text-[10px] text-purple-700">Analisar currículos automaticamente ao receber candidaturas.</p>
+                                    </div>
+                                </div>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        className="sr-only peer"
+                                        checked={vacancyForm.aiAnalysisEnabled}
+                                        onChange={(e) => setVacancyForm({ ...vacancyForm, aiAnalysisEnabled: e.target.checked })}
+                                    />
+                                    <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
+                                </label>
+                            </div>
+
                             {/* Botões */}
                             <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
                                 <button
@@ -1285,9 +1332,17 @@ export default function TalentPoolPage() {
                                         <TrendingUp className="w-8 h-8 text-gray-400" />
                                     </div>
                                     <h4 className="text-sm font-medium text-gray-700 mb-1">Análise IA Indisponível</h4>
-                                    <p className="text-gray-500 text-xs max-w-xs">
+                                    <p className="text-gray-500 text-xs max-w-xs mb-4">
                                         Este candidato ainda não passou pela análise automatizada ou o currículo não foi processado.
                                     </p>
+                                    <button
+                                        onClick={() => handleAnalyzeCandidate(selectedCandidate.id)}
+                                        disabled={loading || !selectedCandidate.resumeFilePath}
+                                        className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-all shadow-md text-sm font-bold"
+                                    >
+                                        <Sparkles className="w-4 h-4" />
+                                        Analisar com IA
+                                    </button>
                                 </div>
                             )}
 

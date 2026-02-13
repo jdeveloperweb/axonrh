@@ -105,6 +105,10 @@ public class JobVacancy {
     @Column(name = "public_code", length = 50, unique = true)
     private String publicCode;
 
+    @Column(name = "ai_analysis_enabled")
+    @Builder.Default
+    private Boolean aiAnalysisEnabled = true;
+
     @Column(name = "is_active")
     @Builder.Default
     private Boolean isActive = true;

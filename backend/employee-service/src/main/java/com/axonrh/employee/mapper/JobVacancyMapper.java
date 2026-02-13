@@ -36,6 +36,7 @@ public class JobVacancyMapper {
                 .maxCandidates(request.getMaxCandidates() != null ? request.getMaxCandidates() : 0)
                 .deadline(request.getDeadline())
                 .status(VacancyStatus.DRAFT)
+                .aiAnalysisEnabled(request.getAiAnalysisEnabled() != null ? request.getAiAnalysisEnabled() : true)
                 .isActive(true)
                 .build();
     }
@@ -63,6 +64,9 @@ public class JobVacancyMapper {
         }
         if (request.getMaxCandidates() != null) {
             vacancy.setMaxCandidates(request.getMaxCandidates());
+        }
+        if (request.getAiAnalysisEnabled() != null) {
+            vacancy.setAiAnalysisEnabled(request.getAiAnalysisEnabled());
         }
         vacancy.setDeadline(request.getDeadline());
     }
@@ -98,6 +102,7 @@ public class JobVacancyMapper {
                 .publicCode(vacancy.getPublicCode())
                 .candidateCount(0)
                 .isActive(vacancy.getIsActive())
+                .aiAnalysisEnabled(vacancy.getAiAnalysisEnabled())
                 .createdAt(vacancy.getCreatedAt())
                 .updatedAt(vacancy.getUpdatedAt())
                 .build();

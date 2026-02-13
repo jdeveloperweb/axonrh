@@ -70,4 +70,7 @@ public class JobVacancyRequest {
 
     @Schema(description = "Data limite para candidaturas")
     private LocalDate deadline;
+
+    @Schema(description = "Habilitar análise por IA", example = "true")
+    private Boolean aiAnalysisEnabled;
 }

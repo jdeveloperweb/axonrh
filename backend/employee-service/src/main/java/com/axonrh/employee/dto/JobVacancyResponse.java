@@ -96,6 +96,9 @@ public class JobVacancyResponse {
     @Schema(description = "Vaga está ativa")
     private Boolean isActive;
 
+    @Schema(description = "Análise por IA está habilitada")
+    private Boolean aiAnalysisEnabled;
+
     @Schema(description = "Data de criação")
     private LocalDateTime createdAt;
 

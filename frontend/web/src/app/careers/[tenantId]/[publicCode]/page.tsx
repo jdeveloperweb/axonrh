@@ -207,7 +207,7 @@ export default function VacancyDetailPage() {
     if (submitted) {
         return (
             <div className="min-h-screen bg-[var(--color-surface-variant)]/30 flex items-center justify-center p-4">
-                <div className="bg-white rounded-[2.5rem] shadow-2xl p-12 max-w-lg text-center border border-gray-100 relative overflow-hidden">
+                <div className="bg-white rounded-[2.5rem] shadow-2xl p-12 max-w-lg text-center border border-gray-100 relative overflow-hidden animate-in zoom-in-95 duration-500">
                     <div
                         className="absolute top-0 left-0 w-full h-2"
                         style={{ backgroundColor: primaryColor }}
@@ -216,14 +216,14 @@ export default function VacancyDetailPage() {
                         <CheckCircle className="w-12 h-12 text-green-600" />
                     </div>
                     <h2 className="text-3xl font-bold text-gray-900 mb-4 tracking-tight">Candidatura enviada!</h2>
-                    <p className="text-gray-500 mb-10 leading-relaxed text-lg">
+                    <p className="text-gray-500 mb-10 leading-relaxed text-lg text-balance">
                         Recebemos sua candidatura para a vaga de <br />
                         <strong className="text-gray-900">{vacancy.title}</strong>. <br />
                         Nossa equipe irá analisar seu perfil e entraremos em contato em breve através do seu email.
                     </p>
                     <Link
                         href={`/careers/${tenantId}`}
-                        className="inline-flex items-center justify-center gap-2 px-10 py-4 text-white rounded-2xl font-bold shadow-xl hover:scale-105 transition-all"
+                        className="inline-flex items-center justify-center gap-2 px-10 py-4 text-white rounded-2xl font-bold shadow-xl hover:scale-105 transition-all w-full sm:w-auto"
                         style={{ backgroundColor: primaryColor }}
                     >
                         <ArrowLeft className="w-5 h-5" />
@@ -236,6 +236,24 @@ export default function VacancyDetailPage() {
 
     return (
         <div className="min-h-screen bg-[var(--color-surface-variant)]/30 pb-20">
+            {/* Overlay de Submissão */}
+            {submitting && (
+                <div className="fixed inset-0 bg-white/60 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-in fade-in duration-300">
+                    <div className="bg-white rounded-[2rem] shadow-2xl p-10 max-w-sm w-full text-center border border-gray-100 animate-in zoom-in-95 duration-500">
+                        <div
+                            className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg animate-pulse"
+                            style={{ background: `linear-gradient(135deg, ${primaryColor}, #6366f1)` }}
+                        >
+                            <Loader2 className="w-10 h-10 text-white animate-spin" />
+                        </div>
+                        <h3 className="text-2xl font-bold text-gray-900 mb-3 tracking-tight">Quase lá!</h3>
+                        <p className="text-gray-500 font-medium leading-relaxed">
+                            Estamos registrando sua candidatura e <strong className="text-gray-900">processando seu currículo com IA</strong>. <br />
+                            Por favor, aguarde um momento.
+                        </p>
+                    </div>
+                </div>
+            )}
             {/* Header */}
             <header className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-100 shadow-sm">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">

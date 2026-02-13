@@ -37,6 +37,7 @@ export interface JobVacancy {
     publicCode?: string;
     candidateCount?: number;
     isActive: boolean;
+    aiAnalysisEnabled?: boolean;
     createdAt?: string;
     updatedAt?: string;
 }
@@ -57,6 +58,7 @@ export interface CreateVacancyData {
     hideSalary?: boolean;
     maxCandidates?: number;
     deadline?: string;
+    aiAnalysisEnabled?: boolean;
 }
 
 export interface TalentCandidate {
@@ -272,6 +274,10 @@ export const talentPoolApi = {
 
     deleteCandidate: async (id: string): Promise<void> => {
         await api.delete(`/talent-pool/candidates/${id}`);
+    },
+
+    analyzeCandidate: async (id: string): Promise<TalentCandidate> => {
+        return api.post<unknown, TalentCandidate>(`/talent-pool/candidates/${id}/analyze`, {});
     },
 
     // ========== Estatísticas ==========
