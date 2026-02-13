@@ -20,6 +20,11 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+  flyway:
+    out-of-order: true
+    validate-on-migrate: true
+    baseline-on-migrate: true
+
   # MongoDB for AI conversations
   data:
     mongodb:
