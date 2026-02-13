@@ -24,6 +24,7 @@ import {
     UserPlus,
     Clock,
     Award,
+    Upload,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -33,6 +34,7 @@ import {
     TalentCandidate,
     TalentPoolStats,
     CreateVacancyData,
+    CreateCandidateData,
     VacancyStatus,
     CandidateStatus,
     getVacancyStatusLabel,
@@ -93,6 +95,20 @@ export default function TalentPoolPage() {
         maxCandidates: 0,
         deadline: '',
     });
+
+    const [candidateForm, setCandidateForm] = useState<CreateCandidateData>({
+        fullName: '',
+        email: '',
+        phone: '',
+        mobile: '',
+        city: '',
+        state: '',
+        linkedinUrl: '',
+        portfolioUrl: '',
+        source: 'OTHER',
+    });
+    const [resumeFile, setResumeFile] = useState<File | null>(null);
+    const [selectedVacancyId, setSelectedVacancyId] = useState<string>('');
 
     // Fetch data
     const fetchData = useCallback(async () => {
@@ -404,23 +420,81 @@ export default function TalentPoolPage() {
         }
     };
 
+    const handleSubmitCandidate = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            if (!selectedVacancyId) {
+                toast({ title: 'Erro', description: 'Selecione uma vaga para o candidato', variant: 'destructive' });
+                return;
+            }
+            if (!candidateForm.fullName || !candidateForm.email) {
+                toast({ title: 'Erro', description: 'Nome e email são obrigatórios', variant: 'destructive' });
+                return;
+            }
+
+            setSubmitting(true);
+            await talentPoolApi.addCandidate(selectedVacancyId, candidateForm, resumeFile || undefined);
+
+            toast({
+                title: 'Sucesso',
+                description: 'Candidato adicionado! A IA está analisando o currículo em segundo plano.',
+            });
+
+            setShowCandidateModal(false);
+            // Reset form
+            setResumeFile(null);
+            setCandidateForm({
+                fullName: '',
+                email: '',
+                phone: '',
+                mobile: '',
+                city: '',
+                state: '',
+                linkedinUrl: '',
+                portfolioUrl: '',
+                source: 'OTHER',
+            });
+            setSelectedVacancyId('');
+
+            await fetchData();
+        } catch (error: unknown) {
+            const err = error as Error & { response?: { data?: { message?: string; error?: string } } };
+            const errorMessage = err.response?.data?.message || err.response?.data?.error || err.message || 'Falha ao adicionar candidato';
+            toast({ title: 'Erro', description: errorMessage, variant: 'destructive' });
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
     return (
         <div className="p-6 space-y-6">
             {/* Page Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-[var(--color-text)]">Banco de Talentos</h1>
+                    <h1 className="text-2xl font-bold text-[var(--color-text)]">Recrutamento e Seleção</h1>
                     <p className="text-[var(--color-text-secondary)]">
                         Gerencie vagas e candidatos da empresa
                     </p>
                 </div>
-                <button
-                    onClick={() => handleOpenVacancyModal()}
-                    className="flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 transition-opacity"
-                >
-                    <Plus className="w-4 h-4" />
-                    Nova Vaga
-                </button>
+                <div className="flex gap-2">
+                    {activeTab === 'vacancies' ? (
+                        <button
+                            onClick={() => handleOpenVacancyModal()}
+                            className="flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 transition-opacity"
+                        >
+                            <Plus className="w-4 h-4" />
+                            Nova Vaga
+                        </button>
+                    ) : (
+                        <button
+                            onClick={() => setShowCandidateModal(true)}
+                            className="flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 transition-opacity"
+                        >
+                            <Plus className="w-4 h-4" />
+                            Novo Candidato
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* Stats Cards */}
@@ -1235,6 +1309,19 @@ export default function TalentPoolPage() {
                                 </div>
                             )}
 
+                            {/* Insight IA */}
+                            {selectedCandidate.aiInsight && (
+                                <div className="p-4 bg-purple-50 rounded-lg border border-purple-100">
+                                    <h4 className="font-medium text-purple-900 flex items-center gap-2 mb-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-sparkles"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" /></svg>
+                                        INSIGHT IA
+                                    </h4>
+                                    <p className="text-sm text-purple-800 whitespace-pre-line leading-relaxed">
+                                        {selectedCandidate.aiInsight}
+                                    </p>
+                                </div>
+                            )}
+
                             {/* Notas */}
                             {selectedCandidate.notes && (
                                 <div>
@@ -1256,6 +1343,170 @@ export default function TalentPoolPage() {
                     </div>
                 </div>
             )}
+
+            {/* Modal - Novo Candidato */}
+            {showCandidateModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl shadow-lg w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+                        <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+                            <h2 className="text-lg font-semibold text-[var(--color-text)]">
+                                Novo Candidato
+                            </h2>
+                            <button onClick={() => setShowCandidateModal(false)} className="p-2 hover:bg-gray-100 rounded-lg">
+                                <XCircle className="w-5 h-5 text-[var(--color-text-secondary)]" />
+                            </button>
+                        </div>
+                        <form onSubmit={handleSubmitCandidate} className="p-6 space-y-6">
+                            {/* Vaga e Currículo */}
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
+                                        Vaga *
+                                    </label>
+                                    <select
+                                        value={selectedVacancyId}
+                                        onChange={(e) => setSelectedVacancyId(e.target.value)}
+                                        required
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] bg-white"
+                                    >
+                                        <option value="">Selecione uma vaga...</option>
+                                        {vacancies.map(v => (
+                                            <option key={v.id} value={v.id}>{v.title} ({getVacancyStatusLabel(v.status)})</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
+                                        Currículo (PDF ou Word)
+                                    </label>
+                                    <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-[var(--color-primary)] transition-colors">
+                                        <div className="space-y-1 text-center">
+                                            <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                                            <div className="flex text-sm text-gray-600">
+                                                <label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] focus-within:outline-none">
+                                                    <span>Upload do arquivo</span>
+                                                    <input id="file-upload" name="file-upload" type="file" className="sr-only"
+                                                        accept=".pdf,.doc,.docx"
+                                                        onChange={(e) => setResumeFile(e.target.files?.[0] || null)}
+                                                    />
+                                                </label>
+                                                <p className="pl-1">ou arraste e solte</p>
+                                            </div>
+                                            <p className="text-xs text-gray-500">
+                                                {resumeFile ? resumeFile.name : 'PDF ou DOCX até 10MB'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Info Pessoal */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
+                                        Nome Completo *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={candidateForm.fullName}
+                                        onChange={(e) => setCandidateForm({ ...candidateForm, fullName: e.target.value })}
+                                        required
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                                    />
+                                </div>
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
+                                        Email *
+                                    </label>
+                                    <input
+                                        type="email"
+                                        value={candidateForm.email}
+                                        onChange={(e) => setCandidateForm({ ...candidateForm, email: e.target.value })}
+                                        required
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
+                                        Telefone
+                                    </label>
+                                    <input
+                                        type="tel"
+                                        value={candidateForm.phone}
+                                        onChange={(e) => setCandidateForm({ ...candidateForm, phone: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
+                                        Celular
+                                    </label>
+                                    <input
+                                        type="tel"
+                                        value={candidateForm.mobile}
+                                        onChange={(e) => setCandidateForm({ ...candidateForm, mobile: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
+                                        Cidade
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={candidateForm.city}
+                                        onChange={(e) => setCandidateForm({ ...candidateForm, city: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
+                                        Estado (UF)
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={candidateForm.state}
+                                        onChange={(e) => setCandidateForm({ ...candidateForm, state: e.target.value })}
+                                        maxLength={2}
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                                    />
+                                </div>
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
+                                        LinkedIn (URL)
+                                    </label>
+                                    <input
+                                        type="url"
+                                        value={candidateForm.linkedinUrl}
+                                        onChange={(e) => setCandidateForm({ ...candidateForm, linkedinUrl: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowCandidateModal(false)}
+                                    className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 bg-white text-[var(--color-text)]"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={submitting}
+                                    className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                >
+                                    {submitting && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />}
+                                    Salvar Candidato
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
+

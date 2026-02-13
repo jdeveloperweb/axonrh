@@ -103,6 +103,7 @@ public class TalentCandidateMapper {
                 .experienceSummary(candidate.getExperienceSummary())
                 .certifications(candidate.getCertifications())
                 .languages(candidate.getLanguages())
+                .aiInsight(candidate.getAiInsight())
                 .status(candidate.getStatus())
                 .statusNotes(candidate.getStatusNotes())
                 .rating(candidate.getRating())

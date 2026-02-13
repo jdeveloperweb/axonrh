@@ -402,6 +402,10 @@ public class LlmService {
         body.put("temperature", request.getTemperature() != null ? request.getTemperature() : openAiTemperature);
         body.put("stream", stream);
 
+        if (request.getResponseFormat() != null && "json_object".equalsIgnoreCase(request.getResponseFormat())) {
+            body.put("response_format", Map.of("type", "json_object"));
+        }
+
         // Add tools if present
         if (request.getTools() != null && !request.getTools().isEmpty()) {
             List<Map<String, Object>> tools = request.getTools().stream()

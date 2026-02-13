@@ -75,8 +75,11 @@ public class TalentCandidateResponse {
     @Schema(description = "Certificações")
     private String certifications;
 
-    @Schema(description = "Idiomas")
+    @Schema(description = "Inglês")
     private String languages;
+
+    @Schema(description = "Insight gerado pela IA")
+    private String aiInsight;
 
     @Schema(description = "Status do candidato")
     private CandidateStatus status;

@@ -80,6 +80,7 @@ export interface TalentCandidate {
     experienceSummary?: string;
     certifications?: string;
     languages?: string;
+    aiInsight?: string;
     status: CandidateStatus;
     statusNotes?: string;
     rating?: number;

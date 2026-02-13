@@ -20,6 +20,7 @@ public class ChatRequest {
     private Double temperature;
     private Boolean stream;
     private List<Tool> tools;
+    private String responseFormat; // "text" or "json_object"
     private Map<String, Object> metadata;
 
     @Data

@@ -1,4 +1,4 @@
-package com.axonrh.employee.dto;
+package com.axonrh.ai.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -9,9 +9,6 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Response da análise de currículo pela IA
- */
 @Data
 @Builder
 @NoArgsConstructor
@@ -92,6 +89,6 @@ public class ResumeAnalysisResponse {
     @AllArgsConstructor
     public static class LanguageEntry {
         private String language;
-        private String level; // BASICO, INTERMEDIARIO, AVANCADO, FLUENTE, NATIVO
+        private String level; 
     }
 }

@@ -679,6 +679,11 @@ public class TalentPoolService {
                     parsedData.put("concerns", analysis.getConcerns());
                     parsedData.put("rawData", analysis.getRawData());
                     candidate.setResumeParsedData(parsedData);
+                    
+                    // Armazena insight IA
+                    if (analysis.getAiInsight() != null) {
+                        candidate.setAiInsight(analysis.getAiInsight());
+                    }
 
                     log.info("Currículo analisado com sucesso via IA para candidato");
                 }

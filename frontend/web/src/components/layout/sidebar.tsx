@@ -91,7 +91,7 @@ const navGroups: NavGroup[] = [
       { label: 'Organograma', href: '/organogram', icon: Users },
       { label: 'Departamentos', href: '/departments', icon: Building2 },
       { label: 'Cargos', href: '/positions', icon: Briefcase },
-      { label: 'Banco de Talentos', href: '/talent-pool', icon: UserPlus, permission: 'EMPLOYEE:READ', module: 'moduleRecruitment' },
+      { label: 'Recrutamento e Seleção', href: '/talent-pool', icon: UserPlus, permission: 'EMPLOYEE:READ', module: 'moduleRecruitment' },
       { label: 'Gestores', href: '/managers', icon: UserCog },
       { label: 'Integrações', href: '/integrations', icon: Puzzle, module: 'moduleIntegration' },
       { label: 'Configurações', href: '/settings', icon: Settings, permission: 'CONFIG:READ' },

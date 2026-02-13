@@ -98,6 +98,10 @@ public class TalentCandidate {
     @Column(name = "languages", columnDefinition = "TEXT")
     private String languages;
 
+    // Insight gerado pela IA
+    @Column(name = "ai_insight", columnDefinition = "TEXT")
+    private String aiInsight;
+
     // Status
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 30)
