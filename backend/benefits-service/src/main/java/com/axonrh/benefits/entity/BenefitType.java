@@ -103,6 +103,9 @@ public class BenefitType {
     @Column(name = "integration_config", columnDefinition = "text")
     private String integrationConfig; // JSON string with specific configs
 
+    @Column(name = "rules", columnDefinition = "text")
+    private String rules; // JSON string mapping to BenefitRule DTO
+
     @PrePersist
     public void prePersist() {
         if (this.id == null) {

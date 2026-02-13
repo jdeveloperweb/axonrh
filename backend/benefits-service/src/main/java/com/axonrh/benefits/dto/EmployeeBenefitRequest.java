@@ -42,4 +42,6 @@ public class EmployeeBenefitRequest {
 
     @Size(max = 1000, message = "Observacoes devem ter no maximo 1000 caracteres")
     private String notes;
+
+    private java.util.List<UUID> dependentIds;
 }

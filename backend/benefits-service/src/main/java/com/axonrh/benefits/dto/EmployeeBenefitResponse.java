@@ -33,5 +33,6 @@ public class EmployeeBenefitResponse {
     private EmployeeBenefitStatus status;
     private String notes;
     private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private java.util.List<EmployeeBenefitDependentResponse> dependents;
+
 }

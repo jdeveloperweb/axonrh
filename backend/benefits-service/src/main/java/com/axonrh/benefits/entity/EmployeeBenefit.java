@@ -76,6 +76,10 @@ public class EmployeeBenefit {
     @Column(name = "created_by", updatable = false)
     private UUID createdBy;
 
+    @OneToMany(mappedBy = "employeeBenefit", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private java.util.List<EmployeeBenefitDependent> dependents = new java.util.ArrayList<>();
+
     @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;

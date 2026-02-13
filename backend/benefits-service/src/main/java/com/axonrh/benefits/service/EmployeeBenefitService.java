@@ -39,6 +39,8 @@ public class EmployeeBenefitService {
     private final BenefitHistoryRepository benefitHistoryRepository;
     private final EmployeeBenefitMapper employeeBenefitMapper;
     private final BenefitHistoryMapper benefitHistoryMapper;
+    private final com.axonrh.benefits.client.EmployeeClient employeeClient;
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
     private UUID getTenantId() {
         String tenant = TenantContext.getCurrentTenant();
@@ -88,6 +90,33 @@ public class EmployeeBenefitService {
                 .status(determineInitialStatus(request.getStartDate()))
                 .notes(request.getNotes())
                 .build();
+
+        // Handle dependents
+        if (request.getDependentIds() != null && !request.getDependentIds().isEmpty()) {
+            // Fetch dependents info from Employee Service to get names
+            try {
+                com.axonrh.benefits.dto.EmployeeDetailsDto employeeDetails = employeeClient.getEmployeeDetails(request.getEmployeeId());
+                if (employeeDetails != null && employeeDetails.getDependents() != null) {
+                    java.util.Map<UUID, String> dependentNames = employeeDetails.getDependents().stream()
+                            .collect(Collectors.toMap(com.axonrh.benefits.dto.DependentDto::getId, com.axonrh.benefits.dto.DependentDto::getName));
+
+                    for (UUID depId : request.getDependentIds()) {
+                        String depName = dependentNames.getOrDefault(depId, "Unknown");
+                        com.axonrh.benefits.entity.EmployeeBenefitDependent dependentEntity = com.axonrh.benefits.entity.EmployeeBenefitDependent.builder()
+                                .employeeBenefit(entity) // Will be set after save? No, entity needs to be saved first if not cascading properly, but cascade is ALL.
+                                .dependentId(depId)
+                                .dependentName(depName)
+                                .build();
+                         // Fix circular reference if needed, or just add to list
+                         dependentEntity.setEmployeeBenefit(entity);
+                         entity.getDependents().add(dependentEntity);
+                    }
+                }
+            } catch (Exception e) {
+                log.error("Erro ao buscar dependentes do colaborador", e);
+                // Proceed without names or throw error? proceed.
+            }
+        }
 
         EmployeeBenefit saved = employeeBenefitRepository.save(entity);
 
@@ -257,11 +286,15 @@ public class EmployeeBenefitService {
             BenefitType type = eb.getBenefitType();
             BigDecimal calculatedAmount;
 
-            if (type.getCalculationType() == CalculationType.SALARY_PERCENTAGE) {
-                BigDecimal pct = eb.getPercentage() != null ? eb.getPercentage() : type.getDefaultPercentage();
-                calculatedAmount = baseSalary.multiply(pct).divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
+            if (type.getRules() != null && !type.getRules().isBlank()) {
+                calculatedAmount = applyBenefitRules(type, eb, baseSalary, employeeId);
             } else {
-                calculatedAmount = eb.getFixedValue() != null ? eb.getFixedValue() : type.getDefaultValue();
+                if (type.getCalculationType() == CalculationType.SALARY_PERCENTAGE) {
+                    BigDecimal pct = eb.getPercentage() != null ? eb.getPercentage() : type.getDefaultPercentage();
+                    calculatedAmount = baseSalary.multiply(pct).divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
+                } else {
+                    calculatedAmount = eb.getFixedValue() != null ? eb.getFixedValue() : type.getDefaultValue();
+                }
             }
 
             if (calculatedAmount == null) {
@@ -343,5 +376,79 @@ public class EmployeeBenefitService {
                 .build();
 
         benefitHistoryRepository.save(history);
+    }
+
+    private BigDecimal applyBenefitRules(BenefitType type, EmployeeBenefit eb, BigDecimal baseSalary, UUID employeeId) {
+        try {
+            com.axonrh.benefits.dto.BenefitRule rule = objectMapper.readValue(type.getRules(), com.axonrh.benefits.dto.BenefitRule.class);
+            
+            if (rule.getRuleType() == com.axonrh.benefits.dto.BenefitRule.RuleType.TRANSPORT_VOUCHER) {
+                // 6% of salary (or configured percentage)
+                BigDecimal pct = rule.getPercentage() != null ? rule.getPercentage() : BigDecimal.valueOf(6.0);
+                BigDecimal discount = baseSalary.multiply(pct).divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
+                
+                // Cap at the benefit value (assumed to be fixedValue in EmployeeBenefit)
+                BigDecimal benefitValue = eb.getFixedValue() != null ? eb.getFixedValue() : BigDecimal.ZERO;
+                if (discount.compareTo(benefitValue) > 0) {
+                    return benefitValue;
+                }
+                return discount;
+            } 
+            else if (rule.getRuleType() == com.axonrh.benefits.dto.BenefitRule.RuleType.HEALTH_PLAN) {
+                BigDecimal totalCost = BigDecimal.ZERO;
+                
+                // Employee Cost
+                // Fetch employee details to get age
+                com.axonrh.benefits.dto.EmployeeDetailsDto details = employeeClient.getEmployeeDetails(employeeId);
+                int employeeAge = calculateAge(details.getBirthDate());
+                
+                BigDecimal empCost = calculateHealthCost(employeeAge, rule.getEmployeeFixedValue(), rule.getAgeRules());
+                totalCost = totalCost.add(empCost);
+                
+                // Dependents Cost
+                if (eb.getDependents() != null) {
+                    // Need to match dependent IDs to their birthdates from details
+                    java.util.Map<UUID, LocalDate> dependentBirthDates = details.getDependents().stream()
+                        .collect(Collectors.toMap(com.axonrh.benefits.dto.DependentDto::getId, com.axonrh.benefits.dto.DependentDto::getBirthDate));
+
+                    for (com.axonrh.benefits.entity.EmployeeBenefitDependent dep : eb.getDependents()) {
+                         LocalDate dob = dependentBirthDates.get(dep.getDependentId());
+                         if (dob != null) {
+                             int age = calculateAge(dob);
+                             BigDecimal depCost = calculateHealthCost(age, rule.getDependentFixedValue(), rule.getAgeRules());
+                             totalCost = totalCost.add(depCost);
+                         }
+                    }
+                }
+                
+                return totalCost;
+            }
+            
+            // Fallback
+            return eb.getFixedValue() != null ? eb.getFixedValue() : BigDecimal.ZERO;
+
+        } catch (Exception e) {
+            log.error("Erro ao aplicar regras de beneficio", e);
+            return BigDecimal.ZERO;
+        }
+    }
+    
+    private int calculateAge(LocalDate birthDate) {
+        if (birthDate == null) return 0;
+        return java.time.Period.between(birthDate, LocalDate.now()).getYears();
+    }
+    
+    private BigDecimal calculateHealthCost(int age, BigDecimal baseValue, List<com.axonrh.benefits.dto.BenefitRule.AgeRule> ageRules) {
+        if (baseValue == null) baseValue = BigDecimal.ZERO;
+        
+        if (ageRules != null) {
+            for (com.axonrh.benefits.dto.BenefitRule.AgeRule rule : ageRules) {
+                if (age >= rule.getMinAge() && age <= rule.getMaxAge()) {
+                     if (rule.isExempt()) return BigDecimal.ZERO;
+                     if (rule.getValue() != null) return rule.getValue();
+                }
+            }
+        }
+        return baseValue;
     }
 }
