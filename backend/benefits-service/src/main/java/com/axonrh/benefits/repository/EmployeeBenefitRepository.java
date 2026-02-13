@@ -29,12 +29,13 @@ public interface EmployeeBenefitRepository extends JpaRepository<EmployeeBenefit
     @Query("SELECT eb FROM EmployeeBenefit eb JOIN FETCH eb.benefitType " +
            "WHERE eb.tenantId = :tenantId AND eb.employeeId = :employeeId " +
            "AND eb.status = 'ACTIVE' " +
-           "AND eb.startDate <= :referenceDate " +
-           "AND (eb.endDate IS NULL OR eb.endDate >= :referenceDate)")
-    List<EmployeeBenefit> findActiveByEmployeeAndDate(
+           "AND eb.startDate <= :endDate " +
+           "AND (eb.endDate IS NULL OR eb.endDate >= :startDate)")
+    List<EmployeeBenefit> findActiveByEmployeeInPeriod(
             @Param("tenantId") UUID tenantId,
             @Param("employeeId") UUID employeeId,
-            @Param("referenceDate") LocalDate referenceDate);
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate);
 
     @Query("SELECT CASE WHEN COUNT(eb) > 0 THEN true ELSE false END " +
            "FROM EmployeeBenefit eb " +

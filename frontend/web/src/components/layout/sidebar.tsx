@@ -66,6 +66,7 @@ const navGroups: NavGroup[] = [
       { label: 'Desempenho', href: '/performance', icon: BarChart3, module: 'modulePerformance' },
       { label: 'Folha de Pagamento', href: '/payroll', icon: Banknote, module: 'modulePayroll' },
       { label: 'Treinamentos', href: '/learning', icon: BookOpen, module: 'moduleLearning' },
+      { label: 'Recrutamento e Seleção', href: '/talent-pool', icon: UserPlus, permission: 'EMPLOYEE:READ', module: 'moduleRecruitment' },
       { label: 'Benefícios', href: '/benefits', icon: HeartPulse, module: 'moduleBenefits' },
       { label: 'Processos RH', href: '/processes', icon: ClipboardCheck, permission: 'EMPLOYEE:READ' },
       { label: 'Saúde Mental', href: '/wellbeing', icon: HeartPulse, permission: 'EMPLOYEE:READ' }, // Visible to HR/Managers
@@ -81,20 +82,28 @@ const navGroups: NavGroup[] = [
   {
     title: 'FERRAMENTAS',
     items: [
-      { label: 'Calculadora', href: '/calculator', icon: Calculator },
+      //  { label: 'Calculadora', href: '/calculator', icon: Calculator },
       { label: 'Base de Conhecimento', href: '/knowledge', icon: Database },
     ]
   },
+
+
   {
     title: 'ADMINISTRAÇÃO',
     items: [
       { label: 'Organograma', href: '/organogram', icon: Users },
       { label: 'Departamentos', href: '/departments', icon: Building2 },
       { label: 'Cargos', href: '/positions', icon: Briefcase },
-      { label: 'Recrutamento e Seleção', href: '/talent-pool', icon: UserPlus, permission: 'EMPLOYEE:READ', module: 'moduleRecruitment' },
       { label: 'Gestores', href: '/managers', icon: UserCog },
-      { label: 'Integrações', href: '/integrations', icon: Puzzle, module: 'moduleIntegration' },
-      { label: 'Configurações', href: '/settings', icon: Settings, permission: 'CONFIG:READ' },
+    ]
+  },
+
+  {
+    title: 'CONFIGURAÇÕES',
+    items: [
+
+      { label: 'Integração da Dinâmica', href: '/integrations', icon: Puzzle, module: 'moduleIntegration' },
+      { label: 'Sistema', href: '/settings', icon: Settings, permission: 'CONFIG:READ' },
     ]
   }
 ];

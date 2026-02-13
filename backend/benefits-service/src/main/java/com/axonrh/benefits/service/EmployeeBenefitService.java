@@ -271,12 +271,13 @@ public class EmployeeBenefitService {
     public EmployeeBenefitCalculationResponse calculateBenefitsForPayroll(
             UUID employeeId, Integer month, Integer year, BigDecimal baseSalary) {
         UUID tenantId = getTenantId();
-        LocalDate referenceDate = LocalDate.of(year, month, 1);
+        LocalDate startOfMonth = LocalDate.of(year, month, 1);
+        LocalDate endOfMonth = startOfMonth.with(java.time.temporal.TemporalAdjusters.lastDayOfMonth());
 
         log.info("Calculando beneficios para colaborador {} referente a {}/{}", employeeId, month, year);
 
         List<EmployeeBenefit> activeBenefits = employeeBenefitRepository
-                .findActiveByEmployeeAndDate(tenantId, employeeId, referenceDate);
+                .findActiveByEmployeeInPeriod(tenantId, employeeId, startOfMonth, endOfMonth);
 
         BigDecimal totalEarnings = BigDecimal.ZERO;
         BigDecimal totalDeductions = BigDecimal.ZERO;

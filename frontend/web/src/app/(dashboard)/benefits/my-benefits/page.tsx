@@ -10,6 +10,7 @@ import {
     Clock,
     ExternalLink
 } from 'lucide-react';
+import { BenefitDetailsDialog } from './_components/benefit-details-dialog';
 import { EmployeeBenefit } from '@/types/benefits';
 import { benefitsApi } from '@/lib/api/benefits';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,6 +25,8 @@ export default function MyBenefitsPage() {
     const { toast } = useToast();
     const [loading, setLoading] = useState(true);
     const [benefits, setBenefits] = useState<EmployeeBenefit[]>([]);
+    const [selectedBenefit, setSelectedBenefit] = useState<EmployeeBenefit | null>(null);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
 
     useEffect(() => {
         async function loadMyBenefits() {
@@ -109,7 +112,13 @@ export default function MyBenefitsPage() {
                                     </div>
                                 </div>
 
-                                <button className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg border border-[var(--color-border)] text-sm font-medium hover:bg-[var(--color-primary)]/5 hover:border-[var(--color-primary)]/30 hover:text-[var(--color-primary)] transition-all">
+                                <button
+                                    onClick={() => {
+                                        setSelectedBenefit(benefit);
+                                        setIsDialogOpen(true);
+                                    }}
+                                    className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg border border-[var(--color-border)] text-sm font-medium hover:bg-[var(--color-primary)]/5 hover:border-[var(--color-primary)]/30 hover:text-[var(--color-primary)] transition-all"
+                                >
                                     Ver Detalhes <ExternalLink className="w-3 h-3" />
                                 </button>
                             </CardContent>
@@ -117,6 +126,12 @@ export default function MyBenefitsPage() {
                     ))
                 )}
             </div>
+
+            <BenefitDetailsDialog
+                isOpen={isDialogOpen}
+                onOpenChange={setIsDialogOpen}
+                benefit={selectedBenefit}
+            />
 
             <Card className="bg-blue-50/50 border-blue-100 rounded-2xl p-6">
                 <div className="flex gap-4 items-start">
