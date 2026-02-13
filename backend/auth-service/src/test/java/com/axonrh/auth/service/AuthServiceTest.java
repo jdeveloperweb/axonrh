@@ -92,7 +92,7 @@ class AuthServiceTest {
         when(userRepository.findByEmailWithRolesAndPermissions(anyString()))
                 .thenReturn(Optional.of(testUser));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
-        when(jwtService.generateAccessToken(any(), anyString())).thenReturn("access-token");
+        when(jwtService.generateAccessToken(any(), anyString(), any())).thenReturn("access-token");
         when(jwtService.generateRefreshToken()).thenReturn("refresh-token");
         when(jwtService.getAccessTokenExpirationSeconds()).thenReturn(28800L);
         when(jwtService.getRefreshTokenExpirationMs()).thenReturn(604800000L);
@@ -227,7 +227,7 @@ class AuthServiceTest {
         when(userRepository.findByEmailWithRolesAndPermissions(anyString()))
                 .thenReturn(Optional.of(testUser));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
-        when(jwtService.generateAccessToken(any(), anyString())).thenReturn("token");
+        when(jwtService.generateAccessToken(any(), anyString(), any())).thenReturn("token");
         when(jwtService.generateRefreshToken()).thenReturn("refresh");
         when(jwtService.getAccessTokenExpirationSeconds()).thenReturn(28800L);
         when(jwtService.getRefreshTokenExpirationMs()).thenReturn(604800000L);

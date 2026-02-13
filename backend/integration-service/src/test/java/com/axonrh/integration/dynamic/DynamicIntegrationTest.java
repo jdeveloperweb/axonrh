@@ -1,9 +1,12 @@
 package com.axonrh.integration.dynamic;
 
 import com.axonrh.integration.dynamic.entity.IntegrationConfig;
+import com.axonrh.integration.dynamic.entity.IntegrationLog;
 import com.axonrh.integration.dynamic.repository.IntegrationConfigRepository;
+import com.axonrh.integration.dynamic.repository.IntegrationLogRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -20,17 +23,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class DynamicIntegrationTest {
 
-    @org.springframework.boot.test.mock.mockito.MockBean
+    @MockBean
     private IntegrationConfigRepository configRepository;
-
-    @org.springframework.boot.test.mock.mockito.MockBean
+    @MockBean
     private IntegrationLogRepository logRepository;
 
     @Autowired
     private MockMvc mockMvc;
-
-    @Autowired
-    private IntegrationConfigRepository configRepository;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -49,7 +48,7 @@ class DynamicIntegrationTest {
         config.setTimeoutSeconds(10);
 
         org.mockito.Mockito.when(configRepository.findByName("HttpBinTest")).thenReturn(java.util.Optional.of(config));
-        org.mockito.Mockito.when(logRepository.save(org.mockito.ArgumentMatchers.any(com.axonrh.integration.dynamic.entity.IntegrationLog.class)))
+        org.mockito.Mockito.when(logRepository.save(org.mockito.ArgumentMatchers.any(IntegrationLog.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         // 2. Dados da execução
@@ -59,7 +58,7 @@ class DynamicIntegrationTest {
         );
 
         // 3. Executar via API
-        mockMvc.perform(post("/api/integrations/execute/HttpBinTest")
+        mockMvc.perform(post("/api/v1/integrations/execute/HttpBinTest")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(data)))
                 .andExpect(status().isOk())
