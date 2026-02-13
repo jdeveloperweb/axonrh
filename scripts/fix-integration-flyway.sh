@@ -32,7 +32,11 @@ fi
 echo "Atualizando repositório..."
 git pull
 
-# 6. Reiniciar o serviço
+# 6. Remover entrada da migração problemática do histórico (OPCIONAL mas recomendado se deu erro de validação)
+echo "Removendo histórico da migração V2 com erro..."
+docker exec -i axonrh-postgres psql -U axonrh -d axonrh -c "DELETE FROM flyway_schema_history WHERE version = '2';" 2>/dev/null || echo "Aviso: Não foi possível limpar o histórico do banco (talvez o banco esteja parado ou inacessível)."
+
+# 7. Reiniciar o serviço
 echo "Reiniciando integration-service..."
 docker compose up -d integration-service 2>/dev/null || docker-compose up -d integration-service
 
