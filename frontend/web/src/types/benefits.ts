@@ -2,6 +2,23 @@ export type BenefitCategory = 'EARNING' | 'DEDUCTION';
 export type CalculationType = 'FIXED_VALUE' | 'SALARY_PERCENTAGE';
 export type EmployeeBenefitStatus = 'ACTIVE' | 'INACTIVE' | 'SCHEDULED' | 'CANCELLED';
 
+export type RuleType = 'STANDARD' | 'TRANSPORT_VOUCHER' | 'HEALTH_PLAN';
+
+export interface AgeRule {
+    minAge: number;
+    maxAge: number;
+    value?: number;
+    exempt?: boolean;
+}
+
+export interface BenefitRule {
+    ruleType: RuleType;
+    percentage?: number; // VT
+    employeeFixedValue?: number; // Health Plan
+    dependentFixedValue?: number; // Health Plan
+    ageRules?: AgeRule[]; // Health Plan
+}
+
 export interface BenefitType {
     id: string;
     name: string;
@@ -18,6 +35,7 @@ export interface BenefitType {
     incidenceIrrf?: boolean;
     externalProvider?: string;
     integrationConfig?: string;
+    rules?: BenefitRule;
     createdAt?: string;
     updatedAt?: string;
 }
@@ -36,6 +54,7 @@ export interface BenefitTypeRequest {
     incidenceIrrf?: boolean;
     externalProvider?: string;
     integrationConfig?: string;
+    rules?: BenefitRule;
 }
 
 export interface EmployeeBenefit {

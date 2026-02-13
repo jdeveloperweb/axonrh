@@ -132,9 +132,12 @@ export function BenefitTypeDialog({
 
                 <form onSubmit={handleSubmit} className="space-y-4 py-2">
                     <Tabs defaultValue="basic" className="w-full">
-                        <TabsList className="grid w-full grid-cols-3 bg-[var(--color-surface-variant)]/50">
+                        <TabsList className="grid w-full grid-cols-4 bg-[var(--color-surface-variant)]/50">
                             <TabsTrigger value="basic" className="gap-2">
                                 <Settings2 className="w-4 h-4" /> Básico
+                            </TabsTrigger>
+                            <TabsTrigger value="rules" className="gap-2">
+                                <FileText className="w-4 h-4" /> Regras
                             </TabsTrigger>
                             <TabsTrigger value="payroll" className="gap-2">
                                 <FileText className="w-4 h-4" /> Folha
@@ -224,6 +227,98 @@ export function BenefitTypeDialog({
                                         </div>
                                     )}
                                 </div>
+                            </div>
+                        </TabsContent>
+
+                        <TabsContent value="rules" className="space-y-4 pt-4">
+                            <div className="space-y-4">
+                                <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg text-sm text-blue-700">
+                                    Configure regras específicas para benefícios regulamentados como Vale Transporte e Planos de Saúde.
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="ruleType">Tipo de Regra Especial</Label>
+                                    <Select
+                                        value={formData.rules?.ruleType || 'STANDARD'}
+                                        onValueChange={(val: any) => {
+                                            if (val === 'STANDARD') {
+                                                const { rules, ...rest } = formData;
+                                                setFormData(rest);
+                                            } else {
+                                                setFormData({
+                                                    ...formData,
+                                                    rules: {
+                                                        ruleType: val,
+                                                        percentage: val === 'TRANSPORT_VOUCHER' ? 6 : undefined,
+                                                        employeeFixedValue: val === 'HEALTH_PLAN' ? 0 : undefined,
+                                                        dependentFixedValue: val === 'HEALTH_PLAN' ? 0 : undefined
+                                                    }
+                                                });
+                                            }
+                                        }}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Selecione o tipo de regra" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="STANDARD">Padrão (Sem regras especiais)</SelectItem>
+                                            <SelectItem value="TRANSPORT_VOUCHER">Vale Transporte (Lei 7.418/85)</SelectItem>
+                                            <SelectItem value="HEALTH_PLAN">Plano de Saúde (ANS)</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                {formData.rules?.ruleType === 'TRANSPORT_VOUCHER' && (
+                                    <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                                        <div className="p-3 bg-yellow-50 border border-yellow-100 rounded-lg text-xs text-yellow-800">
+                                            O cálculo descontará o percentual informado do salário base, limitado ao valor do benefício concedido.
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="vtPercentage">Percentual de Desconto (%)</Label>
+                                            <Input
+                                                id="vtPercentage"
+                                                type="number"
+                                                step="0.01"
+                                                value={formData.rules.percentage || 6}
+                                                onChange={e => setFormData({
+                                                    ...formData,
+                                                    rules: { ...formData.rules!, percentage: parseFloat(e.target.value) }
+                                                })}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+
+                                {formData.rules?.ruleType === 'HEALTH_PLAN' && (
+                                    <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="employeeCost">Custo Titular (R$)</Label>
+                                            <Input
+                                                id="employeeCost"
+                                                type="number"
+                                                step="0.01"
+                                                value={formData.rules.employeeFixedValue || 0}
+                                                onChange={e => setFormData({
+                                                    ...formData,
+                                                    rules: { ...formData.rules!, employeeFixedValue: parseFloat(e.target.value) }
+                                                })}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="depCost">Custo p/ Dependente (R$)</Label>
+                                            <Input
+                                                id="depCost"
+                                                type="number"
+                                                step="0.01"
+                                                value={formData.rules.dependentFixedValue || 0}
+                                                onChange={e => setFormData({
+                                                    ...formData,
+                                                    rules: { ...formData.rules!, dependentFixedValue: parseFloat(e.target.value) }
+                                                })}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </TabsContent>
 

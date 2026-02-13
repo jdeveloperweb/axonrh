@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Heart, Settings, Users, UserCircle } from 'lucide-react';
+import { useAuthStore } from '@/stores/auth-store';
 
 interface BenefitsLayoutProps {
     children: ReactNode;
@@ -12,6 +13,9 @@ interface BenefitsLayoutProps {
 
 export default function BenefitsLayout({ children }: BenefitsLayoutProps) {
     const pathname = usePathname();
+    const { user } = useAuthStore();
+    const roles = user?.roles || [];
+    const isRH = roles.includes('ADMIN') || roles.includes('RH') || roles.includes('GESTOR_RH') || roles.includes('ANALISTA_DP');
 
     const tabs = [
         {
@@ -49,26 +53,28 @@ export default function BenefitsLayout({ children }: BenefitsLayoutProps) {
             </div>
 
             <div className="flex items-center gap-1 p-1 bg-[var(--color-surface-variant)]/50 rounded-xl w-fit border border-[var(--color-border)]">
-                {tabs.map((tab) => {
-                    const Icon = tab.icon;
-                    const isActive = pathname === tab.href;
+                {tabs
+                    .filter(tab => !tab.isAdmin || isRH)
+                    .map((tab) => {
+                        const Icon = tab.icon;
+                        const isActive = pathname === tab.href;
 
-                    return (
-                        <Link
-                            key={tab.href}
-                            href={tab.href}
-                            className={cn(
-                                "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
-                                isActive
-                                    ? "bg-[var(--color-surface)] text-[var(--color-primary)] shadow-sm border border-[var(--color-border)]"
-                                    : "text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-variant)]"
-                            )}
-                        >
-                            <Icon className="w-4 h-4" />
-                            {tab.label}
-                        </Link>
-                    );
-                })}
+                        return (
+                            <Link
+                                key={tab.href}
+                                href={tab.href}
+                                className={cn(
+                                    "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                                    isActive
+                                        ? "bg-[var(--color-surface)] text-[var(--color-primary)] shadow-sm border border-[var(--color-border)]"
+                                        : "text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-variant)]"
+                                )}
+                            >
+                                <Icon className="w-4 h-4" />
+                                {tab.label}
+                            </Link>
+                        );
+                    })}
             </div>
 
             <div className="min-h-[600px]">

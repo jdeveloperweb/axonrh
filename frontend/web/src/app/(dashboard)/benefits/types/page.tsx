@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/stores/auth-store';
 import {
     Plus,
     Search,
@@ -38,6 +40,8 @@ import { BenefitTypeDialog } from './_components/benefit-type-dialog';
 
 export default function BenefitTypesPage() {
     const { toast } = useToast();
+    const router = useRouter();
+    const { user } = useAuthStore();
     const [loading, setLoading] = useState(true);
     const [types, setTypes] = useState<BenefitType[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -62,8 +66,17 @@ export default function BenefitTypesPage() {
     };
 
     useEffect(() => {
+        if (user) {
+            const roles = user.roles || [];
+            const isRH = roles.includes('ADMIN') || roles.includes('RH') || roles.includes('GESTOR_RH') || roles.includes('ANALISTA_DP');
+
+            if (!isRH) {
+                router.replace('/benefits/my-benefits');
+                return;
+            }
+        }
         loadTypes();
-    }, []);
+    }, [user, router]);
 
     const handleToggleStatus = async (type: BenefitType) => {
         try {

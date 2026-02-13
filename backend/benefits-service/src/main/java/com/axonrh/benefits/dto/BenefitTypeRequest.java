@@ -45,4 +45,5 @@ public class BenefitTypeRequest {
     private Boolean incidenceIrrf;
     private String externalProvider;
     private String integrationConfig;
+    private BenefitRule rules;
 }

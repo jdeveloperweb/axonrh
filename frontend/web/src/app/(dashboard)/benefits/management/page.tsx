@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/stores/auth-store';
 import {
     Search,
     Filter,
@@ -40,6 +42,8 @@ import { ptBR } from 'date-fns/locale';
 
 export default function BenefitManagementPage() {
     const { toast } = useToast();
+    const router = useRouter();
+    const { user } = useAuthStore();
     const [loading, setLoading] = useState(true);
     const [benefits, setBenefits] = useState<EmployeeBenefit[]>([]);
     const [benefitTypes, setBenefitTypes] = useState<BenefitType[]>([]);
@@ -69,8 +73,17 @@ export default function BenefitManagementPage() {
     };
 
     useEffect(() => {
+        if (user) {
+            const roles = user.roles || [];
+            const isRH = roles.includes('ADMIN') || roles.includes('RH') || roles.includes('GESTOR_RH') || roles.includes('ANALISTA_DP');
+
+            if (!isRH) {
+                router.replace('/benefits/my-benefits');
+                return;
+            }
+        }
         loadData();
-    }, []);
+    }, [user, router]);
 
     const handleCancel = async (benefit: EmployeeBenefit) => {
         if (!confirm('Tem certeza que deseja cancelar este benefício? Esta ação não pode ser desfeita.')) return;
