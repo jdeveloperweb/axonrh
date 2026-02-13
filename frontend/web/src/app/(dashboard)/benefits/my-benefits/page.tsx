@@ -108,7 +108,7 @@ export default function MyBenefitsPage() {
                                     </div>
                                     <div className="flex items-center gap-3 text-sm text-[var(--color-text-secondary)]">
                                         <Clock className="w-4 h-4 text-orange-500" />
-                                        <span>Próximo crédito: 01/03/2026</span>
+                                        <span>Próximo crédito: {format(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1), 'dd/MM/yyyy')}</span>
                                     </div>
                                 </div>
 

@@ -106,17 +106,17 @@ public class PerformanceEventPublisher {
 
     public void publishEvaluationCreated(com.axonrh.performance.entity.Evaluation evaluation, String cycleName) {
         try {
-            // A avaliacao pode ser para o proprio (autoavaliacao) ou para outro (gestor/par)
-            // O avaliador (evaluatorId) e quem deve receber a notificacao para preencher
-            EmployeeDTO evaluator = getEmployeeSafely(evaluation.getEvaluatorId());
-            if (evaluator == null || evaluator.getUserId() == null) {
-                log.warn("Avaliador {} nao possui userId associado. Notificacao de avaliacao nao sera enviada.", evaluation.getEvaluatorId());
+            // No performance-service, o evaluatorId ja armazena o USER ID de quem deve preencher a avaliacao
+            UUID targetUserId = evaluation.getEvaluatorId();
+            
+            if (targetUserId == null) {
+                log.warn("Avaliacao {} nao possui evaluatorId. Notificacao nao sera enviada.", evaluation.getId());
                 return;
             }
 
             NotificationEvent event = NotificationEvent.builder()
                     .tenantId(evaluation.getTenantId())
-                    .userId(evaluator.getUserId())
+                    .userId(targetUserId)
                     .eventType("EVALUATION_CREATED")
                     .title("Nova Avaliação para Preencher")
                     .body("Você tem uma nova avaliação pendente no ciclo: " + cycleName + " (Colaborador: " + evaluation.getEmployeeName() + " )")
@@ -140,12 +140,12 @@ public class PerformanceEventPublisher {
 
     public void publishEvaluationReminder(com.axonrh.performance.entity.Evaluation evaluation, String cycleName) {
         try {
-            EmployeeDTO evaluator = getEmployeeSafely(evaluation.getEvaluatorId());
-            if (evaluator == null || evaluator.getUserId() == null) return;
+            UUID targetUserId = evaluation.getEvaluatorId();
+            if (targetUserId == null) return;
 
             NotificationEvent event = NotificationEvent.builder()
                     .tenantId(evaluation.getTenantId())
-                    .userId(evaluator.getUserId())
+                    .userId(targetUserId)
                     .eventType("EVALUATION_REMINDER")
                     .title("Lembrete: Avaliação Pendente")
                     .body("Atenção! Você ainda não preencheu a avaliação de " + evaluation.getEmployeeName() + " para o ciclo " + cycleName + ". O prazo está vencendo/vencido.")
@@ -297,12 +297,12 @@ public class PerformanceEventPublisher {
 
     public void publishEvaluationAcknowledged(com.axonrh.performance.entity.Evaluation evaluation) {
         try {
-            EmployeeDTO manager = getEmployeeSafely(evaluation.getEvaluatorId());
-            if (manager == null || manager.getUserId() == null) return;
+            UUID targetUserId = evaluation.getEvaluatorId();
+            if (targetUserId == null) return;
 
             NotificationEvent event = NotificationEvent.builder()
                     .tenantId(evaluation.getTenantId())
-                    .userId(manager.getUserId())
+                    .userId(targetUserId)
                     .eventType("EVALUATION_ACKNOWLEDGED")
                     .title("Avaliação Visualizada pelo Colaborador")
                     .body("O colaborador " + evaluation.getEmployeeName() + " leu e deu o ciente na sua avaliação.")

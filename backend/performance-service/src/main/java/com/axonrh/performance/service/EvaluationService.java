@@ -95,12 +95,18 @@ public class EvaluationService {
             for (com.axonrh.performance.dto.EmployeeDTO employee : employees) {
                 // 1. Autoavaliacao - Usa o USER ID para o avaliador (quem acessa o sistema)
                 if (Boolean.TRUE.equals(cycle.getIncludeSelfEvaluation()) && employee.getUserId() != null) {
-                    createEvaluationIfNotExists(tenantId, cycle, employee, employee.getUserId(), employee.getFullName(), EvaluatorType.SELF);
+                    Evaluation eval = createEvaluationIfNotExists(tenantId, cycle, employee, employee.getUserId(), employee.getFullName(), EvaluatorType.SELF);
+                    if (eval != null) {
+                        eventPublisher.publishEvaluationCreated(eval, cycle.getName());
+                    }
                 }
 
                 // 2. Avaliacao do Gestor - Usa o USER ID do gestor para o avaliador
                 if (Boolean.TRUE.equals(cycle.getIncludeManagerEvaluation()) && employee.getManager() != null && employee.getManager().getUserId() != null) {
-                    createEvaluationIfNotExists(tenantId, cycle, employee, employee.getManager().getUserId(), employee.getManager().getName(), EvaluatorType.MANAGER);
+                    Evaluation eval = createEvaluationIfNotExists(tenantId, cycle, employee, employee.getManager().getUserId(), employee.getManager().getName(), EvaluatorType.MANAGER);
+                    if (eval != null) {
+                        eventPublisher.publishEvaluationCreated(eval, cycle.getName());
+                    }
                 }
             }
         } catch (Exception e) {
@@ -109,7 +115,7 @@ public class EvaluationService {
         }
     }
 
-    private void createEvaluationIfNotExists(UUID tenantId, EvaluationCycle cycle, com.axonrh.performance.dto.EmployeeDTO employee, UUID evaluatorId, String evaluatorName, EvaluatorType type) {
+    private Evaluation createEvaluationIfNotExists(UUID tenantId, EvaluationCycle cycle, com.axonrh.performance.dto.EmployeeDTO employee, UUID evaluatorId, String evaluatorName, EvaluatorType type) {
         boolean exists = evaluationRepository.existsByTenantIdAndCycleIdAndEmployeeIdAndEvaluatorIdAndEvaluatorType(
                 tenantId, cycle.getId(), employee.getId(), evaluatorId, type);
 
@@ -137,8 +143,9 @@ public class EvaluationService {
             // Adicionar perguntas do formulario
             addQuestionsFromForm(evaluation, form);
 
-            evaluationRepository.save(evaluation);
+            return evaluationRepository.save(evaluation);
         }
+        return null;
     }
 
     private EvaluationForm getOrCreateDefaultForm(UUID tenantId) {

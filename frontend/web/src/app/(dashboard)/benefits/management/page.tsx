@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
 import {
@@ -39,6 +39,7 @@ import { useToast } from '@/hooks/use-toast';
 import { EmployeeBenefitDialog } from './_components/employee-benefit-dialog';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { formatCurrency } from '@/lib/utils';
 
 export default function BenefitManagementPage() {
     const { toast } = useToast();
@@ -108,6 +109,24 @@ export default function BenefitManagementPage() {
         setIsDialogOpen(true);
     };
 
+
+    const stats = useMemo(() => {
+        return benefits.reduce((acc, b) => {
+            if (b.status === 'ACTIVE') {
+                if (b.benefitCategory === 'EARNING') {
+                    acc.totalEarning += b.fixedValue || 0;
+                } else if (b.benefitCategory === 'DEDUCTION') {
+                    acc.totalDeduction += b.fixedValue || 0;
+                }
+            }
+            return acc;
+        }, {
+            totalEarning: 0,
+            totalDeduction: 0,
+            benefitedCount: new Set(benefits.filter(b => b.status === 'ACTIVE').map(b => b.employeeId)).size
+        });
+    }, [benefits]);
+
     const filteredBenefits = benefits.filter(b =>
         b.employeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         b.benefitTypeName.toLowerCase().includes(searchTerm.toLowerCase())
@@ -142,7 +161,7 @@ export default function BenefitManagementPage() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm font-medium text-green-600">Total Proventos</p>
-                                <h3 className="text-2xl font-bold mt-1 text-green-900">R$ 14.250,00</h3>
+                                <h3 className="text-2xl font-bold mt-1 text-green-900">{formatCurrency(stats.totalEarning)}</h3>
                             </div>
                             <div className="p-3 bg-green-100 rounded-xl text-green-600">
                                 <TrendingUp className="w-6 h-6" />
@@ -155,7 +174,7 @@ export default function BenefitManagementPage() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm font-medium text-orange-600">Total Descontos</p>
-                                <h3 className="text-2xl font-bold mt-1 text-orange-900">R$ 5.120,00</h3>
+                                <h3 className="text-2xl font-bold mt-1 text-orange-900">{formatCurrency(stats.totalDeduction)}</h3>
                             </div>
                             <div className="p-3 bg-orange-100 rounded-xl text-orange-600">
                                 <TrendingDown className="w-6 h-6" />
@@ -168,7 +187,7 @@ export default function BenefitManagementPage() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm font-medium text-blue-600">Colaboradores Beneficiados</p>
-                                <h3 className="text-2xl font-bold mt-1 text-blue-900">{benefits.length}</h3>
+                                <h3 className="text-2xl font-bold mt-1 text-blue-900">{stats.benefitedCount}</h3>
                             </div>
                             <div className="p-3 bg-blue-100 rounded-xl text-blue-600">
                                 <History className="w-6 h-6" />

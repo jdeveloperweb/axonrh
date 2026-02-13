@@ -14,7 +14,8 @@ import {
     FileText,
     HelpCircle,
     BrainCircuit,
-    FileEdit
+    FileEdit,
+    ClipboardCheck
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,7 +25,7 @@ import { vacationApi, VacationPeriod } from '@/lib/api/vacation';
 import { enrollmentsApi, Enrollment } from '@/lib/api/learning';
 import { Progress } from '@/components/ui/progress';
 import { useRouter } from 'next/navigation';
-import { pdisApi, PDI, discApi, DiscAssignment, DiscEvaluation } from '@/lib/api/performance';
+import { pdisApi, PDI, discApi, DiscAssignment, DiscEvaluation, evaluationsApi, Evaluation } from '@/lib/api/performance';
 import { employeesApi } from '@/lib/api/employees';
 import { AxonIATip } from '@/components/performance/AxonIATip';
 import { useThemeStore } from '@/stores/theme-store';
@@ -42,6 +43,7 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
     const [activePDIs, setActivePDIs] = useState<PDI[]>([]);
     const [pendingDisc, setPendingDisc] = useState<DiscAssignment[]>([]);
     const [latestDisc, setLatestDisc] = useState<DiscEvaluation | null>(null);
+    const [pendingEvaluations, setPendingEvaluations] = useState<Evaluation[]>([]);
     const [loading, setLoading] = useState(true);
 
     const roles = user?.roles || [];
@@ -54,13 +56,14 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
                 const employee = await employeesApi.getMe().catch(() => null);
                 const employeeId = employee?.id;
 
-                const [records, periods, allEnrollments, pdis, disc, latestDiscRes] = await Promise.all([
+                const [records, periods, allEnrollments, pdis, disc, latestDiscRes, pendingEvals] = await Promise.all([
                     timesheetApi.getTodayRecords().catch(() => [] as TimeRecord[]),
                     vacationApi.getMyPeriods().catch(() => [] as VacationPeriod[]),
                     employeeId ? enrollmentsApi.getByEmployee(employeeId).catch(() => [] as Enrollment[]) : Promise.resolve([] as Enrollment[]),
                     employeeId ? pdisApi.getByEmployee(employeeId).catch(() => [] as PDI[]) : Promise.resolve([] as PDI[]),
                     employeeId ? discApi.getPendingForEmployee(employeeId).catch(() => [] as DiscAssignment[]) : Promise.resolve([] as DiscAssignment[]),
-                    employeeId ? discApi.getLatest(employeeId).catch(() => null) : Promise.resolve(null)
+                    employeeId ? discApi.getLatest(employeeId).catch(() => null) : Promise.resolve(null),
+                    user?.id ? evaluationsApi.getPending(user.id).catch(() => [] as Evaluation[]) : Promise.resolve([] as Evaluation[])
                 ]);
 
                 setTodayRecords(Array.isArray(records) ? records : []);
@@ -73,6 +76,7 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
                 setActivePDIs(relevantPDIs);
                 setPendingDisc(Array.isArray(disc) ? disc : []);
                 setLatestDisc(latestDiscRes);
+                setPendingEvaluations(Array.isArray(pendingEvals) ? pendingEvals : []);
             } catch (error) {
                 console.error('Error loading collaborator dashboard data:', error);
             } finally {
@@ -315,13 +319,32 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
                         </>
                     )}
 
-                    {useThemeStore.getState().tenantTheme?.modules?.modulePerformance !== false && (pendingDisc.length > 0 || activePDIs.length > 0) && (
+                    {useThemeStore.getState().tenantTheme?.modules?.modulePerformance !== false && (pendingDisc.length > 0 || activePDIs.length > 0 || pendingEvaluations.length > 0) && (
                         <div className="mt-10 space-y-4">
                             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                                 <AlertCircle className="w-5 h-5 text-blue-500" />
                                 Notificações do RH
                             </h2>
                             <div className="space-y-4">
+                                {pendingEvaluations.map((evaluation) => (
+                                    <div key={evaluation.id} className="flex items-start gap-4 p-5 bg-white rounded-2xl shadow-sm border-l-4 border-l-blue-500 border-blue-100 hover:border-blue-200 transition-all cursor-pointer" onClick={() => router.push(`/performance/evaluations/${evaluation.id}`)}>
+                                        <div className="p-3 bg-blue-50 rounded-xl text-blue-600">
+                                            <ClipboardCheck className="w-6 h-6" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <div className="flex items-center justify-between mb-1">
+                                                <h5 className="font-bold text-blue-900 uppercase text-xs tracking-wider">Avaliação de Desempenho</h5>
+                                                <span className="text-[10px] text-blue-400 font-medium bg-blue-50 px-2 py-0.5 rounded-full">Pendente</span>
+                                            </div>
+                                            <h4 className="font-bold text-gray-900 mb-1">
+                                                {evaluation.evaluatorType === 'SELF' ? 'Sua Autoavaliação' : `Avaliação de ${evaluation.employeeName}`}
+                                            </h4>
+                                            <p className="text-sm text-gray-500 leading-relaxed">
+                                                Um novo ciclo de avaliação iniciou. Clique para preencher os formulários de desempenho.
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))}
                                 {pendingDisc.map((disc) => (
                                     <div key={disc.id} className="flex items-start gap-4 p-5 bg-white rounded-2xl shadow-sm border-l-4 border-l-orange-500 border-orange-100 hover:border-orange-200 transition-all cursor-pointer" onClick={() => router.push(`/performance/disc?take=true`)}>
                                         <div className="p-3 bg-orange-50 rounded-xl text-orange-600">
