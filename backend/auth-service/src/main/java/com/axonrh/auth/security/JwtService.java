@@ -39,7 +39,7 @@ public class JwtService {
     /**
      * Gera um access token JWT para o usuario.
      */
-    public String generateAccessToken(User user, String tenantName) {
+    public String generateAccessToken(User user, String tenantName, UUID employeeId) {
         Instant now = Instant.now();
         Instant expiration = now.plusMillis(accessTokenExpiration);
 
@@ -61,6 +61,7 @@ public class JwtService {
                 .claim("name", user.getName())
                 .claim("roles", roles)
                 .claim("permissions", permissions)
+                .claim("employee_id", employeeId != null ? employeeId.toString() : null)
                 .issuer("http://axonrh-auth-service:8081")
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiration))

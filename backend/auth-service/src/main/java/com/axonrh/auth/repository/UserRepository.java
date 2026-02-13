@@ -31,4 +31,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findByIdWithRolesAndPermissions(@Param("id") UUID id);
 
     List<com.axonrh.auth.entity.User> findAllByTenantId(UUID tenantId);
+    
+    @Query(value = "SELECT id FROM shared.employees WHERE user_id = :userId", nativeQuery = true)
+    Optional<UUID> findEmployeeIdByUserId(@Param("userId") UUID userId);
 }

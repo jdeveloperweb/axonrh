@@ -77,14 +77,18 @@ public class JwtAuthFilter extends AbstractGatewayFilterFactory<JwtAuthFilter.Co
                 Claims claims = validateToken(token);
 
                 // Injeta claims como headers para os microservicos
-                ServerHttpRequest modifiedRequest = request.mutate()
+                ServerHttpRequest.Builder builder = request.mutate()
                         .header("X-User-Id", claims.getSubject())
                         .header("X-Tenant-Id", claims.get("tenant_id", String.class))
                         .header("X-User-Email", claims.get("email", String.class))
-                        .header("X-User-Roles", String.join(",", claims.get("roles", List.class)))
-                        .build();
+                        .header("X-User-Roles", String.join(",", claims.get("roles", List.class)));
+                
+                String employeeId = claims.get("employee_id", String.class);
+                if (employeeId != null) {
+                    builder.header("X-Employee-Id", employeeId);
+                }
 
-                return chain.filter(exchange.mutate().request(modifiedRequest).build());
+                return chain.filter(exchange.mutate().request(builder.build()).build());
 
             } catch (ExpiredJwtException e) {
                 log.warn("JWT token expired: {}", e.getMessage());

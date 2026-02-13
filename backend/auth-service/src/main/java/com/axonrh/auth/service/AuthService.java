@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Servico de autenticacao.
@@ -108,7 +109,8 @@ public class AuthService {
         userRepository.save(user);
 
         // Gera tokens
-        String accessToken = jwtService.generateAccessToken(user, ""); // TODO: buscar tenant name
+        UUID employeeId = userRepository.findEmployeeIdByUserId(user.getId()).orElse(null);
+        String accessToken = jwtService.generateAccessToken(user, "", employeeId); // TODO: buscar tenant name
         String refreshToken = createRefreshToken(user, ipAddress, userAgent);
 
         // Registra tentativa de login bem-sucedida
@@ -117,7 +119,7 @@ public class AuthService {
 
         log.info("Login successful for user: {}", user.getId());
 
-        return buildLoginResponse(user, accessToken, refreshToken);
+        return buildLoginResponse(user, employeeId, accessToken, refreshToken);
     }
 
     /**
@@ -139,7 +141,8 @@ public class AuthService {
         refreshTokenRepository.save(storedToken);
 
         // Gera novos tokens
-        String accessToken = jwtService.generateAccessToken(user, "");
+        UUID employeeId = userRepository.findEmployeeIdByUserId(user.getId()).orElse(null);
+        String accessToken = jwtService.generateAccessToken(user, "", employeeId);
         String newRefreshToken = createRefreshToken(user, ipAddress, userAgent);
 
         // Atualiza o token antigo com referencia ao novo
@@ -148,7 +151,7 @@ public class AuthService {
 
         log.info("Token refreshed for user: {}", user.getId());
 
-        return buildLoginResponse(user, accessToken, newRefreshToken);
+        return buildLoginResponse(user, employeeId, accessToken, newRefreshToken);
     }
 
     /**
@@ -208,7 +211,7 @@ public class AuthService {
         loginAttemptRepository.save(attempt);
     }
 
-    private LoginResponse buildLoginResponse(User user, String accessToken, String refreshToken) {
+    private LoginResponse buildLoginResponse(User user, UUID employeeId, String accessToken, String refreshToken) {
         List<String> roles = user.getRoles().stream()
                 .map(role -> role.getName())
                 .toList();
@@ -233,6 +236,7 @@ public class AuthService {
                         .roles(roles)
                         .permissions(permissions)
                         .twoFactorEnabled(user.isTwoFactorEnabled())
+                        .employeeId(employeeId)
                         .build())
                 .build();
     }

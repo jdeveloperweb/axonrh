@@ -37,5 +37,6 @@ public class LoginResponse {
         private List<String> roles;
         private List<String> permissions;
         private boolean twoFactorEnabled;
+        private UUID employeeId;
     }
 }
