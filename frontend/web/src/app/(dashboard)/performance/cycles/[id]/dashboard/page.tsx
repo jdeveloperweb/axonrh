@@ -26,6 +26,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { cyclesApi, EvaluationStatistics, EvaluationCycle } from '@/lib/api/performance';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/utils';
+import { useAuthStore } from '@/stores/auth-store';
+import { HelpCircle, Info } from 'lucide-react';
 import {
     Chart as ChartJS,
     ArcElement,
@@ -68,6 +70,7 @@ export default function CycleDashboardPage() {
     const [stats, setStats] = useState<EvaluationStatistics | null>(null);
     const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
     const [viewMode, setViewMode] = useState<'manager' | 'employee'>('manager');
+    const { user } = useAuthStore();
 
     const loadData = useCallback(async () => {
         if (!id) return;
@@ -277,6 +280,40 @@ export default function CycleDashboardPage() {
                     </div>
                 </div>
 
+                {/* Help Section */}
+                <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 shadow-sm">
+                    <div className="flex items-start gap-4">
+                        <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                            <HelpCircle className="h-6 w-6" />
+                        </div>
+                        <div className="space-y-1">
+                            <h3 className="text-lg font-bold text-blue-900">Como funciona este ciclo?</h3>
+                            <p className="text-sm text-blue-700 leading-relaxed">
+                                Este ciclo está em fase de **Preenchimento de Formulários**.
+                                As avaliações são geradas automaticamente para todos os colaboradores ativos.
+                            </p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 text-xs font-medium">
+                                <div className="flex items-center gap-2 text-blue-800">
+                                    <div className="h-1.5 w-1.5 rounded-full bg-blue-600" />
+                                    <span>**Quem inicia?** O sistema gera as pendências assim que o RH ativa o ciclo.</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-blue-800">
+                                    <div className="h-1.5 w-1.5 rounded-full bg-blue-600" />
+                                    <span>**Aonde vou?** Troque para a aba **"Visão Colaborador"** abaixo para ver suas tarefas.</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-blue-800">
+                                    <div className="h-1.5 w-1.5 rounded-full bg-blue-600" />
+                                    <span>**O que fazer?** Clique em "Iniciar" nas avaliações listadas na sua visão pessoal.</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-blue-800">
+                                    <div className="h-1.5 w-1.5 rounded-full bg-blue-600" />
+                                    <span>**Gestor:** Acompanhe o progresso da equipe na aba **"Visão Gestor"**.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 {/* Manager Dashboard */}
                 {viewMode === 'manager' && (
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -465,6 +502,80 @@ export default function CycleDashboardPage() {
                                 </CardContent>
                             </Card>
                         </div>
+
+                        {/* Detailed Table Section for Managers/HR */}
+                        <Card className="border-0 shadow-md">
+                            <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-4">
+                                <div>
+                                    <CardTitle className="text-lg font-bold text-slate-800">Lista Geral de Avaliações</CardTitle>
+                                    <CardDescription>Acompanhamento individual de cada formulário</CardDescription>
+                                </div>
+                                <div className="p-2 bg-slate-50 rounded-lg text-xs font-medium text-slate-500 border border-slate-100 flex items-center gap-2">
+                                    <Info className="h-4 w-4" />
+                                    Total de {evaluations.length} avaliações geradas
+                                </div>
+                            </CardHeader>
+                            <CardContent className="p-0 sm:p-6">
+                                <div className="overflow-x-auto">
+                                    <Table>
+                                        <TableHeader className="bg-slate-50/50">
+                                            <TableRow>
+                                                <TableHead className="font-bold">Colaborador</TableHead>
+                                                <TableHead className="font-bold">Avaliador</TableHead>
+                                                <TableHead className="font-bold">Tipo</TableHead>
+                                                <TableHead className="font-bold">Status</TableHead>
+                                                <TableHead className="text-right font-bold">Ação</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {evaluations.length > 0 ? (
+                                                evaluations.map((evaluation) => (
+                                                    <TableRow key={evaluation.id} className="hover:bg-slate-50/50 transition-colors">
+                                                        <TableCell className="font-semibold text-slate-900">{evaluation.employeeName}</TableCell>
+                                                        <TableCell className="text-slate-600">{evaluation.evaluatorName}</TableCell>
+                                                        <TableCell>
+                                                            <Badge variant="outline" className="font-medium bg-white text-slate-600 border-slate-200">
+                                                                {evaluation.evaluatorType === 'SELF' ? 'Autoavaliação' :
+                                                                    evaluation.evaluatorType === 'MANAGER' ? 'Gestor' :
+                                                                        evaluation.evaluatorType === 'PEER' ? 'Par' :
+                                                                            evaluation.evaluatorType === 'SUBORDINATE' ? 'Subordinado' : evaluation.evaluatorType}
+                                                            </Badge>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Badge className={`font-semibold ${evaluation.status === 'PENDING' ? 'bg-amber-100 text-amber-700 hover:bg-amber-100' :
+                                                                evaluation.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-700 hover:bg-blue-100' :
+                                                                    evaluation.status === 'SUBMITTED' ? 'bg-indigo-100 text-indigo-700 hover:bg-indigo-100' :
+                                                                        evaluation.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100' :
+                                                                            'bg-slate-100 text-slate-700'
+                                                                }`}>
+                                                                {evaluation.status === 'PENDING' ? 'Não Iniciada' :
+                                                                    evaluation.status === 'IN_PROGRESS' ? 'Em Andamento' :
+                                                                        evaluation.status === 'SUBMITTED' ? 'Submetida' :
+                                                                            evaluation.status === 'CALIBRATED' ? 'Calibrada' :
+                                                                                evaluation.status === 'COMPLETED' ? 'Concluída' : evaluation.status}
+                                                            </Badge>
+                                                        </TableCell>
+                                                        <TableCell className="text-right">
+                                                            <Link href={`/performance/evaluations/${evaluation.id}`}>
+                                                                <Button variant="ghost" size="sm" className="font-bold text-blue-600 hover:text-blue-700 hover:bg-blue-50">
+                                                                    Detalhes
+                                                                </Button>
+                                                            </Link>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))
+                                            ) : (
+                                                <TableRow>
+                                                    <TableCell colSpan={5} className="h-32 text-center text-slate-400">
+                                                        Nenhuma avaliação encontrada para este ciclo.
+                                                    </TableCell>
+                                                </TableRow>
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                            </CardContent>
+                        </Card>
                     </div>
                 )}
 
@@ -518,9 +629,9 @@ export default function CycleDashboardPage() {
                                 <CardDescription>Lista de avaliações atribuídas a você neste ciclo</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                {evaluations.length > 0 ? (
+                                {evaluations.filter(e => e.evaluatorId === user?.id).length > 0 ? (
                                     <div className="space-y-4">
-                                        {evaluations.filter(e => e.status !== 'COMPLETED' && e.status !== 'CALIBRATED').map(evaluation => (
+                                        {evaluations.filter(e => e.evaluatorId === user?.id && e.status !== 'COMPLETED' && e.status !== 'CALIBRATED').map(evaluation => (
                                             <div key={evaluation.id} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-xl shadow-sm hover:border-blue-200 transition-all">
                                                 <div className="flex items-center gap-4">
                                                     <div className={`p-3 rounded-full ${evaluation.evaluatorType === 'SELF' ? 'bg-blue-50 text-blue-600' : 'bg-purple-50 text-purple-600'
@@ -543,7 +654,7 @@ export default function CycleDashboardPage() {
                                                 </Link>
                                             </div>
                                         ))}
-                                        {evaluations.filter(e => e.status !== 'COMPLETED' && e.status !== 'CALIBRATED').length === 0 && (
+                                        {evaluations.filter(e => e.evaluatorId === user?.id && e.status !== 'COMPLETED' && e.status !== 'CALIBRATED').length === 0 && (
                                             <div className="flex flex-col items-center justify-center p-12 text-center border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50">
                                                 <div className="bg-white p-3 rounded-full mb-3 shadow-sm">
                                                     <UserCog className="h-8 w-8 text-slate-300" />

@@ -23,4 +23,8 @@ public class EmployeeDTO implements Serializable {
     private DepartmentDTO department;
     private UUID workScheduleId;
     private String workRegime;
+    private String registrationNumber;
+    private String cpf;
+    private java.time.LocalDate hireDate;
+    private String pisPasep;
 }

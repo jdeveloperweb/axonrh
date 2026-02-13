@@ -41,6 +41,7 @@ public class EmployeeResponse implements Serializable {
     private String nationality;
     private String birthCity;
     private String birthState;
+    private String pisPasep;
 
     // Contato
     private String email;
