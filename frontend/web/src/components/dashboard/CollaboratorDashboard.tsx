@@ -38,7 +38,7 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
     const router = useRouter();
     const [todayRecords, setTodayRecords] = useState<TimeRecord[]>([]);
     const [vacationPeriods, setVacationPeriods] = useState<VacationPeriod[]>([]);
-    const [activeEnrollments, setActiveEnrollments] = useState<Enrollment[]>([]);
+    const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
     const [activePDIs, setActivePDIs] = useState<PDI[]>([]);
     const [pendingDisc, setPendingDisc] = useState<DiscAssignment[]>([]);
     const [latestDisc, setLatestDisc] = useState<DiscEvaluation | null>(null);
@@ -54,10 +54,10 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
                 const employee = await employeesApi.getMe().catch(() => null);
                 const employeeId = employee?.id;
 
-                const [records, periods, enrollments, pdis, disc, latestDiscRes] = await Promise.all([
+                const [records, periods, allEnrollments, pdis, disc, latestDiscRes] = await Promise.all([
                     timesheetApi.getTodayRecords().catch(() => [] as TimeRecord[]),
                     vacationApi.getMyPeriods().catch(() => [] as VacationPeriod[]),
-                    employeeId ? enrollmentsApi.getActiveByEmployee(employeeId).catch(() => [] as Enrollment[]) : Promise.resolve([] as Enrollment[]),
+                    employeeId ? enrollmentsApi.getByEmployee(employeeId).catch(() => [] as Enrollment[]) : Promise.resolve([] as Enrollment[]),
                     employeeId ? pdisApi.getByEmployee(employeeId).catch(() => [] as PDI[]) : Promise.resolve([] as PDI[]),
                     employeeId ? discApi.getPendingForEmployee(employeeId).catch(() => [] as DiscAssignment[]) : Promise.resolve([] as DiscAssignment[]),
                     employeeId ? discApi.getLatest(employeeId).catch(() => null) : Promise.resolve(null)
@@ -65,7 +65,7 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
 
                 setTodayRecords(Array.isArray(records) ? records : []);
                 setVacationPeriods(Array.isArray(periods) ? periods : []);
-                setActiveEnrollments(Array.isArray(enrollments) ? enrollments : []);
+                setEnrollments(Array.isArray(allEnrollments) ? allEnrollments : []);
 
                 // Filter PDIs
                 const allPDIs = Array.isArray(pdis) ? pdis : [];
@@ -82,6 +82,10 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
 
         loadData();
     }, [user?.id]);
+
+    // Filter Enrollments
+    const activeEnrollments = enrollments.filter(e => e.status === 'ENROLLED' || e.status === 'IN_PROGRESS');
+    const completedEnrollments = enrollments.filter(e => e.status === 'COMPLETED');
 
     // Status de ponto do dia
     const lastRecord = todayRecords.length > 0 ? todayRecords[todayRecords.length - 1] : null;
@@ -230,7 +234,7 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
                                 {activeEnrollments.length} Em andamento
                             </h3>
                             <p className="text-sm text-gray-600 mb-6 font-medium">
-                                {activeEnrollments.filter(e => e.status === 'COMPLETED').length} concluídos recentemente
+                                {completedEnrollments.length} concluídos recentemente
                             </p>
                             <button
                                 className="p-0 text-emerald-600 h-auto font-bold flex items-center group/btn hover:underline"
