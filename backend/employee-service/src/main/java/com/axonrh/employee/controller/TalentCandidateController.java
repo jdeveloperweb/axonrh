@@ -109,6 +109,21 @@ public class TalentCandidateController {
         return ResponseEntity.ok(talentPoolService.uploadResume(id, resumeFile));
     }
 
+    @GetMapping("/{id}/resume/download")
+    @PreAuthorize("hasAuthority('EMPLOYEE:READ')")
+    @Operation(summary = "Download de currículo")
+    public ResponseEntity<byte[]> downloadResume(@PathVariable UUID id) {
+        java.util.Map<String, Object> resumeData = talentPoolService.getResumeFile(id);
+        byte[] content = (byte[]) resumeData.get("content");
+        String fileName = (String) resumeData.get("fileName");
+        String contentType = (String) resumeData.get("contentType");
+
+        return ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+                .contentType(MediaType.parseMediaType(contentType))
+                .body(content);
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('EMPLOYEE:WRITE')")
     @Operation(summary = "Excluir candidato")

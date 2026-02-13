@@ -123,6 +123,10 @@ export default function VacancyDetailPage() {
             errors.linkedinUrl = 'URL do LinkedIn inválida';
         }
 
+        if (!resumeFile) {
+            errors.resume = 'Currículo original em PDF é obrigatório';
+        }
+
         setFormErrors(errors);
         return Object.keys(errors).length === 0;
     };
@@ -149,9 +153,9 @@ export default function VacancyDetailPage() {
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-            if (!validTypes.includes(file.type)) {
-                setFormErrors({ ...formErrors, resume: 'Apenas arquivos PDF ou Word são aceitos' });
+            const validTypes = ['application/pdf'];
+            if (!validTypes.includes(file.type) && !file.name.toLowerCase().endsWith('.pdf')) {
+                setFormErrors({ ...formErrors, resume: 'Apenas arquivos PDF são aceitos' });
                 return;
             }
             if (file.size > 10 * 1024 * 1024) { // 10MB
@@ -543,7 +547,7 @@ export default function VacancyDetailPage() {
                                                 <p className="text-xs text-gray-400 mt-1 font-medium">Até 10MB</p>
                                                 <input
                                                     type="file"
-                                                    accept=".pdf,.doc,.docx"
+                                                    accept=".pdf"
                                                     onChange={handleFileChange}
                                                     className="hidden"
                                                 />

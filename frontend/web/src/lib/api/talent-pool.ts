@@ -264,6 +264,12 @@ export const talentPoolApi = {
         return api.post<FormData, TalentCandidate>(`/talent-pool/candidates/${id}/resume`, formData);
     },
 
+    downloadResume: async (id: string): Promise<Blob> => {
+        return api.get<unknown, Blob>(`/talent-pool/candidates/${id}/resume/download`, {
+            responseType: 'blob'
+        });
+    },
+
     deleteCandidate: async (id: string): Promise<void> => {
         await api.delete(`/talent-pool/candidates/${id}`);
     },

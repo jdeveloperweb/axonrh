@@ -560,6 +560,45 @@ public class TalentPoolService {
                 .build();
     }
 
+    /**
+     * Retorna o arquivo do currículo do candidato
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Object> getResumeFile(UUID candidateId) {
+        UUID tenantId = getTenantId();
+        TalentCandidate candidate = candidateRepository.findByTenantIdAndId(tenantId, candidateId)
+                .orElseThrow(() -> new ResourceNotFoundException("Candidato não encontrado: " + candidateId));
+
+        if (candidate.getResumeFilePath() == null) {
+            throw new ResourceNotFoundException("Currículo não encontrado para o candidato: " + candidateId);
+        }
+
+        try {
+            Path filePath = Paths.get(candidate.getResumeFilePath());
+            if (!Files.exists(filePath)) {
+                throw new ResourceNotFoundException("Arquivo do currículo não encontrado no servidor");
+            }
+
+            byte[] content = Files.readAllBytes(filePath);
+            Map<String, Object> result = new HashMap<>();
+            result.put("fileName", candidate.getResumeFileName() != null ? candidate.getResumeFileName() : "curriculo");
+            result.put("content", content);
+            
+            String contentType = "application/octet-stream";
+            if ("PDF".equalsIgnoreCase(candidate.getResumeFileType())) {
+                contentType = "application/pdf";
+            } else if ("WORD".equalsIgnoreCase(candidate.getResumeFileType())) {
+                contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+            }
+            result.put("contentType", contentType);
+            
+            return result;
+        } catch (IOException e) {
+            log.error("Erro ao ler arquivo do currículo", e);
+            throw new InvalidOperationException("Erro ao ler o arquivo do currículo: " + e.getMessage());
+        }
+    }
+
     // ==================== MÉTODOS AUXILIARES ====================
 
     private UUID getTenantId() {
@@ -594,13 +633,9 @@ public class TalentPoolService {
             }
 
             boolean isPdf = contentType.equals("application/pdf") || originalFilename.toLowerCase().endsWith(".pdf");
-            boolean isWord = contentType.equals("application/vnd.openxmlformats-officedocument.wordprocessingml.document")
-                    || contentType.equals("application/msword")
-                    || originalFilename.toLowerCase().endsWith(".docx")
-                    || originalFilename.toLowerCase().endsWith(".doc");
 
-            if (!isPdf && !isWord) {
-                throw new InvalidOperationException("Apenas arquivos PDF ou Word são aceitos");
+            if (!isPdf) {
+                throw new InvalidOperationException("Apenas arquivos PDF são aceitos");
             }
 
             // Salva arquivo

@@ -76,6 +76,8 @@ export default function TalentPoolPage() {
     const [showCandidateDetail, setShowCandidateDetail] = useState(false);
     const [editingVacancy, setEditingVacancy] = useState<JobVacancy | null>(null);
     const [selectedCandidate, setSelectedCandidate] = useState<TalentCandidate | null>(null);
+    const [viewingResume, setViewingResume] = useState(false);
+    const [resumeUrl, setResumeUrl] = useState<string | null>(null);
 
     // Form Data
     const [vacancyForm, setVacancyForm] = useState<CreateVacancyData>({
@@ -420,6 +422,61 @@ export default function TalentPoolPage() {
         }
     };
 
+    const handleDownloadResume = async (candidate: TalentCandidate) => {
+        try {
+            if (!candidate.resumeFileName) {
+                toast({ title: 'Aviso', description: 'Candidato não possui currículo cadastrado' });
+                return;
+            }
+            const blob = await talentPoolApi.downloadResume(candidate.id);
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = candidate.resumeFileName || 'curriculo.pdf';
+            document.body.appendChild(a);
+            a.click();
+
+            // Pequeno delay para garantir que o browser iniciou o download antes de revogar
+            setTimeout(() => {
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            }, 100);
+
+            toast({ title: 'Sucesso', description: 'Download iniciado' });
+        } catch (error: any) {
+            toast({ title: 'Erro', description: error.message || 'Falha ao baixar currículo', variant: 'destructive' });
+        }
+    };
+
+    const handleViewResume = async (candidate: TalentCandidate) => {
+        try {
+            if (!candidate.resumeFileName) {
+                toast({ title: 'Aviso', description: 'Candidato não possui currículo cadastrado' });
+                return;
+            }
+
+            // Se já temos uma URL, revogamos antes de abrir uma nova
+            if (resumeUrl) {
+                window.URL.revokeObjectURL(resumeUrl);
+            }
+
+            const blob = await talentPoolApi.downloadResume(candidate.id);
+            const url = window.URL.createObjectURL(blob);
+            setResumeUrl(url);
+            setViewingResume(true);
+        } catch (error: any) {
+            toast({ title: 'Erro', description: error.message || 'Falha ao carregar currículo', variant: 'destructive' });
+        }
+    };
+
+    const closeResumeViewer = () => {
+        setViewingResume(false);
+        if (resumeUrl) {
+            window.URL.revokeObjectURL(resumeUrl);
+            setResumeUrl(null);
+        }
+    };
+
     const handleSubmitCandidate = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
@@ -429,6 +486,10 @@ export default function TalentPoolPage() {
             }
             if (!candidateForm.fullName || !candidateForm.email) {
                 toast({ title: 'Erro', description: 'Nome e email são obrigatórios', variant: 'destructive' });
+                return;
+            }
+            if (!resumeFile) {
+                toast({ title: 'Erro', description: 'Currículo original em PDF é obrigatório', variant: 'destructive' });
                 return;
             }
 
@@ -1170,173 +1231,298 @@ export default function TalentPoolPage() {
 
             {/* Modal - Detalhes do Candidato */}
             {showCandidateDetail && selectedCandidate && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-xl shadow-lg w-full max-w-3xl mx-4 max-h-[90vh] overflow-y-auto">
-                        <div className="p-6 border-b border-gray-200">
-                            <div className="flex items-center justify-between">
-                                <h2 className="text-lg font-semibold text-[var(--color-text)]">
-                                    Detalhes do Candidato
-                                </h2>
-                                <button
-                                    onClick={() => setShowCandidateDetail(false)}
-                                    className="p-2 hover:bg-gray-100 rounded-lg"
-                                >
-                                    <XCircle className="w-5 h-5" />
-                                </button>
-                            </div>
-                        </div>
-                        <div className="p-6 space-y-6">
-                            {/* Info básica */}
-                            <div className="flex items-start gap-4">
-                                <div className="w-16 h-16 rounded-full bg-[var(--color-primary)] flex items-center justify-center text-white text-2xl font-semibold">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-lg w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+                        <div className="p-6 border-b border-gray-200 flex justify-between items-start bg-gray-50">
+                            <div className="flex gap-4">
+                                <div className="w-16 h-16 rounded-full bg-[var(--color-primary)] flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
                                     {selectedCandidate.fullName.charAt(0).toUpperCase()}
                                 </div>
-                                <div className="flex-1">
-                                    <h3 className="text-xl font-semibold text-[var(--color-text)]">{selectedCandidate.fullName}</h3>
-                                    <p className="text-[var(--color-text-secondary)]">{selectedCandidate.email}</p>
-                                    <div className="flex items-center gap-3 mt-2">
-                                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getCandidateStatusColor(selectedCandidate.status)}`}>
+                                <div className="flex-1 min-w-0">
+                                    <h2 className="text-xl font-bold text-[var(--color-text)] mb-1 truncate">
+                                        {selectedCandidate.fullName}
+                                    </h2>
+                                    <div className="text-sm text-[var(--color-text-secondary)] mb-2 truncate">
+                                        {selectedCandidate.email}
+                                    </div>
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${getCandidateStatusColor(selectedCandidate.status)}`}>
                                             {getCandidateStatusLabel(selectedCandidate.status)}
                                         </span>
-                                        <span className="text-sm text-[var(--color-text-secondary)]">
-                                            Vaga: {selectedCandidate.vacancyTitle}
+                                        <span className="text-sm text-[var(--color-text-secondary)] flex items-center gap-1">
+                                            <Briefcase className="w-3 h-3" /> {selectedCandidate.vacancyTitle}
                                         </span>
                                     </div>
                                 </div>
                             </div>
+                            <button onClick={() => { setShowCandidateDetail(false); closeResumeViewer(); }} className="p-2 hover:bg-gray-200 rounded-lg text-gray-500 transition-colors">
+                                <XCircle className="w-6 h-6" />
+                            </button>
+                        </div>
 
-                            {/* Atualizar Status */}
-                            <div className="p-4 bg-gray-50 rounded-lg">
-                                <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
-                                    Atualizar Status
-                                </label>
-                                <div className="flex flex-wrap gap-2">
-                                    {(['NEW', 'SCREENING', 'INTERVIEW', 'APPROVED', 'REJECTED', 'HIRED', 'WITHDRAWN'] as CandidateStatus[]).map(status => (
-                                        <button
-                                            key={status}
-                                            onClick={() => handleUpdateCandidateStatus(selectedCandidate.id, status)}
-                                            disabled={selectedCandidate.status === status}
-                                            className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${selectedCandidate.status === status
-                                                ? `${getCandidateStatusColor(status)} cursor-default`
-                                                : 'bg-white border border-gray-200 hover:bg-gray-100'
-                                                }`}
-                                        >
-                                            {getCandidateStatusLabel(status)}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Contato */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Telefone</label>
-                                    <p className="text-[var(--color-text)]">{selectedCandidate.phone || selectedCandidate.mobile || '-'}</p>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Localização</label>
-                                    <p className="text-[var(--color-text)]">
-                                        {selectedCandidate.city && selectedCandidate.state
-                                            ? `${selectedCandidate.city}, ${selectedCandidate.state}`
-                                            : '-'}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Links */}
-                            <div className="flex gap-4">
-                                {selectedCandidate.linkedinUrl && (
-                                    <a
-                                        href={selectedCandidate.linkedinUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="flex items-center gap-1 text-blue-600 hover:underline"
-                                    >
-                                        <ExternalLink className="w-4 h-4" />
-                                        LinkedIn
-                                    </a>
-                                )}
-                                {selectedCandidate.portfolioUrl && (
-                                    <a
-                                        href={selectedCandidate.portfolioUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="flex items-center gap-1 text-blue-600 hover:underline"
-                                    >
-                                        <ExternalLink className="w-4 h-4" />
-                                        Portfólio
-                                    </a>
-                                )}
-                            </div>
-
-                            {/* Dados extraídos do currículo */}
-                            {(selectedCandidate.skills || selectedCandidate.education || selectedCandidate.experienceSummary) && (
-                                <div className="space-y-4">
-                                    <h4 className="font-medium text-[var(--color-text)] flex items-center gap-2">
-                                        <FileText className="w-5 h-5" />
-                                        Dados do Currículo
+                        <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-gray-200">
+                            {/* Insight IA - Destaque no topo */}
+                            {selectedCandidate.aiInsight ? (
+                                <div className="mb-8 p-6 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-100 shadow-sm relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 p-4 opacity-10">
+                                        <TrendingUp className="w-24 h-24 text-purple-600" />
+                                    </div>
+                                    <h4 className="text-lg font-semibold text-purple-900 flex items-center gap-2 mb-3">
+                                        <div className="p-1.5 bg-purple-100 rounded-lg">
+                                            <Star className="w-5 h-5 text-purple-600 fill-purple-600" />
+                                        </div>
+                                        Análise Inteligente (IA)
                                     </h4>
-                                    {selectedCandidate.skills && (
-                                        <div>
-                                            <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Habilidades</label>
-                                            <p className="text-sm text-[var(--color-text)]">{selectedCandidate.skills}</p>
-                                        </div>
-                                    )}
-                                    {selectedCandidate.education && (
-                                        <div>
-                                            <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Formação</label>
-                                            <p className="text-sm text-[var(--color-text)]">{selectedCandidate.education}</p>
-                                        </div>
-                                    )}
-                                    {selectedCandidate.experienceSummary && (
-                                        <div>
-                                            <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Experiência</label>
-                                            <p className="text-sm text-[var(--color-text)]">{selectedCandidate.experienceSummary}</p>
-                                        </div>
-                                    )}
-                                    {selectedCandidate.certifications && (
-                                        <div>
-                                            <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Certificações</label>
-                                            <p className="text-sm text-[var(--color-text)]">{selectedCandidate.certifications}</p>
-                                        </div>
-                                    )}
-                                    {selectedCandidate.languages && (
-                                        <div>
-                                            <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Idiomas</label>
-                                            <p className="text-sm text-[var(--color-text)]">{selectedCandidate.languages}</p>
-                                        </div>
-                                    )}
+                                    <div className="prose prose-purple max-w-none">
+                                        <p className="text-purple-800 whitespace-pre-line leading-relaxed text-base">
+                                            {selectedCandidate.aiInsight}
+                                        </p>
+                                    </div>
                                 </div>
-                            )}
-
-                            {/* Insight IA */}
-                            {selectedCandidate.aiInsight && (
-                                <div className="p-4 bg-purple-50 rounded-lg border border-purple-100">
-                                    <h4 className="font-medium text-purple-900 flex items-center gap-2 mb-2">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-sparkles"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" /></svg>
-                                        INSIGHT IA
-                                    </h4>
-                                    <p className="text-sm text-purple-800 whitespace-pre-line leading-relaxed">
-                                        {selectedCandidate.aiInsight}
+                            ) : (
+                                <div className="mb-8 p-6 bg-gray-50 rounded-xl border border-gray-200 flex flex-col items-center justify-center text-center">
+                                    <div className="p-3 bg-gray-100 rounded-full mb-3">
+                                        <TrendingUp className="w-8 h-8 text-gray-400" />
+                                    </div>
+                                    <h4 className="text-sm font-medium text-gray-700 mb-1">Análise IA Indisponível</h4>
+                                    <p className="text-gray-500 text-xs max-w-xs">
+                                        Este candidato ainda não passou pela análise automatizada ou o currículo não foi processado.
                                     </p>
                                 </div>
                             )}
 
-                            {/* Notas */}
-                            {selectedCandidate.notes && (
-                                <div>
-                                    <label className="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Notas</label>
-                                    <p className="text-sm text-[var(--color-text)]">{selectedCandidate.notes}</p>
-                                </div>
-                            )}
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                {/* Coluna Principal - Esquerda (2/3) */}
+                                <div className="lg:col-span-2 space-y-8">
+                                    {viewingResume && resumeUrl ? (
+                                        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-inner h-[650px] flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                                            <div className="bg-gray-100 p-3 flex justify-between items-center border-b">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="p-1.5 bg-red-100 rounded-lg">
+                                                        <FileText className="w-4 h-4 text-red-600" />
+                                                    </div>
+                                                    <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">Visualizando: {selectedCandidate.resumeFileName}</span>
+                                                </div>
+                                                <button
+                                                    onClick={closeResumeViewer}
+                                                    className="px-3 py-1.5 bg-white hover:bg-red-50 hover:text-red-600 text-gray-600 border border-gray-200 rounded-lg flex items-center gap-1.5 text-xs font-bold transition-all shadow-sm"
+                                                >
+                                                    <XCircle className="w-4 h-4" /> Fechar Visualizador
+                                                </button>
+                                            </div>
+                                            <iframe
+                                                src={`${resumeUrl}#toolbar=0`}
+                                                className="w-full h-full border-none"
+                                                title="PDF Viewer"
+                                            />
+                                        </div>
+                                    ) : (
+                                        <>
+                                            {/* Dados do Currículo */}
+                                            {(selectedCandidate.skills || selectedCandidate.education || selectedCandidate.experienceSummary) ? (
+                                                <section className="animate-in fade-in slide-in-from-left-4 duration-300">
+                                                    <h3 className="text-lg font-semibold text-[var(--color-text)] mb-4 flex items-center gap-2 border-b pb-2">
+                                                        <FileText className="w-5 h-5 text-[var(--color-primary)]" />
+                                                        Resumo do Currículo
+                                                    </h3>
 
-                            {/* Datas */}
-                            <div className="grid grid-cols-2 gap-4 text-sm text-[var(--color-text-secondary)]">
-                                <div>
-                                    Candidatura: {selectedCandidate.appliedAt ? new Date(selectedCandidate.appliedAt).toLocaleString('pt-BR') : '-'}
+                                                    <div className="space-y-6">
+                                                        {selectedCandidate.experienceSummary && (
+                                                            <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:border-[var(--color-primary)]/30 transition-colors">
+                                                                <label className="block text-[10px] font-bold text-[var(--color-text-secondary)] uppercase tracking-wider mb-2">Experiência Profissional</label>
+                                                                <p className="text-sm text-[var(--color-text)] leading-relaxed whitespace-pre-line">{selectedCandidate.experienceSummary}</p>
+                                                            </div>
+                                                        )}
+
+                                                        {selectedCandidate.education && (
+                                                            <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:border-[var(--color-primary)]/30 transition-colors">
+                                                                <label className="block text-[10px] font-bold text-[var(--color-text-secondary)] uppercase tracking-wider mb-2">Formação Acadêmica</label>
+                                                                <p className="text-sm text-[var(--color-text)] leading-relaxed whitespace-pre-line">{selectedCandidate.education}</p>
+                                                            </div>
+                                                        )}
+
+                                                        {selectedCandidate.skills && (
+                                                            <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:border-[var(--color-primary)]/30 transition-colors">
+                                                                <label className="block text-[10px] font-bold text-[var(--color-text-secondary)] uppercase tracking-wider mb-3">Principais Habilidades</label>
+                                                                <div className="flex flex-wrap gap-2">
+                                                                    {selectedCandidate.skills.split(',').map((skill, i) => (
+                                                                        <span key={i} className="px-3 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-semibold border border-blue-100">
+                                                                            {skill.trim()}
+                                                                        </span>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        )}
+
+                                                        {(selectedCandidate.languages || selectedCandidate.certifications) && (
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                                {selectedCandidate.languages && (
+                                                                    <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:border-[var(--color-primary)]/30 transition-colors">
+                                                                        <label className="block text-[10px] font-bold text-[var(--color-text-secondary)] uppercase tracking-wider mb-2">Idiomas</label>
+                                                                        <p className="text-sm text-[var(--color-text)]">{selectedCandidate.languages}</p>
+                                                                    </div>
+                                                                )}
+                                                                {selectedCandidate.certifications && (
+                                                                    <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:border-[var(--color-primary)]/30 transition-colors">
+                                                                        <label className="block text-[10px] font-bold text-[var(--color-text-secondary)] uppercase tracking-wider mb-2">Certificações</label>
+                                                                        <p className="text-sm text-[var(--color-text)]">{selectedCandidate.certifications}</p>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </section>
+                                            ) : (
+                                                <div className="p-12 text-center bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                                                    <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                                                    <h4 className="text-gray-600 font-medium">Currículo não processado</h4>
+                                                    <p className="text-gray-400 text-sm">Os dados extraídos aparecerão aqui após o processamento.</p>
+                                                </div>
+                                            )}
+
+                                            {/* Notas Internas */}
+                                            <section className="animate-in fade-in slide-in-from-left-4 duration-500">
+                                                <h3 className="text-lg font-semibold text-[var(--color-text)] mb-4 flex items-center gap-2 border-b pb-2">
+                                                    <Edit className="w-5 h-5 text-[var(--color-primary)]" />
+                                                    Notas e Observações
+                                                </h3>
+                                                <div className="bg-amber-50 p-6 rounded-xl border border-amber-100 relative group">
+                                                    <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <Edit className="w-4 h-4 text-amber-600 cursor-pointer" />
+                                                    </div>
+                                                    {selectedCandidate.notes ? (
+                                                        <p className="text-sm text-amber-900 whitespace-pre-line leading-relaxed">{selectedCandidate.notes}</p>
+                                                    ) : (
+                                                        <p className="text-sm text-amber-700/60 italic">Nenhuma observação interna registrada para este candidato.</p>
+                                                    )}
+                                                </div>
+                                            </section>
+                                        </>
+                                    )}
                                 </div>
-                                <div>
-                                    Última atualização: {selectedCandidate.lastStatusChange ? new Date(selectedCandidate.lastStatusChange).toLocaleString('pt-BR') : '-'}
+
+                                {/* Coluna Lateral - Direita (1/3) */}
+                                <div className="space-y-6">
+                                    {/* Ações Rápidas - Status */}
+                                    <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                                        <label className="block text-sm font-bold text-[var(--color-text)] mb-4 uppercase tracking-tight">Alterar Status</label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {(['NEW', 'SCREENING', 'INTERVIEW', 'APPROVED', 'REJECTED', 'HIRED', 'WITHDRAWN'] as const).map((status) => {
+                                                const isActive = selectedCandidate.status === status;
+                                                return (
+                                                    <button
+                                                        key={status}
+                                                        onClick={() => handleUpdateCandidateStatus(selectedCandidate.id, status as any)}
+                                                        disabled={isActive}
+                                                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${isActive
+                                                            ? `${getCandidateStatusColor(status as any)} border-transparent shadow-sm scale-105 ring-2 ring-offset-1 ring-opacity-20`
+                                                            : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                                            }`}
+                                                    >
+                                                        {getCandidateStatusLabel(status as any)}
+                                                    </button>
+                                                )
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    {/* Informações de Contato */}
+                                    <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-5">
+                                        <h4 className="font-bold text-[var(--color-text)] flex items-center gap-2 text-sm uppercase tracking-tight">
+                                            <Users className="w-4 h-4 text-[var(--color-primary)]" /> Contato
+                                        </h4>
+
+                                        <div className="space-y-4">
+                                            <div className="group">
+                                                <label className="block text-[10px] font-bold text-[var(--color-text-secondary)] uppercase mb-1">E-mail Principal</label>
+                                                <a href={`mailto:${selectedCandidate.email}`} className="text-sm text-blue-600 hover:text-blue-700 font-medium break-all flex items-center gap-1">
+                                                    {selectedCandidate.email} <ExternalLink className="w-3 h-3" />
+                                                </a>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-[10px] font-bold text-[var(--color-text-secondary)] uppercase mb-1">Contato</label>
+                                                    <p className="text-sm text-[var(--color-text)] font-medium">{selectedCandidate.phone || selectedCandidate.mobile || '-'}</p>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[10px] font-bold text-[var(--color-text-secondary)] uppercase mb-1">Localização</label>
+                                                    <p className="text-sm text-[var(--color-text)] font-medium">
+                                                        {selectedCandidate.city || ''}
+                                                        {selectedCandidate.city && selectedCandidate.state ? ', ' : ''}
+                                                        {selectedCandidate.state || '-'}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex gap-3 pt-2">
+                                                {selectedCandidate.linkedinUrl && (
+                                                    <a href={selectedCandidate.linkedinUrl} target="_blank" rel="noopener noreferrer"
+                                                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 bg-[#0077b5]/10 text-[#0077b5] rounded-xl text-xs font-bold hover:bg-[#0077b5]/20 transition-all">
+                                                        <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" /></svg> LinkedIn
+                                                    </a>
+                                                )}
+                                                {selectedCandidate.portfolioUrl && (
+                                                    <a href={selectedCandidate.portfolioUrl} target="_blank" rel="noopener noreferrer"
+                                                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-xs font-bold hover:bg-gray-200 transition-all">
+                                                        <ExternalLink className="w-4 h-4" /> Portfólio
+                                                    </a>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Arquivo do Currículo */}
+                                    <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                                        <h4 className="font-bold text-[var(--color-text)] mb-4 flex items-center gap-2 text-sm uppercase tracking-tight">
+                                            <Upload className="w-4 h-4 text-[var(--color-primary)]" /> Documento
+                                        </h4>
+                                        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100 group">
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <div className="bg-red-50 p-2.5 rounded-lg text-red-500">
+                                                    <FileText className="w-6 h-6" />
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="font-bold text-[var(--color-text)] text-sm truncate pr-2" title={selectedCandidate.resumeFileName}>
+                                                        {selectedCandidate.resumeFileName || 'Currículo original'}
+                                                    </p>
+                                                    <p className="text-[10px] text-[var(--color-text-secondary)] font-medium uppercase tracking-widest">{selectedCandidate.resumeFileType || 'Documento'} • Pronto</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => handleViewResume(selectedCandidate)}
+                                                    className="bg-white text-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-white p-2.5 rounded-xl transition-all shadow-sm border border-gray-100"
+                                                    title="Visualizar Currículo"
+                                                >
+                                                    <Eye className="w-5 h-5" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDownloadResume(selectedCandidate)}
+                                                    className="bg-white text-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-white p-2.5 rounded-xl transition-all shadow-sm border border-gray-100"
+                                                    title="Baixar Currículo"
+                                                >
+                                                    <Upload className="w-5 h-5 rotate-180" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Metadados Temporal */}
+                                    <div className="bg-slate-50/50 p-4 rounded-xl space-y-2">
+                                        <div className="flex justify-between items-center text-[10px]">
+                                            <span className="text-slate-400 font-bold uppercase tracking-widest">Inscrito em</span>
+                                            <span className="font-bold text-slate-600">
+                                                {selectedCandidate.appliedAt ? new Date(selectedCandidate.appliedAt).toLocaleDateString('pt-BR') : '-'}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-[10px]">
+                                            <span className="text-slate-400 font-bold uppercase tracking-widest">Última ação</span>
+                                            <span className="font-bold text-slate-600">
+                                                {selectedCandidate.lastStatusChange ? new Date(selectedCandidate.lastStatusChange).toLocaleDateString('pt-BR') : '-'}
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1344,7 +1530,6 @@ export default function TalentPoolPage() {
                 </div>
             )}
 
-            {/* Modal - Novo Candidato */}
             {showCandidateModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-xl shadow-lg w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
@@ -1378,7 +1563,7 @@ export default function TalentPoolPage() {
 
                                 <div>
                                     <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
-                                        Currículo (PDF ou Word)
+                                        Currículo (PDF Obrigatório)
                                     </label>
                                     <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-[var(--color-primary)] transition-colors">
                                         <div className="space-y-1 text-center">
@@ -1387,14 +1572,14 @@ export default function TalentPoolPage() {
                                                 <label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] focus-within:outline-none">
                                                     <span>Upload do arquivo</span>
                                                     <input id="file-upload" name="file-upload" type="file" className="sr-only"
-                                                        accept=".pdf,.doc,.docx"
+                                                        accept=".pdf"
                                                         onChange={(e) => setResumeFile(e.target.files?.[0] || null)}
                                                     />
                                                 </label>
                                                 <p className="pl-1">ou arraste e solte</p>
                                             </div>
                                             <p className="text-xs text-gray-500">
-                                                {resumeFile ? resumeFile.name : 'PDF ou DOCX até 10MB'}
+                                                {resumeFile ? resumeFile.name : 'Apenas PDF até 10MB'}
                                             </p>
                                         </div>
                                     </div>
