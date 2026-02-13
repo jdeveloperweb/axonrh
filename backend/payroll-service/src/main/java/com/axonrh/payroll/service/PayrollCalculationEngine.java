@@ -53,6 +53,7 @@ public class PayrollCalculationEngine {
                              TimesheetDTO timesheet,
                              List<VacationDTO> vacations,
                              PerformanceBonusDTO bonus,
+                             EmployeeBenefitCalculationResponse benefits,
                              Integer month, Integer year) {
 
         log.info("Iniciando calculo de folha para colaborador {} - {}/{}", employee.getFullName(), month, year);
@@ -182,6 +183,18 @@ public class PayrollCalculationEngine {
             }
         }
 
+        // 8. Benefícios (do benefits-service)
+        if (benefits != null && benefits.getItems() != null) {
+            for (EmployeeBenefitCalculationResponse.BenefitItem item : benefits.getItems()) {
+                if ("EARNING".equals(item.getCategory())) {
+                    sortOrder++;
+                    payroll.addItem(buildItem(tenantId, PayrollItemType.EARNING, PayrollItemCode.OTHER_EARNING,
+                            item.getBenefitTypeName(), item.getFixedValue(), null, item.getPercentage(),
+                            item.getCalculatedAmount(), sortOrder));
+                }
+            }
+        }
+
         // Calcular total de proventos para base dos impostos
         payroll.recalculateTotals();
         BigDecimal grossSalary = payroll.getTotalEarnings();
@@ -200,6 +213,23 @@ public class PayrollCalculationEngine {
                     dailyRate, timesheet.getAbsenceDays(), null, absenceValue, sortOrder));
             // Ajusta base para calculo de impostos
             grossSalary = grossSalary.subtract(absenceValue);
+        }
+
+        // 10. Descontos de Benefícios (do benefits-service)
+        if (benefits != null && benefits.getItems() != null) {
+            for (EmployeeBenefitCalculationResponse.BenefitItem item : benefits.getItems()) {
+                if ("DEDUCTION".equals(item.getCategory())) {
+                    sortOrder++;
+                    PayrollItemCode code = PayrollItemCode.OTHER_DEDUCTION;
+                    if (item.getBenefitTypeName().toLowerCase().contains("transporte")) code = PayrollItemCode.TRANSPORT_VOUCHER;
+                    if (item.getBenefitTypeName().toLowerCase().contains("alimentação")) code = PayrollItemCode.MEAL_VOUCHER;
+                    if (item.getBenefitTypeName().toLowerCase().contains("saúde")) code = PayrollItemCode.HEALTH_INSURANCE;
+
+                    payroll.addItem(buildItem(tenantId, PayrollItemType.DEDUCTION, code,
+                            item.getBenefitTypeName(), item.getFixedValue(), null, item.getPercentage(),
+                            item.getCalculatedAmount(), sortOrder));
+                }
+            }
         }
 
         // 9. INSS (faixas progressivas)

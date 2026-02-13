@@ -328,9 +328,6 @@ public class VacationService {
         return toRequestResponse(saved);
     }
 
-    /**
-     * Aprova solicitacao de ferias (T162) - Fluxo de 2 Etapas.
-     */
     @Transactional
     public VacationRequestResponse approveRequest(UUID requestId, String notes, UUID approverId, String approverName, List<String> userRoles) {
         String tenantStr = TenantContext.getCurrentTenant();
@@ -353,52 +350,62 @@ public class VacationService {
         VacationPeriod period = request.getVacationPeriod();
 
         if (request.getStatus() == VacationRequestStatus.PENDING) {
-            // Fase 1: Aprovação do Gestor
-            request.setStatus(VacationRequestStatus.MANAGER_APPROVED);
-            request.setApprovalNotes(notes != null ? "Gestor: " + notes : null);
-            // Não desconta dias nem finaliza ainda
-            
-            log.info("Ferias aprovadas pelo gestor - solicitacao: {}, aprovador: {}", requestId, approverId);
-
+            if (isRH) {
+                // Admin/RH aprovando: pula direto para aprovado
+                finalizeApproval(request, notes, approverId, approverName, period);
+                log.info("Ferias aprovadas direto pelo Admin/RH - solicitacao: {}, aprovador: {}", requestId, approverId);
+            } else {
+                // Gestor comum aprovando: vai para aprovação do RH
+                request.setStatus(VacationRequestStatus.MANAGER_APPROVED);
+                request.setApprovalNotes(notes != null ? "Gestor: " + notes : null);
+                log.info("Ferias aprovadas pelo gestor - solicitacao: {}, aprovador: {}", requestId, approverId);
+            }
         } else if (request.getStatus() == VacationRequestStatus.MANAGER_APPROVED) {
-            // Fase 2: Aprovação Final do RH
             if (!isRH) {
                 throw new InvalidOperationException("Apenas RH pode realizar a aprovacao final.");
             }
-
-            request.setStatus(VacationRequestStatus.APPROVED);
-            String currentNotes = request.getApprovalNotes() != null ? request.getApprovalNotes() : "";
-            request.setApprovalNotes(currentNotes + (notes != null ? " | RH: " + notes : ""));
-            
-            request.setApproverId(approverId);
-            request.setApproverName(approverName);
-            request.setApprovedAt(LocalDateTime.now());
-
-            // Atualizar dias usados no periodo (Só agora desconta)
-            period.setUsedDays(period.getUsedDays() + request.getDaysCount());
-            if (request.getSellDays() && request.getSoldDaysCount() > 0) {
-                period.setSoldDays(period.getSoldDays() + request.getSoldDaysCount());
-            }
-            periodRepository.save(period);
-            updatePeriodStatus(period);
-
-            // Calcular data de pagamento (2 dias antes do inicio - CLT)
-            LocalDate paymentDate = request.getStartDate().minusDays(2);
-            if (paymentDate.isBefore(LocalDate.now())) {
-                paymentDate = LocalDate.now();
-            }
-            request.setPaymentDate(paymentDate);
-
+            finalizeApproval(request, notes, approverId, approverName, period);
             log.info("Ferias aprovadas final (RH) - solicitacao: {}, aprovador: {}", requestId, approverId);
         } else {
             throw new InvalidOperationException("Solicitacao nao esta pendente de aprovacao");
         }
 
         VacationRequest saved = requestRepository.save(request);
-
         publishEvent("VACATION_APPROVED", saved, null, null);
 
         return toRequestResponse(saved);
+    }
+
+    private void finalizeApproval(VacationRequest request, String notes, UUID approverId, String approverName, VacationPeriod period) {
+        request.setStatus(VacationRequestStatus.APPROVED);
+        
+        String currentNotes = request.getApprovalNotes() != null ? request.getApprovalNotes() : "";
+        if (notes != null && !notes.isEmpty()) {
+            if (!currentNotes.isEmpty()) {
+                request.setApprovalNotes(currentNotes + " | RH: " + notes);
+            } else {
+                request.setApprovalNotes("RH: " + notes);
+            }
+        }
+        
+        request.setApproverId(approverId);
+        request.setApproverName(approverName);
+        request.setApprovedAt(LocalDateTime.now());
+
+        // Atualizar dias usados no periodo
+        period.setUsedDays(period.getUsedDays() + request.getDaysCount());
+        if (request.getSellDays() && request.getSoldDaysCount() > 0) {
+            period.setSoldDays(period.getSoldDays() + request.getSoldDaysCount());
+        }
+        periodRepository.save(period);
+        updatePeriodStatus(period);
+
+        // Calcular data de pagamento (2 dias antes do inicio - CLT)
+        LocalDate paymentDate = request.getStartDate().minusDays(2);
+        if (paymentDate.isBefore(LocalDate.now())) {
+            paymentDate = LocalDate.now();
+        }
+        request.setPaymentDate(paymentDate);
     }
     
     /**
@@ -415,11 +422,8 @@ public class VacationService {
                 .map(this::toRequestResponse);
     }
 
-    /**
-     * Rejeita solicitacao de ferias.
-     */
     @Transactional
-    public VacationRequestResponse rejectRequest(UUID requestId, String reason, UUID approverId, String approverName) {
+    public VacationRequestResponse rejectRequest(UUID requestId, String reason, UUID approverId, String approverName, List<String> userRoles) {
         String tenantStr = TenantContext.getCurrentTenant();
         if (tenantStr == null) {
             throw new InvalidOperationException("Tenant context missing");
@@ -429,8 +433,20 @@ public class VacationService {
         VacationRequest request = requestRepository.findByTenantIdAndId(tenantId, requestId)
                 .orElseThrow(() -> new ResourceNotFoundException("Solicitacao nao encontrada"));
 
-        if (request.getStatus() != VacationRequestStatus.PENDING) {
-            throw new InvalidOperationException("Solicitacao nao esta pendente");
+        boolean isRH = userRoles != null && userRoles.stream()
+                .anyMatch(r -> r.equalsIgnoreCase("RH") || 
+                               r.equalsIgnoreCase("ROLE_RH") || 
+                               r.equalsIgnoreCase("ADMIN") || 
+                               r.equalsIgnoreCase("ROLE_ADMIN") ||
+                               r.equalsIgnoreCase("GESTOR_RH") ||
+                               r.equalsIgnoreCase("ROLE_GESTOR_RH"));
+
+        if (!isRH && request.getStatus() != VacationRequestStatus.PENDING) {
+            throw new InvalidOperationException("Solicitacao nao esta pendente de aprovacao do gestor");
+        }
+
+        if (isRH && request.getStatus() != VacationRequestStatus.PENDING && request.getStatus() != VacationRequestStatus.MANAGER_APPROVED) {
+             throw new InvalidOperationException("RH so pode rejeitar solicitacoes pendentes ou ja aprovadas pelo gestor");
         }
 
         request.setStatus(VacationRequestStatus.REJECTED);
@@ -443,16 +459,13 @@ public class VacationService {
 
         publishEvent("VACATION_REJECTED", saved, null, null);
 
-        log.info("Ferias rejeitadas - solicitacao: {}, motivo: {}", requestId, reason);
+        log.info("Ferias rejeitadas - solicitacao: {}, motivo: {}, por: {}", requestId, reason, approverName);
 
         return toRequestResponse(saved);
     }
 
-    /**
-     * Cancela solicitacao de ferias.
-     */
     @Transactional
-    public VacationRequestResponse cancelRequest(UUID requestId, UUID employeeId) {
+    public VacationRequestResponse cancelRequest(UUID requestId, UUID userId, List<String> userRoles) {
         String tenantStr = TenantContext.getCurrentTenant();
         if (tenantStr == null) {
             throw new InvalidOperationException("Tenant context missing");
@@ -462,12 +475,22 @@ public class VacationService {
         VacationRequest request = requestRepository.findByTenantIdAndId(tenantId, requestId)
                 .orElseThrow(() -> new ResourceNotFoundException("Solicitacao nao encontrada"));
 
-        if (!request.getEmployeeId().equals(employeeId)) {
-            throw new InvalidOperationException("Apenas o solicitante pode cancelar");
+        boolean isRH = userRoles != null && userRoles.stream()
+                .anyMatch(r -> r.equalsIgnoreCase("RH") || 
+                               r.equalsIgnoreCase("ROLE_RH") || 
+                               r.equalsIgnoreCase("ADMIN") || 
+                               r.equalsIgnoreCase("ROLE_ADMIN") ||
+                               r.equalsIgnoreCase("GESTOR_RH") ||
+                               r.equalsIgnoreCase("ROLE_GESTOR_RH"));
+
+        UUID requesterEmployeeId = resolveEmployeeId(userId);
+
+        if (!isRH && !request.getEmployeeId().equals(requesterEmployeeId)) {
+            throw new InvalidOperationException("Apenas o solicitante ou RH podem cancelar");
         }
 
         if (!request.canCancel()) {
-            throw new InvalidOperationException("Solicitacao nao pode ser cancelada");
+            throw new InvalidOperationException("Solicitacao nao pode ser cancelada no status atual: " + request.getStatus());
         }
 
         // Se ja estava aprovada, devolver dias ao periodo

@@ -139,7 +139,9 @@ public class VacationRequest {
      * Verifica se pode ser cancelada.
      */
     public boolean canCancel() {
-        return status == VacationRequestStatus.PENDING || status == VacationRequestStatus.APPROVED;
+        return status == VacationRequestStatus.PENDING || 
+               status == VacationRequestStatus.MANAGER_APPROVED || 
+               status == VacationRequestStatus.APPROVED;
     }
 
     /**

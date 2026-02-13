@@ -137,11 +137,11 @@ spring:
             # - StripPrefix=2
             - name: JwtAuthFilter
 
-        # Analytics Service
-        - id: analytics-service
-          uri: http://axonrh-analytics-service:8091
+        # Benefits Service
+        - id: benefits-service
+          uri: http://axonrh-benefits-service:8091
           predicates:
-            - Path=/api/v1/analytics/**, /api/v1/reports/**
+            - Path=/api/v1/benefits/**
           filters:
             # - StripPrefix=2
             - name: JwtAuthFilter

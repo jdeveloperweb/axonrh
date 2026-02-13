@@ -1,11 +1,12 @@
 package com.axonrh.payroll.service;
 
+import com.axonrh.payroll.client.BenefitsServiceClient;
+import com.axonrh.payroll.client.ConfigServiceClient;
+import com.axonrh.payroll.client.CoreServiceClient;
 import com.axonrh.payroll.client.EmployeeServiceClient;
 import com.axonrh.payroll.client.PerformanceServiceClient;
 import com.axonrh.payroll.client.TimesheetServiceClient;
 import com.axonrh.payroll.client.VacationServiceClient;
-import com.axonrh.payroll.client.ConfigServiceClient;
-import com.axonrh.payroll.client.CoreServiceClient;
 import com.axonrh.payroll.config.TenantContext;
 import com.axonrh.payroll.dto.*;
 import com.axonrh.payroll.entity.Payroll;
@@ -50,6 +51,7 @@ public class PayrollService {
     private final TimesheetServiceClient timesheetServiceClient;
     private final VacationServiceClient vacationServiceClient;
     private final PerformanceServiceClient performanceServiceClient;
+    private final BenefitsServiceClient benefitsServiceClient;
     private final CoreServiceClient coreServiceClient;
     private final ConfigServiceClient configServiceClient;
     private final DomainEventPublisher eventPublisher;
@@ -77,6 +79,7 @@ public class PayrollService {
         TimesheetDTO timesheet = fetchTimesheet(request.getEmployeeId(), request.getReferenceMonth(), request.getReferenceYear());
         List<VacationDTO> vacations = fetchVacations(request.getEmployeeId(), request.getReferenceMonth(), request.getReferenceYear());
         PerformanceBonusDTO bonus = fetchBonus(request.getEmployeeId(), request.getReferenceMonth(), request.getReferenceYear());
+        EmployeeBenefitCalculationResponse benefits = fetchBenefits(request.getEmployeeId(), request.getReferenceMonth(), request.getReferenceYear(), employee.getBaseSalary());
 
         // Verifica se ja existe folha para este colaborador/periodo
         Payroll existing = payrollRepository
@@ -97,7 +100,7 @@ public class PayrollService {
 
         // Calcula nova folha
         Payroll payroll = calculationEngine.calculate(
-                tenantId, employee, timesheet, vacations, bonus,
+                tenantId, employee, timesheet, vacations, bonus, benefits,
                 request.getReferenceMonth(), request.getReferenceYear());
 
         if (existing != null) {
@@ -177,6 +180,7 @@ public class PayrollService {
                 TimesheetDTO timesheet = fetchTimesheet(employee.getId(), request.getReferenceMonth(), request.getReferenceYear());
                 List<VacationDTO> vacations = fetchVacations(employee.getId(), request.getReferenceMonth(), request.getReferenceYear());
                 PerformanceBonusDTO bonus = fetchBonus(employee.getId(), request.getReferenceMonth(), request.getReferenceYear());
+                EmployeeBenefitCalculationResponse benefits = fetchBenefits(employee.getId(), request.getReferenceMonth(), request.getReferenceYear(), employee.getBaseSalary());
 
                 // Remove folha anterior se existir (exceto fechadas)
                 payrollRepository.findByTenantIdAndEmployeeIdAndReferenceMonthAndReferenceYear(
@@ -191,7 +195,7 @@ public class PayrollService {
                         });
 
                 Payroll payroll = calculationEngine.calculate(
-                        tenantId, employee, timesheet, vacations, bonus,
+                        tenantId, employee, timesheet, vacations, bonus, benefits,
                         request.getReferenceMonth(), request.getReferenceYear());
 
                 payroll.setPayrollRun(run);
@@ -435,6 +439,20 @@ public class PayrollService {
             return PerformanceBonusDTO.builder()
                     .bonusAmount(java.math.BigDecimal.ZERO)
                     .commissionAmount(java.math.BigDecimal.ZERO)
+                    .build();
+        }
+    }
+
+    private EmployeeBenefitCalculationResponse fetchBenefits(UUID employeeId, Integer month, Integer year, BigDecimal baseSalary) {
+        try {
+            return benefitsServiceClient.calculateForPayroll(employeeId, month, year, baseSalary);
+        } catch (Exception e) {
+            log.warn("Nao foi possivel obter beneficios para colaborador {}: {}", employeeId, e.getMessage());
+            return EmployeeBenefitCalculationResponse.builder()
+                    .employeeId(employeeId)
+                    .totalEarnings(BigDecimal.ZERO)
+                    .totalDeductions(BigDecimal.ZERO)
+                    .items(Collections.emptyList())
                     .build();
         }
     }

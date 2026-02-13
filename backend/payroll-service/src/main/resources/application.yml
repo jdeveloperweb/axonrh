@@ -130,3 +130,4 @@ application:
     performance-service: ${PERFORMANCE_SERVICE_URL:http://localhost:8086}
     config-service: ${CONFIG_SERVICE_URL:http://localhost:8888}
     core-service: ${CORE_SERVICE_URL:http://localhost:8082}
+    benefits-service: ${BENEFITS_SERVICE_URL:http://localhost:8091}

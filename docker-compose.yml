@@ -405,6 +405,8 @@ services:
       <<: *backend-env
       SPRING_FLYWAY_ENABLED: "true"
       SERVER_PORT: 8091
+      EMPLOYEE_SERVICE_URL: http://axonrh-employee-service:8083
+      PAYROLL_SERVICE_URL: http://axonrh-payroll-service:8092
     deploy:
       resources:
         limits:
@@ -420,6 +422,7 @@ services:
       <<: *backend-env
       SPRING_FLYWAY_ENABLED: "true"
       SERVER_PORT: 8092
+      BENEFITS_SERVICE_URL: http://axonrh-benefits-service:8091
       EMPLOYEE_SERVICE_URL: http://employee-service:8083
       TIMESHEET_SERVICE_URL: http://timesheet-service:8084
       VACATION_SERVICE_URL: http://vacation-service:8085

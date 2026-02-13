@@ -50,7 +50,9 @@ public class VacationRequestController {
     public ResponseEntity<VacationRequestResponse> cancel(
             @PathVariable UUID id,
             @AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.ok(service.cancelRequest(id, getUserId(jwt)));
+        UUID userId = getUserId(jwt);
+        List<String> roles = getRoles(jwt);
+        return ResponseEntity.ok(service.cancelRequest(id, userId, roles));
     }
 
     // --- Manager / Approver Endpoints ---
@@ -59,8 +61,22 @@ public class VacationRequestController {
     public ResponseEntity<Page<VacationRequestResponse>> getPendingRequests(
             Pageable pageable,
             @AuthenticationPrincipal Jwt jwt) {
-        UUID managerId = getUserId(jwt);
-        return ResponseEntity.ok(service.getPendingRequestsForManager(managerId, pageable));
+        UUID userId = getUserId(jwt);
+        List<String> roles = getRoles(jwt);
+        
+        boolean isRHOrAdmin = roles.stream()
+                .anyMatch(r -> r.equalsIgnoreCase("RH") || 
+                               r.equalsIgnoreCase("ROLE_RH") || 
+                               r.equalsIgnoreCase("ADMIN") || 
+                               r.equalsIgnoreCase("ROLE_ADMIN") ||
+                               r.equalsIgnoreCase("GESTOR_RH") ||
+                               r.equalsIgnoreCase("ROLE_GESTOR_RH"));
+
+        if (isRHOrAdmin) {
+            return ResponseEntity.ok(service.getAllPendingRequests(pageable));
+        }
+
+        return ResponseEntity.ok(service.getPendingRequestsForManager(userId, pageable));
     }
 
     @GetMapping("/pending/rh")
@@ -92,8 +108,9 @@ public class VacationRequestController {
         
         UUID approverId = getUserId(jwt);
         String approverName = getUserName(jwt);
+        List<String> roles = getRoles(jwt);
 
-        return ResponseEntity.ok(service.rejectRequest(id, review.getReason(), approverId, approverName));
+        return ResponseEntity.ok(service.rejectRequest(id, review.getReason(), approverId, approverName, roles));
     }
 
     // --- Common / Admin ---
