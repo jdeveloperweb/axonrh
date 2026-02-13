@@ -243,15 +243,22 @@ export function BenefitTypeDialog({
                                         onValueChange={(val: any) => {
                                             if (val === 'STANDARD') {
                                                 const { rules, ...rest } = formData;
-                                                setFormData(rest);
+                                                // We need to explicitly set rules to undefined or null to clear it
+                                                // but BenefitTypeRequest defines it as optional.
+                                                // Let's set it to undefined in the state.
+                                                setFormData({ ...rest, rules: undefined });
                                             } else {
+                                                const currentRules: any = formData.rules || {};
                                                 setFormData({
                                                     ...formData,
                                                     rules: {
+                                                        ...currentRules,
                                                         ruleType: val,
-                                                        percentage: val === 'TRANSPORT_VOUCHER' ? 6 : undefined,
-                                                        employeeFixedValue: val === 'HEALTH_PLAN' ? 0 : undefined,
-                                                        dependentFixedValue: val === 'HEALTH_PLAN' ? 0 : undefined
+                                                        // Initialize defaults if switching types
+                                                        percentage: val === 'TRANSPORT_VOUCHER' ? (currentRules.percentage || 6) : undefined,
+                                                        employeeFixedValue: val === 'HEALTH_PLAN' ? (currentRules.employeeFixedValue || 0) : undefined,
+                                                        dependentFixedValue: val === 'HEALTH_PLAN' ? (currentRules.dependentFixedValue || 0) : undefined,
+                                                        ageRules: val === 'HEALTH_PLAN' ? (currentRules.ageRules || []) : undefined
                                                     }
                                                 });
                                             }
