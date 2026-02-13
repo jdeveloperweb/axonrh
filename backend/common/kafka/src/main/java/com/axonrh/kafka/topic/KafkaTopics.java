@@ -37,6 +37,11 @@ public final class KafkaTopics {
      */
     public static final String LEARNING_DOMAIN_EVENTS = "learning.domain.events";
 
+    /**
+     * Eventos de beneficios.
+     */
+    public static final String BENEFITS_DOMAIN_EVENTS = "benefits.domain.events";
+
     // ==================== System Events ====================
 
     /**
@@ -74,4 +79,5 @@ public final class KafkaTopics {
     public static final String AUDIT_SERVICE_GROUP = "audit-service";
     public static final String AI_SERVICE_GROUP = "ai-service";
     public static final String ANALYTICS_SERVICE_GROUP = "analytics-service";
+    public static final String BENEFITS_SERVICE_GROUP = "benefits-service";
 }
