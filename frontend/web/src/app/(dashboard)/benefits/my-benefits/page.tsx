@@ -27,15 +27,17 @@ export default function MyBenefitsPage() {
 
     useEffect(() => {
         async function loadMyBenefits() {
-            if (!user?.id) return;
+            const employeeId = user?.employeeId || user?.id;
+            if (!employeeId) return;
+
             try {
                 setLoading(true);
-                // Em um cenário real, o ID do colaborador estaria nas claims do JWT ou vinculada ao User
-                // Simulando busca pelo ID do usuário como ID do colaborador por simplicidade no demo
-                const data = await benefitsApi.getActiveBenefitsByEmployee(user.id);
-                setBenefits(data);
+                const data = await benefitsApi.getActiveBenefitsByEmployee(employeeId);
+                // Garantir que data seja um array antes de atualizar o estado
+                setBenefits(Array.isArray(data) ? data : []);
             } catch (error) {
                 console.error('Error loading my benefits:', error);
+                setBenefits([]);
             } finally {
                 setLoading(false);
             }
@@ -87,7 +89,12 @@ export default function MyBenefitsPage() {
                                     </div>
                                     <div className="space-y-1">
                                         <p className="text-[10px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider">Início em</p>
-                                        <p className="text-sm font-medium">{format(new Date(benefit.startDate), 'dd MMM yyyy', { locale: ptBR })}</p>
+                                        <p className="text-sm font-medium">
+                                            {benefit.startDate ? (() => {
+                                                const date = new Date(benefit.startDate);
+                                                return isNaN(date.getTime()) ? 'Data inválida' : format(date, 'dd MMM yyyy', { locale: ptBR });
+                                            })() : '-'}
+                                        </p>
                                     </div>
                                 </div>
 

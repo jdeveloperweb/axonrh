@@ -144,8 +144,14 @@ export default function VacationRequestDetailsPage() {
         COMPLETED: 'bg-green-100 text-green-700',
     };
 
-    const isApprover = user?.roles?.includes('ROLE_MANAGER') || user?.roles?.includes('ROLE_ADMIN') || user?.roles?.includes('ROLE_RH');
-    const canApprove = request.status === 'PENDING' && isApprover;
+    const roles = user?.roles || [];
+    const isAdmin = roles.some(r => r.includes('ADMIN'));
+    const isRH = roles.some(r => r.includes('RH') || r.includes('GESTOR_RH') || r.includes('ANALISTA_DP'));
+    const isManager = roles.some(r => r.includes('GESTOR') || r.includes('LIDER') || r.includes('MANAGER'));
+
+    const isApprover = isAdmin || isRH || isManager;
+    const canApprove = (request.status === 'PENDING' && isApprover) ||
+        (request.status === 'MANAGER_APPROVED' && (isAdmin || isRH));
 
     return (
         <div className="p-6 space-y-6 animate-in fade-in duration-500 max-w-5xl mx-auto">

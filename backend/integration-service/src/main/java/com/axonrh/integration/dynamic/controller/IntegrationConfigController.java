@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/integrations")
+@RequestMapping("/api/v1/integrations")
 public class IntegrationConfigController {
 
     private final IntegrationConfigRepository configRepository;
@@ -25,11 +25,13 @@ public class IntegrationConfigController {
     }
 
     @GetMapping
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     public List<IntegrationConfig> listConfigs() {
         return configRepository.findAll();
     }
 
     @GetMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<IntegrationConfig> getConfig(@PathVariable UUID id) {
         return configRepository.findById(id)
                 .map(ResponseEntity::ok)
@@ -37,11 +39,13 @@ public class IntegrationConfigController {
     }
 
     @PostMapping("/configs")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     public IntegrationConfig createConfig(@RequestBody IntegrationConfig config) {
         return configRepository.save(config);
     }
 
     @PutMapping("/configs/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<IntegrationConfig> updateConfig(@PathVariable UUID id, @RequestBody IntegrationConfig configDetails) {
         return configRepository.findById(id)
                 .map(config -> {
@@ -61,6 +65,7 @@ public class IntegrationConfigController {
     }
 
     @DeleteMapping("/configs/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteConfig(@PathVariable UUID id) {
         if (configRepository.existsById(id)) {
             configRepository.deleteById(id);
@@ -70,6 +75,7 @@ public class IntegrationConfigController {
     }
 
     @PostMapping("/execute/{configName}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<IntegrationLog> executeIntegration(@PathVariable String configName, @RequestBody Map<String, Object> data) {
         try {
             IntegrationLog log = dynamicIntegrationService.executeIntegration(configName, data);

@@ -12,15 +12,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { EmployeeBenefit, EmployeeBenefitRequest, BenefitType } from '@/types/benefits';
 import { benefitsApi } from '@/lib/api/benefits';
+import { employeesApi, Employee } from '@/lib/api/employees';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
@@ -43,6 +38,7 @@ export function EmployeeBenefitDialog({
 }: EmployeeBenefitDialogProps) {
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
+    const [employees, setEmployees] = useState<Employee[]>([]);
     const [formData, setFormData] = useState<EmployeeBenefitRequest>({
         employeeId: '',
         employeeName: '',
@@ -69,7 +65,7 @@ export function EmployeeBenefitDialog({
                 notes: selectedBenefit.notes || ''
             });
         } else if (employeeInfo) {
-            setFormData(prev => ({
+            setFormData((prev: EmployeeBenefitRequest) => ({
                 ...prev,
                 employeeId: employeeInfo.id,
                 employeeName: employeeInfo.name,
@@ -80,8 +76,35 @@ export function EmployeeBenefitDialog({
                 endDate: '',
                 notes: ''
             }));
+        } else {
+            setFormData((prev: EmployeeBenefitRequest) => ({
+                ...prev,
+                employeeId: '',
+                employeeName: '',
+                benefitTypeId: '',
+                fixedValue: 0,
+                percentage: 0,
+                startDate: format(new Date(), 'yyyy-MM-dd'),
+                endDate: '',
+                notes: ''
+            }));
         }
     }, [selectedBenefit, employeeInfo, isOpen]);
+
+    useEffect(() => {
+        const fetchEmployees = async () => {
+            try {
+                const response = await employeesApi.list({ status: 'ACTIVE', size: 1000 });
+                setEmployees(response.content || []);
+            } catch (error) {
+                console.error('Error fetching employees:', error);
+            }
+        };
+
+        if (isOpen && !selectedBenefit && !employeeInfo) {
+            fetchEmployees();
+        }
+    }, [isOpen, selectedBenefit, employeeInfo]);
 
     const handleTypeChange = (typeId: string) => {
         const type = benefitTypes.find(t => t.id === typeId);
@@ -132,7 +155,28 @@ export function EmployeeBenefitDialog({
                 <form onSubmit={handleSubmit} className="space-y-4 py-2">
                     <div className="space-y-2">
                         <Label>Colaborador</Label>
-                        <Input value={formData.employeeName} disabled className="bg-slate-50" />
+                        {selectedBenefit || employeeInfo ? (
+                            <Input value={formData.employeeName} disabled className="bg-slate-50" />
+                        ) : (
+                            <Select
+                                value={formData.employeeId}
+                                onValueChange={(id) => {
+                                    const emp = employees.find(e => e.id === id);
+                                    setFormData({ ...formData, employeeId: id, employeeName: emp?.fullName || emp?.socialName || '' });
+                                }}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Selecione um colaborador" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {employees.map(emp => (
+                                        <SelectItem key={emp.id} value={emp.id}>
+                                            {emp.fullName}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        )}
                     </div>
 
                     <div className="space-y-2">
@@ -140,9 +184,8 @@ export function EmployeeBenefitDialog({
                         <Select
                             value={formData.benefitTypeId}
                             onValueChange={handleTypeChange}
-                            disabled={!!selectedBenefit}
                         >
-                            <SelectTrigger>
+                            <SelectTrigger disabled={!!selectedBenefit}>
                                 <SelectValue placeholder="Selecione um benefício" />
                             </SelectTrigger>
                             <SelectContent>
@@ -156,7 +199,7 @@ export function EmployeeBenefitDialog({
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                        {selectedType?.calculationType === 'FIXED_VALUE' || (!selectedType && formData.fixedValue > 0) ? (
+                        {selectedType?.calculationType === 'FIXED_VALUE' || (!selectedType && (formData.fixedValue || 0) > 0) ? (
                             <div className="space-y-2">
                                 <Label htmlFor="fixedValue">Valor Mensal (R$)</Label>
                                 <Input
@@ -220,7 +263,7 @@ export function EmployeeBenefitDialog({
                         <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
                             Cancelar
                         </Button>
-                        <Button type="submit" className="btn-primary" disabled={loading || !formData.benefitTypeId}>
+                        <Button type="submit" className="btn-primary" disabled={loading || !formData.benefitTypeId || !formData.employeeId}>
                             {loading ? 'Salvando...' : 'Salvar'}
                         </Button>
                     </DialogFooter>
@@ -229,3 +272,4 @@ export function EmployeeBenefitDialog({
         </Dialog>
     );
 }
+

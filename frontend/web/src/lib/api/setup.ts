@@ -188,6 +188,7 @@ export interface ModuleConfig {
   moduleLearning: boolean;
   moduleRecruitment: boolean;
   moduleBenefits: boolean;
+  moduleIntegration: boolean;
   moduleEsocial: boolean;
   moduleAccounting: boolean;
   moduleBanking: boolean;

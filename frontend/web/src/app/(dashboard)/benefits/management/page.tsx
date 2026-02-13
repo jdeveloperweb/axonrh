@@ -205,13 +205,20 @@ export default function BenefitManagementPage() {
                                             : `${b.percentage}%`}
                                     </TableCell>
                                     <TableCell className="text-sm">
-                                        {format(new Date(b.startDate), 'dd/MM/yyyy')}
-                                        {b.endDate && <><ArrowRight className="inline w-3 h-3 mx-1" /> {format(new Date(b.endDate), 'dd/MM/yyyy')}</>}
+                                        {b.startDate ? (() => {
+                                            const date = new Date(b.startDate);
+                                            return isNaN(date.getTime()) ? 'Invalida' : format(date, 'dd/MM/yyyy');
+                                        })() : '-'}
+                                        {b.endDate && (() => {
+                                            const date = new Date(b.endDate);
+                                            if (isNaN(date.getTime())) return null;
+                                            return <><ArrowRight className="inline w-3 h-3 mx-1" /> {format(date, 'dd/MM/yyyy')}</>;
+                                        })()}
                                     </TableCell>
                                     <TableCell>
                                         <Badge variant={
                                             b.status === 'ACTIVE' ? 'success' :
-                                                b.status === 'SCHEDULED' ? 'pending' :
+                                                b.status === 'SCHEDULED' ? 'warning' :
                                                     'secondary'
                                         }>
                                             {b.status}

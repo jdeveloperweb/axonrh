@@ -22,7 +22,8 @@ import {
     Monitor,
     Heart,
     CreditCard,
-    Building2
+    Building2,
+    Puzzle
 } from 'lucide-react';
 import { setupApi, ModuleConfig } from '@/lib/api/setup';
 import { Switch } from '@/components/ui/switch';
@@ -46,6 +47,7 @@ const INITIAL_MODULES: ModuleConfig = {
     moduleAiAnalytics: false,
     moduleMobileApp: true,
     moduleKiosk: false,
+    moduleIntegration: false,
 };
 
 const moduleInfo = [
@@ -155,6 +157,13 @@ const moduleInfo = [
         name: 'Banking & Pagamentos',
         desc: 'Pagamento de salários diretamente pelo sistema via API bancária.',
         icon: CreditCard,
+        category: 'Eficiência'
+    },
+    {
+        key: 'moduleIntegration',
+        name: 'Integração Dinâmica',
+        desc: 'Conecte o AxonRH a qualquer sistema externo via APIs personalizáveis.',
+        icon: Puzzle,
         category: 'Eficiência'
     }
 ];

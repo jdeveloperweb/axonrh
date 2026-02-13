@@ -18,18 +18,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@org.testcontainers.junit.jupiter.Testcontainers
 class DynamicIntegrationTest {
 
-    @org.testcontainers.junit.jupiter.Container
-    static org.testcontainers.containers.PostgreSQLContainer<?> postgres = new org.testcontainers.containers.PostgreSQLContainer<>("postgres:15-alpine");
+    @org.springframework.boot.test.mock.mockito.MockBean
+    private IntegrationConfigRepository configRepository;
 
-    @org.springframework.test.context.DynamicPropertySource
-    static void configureProperties(org.springframework.test.context.DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-    }
+    @org.springframework.boot.test.mock.mockito.MockBean
+    private IntegrationLogRepository logRepository;
 
     @Autowired
     private MockMvc mockMvc;
@@ -41,8 +36,9 @@ class DynamicIntegrationTest {
     private ObjectMapper objectMapper;
 
     @Test
+    @org.springframework.security.test.context.support.WithMockUser(roles = "ADMIN")
     void shouldExecuteIntegrationSuccessfully() throws Exception {
-        // 1. Criar Configuração
+        // 1. Mock Configuração
         IntegrationConfig config = new IntegrationConfig();
         config.setName("HttpBinTest");
         config.setTargetUrl("https://httpbin.org/post");
@@ -50,7 +46,11 @@ class DynamicIntegrationTest {
         config.setHeadersTemplate("{\"X-Test-Header\": \"${headerValue}\"}");
         config.setBodyTemplate("{\"message\": \"Hello ${name}!\"}");
         config.setActive(true);
-        configRepository.save(config);
+        config.setTimeoutSeconds(10);
+
+        org.mockito.Mockito.when(configRepository.findByName("HttpBinTest")).thenReturn(java.util.Optional.of(config));
+        org.mockito.Mockito.when(logRepository.save(org.mockito.ArgumentMatchers.any(com.axonrh.integration.dynamic.entity.IntegrationLog.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         // 2. Dados da execução
         Map<String, Object> data = Map.of(

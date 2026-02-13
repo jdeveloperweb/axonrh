@@ -35,7 +35,8 @@ export default function VacationApprovalsPage() {
 
     const [activeTab, setActiveTab] = useState('team');
 
-    const isRH = user?.roles?.some((r: string) => r.includes('RH') || r.includes('ADMIN'));
+    const roles = user?.roles || [];
+    const isRH = roles.some(r => r.includes('RH') || r.includes('ADMIN') || r.includes('GESTOR_RH') || r.includes('ANALISTA_DP'));
 
     const loadRequests = useCallback(async () => {
         try {

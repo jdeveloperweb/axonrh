@@ -25,6 +25,7 @@ import {
   UserPlus,
   HeartPulse,
   Banknote,
+  Puzzle
 } from 'lucide-react';
 import { cn, getPhotoUrl } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
@@ -92,6 +93,7 @@ const navGroups: NavGroup[] = [
       { label: 'Cargos', href: '/positions', icon: Briefcase },
       { label: 'Banco de Talentos', href: '/talent-pool', icon: UserPlus, permission: 'EMPLOYEE:READ', module: 'moduleRecruitment' },
       { label: 'Gestores', href: '/managers', icon: UserCog },
+      { label: 'Integrações', href: '/integrations', icon: Puzzle, module: 'moduleIntegration' },
       { label: 'Configurações', href: '/settings', icon: Settings, permission: 'CONFIG:READ' },
     ]
   }

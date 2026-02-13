@@ -246,66 +246,66 @@ export interface DigitalCertificate {
 
 export const esocialApi = {
   createEvent: (data: { eventType: ESocialEventType; employeeId?: string; eventData: Record<string, unknown> }) =>
-    api.post<ESocialEvent>('/integration/esocial/events', data),
+    api.post<ESocialEvent>('/esocial/events', data),
 
   listEvents: (page = 0, size = 20) =>
-    api.get<{ content: ESocialEvent[]; totalElements: number }>(`/integration/esocial/events?page=${page}&size=${size}`),
+    api.get<{ content: ESocialEvent[]; totalElements: number }, { content: ESocialEvent[]; totalElements: number }>(`/esocial/events?page=${page}&size=${size}`),
 
   getEvent: (id: string) =>
-    api.get<ESocialEvent>(`/integration/esocial/events/${id}`),
+    api.get<ESocialEvent, ESocialEvent>(`/esocial/events/${id}`),
 
   getPendingEvents: () =>
-    api.get<ESocialEvent[]>('/integration/esocial/events/pending'),
+    api.get<ESocialEvent[], ESocialEvent[]>('/esocial/events/pending'),
 
   getEventsByEmployee: (employeeId: string) =>
-    api.get<ESocialEvent[]>(`/integration/esocial/events/employee/${employeeId}`),
+    api.get<ESocialEvent[], ESocialEvent[]>(`/esocial/events/employee/${employeeId}`),
 
   transmitEvent: (eventId: string) =>
-    api.post<TransmissionResult>(`/integration/esocial/events/${eventId}/transmit`),
+    api.post<unknown, TransmissionResult>(`/esocial/events/${eventId}/transmit`),
 
   transmitBatch: (eventIds: string[]) =>
-    api.post<{ total: number; success: number; failed: number; results: TransmissionResult[] }>(
-      '/integration/esocial/events/batch/transmit',
+    api.post<unknown, { total: number; success: number; failed: number; results: TransmissionResult[] }>(
+      '/esocial/events/batch/transmit',
       { eventIds }
     ),
 
   consultEvent: (eventId: string) =>
-    api.post<TransmissionResult>(`/integration/esocial/events/${eventId}/consult`),
+    api.post<unknown, TransmissionResult>(`/esocial/events/${eventId}/consult`),
 
   retryEvent: (eventId: string) =>
-    api.post<ESocialEvent>(`/integration/esocial/events/${eventId}/retry`),
+    api.post<unknown, ESocialEvent>(`/esocial/events/${eventId}/retry`),
 
   cancelEvent: (eventId: string, reason: string) =>
-    api.post<ESocialEvent>(`/integration/esocial/events/${eventId}/cancel`, { reason }),
+    api.post<unknown, ESocialEvent>(`/esocial/events/${eventId}/cancel`, { reason }),
 
   getStatistics: () =>
-    api.get<ESocialStatistics>('/integration/esocial/statistics'),
+    api.get<ESocialStatistics, ESocialStatistics>('/esocial/statistics'),
 };
 
 // ==================== CNAB API ====================
 
 export const cnabApi = {
   generatePayrollFile: (data: { payments: PayrollPayment[]; bankConfig: BankConfig; paymentDate: string }) =>
-    api.post<CnabFile>('/integration/cnab/payroll', data),
+    api.post<unknown, CnabFile>('/cnab/payroll', data),
 
   processReturnFile: (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
     // Não definir Content-Type manualmente - deixar o axios configurar o boundary automaticamente
-    return api.post<CnabFile>('/integration/cnab/return', formData);
+    return api.post<FormData, CnabFile>('/cnab/return', formData);
   },
 
   listFiles: (page = 0, size = 20) =>
-    api.get<{ content: CnabFile[]; totalElements: number }>(`/integration/cnab/files?page=${page}&size=${size}`),
+    api.get<{ content: CnabFile[]; totalElements: number }, { content: CnabFile[]; totalElements: number }>(`/cnab/files?page=${page}&size=${size}`),
 
   getFile: (id: string) =>
-    api.get<CnabFile>(`/integration/cnab/files/${id}`),
+    api.get<CnabFile, CnabFile>(`/cnab/files/${id}`),
 
   getFileRecords: (fileId: string) =>
-    api.get<CnabRecord[]>(`/integration/cnab/files/${fileId}/records`),
+    api.get<CnabRecord[], CnabRecord[]>(`/cnab/files/${fileId}/records`),
 
   downloadFile: (fileId: string) =>
-    api.get<Blob>(`/integration/cnab/files/${fileId}/download`, { responseType: 'blob' }),
+    api.get<unknown, Blob>(`/cnab/files/${fileId}/download`, { responseType: 'blob' }),
 };
 
 // ==================== Accounting API ====================
@@ -333,19 +333,19 @@ export const accountingApi = {
         historyCode?: string;
       }>;
     }>;
-  }) => api.post<AccountingExport>('/integration/accounting/exports', data),
+  }) => api.post<unknown, AccountingExport>('/accounting/exports', data),
 
   listExports: (page = 0, size = 20) =>
-    api.get<{ content: AccountingExport[]; totalElements: number }>(`/integration/accounting/exports?page=${page}&size=${size}`),
+    api.get<{ content: AccountingExport[]; totalElements: number }, { content: AccountingExport[]; totalElements: number }>(`/accounting/exports?page=${page}&size=${size}`),
 
   getExport: (id: string) =>
-    api.get<AccountingExport>(`/integration/accounting/exports/${id}`),
+    api.get<AccountingExport, AccountingExport>(`/accounting/exports/${id}`),
 
   downloadExport: (exportId: string) =>
-    api.get<Blob>(`/integration/accounting/exports/${exportId}/download`, { responseType: 'blob' }),
+    api.get<unknown, Blob>(`/accounting/exports/${exportId}/download`, { responseType: 'blob' }),
 
   getAccountingSystems: () =>
-    api.get<AccountingSystem[]>('/integration/accounting/systems'),
+    api.get<AccountingSystem[], AccountingSystem[]>('/accounting/systems'),
 };
 
 // ==================== Webhook API ====================
@@ -361,31 +361,31 @@ export const webhooksApi = {
     headers?: string;
     retryCount?: number;
     timeoutSeconds?: number;
-  }) => api.post<Webhook>('/integration/webhooks', data),
+  }) => api.post<unknown, Webhook>('/webhooks', data),
 
   list: () =>
-    api.get<Webhook[]>('/integration/webhooks'),
+    api.get<Webhook[], Webhook[]>('/webhooks'),
 
   get: (id: string) =>
-    api.get<Webhook>(`/integration/webhooks/${id}`),
+    api.get<Webhook, Webhook>(`/webhooks/${id}`),
 
   update: (id: string, data: Partial<Webhook>) =>
-    api.put<Webhook>(`/integration/webhooks/${id}`, data),
+    api.put<unknown, Webhook>(`/webhooks/${id}`, data),
 
   delete: (id: string) =>
-    api.delete(`/integration/webhooks/${id}`),
+    api.delete<unknown, void>(`/webhooks/${id}`),
 
   test: (id: string) =>
-    api.post<WebhookDelivery>(`/integration/webhooks/${id}/test`),
+    api.post<unknown, WebhookDelivery>(`/webhooks/${id}/test`),
 
   getDeliveryHistory: (webhookId: string) =>
-    api.get<WebhookDelivery[]>(`/integration/webhooks/${webhookId}/deliveries`),
+    api.get<WebhookDelivery[], WebhookDelivery[]>(`/webhooks/${webhookId}/deliveries`),
 
   retryDelivery: (deliveryId: string) =>
-    api.post<WebhookDelivery>(`/integration/webhooks/deliveries/${deliveryId}/retry`),
+    api.post<unknown, WebhookDelivery>(`/webhooks/deliveries/${deliveryId}/retry`),
 
   getEventTypes: () =>
-    api.get<WebhookEventType[]>('/integration/webhooks/event-types'),
+    api.get<WebhookEventType[], WebhookEventType[]>('/webhooks/event-types'),
 };
 
 // ==================== Certificate API ====================
@@ -397,24 +397,75 @@ export const certificatesApi = {
     formData.append('name', name);
     formData.append('password', password);
     // Não definir Content-Type manualmente - deixar o axios configurar o boundary automaticamente
-    return api.post<DigitalCertificate>('/integration/certificates', formData);
+    return api.post<FormData, DigitalCertificate>('/certificates', formData);
   },
 
   list: () =>
-    api.get<DigitalCertificate[]>('/integration/certificates'),
+    api.get<DigitalCertificate[], DigitalCertificate[]>('/certificates'),
 
   get: (id: string) =>
-    api.get<DigitalCertificate>(`/integration/certificates/${id}`),
+    api.get<DigitalCertificate, DigitalCertificate>(`/certificates/${id}`),
 
   activate: (id: string) =>
-    api.post<DigitalCertificate>(`/integration/certificates/${id}/activate`),
+    api.post<unknown, DigitalCertificate>(`/certificates/${id}/activate`),
 
   deactivate: (id: string) =>
-    api.post<DigitalCertificate>(`/integration/certificates/${id}/deactivate`),
+    api.post<unknown, DigitalCertificate>(`/certificates/${id}/deactivate`),
 
   delete: (id: string) =>
-    api.delete(`/integration/certificates/${id}`),
+    api.delete<unknown, void>(`/certificates/${id}`),
 
   getExpiring: (days = 30) =>
-    api.get<DigitalCertificate[]>(`/integration/certificates/expiring?days=${days}`),
+    api.get<DigitalCertificate[], DigitalCertificate[]>(`/certificates/expiring?days=${days}`),
+};
+// ==================== Dynamic Integration Types ====================
+
+export interface IntegrationConfig {
+  id: string;
+  name: string;
+  description?: string;
+  targetUrl: string;
+  httpMethod: string;
+  headersTemplate?: string;
+  bodyTemplate?: string;
+  responseMapping?: string;
+  isActive: boolean;
+  retryCount: number;
+  timeoutSeconds: number;
+  createdAt: string;
+}
+
+export interface IntegrationLog {
+  id: string;
+  configId: string;
+  configName: string;
+  executionTime: string;
+  requestPayload?: string;
+  responseStatus?: number;
+  responseBody?: string;
+  success: boolean;
+  errorMessage?: string;
+  durationMs: number;
+}
+
+// ==================== Dynamic Integration API ====================
+
+export const dynamicIntegrationsApi = {
+  listConfigs: () =>
+    api.get<IntegrationConfig[], IntegrationConfig[]>('/integrations'),
+
+  getConfig: (id: string) =>
+    api.get<IntegrationConfig, IntegrationConfig>(`/integrations/${id}`),
+
+  createConfig: (config: Partial<IntegrationConfig>) =>
+    api.post<unknown, IntegrationConfig>('/integrations/configs', config),
+
+  updateConfig: (id: string, config: Partial<IntegrationConfig>) =>
+    api.put<unknown, IntegrationConfig>(`/integrations/configs/${id}`, config),
+
+  deleteConfig: (id: string) =>
+    api.delete<unknown, void>(`/integrations/configs/${id}`),
+
+  execute: (configName: string, data: Record<string, unknown>) =>
+    api.post<unknown, IntegrationLog>(`/integrations/execute/${configName}`, data),
 };

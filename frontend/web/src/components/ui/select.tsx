@@ -13,6 +13,7 @@ interface SelectContextValue {
   id: string
   selectedLabel?: string
   setSelectedLabel: (label: string) => void
+  disabled?: boolean
 }
 
 const SelectContext = React.createContext<SelectContextValue | null>(null)
@@ -30,9 +31,10 @@ interface SelectProps {
   value?: string
   defaultValue?: string
   onValueChange?: (value: string) => void
+  disabled?: boolean
 }
 
-const Select = ({ children, value: controlledValue, defaultValue, onValueChange }: SelectProps) => {
+const Select = ({ children, value: controlledValue, defaultValue, onValueChange, disabled }: SelectProps) => {
   const [uncontrolledValue, setUncontrolledValue] = React.useState(defaultValue)
   const [open, setOpen] = React.useState(false)
   const [selectedLabel, setSelectedLabel] = React.useState<string | undefined>()
@@ -49,7 +51,7 @@ const Select = ({ children, value: controlledValue, defaultValue, onValueChange 
   }
 
   return (
-    <SelectContext.Provider value={{ value, onValueChange: handleValueChange, open, setOpen, id, selectedLabel, setSelectedLabel }}>
+    <SelectContext.Provider value={{ value, onValueChange: handleValueChange, open, setOpen, id, selectedLabel, setSelectedLabel, disabled }}>
       <div className="relative">
         {children}
       </div>
@@ -75,7 +77,7 @@ const SelectTrigger = React.forwardRef<
   HTMLButtonElement,
   React.ButtonHTMLAttributes<HTMLButtonElement>
 >(({ className, children, ...props }, ref) => {
-  const { open, setOpen, id } = useSelect()
+  const { open, setOpen, id, disabled } = useSelect()
 
   return (
     <button
@@ -84,11 +86,12 @@ const SelectTrigger = React.forwardRef<
       role="combobox"
       aria-expanded={open}
       aria-controls={id}
+      disabled={disabled}
       className={cn(
         "flex h-10 w-full items-center justify-between rounded-md border border-input bg-white px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
         className
       )}
-      onClick={() => setOpen(!open)}
+      onClick={() => !disabled && setOpen(!open)}
       {...props}
     >
       {children}
@@ -153,7 +156,7 @@ interface SelectItemProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const SelectItem = React.forwardRef<HTMLDivElement, SelectItemProps>(
   ({ className, children, value: itemValue, ...props }, ref) => {
-    const { value, onValueChange, setSelectedLabel } = useSelect()
+    const { value, onValueChange, setSelectedLabel, disabled } = useSelect()
     const isSelected = value === itemValue
 
     React.useEffect(() => {
@@ -172,7 +175,7 @@ const SelectItem = React.forwardRef<HTMLDivElement, SelectItemProps>(
           isSelected && "bg-blue-50/50 text-blue-600 font-bold",
           className
         )}
-        onClick={() => onValueChange?.(itemValue)}
+        onClick={() => !disabled && onValueChange?.(itemValue)}
         {...props}
       >
         {isSelected && (

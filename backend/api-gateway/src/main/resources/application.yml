@@ -158,7 +158,7 @@ spring:
         - id: integration-service
           uri: http://axonrh-integration-service:8090
           predicates:
-            - Path=/api/v1/integrations/**, /api/v1/esocial/**
+            - Path=/api/v1/integrations/**, /api/v1/esocial/**, /api/v1/integration/**
           filters:
             # - StripPrefix=2
             - name: JwtAuthFilter

@@ -1,0 +1,87 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -------------------< com.axonrh:integration-service >-------------------
+[INFO] Building AxonRH Integration Service 1.0.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.4.0:clean (default-clean) @ integration-service ---
+[INFO] Deleting C:\Users\Jaime.Vicente\axonrh\backend\integration-service\target
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ integration-service ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 2 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ integration-service ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 34 source files with javac [debug parameters release 17] to target\classes
+[INFO] /C:/Users/Jaime.Vicente/axonrh/backend/integration-service/src/main/java/com/axonrh/integration/dynamic/service/DynamicIntegrationService.java: C:\Users\Jaime.Vicente\axonrh\backend\integration-service\src\main\java\com\axonrh\integration\dynamic\service\DynamicIntegrationService.java uses unchecked or unsafe operations.
+[INFO] /C:/Users/Jaime.Vicente/axonrh/backend/integration-service/src/main/java/com/axonrh/integration/dynamic/service/DynamicIntegrationService.java: Recompile with -Xlint:unchecked for details.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ integration-service ---
+[INFO] skip non existing resourceDirectory C:\Users\Jaime.Vicente\axonrh\backend\integration-service\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ integration-service ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 1 source file with javac [debug parameters release 17] to target\test-classes
+[INFO] 
+[INFO] --- surefire:3.5.2:test (default-test) @ integration-service ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running com.axonrh.integration.dynamic.DynamicIntegrationTest
+12:08:48.845 [main] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.axonrh.integration.dynamic.DynamicIntegrationTest]: DynamicIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+12:08:49.098 [main] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.axonrh.integration.IntegrationServiceApplication for test class com.axonrh.integration.dynamic.DynamicIntegrationTest
+12:08:49.372 [main] INFO org.testcontainers.images.PullPolicy -- Image pull policy will be performed by: DefaultPullPolicy()
+12:08:49.378 [main] INFO org.testcontainers.utility.ImageNameSubstitutor -- Image name substitution will be performed by: DefaultImageNameSubstitutor (composite of 'ConfigurationFileImageNameSubstitutor' and 'PrefixingImageNameSubstitutor')
+12:08:49.822 [main] INFO org.testcontainers.dockerclient.DockerMachineClientProviderStrategy -- docker-machine executable was not found on PATH ([C:\Users\Jaime.Vicente\AppData\Roaming\npm, C:\Program Files\Common Files\Oracle\Java\javapath, C:\Program Files (x86)\Common Files\Oracle\Java\java8path, C:\Program Files (x86)\Common Files\Oracle\Java\javapath, c:\Users\Jaime.Vicente\AppData\Local\Programs\cursor\resources\app\bin, C:\Program Files\Google\Chrome\Application, C:\apache-maven-3.9.9\bin, C:\WINDOWS\System32\WindowsPowerShell\v1.0\, C:\Python312\Scripts\, C:\Python312\, C:\WINDOWS\system32, C:\WINDOWS, C:\WINDOWS\System32\Wbem, C:\WINDOWS\System32\OpenSSH\, C:\Program Files\dotnet\, C:\Program Files\PuTTY\, C:\Program Files\Git\cmd, C:\ProgramData\chocolatey\bin, C:\Program Files\Microsoft SQL Server\150\Tools\Binn\, C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\, C:\Users\Jaime.Vicente\AppData\Local\Microsoft\WindowsApps, C:\Program Files\JetBrains\IntelliJ IDEA 2024.3.2.2\bin, C:\Program Files (x86)\CVSNT\, C:\Program Files\Java\jdk-17\bin, C:\Progr, C:\Program Files\CMake\bin, C:\Program Files\nodejs\, C:\WINDOWS\system32, C:\WINDOWS, C:\WINDOWS\System32\Wbem, C:\WINDOWS\System32\WindowsPowerShell\v1.0\, C:\WINDOWS\System32\OpenSSH\, C:\Program Files\Amazon\AWSCLIV2\, C:\Users\Jaime.Vicente\AppData\Local\Microsoft\WindowsApps, , C:\Program Files\JetBrains\IntelliJ IDEA 2024.3.2.2\bin, , C:\Program Files (x86)\CVSNT\, C:\Users\Jaime.Vicente\AppData\Local\Programs\Microsoft VS Code\bin, C:\Users\Jaime.Vicente\AppData\Roaming\npm, C:\tools\dart-sdk\bin, C:\Users\Jaime.Vicente\AppData\Local\Pub\Cache\bin, C:\Users\Jaime.Vicente\AppData\Local\Programs\Antigravity\bin, c:\Users\Jaime.Vicente\.antigravity\extensions\ms-python.debugpy-2025.18.0-win32-x64\bundled\scripts\noConfigScripts])
+12:08:49.823 [main] ERROR org.testcontainers.dockerclient.DockerClientProviderStrategy -- Could not find a valid Docker environment. Please check configuration. Attempted configurations were:
+As no valid configuration was found, execution cannot continue.
+See https://java.testcontainers.org/on_failure.html for more details.
+[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 1.205 s <<< FAILURE! -- in com.axonrh.integration.dynamic.DynamicIntegrationTest
+[ERROR] com.axonrh.integration.dynamic.DynamicIntegrationTest -- Time elapsed: 1.205 s <<< ERROR!
+java.lang.IllegalStateException: Could not find a valid Docker environment. Please see logs and check configuration
+	at org.testcontainers.dockerclient.DockerClientProviderStrategy.lambda$getFirstValidStrategy$7(DockerClientProviderStrategy.java:277)
+	at java.base/java.util.Optional.orElseThrow(Optional.java:403)
+	at org.testcontainers.dockerclient.DockerClientProviderStrategy.getFirstValidStrategy(DockerClientProviderStrategy.java:268)
+	at org.testcontainers.DockerClientFactory.getOrInitializeStrategy(DockerClientFactory.java:152)
+	at org.testcontainers.DockerClientFactory.client(DockerClientFactory.java:194)
+	at org.testcontainers.DockerClientFactory$1.getDockerClient(DockerClientFactory.java:106)
+	at com.github.dockerjava.api.DockerClientDelegate.authConfig(DockerClientDelegate.java:109)
+	at org.testcontainers.containers.GenericContainer.start(GenericContainer.java:329)
+	at org.testcontainers.junit.jupiter.TestcontainersExtension$StoreAdapter.start(TestcontainersExtension.java:280)
+	at org.testcontainers.junit.jupiter.TestcontainersExtension$StoreAdapter.access$200(TestcontainersExtension.java:267)
+	at org.testcontainers.junit.jupiter.TestcontainersExtension.lambda$null$4(TestcontainersExtension.java:82)
+	at org.testcontainers.junit.jupiter.TestcontainersExtension.lambda$startContainers$5(TestcontainersExtension.java:82)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at org.testcontainers.junit.jupiter.TestcontainersExtension.startContainers(TestcontainersExtension.java:82)
+	at org.testcontainers.junit.jupiter.TestcontainersExtension.beforeAll(TestcontainersExtension.java:56)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Errors: 
+[ERROR]   DynamicIntegrationTest ? IllegalState Could not find a valid Docker environment. Please see logs and check configuration
+[INFO] 
+[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  11.476 s
+[INFO] Finished at: 2026-02-13T12:08:50-03:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.2:test (default-test) on project integration-service: 
+[ERROR] 
+[ERROR] See C:\Users\Jaime.Vicente\axonrh\backend\integration-service\target\surefire-reports for the individual test results.
+[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

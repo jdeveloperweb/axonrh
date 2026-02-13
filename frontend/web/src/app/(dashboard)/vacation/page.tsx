@@ -53,9 +53,9 @@ export default function VacationPage() {
   const [requests, setRequests] = useState<VacationRequest[]>([]);
 
   const roles = user?.roles || [];
-  const isAdmin = roles.includes('ADMIN');
-  const isRH = roles.includes('RH') || roles.includes('GESTOR_RH') || roles.includes('ANALISTA_DP');
-  const isManager = roles.includes('GESTOR') || roles.includes('LIDER') || roles.includes('MANAGER');
+  const isAdmin = roles.some(r => r.includes('ADMIN'));
+  const isRH = roles.some(r => r.includes('RH') || r.includes('GESTOR_RH') || r.includes('ANALISTA_DP'));
+  const isManager = roles.some(r => r.includes('GESTOR') || r.includes('LIDER') || r.includes('MANAGER'));
   const [statistics, setStatistics] = useState({
     pendingRequests: 0,
     expiringPeriods: 0,
@@ -160,7 +160,7 @@ export default function VacationPage() {
             Nova Solicitação
           </Button>
 
-          {(isManager || isRH) && (
+          {(isManager || isRH || isAdmin) && (
             <Button
               variant="outline"
               onClick={() => router.push('/vacation/approvals')}
@@ -187,12 +187,27 @@ export default function VacationPage() {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { icon: Clock, label: 'Pendentes', value: statistics.pendingRequests, desc: 'Aguardando aprovação', iconBg: 'bg-amber-50', iconColor: 'text-amber-500' },
+          {
+            icon: Clock,
+            label: 'Pendentes',
+            value: statistics.pendingRequests,
+            desc: 'Aguardando aprovação',
+            iconBg: 'bg-amber-50',
+            iconColor: 'text-amber-500',
+            path: (isManager || isRH || isAdmin) && statistics.pendingRequests > 0 ? '/vacation/approvals' : undefined
+          },
           { icon: CalendarCheck2, label: 'Agendadas', value: statistics.upcomingVacations, desc: 'Próximas férias', iconBg: 'bg-blue-50', iconColor: 'text-blue-500' },
           { icon: AlertTriangle, label: 'A Vencer', value: statistics.expiringPeriods, desc: 'Atenção aos prazos', iconBg: 'bg-red-50', iconColor: 'text-red-500' },
           { icon: Sun, label: 'Em Férias', value: statistics.employeesOnVacation, desc: 'Equipe em descanso', iconBg: 'bg-emerald-50', iconColor: 'text-emerald-500' },
         ].map((stat, i) => (
-          <Card key={i} className="border-none shadow-sm bg-white hover:shadow-md transition-all">
+          <Card
+            key={i}
+            className={cn(
+              "border-none shadow-sm bg-white transition-all",
+              stat.path ? "cursor-pointer hover:shadow-md hover:scale-[1.02] active:scale-[0.98]" : "hover:shadow-md"
+            )}
+            onClick={() => stat.path && router.push(stat.path)}
+          >
             <CardContent className="p-4 flex items-center justify-between">
               <div className="space-y-1">
                 <p className="text-xs font-medium text-gray-500">{stat.label}</p>
@@ -401,7 +416,7 @@ export default function VacationPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               {[
-                ...(isManager || isRH ? [{
+                ...(isManager || isRH || isAdmin ? [{
                   icon: CheckCircle2,
                   label: 'Aprovações',
                   desc: 'Gerenciar solicitações',
