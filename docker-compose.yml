@@ -15,7 +15,7 @@ x-backend-env: &backend-env
   SPRING_FLYWAY_ENABLED: "false"
   SPRING_LIQUIBASE_ENABLED: "false"
   SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-  JAVA_TOOL_OPTIONS: "-Xms256m -Xmx768m"
+  JAVA_TOOL_OPTIONS: "-Xms128m -Xmx384m"
 
 x-backend-service: &backend-service
   image: maven:3.9.6-eclipse-temurin-21
@@ -62,6 +62,10 @@ services:
       retries: 5
     networks:
       - axonrh-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   # MongoDB for AI conversations
   mongodb:
@@ -99,6 +103,10 @@ services:
       retries: 5
     networks:
       - axonrh-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   # RabbitMQ for messaging
   rabbitmq:
@@ -119,6 +127,10 @@ services:
       retries: 5
     networks:
       - axonrh-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   # Zookeeper for Kafka
   zookeeper:
@@ -133,6 +145,10 @@ services:
       - zookeeper_data:/var/lib/zookeeper/data
     networks:
       - axonrh-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   # Kafka for messaging
   kafka:
@@ -158,6 +174,10 @@ services:
       retries: 5
     networks:
       - axonrh-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   # MailHog for email testing
   mailhog:
@@ -173,6 +193,10 @@ services:
       retries: 5
     networks:
       - axonrh-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   # MinIO for file storage (S3 compatible)
   minio:
@@ -194,6 +218,10 @@ services:
       retries: 5
     networks:
       - axonrh-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   config-service:
     <<: *backend-service
@@ -205,6 +233,10 @@ services:
       <<: *backend-env
       SPRING_FLYWAY_ENABLED: "true"
       SERVER_PORT: 8888
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   auth-service:
     <<: *backend-service
@@ -216,6 +248,10 @@ services:
       <<: *backend-env
       SPRING_FLYWAY_ENABLED: "true"
       SERVER_PORT: 8081
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   core-service:
     <<: *backend-service
@@ -227,6 +263,10 @@ services:
       <<: *backend-env
       SPRING_FLYWAY_ENABLED: "true"
       SERVER_PORT: 8082
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   employee-service:
     <<: *backend-service
@@ -239,6 +279,10 @@ services:
       SPRING_FLYWAY_ENABLED: "true"
       SERVER_PORT: 8083
       AI_ASSISTANT_SERVICE_URL: http://ai-assistant-service:8088
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   timesheet-service:
     <<: *backend-service
@@ -251,6 +295,10 @@ services:
       SPRING_FLYWAY_ENABLED: "true"
       SERVER_PORT: 8084
       EMPLOYEE_SERVICE_URL: http://employee-service:8083
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   vacation-service:
     <<: *backend-service
@@ -263,6 +311,10 @@ services:
       SPRING_FLYWAY_ENABLED: "true"
       SERVER_PORT: 8085
       EMPLOYEE_SERVICE_URL: http://employee-service:8083
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   performance-service:
     <<: *backend-service
@@ -275,6 +327,10 @@ services:
       SPRING_FLYWAY_ENABLED: "true"
       SERVER_PORT: 8086
       APPLICATION_SERVICES_EMPLOYEE_URL: http://employee-service:8083
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   learning-service:
     <<: *backend-service
@@ -286,6 +342,10 @@ services:
       <<: *backend-env
       SPRING_FLYWAY_ENABLED: "true"
       SERVER_PORT: 8087
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   ai-assistant-service:
     <<: *backend-service
@@ -300,6 +360,10 @@ services:
       SPRING_FLYWAY_ENABLED: "true"
       SERVER_PORT: 8088
       OPENAI_API_KEY: ${OPENAI_API_KEY}
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   notification-service:
     <<: *backend-service
@@ -311,6 +375,10 @@ services:
       <<: *backend-env
       SPRING_FLYWAY_ENABLED: "true"
       SERVER_PORT: 8089
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   integration-service:
     <<: *backend-service
@@ -322,6 +390,10 @@ services:
       <<: *backend-env
       SPRING_FLYWAY_ENABLED: "true"
       SERVER_PORT: 8090
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   benefits-service:
     <<: *backend-service
@@ -333,6 +405,10 @@ services:
       <<: *backend-env
       SPRING_FLYWAY_ENABLED: "true"
       SERVER_PORT: 8091
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   payroll-service:
     <<: *backend-service
@@ -350,6 +426,10 @@ services:
       PERFORMANCE_SERVICE_URL: http://performance-service:8086
       CONFIG_SERVICE_URL: http://config-service:8888
       CORE_SERVICE_URL: http://core-service:8082
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   api-gateway:
     <<: *backend-service
@@ -361,6 +441,10 @@ services:
       <<: *backend-env
       SPRING_FLYWAY_ENABLED: "true"
       SERVER_PORT: 8080
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   frontend:
     image: node:20-alpine
@@ -379,6 +463,10 @@ services:
         condition: service_started
     networks:
       - axonrh-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
     profiles:
       - frontend
 
