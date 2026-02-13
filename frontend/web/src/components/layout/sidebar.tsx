@@ -65,6 +65,7 @@ const navGroups: NavGroup[] = [
       { label: 'Desempenho', href: '/performance', icon: BarChart3, module: 'modulePerformance' },
       { label: 'Folha de Pagamento', href: '/payroll', icon: Banknote, module: 'modulePayroll' },
       { label: 'Treinamentos', href: '/learning', icon: BookOpen, module: 'moduleLearning' },
+      { label: 'Benefícios', href: '/benefits', icon: HeartPulse, module: 'moduleBenefits' },
       { label: 'Processos RH', href: '/processes', icon: ClipboardCheck, permission: 'EMPLOYEE:READ' },
       { label: 'Saúde Mental', href: '/wellbeing', icon: HeartPulse, permission: 'EMPLOYEE:READ' }, // Visible to HR/Managers
       { label: 'Assistente IA', href: '/assistant', icon: MessageSquare, module: 'moduleAiAssistant' },

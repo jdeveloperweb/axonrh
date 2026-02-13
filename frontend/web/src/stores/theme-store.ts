@@ -28,7 +28,17 @@ interface TenantTheme {
   customCss?: string;
   baseFontSize?: number;
   fontFamily?: string;
-  modules?: Record<string, boolean>;
+  modules?: {
+    moduleEmployees?: boolean;
+    moduleTimesheet?: boolean;
+    moduleVacation?: boolean;
+    modulePerformance?: boolean;
+    modulePayroll?: boolean;
+    moduleLearning?: boolean;
+    moduleAiAssistant?: boolean;
+    moduleRecruitment?: boolean;
+    moduleBenefits?: boolean;
+  };
 }
 
 interface ThemeState {

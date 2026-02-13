@@ -323,6 +323,17 @@ services:
       SPRING_FLYWAY_ENABLED: "true"
       SERVER_PORT: 8090
 
+  benefits-service:
+    <<: *backend-service
+    container_name: axonrh-benefits-service
+    command: mvn -pl benefits-service -am spring-boot:run
+    ports:
+      - "8091:8091"
+    environment:
+      <<: *backend-env
+      SPRING_FLYWAY_ENABLED: "true"
+      SERVER_PORT: 8091
+
   payroll-service:
     <<: *backend-service
     container_name: axonrh-payroll-service

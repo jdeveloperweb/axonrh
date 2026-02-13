@@ -27,4 +27,12 @@ public class BenefitTypeResponse {
     private Boolean isActive;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    private String payrollCode;
+    private String payrollNature;
+    private Boolean incidenceInss;
+    private Boolean incidenceFgts;
+    private Boolean incidenceIrrf;
+    private String externalProvider;
+    private String integrationConfig;
 }

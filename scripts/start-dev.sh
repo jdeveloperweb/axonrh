@@ -67,6 +67,7 @@ logs_menu() {
         "axonrh-ai-assistant-service"
         "axonrh-notification-service"
         "axonrh-integration-service"
+        "axonrh-benefits-service"
         "axonrh-payroll-service"
         "axonrh-api-gateway"
         "axonrh-frontend"
@@ -164,6 +165,7 @@ start_backend() {
     echo -e "  - Auth Service: http://localhost:8081"
     echo -e "  - Core Service: http://localhost:8082"
     echo -e "  - API Gateway: http://localhost:8180"
+    echo -e "  - Benefits Service: http://localhost:8091"
 }
 
 # Start frontend
@@ -200,6 +202,7 @@ select_backend_service() {
         "ai-assistant-service"
         "notification-service"
         "integration-service"
+        "benefits-service"
         "payroll-service"
         "api-gateway"
     )

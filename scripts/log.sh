@@ -13,6 +13,7 @@ services=(
   "axonrh-vacation-service"
   "axonrh-ai-assistant-service"
   "axonrh-integration-service"
+  "axonrh-benefits-service"
   "axonrh-payroll-service"
 )
 

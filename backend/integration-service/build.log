@@ -1,0 +1,48 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -------------------< com.axonrh:integration-service >-------------------
+[INFO] Building AxonRH Integration Service 1.0.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.4.0:clean (default-clean) @ integration-service ---
+[INFO] Deleting C:\Users\Jaime.Vicente\axonrh\backend\integration-service\target
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ integration-service ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 2 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ integration-service ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 34 source files with javac [debug parameters release 17] to target\classes
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /C:/Users/Jaime.Vicente/axonrh/backend/integration-service/src/main/java/com/axonrh/integration/dynamic/service/TemplateService.java:[4,27] cannot find symbol
+  symbol:   class StringTemplateLoader
+  location: package freemarker.template
+[ERROR] /C:/Users/Jaime.Vicente/axonrh/backend/integration-service/src/main/java/com/axonrh/integration/dynamic/service/TemplateService.java:[15,19] cannot find symbol
+  symbol:   class StringTemplateLoader
+  location: class com.axonrh.integration.dynamic.service.TemplateService
+[INFO] 2 errors 
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  4.668 s
+[INFO] Finished at: 2026-02-12T23:44:34-03:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.13.0:compile (default-compile) on project integration-service: Compilation failure: Compilation failure: 
+[ERROR] /C:/Users/Jaime.Vicente/axonrh/backend/integration-service/src/main/java/com/axonrh/integration/dynamic/service/TemplateService.java:[4,27] cannot find symbol
+[ERROR]   symbol:   class StringTemplateLoader
+[ERROR]   location: package freemarker.template
+[ERROR] /C:/Users/Jaime.Vicente/axonrh/backend/integration-service/src/main/java/com/axonrh/integration/dynamic/service/TemplateService.java:[15,19] cannot find symbol
+[ERROR]   symbol:   class StringTemplateLoader
+[ERROR]   location: class com.axonrh.integration.dynamic.service.TemplateService
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

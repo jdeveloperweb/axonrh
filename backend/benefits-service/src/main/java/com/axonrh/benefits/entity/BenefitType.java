@@ -80,6 +80,29 @@ public class BenefitType {
     @Column(name = "updated_by")
     private UUID updatedBy;
 
+    // Integração com Folha de Pagamento
+    @Column(name = "payroll_code", length = 50)
+    private String payrollCode;
+
+    @Column(name = "payroll_nature", length = 20)
+    private String payrollNature; // EARNING, DEDUCTION
+
+    @Column(name = "incidence_inss")
+    private Boolean incidenceInss;
+
+    @Column(name = "incidence_fgts")
+    private Boolean incidenceFgts;
+
+    @Column(name = "incidence_irrf")
+    private Boolean incidenceIrrf;
+
+    // Integração Externa
+    @Column(name = "external_provider", length = 50)
+    private String externalProvider; // iFood, Flash, etc.
+
+    @Column(name = "integration_config", columnDefinition = "text")
+    private String integrationConfig; // JSON string with specific configs
+
     @PrePersist
     public void prePersist() {
         if (this.id == null) {
