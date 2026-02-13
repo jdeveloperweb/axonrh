@@ -488,7 +488,9 @@ public class TalentPoolService {
         TalentCandidate candidate = candidateRepository.findByTenantIdAndId(tenantId, id)
                 .orElseThrow(() -> new ResourceNotFoundException("Candidato não encontrado: " + id));
 
-        processResume(candidate, resumeFile, candidate.getVacancy().getRequirements());
+        boolean aiEnabled = candidate.getVacancy() != null && candidate.getVacancy().getAiAnalysisEnabled() != null 
+                ? candidate.getVacancy().getAiAnalysisEnabled() : true;
+        processResume(candidate, resumeFile, candidate.getVacancy() != null ? candidate.getVacancy().getRequirements() : null, aiEnabled);
 
         candidate = candidateRepository.save(candidate);
         log.info("Currículo atualizado para candidato: {}", id);
