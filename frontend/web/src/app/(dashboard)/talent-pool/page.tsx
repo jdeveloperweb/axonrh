@@ -49,7 +49,7 @@ import { positionsApi, Position } from '@/lib/api/positions';
 import { employeesApi, Department } from '@/lib/api/employees';
 import { useAuthStore } from '@/stores/auth-store';
 
-type Tab = 'vacancies' | 'candidates';
+type Tab = 'vacancies' | 'candidates' | 'talentPool';
 
 export default function TalentPoolPage() {
     const { confirm } = useConfirm();
@@ -70,6 +70,7 @@ export default function TalentPoolPage() {
     const [statusFilter, setStatusFilter] = useState<string>('');
     const [vacancyFilter, setVacancyFilter] = useState<string>('');
     const [actionLoading, setActionLoading] = useState(false);
+    const [departmentFilter, setDepartmentFilter] = useState<string>('');
 
     // Modals
     const [showVacancyModal, setShowVacancyModal] = useState(false);
@@ -162,8 +163,28 @@ export default function TalentPoolPage() {
             c.email.toLowerCase().includes(search.toLowerCase());
         const matchStatus = !statusFilter || c.status === statusFilter;
         const matchVacancy = !vacancyFilter || c.vacancyId === vacancyFilter;
+        const matchDepartment = !departmentFilter || c.departmentId === departmentFilter;
+
+        // No Talent Pool, filtramos apenas os que tem status TALENT_POOL ou que estão marcados para o banco
+        if (activeTab === 'talentPool') {
+            return matchSearch && c.status === 'TALENT_POOL' && matchDepartment;
+        }
+
+        // Na aba candidatos, filtramos os que NÃO são TALENT_POOL (exceto se o filtro de status for explícito)
+        if (activeTab === 'candidates' && !statusFilter) {
+            return matchSearch && c.status !== 'TALENT_POOL' && matchVacancy;
+        }
+
         return matchSearch && matchStatus && matchVacancy;
     });
+
+    // Agrupamento por departamento para o Banco de Talentos
+    const candidatesByDepartment = filteredCandidates.reduce((acc, candidate) => {
+        const dept = candidate.departmentName || 'Sem Setor';
+        if (!acc[dept]) acc[dept] = [];
+        acc[dept].push(candidate);
+        return acc;
+    }, {} as Record<string, TalentCandidate[]>);
 
     // Handlers - Vagas
     const handleOpenVacancyModal = async (vacancy?: JobVacancy) => {
@@ -632,12 +653,12 @@ export default function TalentPoolPage() {
                     </Card>
                     <Card>
                         <CardContent className="p-4 flex items-center gap-4">
-                            <div className="p-3 bg-green-100 rounded-lg">
-                                <Award className="w-6 h-6 text-green-600" />
+                            <div className="p-3 bg-orange-100 rounded-lg">
+                                <Star className="w-6 h-6 text-orange-600" />
                             </div>
                             <div>
-                                <p className="text-sm text-[var(--color-text-secondary)]">Contratados</p>
-                                <p className="text-2xl font-bold text-[var(--color-text)]">{stats.hiredCandidates}</p>
+                                <p className="text-sm text-[var(--color-text-secondary)]">Banco de Talentos</p>
+                                <p className="text-2xl font-bold text-[var(--color-text)]">{stats.talentPoolCandidates || 0}</p>
                             </div>
                         </CardContent>
                     </Card>
@@ -672,9 +693,25 @@ export default function TalentPoolPage() {
                     <div className="flex items-center gap-2">
                         <Users className="w-4 h-4" />
                         Candidatos
-                        <span className="px-2 py-0.5 text-xs rounded-full bg-gray-100">{candidates.length}</span>
+                        <span className="px-2 py-0.5 text-xs rounded-full bg-gray-100">{candidates.filter(c => c.status !== 'TALENT_POOL').length}</span>
                     </div>
                     {activeTab === 'candidates' && (
+                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--color-primary)]" />
+                    )}
+                </button>
+                <button
+                    onClick={() => setActiveTab('talentPool')}
+                    className={`pb-3 px-2 text-sm font-medium transition-colors relative ${activeTab === 'talentPool'
+                        ? 'text-[var(--color-primary)]'
+                        : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
+                        }`}
+                >
+                    <div className="flex items-center gap-2">
+                        <Sparkles className="w-4 h-4" />
+                        Banco de Talentos
+                        <span className="px-2 py-0.5 text-xs rounded-full bg-orange-100 text-orange-700">{candidates.filter(c => c.status === 'TALENT_POOL').length}</span>
+                    </div>
+                    {activeTab === 'talentPool' && (
                         <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--color-primary)]" />
                     )}
                 </button>
@@ -716,9 +753,22 @@ export default function TalentPoolPage() {
                                         <option value="APPROVED">Aprovado</option>
                                         <option value="REJECTED">Rejeitado</option>
                                         <option value="HIRED">Contratado</option>
+                                        <option value="TALENT_POOL">No Banco</option>
                                     </>
                                 )}
                             </select>
+                            {activeTab !== 'vacancies' && (
+                                <select
+                                    value={departmentFilter}
+                                    onChange={(e) => setDepartmentFilter(e.target.value)}
+                                    className="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] bg-white"
+                                >
+                                    <option value="">Todos os Setores</option>
+                                    {departments.map(d => (
+                                        <option key={d.id} value={d.id}>{d.name}</option>
+                                    ))}
+                                </select>
+                            )}
                             {activeTab === 'candidates' && (
                                 <select
                                     value={vacancyFilter}
@@ -902,7 +952,7 @@ export default function TalentPoolPage() {
                         ))
                     )}
                 </div>
-            ) : (
+            ) : activeTab === 'candidates' ? (
                 /* Candidatos */
                 <Card>
                     <CardContent className="p-0">
@@ -922,6 +972,9 @@ export default function TalentPoolPage() {
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-[var(--color-text-secondary)] uppercase">
                                                 Vaga
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-[var(--color-text-secondary)] uppercase">
+                                                Setor
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-[var(--color-text-secondary)] uppercase">
                                                 Status
@@ -948,6 +1001,9 @@ export default function TalentPoolPage() {
                                                 </td>
                                                 <td className="px-6 py-4 text-sm text-[var(--color-text-secondary)]">
                                                     {candidate.vacancyTitle || '-'}
+                                                </td>
+                                                <td className="px-6 py-4 text-sm text-[var(--color-text-secondary)]">
+                                                    {candidate.departmentName || '-'}
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${getCandidateStatusColor(candidate.status)}`}>
@@ -986,15 +1042,13 @@ export default function TalentPoolPage() {
                                                             <Eye className="w-4 h-4 text-[var(--color-text-secondary)]" />
                                                         </button>
                                                         {candidate.resumeFilePath && (
-                                                            <a
-                                                                href={`/api/v1/uploads/${candidate.resumeFilePath}`}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
+                                                            <button
+                                                                onClick={() => handleViewResume(candidate)}
                                                                 className="p-2 hover:bg-gray-100 rounded-lg"
                                                                 title="Ver currículo"
                                                             >
                                                                 <FileText className="w-4 h-4 text-[var(--color-text-secondary)]" />
-                                                            </a>
+                                                            </button>
                                                         )}
                                                         <button
                                                             onClick={() => handleDeleteCandidate(candidate.id)}
@@ -1013,6 +1067,107 @@ export default function TalentPoolPage() {
                         )}
                     </CardContent>
                 </Card>
+            ) : (
+                /* Banco de Talentos - Agrupado por Setor */
+                <div className="space-y-8">
+                    {Object.keys(candidatesByDepartment).length === 0 ? (
+                        <Card>
+                            <CardContent className="p-12 text-center text-[var(--color-text-secondary)]">
+                                <Sparkles className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                                <p className="text-lg font-medium">Banco de talentos vazio</p>
+                                <p className="text-sm">Mova candidatos promissores para cá para mantê-los no radar</p>
+                            </CardContent>
+                        </Card>
+                    ) : (
+                        Object.entries(candidatesByDepartment).map(([department, deptCandidates]) => (
+                            <div key={department} className="space-y-4">
+                                <div className="flex items-center justify-between px-2">
+                                    <h3 className="text-lg font-bold text-[var(--color-text)] flex items-center gap-2">
+                                        <div className="w-2 h-6 bg-[var(--color-primary)] rounded-full" />
+                                        {department}
+                                        <span className="text-sm font-normal text-[var(--color-text-secondary)]">
+                                            ({deptCandidates.length} candidato{deptCandidates.length > 1 ? 's' : ''})
+                                        </span>
+                                    </h3>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {deptCandidates.map(candidate => (
+                                        <Card key={candidate.id} className="hover:shadow-md transition-all border-l-4 border-l-orange-400 group">
+                                            <CardContent className="p-5">
+                                                <div className="flex items-start justify-between mb-4">
+                                                    <div className="flex gap-3">
+                                                        <div className="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-lg">
+                                                            {candidate.fullName.charAt(0).toUpperCase()}
+                                                        </div>
+                                                        <div>
+                                                            <h4 className="font-bold text-[var(--color-text)] group-hover:text-[var(--color-primary)] transition-colors">
+                                                                {candidate.fullName}
+                                                            </h4>
+                                                            <p className="text-xs text-[var(--color-text-secondary)] truncate w-40">
+                                                                {candidate.email}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex flex-col items-end">
+                                                        <div className="flex items-center gap-0.5 mb-1">
+                                                            {[1, 2, 3, 4, 5].map(star => (
+                                                                <Star
+                                                                    key={star}
+                                                                    className={`w-3 h-3 ${candidate.rating != null && star <= candidate.rating
+                                                                        ? 'text-yellow-400 fill-yellow-400'
+                                                                        : 'text-gray-200'
+                                                                        }`}
+                                                                />
+                                                            ))}
+                                                        </div>
+                                                        <span className="text-[10px] text-[var(--color-text-secondary)]">
+                                                            {candidate.appliedAt ? new Date(candidate.appliedAt).toLocaleDateString('pt-BR') : ''}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-2 mb-4">
+                                                    {candidate.vacancyTitle && (
+                                                        <p className="text-xs flex items-center gap-1.5 text-[var(--color-text-secondary)]">
+                                                            <Briefcase className="w-3 h-3" /> Origem: {candidate.vacancyTitle}
+                                                        </p>
+                                                    )}
+                                                    {candidate.skills && (
+                                                        <p className="text-xs text-[var(--color-text-secondary)] line-clamp-2">
+                                                            <strong>Skills:</strong> {candidate.skills}
+                                                        </p>
+                                                    )}
+                                                </div>
+
+                                                <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                                                    <button
+                                                        onClick={() => handleViewCandidate(candidate)}
+                                                        className="text-xs font-bold text-[var(--color-primary)] hover:underline flex items-center gap-1"
+                                                    >
+                                                        <Eye className="w-3 h-3" /> Ver Detalhes
+                                                    </button>
+                                                    <div className="flex gap-2">
+                                                        {candidate.linkedinUrl && (
+                                                            <a href={candidate.linkedinUrl} target="_blank" rel="noopener noreferrer" className="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors">
+                                                                <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" /></svg>
+                                                            </a>
+                                                        )}
+                                                        <button
+                                                            onClick={() => handleViewResume(candidate)}
+                                                            className="p-1.5 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+                                                        >
+                                                            <FileText className="w-3 h-3" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    ))}
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
             )}
 
             {/* Modal - Nova/Editar Vaga */}
@@ -1462,7 +1617,7 @@ export default function TalentPoolPage() {
                                     <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
                                         <label className="block text-sm font-bold text-[var(--color-text)] mb-4 uppercase tracking-tight">Alterar Status</label>
                                         <div className="flex flex-wrap gap-2">
-                                            {(['NEW', 'SCREENING', 'INTERVIEW', 'APPROVED', 'REJECTED', 'HIRED', 'WITHDRAWN'] as const).map((status) => {
+                                            {(['NEW', 'SCREENING', 'INTERVIEW', 'APPROVED', 'REJECTED', 'HIRED', 'WITHDRAWN', 'TALENT_POOL'] as const).map((status) => {
                                                 const isActive = selectedCandidate.status === status;
                                                 return (
                                                     <button

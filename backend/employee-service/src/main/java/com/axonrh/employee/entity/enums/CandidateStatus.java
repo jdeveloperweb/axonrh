@@ -10,5 +10,6 @@ public enum CandidateStatus {
     APPROVED,   // Aprovado
     REJECTED,   // Rejeitado
     HIRED,      // Contratado
-    WITHDRAWN   // Desistiu
+    WITHDRAWN,  // Desistiu
+    TALENT_POOL // Movido para o banco de talentos
 }

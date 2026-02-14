@@ -86,6 +86,10 @@ public class TalentCandidateMapper {
                 .id(candidate.getId())
                 .vacancyId(candidate.getVacancy() != null ? candidate.getVacancy().getId() : null)
                 .vacancyTitle(candidate.getVacancy() != null ? candidate.getVacancy().getTitle() : null)
+                .departmentId(candidate.getVacancy() != null && candidate.getVacancy().getPosition() != null && candidate.getVacancy().getPosition().getDepartment() != null 
+                        ? candidate.getVacancy().getPosition().getDepartment().getId() : null)
+                .departmentName(candidate.getVacancy() != null && candidate.getVacancy().getPosition() != null && candidate.getVacancy().getPosition().getDepartment() != null 
+                        ? candidate.getVacancy().getPosition().getDepartment().getName() : "Sem Setor")
                 .fullName(candidate.getFullName())
                 .email(candidate.getEmail())
                 .phone(candidate.getPhone())

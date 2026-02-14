@@ -59,8 +59,19 @@ public class TimesheetExportService {
             log.warn("Erro ao buscar dados da empresa para exportacao: {}", e.getMessage());
         }
         
+        // Buscar escala contratual real do banco para exibir os horários corretos
+        com.axonrh.timesheet.entity.WorkSchedule workSchedule = null;
+        if (employee != null && employee.getWorkScheduleId() != null) {
+            try {
+                workSchedule = coreServiceClient.getWorkScheduleWithDays(tenantId, employee.getWorkScheduleId());
+            } catch (Exception e) {
+                // Fallback para buscar localmente se o client falhar
+                workSchedule = dailySummaryService.getWorkSchedule(tenantId, employee.getWorkScheduleId());
+            }
+        }
+
         String employeeName = employee != null ? employee.getFullName() : getEmployeeName(tenantId, employeeId);
-        String html = generateHtmlContent(List.of(new ExportData(employeeId, employeeName, employee, timesheet, totals)), startDate, endDate, company);
+        String html = generateHtmlContent(List.of(new ExportData(employeeId, employeeName, employee, timesheet, totals, workSchedule)), startDate, endDate, company);
         
         ByteArrayOutputStream target = new ByteArrayOutputStream();
         HtmlConverter.convertToPdf(html, target);
@@ -78,7 +89,7 @@ public class TimesheetExportService {
                 .map(com.axonrh.timesheet.entity.DailySummary::getEmployeeId)
                 .distinct()
                 .toList();
-
+ 
         if (employeeIds.isEmpty()) {
             log.warn("Nenhum dado de ponto encontrado para exportacao em massa no periodo {} a {}", startDate, endDate);
             return new byte[0];
@@ -95,7 +106,14 @@ public class TimesheetExportService {
                     employee = employeeClient.getEmployee(id);
                 } catch (Exception ee) {}
                 
-                return new ExportData(id, employee != null ? employee.getFullName() : getEmployeeName(tenantId, id), employee, timesheet, totals);
+                com.axonrh.timesheet.entity.WorkSchedule workSchedule = null;
+                if (employee != null && employee.getWorkScheduleId() != null) {
+                    try {
+                        workSchedule = dailySummaryService.getWorkSchedule(tenantId, employee.getWorkScheduleId());
+                    } catch (Exception e) {}
+                }
+
+                return new ExportData(id, employee != null ? employee.getFullName() : getEmployeeName(tenantId, id), employee, timesheet, totals, workSchedule);
             } catch (Exception e) {
                 log.error("Erro ao processar dados do colaborador {} para exportacao em massa: {}", id, e.getMessage());
                 return null;
@@ -329,7 +347,7 @@ public class TimesheetExportService {
                 .orElse("Colaborador (" + employeeId.toString().substring(0, 8) + "...)");
     }
 
-    private record ExportData(UUID id, String name, com.axonrh.timesheet.dto.EmployeeDTO employee, List<DailySummaryResponse> timesheet, DailySummaryService.PeriodTotals totals) {}
+    private record ExportData(UUID id, String name, com.axonrh.timesheet.dto.EmployeeDTO employee, List<DailySummaryResponse> timesheet, DailySummaryService.PeriodTotals totals, com.axonrh.timesheet.entity.WorkSchedule workSchedule) {}
 
     private String generateHtmlContent(List<ExportData> dataList, LocalDate startDate, LocalDate endDate, com.axonrh.timesheet.client.CoreServiceClient.CompanyProfileDTO company) {
         UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
@@ -340,7 +358,6 @@ public class TimesheetExportService {
             theme = configServiceClient.getThemeConfig(tenantId);
             if (theme != null && theme.getLogoUrl() != null) {
                 String url = theme.getLogoUrl();
-                // Procura por tenantId e filename na URL para buscar bytes reais
                 if (url.contains("/logos/")) {
                     String[] parts = url.split("/");
                     if (parts.length >= 2) {
@@ -352,15 +369,11 @@ public class TimesheetExportService {
                             if (logoBytes != null) {
                                 String extension = filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
                                 String mimeType = "image/" + (extension.equals("svg") ? "svg+xml" : extension);
-                                if (extension.equals("jpg")) mimeType = "image/jpeg";
+                                if (extension.equals("jpg") || extension.equals("jpeg")) mimeType = "image/jpeg";
                                 logoDataUri = "data:" + mimeType + ";base64," + java.util.Base64.getEncoder().encodeToString(logoBytes);
                             }
                         } catch (Exception tIdErr) {}
                     }
-                } else if (url.startsWith("http")) {
-                   // Se for URL externa direta, tentamos usar ela mesmo (pode falhar no iText se não houver acesso)
-                   // Mas para segurança em ambiente local/docker, o DataURI é melhor se o microserviço conseguir baixar.
-                   // Por ora mantemos a lógica de parsing ou deixamos o iText tentar se for absoluto.
                 }
             }
         } catch (Exception e) {}
@@ -375,116 +388,131 @@ public class TimesheetExportService {
         sb.append(".page { padding: 30px; page-break-after: always; position: relative; background: white; }");
         
         // Header
-        sb.append(".header-container { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 2px solid ").append(primaryColor).append("; padding-bottom: 10px; }");
-        sb.append(".logo-box { width: 140px; }");
-        sb.append(".title-box { text-align: right; flex-grow: 1; }");
-        sb.append(".main-title { font-size: 18px; font-weight: 700; color: ").append(primaryColor).append("; margin: 0; text-transform: uppercase; }");
-        sb.append(".period-label { font-size: 11px; color: #64748b; font-weight: 500; margin-top: 4px; }");
+        sb.append(".header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 3px solid ").append(primaryColor).append("; padding-bottom: 15px; }");
+        sb.append(".logo-box { width: 160px; }");
+        sb.append(".title-box { text-align: right; }");
+        sb.append(".main-title { font-size: 20px; font-weight: 800; color: ").append(primaryColor).append("; margin: 0; text-transform: uppercase; letter-spacing: 0.5px; }");
+        sb.append(".period-label { font-size: 12px; color: #64748b; font-weight: 600; margin-top: 5px; }");
         
-        // Info Tables (Company/Employee)
-        sb.append(".info-section { width: 100%; margin-bottom: 15px; border: 1px solid #e2e8f0; border-radius: 4px; overflow: hidden; }");
+        // Boxes
+        sb.append(".info-section { width: 100%; margin-bottom: 15px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }");
         sb.append(".info-row { display: flex; border-bottom: 1px solid #e2e8f0; }");
         sb.append(".info-row:last-child { border-bottom: none; }");
-        sb.append(".info-item { padding: 6px 10px; border-right: 1px solid #e2e8f0; flex: 1; }");
+        sb.append(".info-item { padding: 8px 12px; border-right: 1px solid #e2e8f0; flex: 1; }");
         sb.append(".info-item:last-child { border-right: none; }");
-        sb.append(".label { font-size: 7px; color: #64748b; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 2px; }");
+        sb.append(".label { font-size: 7px; color: #94a3b8; font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 3px; letter-spacing: 0.3px; }");
         sb.append(".value { font-size: 10px; font-weight: 600; color: #0f172a; }");
         sb.append(".bg-light { background-color: #f8fafc; }");
 
-        // Contracted Hours Section
-        sb.append(".contract-info { background-color: #f1f5f9; padding: 8px 12px; margin-bottom: 15px; border-radius: 4px; display: flex; gap: 30px; }");
-        sb.append(".contract-title { font-weight: 700; color: #475569; font-size: 9px; margin-right: 10px; line-height: 1.6; }");
+        // Contracted Hours Box
+        sb.append(".contract-info { background: #f8fafc; border: 1px solid #e2e8f0; border-left: 5px solid ").append(primaryColor).append("; padding: 12px; margin-bottom: 20px; border-radius: 0 8px 8px 0; }");
+        sb.append(".contract-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 5px; }");
+        sb.append(".contract-title { font-weight: 800; color: ").append(primaryColor).append("; font-size: 10px; text-transform: uppercase; }");
+        sb.append(".contract-grid { display: flex; justify-content: space-between; }");
 
         // Main Table
-        sb.append("table.main-table { width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid #cfd8dc; }");
-        sb.append("table.main-table th { background-color: #f8fafc; border: 1px solid #cfd8dc; padding: 6px; font-size: 8px; text-transform: uppercase; color: #475569; font-weight: 700; }");
-        sb.append("table.main-table td { border: 1px solid #e2e8f0; padding: 5px 4px; text-align: center; height: 18px; font-weight: 500; }");
+        sb.append("table.main-table { width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; }");
+        sb.append("table.main-table th { background-color: #f1f5f9; border: 1px solid #e2e8f0; padding: 10px 5px; font-size: 8px; text-transform: uppercase; color: #475569; font-weight: 800; }");
+        sb.append("table.main-table td { border: 1px solid #e2e8f0; padding: 7px 5px; text-align: center; font-weight: 500; font-size: 9px; }");
         sb.append(".col-date { font-weight: 700; color: #334155; }");
-        sb.append(".col-punches { text-align: left; padding-left: 8px !important; color: #0f172a; font-family: monospace; font-size: 9px; letter-spacing: 0.5px; }");
+        sb.append(".col-punches { text-align: left; padding-left: 10px !important; color: #0f172a; font-family: 'Courier New', monospace; font-size: 10px; letter-spacing: 1px; }");
         sb.append(".weekend { background-color: #f8fafc; color: #94a3b8; }");
-        sb.append(".holiday { background-color: #fff7ed; color: #c2410c; }");
-        sb.append(".absent { background-color: #fef2f2; color: #b91c1c; }");
-        sb.append(".positive { color: #15803d; }");
-        sb.append(".negative { color: #b91c1c; }");
+        sb.append(".holiday { background-color: #fffaf0; color: #d97706; }");
+        sb.append(".absent { background-color: #fff1f2; color: #e11d48; }");
+        sb.append(".positive { color: #16a34a; font-weight: 700; }");
+        sb.append(".negative { color: #dc2626; font-weight: 700; }");
         
         // Signatures
-        sb.append(".sig-container { margin-top: 50px; display: table; width: 100%; border-spacing: 20px 0; }");
-        sb.append(".sig-box { display: table-cell; width: 45%; border-top: 1px solid #94a3b8; text-align: center; padding-top: 8px; font-size: 9px; color: #475569; }");
+        sb.append(".sig-container { margin-top: 60px; display: table; width: 100%; border-spacing: 40px 0; }");
+        sb.append(".sig-box { display: table-cell; width: 45%; border-top: 1px solid #cbd5e1; text-align: center; padding-top: 12px; font-size: 9px; color: #475569; }");
         
-        // Footer info
-        sb.append(".footer-meta { position: absolute; bottom: 15px; right: 30px; font-size: 7px; color: #94a3b8; }");
+        // Footer
+        sb.append(".footer-meta { margin-top: 30px; display: flex; justify-content: space-between; font-size: 7px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 10px; }");
 
         sb.append("</style></head><body>");
 
         for (ExportData data : dataList) {
             sb.append("<div class='page'>");
             
-            // Header Section
+            // Header
             sb.append("<div class='header-container'>");
             sb.append("<div class='logo-box'>");
             if (logoDataUri != null) {
-                sb.append("<img src='").append(logoDataUri).append("' style='max-height: 45px;' />");
+                sb.append("<img src='").append(logoDataUri).append("' style='max-height: 55px; max-width: 160px;' />");
             } else {
-                sb.append("<div style='font-size: 24px; font-weight: 800; color:").append(primaryColor).append("'>Axon<span style='color:#333'>RH</span></div>");
+                sb.append("<div style='font-size: 26px; font-weight: 900; color:").append(primaryColor).append("'>Axon<span style='color:#1e293b'>RH</span></div>");
             }
             sb.append("</div>");
             sb.append("<div class='title-box'>");
-            sb.append("<h1 class='main-title'>Espelho de Ponto Eletrônico</h1>");
+            sb.append("<div class='main-title'>Espelho de Ponto Eletrônico</div>");
             sb.append("<div class='period-label'>Período: ")
               .append(startDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
-              .append(" — ")
+              .append(" à ")
               .append(endDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
               .append("</div>");
             sb.append("</div>");
             sb.append("</div>");
 
-            // Company & Employee Info
+            // Company Info Box
             sb.append("<div class='info-section'>");
             sb.append("<div class='info-row'>");
-            sb.append("<div class='info-item' style='flex: 3;'><span class='label'>Empregador</span><span class='value'>").append(company != null ? company.getLegalName() : "Empresa AxonRH").append("</span></div>");
-            sb.append("<div class='info-item' style='flex: 2;'><span class='label'>CNPJ</span><span class='value'>").append(company != null && company.getCnpj() != null ? formatCnpj(company.getCnpj()) : "" ).append("</span></div>");
+            sb.append("<div class='info-item' style='flex: 2;'><span class='label'>Empregador</span><span class='value'>").append(company != null ? company.getLegalName() : "Empresa AxonRH").append("</span></div>");
+            sb.append("<div class='info-item' style='flex: 1;'><span class='label'>CNPJ</span><span class='value'>").append(company != null && company.getCnpj() != null ? formatCnpj(company.getCnpj()) : "" ).append("</span></div>");
             sb.append("</div>");
-            sb.append("<div class='info-row'>");
-            sb.append("<div class='info-item' style='flex: 3;'><span class='label'>Endereço</span><span class='value'>").append(company != null ? company.getFullAddress() : "N/A").append("</span></div>");
-            sb.append("<div class='info-item' style='flex: 2;'><span class='label'>Cidade/UF</span><span class='value'>").append(company != null ? getString(company.getAddressCity()) + "/" + getString(company.getAddressState()) : "").append("</span></div>");
-            sb.append("</div>");
-            sb.append("</div>");
-
-            sb.append("<div class='info-section'>");
             sb.append("<div class='info-row bg-light'>");
-            sb.append("<div class='info-item'><span class='label'>Colaborador</span><span class='value'>").append(data.name()).append("</span></div>");
-            sb.append("<div class='info-item'><span class='label'>Matrícula</span><span class='value'>").append(data.employee() != null ? getString(data.employee().getRegistrationNumber()) : "").append("</span></div>");
-            sb.append("<div class='info-item'><span class='label'>PIS/PASEP</span><span class='value'>").append(data.employee() != null ? getString(data.employee().getPisPasep()) : "").append("</span></div>");
-            sb.append("<div class='info-item'><span class='label'>CPF</span><span class='value'>").append(data.employee() != null ? getString(data.employee().getCpf()) : "").append("</span></div>");
-            sb.append("<div class='info-item'><span class='label'>Admissão</span><span class='value'>").append(data.employee() != null && data.employee().getHireDate() != null ? data.employee().getHireDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "").append("</span></div>");
+            sb.append("<div class='info-item' style='flex: 2;'><span class='label'>Endereço</span><span class='value'>").append(company != null && company.getFullAddress() != null && !company.getFullAddress().isEmpty() ? company.getFullAddress() : "Endereço não informado").append("</span></div>");
+            sb.append("<div class='info-item' style='flex: 1;'><span class='label'>Cidade/UF</span><span class='value'>").append(company != null && company.getAddressCity() != null ? getString(company.getAddressCity()) + "/" + getString(company.getAddressState()) : "N/A").append("</span></div>");
             sb.append("</div>");
             sb.append("</div>");
 
-            // Contracted Hours
+            // Employee Info Box
+            sb.append("<div class='info-section'>");
+            sb.append("<div class='info-row'>");
+            sb.append("<div class='info-item' style='flex: 2;'><span class='label'>Colaborador</span><span class='value'>").append(data.name()).append("</span></div>");
+            sb.append("<div class='info-item'><span class='label'>Matrícula</span><span class='value'>").append(data.employee() != null ? getString(data.employee().getRegistrationNumber()) : "-").append("</span></div>");
+            sb.append("<div class='info-item'><span class='label'>CPF</span><span class='value'>").append(data.employee() != null ? getString(data.employee().getCpf()) : "-").append("</span></div>");
+            sb.append("</div>");
+            sb.append("<div class='info-row bg-light'>");
+            sb.append("<div class='info-item'><span class='label'>PIS/PASEP</span><span class='value'>").append(data.employee() != null ? getString(data.employee().getPisPasep()) : "-").append("</span></div>");
+            sb.append("<div class='info-item'><span class='label'>Admissão</span><span class='value'>").append(data.employee() != null && data.employee().getHireDate() != null ? data.employee().getHireDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "-").append("</span></div>");
+            sb.append("<div class='info-item' style='flex: 1.5;'><span class='label'>Cargo/Departamento</span><span class='value'>").append(data.employee() != null && data.employee().getDepartment() != null ? data.employee().getDepartment().getName() : "-").append("</span></div>");
+            sb.append("</div>");
+            sb.append("</div>");
+
+            // Contracted Hours synthesized box
             sb.append("<div class='contract-info'>");
-            sb.append("<div class='contract-title'>HORÁRIOS<br/>CONTRATUAIS</div>");
-            DailySummaryResponse dayBase = data.timesheet().stream()
-                    .filter(d -> d.getScheduledEntry() != null)
-                    .findFirst().orElse(null);
+            sb.append("<div class='contract-header'>");
+            sb.append("<div class='contract-title'>Horários e Escala de Trabalho</div>");
+            sb.append("<div style='font-size: 8px; font-weight: 700; color: #64748b;'>Escala: ").append(data.workSchedule() != null ? data.workSchedule().getName() : "Não informada").append("</div>");
+            sb.append("</div>");
             
-            if (dayBase != null) {
-                sb.append("<div><span class='label'>Entrada</span><span class='value'>").append(formatTime(dayBase.getScheduledEntry())).append("</span></div>");
-                sb.append("<div><span class='label'>Saída Intervalo</span><span class='value'>").append(formatTime(dayBase.getScheduledBreakStart())).append("</span></div>");
-                sb.append("<div><span class='label'>Retorno Intervalo</span><span class='value'>").append(formatTime(dayBase.getScheduledBreakEnd())).append("</span></div>");
-                sb.append("<div><span class='label'>Saída</span><span class='value'>").append(formatTime(dayBase.getScheduledExit())).append("</span></div>");
-                sb.append("<div><span class='label'>Jornada</span><span class='value'>").append(dayBase.getExpectedWorkFormatted() != null ? dayBase.getExpectedWorkFormatted() : "").append("</span></div>");
-            } else {
-                sb.append("<div><span class='value'>Escala não informada no período</span></div>");
+            sb.append("<div class='contract-grid'>");
+            com.axonrh.timesheet.entity.ScheduleDay daySpec = null;
+            if (data.workSchedule() != null && data.workSchedule().getScheduleDays() != null) {
+                daySpec = data.workSchedule().getScheduleDays().stream()
+                        .filter(d -> Boolean.TRUE.equals(d.getIsWorkDay()))
+                        .findFirst().orElse(null);
             }
+            
+            if (daySpec != null) {
+                sb.append("<div><span class='label'>Entrada</span><span class='value'>").append(formatTime(daySpec.getEntryTime())).append("</span></div>");
+                sb.append("<div><span class='label'>Saída Almoço</span><span class='value'>").append(formatTime(daySpec.getBreakStartTime())).append("</span></div>");
+                sb.append("<div><span class='label'>Retorno Almoço</span><span class='value'>").append(formatTime(daySpec.getBreakEndTime())).append("</span></div>");
+                sb.append("<div><span class='label'>Saída Final</span><span class='value'>").append(formatTime(daySpec.getExitTime())).append("</span></div>");
+                sb.append("<div><span class='label'>Carga Diária</span><span class='value'>").append(formatMinutes(daySpec.getExpectedWorkMinutes())).append("</span></div>");
+            } else {
+                sb.append("<div style='width: 100%; text-align: center; color: #94a3b8; font-style: italic;'>Os horários variam conforme a escala configurada.</div>");
+            }
+            sb.append("</div>");
             sb.append("</div>");
 
             // Main Table
             sb.append("<table class='main-table'><thead>");
             sb.append("<tr>");
             sb.append("<th rowspan='2' width='8%'>Data</th>");
-            sb.append("<th rowspan='2' width='35%'>Marcações Ponto Eletrônico</th>");
+            sb.append("<th rowspan='2' width='35%'>Marcações de Ponto</th>");
             sb.append("<th colspan='4'>Jornada Realizada</th>");
-            sb.append("<th rowspan='2' width='8%'>Saldo</th>");
+            sb.append("<th rowspan='2' width='9%'>Saldo</th>");
             sb.append("<th rowspan='2' width='10%'>Ocorrência</th>");
             sb.append("</tr>");
             sb.append("<tr>");
@@ -499,16 +527,14 @@ public class TimesheetExportService {
                 if (Boolean.TRUE.equals(day.getIsAbsent())) rowClass = " class='absent'";
 
                 sb.append("<tr").append(rowClass).append(">");
-                sb.append("<td class='col-date'>").append(day.getSummaryDate().format(DateTimeFormatter.ofPattern("dd/MM"))).append("<br/><span style='font-size:6px; font-weight:normal; color:#94a3b8;'>").append(day.getDayOfWeek().substring(0, 3)).append("</span></td>");
+                sb.append("<td class='col-date'>").append(day.getSummaryDate().format(DateTimeFormatter.ofPattern("dd/MM"))).append("<br/><span style='font-size:6.5px; font-weight:500; color:#64748b;'>").append(day.getDayOfWeek().substring(0, 3)).append("</span></td>");
                 
-                // Punches Column
                 sb.append("<td class='col-punches'>").append(formatPunches(day.getRecords())).append("</td>");
 
-                // Jornada Realizada
                 if (Boolean.TRUE.equals(day.getIsAbsent())) {
-                    sb.append("<td colspan='4' style='font-weight:700; font-size:8px;'>").append(day.getAbsenceType() != null ? day.getAbsenceType() : "FALTA").append("</td>");
+                    sb.append("<td colspan='4' style='font-weight:800; color:#e11d48;'>").append(day.getAbsenceType() != null ? day.getAbsenceType() : "FALTA").append("</td>");
                 } else if (Boolean.TRUE.equals(day.getIsHoliday())) {
-                    sb.append("<td colspan='4' style='font-size:8px;'>FERIADO: ").append(day.getHolidayName()).append("</td>");
+                    sb.append("<td colspan='4' style='font-weight:600; color:#d97706;'>FERIADO: ").append(day.getHolidayName()).append("</td>");
                 } else {
                     sb.append("<td>").append(formatTime(day.getFirstEntry())).append("</td>");
                     sb.append("<td>").append(formatTime(day.getBreakStart())).append("</td>");
@@ -517,9 +543,8 @@ public class TimesheetExportService {
                 }
 
                 String balClass = Boolean.TRUE.equals(day.getIsPositive()) ? " positive" : " negative";
-                sb.append("<td class='").append(balClass).append("' style='font-weight:700;'>")
-                  .append(day.getBalanceFormatted() != null ? (Boolean.TRUE.equals(day.getIsPositive()) ? "+" : "-") + day.getBalanceFormatted() : "00:00")
-                  .append("</td>");
+                String balance = day.getBalanceFormatted() != null ? (Boolean.TRUE.equals(day.getIsPositive()) ? "+" : "-") + day.getBalanceFormatted() : "00:00";
+                sb.append("<td class='").append(balClass).append("'>").append(balance).append("</td>");
                 
                 String ocr = "OK";
                 if (Boolean.TRUE.equals(day.getIsAbsent())) ocr = "Falta";
@@ -527,33 +552,42 @@ public class TimesheetExportService {
                 else if (day.getDeficitMinutes() != null && day.getDeficitMinutes() > 10) ocr = "Débito";
                 else if (day.getOvertimeMinutes() != null && day.getOvertimeMinutes() > 10) ocr = "Extra";
 
-                sb.append("<td style='font-size:7px'>").append(ocr).append("</td>");
+                sb.append("<td style='font-size:7.5px; font-weight:600;'>").append(ocr).append("</td>");
                 sb.append("</tr>");
             }
             sb.append("</tbody></table>");
 
-            // Totals
-            if (data.totals() != null) {
-                sb.append("<div style='margin-top:10px; display:flex; gap:20px; font-size:9px;'>");
-                sb.append("<div><strong>Total Trabalhado:</strong> ").append(data.totals().workedFormatted()).append("</div>");
-                sb.append("<div><strong>Carga Esperada:</strong> ").append(calculateExpectedPeriod(data.timesheet())).append("</div>");
-                sb.append("<div><strong>Extras:</strong> ").append(data.totals().overtimeFormatted()).append("</div>");
-                sb.append("<div><strong>Débitos/Atrasos:</strong> ").append(data.totals().deficitFormatted()).append("</div>");
-                sb.append("</div>");
-            }
-
-            // Signatures
-            sb.append("<div class='sig-container' style='width: 100%; border-collapse: separate;'>");
-            sb.append("<div class='sig-box'><strong>").append(data.name()).append("</strong><br/>Assinatura do Colaborador</div>");
-            sb.append("<div class='sig-box'><strong>").append(company != null ? company.getLegalName() : "A Empresa").append("</strong><br/>Responsável / RH</div>");
+            // Totals sintetizados
+            sb.append("<div style='margin-top:20px; padding: 12px; background: #f1f5f9; border-radius: 8px; display: flex; justify-content: space-around; font-size: 10px; border: 1px solid #e2e8f0;'>");
+            sb.append("<div><span class='label'>Total Trabalhado</span><span class='value'>").append(data.totals() != null ? data.totals().workedFormatted() : "00:00").append("</span></div>");
+            sb.append("<div><span class='label'>Carga Esperada</span><span class='value'>").append(calculateExpectedPeriod(data.timesheet())).append("</span></div>");
+            sb.append("<div><span class='label'>Horas Extras</span><span class='value positive'>").append(data.totals() != null ? data.totals().overtimeFormatted() : "00:00").append("</span></div>");
+            sb.append("<div><span class='label'>Débitos/Atrasos</span><span class='value negative'>").append(data.totals() != null ? data.totals().deficitFormatted() : "00:00").append("</span></div>");
             sb.append("</div>");
 
-            sb.append("<div class='footer-meta'>Emitido via AxonRH em ").append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))).append("</div>");
+            // Signatures
+            sb.append("<div class='sig-container'>");
+            sb.append("<div class='sig-box'><strong>").append(data.name()).append("</strong><br/>Colaborador</div>");
+            sb.append("<div class='sig-box'><strong>").append(company != null ? company.getLegalName() : "Empresa AxonRH").append("</strong><br/>Responsável / RH</div>");
+            sb.append("</div>");
+
+            // Footer
+            sb.append("<div class='footer-meta'>");
+            sb.append("<span>Emitido em: ").append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))).append("</span>");
+            sb.append("<span>AxonRH — Tecnologia para Gestão de Pessoas</span>");
+            sb.append("</div>");
             sb.append("</div>");
         }
 
         sb.append("</body></html>");
         return sb.toString();
+    }
+
+    private String formatMinutes(Integer minutes) {
+        if (minutes == null || minutes == 0) return "00:00";
+        int hours = minutes / 60;
+        int mins = minutes % 60;
+        return String.format("%02d:%02d", hours, mins);
     }
 
     private String calculateExpectedPeriod(List<DailySummaryResponse> timesheet) {

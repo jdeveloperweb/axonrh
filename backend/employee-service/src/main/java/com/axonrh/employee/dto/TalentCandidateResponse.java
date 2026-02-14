@@ -27,6 +27,12 @@ public class TalentCandidateResponse {
     @Schema(description = "Título da vaga")
     private String vacancyTitle;
 
+    @Schema(description = "ID do departamento")
+    private UUID departmentId;
+
+    @Schema(description = "Nome do departamento")
+    private String departmentName;
+
     @Schema(description = "Nome completo")
     private String fullName;
 

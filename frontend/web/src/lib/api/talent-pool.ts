@@ -4,7 +4,7 @@ import { api } from './client';
 
 export type VacancyStatus = 'DRAFT' | 'OPEN' | 'PAUSED' | 'CLOSED' | 'CANCELLED';
 export type VacancyType = 'INTERNAL' | 'EXTERNAL' | 'BOTH';
-export type CandidateStatus = 'NEW' | 'SCREENING' | 'INTERVIEW' | 'APPROVED' | 'REJECTED' | 'HIRED' | 'WITHDRAWN';
+export type CandidateStatus = 'NEW' | 'SCREENING' | 'INTERVIEW' | 'APPROVED' | 'REJECTED' | 'HIRED' | 'WITHDRAWN' | 'TALENT_POOL';
 export type CandidateSource = 'WEBSITE' | 'LINKEDIN' | 'REFERRAL' | 'JOB_BOARD' | 'OTHER';
 export type EmploymentType = 'CLT' | 'PJ' | 'ESTAGIARIO' | 'TEMPORARIO' | 'APRENDIZ' | 'AUTONOMO' | 'TERCEIRIZADO';
 export type WorkRegime = 'PRESENCIAL' | 'REMOTO' | 'HIBRIDO';
@@ -65,6 +65,8 @@ export interface TalentCandidate {
     id: string;
     vacancyId?: string;
     vacancyTitle?: string;
+    departmentId?: string;
+    departmentName?: string;
     fullName: string;
     email: string;
     phone?: string;
@@ -156,6 +158,7 @@ export interface TalentPoolStats {
     inProcessCandidates: number;
     approvedCandidates: number;
     hiredCandidates: number;
+    talentPoolCandidates: number;
     candidatesByStatus: Record<string, number>;
     candidatesByVacancy: Record<string, number>;
 }
@@ -342,6 +345,7 @@ export const getCandidateStatusLabel = (status: CandidateStatus): string => {
         REJECTED: 'Rejeitado',
         HIRED: 'Contratado',
         WITHDRAWN: 'Desistiu',
+        TALENT_POOL: 'Banco de Talentos',
     };
     return labels[status] || status;
 };
@@ -355,6 +359,7 @@ export const getCandidateStatusColor = (status: CandidateStatus): string => {
         REJECTED: 'bg-red-100 text-red-800',
         HIRED: 'bg-emerald-100 text-emerald-800',
         WITHDRAWN: 'bg-gray-100 text-gray-800',
+        TALENT_POOL: 'bg-orange-100 text-orange-800',
     };
     return colors[status] || 'bg-gray-100 text-gray-800';
 };

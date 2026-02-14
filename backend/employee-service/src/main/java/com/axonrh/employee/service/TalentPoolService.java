@@ -534,6 +534,7 @@ public class TalentPoolService {
                 + candidateRepository.countByTenantIdAndStatusAndIsActiveTrue(tenantId, CandidateStatus.INTERVIEW);
         long approvedCandidates = candidateRepository.countByTenantIdAndStatusAndIsActiveTrue(tenantId, CandidateStatus.APPROVED);
         long hiredCandidates = candidateRepository.countByTenantIdAndStatusAndIsActiveTrue(tenantId, CandidateStatus.HIRED);
+        long talentPoolCandidates = candidateRepository.countByTenantIdAndStatusAndIsActiveTrue(tenantId, CandidateStatus.TALENT_POOL);
 
         // Distribuição por status
         Map<String, Long> candidatesByStatus = new HashMap<>();
@@ -557,6 +558,7 @@ public class TalentPoolService {
                 .inProcessCandidates(inProcessCandidates)
                 .approvedCandidates(approvedCandidates)
                 .hiredCandidates(hiredCandidates)
+                .talentPoolCandidates(talentPoolCandidates)
                 .candidatesByStatus(candidatesByStatus)
                 .candidatesByVacancy(candidatesByVacancy)
                 .build();
@@ -635,9 +637,10 @@ public class TalentPoolService {
             }
 
             boolean isPdf = contentType.equals("application/pdf") || originalFilename.toLowerCase().endsWith(".pdf");
+            boolean isWord = contentType.equals("application/vnd.openxmlformats-officedocument.wordprocessingml.document") || originalFilename.toLowerCase().endsWith(".docx");
 
-            if (!isPdf) {
-                throw new InvalidOperationException("Apenas arquivos PDF são aceitos");
+            if (!isPdf && !isWord) {
+                throw new InvalidOperationException("Apenas arquivos PDF ou Word (.docx) são aceitos");
             }
 
             // Salva arquivo
@@ -731,6 +734,18 @@ public class TalentPoolService {
                 // Armazena insight IA
                 if (analysis.getAiInsight() != null) {
                     candidate.setAiInsight(analysis.getAiInsight());
+                }
+
+                // Classifica automaticamente as estrelas baseada no score de compatibilidade
+                if (analysis.getCompatibilityScore() != null) {
+                    double score = analysis.getCompatibilityScore();
+                    int rating = 1;
+                    if (score >= 90) rating = 5;
+                    else if (score >= 70) rating = 4;
+                    else if (score >= 50) rating = 3;
+                    else if (score >= 30) rating = 2;
+                    
+                    candidate.setRating(rating);
                 }
 
                 log.info("Currículo analisado com sucesso via IA para candidato: {}", candidate.getId());

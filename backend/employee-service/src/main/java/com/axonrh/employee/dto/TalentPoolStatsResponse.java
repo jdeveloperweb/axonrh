@@ -44,6 +44,9 @@ public class TalentPoolStatsResponse {
     @Schema(description = "Candidatos contratados")
     private Long hiredCandidates;
 
+    @Schema(description = "Candidatos no banco de talentos")
+    private Long talentPoolCandidates;
+
     @Schema(description = "Distribuição de candidatos por status")
     private Map<String, Long> candidatesByStatus;
 
