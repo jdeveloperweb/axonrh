@@ -773,4 +773,3 @@ public class DailySummaryService {
         return workScheduleRepository.findByTenantIdAndIdWithDays(tenantId, scheduleId).orElse(null);
     }
 }
-}
