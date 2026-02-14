@@ -27,7 +27,10 @@ public interface EvaluationRepository extends JpaRepository<Evaluation, UUID> {
     List<Evaluation> findByTenantIdAndEmployeeIdOrderByCreatedAtDesc(UUID tenantId, UUID employeeId);
 
     // Avaliacoes por ciclo
-    Page<Evaluation> findByTenantIdAndCycleId(UUID tenantId, UUID cycleId, Pageable pageable);
+    @Query("SELECT e FROM Evaluation e WHERE e.tenantId = :tenantId AND e.cycle.id = :cycleId")
+    Page<Evaluation> findByTenantIdAndCycleId(@Param("tenantId") UUID tenantId, 
+                                             @Param("cycleId") UUID cycleId, 
+                                             Pageable pageable);
 
     // Avaliacoes pendentes do avaliador
     @Query("SELECT e FROM Evaluation e WHERE e.tenantId = :tenantId " +
@@ -68,8 +71,15 @@ public interface EvaluationRepository extends JpaRepository<Evaluation, UUID> {
                                @Param("status") EvaluationStatus status);
 
     // Verificar se ja existe avaliacao
+    @Query("SELECT COUNT(e) > 0 FROM Evaluation e WHERE e.tenantId = :tenantId " +
+           "AND e.cycle.id = :cycleId AND e.employeeId = :employeeId " +
+           "AND e.evaluatorId = :evaluatorId AND e.evaluatorType = :evaluatorType")
     boolean existsByTenantIdAndCycleIdAndEmployeeIdAndEvaluatorIdAndEvaluatorType(
-            UUID tenantId, UUID cycleId, UUID employeeId, UUID evaluatorId, EvaluatorType evaluatorType);
+            @Param("tenantId") UUID tenantId, 
+            @Param("cycleId") UUID cycleId, 
+            @Param("employeeId") UUID employeeId, 
+            @Param("evaluatorId") UUID evaluatorId, 
+            @Param("evaluatorType") EvaluatorType evaluatorType);
 
     // Contar avaliacoes por ciclo
     long countByTenantIdAndCycleId(UUID tenantId, UUID cycleId);
