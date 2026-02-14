@@ -18,7 +18,8 @@ import java.util.UUID;
 @Repository
 public interface EvaluationRepository extends JpaRepository<Evaluation, UUID> {
 
-    Optional<Evaluation> findByTenantIdAndId(UUID tenantId, UUID id);
+    @Query("SELECT DISTINCT e FROM Evaluation e LEFT JOIN FETCH e.cycle LEFT JOIN FETCH e.answers WHERE e.tenantId = :tenantId AND e.id = :id")
+    Optional<Evaluation> findByTenantIdAndId(@Param("tenantId") UUID tenantId, @Param("id") UUID id);
 
     // Avaliacoes do avaliador
     List<Evaluation> findByTenantIdAndEvaluatorIdOrderByDueDateAsc(UUID tenantId, UUID evaluatorId);
@@ -33,7 +34,8 @@ public interface EvaluationRepository extends JpaRepository<Evaluation, UUID> {
                                              Pageable pageable);
 
     // Avaliacoes pendentes do avaliador
-    @Query("SELECT e FROM Evaluation e WHERE e.tenantId = :tenantId " +
+    @Query("SELECT DISTINCT e FROM Evaluation e LEFT JOIN FETCH e.cycle " +
+           "WHERE e.tenantId = :tenantId " +
            "AND e.evaluatorId = :evaluatorId " +
            "AND e.status IN ('PENDING', 'IN_PROGRESS')")
     List<Evaluation> findPendingByEvaluator(@Param("tenantId") UUID tenantId,
