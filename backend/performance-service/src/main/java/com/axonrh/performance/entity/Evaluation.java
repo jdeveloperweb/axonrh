@@ -113,6 +113,19 @@ public class Evaluation {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    // Métodos para compatibilidade com o Frontend (Flattening JSON)
+    @Transient
+    @com.fasterxml.jackson.annotation.JsonProperty("cycleName")
+    public String getCycleName() {
+        return cycle != null ? cycle.getName() : null;
+    }
+
+    @Transient
+    @com.fasterxml.jackson.annotation.JsonProperty("cycleId")
+    public UUID getCycleId() {
+        return cycle != null ? cycle.getId() : null;
+    }
+
     // Business methods
     public void start() {
         if (this.status != EvaluationStatus.PENDING) {
