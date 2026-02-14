@@ -115,6 +115,9 @@ public class TimesheetExportService {
     }
 
     public byte[] exportToExcel(UUID employeeId, LocalDate startDate, LocalDate endDate) {
+        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        List<DailySummaryResponse> timesheet = dailySummaryService.getTimesheetByPeriod(employeeId, startDate, endDate);
+        
         com.axonrh.timesheet.dto.EmployeeDTO employee = null;
         try {
             employee = employeeClient.getEmployee(employeeId);
@@ -131,6 +134,8 @@ public class TimesheetExportService {
         } catch (Exception e) {
             log.debug("Erro ao buscar tema para excel: {}", e.getMessage());
         }
+
+        String employeeName = employee != null ? employee.getFullName() : getEmployeeName(tenantId, employeeId);
 
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Sheet sheet = workbook.createSheet("Espelho de Ponto");
