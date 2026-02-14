@@ -22,6 +22,7 @@ import Link from 'next/link';
 import { evaluationsApi, Evaluation, EvaluationAnswer } from '@/lib/api/performance';
 import { getErrorMessage } from '@/lib/api/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuthStore } from '@/stores/auth-store';
 import { useConfirm } from '@/components/providers/ConfirmProvider';
 import { cn } from '@/lib/utils';
 
@@ -57,6 +58,10 @@ export default function EvaluationPage() {
     const loadEvaluation = async () => {
       try {
         setLoading(true);
+        console.log(`AXON_DEBUG: Carregando avaliacao ID: ${evaluationId}`);
+        const { user } = useAuthStore.getState();
+        console.log(`AXON_DEBUG: Tenant ID: ${user?.tenantId}`);
+
         const data = await evaluationsApi.get(evaluationId);
         setEvaluation(data);
 

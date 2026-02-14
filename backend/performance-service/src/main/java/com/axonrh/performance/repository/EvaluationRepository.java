@@ -83,4 +83,6 @@ public interface EvaluationRepository extends JpaRepository<Evaluation, UUID> {
 
     // Contar avaliacoes por ciclo
     long countByTenantIdAndCycleId(UUID tenantId, UUID cycleId);
+
+    List<Evaluation> findByTenantIdAndCycleId(UUID tenantId, UUID cycleId);
 }

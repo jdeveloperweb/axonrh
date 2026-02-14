@@ -33,17 +33,20 @@ public class EvaluationService {
     private final com.axonrh.performance.publisher.PerformanceEventPublisher eventPublisher;
     private final com.axonrh.performance.client.EmployeeServiceClient employeeServiceClient;
     private final com.axonrh.performance.repository.EvaluationFormRepository formRepository;
+    private final com.axonrh.performance.repository.GoalRepository goalRepository;
 
     public EvaluationService(EvaluationRepository evaluationRepository,
                             EvaluationCycleRepository cycleRepository,
                             com.axonrh.performance.publisher.PerformanceEventPublisher eventPublisher,
                             com.axonrh.performance.client.EmployeeServiceClient employeeServiceClient,
-                            com.axonrh.performance.repository.EvaluationFormRepository formRepository) {
+                            com.axonrh.performance.repository.EvaluationFormRepository formRepository,
+                            com.axonrh.performance.repository.GoalRepository goalRepository) {
         this.evaluationRepository = evaluationRepository;
         this.cycleRepository = cycleRepository;
         this.eventPublisher = eventPublisher;
         this.employeeServiceClient = employeeServiceClient;
         this.formRepository = formRepository;
+        this.goalRepository = goalRepository;
     }
 
     // ==================== Cycles ====================
@@ -323,15 +326,17 @@ public class EvaluationService {
     public void deleteCycle(UUID tenantId, UUID cycleId) {
         EvaluationCycle cycle = getCycle(tenantId, cycleId);
         
-        // Verificar se há avaliações vinculadas
-        long evaluationCount = evaluationRepository.countByTenantIdAndCycleId(tenantId, cycleId);
-        if (evaluationCount > 0) {
-            throw new IllegalStateException(
-                "Não é possível excluir o ciclo pois existem " + evaluationCount + 
-                " avaliações vinculadas. Exclua as avaliações primeiro."
-            );
+        // 1. Limpar referências em metas
+        goalRepository.clearCycleId(tenantId, cycleId);
+        
+        // 2. Deletar avaliações vinculadas (isso também deleta as respostas via cascade)
+        List<Evaluation> evaluations = evaluationRepository.findByTenantIdAndCycleId(tenantId, cycleId);
+        if (!evaluations.isEmpty()) {
+            evaluationRepository.deleteAll(evaluations);
+            log.info("Deletadas {} avaliações do ciclo {}", evaluations.size(), cycleId);
         }
         
+        // 3. Deletar o ciclo
         cycleRepository.delete(cycle);
     }
 

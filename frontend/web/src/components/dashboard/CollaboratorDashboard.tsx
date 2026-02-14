@@ -172,7 +172,7 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
             </div>
 
             {/* Main Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {/* Ponto Status */}
                 {useThemeStore.getState().tenantTheme?.modules?.moduleTimesheet !== false && (
                     <Card className="border-none shadow-sm bg-gradient-to-br from-[#EEF2FF] to-[#E0E7FF] overflow-hidden relative group">
@@ -226,6 +226,30 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
                     </Card>
                 )}
 
+                {/* Performance Status */}
+                {useThemeStore.getState().tenantTheme?.modules?.modulePerformance !== false && (
+                    <Card className="border-none shadow-sm bg-gradient-to-br from-[#F5F3FF] to-[#EDE9FE] overflow-hidden relative group">
+                        <div className="absolute top-[-10px] right-[-10px] p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                            <ClipboardCheck className="w-24 h-24" />
+                        </div>
+                        <CardContent className="p-6">
+                            <p className="text-sm font-semibold text-violet-600 mb-1 uppercase tracking-wider">Desempenho</p>
+                            <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                                {pendingEvaluations.length} {pendingEvaluations.length === 1 ? 'Avaliação' : 'Avaliações'}
+                            </h3>
+                            <p className="text-sm text-gray-600 mb-6 font-medium">
+                                {pendingEvaluations.length > 0 ? 'Existem avaliações pendentes' : 'Nenhuma avaliação pendente'}
+                            </p>
+                            <button
+                                className="p-0 text-violet-600 h-auto font-bold flex items-center group/btn hover:underline"
+                                onClick={() => router.push('/performance')}
+                            >
+                                Ver desempenho <ArrowRight className="w-4 h-4 ml-1 group-hover/btn:translate-x-1 transition-transform" />
+                            </button>
+                        </CardContent>
+                    </Card>
+                )}
+
                 {/* Treinamentos Status */}
                 {useThemeStore.getState().tenantTheme?.modules?.moduleLearning !== false && (
                     <Card className="border-none shadow-sm bg-gradient-to-br from-[#ECFDF5] to-[#D1FAE5] overflow-hidden relative group">
@@ -250,6 +274,7 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
                     </Card>
                 )}
             </div>
+
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Próximas Atividades / Cursos */}

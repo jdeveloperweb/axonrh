@@ -66,4 +66,8 @@ public interface GoalRepository extends JpaRepository<Goal, UUID> {
     long countByEmployeeAndStatus(@Param("tenantId") UUID tenantId,
                                   @Param("employeeId") UUID employeeId,
                                   @Param("status") GoalStatus status);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("UPDATE Goal g SET g.cycleId = NULL WHERE g.tenantId = :tenantId AND g.cycleId = :cycleId")
+    void clearCycleId(@Param("tenantId") UUID tenantId, @Param("cycleId") UUID cycleId);
 }
