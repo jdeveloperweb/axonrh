@@ -12,6 +12,9 @@ public interface CoreServiceClient {
     @GetMapping("/api/v1/setup/company")
     CompanyProfileDTO getCompanyProfile(@RequestHeader("X-Tenant-ID") UUID tenantId);
 
+    @GetMapping("/api/v1/setup/work-schedules/{id}")
+    com.axonrh.timesheet.entity.WorkSchedule getWorkScheduleWithDays(@RequestHeader("X-Tenant-ID") UUID tenantId, @RequestHeader("id") UUID id);
+
     @lombok.Data
     class CompanyProfileDTO {
         private String legalName;

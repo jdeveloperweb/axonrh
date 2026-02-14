@@ -768,4 +768,9 @@ public class DailySummaryService {
         }
         return ids;
     }
+
+    public com.axonrh.timesheet.entity.WorkSchedule getWorkSchedule(UUID tenantId, UUID scheduleId) {
+        return workScheduleRepository.findByTenantIdAndIdWithDays(tenantId, scheduleId).orElse(null);
+    }
+}
 }
