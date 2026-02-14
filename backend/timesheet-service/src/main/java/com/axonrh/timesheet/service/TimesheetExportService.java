@@ -63,10 +63,9 @@ public class TimesheetExportService {
         com.axonrh.timesheet.entity.WorkSchedule workSchedule = null;
         if (employee != null && employee.getWorkScheduleId() != null) {
             try {
-                workSchedule = coreServiceClient.getWorkScheduleWithDays(tenantId, employee.getWorkScheduleId());
-            } catch (Exception e) {
-                // Fallback para buscar localmente se o client falhar
                 workSchedule = dailySummaryService.getWorkSchedule(tenantId, employee.getWorkScheduleId());
+            } catch (Exception e) {
+                log.warn("Erro ao buscar escala local para exportacao: {}", e.getMessage());
             }
         }
 
