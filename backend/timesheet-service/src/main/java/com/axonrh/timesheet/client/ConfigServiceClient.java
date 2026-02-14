@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.UUID;
 
-@FeignClient(name = "config-service", url = "${application.clients.config-service:http://config-service:8888}")
+@FeignClient(name = "config-service", url = "${application.clients.config-service:http://localhost:8888}")
 public interface ConfigServiceClient {
 
     @GetMapping("/api/v1/config/theme/{tenantId}")

@@ -112,8 +112,13 @@ public class EvaluationController {
     @GetMapping("/evaluations/pending")
     public ResponseEntity<List<Evaluation>> getMyPendingEvaluations(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
-            @RequestParam UUID evaluatorId) {
-        return ResponseEntity.ok(evaluationService.getMyPendingEvaluations(tenantId, evaluatorId));
+            @RequestParam(required = false) UUID evaluatorId,
+            @RequestParam(required = false) UUID userId) {
+        UUID finalId = evaluatorId != null ? evaluatorId : userId;
+        if (finalId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(evaluationService.getMyPendingEvaluations(tenantId, finalId));
     }
 
     @GetMapping("/evaluations/employee/{employeeId}")

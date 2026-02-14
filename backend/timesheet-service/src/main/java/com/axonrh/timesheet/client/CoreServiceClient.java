@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 
 import java.util.UUID;
 
-@FeignClient(name = "core-service", url = "${application.clients.core-service:http://core-service:8080}")
+@FeignClient(name = "core-service", url = "${application.clients.core-service:http://localhost:8082}")
 public interface CoreServiceClient {
 
     @GetMapping("/api/v1/setup/company")

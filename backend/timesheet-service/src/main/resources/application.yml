@@ -120,4 +120,6 @@ timesheet:
 # Clientes HTTP
 application:
   clients:
+    core-service: ${CORE_SERVICE_URL:http://localhost:8082}
+    config-service: ${CONFIG_SERVICE_URL:http://localhost:8888}
     employee-service: ${EMPLOYEE_SERVICE_URL:http://localhost:8083}

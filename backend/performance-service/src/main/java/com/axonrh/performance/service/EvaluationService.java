@@ -96,25 +96,30 @@ public class EvaluationService {
             log.info("Gerando avaliacoes para {} colaboradores no ciclo {}", employees.size(), cycle.getName());
 
             for (com.axonrh.performance.dto.EmployeeDTO employee : employees) {
-                // 1. Autoavaliacao - Usa o USER ID para o avaliador (quem acessa o sistema)
-                if (Boolean.TRUE.equals(cycle.getIncludeSelfEvaluation()) && employee.getUserId() != null) {
-                    Evaluation eval = createEvaluationIfNotExists(tenantId, cycle, employee, employee.getUserId(), employee.getFullName(), EvaluatorType.SELF);
-                    if (eval != null) {
-                        eventPublisher.publishEvaluationCreated(eval, cycle.getName());
+                try {
+                    // 1. Autoavaliacao (sempre inclusa por padrao se o colaborador tiver usuario)
+                    if (Boolean.TRUE.equals(cycle.getIncludeSelfEvaluation()) && employee.getUserId() != null) {
+                        Evaluation eval = createEvaluationIfNotExists(tenantId, cycle, employee, employee.getUserId(), employee.getFullName(), EvaluatorType.SELF);
+                        if (eval != null) {
+                            eventPublisher.publishEvaluationCreated(eval, cycle.getName());
+                        }
                     }
-                }
 
-                // 2. Avaliacao do Gestor - Usa o USER ID do gestor para o avaliador
-                if (Boolean.TRUE.equals(cycle.getIncludeManagerEvaluation()) && employee.getManager() != null && employee.getManager().getUserId() != null) {
-                    Evaluation eval = createEvaluationIfNotExists(tenantId, cycle, employee, employee.getManager().getUserId(), employee.getManager().getName(), EvaluatorType.MANAGER);
-                    if (eval != null) {
-                        eventPublisher.publishEvaluationCreated(eval, cycle.getName());
+                    // 2. Avaliacao do Gestor (se o colaborador tiver gestor com usuario)
+                    if (Boolean.TRUE.equals(cycle.getIncludeManagerEvaluation()) && employee.getManager() != null && employee.getManager().getUserId() != null) {
+                        Evaluation eval = createEvaluationIfNotExists(tenantId, cycle, employee, employee.getManager().getUserId(), employee.getManager().getName(), EvaluatorType.MANAGER);
+                        if (eval != null) {
+                            eventPublisher.publishEvaluationCreated(eval, cycle.getName());
+                        }
                     }
+                } catch (Exception e) {
+                    log.error("Erro ao gerar avaliação para o colaborador {} (ID: {}) no ciclo {}: {}", 
+                            employee.getFullName(), employee.getId(), cycle.getId(), e.getMessage());
+                    // Continua para o proximo colaborador
                 }
             }
         } catch (Exception e) {
-            log.error("Erro ao gerar avaliacoes para o ciclo {}: {}", cycle.getId(), e.getMessage(), e);
-            // Nao relanca excecao para nao impedir ativacao do ciclo, mas loga erro grave
+            log.error("Erro fatal ao acessar servico de colaboradores para o ciclo {}: {}", cycle.getId(), e.getMessage(), e);
         }
     }
 
