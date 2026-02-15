@@ -59,8 +59,44 @@ export interface Employee {
   dependents?: EmployeeDependent[];
   createdAt: string;
   updatedAt: string;
+  addressCountry?: string;
   workScheduleId?: string;
   missingFields?: string[];
+
+  // Novos campos adicionados para paridade com Backend
+  birthCity?: string;
+  birthState?: string;
+  motherName?: string;
+  fatherName?: string;
+  rgNumber?: string;
+  rgIssuer?: string;
+  rgState?: string;
+  rgIssueDate?: string;
+  pisPasep?: string;
+  ctpsNumber?: string;
+  ctpsSeries?: string;
+  ctpsState?: string;
+  ctpsIssueDate?: string;
+  voterTitle?: string;
+  voterZone?: string;
+  voterSection?: string;
+  militaryCertificate?: string;
+  driverLicense?: string;
+  driverLicenseCategory?: string;
+  driverLicenseExpiry?: string;
+  bankCode?: string;
+  bankName?: string;
+  bankAgency?: string;
+  bankAgencyDigit?: string;
+  bankAccount?: string;
+  bankAccountDigit?: string;
+  bankAccountType?: string;
+  pixKey?: string;
+  pixKeyType?: string;
+  salaryType?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  emergencyContactRelationship?: string;
 }
 
 export type EmployeeStatus = 'ACTIVE' | 'INACTIVE' | 'ON_LEAVE' | 'TERMINATED' | 'PENDING';
@@ -138,28 +174,27 @@ export interface EmployeeCreateRequest {
   cpf: string;
   fullName: string;
   socialName?: string;
-  email: string;  // Obrigatório no backend
+  email: string;
   personalEmail?: string;
   phone?: string;
-  mobile?: string;  // Renomeado de personalPhone
-  birthDate: string;  // Obrigatório no backend
+  mobile?: string;
+  birthDate: string;
   gender?: string;
   ethnicity?: string;
   race?: string;
   maritalStatus?: string;
   nationality?: string;
-  hireDate: string;  // Renomeado de admissionDate
+  hireDate: string;
   employmentType: string;
   workRegime?: string;
   hybridWorkDays?: string[];
   hybridFrequency?: number;
-  baseSalary?: number;  // Renomeado de salary
-  weeklyHours?: number;  // Renomeado de workHoursPerWeek
+  baseSalary?: number;
+  weeklyHours?: number;
   departmentId?: string;
   positionId?: string;
   costCenterId?: string;
   managerId?: string;
-  // Campos de endereço planos (não objeto aninhado)
   addressStreet?: string;
   addressNumber?: string;
   addressComplement?: string;
@@ -169,6 +204,41 @@ export interface EmployeeCreateRequest {
   addressZipCode?: string;
   addressCountry?: string;
   workScheduleId?: string;
+
+  // Novos campos opcionais
+  birthCity?: string;
+  birthState?: string;
+  motherName?: string;
+  fatherName?: string;
+  rgNumber?: string;
+  rgIssuer?: string;
+  rgState?: string;
+  rgIssueDate?: string;
+  pisPasep?: string;
+  ctpsNumber?: string;
+  ctpsSeries?: string;
+  ctpsState?: string;
+  ctpsIssueDate?: string;
+  voterTitle?: string;
+  voterZone?: string;
+  voterSection?: string;
+  militaryCertificate?: string;
+  driverLicense?: string;
+  driverLicenseCategory?: string;
+  driverLicenseExpiry?: string;
+  bankCode?: string;
+  bankName?: string;
+  bankAgency?: string;
+  bankAgencyDigit?: string;
+  bankAccount?: string;
+  bankAccountDigit?: string;
+  bankAccountType?: string;
+  pixKey?: string;
+  pixKeyType?: string;
+  salaryType?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  emergencyContactRelationship?: string;
 }
 
 export interface EmployeeUpdateRequest extends Partial<EmployeeCreateRequest> {

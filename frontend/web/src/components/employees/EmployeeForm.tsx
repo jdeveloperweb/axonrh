@@ -16,7 +16,8 @@ import {
     EyeOff,
     ShieldCheck,
     ShieldAlert,
-    Sparkles
+    Sparkles,
+    Upload
 } from 'lucide-react';
 import { ExtractDataModal } from './ExtractDataModal';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,7 +33,7 @@ import { cn, isValidCpf, isValidEmail } from '@/lib/utils';
 import { DocumentsTab } from './DocumentsTab';
 import { DependentsTab } from './DependentsTab';
 
-type TabKey = 'personal' | 'address' | 'professional' | 'documents' | 'dependents';
+type TabKey = 'personal' | 'address' | 'professional' | 'document_info' | 'bank' | 'documents' | 'dependents';
 
 interface FormErrors {
     [key: string]: string;
@@ -46,17 +47,17 @@ interface FormData {
     email: string;
     personalEmail: string;
     phone: string;
-    personalPhone: string;  // Será mapeado para mobile
+    personalPhone: string;
     birthDate: string;
     gender: string;
     ethnicity: string;
     race: string;
     maritalStatus: string;
     nationality: string;
-    admissionDate: string;  // Será mapeado para hireDate
+    admissionDate: string;
     employmentType: string;
-    salary?: number;  // Será mapeado para baseSalary
-    workHoursPerWeek?: number;  // Será mapeado para weeklyHours
+    salary?: number;
+    workHoursPerWeek?: number;
     departmentId: string;
     positionId: string;
     costCenterId: string;
@@ -78,6 +79,41 @@ interface FormData {
     platformPassword?: string;
     platformRoles: string[];
     workScheduleId: string;
+
+    // Novos campos
+    birthCity: string;
+    birthState: string;
+    motherName: string;
+    fatherName: string;
+    rgNumber: string;
+    rgIssuer: string;
+    rgState: string;
+    rgIssueDate: string;
+    pisPasep: string;
+    ctpsNumber: string;
+    ctpsSeries: string;
+    ctpsState: string;
+    ctpsIssueDate: string;
+    voterTitle: string;
+    voterZone: string;
+    voterSection: string;
+    militaryCertificate: string;
+    driverLicense: string;
+    driverLicenseCategory: string;
+    driverLicenseExpiry: string;
+    bankCode: string;
+    bankName: string;
+    bankAgency: string;
+    bankAgencyDigit: string;
+    bankAccount: string;
+    bankAccountDigit: string;
+    bankAccountType: string;
+    pixKey: string;
+    pixKeyType: string;
+    salaryType: string;
+    emergencyContactName: string;
+    emergencyContactPhone: string;
+    emergencyContactRelationship: string;
 }
 
 interface EmployeeFormProps {
@@ -133,6 +169,39 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
         platformPassword: '',
         platformRoles: ['COLABORADOR'],
         workScheduleId: '',
+        birthCity: '',
+        birthState: '',
+        motherName: '',
+        fatherName: '',
+        rgNumber: '',
+        rgIssuer: '',
+        rgState: '',
+        rgIssueDate: '',
+        pisPasep: '',
+        ctpsNumber: '',
+        ctpsSeries: '',
+        ctpsState: '',
+        ctpsIssueDate: '',
+        voterTitle: '',
+        voterZone: '',
+        voterSection: '',
+        militaryCertificate: '',
+        driverLicense: '',
+        driverLicenseCategory: '',
+        driverLicenseExpiry: '',
+        bankCode: '',
+        bankName: '',
+        bankAgency: '',
+        bankAgencyDigit: '',
+        bankAccount: '',
+        bankAccountDigit: '',
+        bankAccountType: 'CURRENT',
+        pixKey: '',
+        pixKeyType: 'CPF',
+        salaryType: 'MONTHLY',
+        emergencyContactName: '',
+        emergencyContactPhone: '',
+        emergencyContactRelationship: '',
     });
 
     const [showPassword, setShowPassword] = useState(false);
@@ -268,7 +337,40 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                     zipCode: initialData.addressZipCode || prev.address.zipCode,
                     country: initialData.addressCountry || prev.address.country,
                 },
-                workScheduleId: (initialData as any).workScheduleId || prev.workScheduleId
+                workScheduleId: (initialData as any).workScheduleId || prev.workScheduleId,
+                birthCity: (initialData as any).birthCity || prev.birthCity,
+                birthState: (initialData as any).birthState || prev.birthState,
+                motherName: (initialData as any).motherName || prev.motherName,
+                fatherName: (initialData as any).fatherName || prev.fatherName,
+                rgNumber: (initialData as any).rgNumber || prev.rgNumber,
+                rgIssuer: (initialData as any).rgIssuer || prev.rgIssuer,
+                rgState: (initialData as any).rgState || prev.rgState,
+                rgIssueDate: (initialData as any).rgIssueDate || prev.rgIssueDate,
+                pisPasep: (initialData as any).pisPasep || prev.pisPasep,
+                ctpsNumber: (initialData as any).ctpsNumber || prev.ctpsNumber,
+                ctpsSeries: (initialData as any).ctpsSeries || prev.ctpsSeries,
+                ctpsState: (initialData as any).ctpsState || prev.ctpsState,
+                ctpsIssueDate: (initialData as any).ctpsIssueDate || prev.ctpsIssueDate,
+                voterTitle: (initialData as any).voterTitle || prev.voterTitle,
+                voterZone: (initialData as any).voterZone || prev.voterZone,
+                voterSection: (initialData as any).voterSection || prev.voterSection,
+                militaryCertificate: (initialData as any).militaryCertificate || prev.militaryCertificate,
+                driverLicense: (initialData as any).driverLicense || prev.driverLicense,
+                driverLicenseCategory: (initialData as any).driverLicenseCategory || prev.driverLicenseCategory,
+                driverLicenseExpiry: (initialData as any).driverLicenseExpiry || prev.driverLicenseExpiry,
+                bankCode: (initialData as any).bankCode || prev.bankCode,
+                bankName: (initialData as any).bankName || prev.bankName,
+                bankAgency: (initialData as any).bankAgency || prev.bankAgency,
+                bankAgencyDigit: (initialData as any).bankAgencyDigit || prev.bankAgencyDigit,
+                bankAccount: (initialData as any).bankAccount || prev.bankAccount,
+                bankAccountDigit: (initialData as any).bankAccountDigit || prev.bankAccountDigit,
+                bankAccountType: (initialData as any).bankAccountType || prev.bankAccountType,
+                pixKey: (initialData as any).pixKey || prev.pixKey,
+                pixKeyType: (initialData as any).pixKeyType || prev.pixKeyType,
+                salaryType: (initialData as any).salaryType || prev.salaryType,
+                emergencyContactName: (initialData as any).emergencyContactName || prev.emergencyContactName,
+                emergencyContactPhone: (initialData as any).emergencyContactPhone || prev.emergencyContactPhone,
+                emergencyContactRelationship: (initialData as any).emergencyContactRelationship || prev.emergencyContactRelationship,
             }));
             setErrors({});
         }
@@ -341,6 +443,20 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
             nationality: data.nationality || data.nacionalidade || prev.nationality,
             email: data.email || prev.email,
             phone: data.phone || data.telefone || prev.phone,
+            birthCity: data.birthCity || data.naturalidade || prev.birthCity,
+            birthState: data.birthState || data.naturalidadeUF || prev.birthState,
+            motherName: data.motherName || data.nomeMae || prev.motherName,
+            fatherName: data.fatherName || data.nomePai || prev.fatherName,
+            rgNumber: data.rgNumber || data.rg || prev.rgNumber,
+            rgIssuer: data.rgIssuer || data.rgOrgaoEmissor || prev.rgIssuer,
+            rgIssueDate: data.rgIssueDate || data.rgDataEmissao || prev.rgIssueDate,
+            pisPasep: data.pisPasep || data.pis || prev.pisPasep,
+            ctpsNumber: data.ctpsNumber || data.ctps || prev.ctpsNumber,
+            bankCode: data.bankCode || prev.bankCode,
+            bankName: data.bankName || prev.bankName,
+            bankAgency: data.bankAgency || prev.bankAgency,
+            bankAccount: data.bankAccount || prev.bankAccount,
+            pixKey: data.pixKey || prev.pixKey,
             address: {
                 ...prev.address,
                 street: data.addressStreet || data.logradouro || prev.address.street,
@@ -455,7 +571,40 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                 addressCity: formData.address.city?.trim() || undefined,
                 addressState: formData.address.state?.trim() || undefined,
                 addressZipCode: formData.address.zipCode?.replace(/\D/g, '') || undefined,
-                addressCountry: formData.address.country || 'Brasil'
+                addressCountry: formData.address.country || 'Brasil',
+                birthCity: formData.birthCity || undefined,
+                birthState: formData.birthState || undefined,
+                motherName: formData.motherName || undefined,
+                fatherName: formData.fatherName || undefined,
+                rgNumber: formData.rgNumber || undefined,
+                rgIssuer: formData.rgIssuer || undefined,
+                rgState: formData.rgState || undefined,
+                rgIssueDate: formData.rgIssueDate || undefined,
+                pisPasep: formData.pisPasep || undefined,
+                ctpsNumber: formData.ctpsNumber || undefined,
+                ctpsSeries: formData.ctpsSeries || undefined,
+                ctpsState: formData.ctpsState || undefined,
+                ctpsIssueDate: formData.ctpsIssueDate || undefined,
+                voterTitle: formData.voterTitle || undefined,
+                voterZone: formData.voterZone || undefined,
+                voterSection: formData.voterSection || undefined,
+                militaryCertificate: formData.militaryCertificate || undefined,
+                driverLicense: formData.driverLicense || undefined,
+                driverLicenseCategory: formData.driverLicenseCategory || undefined,
+                driverLicenseExpiry: formData.driverLicenseExpiry || undefined,
+                bankCode: formData.bankCode || undefined,
+                bankName: formData.bankName || undefined,
+                bankAgency: formData.bankAgency || undefined,
+                bankAgencyDigit: formData.bankAgencyDigit || undefined,
+                bankAccount: formData.bankAccount || undefined,
+                bankAccountDigit: formData.bankAccountDigit || undefined,
+                bankAccountType: formData.bankAccountType || undefined,
+                pixKey: formData.pixKey || undefined,
+                pixKeyType: formData.pixKeyType || undefined,
+                salaryType: formData.salaryType || undefined,
+                emergencyContactName: formData.emergencyContactName || undefined,
+                emergencyContactPhone: formData.emergencyContactPhone || undefined,
+                emergencyContactRelationship: formData.emergencyContactRelationship || undefined,
             };
 
             console.log('🚀 Final Payload for API:', JSON.stringify(submitData, null, 2));
@@ -563,7 +712,9 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
         { key: 'personal' as TabKey, label: 'Dados Pessoais', icon: User, disabled: false },
         { key: 'address' as TabKey, label: 'Endereço', icon: MapPin, disabled: !employeeId },
         { key: 'professional' as TabKey, label: 'Dados Profissionais', icon: Briefcase, disabled: !employeeId },
-        { key: 'documents' as TabKey, label: 'Documentos', icon: FileText, disabled: !employeeId },
+        { key: 'document_info' as TabKey, label: 'Documentação', icon: FileText, disabled: !employeeId },
+        { key: 'bank' as TabKey, label: 'Dados Bancários', icon: Key, disabled: !employeeId },
+        { key: 'documents' as TabKey, label: 'Arquivos', icon: Upload, disabled: !employeeId },
         { key: 'dependents' as TabKey, label: 'Dependentes', icon: Users, disabled: !employeeId },
     ];
 
@@ -744,6 +895,28 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                                         onChange={handleChange}
                                         className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
                                     />
+                                </div>
+                            </div>
+
+                            <div className="pt-4 border-t border-gray-100">
+                                <h3 className="text-sm font-semibold mb-3">Naturalidade e Filiação</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                    <div className="md:col-span-3">
+                                        <label className="block text-sm font-medium mb-1">Cidade Natal</label>
+                                        <input type="text" name="birthCity" value={formData.birthCity} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">UF Natal</label>
+                                        <input type="text" name="birthState" value={formData.birthState} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg" maxLength={2} />
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <label className="block text-sm font-medium mb-1">Nome da Mãe</label>
+                                        <input type="text" name="motherName" value={formData.motherName} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg" />
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <label className="block text-sm font-medium mb-1">Nome do Pai</label>
+                                        <input type="text" name="fatherName" value={formData.fatherName} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg" />
+                                    </div>
                                 </div>
                             </div>
 
@@ -1016,6 +1189,146 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                                     </div>
                                 </div>
                             )}
+                        </CardContent>
+                    </Card>
+                )
+            }
+
+            {
+                activeTab === 'document_info' && (
+                    <Card>
+                        <CardHeader><CardTitle>Informações de Documentos</CardTitle></CardHeader>
+                        <CardContent className="space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <h3 className="md:col-span-4 text-sm font-semibold flex items-center gap-2 border-b pb-2">
+                                    RG (Carteira de Identidade)
+                                </h3>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Número</label>
+                                    <input type="text" name="rgNumber" value={formData.rgNumber} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Órgão Emissor</label>
+                                    <input type="text" name="rgIssuer" value={formData.rgIssuer} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg" placeholder="SSP" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">UF Emissor</label>
+                                    <input type="text" name="rgState" value={formData.rgState} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg" maxLength={2} />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Data Emissão</label>
+                                    <input type="date" name="rgIssueDate" value={formData.rgIssueDate} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg" />
+                                </div>
+
+                                <h3 className="md:col-span-4 text-sm font-semibold flex items-center gap-2 border-b pb-2 pt-4">
+                                    Trabalhista (PIS / CTPS)
+                                </h3>
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium mb-1">PIS / PASEP</label>
+                                    <input type="text" name="pisPasep" value={formData.pisPasep} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">CTPS (Nº/Série)</label>
+                                    <input type="text" name="ctpsNumber" value={formData.ctpsNumber} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Série</label>
+                                    <input type="text" name="ctpsSeries" value={formData.ctpsSeries} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg" />
+                                </div>
+
+                                <h3 className="md:col-span-4 text-sm font-semibold flex items-center gap-2 border-b pb-2 pt-4">
+                                    Outros Documentos
+                                </h3>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Título de Eleitor</label>
+                                    <input type="text" name="voterTitle" value={formData.voterTitle} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Zona</label>
+                                    <input type="text" name="voterZone" value={formData.voterZone} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Seção</label>
+                                    <input type="text" name="voterSection" value={formData.voterSection} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Certificado Militar</label>
+                                    <input type="text" name="militaryCertificate" value={formData.militaryCertificate} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg" />
+                                </div>
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium mb-1">CNH (Habilitação)</label>
+                                    <input type="text" name="driverLicense" value={formData.driverLicense} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Categoria</label>
+                                    <input type="text" name="driverLicenseCategory" value={formData.driverLicenseCategory} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Validade CNH</label>
+                                    <input type="date" name="driverLicenseExpiry" value={formData.driverLicenseExpiry} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                )
+            }
+
+            {
+                activeTab === 'bank' && (
+                    <Card>
+                        <CardHeader><CardTitle>Dados Bancários</CardTitle></CardHeader>
+                        <CardContent className="space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Banco (Cód)</label>
+                                    <input type="text" name="bankCode" value={formData.bankCode} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg" placeholder="001" />
+                                </div>
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium mb-1">Nome do Banco</label>
+                                    <input type="text" name="bankName" value={formData.bankName} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg" placeholder="Banco do Brasil" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Agência</label>
+                                    <input type="text" name="bankAgency" value={formData.bankAgency} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Dígito Agência</label>
+                                    <input type="text" name="bankAgencyDigit" value={formData.bankAgencyDigit} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Tipo de Conta</label>
+                                    <select name="bankAccountType" value={formData.bankAccountType} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg">
+                                        <option value="CURRENT">Conta Corrente</option>
+                                        <option value="SAVINGS">Conta Poupança</option>
+                                        <option value="SALARY">Conta Salário</option>
+                                    </select>
+                                </div>
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium mb-1">Número da Conta</label>
+                                    <input type="text" name="bankAccount" value={formData.bankAccount} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Dígito Conta</label>
+                                    <input type="text" name="bankAccountDigit" value={formData.bankAccountDigit} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg" />
+                                </div>
+
+                                <h3 className="md:col-span-3 text-sm font-semibold flex items-center gap-2 border-b pb-2 pt-4">
+                                    PIX
+                                </h3>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Tipo de Chave</label>
+                                    <select name="pixKeyType" value={formData.pixKeyType} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg">
+                                        <option value="CPF">CPF</option>
+                                        <option value="EMAIL">E-mail</option>
+                                        <option value="PHONE">Telefone</option>
+                                        <option value="RANDOM">Chave Aleatória</option>
+                                    </select>
+                                </div>
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium mb-1">Chave PIX</label>
+                                    <input type="text" name="pixKey" value={formData.pixKey} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg" />
+                                </div>
+                            </div>
                         </CardContent>
                     </Card>
                 )
