@@ -34,7 +34,7 @@ public interface EvaluationRepository extends JpaRepository<Evaluation, UUID> {
                                              Pageable pageable);
 
     // Avaliacoes pendentes do avaliador
-    @Query("SELECT DISTINCT e FROM Evaluation e LEFT JOIN FETCH e.cycle " +
+    @Query("SELECT DISTINCT e FROM Evaluation e LEFT JOIN FETCH e.cycle LEFT JOIN FETCH e.answers " +
            "WHERE e.tenantId = :tenantId " +
            "AND e.evaluatorId = :evaluatorId " +
            "AND e.status IN ('PENDING', 'IN_PROGRESS')")

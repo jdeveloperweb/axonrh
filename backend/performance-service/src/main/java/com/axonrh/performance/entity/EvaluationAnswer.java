@@ -20,6 +20,7 @@ public class EvaluationAnswer {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "evaluation_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Evaluation evaluation;
 
     @Column(name = "question_id", nullable = false)
