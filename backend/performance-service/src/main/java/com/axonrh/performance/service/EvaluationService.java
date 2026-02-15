@@ -35,6 +35,8 @@ public class EvaluationService {
     private final com.axonrh.performance.client.EmployeeServiceClient employeeServiceClient;
     private final com.axonrh.performance.repository.EvaluationFormRepository formRepository;
     private final com.axonrh.performance.repository.GoalRepository goalRepository;
+    @jakarta.persistence.PersistenceContext
+    private jakarta.persistence.EntityManager entityManager;
 
     public EvaluationService(EvaluationRepository evaluationRepository,
                             EvaluationCycleRepository cycleRepository,
@@ -474,8 +476,11 @@ public class EvaluationService {
 
     public Page<Evaluation> getEvaluationsByCycle(UUID tenantId, UUID cycleId, Pageable pageable) {
         Page<Evaluation> page = evaluationRepository.findByTenantIdAndCycle_Id(tenantId, cycleId, pageable);
-        // Limpar answers para evitar LazyInitializationException na serialização da lista, pois não são necessárias na listagem
-        page.getContent().forEach(e -> e.setAnswers(null));
+        // Detachar a entidade e limpar answers para evitar LazyInitializationException na serialização e não deletar do banco
+        page.getContent().forEach(e -> {
+            entityManager.detach(e);
+            e.setAnswers(null);
+        });
         return page;
     }
 
