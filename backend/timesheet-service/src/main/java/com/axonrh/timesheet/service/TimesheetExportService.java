@@ -254,7 +254,7 @@ public class TimesheetExportService {
 
             // Table Header
             Row headerRow = sheet.createRow(12);
-            String[] columns = {"Data", "Marcações", "Entrada", "I. Início", "I. Fim", "Saída", "Faltas", "Extras", "Saldo", "Ocorrência"};
+            String[] columns = {"Data", "Marcações", "Entrada", "I. Início", "I. Fim", "Saída", "Faltas", "Extras", "Adic. Not.", "Saldo", "Ocorrência"};
             for (int i = 0; i < columns.length; i++) {
                 Cell cell = headerRow.createCell(i);
                 cell.setCellValue(columns[i]);
@@ -303,13 +303,14 @@ public class TimesheetExportService {
                 
                 row.createCell(6).setCellValue(day.getDeficitFormatted());
                 row.createCell(7).setCellValue(day.getOvertimeFormatted());
-                row.createCell(8).setCellValue((Boolean.TRUE.equals(day.getIsPositive()) ? "+" : "-") + day.getBalanceFormatted());
+                row.createCell(8).setCellValue(day.getNightShiftFormatted());
+                row.createCell(9).setCellValue((Boolean.TRUE.equals(day.getIsPositive()) ? "+" : "-") + day.getBalanceFormatted());
                 
                 String ocr = "OK";
                 if (Boolean.TRUE.equals(day.getIsAbsent())) ocr = "Falta";
                 else if (day.getHasMissingRecords() != null && day.getHasMissingRecords()) ocr = "Inc.";
                 
-                row.createCell(9).setCellValue(ocr);
+                row.createCell(10).setCellValue(ocr);
 
                 for(int i=0; i<columns.length; i++) {
                     if (row.getCell(i) != null) row.getCell(i).setCellStyle(currentStyle);
@@ -434,8 +435,8 @@ public class TimesheetExportService {
             log.error("Erro geral ao buscar logo do tema: {}", e.getMessage());
         }
 
-        String primaryColor = (theme != null && theme.getTextPrimaryColor() != null) ? theme.getTextPrimaryColor() 
-                              : (theme != null && theme.getPrimaryColor() != null) ? theme.getPrimaryColor() 
+        String primaryColor = (theme != null && theme.getPrimaryColor() != null) ? theme.getPrimaryColor() 
+                              : (theme != null && theme.getTextPrimaryColor() != null) ? theme.getTextPrimaryColor() 
                               : "#FF8000";
         if (logoDataUri == null && logoUrl != null) logoDataUri = logoUrl;
 
@@ -624,11 +625,14 @@ public class TimesheetExportService {
             sb.append("<div class='summary-item'><span class='label'>Carga Esperada</span><span class='summary-value'>").append(calculateExpectedPeriod(data.timesheet())).append("</span></div>");
             sb.append("<div class='summary-item'><span class='label'>Horas Extras (+)</span><span class='summary-value status-ok'>").append(data.totals() != null ? data.totals().overtimeFormatted() : "00:00").append("</span></div>");
             sb.append("<div class='summary-item'><span class='label'>Débitos / Atrasos (-)</span><span class='summary-value status-error'>").append(data.totals() != null ? data.totals().deficitFormatted() : "00:00").append("</span></div>");
+            sb.append("<div class='summary-item'><span class='label'>Adicional Noturno</span><span class='summary-value' style='color:#7c3aed;'>").append(data.totals() != null ? data.totals().nightShiftFormatted() : "00:00").append("</span></div>");
+            
             int finalBalance = (data.totals() != null ? data.totals().overtimeMinutes() - data.totals().deficitMinutes() : 0);
             String finalBalStr = (finalBalance >= 0 ? "+" : "-") + formatMinutes(Math.abs(finalBalance));
             String bgRgba = hexToRgba(primaryColor, 0.1);
             sb.append("<div class='summary-item' style='background: ").append(bgRgba).append(";'><span class='label' style='color:").append(primaryColor).append("'>Saldo Final</span><span class='summary-value' style='color:").append(primaryColor).append("'>").append(finalBalStr).append("</span></div>");
             sb.append("</div>");
+
 
             // Signatures
             sb.append("<div class='signature-section'>");
