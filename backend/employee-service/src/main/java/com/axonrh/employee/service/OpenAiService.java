@@ -30,7 +30,7 @@ public class OpenAiService {
     public Map<String, Object> extractDataFromDocument(MultipartFile file) {
         if (apiKey == null || apiKey.isEmpty()) {
             log.warn("OpenAI API Key not configured. Returning empty extraction.");
-            return Collections.emptyMap();
+            return new HashMap<>();
         }
 
         try {
@@ -119,6 +119,6 @@ public class OpenAiService {
             throw new RuntimeException("Falha na extração de dados via IA", e);
         }
         
-        return Collections.emptyMap();
+        return new HashMap<>();
     }
 }
