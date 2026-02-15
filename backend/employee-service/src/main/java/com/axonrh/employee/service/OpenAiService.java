@@ -68,6 +68,7 @@ public class OpenAiService {
             Map<String, Object> payload = new HashMap<>();
             payload.put("model", model);
             payload.put("max_tokens", 1000);
+            payload.put("response_format", Map.of("type", "json_object"));
 
             List<Map<String, Object>> contents = new ArrayList<>();
             contents.add(Map.of("type", "text", "text", prompt));
@@ -113,7 +114,10 @@ public class OpenAiService {
                 JsonNode root = objectMapper.readTree(response.getBody());
                 String content = root.path("choices").get(0).path("message").path("content").asText();
                 
+                log.debug("Raw OpenAI Response Content: {}", content);
+
                 // Cleanup content if it contains markdown code blocks
+                content = content.trim();
                 if (content.startsWith("```json")) {
                     content = content.substring(7);
                     if (content.endsWith("```")) {
@@ -126,7 +130,14 @@ public class OpenAiService {
                     }
                 }
                 
-                return objectMapper.readValue(content, Map.class);
+                content = content.trim();
+
+                try {
+                    return objectMapper.readValue(content, Map.class);
+                } catch (Exception e) {
+                    log.error("Erro ao converter conteúdo JSON da OpenAI. Conteúdo recebido: {}", content);
+                    throw e;
+                }
             }
 
         } catch (IOException e) {
