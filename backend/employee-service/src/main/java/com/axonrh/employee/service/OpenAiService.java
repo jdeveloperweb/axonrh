@@ -18,10 +18,10 @@ import java.util.*;
 @Slf4j
 public class OpenAiService {
 
-    @Value("${ai.openai.api-key:${OPENAI_API_KEY}}")
+    @Value("${application.openai.api-key:${OPENAI_API_KEY:}}")
     private String apiKey;
 
-    @Value("${ai.openai.model:gpt-4o}")
+    @Value("${application.openai.model:gpt-4o}")
     private String model;
 
     private final ObjectMapper objectMapper;
