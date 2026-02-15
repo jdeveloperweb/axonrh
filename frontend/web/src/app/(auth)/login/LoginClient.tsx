@@ -121,7 +121,12 @@ export default function LoginClient() {
   // Redireciona se ja autenticado
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace("/dashboard");
+      const setupTenantId = localStorage.getItem('setup_tenant_id');
+      if (setupTenantId) {
+        router.replace(`/setup?tenantId=${setupTenantId}`);
+      } else {
+        router.replace("/dashboard");
+      }
     }
   }, [isAuthenticated, router]);
 
@@ -140,8 +145,15 @@ export default function LoginClient() {
         password: data.password,
         totpCode: data.totpCode || undefined,
       });
-      router.replace("/dashboard");
+
+      const setupTenantId = localStorage.getItem('setup_tenant_id');
+      if (setupTenantId) {
+        router.replace(`/setup?tenantId=${setupTenantId}`);
+      } else {
+        router.replace("/dashboard");
+      }
     } catch (error) {
+
       const message = error instanceof Error ? error.message : "";
 
       // Verifica se precisa de 2FA

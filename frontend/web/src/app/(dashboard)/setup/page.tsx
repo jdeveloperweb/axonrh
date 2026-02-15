@@ -27,8 +27,10 @@ function SetupContent() {
         data.progressPercentage === 100;
 
       if (isSetupCompleted) {
+        localStorage.removeItem('setup_tenant_id');
         router.push('/dashboard');
       }
+
     } catch (error) {
       console.error('Error loading setup summary:', error);
     } finally {

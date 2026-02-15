@@ -35,14 +35,17 @@ api.interceptors.request.use(
     }
 
     if (config.headers) {
-      if (user?.tenantId) {
+      const setupTenantId = typeof window !== 'undefined' ? localStorage.getItem('setup_tenant_id') : null;
+      const isSetupRequest = config.url?.includes('/setup');
+
+      if (isSetupRequest && setupTenantId) {
+        config.headers['X-Tenant-ID'] = setupTenantId;
+      } else if (user?.tenantId) {
         config.headers['X-Tenant-ID'] = user.tenantId;
-      } else {
-        const setupTenantId = typeof window !== 'undefined' ? localStorage.getItem('setup_tenant_id') : null;
-        if (setupTenantId) {
-          config.headers['X-Tenant-ID'] = setupTenantId;
-        }
+      } else if (setupTenantId) {
+        config.headers['X-Tenant-ID'] = setupTenantId;
       }
+
       if (user?.id) {
         config.headers['X-User-Id'] = user.id;
       } else {
