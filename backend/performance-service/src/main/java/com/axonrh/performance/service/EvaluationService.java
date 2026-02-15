@@ -335,7 +335,7 @@ public class EvaluationService {
         goalRepository.clearCycleId(tenantId, cycleId);
         
         // 2. Deletar avaliações vinculadas (isso também deleta as respostas via cascade)
-        List<Evaluation> evaluations = evaluationRepository.findByTenantIdAndCycleId(tenantId, cycleId);
+        List<Evaluation> evaluations = evaluationRepository.findByTenantIdAndCycle_Id(tenantId, cycleId);
         if (!evaluations.isEmpty()) {
             evaluationRepository.deleteAll(evaluations);
             log.info("Deletadas {} avaliações do ciclo {}", evaluations.size(), cycleId);
@@ -349,7 +349,7 @@ public class EvaluationService {
 
     public Evaluation createEvaluation(UUID tenantId, Evaluation evaluation) {
         // Verificar se ja existe avaliacao
-        boolean exists = evaluationRepository.existsByTenantIdAndCycleIdAndEmployeeIdAndEvaluatorIdAndEvaluatorType(
+        boolean exists = evaluationRepository.existsByTenantIdAndCycle_IdAndEmployeeIdAndEvaluatorIdAndEvaluatorType(
                 tenantId, evaluation.getCycle().getId(), evaluation.getEmployeeId(),
                 evaluation.getEvaluatorId(), evaluation.getEvaluatorType());
 
@@ -425,7 +425,7 @@ public class EvaluationService {
     }
 
     public Page<Evaluation> getEvaluationsByCycle(UUID tenantId, UUID cycleId, Pageable pageable) {
-        return evaluationRepository.findByTenantIdAndCycleId(tenantId, cycleId, pageable);
+        return evaluationRepository.findByTenantIdAndCycle_Id(tenantId, cycleId, pageable);
     }
 
     public Evaluation startEvaluation(UUID tenantId, UUID evaluationId) {

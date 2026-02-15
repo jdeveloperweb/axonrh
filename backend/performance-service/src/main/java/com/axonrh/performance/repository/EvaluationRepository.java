@@ -29,7 +29,7 @@ public interface EvaluationRepository extends JpaRepository<Evaluation, UUID> {
 
     // Avaliacoes por ciclo
     @Query("SELECT e FROM Evaluation e WHERE e.tenantId = :tenantId AND e.cycle.id = :cycleId")
-    Page<Evaluation> findByTenantIdAndCycleId(@Param("tenantId") UUID tenantId, 
+    Page<Evaluation> findByTenantIdAndCycle_Id(@Param("tenantId") UUID tenantId, 
                                              @Param("cycleId") UUID cycleId, 
                                              Pageable pageable);
 
@@ -42,7 +42,7 @@ public interface EvaluationRepository extends JpaRepository<Evaluation, UUID> {
                                             @Param("evaluatorId") UUID evaluatorId);
 
     // Avaliacoes por status
-    List<Evaluation> findByTenantIdAndCycleIdAndStatus(UUID tenantId, UUID cycleId, EvaluationStatus status);
+    List<Evaluation> findByTenantIdAndCycle_IdAndStatus(UUID tenantId, UUID cycleId, EvaluationStatus status);
 
     // Avaliacoes atrasadas
     @Query("SELECT e FROM Evaluation e WHERE e.tenantId = :tenantId " +
@@ -76,7 +76,7 @@ public interface EvaluationRepository extends JpaRepository<Evaluation, UUID> {
     @Query("SELECT COUNT(e) > 0 FROM Evaluation e WHERE e.tenantId = :tenantId " +
            "AND e.cycle.id = :cycleId AND e.employeeId = :employeeId " +
            "AND e.evaluatorId = :evaluatorId AND e.evaluatorType = :evaluatorType")
-    boolean existsByTenantIdAndCycleIdAndEmployeeIdAndEvaluatorIdAndEvaluatorType(
+    boolean existsByTenantIdAndCycle_IdAndEmployeeIdAndEvaluatorIdAndEvaluatorType(
             @Param("tenantId") UUID tenantId, 
             @Param("cycleId") UUID cycleId, 
             @Param("employeeId") UUID employeeId, 
@@ -84,7 +84,7 @@ public interface EvaluationRepository extends JpaRepository<Evaluation, UUID> {
             @Param("evaluatorType") EvaluatorType evaluatorType);
 
     // Contar avaliacoes por ciclo
-    long countByTenantIdAndCycleId(UUID tenantId, UUID cycleId);
+    long countByTenantIdAndCycle_Id(UUID tenantId, UUID cycleId);
 
-    List<Evaluation> findByTenantIdAndCycleId(UUID tenantId, UUID cycleId);
+    List<Evaluation> findByTenantIdAndCycle_Id(UUID tenantId, UUID cycleId);
 }
