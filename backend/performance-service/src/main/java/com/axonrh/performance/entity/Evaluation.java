@@ -18,7 +18,6 @@ import java.util.UUID;
  */
 @Entity
 @Table(name = "evaluations")
-@Builder
 @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Evaluation {
 
