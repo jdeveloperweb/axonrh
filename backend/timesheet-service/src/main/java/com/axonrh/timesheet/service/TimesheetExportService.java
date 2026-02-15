@@ -360,7 +360,7 @@ public class TimesheetExportService {
                 logoUrl = theme.getLogoUrl();
                 log.info("Tentando buscar logo para PDF. URL: {}", logoUrl);
 
-                // Regex para extrair Tenant ID e Filename da URL do logo
+                // Regex para extrair Tenant ID e Filename da URL interna do logo
                 // Suporta /logos/{uuid}/{filename}
                 java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(".*/logos/([0-9a-fA-F-]+)/(.+)");
                 java.util.regex.Matcher matcher = pattern.matcher(logoUrl);
@@ -368,7 +368,7 @@ public class TimesheetExportService {
                 if (matcher.find()) {
                     String tIdStr = matcher.group(1);
                     String filename = matcher.group(2);
-                    log.info("ExtraÃ­do do logo URL - Tenant: {}, Filename: {}", tIdStr, filename);
+                    log.info("Extraído do logo interno - Tenant: {}, Filename: {}", tIdStr, filename);
 
                     try {
                         UUID tId = UUID.fromString(tIdStr);
@@ -379,22 +379,44 @@ public class TimesheetExportService {
                             if (extension.equals("jpg") || extension.equals("jpeg")) mimeType = "image/jpeg";
                             
                             logoDataUri = "data:" + mimeType + ";base64," + java.util.Base64.getEncoder().encodeToString(logoBytes);
-                            log.info("Logo convertido com sucesso para Base64. Tamanho: {} bytes", logoBytes.length);
-                        } else {
-                            log.warn("Recebido array de bytes vazio ou nulo para o logo.");
+                            log.info("Logo interno convertido com sucesso para Base64. Tamanho: {} bytes", logoBytes.length);
                         }
                     } catch (Exception tIdErr) {
-                        log.error("Erro ao processar bytes do logo: {}", tIdErr.getMessage());
+                        log.error("Erro ao processar bytes do logo interno: {}", tIdErr.getMessage());
                     }
                 } else {
-                     log.warn("URL do logo nao corresponde ao padrao esperado (.../logos/uuid/filename): {}", logoUrl);
+                     // Caso seja uma URL externa (ex: Wikimedia, S3 público, etc), tente baixar e converter
+                     log.info("URL do logo parece externa: {}. Tentando baixar...", logoUrl);
+                     try {
+                         java.net.URL url = new java.net.URL(logoUrl);
+                         try (java.io.InputStream is = url.openStream()) {
+                             byte[] bytes = is.readAllBytes();
+                             if (bytes.length > 0) {
+                                  String extension = logoUrl.contains(".") ? logoUrl.substring(logoUrl.lastIndexOf(".") + 1).toLowerCase() : "png";
+                                  // Tratar query params na extensao se houver
+                                  if (extension.contains("?")) extension = extension.split("\\?")[0];
+                                  
+                                  String mimeType = "image/png"; // Default
+                                  if (extension.equals("svg")) mimeType = "image/svg+xml";
+                                  else if (extension.equals("jpg") || extension.equals("jpeg")) mimeType = "image/jpeg";
+                                  
+                                  logoDataUri = "data:" + mimeType + ";base64," + java.util.Base64.getEncoder().encodeToString(bytes);
+                                  log.info("Logo externo baixado e convertido. Tamanho: {} bytes", bytes.length);
+                             }
+                         }
+                     } catch (Exception extErr) {
+                         log.error("Falha ao baixar logo externo: {}", extErr.getMessage());
+                         // Se falhar o download, deixa a URL original e o iText tenta resolver (pode falhar se bloqueado)
+                     }
                 }
             }
         } catch (Exception e) {
             log.error("Erro geral ao buscar logo do tema: {}", e.getMessage());
         }
 
-        String primaryColor = (theme != null && theme.getPrimaryColor() != null) ? theme.getPrimaryColor() : "#FF8000";
+        String primaryColor = (theme != null && theme.getTextPrimaryColor() != null) ? theme.getTextPrimaryColor() 
+                              : (theme != null && theme.getPrimaryColor() != null) ? theme.getPrimaryColor() 
+                              : "#FF8000";
         if (logoDataUri == null && logoUrl != null) logoDataUri = logoUrl;
 
         StringBuilder sb = new StringBuilder();
