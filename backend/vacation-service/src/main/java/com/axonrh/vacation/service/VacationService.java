@@ -820,7 +820,8 @@ public class VacationService {
         }
 
         // Uma das fracoes deve ter no minimo 14 dias (CLT)
-        if (dto.getFractionNumber() == 1 && requestedDays < 14) {
+        Integer fractionNumber = dto.getFractionNumber();
+        if (fractionNumber != null && fractionNumber == 1 && requestedDays < 14) {
             throw new InvalidOperationException("A primeira fracao deve ter no minimo 14 dias");
         }
 

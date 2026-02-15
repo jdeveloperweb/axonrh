@@ -58,13 +58,27 @@ public class TimesheetExportController {
 
     @GetMapping("/export/mass")
     @Operation(summary = "Exportar espelho em massa", description = "Gera um único PDF com o espelho de ponto de todos os colaboradores")
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'RH', 'GESTOR_RH', 'ANALISTA_DP', 'MANAGER', 'GESTOR', 'LIDER')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'RH', 'GESTOR_RH', 'ANALISTA_DP', 'MANAGER', 'GESTOR', 'LIDER', 'TIMESHEET:READ', 'REPORT:EXPORT')")
     public ResponseEntity<byte[]> exportMass(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-            @RequestParam(required = false) java.util.UUID managerId) {
+            @RequestParam(required = false) java.util.UUID managerId,
+            @AuthenticationPrincipal org.springframework.security.oauth2.jwt.Jwt jwt) {
 
-        byte[] data = exportService.exportMassToPdf(startDate, endDate, managerId);
+        // Se o usuário não for do RH/Admin, ele só pode exportar seus próprios subordinados
+        boolean isHR = jwt.getAuthorities().stream()
+                .anyMatch(a -> java.util.Arrays.asList("ADMIN", "RH", "GESTOR_RH", "ANALISTA_DP")
+                        .contains(a.getAuthority().toUpperCase()));
+
+        java.util.UUID finalManagerId = managerId;
+        
+        // Se não for RH e não informou managerId, tenta resolver o ID do colaborador atual como gestor
+        if (!isHR && finalManagerId == null) {
+            finalManagerId = resolveEmployeeId("me", jwt);
+            log.info("Resolvido gestor atual {} para exportação em massa (não RH)", finalManagerId);
+        }
+
+        byte[] data = exportService.exportMassToPdf(startDate, endDate, finalManagerId);
         String filename = "espelho-ponto-massa.pdf";
 
         return ResponseEntity.ok()
