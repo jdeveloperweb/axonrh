@@ -514,18 +514,20 @@ export default function TimesheetMirrorPage() {
                                 </div>
                               </TooltipTrigger>
                               <TooltipContent>
-                                {day.isHoliday && day.holidayName}
-                                {day.isAbsent && (day.absenceType || 'Falta')}
-                                {day.hasPendingRecords && 'Registros pendentes de aprovação'}
-                                {day.hasMissingRecords && 'Registros incompletos'}
-                                {!day.isHoliday && !day.isAbsent && day.deficitMinutes > 0 && 'Falta não OK (Déficit)'}
-                                {!day.isHoliday &&
-                                  !day.isAbsent &&
-                                  !day.hasPendingRecords &&
-                                  !day.hasMissingRecords &&
-                                  day.workedMinutes > 0 &&
-                                  day.deficitMinutes === 0 &&
-                                  'Dia OK'}
+                                <div className="flex flex-col gap-1">
+                                  {day.isHoliday && <div>{day.holidayName}</div>}
+                                  {day.isAbsent && <div>{day.absenceType || 'Falta'}</div>}
+                                  {day.hasPendingRecords && <div>Registros pendentes de aprovação</div>}
+                                  {day.hasMissingRecords && <div>Registros incompletos</div>}
+                                  {!day.isHoliday && !day.isAbsent && day.deficitMinutes > 0 && <div>Falta não OK (Déficit)</div>}
+                                  {!day.isHoliday &&
+                                    !day.isAbsent &&
+                                    !day.hasPendingRecords &&
+                                    !day.hasMissingRecords &&
+                                    day.workedMinutes > 0 &&
+                                    day.deficitMinutes === 0 &&
+                                    <div>Dia OK</div>}
+                                </div>
                               </TooltipContent>
                             </Tooltip>
                           </TableCell>

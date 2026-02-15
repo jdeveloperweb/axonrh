@@ -386,10 +386,31 @@ public class TimesheetExportService {
                     }
                 } else {
                      // Caso seja uma URL externa (ex: Wikimedia, S3 público, etc), tente baixar e converter
-                     log.info("URL do logo parece externa: {}. Tentando baixar...", logoUrl);
+                     log.info("URL do logo parece externa: {}. Tentando baixar (bypass SSL)...", logoUrl);
                      try {
+                         // Criar um TrustManager que aceita todos os certificados
+                         javax.net.ssl.TrustManager[] trustAllCerts = new javax.net.ssl.TrustManager[]{
+                             new javax.net.ssl.X509TrustManager() {
+                                 public java.security.cert.X509Certificate[] getAcceptedIssuers() { return null; }
+                                 public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
+                                 public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
+                             }
+                         };
+
+                         // Instalar o all-trusting trust manager
+                         javax.net.ssl.SSLContext sc = javax.net.ssl.SSLContext.getInstance("SSL");
+                         sc.init(null, trustAllCerts, new java.security.SecureRandom());
+                         javax.net.ssl.HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+
+                         // Criar connection e configurar bypass de HostnameVerifier também se necessário
                          java.net.URL url = new java.net.URL(logoUrl);
-                         try (java.io.InputStream is = url.openStream()) {
+                         java.net.URLConnection conn = url.openConnection();
+                         if (conn instanceof javax.net.ssl.HttpsURLConnection) {
+                             ((javax.net.ssl.HttpsURLConnection) conn).setSSLSocketFactory(sc.getSocketFactory());
+                             ((javax.net.ssl.HttpsURLConnection) conn).setHostnameVerifier((hostname, session) -> true);
+                         }
+                         
+                         try (java.io.InputStream is = conn.getInputStream()) {
                              byte[] bytes = is.readAllBytes();
                              if (bytes.length > 0) {
                                   String extension = logoUrl.contains(".") ? logoUrl.substring(logoUrl.lastIndexOf(".") + 1).toLowerCase() : "png";
@@ -401,12 +422,11 @@ public class TimesheetExportService {
                                   else if (extension.equals("jpg") || extension.equals("jpeg")) mimeType = "image/jpeg";
                                   
                                   logoDataUri = "data:" + mimeType + ";base64," + java.util.Base64.getEncoder().encodeToString(bytes);
-                                  log.info("Logo externo baixado e convertido. Tamanho: {} bytes", bytes.length);
+                                  log.info("Logo externo baixado e convertido (SSL bypass). Tamanho: {} bytes", bytes.length);
                              }
                          }
                      } catch (Exception extErr) {
                          log.error("Falha ao baixar logo externo: {}", extErr.getMessage());
-                         // Se falhar o download, deixa a URL original e o iText tenta resolver (pode falhar se bloqueado)
                      }
                 }
             }
