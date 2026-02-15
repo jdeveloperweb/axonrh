@@ -513,7 +513,7 @@ export default function EvaluationPage() {
         ) : (
           <Card className="border-2 border-dashed border-slate-200 bg-slate-50/50 rounded-[40px] text-center p-20">
             <div className="h-20 w-20 bg-white rounded-3xl shadow-xl flex items-center justify-center mx-auto mb-6">
-              < brainCircuit className="h-10 w-10 text-slate-300" />
+              <BrainCircuit className="h-10 w-10 text-slate-300" />
             </div>
             <h3 className="text-2xl font-black text-slate-400 uppercase tracking-widest">Nenhuma pergunta carregada</h3>
             <p className="text-slate-400 font-medium max-w-sm mx-auto mt-2">
@@ -526,7 +526,7 @@ export default function EvaluationPage() {
         <div className="space-y-6">
           <div className="flex items-center gap-4">
             <div className="h-10 w-10 rounded-xl bg-violet-600 text-white flex items-center justify-center">
-              <brainCircuit className="h-5 w-5" />
+              <BrainCircuit className="h-5 w-5" />
             </div>
             <h3 className="text-2xl font-black text-slate-800 tracking-tight">Feedback Consolidado</h3>
             <div className="flex-1 h-[2px] bg-slate-100 rounded-full" />

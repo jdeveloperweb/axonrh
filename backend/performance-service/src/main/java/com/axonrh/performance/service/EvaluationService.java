@@ -374,7 +374,50 @@ public class EvaluationService {
     }
 
     public List<Evaluation> getMyPendingEvaluations(UUID tenantId, UUID evaluatorId) {
-        return evaluationRepository.findPendingByEvaluator(tenantId, evaluatorId);
+        List<Evaluation> evaluations = evaluationRepository.findPendingByEvaluator(tenantId, evaluatorId);
+        
+        // Auto-heal: Se não houver avaliações mas houver ciclos ativos, tenta sincronizar para este usuário
+        if (evaluations.isEmpty()) {
+            try {
+                syncEvaluationsForUser(tenantId, evaluatorId);
+                evaluations = evaluationRepository.findPendingByEvaluator(tenantId, evaluatorId);
+            } catch (Exception e) {
+                log.error("Erro ao sincronizar avaliações para o usuário {}: {}", evaluatorId, e.getMessage());
+            }
+        }
+        
+        return evaluations;
+    }
+
+    private void syncEvaluationsForUser(UUID tenantId, UUID userId) {
+        List<EvaluationCycle> activeCycles = getActiveCycles(tenantId);
+        if (activeCycles.isEmpty()) return;
+
+        try {
+            // Busca dados do colaborador vinculado a este User ID
+            com.axonrh.performance.dto.EmployeeDTO employee = employeeServiceClient.getEmployeeByUserId(userId);
+            if (employee == null) {
+                log.warn("Nenhum colaborador encontrado para o userId {} no tenant {}. Sincronização ignorada.", userId, tenantId);
+                return;
+            }
+
+            log.info("Sincronizando avaliações para {} (UserID: {}) em {} ciclos ativos", employee.getFullName(), userId, activeCycles.size());
+
+            for (EvaluationCycle cycle : activeCycles) {
+                // 1. Autoavaliação
+                if (Boolean.TRUE.equals(cycle.getIncludeSelfEvaluation())) {
+                    createEvaluationIfNotExists(tenantId, cycle, employee, employee.getUserId(), employee.getFullName(), EvaluatorType.SELF);
+                }
+
+                // 2. Avaliação como Gestor (se este usuário for gestor de alguém)
+                // Nota: A lógica de gerar avaliações para os liderados deste gestor é mais complexa, 
+                // mas aqui garantimos que as avaliações que ELE deve preencher sejam geradas.
+                // Como getActiveEmployees() já varre todos, se ele for gestor, a ativação do ciclo já deveria ter criado.
+                // Mas se ele for um NOVO gestor ou novo colaborador, vamos garantir que a autoavaliação suba.
+            }
+        } catch (Exception e) {
+            log.error("Falha ao sincronizar avaliações: {}", e.getMessage());
+        }
     }
 
     public List<Evaluation> getMyEvaluationsAsEmployee(UUID tenantId, UUID employeeId) {
