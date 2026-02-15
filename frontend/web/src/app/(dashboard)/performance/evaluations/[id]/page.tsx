@@ -212,7 +212,12 @@ export default function EvaluationPage() {
     if (questions.length === 0) return 0;
     const required = questions.filter((q) => q.required);
     if (required.length === 0) return 100;
-    const answered = required.filter((q) => answers[q.id]?.score !== undefined || (answers[q.id]?.textAnswer && answers[q.id].textAnswer!.length > 5));
+    const answered = required.filter((q) => {
+      const ans = answers[q.id];
+      if (!ans) return false;
+      if (q.type === 'SCALE') return typeof ans.score === 'number';
+      return typeof ans.textAnswer === 'string' && ans.textAnswer.length > 5;
+    });
     return (answered.length / required.length) * 100;
   }, [questions, answers]);
 
