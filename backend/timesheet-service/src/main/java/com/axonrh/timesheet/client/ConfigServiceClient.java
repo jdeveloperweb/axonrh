@@ -16,9 +16,14 @@ public interface ConfigServiceClient {
     byte[] getLogoBytes(@PathVariable("tenantId") UUID tenantId, @PathVariable("filename") String filename);
 
     @lombok.Data
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
     class ThemeConfigResponse {
         private String logoUrl;
         private String primaryColor;
         private String secondaryColor;
+        private String textPrimaryColor;
+        private String textSecondaryColor;
+        private String appsColor; // Cor de Destaque
+        private String backgroundColor;
     }
 }

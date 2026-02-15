@@ -358,26 +358,41 @@ public class TimesheetExportService {
             theme = configServiceClient.getThemeConfig(tenantId);
             if (theme != null && theme.getLogoUrl() != null) {
                 logoUrl = theme.getLogoUrl();
-                // Tenta converter para Data URI se for do nosso storage para evitar problemas de acesso externo no iText
-                if (logoUrl.contains("/logos/")) {
-                    String[] parts = logoUrl.split("/");
-                    if (parts.length >= 2) {
-                        String filename = parts[parts.length - 1];
-                        String tIdStr = parts[parts.length - 2];
-                        try {
-                            UUID tId = UUID.fromString(tIdStr);
-                            byte[] logoBytes = configServiceClient.getLogoBytes(tId, filename);
-                            if (logoBytes != null) {
-                                String extension = filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
-                                String mimeType = "image/" + (extension.equals("svg") ? "svg+xml" : extension);
-                                if (extension.equals("jpg") || extension.equals("jpeg")) mimeType = "image/jpeg";
-                                logoDataUri = "data:" + mimeType + ";base64," + java.util.Base64.getEncoder().encodeToString(logoBytes);
-                            }
-                        } catch (Exception tIdErr) {}
+                log.info("Tentando buscar logo para PDF. URL: {}", logoUrl);
+
+                // Regex para extrair Tenant ID e Filename da URL do logo
+                // Suporta /logos/{uuid}/{filename}
+                java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(".*/logos/([0-9a-fA-F-]+)/(.+)");
+                java.util.regex.Matcher matcher = pattern.matcher(logoUrl);
+
+                if (matcher.find()) {
+                    String tIdStr = matcher.group(1);
+                    String filename = matcher.group(2);
+                    log.info("ExtraÃ­do do logo URL - Tenant: {}, Filename: {}", tIdStr, filename);
+
+                    try {
+                        UUID tId = UUID.fromString(tIdStr);
+                        byte[] logoBytes = configServiceClient.getLogoBytes(tId, filename);
+                        if (logoBytes != null && logoBytes.length > 0) {
+                            String extension = filename.contains(".") ? filename.substring(filename.lastIndexOf(".") + 1).toLowerCase() : "png";
+                            String mimeType = "image/" + (extension.equals("svg") ? "svg+xml" : extension);
+                            if (extension.equals("jpg") || extension.equals("jpeg")) mimeType = "image/jpeg";
+                            
+                            logoDataUri = "data:" + mimeType + ";base64," + java.util.Base64.getEncoder().encodeToString(logoBytes);
+                            log.info("Logo convertido com sucesso para Base64. Tamanho: {} bytes", logoBytes.length);
+                        } else {
+                            log.warn("Recebido array de bytes vazio ou nulo para o logo.");
+                        }
+                    } catch (Exception tIdErr) {
+                        log.error("Erro ao processar bytes do logo: {}", tIdErr.getMessage());
                     }
+                } else {
+                     log.warn("URL do logo nao corresponde ao padrao esperado (.../logos/uuid/filename): {}", logoUrl);
                 }
             }
-        } catch (Exception e) {}
+        } catch (Exception e) {
+            log.error("Erro geral ao buscar logo do tema: {}", e.getMessage());
+        }
 
         String primaryColor = (theme != null && theme.getPrimaryColor() != null) ? theme.getPrimaryColor() : "#FF8000";
         if (logoDataUri == null && logoUrl != null) logoDataUri = logoUrl;
