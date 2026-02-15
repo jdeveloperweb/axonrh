@@ -137,7 +137,26 @@ export function ExtractDataModal({
             setLoading(true);
 
             // Prepare data to send
-            const dataToApply: any = {};
+            let dataToApply: any = {};
+
+            // If we are updating an existing employee via API, we MUST include mandatory fields
+            // to pass backend validation (@Valid EmployeeRequest)
+            if (!onDataExtracted && employee) {
+                dataToApply = {
+                    fullName: employee.fullName,
+                    cpf: employee.cpf.replace(/\D/g, ''),
+                    birthDate: employee.birthDate,
+                    // Flatten address if exists
+                    addressStreet: employee.address?.street,
+                    addressNumber: employee.address?.number,
+                    addressNeighborhood: employee.address?.neighborhood,
+                    addressCity: employee.address?.city,
+                    addressState: employee.address?.state,
+                    addressZipCode: employee.address?.zipCode?.replace(/\D/g, ''),
+                };
+            }
+
+            // Apply selected AI findings
             selectedFields.forEach(field => {
                 let value = extractedData[field];
 
@@ -166,8 +185,8 @@ export function ExtractDataModal({
                 onClose();
             }
         } catch (error: any) {
-            console.error(error);
-            const message = error.response?.data?.message || 'Falha ao salvar dados. Verifique os formatos.';
+            console.error('Update Error:', error.response?.data || error);
+            const message = error.response?.data?.message || 'Falha ao salvar dados. Verifique se os campos obrigatórios estão preenchidos.';
             toast({
                 title: 'Erro de Validação',
                 description: message,
@@ -288,7 +307,24 @@ export function ExtractDataModal({
                                         </span>
                                     )}
                                 </div>
-                                <span>{selectedFields.size} selecionados</span>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedFields(new Set(Object.keys(extractedData)))}
+                                        className="text-[10px] text-purple-600 hover:underline"
+                                    >
+                                        Marcar Todos
+                                    </button>
+                                    <span className="text-gray-300">|</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedFields(new Set())}
+                                        className="text-[10px] text-gray-500 hover:underline"
+                                    >
+                                        Limpar
+                                    </button>
+                                    <span className="ml-4">{selectedFields.size} selecionados</span>
+                                </div>
                             </div>
 
                             <ScrollArea className="h-[300px] border rounded-xl bg-white shadow-inner overflow-hidden">
