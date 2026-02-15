@@ -124,7 +124,7 @@ public class EvaluationService {
     }
 
     private Evaluation createEvaluationIfNotExists(UUID tenantId, EvaluationCycle cycle, com.axonrh.performance.dto.EmployeeDTO employee, UUID evaluatorId, String evaluatorName, EvaluatorType type) {
-        boolean exists = evaluationRepository.existsByTenantIdAndCycleIdAndEmployeeIdAndEvaluatorIdAndEvaluatorType(
+        boolean exists = evaluationRepository.existsByTenantIdAndCycle_IdAndEmployeeIdAndEvaluatorIdAndEvaluatorType(
                 tenantId, cycle.getId(), employee.getId(), evaluatorId, type);
 
         if (!exists) {
