@@ -215,7 +215,7 @@ public class DailySummaryService {
             log.info("Diagnóstico Fallback OK: Utilizando escala '{}' (ID: {}) para colaborador {}", 
                 fallbackSchedule.getWorkSchedule().getName(), fallbackSchedule.getWorkSchedule().getId(), employeeId);
         } else {
-            log.warn("Diagnóstico Fallback FALHOU: Nao foi possivel determinar escala fixa para colaborador {}", employeeId);
+            log.debug("Diagnóstico Fallback: Nao foi possivel determinar escala fixa para colaborador {} (Provavelmente sem configuração de escala)", employeeId);
         }
 
         try {
@@ -717,7 +717,7 @@ public class DailySummaryService {
         
         UUID scheduleId = (dto != null) ? dto.getWorkScheduleId() : null;
         if (scheduleId == null) {
-            log.warn("resolveScheduleFallback: No workScheduleId found in DTO for employee {}", employeeId);
+            log.debug("resolveScheduleFallback: No workScheduleId found in DTO for employee {}", employeeId);
             return null;
         }
 
