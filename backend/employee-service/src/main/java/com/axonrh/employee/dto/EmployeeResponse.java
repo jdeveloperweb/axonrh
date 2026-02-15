@@ -80,6 +80,7 @@ public class EmployeeResponse implements Serializable {
     // Relacionamentos
     private List<DependentSummary> dependents;
     private Integer documentCount;
+    private List<String> missingFields;
 
     // Auditoria
     private LocalDateTime createdAt;

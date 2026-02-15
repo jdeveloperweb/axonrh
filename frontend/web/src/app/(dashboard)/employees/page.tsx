@@ -21,8 +21,15 @@ import {
   TrendingUp,
   Coins,
   Clock,
-  Calendar
+  Calendar,
+  AlertCircle
 } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { Card, CardContent } from '@/components/ui/card';
 import Image from "next/image";
 import {
@@ -569,6 +576,27 @@ export default function EmployeesPage() {
                           <div className="flex flex-col">
                             <p className="font-bold text-gray-900 leading-tight">
                               {employee.fullName}
+                              {employee.missingFields && employee.missingFields.length > 0 && (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span className="inline-flex ml-2 cursor-help">
+                                        <AlertCircle className="w-4 h-4 text-orange-500" />
+                                      </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <div className="text-xs">
+                                        <p className="font-bold mb-1">Dados pendentes:</p>
+                                        <ul className="list-disc pl-4">
+                                          {employee.missingFields.map((field) => (
+                                            <li key={field}>{field}</li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
                             </p>
                             {employee.socialName && (
                               <p className="text-xs text-gray-500 font-medium">
@@ -666,6 +694,27 @@ export default function EmployeesPage() {
                       <div className="flex flex-col">
                         <p className="font-bold text-gray-900 leading-tight">
                           {employee.fullName}
+                          {employee.missingFields && employee.missingFields.length > 0 && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="inline-flex ml-2 cursor-help align-text-bottom">
+                                    <AlertCircle className="w-3 h-3 text-orange-500" />
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <div className="text-xs">
+                                    <p className="font-bold mb-1">Dados pendentes:</p>
+                                    <ul className="list-disc pl-4">
+                                      {employee.missingFields.map((field) => (
+                                        <li key={field}>{field}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
                         </p>
                         {employee.socialName && (
                           <p className="text-xs text-gray-500 font-medium">

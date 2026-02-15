@@ -63,6 +63,7 @@ public interface EmployeeMapper {
     @Mapping(target = "manager", source = "manager")
     @Mapping(target = "dependents", source = "dependents")
     @Mapping(target = "documentCount", expression = "java(employee.getDocuments() != null ? employee.getDocuments().size() : 0)")
+    @Mapping(target = "missingFields", expression = "java(calculateMissingFields(employee))")
     EmployeeResponse toResponse(Employee employee);
 
     // ==================== Mapeamentos de Relacionamentos ====================
@@ -143,5 +144,44 @@ public interface EmployeeMapper {
                 .country(employee.getAddressCountry())
                 .fullAddress(fullAddress)
                 .build();
+    }
+
+    default java.util.List<String> calculateMissingFields(Employee employee) {
+        java.util.List<String> missing = new java.util.ArrayList<>();
+        
+        if (employee.getCpf() == null || employee.getCpf().isBlank()) missing.add("CPF");
+        if (employee.getRgNumber() == null || employee.getRgNumber().isBlank()) missing.add("RG");
+        if (employee.getPisPasep() == null || employee.getPisPasep().isBlank()) missing.add("PIS/PASEP");
+        if (employee.getBirthDate() == null) missing.add("Data de Nascimento");
+        if (employee.getGender() == null) missing.add("Gênero");
+        if (employee.getMaritalStatus() == null) missing.add("Estado Civil");
+        if (employee.getNationality() == null || employee.getNationality().isBlank()) missing.add("Nacionalidade");
+        
+        // Address check (at least street and city)
+        if (employee.getAddressStreet() == null || employee.getAddressStreet().isBlank()) missing.add("Endereço");
+        else if (employee.getAddressCity() == null || employee.getAddressCity().isBlank()) missing.add("Cidade");
+        else if (employee.getAddressState() == null || employee.getAddressState().isBlank()) missing.add("Estado");
+        
+        // Contact
+        if ((employee.getPhone() == null || employee.getPhone().isBlank()) && 
+            (employee.getMobile() == null || employee.getMobile().isBlank())) {
+            missing.add("Telefone/Celular");
+        }
+        if (employee.getEmail() == null || employee.getEmail().isBlank()) missing.add("Email Corporativo");
+        
+        // Professional
+        if (employee.getDepartment() == null) missing.add("Departamento");
+        if (employee.getPosition() == null) missing.add("Cargo");
+        if (employee.getHireDate() == null) missing.add("Data de Admissão");
+        if (employee.getWorkRegime() == null) missing.add("Regime de Trabalho");
+        if (employee.getSalaryType() == null) missing.add("Tipo de Salário");
+        if (employee.getBaseSalary() == null) missing.add("Salário Base");
+        
+        // Bank info (checking at least bank code and account)
+        if (employee.getBankCode() == null || employee.getBankCode().isBlank()) missing.add("Dados Bancários");
+        
+        if (employee.getCtpsNumber() == null || employee.getCtpsNumber().isBlank()) missing.add("CTPS");
+        
+        return missing;
     }
 }

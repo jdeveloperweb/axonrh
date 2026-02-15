@@ -60,6 +60,7 @@ export interface Employee {
   createdAt: string;
   updatedAt: string;
   workScheduleId?: string;
+  missingFields?: string[];
 }
 
 export type EmployeeStatus = 'ACTIVE' | 'INACTIVE' | 'ON_LEAVE' | 'TERMINATED' | 'PENDING';
