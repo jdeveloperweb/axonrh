@@ -4,12 +4,18 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.rendering.ImageType;
+import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.*;
 
@@ -34,9 +40,6 @@ public class OpenAiService {
         }
 
         try {
-            String base64Image = Base64.getEncoder().encodeToString(file.getBytes());
-            String mimeType = file.getContentType() != null ? file.getContentType() : "image/jpeg";
-
             // Prepare prompt specifically for Employee Data
             String prompt = """
                 Analise este documento (RG, CNH, Comprovante de Residência, etc) e extraia os dados para cadastro de funcionário.
@@ -65,16 +68,31 @@ public class OpenAiService {
             Map<String, Object> payload = new HashMap<>();
             payload.put("model", model);
             payload.put("max_tokens", 1000);
-            
-            Map<String, Object> imageContent = new HashMap<>();
-            imageContent.put("type", "image_url");
-            imageContent.put("image_url", Map.of("url", "data:" + mimeType + ";base64," + base64Image));
-            
-            Map<String, Object> textContent = Map.of("type", "text", "text", prompt);
-            
+
+            List<Map<String, Object>> contents = new ArrayList<>();
+            contents.add(Map.of("type", "text", "text", prompt));
+
+            if ("application/pdf".equalsIgnoreCase(file.getContentType())) {
+                log.info("Processando arquivo PDF para extração de dados");
+                List<String> base64Images = convertPdfToImages(file.getBytes());
+                for (String base64Img : base64Images) {
+                    Map<String, Object> imageContent = new HashMap<>();
+                    imageContent.put("type", "image_url");
+                    imageContent.put("image_url", Map.of("url", "data:image/png;base64," + base64Img));
+                    contents.add(imageContent);
+                }
+            } else {
+                String base64Image = Base64.getEncoder().encodeToString(file.getBytes());
+                String mimeType = file.getContentType() != null ? file.getContentType() : "image/jpeg";
+                Map<String, Object> imageContent = new HashMap<>();
+                imageContent.put("type", "image_url");
+                imageContent.put("image_url", Map.of("url", "data:" + mimeType + ";base64," + base64Image));
+                contents.add(imageContent);
+            }
+
             Map<String, Object> message = new HashMap<>();
             message.put("role", "user");
-            message.put("content", List.of(textContent, imageContent));
+            message.put("content", contents);
             
             payload.put("messages", List.of(message));
 
@@ -120,5 +138,22 @@ public class OpenAiService {
         }
         
         return new HashMap<>();
+    }
+
+    private List<String> convertPdfToImages(byte[] pdfBytes) throws IOException {
+        List<String> base64Images = new ArrayList<>();
+        try (PDDocument document = PDDocument.load(pdfBytes)) {
+            PDFRenderer pdfRenderer = new PDFRenderer(document);
+            // Limitamos a extração às primeiras 2 páginas para evitar payloads excessivos
+            int pagesToProcess = Math.min(document.getNumberOfPages(), 2);
+            for (int page = 0; page < pagesToProcess; ++page) {
+                BufferedImage bim = pdfRenderer.renderImageWithDPI(page, 200, ImageType.RGB);
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                ImageIO.write(bim, "png", baos);
+                byte[] bytes = baos.toByteArray();
+                base64Images.add(Base64.getEncoder().encodeToString(bytes));
+            }
+        }
+        return base64Images;
     }
 }
