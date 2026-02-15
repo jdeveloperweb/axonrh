@@ -31,4 +31,5 @@ public class VacationPeriodResponse {
     private boolean isExpired;
     private boolean isExpiringSoon;
     private Integer daysUntilExpiration;
+    private String employeePhotoUrl;
 }

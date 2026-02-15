@@ -22,6 +22,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+} from '@/components/ui/dialog';
+import { ExpandablePhoto } from '@/components/ui/expandable-photo';
 import { DependentsTab } from '@/components/employees/DependentsTab';
 import { ShieldCheck, ShieldAlert, Key, CreditCard, BrainCircuit } from 'lucide-react';
 import { EmployeeBadge } from '@/components/employees/EmployeeBadge';
@@ -332,21 +337,21 @@ export default function EmployeeDetailPage() {
               {/* Photo Profile */}
               <div className="relative shrink-0">
                 <div className="w-32 h-32 md:w-40 md:h-40 rounded-2xl shadow-md overflow-hidden bg-slate-100 border-4 border-white dark:border-slate-800 relative group/photo">
-                  {employee.photoUrl ? (
-                    <img
-                      src={getPhotoUrl(employee.photoUrl, employee.updatedAt) || ''}
-                      alt={employee.fullName}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-slate-200 text-slate-400 flex items-center justify-center text-5xl font-black">
-                      {employee.fullName.charAt(0).toUpperCase()}
-                    </div>
-                  )}
+                  <ExpandablePhoto
+                    src={employee.photoUrl ? getPhotoUrl(employee.photoUrl, employee.updatedAt) : null}
+                    alt={employee.fullName}
+                    className="w-full h-full object-cover"
+                    containerClassName="w-full h-full"
+                    fallback={
+                      <div className="w-full h-full bg-slate-200 text-slate-400 flex items-center justify-center text-5xl font-black">
+                        {employee.fullName.charAt(0).toUpperCase()}
+                      </div>
+                    }
+                  />
 
                   {/* Overlay for Photo Change */}
-                  <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/photo:opacity-100 transition-opacity cursor-pointer backdrop-blur-sm">
-                    <Camera className="w-6 h-6 text-white" />
+                  <label className="absolute bottom-0 right-0 p-2 bg-black/40 hover:bg-black/60 text-white cursor-pointer backdrop-blur-sm rounded-tl-xl transition-all z-10">
+                    <Camera className="w-5 h-5" />
                     <input type="file" accept="image/*" onChange={handlePhotoSelect} className="hidden" />
                   </label>
                 </div>
@@ -1053,7 +1058,7 @@ export default function EmployeeDetailPage() {
             />
           </div>
         </div>
-      </div >
-    </div >
+      </div>
+    </div>
   );
 }

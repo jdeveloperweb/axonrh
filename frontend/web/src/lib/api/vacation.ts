@@ -19,6 +19,7 @@ export interface VacationPeriod {
   isExpired: boolean;
   isExpiringSoon: boolean;
   daysUntilExpiration: number;
+  employeePhotoUrl?: string;
 }
 
 export interface VacationRequest {

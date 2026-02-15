@@ -225,11 +225,22 @@ public class VacationService {
             return Collections.emptyList();
         }
         UUID tenantId = UUID.fromString(tenantStr);
+        String photoUrl = null;
+        try {
+            EmployeeDTO emp = employeeServiceClient.getEmployee(employeeId);
+            if (emp != null) photoUrl = emp.getPhotoUrl();
+        } catch (Exception e) {
+            log.warn("Nao foi possivel carregar foto do colaborador {}: {}", employeeId, e.getMessage());
+        }
 
         List<VacationPeriod> periods = periodRepository
                 .findByTenantIdAndEmployeeIdOrderByAcquisitionStartDateDesc(tenantId, employeeId);
 
-        return periods.stream().map(this::toPeriodResponse).toList();
+        final String finalPhotoUrl = photoUrl;
+        return periods.stream()
+                .map(this::toPeriodResponse)
+                .peek(resp -> resp.setEmployeePhotoUrl(finalPhotoUrl))
+                .toList();
     }
 
     /**
@@ -248,7 +259,26 @@ public class VacationService {
         List<VacationPeriod> periods = periodRepository
                 .findExpiringPeriods(tenantId, LocalDate.now(), thresholdDate);
 
-        return periods.stream().map(this::toPeriodResponse).toList();
+        // Fetch employees to get photos
+        Map<UUID, String> photoMap = new HashMap<>();
+        try {
+            List<EmployeeDTO> employees = employeeServiceClient.getActiveEmployees();
+            for (EmployeeDTO emp : employees) {
+                if (emp.getPhotoUrl() != null) {
+                    photoMap.put(emp.getId(), emp.getPhotoUrl());
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Nao foi possivel carregar fotos dos colaboradores: {}", e.getMessage());
+        }
+
+        return periods.stream()
+                .map(p -> {
+                    VacationPeriodResponse resp = toPeriodResponse(p);
+                    resp.setEmployeePhotoUrl(photoMap.get(p.getEmployeeId()));
+                    return resp;
+                })
+                .toList();
     }
 
     // ==================== Solicitacoes de Ferias (T160-T162) ====================

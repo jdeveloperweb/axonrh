@@ -20,6 +20,7 @@ public class EmployeeDTO {
     private String email;
     private java.time.LocalDate hireDate;
     private EmployeeDTO manager;
+    private String photoUrl;
     private UUID tenantId;
 }
 

@@ -30,7 +30,8 @@ import { Input } from '@/components/ui/input';
 
 import { vacationApi, VacationRequest } from '@/lib/api/vacation';
 import { employeesApi, Employee } from '@/lib/api/employees';
-import { cn } from '@/lib/utils';
+import { cn, getPhotoUrl } from '@/lib/utils';
+import { ExpandablePhoto } from '@/components/ui/expandable-photo';
 
 interface DailyStatus {
     employee: Employee;
@@ -225,12 +226,16 @@ export default function TeamVacationPage() {
                                         >
                                             <div className="flex items-center gap-4">
                                                 <div className="relative">
-                                                    <Avatar className="h-12 w-12 rounded-lg">
-                                                        <AvatarImage src={item.employee.photoUrl} />
-                                                        <AvatarFallback className="bg-[var(--color-primary)]/10 text-[var(--color-primary)] font-bold text-sm rounded-lg">
-                                                            {item.employee.fullName.charAt(0)}
-                                                        </AvatarFallback>
-                                                    </Avatar>
+                                                    <ExpandablePhoto
+                                                        src={getPhotoUrl(item.employee.photoUrl, item.employee.updatedAt)}
+                                                        alt={item.employee.fullName}
+                                                        containerClassName="h-12 w-12 rounded-lg"
+                                                        fallback={
+                                                            <div className="bg-[var(--color-primary)]/10 text-[var(--color-primary)] font-bold text-sm rounded-lg h-full w-full flex items-center justify-center">
+                                                                {item.employee.fullName.charAt(0)}
+                                                            </div>
+                                                        }
+                                                    />
                                                     <div className={cn(
                                                         "absolute -bottom-1 -right-1 h-5 w-5 rounded border-2 border-white flex items-center justify-center",
                                                         statusConfig[item.status].color

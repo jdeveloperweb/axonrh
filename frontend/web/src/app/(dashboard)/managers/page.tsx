@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { employeesApi, Employee, Department } from '@/lib/api/employees';
 import { departmentsApi } from '@/lib/api/departments';
 import { getPhotoUrl } from '@/lib/utils';
+import { ExpandablePhoto } from '@/components/ui/expandable-photo';
 
 interface Manager {
     id: string;
@@ -244,22 +245,18 @@ export default function ManagersPage() {
                         <Card key={`${manager.id}-${manager.department}`} className="hover:shadow-lg transition-shadow">
                             <CardContent className="p-6">
                                 <div className="flex items-start gap-4">
-                                    {manager.photoUrl ? (
-                                        <img
-                                            src={getPhotoUrl(manager.photoUrl, manager.updatedAt) || ''}
+                                    <div className="w-12 h-12">
+                                        <ExpandablePhoto
+                                            src={manager.photoUrl ? getPhotoUrl(manager.photoUrl, manager.updatedAt) : null}
                                             alt={manager.name}
-                                            className="w-12 h-12 rounded-full object-cover"
-                                            onError={(e) => {
-                                                (e.target as HTMLImageElement).style.display = 'none';
-                                                (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
-                                            }}
+                                            containerClassName="w-12 h-12 rounded-full"
+                                            fallback={
+                                                <div className="w-12 h-12 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center font-medium text-lg">
+                                                    {manager.name.charAt(0).toUpperCase()}
+                                                </div>
+                                            }
                                         />
-                                    ) : null}
-                                    {(true) && (
-                                        <div className={`${manager.photoUrl ? 'hidden' : ''} w-12 h-12 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center font-medium text-lg`}>
-                                            {manager.name.charAt(0).toUpperCase()}
-                                        </div>
-                                    )}
+                                    </div>
                                     <div className="flex-1 min-w-0">
                                         <h3 className="font-semibold text-[var(--color-text)] truncate">{manager.name}</h3>
                                         <div className="flex items-center gap-1 text-sm text-[var(--color-text-secondary)] mt-1">

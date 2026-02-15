@@ -23,7 +23,9 @@ import {
     RefreshCw,
     UserCircle2,
     CheckCircle2,
+    SquareUser,
 } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { vacationApi, VacationPeriod } from '@/lib/api/vacation';
 import { cn } from '@/lib/utils';
@@ -35,6 +37,7 @@ export default function VacationAdminPage() {
     const [syncing, setSyncing] = useState(false);
     const [expiringPeriods, setExpiringPeriods] = useState<VacationPeriod[]>([]);
     const [filter, setFilter] = useState('');
+    const [notifyingIds, setNotifyingIds] = useState<Set<string>>(new Set());
 
     const loadData = useCallback(async () => {
         try {
@@ -59,6 +62,7 @@ export default function VacationAdminPage() {
 
     const handleNotify = async (period: VacationPeriod) => {
         try {
+            setNotifyingIds(prev => new Set(prev).add(period.id));
             await vacationApi.notifyExpiration(period.id);
             toast({
                 title: 'Notificação Enviada',
@@ -70,6 +74,12 @@ export default function VacationAdminPage() {
                 title: 'Erro',
                 description: 'Falha ao enviar notificação.',
                 variant: 'destructive',
+            });
+        } finally {
+            setNotifyingIds(prev => {
+                const next = new Set(prev);
+                next.delete(period.id);
+                return next;
             });
         }
     };
@@ -193,10 +203,16 @@ export default function VacationAdminPage() {
                                     {filteredPeriods.map((period) => (
                                         <TableRow key={period.id} className="hover:bg-gray-50/50 transition-colors border-b border-gray-50">
                                             <TableCell className="px-6">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="h-10 w-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400">
-                                                        <UserCircle2 className="h-5 w-5" />
-                                                    </div>
+                                                <div
+                                                    className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+                                                    onClick={() => router.push(`/employees/${period.employeeId}`)}
+                                                >
+                                                    <Avatar className="h-10 w-10 rounded-lg">
+                                                        <AvatarImage src={period.employeePhotoUrl} alt={period.employeeName} />
+                                                        <AvatarFallback className="rounded-lg bg-gray-100 text-gray-400">
+                                                            <UserCircle2 className="h-5 w-5" />
+                                                        </AvatarFallback>
+                                                    </Avatar>
                                                     <p className="font-bold text-gray-900 text-sm">{period.employeeName}</p>
                                                 </div>
                                             </TableCell>
@@ -225,9 +241,14 @@ export default function VacationAdminPage() {
                                                         size="sm"
                                                         variant="outline"
                                                         onClick={() => handleNotify(period)}
+                                                        disabled={notifyingIds.has(period.id)}
                                                         className="rounded-lg h-9 border-gray-200 hover:bg-gray-50 transition-all"
                                                     >
-                                                        <Bell className="mr-2 h-3.5 w-3.5" />
+                                                        {notifyingIds.has(period.id) ? (
+                                                            <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                                                        ) : (
+                                                            <Bell className="mr-2 h-3.5 w-3.5" />
+                                                        )}
                                                         Notificar
                                                     </Button>
                                                 </div>

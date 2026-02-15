@@ -39,6 +39,11 @@ import {
   DropdownMenuContent,
   DropdownMenuItem
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+} from '@/components/ui/dialog';
+import { ExpandablePhoto } from '@/components/ui/expandable-photo';
 import { employeesApi, Employee, EmployeeStatus, EmployeeListParams, Department, WorkRegime, EmployeeStats } from '@/lib/api/employees';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate, formatCpf, getPhotoUrl, formatCurrency } from '@/lib/utils';
@@ -578,16 +583,17 @@ export default function EmployeesPage() {
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] flex items-center justify-center font-bold overflow-hidden border border-white shadow-sm">
-                            {employee.photoUrl ? (
-                              <img
-                                src={getPhotoUrl(employee.photoUrl, employee.updatedAt) || ''}
-                                alt=""
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              employee.fullName.charAt(0).toUpperCase()
-                            )}
+                          <div className="w-10 h-10">
+                            <ExpandablePhoto
+                              src={getPhotoUrl(employee.photoUrl, employee.updatedAt)}
+                              alt={employee.fullName}
+                              containerClassName="w-10 h-10 rounded-full border border-white shadow-sm"
+                              fallback={
+                                <div className="w-full h-full rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] flex items-center justify-center font-bold">
+                                  {employee.fullName.charAt(0).toUpperCase()}
+                                </div>
+                              }
+                            />
                           </div>
                           <div className="flex flex-col">
                             <p className="font-bold text-gray-900 leading-tight">
@@ -714,16 +720,17 @@ export default function EmployeesPage() {
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] flex items-center justify-center font-bold overflow-hidden border-2 border-white shadow-md">
-                        {employee.photoUrl ? (
-                          <img
-                            src={getPhotoUrl(employee.photoUrl, employee.updatedAt) || ''}
-                            alt=""
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          employee.fullName.charAt(0).toUpperCase()
-                        )}
+                      <div className="w-12 h-12">
+                        <ExpandablePhoto
+                          src={getPhotoUrl(employee.photoUrl, employee.updatedAt)}
+                          alt={employee.fullName}
+                          containerClassName="w-12 h-12 rounded-full border-2 border-white shadow-md"
+                          fallback={
+                            <div className="w-full h-full rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] flex items-center justify-center font-bold">
+                              {employee.fullName.charAt(0).toUpperCase()}
+                            </div>
+                          }
+                        />
                       </div>
                       <div className="flex flex-col">
                         <p className="font-bold text-gray-900 leading-tight">
