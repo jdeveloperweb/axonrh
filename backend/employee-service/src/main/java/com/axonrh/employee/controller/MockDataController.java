@@ -40,6 +40,27 @@ public class MockDataController {
     private final String[] NAMES = {"João", "Maria", "Pedro", "Ana", "Carlos", "Fernanda", "Lucas", "Juliana", "Marcos", "Patrícia", "Gabriel", "Aline", "Rafael", "Camila", "Bruno", "Larissa", "Daniel", "Mariana", "Thiago", "Letícia"};
     private final String[] SURNAMES = {"Silva", "Santos", "Oliveira", "Souza", "Rodrigues", "Ferreira", "Almeida", "Pereira", "Lima", "Gomes", "Costa", "Ribeiro", "Martins", "Carvalho", "Araujo", "Melo", "Barbosa", "Castro", "Cardoso", "Fernandes"};
 
+    @PostMapping("/departments")
+    public ResponseEntity<List<Department>> seedDepartments() {
+        UUID tenantId = getTenantId();
+        List<Department> created = createMockDepartments(tenantId);
+        return ResponseEntity.ok(created);
+    }
+
+    @PostMapping("/positions")
+    public ResponseEntity<List<Position>> seedPositions() {
+        UUID tenantId = getTenantId();
+        
+        List<Department> departments = departmentRepository.findByTenantIdAndIsActiveTrueOrderByName(tenantId);
+        if (departments.isEmpty()) {
+            // Se nao tem departamentos, cria
+            departments = createMockDepartments(tenantId);
+        }
+
+        List<Position> created = createMockPositions(tenantId, departments);
+        return ResponseEntity.ok(created);
+    }
+
     @PostMapping("/employees")
     public ResponseEntity<Map<String, Object>> seedEmployees(@RequestParam(defaultValue = "20") int count) {
         UUID tenantId = getTenantId();
@@ -55,7 +76,7 @@ public class MockDataController {
         
         List<Position> positions = positionRepository.findByTenantIdAndIsActiveTrueOrderByTitle(tenantId);
         if (positions.isEmpty()) {
-            positions = createMockPositions(tenantId, departments.get(0));
+            positions = createMockPositions(tenantId, departments);
         }
 
         int createdCount = 0;
@@ -70,7 +91,12 @@ public class MockDataController {
                 String email = firstName.toLowerCase() + "." + lastName.split(" ")[0].toLowerCase() + "_" + random.nextInt(1000) + "@axonrh.com";
 
                 Department dept = departments.get(random.nextInt(departments.size()));
-                Position pos = positions.get(random.nextInt(positions.size()));
+                
+                // Try to find a position that belongs to this department, otherwise pick random
+                Position pos = positions.stream()
+                        .filter(p -> p.getDepartment() != null && p.getDepartment().getId().equals(dept.getId()))
+                        .findAny()
+                        .orElse(positions.get(random.nextInt(positions.size())));
 
                 EmployeeRequest request = EmployeeRequest.builder()
                         .fullName(fullName)
@@ -90,10 +116,8 @@ public class MockDataController {
                 EmployeeResponse response = employeeService.create(request, userId);
                 
                 // Update photo with mock image
-                // Using pravatar.cc with UUID to get consistent random images
                 String photoUrl = "https://i.pravatar.cc/300?u=" + response.getId();
                 
-                // Direct update to repository to bypass complex logic just for photo
                 Employee employee = employeeRepository.findByTenantIdAndId(tenantId, response.getId()).orElseThrow();
                 employee.setPhotoUrl(photoUrl);
                 employeeRepository.save(employee);
@@ -118,13 +142,21 @@ public class MockDataController {
 
     private List<Department> createMockDepartments(UUID tenantId) {
         List<Department> created = new ArrayList<>();
-        String[] deptNames = {"Tecnologia l", "Recursos Humanos", "Vendas", "Financeiro", "Operações"};
+        String[] deptNames = {"Tecnologia da Informação", "Recursos Humanos", "Comercial", "Financeiro", "Operações", "Marketing", "Jurídico"};
         
         for (String name : deptNames) {
+            // Check if exists
+            Optional<Department> exists = departmentRepository.findByTenantIdAndCode(tenantId, name.substring(0, 3).toUpperCase());
+            if (exists.isPresent()) {
+                created.add(exists.get());
+                continue;
+            }
+
             Department d = Department.builder()
                     .tenantId(tenantId)
                     .name(name)
-                    .code(name.substring(0, 3).toUpperCase() + random.nextInt(100))
+                    .code(name.substring(0, 3).toUpperCase())
+                    .description("Departamento de " + name)
                     .isActive(true)
                     .build();
             created.add(departmentRepository.save(d));
@@ -132,19 +164,43 @@ public class MockDataController {
         return created;
     }
 
-    private List<Position> createMockPositions(UUID tenantId, Department defaultDept) {
+    private List<Position> createMockPositions(UUID tenantId, List<Department> departments) {
         List<Position> created = new ArrayList<>();
-        String[] positionTitles = {"Desenvolvedor", "Analista de RH", "Vendedor", "Gerente", "Analista Financeiro"};
         
-        for (String title : positionTitles) {
-            Position p = Position.builder()
-                    .tenantId(tenantId)
-                    .title(title)
-                    .code(title.substring(0, 3).toUpperCase() + random.nextInt(100))
-                    .department(defaultDept) // Associate with a department
-                    .isActive(true)
-                    .build();
-            created.add(positionRepository.save(p));
+        Map<String, List<String>> deptPositions = new HashMap<>();
+        deptPositions.put("Tecnologia da Informação", Arrays.asList("Desenvolvedor Backend", "Desenvolvedor Frontend", "Tech Lead", "QA Automation", "DevOps Engineer"));
+        deptPositions.put("Recursos Humanos", Arrays.asList("Analista de RH", "Business Partner", "Gerente de RH", "Recrutador"));
+        deptPositions.put("Comercial", Arrays.asList("Executivo de Vendas", "Pré-vendas (SDR)", "Gerente Comercial"));
+        deptPositions.put("Financeiro", Arrays.asList("Analista Financeiro", "Controller", "Assistente Financeiro"));
+        deptPositions.put("Operações", Arrays.asList("Analista de Operações", "Coordenador de Operações"));
+        deptPositions.put("Marketing", Arrays.asList("Analista de Marketing", "Designer", "Copywriter"));
+        deptPositions.put("Jurídico", Arrays.asList("Advogado Jr", "Advogado Pleno", "Advogado Sr"));
+
+        for (Department dept : departments) {
+            List<String> titles = deptPositions.getOrDefault(dept.getName(), Arrays.asList("Assistente", "Analista", "Gerente"));
+            
+            for (String title : titles) {
+                 // Check if exists
+                String code = (dept.getCode() + "-" + title.substring(0, 3)).toUpperCase().replaceAll("\\s+", "");
+                if (code.length() > 20) code = code.substring(0, 20);
+
+                Optional<Position> exists = positionRepository.findByTenantIdAndCode(tenantId, code);
+                if (exists.isPresent()) {
+                    created.add(exists.get());
+                    continue;
+                }
+
+                Position p = Position.builder()
+                        .tenantId(tenantId)
+                        .title(title)
+                        .code(code)
+                        .department(dept)
+                        .isActive(true)
+                        .salaryRangeMin(new BigDecimal("3000.00"))
+                        .salaryRangeMax(new BigDecimal("15000.00"))
+                        .build();
+                created.add(positionRepository.save(p));
+            }
         }
         return created;
     }
@@ -152,8 +208,6 @@ public class MockDataController {
     private UUID getTenantId() {
         String tenant = TenantContext.getCurrentTenant();
         if (tenant == null) {
-            // Fallback for development/testing if no context
-            // In a real scenario, this endpoint should be called with auth
             throw new IllegalStateException("Tenant nao definido no contexto. Chame a API autenticado.");
         }
         return UUID.fromString(tenant);
