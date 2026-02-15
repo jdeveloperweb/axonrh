@@ -569,7 +569,8 @@ public class TimesheetExportService {
             sb.append("<div class='summary-item'><span class='label'>Débitos / Atrasos (-)</span><span class='summary-value status-error'>").append(data.totals() != null ? data.totals().deficitFormatted() : "00:00").append("</span></div>");
             int finalBalance = (data.totals() != null ? data.totals().overtimeMinutes() - data.totals().deficitMinutes() : 0);
             String finalBalStr = (finalBalance >= 0 ? "+" : "-") + formatMinutes(Math.abs(finalBalance));
-            sb.append("<div class='summary-item' style='background: ").append(primaryColor).append("10;'><span class='label' style='color:").append(primaryColor).append("'>Saldo Final</span><span class='summary-value' style='color:").append(primaryColor).append("'>").append(finalBalStr).append("</span></div>");
+            String bgRgba = hexToRgba(primaryColor, 0.1);
+            sb.append("<div class='summary-item' style='background: ").append(bgRgba).append(";'><span class='label' style='color:").append(primaryColor).append("'>Saldo Final</span><span class='summary-value' style='color:").append(primaryColor).append("'>").append(finalBalStr).append("</span></div>");
             sb.append("</div>");
 
             // Signatures
@@ -634,5 +635,17 @@ public class TimesheetExportService {
 
     private String getString(String val) {
         return val == null ? "" : val;
+    }
+
+    private String hexToRgba(String hex, double alpha) {
+        if (hex == null) return "rgba(0,0,0," + alpha + ")";
+        if (!hex.startsWith("#") && !hex.startsWith("0x")) hex = "#" + hex;
+        try {
+            Color c = Color.decode(hex);
+            return String.format(java.util.Locale.US, "rgba(%d, %d, %d, %.2f)", c.getRed(), c.getGreen(), c.getBlue(), alpha);
+        } catch (Exception e) {
+            // Fallback: Slate 200
+            return "rgba(226, 232, 240, " + alpha + ")";
+        }
     }
 }
