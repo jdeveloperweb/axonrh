@@ -1,6 +1,7 @@
 package com.axonrh.employee.dto;
 
 import com.axonrh.employee.entity.enums.*;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
@@ -16,6 +17,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class EmployeeRequest {
 
     // ==================== Dados Pessoais ====================
