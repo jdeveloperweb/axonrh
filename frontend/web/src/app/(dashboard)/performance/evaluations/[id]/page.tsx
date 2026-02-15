@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
+import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import {
   ArrowLeft,
@@ -15,32 +16,25 @@ import {
   Send,
   User,
   Calendar,
-  CheckCircle2,
-  Sparkles,
-  Info,
-  ChevronRight,
-  Target,
-  Trophy,
-  BrainCircuit,
-  Lightbulb,
+  AlertCircle,
+  Info
 } from 'lucide-react';
 import Link from 'next/link';
 import { evaluationsApi, Evaluation, EvaluationAnswer } from '@/lib/api/performance';
 import { getErrorMessage } from '@/lib/api/client';
 import { useToast } from '@/hooks/use-toast';
-import { useAuthStore } from '@/stores/auth-store';
 import { useConfirm } from '@/components/providers/ConfirmProvider';
 import { cn } from '@/lib/utils';
 
-// FormQuestion interface defined locally for UI mapping
 interface FormQuestion {
-  id: string; // This will map to questionId from backend answer
+  id: string;
   text: string;
   section: string;
   type: 'SCALE' | 'TEXT';
   weight: number;
   required: boolean;
-  answerId?: string; // ID of the answer record itself
+  answerId?: string;
+  questionOrder?: number;
 }
 
 export default function EvaluationPage() {
@@ -67,7 +61,6 @@ export default function EvaluationPage() {
         const data = await evaluationsApi.get(evaluationId);
         setEvaluation(data);
 
-        // Derivar perguntas das respostas retornadas pelo backend
         if (data.answers && data.answers.length > 0) {
           const derivedQuestions: FormQuestion[] = data.answers.map(ans => ({
             id: ans.questionId,
@@ -76,12 +69,12 @@ export default function EvaluationPage() {
             type: ans.weight > 0 ? 'SCALE' : 'TEXT',
             weight: ans.weight,
             required: ans.weight > 0,
-            answerId: ans.id
+            answerId: ans.id,
+            questionOrder: 0 // Backend doesn't return order in answers, simplified for now
           }));
 
           setQuestions(derivedQuestions);
 
-          // Inicializar respostas existentes
           const existingAnswers: Record<string, EvaluationAnswer> = {};
           data.answers.forEach((answer) => {
             existingAnswers[answer.questionId] = answer;
@@ -89,12 +82,10 @@ export default function EvaluationPage() {
           setAnswers(existingAnswers);
         }
 
-        // Inicializar feedback
         setFeedback(data.overallFeedback || '');
         setStrengths(data.strengths || '');
         setImprovements(data.areasForImprovement || '');
 
-        // Iniciar avaliacao se pendente
         if (data.status === 'PENDING') {
           await evaluationsApi.start(evaluationId);
         }
@@ -209,30 +200,6 @@ export default function EvaluationPage() {
     return (answered.length / required.length) * 100;
   }, [questions, answers]);
 
-  const getScoreLabel = (score: number) => {
-    const labels = [
-      'Não avaliado',
-      'Muito abaixo do esperado',
-      'Abaixo do esperado',
-      'Atende plenamente',
-      'Supera as expectativas',
-      'Excepcional / Referência',
-    ];
-    return labels[score] || '';
-  };
-
-  const getScoreColor = (score: number) => {
-    const colors = [
-      'text-slate-400',
-      'text-rose-600',
-      'text-amber-600',
-      'text-indigo-600',
-      'text-emerald-600',
-      'text-violet-600'
-    ];
-    return colors[score] || 'text-slate-400';
-  };
-
   const groupedQuestions = useMemo(() => {
     return questions.reduce((acc, question) => {
       if (!acc[question.section]) {
@@ -243,414 +210,316 @@ export default function EvaluationPage() {
     }, {} as Record<string, FormQuestion[]>);
   }, [questions]);
 
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'PENDING':
+        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Pendente</Badge>;
+      case 'IN_PROGRESS':
+        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Em Andamento</Badge>;
+      case 'SUBMITTED':
+        return <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">Submetida</Badge>;
+      case 'CALIBRATED':
+        return <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">Calibrada</Badge>;
+      case 'COMPLETED':
+        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Concluída</Badge>;
+      default:
+        return <Badge variant="secondary">{status}</Badge>;
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
-        <div className="relative h-20 w-20">
-          <div className="absolute inset-0 rounded-full border-4 border-slate-100"></div>
-          <div className="absolute inset-0 rounded-full border-4 border-indigo-600 border-t-transparent animate-spin"></div>
-        </div>
-        <p className="text-slate-500 font-black uppercase tracking-widest text-[10px] animate-pulse">Sincronizando com AxonIA...</p>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <p className="text-muted-foreground text-sm">Carregando avaliação...</p>
       </div>
     );
   }
 
   if (!evaluation) {
     return (
-      <div className="flex flex-col items-center justify-center h-[60vh] space-y-6">
-        <div className="h-20 w-20 rounded-full bg-rose-50 flex items-center justify-center">
-          <Info className="h-10 w-10 text-rose-500" />
-        </div>
-        <div className="text-center space-y-2">
-          <h2 className="text-2xl font-black text-slate-800">Avaliação não encontrada</h2>
-          <p className="text-slate-500 font-medium">O link pode estar expirado ou você não tem permissão para acessá-lo.</p>
-        </div>
+      <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
+        <AlertCircle className="h-12 w-12 text-muted-foreground opacity-50" />
+        <h2 className="text-xl font-semibold">Avaliação não encontrada</h2>
+        <p className="text-muted-foreground">O link pode estar expirado ou você não tem permissão para acessá-lo.</p>
         <Link href="/performance">
-          <Button className="bg-slate-900 font-bold px-8">Voltar para Performance</Button>
+          <Button variant="outline">Voltar para Performance</Button>
         </Link>
       </div>
     );
   }
 
-  const isReadOnly = evaluation.status === 'COMPLETED' || evaluation.status === 'SUBMITTED' || evaluation.status === 'CALIBRATED';
+  const isReadOnly = ['COMPLETED', 'SUBMITTED', 'CALIBRATED'].includes(evaluation.status);
 
   return (
-    <div className="w-full max-w-6xl mx-auto px-4 lg:px-6 py-10 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-
-      {/* Premium Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-6">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => router.back()}
-            className="h-14 w-14 rounded-2xl border-2 border-slate-100 bg-white shadow-xl shadow-slate-200/40 hover:shadow-2xl hover:scale-105 transition-all flex items-center justify-center p-0"
-          >
-            <ArrowLeft className="h-6 w-6 text-slate-600" />
-          </Button>
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-indigo-500 fill-indigo-500" />
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Módulo de Talentos</span>
-            </div>
-            <h1 className="text-3xl md:text-5xl font-black text-slate-900 leading-none tracking-tighter">
-              Avaliação de <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600 italic">Desempenho</span>
-            </h1>
+    <div className="container max-w-5xl py-8 space-y-8">
+      {/* Header */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" onClick={() => router.back()} className="h-8 w-8 -ml-2">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <h1 className="text-2xl font-bold tracking-tight">Avaliação de Desempenho</h1>
+          </div>
+          <div className="flex items-center gap-2 text-muted-foreground text-sm pl-8">
+            <User className="h-4 w-4" />
+            <span>{evaluation.employeeName}</span>
+            <span className="text-border">|</span>
+            <span>{evaluation.cycleName}</span>
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <div className="hidden md:flex flex-col items-end mr-2">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Status Atual</span>
-            <span className="text-sm font-bold text-slate-900">
-              {evaluation.status === 'PENDING' ? 'Aguardando Início' :
-                evaluation.status === 'IN_PROGRESS' ? 'Em Preenchimento' : 'Concluída'}
-            </span>
+          <div className="flex flex-col items-end gap-1">
+            <span className="text-xs text-muted-foreground font-medium uppercase">Status</span>
+            {getStatusBadge(evaluation.status)}
           </div>
-          <Badge className={cn(
-            "px-6 py-2 rounded-2xl font-black text-xs uppercase tracking-widest border-2 shadow-lg",
-            evaluation.status === 'PENDING' ? 'bg-amber-500 text-white border-amber-400' :
-              evaluation.status === 'IN_PROGRESS' ? 'bg-indigo-600 text-white border-indigo-500' :
-                'bg-emerald-500 text-white border-emerald-400'
-          )}>
-            {evaluation.status === 'PENDING' ? 'PENDENTE' :
-              evaluation.status === 'IN_PROGRESS' ? 'EM ANDAMENTO' :
-                evaluation.status === 'SUBMITTED' ? 'SUBMETIDA' :
-                  evaluation.status === 'CALIBRATED' ? 'CALIBRADA' :
-                    evaluation.status === 'COMPLETED' ? 'CONCLUÍDA' : evaluation.status}
-          </Badge>
+          {evaluation.dueDate && (
+            <div className="flex flex-col items-end gap-1 border-l pl-4 border-border">
+              <span className="text-xs text-muted-foreground font-medium uppercase">Prazo</span>
+              <div className="flex items-center gap-1.5 text-sm font-medium">
+                <Calendar className="h-3.5 w-3.5" />
+                {new Date(evaluation.dueDate).toLocaleDateString('pt-BR')}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Grid de Informações e Progresso */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Main Content */}
+        <div className="lg:col-span-2 space-y-8">
 
-        {/* Card do Avaliado */}
-        <Card className="lg:col-span-2 border-0 shadow-2xl shadow-slate-200/50 bg-white ring-1 ring-slate-100 overflow-hidden">
-          <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-indigo-600 to-violet-600" />
-          <CardContent className="p-8">
-            <div className="flex flex-col md:flex-row items-center gap-8">
-              <div className="relative group">
-                <div className="h-24 w-24 rounded-3xl bg-gradient-to-br from-indigo-50 to-slate-100 flex items-center justify-center ring-4 ring-white shadow-xl transition-transform group-hover:scale-110">
-                  <User className="h-12 w-12 text-indigo-600" />
-                </div>
-                <div className="absolute -bottom-2 -right-2 h-8 w-8 rounded-xl bg-emerald-500 flex items-center justify-center text-white shadow-lg border-2 border-white">
-                  <CheckCircle2 className="h-4 w-4" />
-                </div>
+          {/* Progress Section */}
+          <Card className="shadow-sm">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg font-semibold">Progresso Geral</CardTitle>
+                <span className="text-sm font-bold text-primary">{progress.toFixed(0)}%</span>
               </div>
-              <div className="flex-1 space-y-4 text-center md:text-left">
-                <div>
-                  <h2 className="text-3xl font-black text-slate-900 leading-tight">
-                    {evaluation.employeeName || "Colaborador não identificado"}
-                  </h2>
-                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-1 text-slate-500 font-bold text-sm">
-                    <span className="flex items-center gap-1.5 bg-slate-50 px-3 py-1 rounded-lg">
-                      <Target className="h-4 w-4 text-indigo-500" />
-                      {evaluation.cycleName || "Ciclo de Performance"}
-                    </span>
-                    <span className="flex items-center gap-1.5 bg-slate-50 px-3 py-1 rounded-lg uppercase tracking-tight text-xs">
-                      {evaluation.evaluatorType === 'SELF' ? 'Autoavaliação' :
-                        evaluation.evaluatorType === 'MANAGER' ? 'Avaliação do Gestor' : 'Avaliação 360º'}
-                    </span>
+              <CardDescription>
+                {progress < 100 ? "Complete as perguntas obrigatórias para enviar." : "Pronto para envio!"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Progress value={progress} className="h-2" />
+            </CardContent>
+          </Card>
+
+          {/* Form Sections */}
+          <div className="space-y-8">
+            {Object.entries(groupedQuestions).length > 0 ? (
+              Object.entries(groupedQuestions).map(([section, sectionQuestions]) => (
+                <div key={section} className="space-y-4">
+                  <div className="flex items-center gap-2 pb-2 border-b">
+                    <h3 className="text-lg font-semibold tracking-tight">{section}</h3>
                   </div>
-                </div>
-              </div>
-              {evaluation.dueDate && (
-                <div className="bg-slate-900 p-5 rounded-3xl text-white text-center min-w-[140px] shadow-2xl shadow-indigo-200">
-                  <Calendar className="h-6 w-6 text-indigo-400 mx-auto mb-2" />
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Prazo Final</p>
-                  <p className="text-lg font-black">{new Date(evaluation.dueDate).toLocaleDateString('pt-BR')}</p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* Card de Progresso */}
-        <Card className="border-0 shadow-2xl shadow-slate-200/50 bg-slate-900 text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12 translate-x-4 -translate-y-4">
-            <BrainCircuit className="h-32 w-32" />
-          </div>
-          <CardContent className="p-8 flex flex-col items-center justify-center h-full space-y-4 text-center relative z-10">
-            <div className="relative h-24 w-24 flex items-center justify-center">
-              <svg className="w-full h-full transform -rotate-90">
-                <circle
-                  cx="48"
-                  cy="48"
-                  r="42"
-                  stroke="currentColor"
-                  strokeWidth="8"
-                  fill="transparent"
-                  className="text-slate-800"
-                />
-                <circle
-                  cx="48"
-                  cy="48"
-                  r="42"
-                  stroke="currentColor"
-                  strokeWidth="8"
-                  fill="transparent"
-                  strokeDasharray={263.8}
-                  strokeDashoffset={263.8 - (263.8 * progress / 100)}
-                  strokeLinecap="round"
-                  className="text-indigo-500 transition-all duration-1000"
-                />
-              </svg>
-              <span className="absolute text-2xl font-black">{progress.toFixed(0)}%</span>
-            </div>
-            <div>
-              <h3 className="text-lg font-black">Progresso Geral</h3>
-              <p className="text-slate-400 text-xs font-bold leading-relaxed">
-                {progress < 100 ? "Complete as perguntas para habilitar a submissão" : "Tudo pronto para enviar!"}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Formulario de Questoes */}
-      <div className="space-y-12">
-        {Object.entries(groupedQuestions).length > 0 ? (
-          Object.entries(groupedQuestions).map(([section, sectionQuestions]) => (
-            <div key={section} className="space-y-6">
-              <div className="flex items-center gap-4">
-                <div className="h-10 w-10 rounded-xl bg-slate-900 text-white flex items-center justify-center">
-                  <Trophy className="h-5 w-5" />
-                </div>
-                <h3 className="text-2xl font-black text-slate-800 tracking-tight">{section}</h3>
-                <div className="flex-1 h-[2px] bg-slate-100 rounded-full" />
-              </div>
-
-              <div className="grid grid-cols-1 gap-6">
-                {sectionQuestions.map((question, index) => (
-                  <Card key={question.id} className="border-0 shadow-xl shadow-slate-200/40 bg-white ring-1 ring-slate-100 hover:ring-indigo-100 transition-all">
-                    <CardContent className="p-8">
-                      <div className="space-y-8">
-                        <div className="flex items-start justify-between gap-6">
-                          <div className="space-y-2">
-                            <span className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em]">Pergunta {index + 1}</span>
-                            <h4 className="text-lg font-bold text-slate-800 leading-snug">
-                              {question.text}
-                              {question.required && <span className="text-rose-500 ml-1 italic font-normal text-xs">(obrigatória)</span>}
-                            </h4>
-                          </div>
-                          {question.weight > 1 && (
-                            <div className="px-3 py-1 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-600 text-[10px] font-black uppercase">
-                              Peso x{question.weight}
+                  <div className="grid gap-4">
+                    {sectionQuestions.map((question, index) => (
+                      <Card key={question.id} className="shadow-sm border-border/60">
+                        <CardHeader className="pb-4">
+                          <div className="flex justify-between items-start gap-4">
+                            <div className="space-y-1">
+                              <CardTitle className="text-base font-medium leading-relaxed">
+                                {question.text}
+                                {question.required && <span className="text-red-500 ml-1">*</span>}
+                              </CardTitle>
+                              {question.weight > 1 && (
+                                <Badge variant="secondary" className="text-xs font-normal">
+                                  Peso x{question.weight}
+                                </Badge>
+                              )}
                             </div>
-                          )}
-                        </div>
-
-                        {question.type === 'SCALE' ? (
-                          <div className="space-y-8">
-                            <div className="px-2">
+                          </div>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                          {question.type === 'SCALE' ? (
+                            <div className="space-y-6">
                               <Slider
                                 value={[answers[question.id]?.score || 0]}
-                                onValueChange={([value]) => handleScoreChange(question.id, value)}
+                                onValueChange={([value]) => !isReadOnly && handleScoreChange(question.id, value)}
                                 max={5}
                                 min={0}
                                 step={1}
                                 disabled={isReadOnly}
-                                className="w-full h-2"
+                                className="w-full"
                               />
-                            </div>
-                            <div className="grid grid-cols-6 gap-2">
-                              {[0, 1, 2, 3, 4, 5].map((val) => (
-                                <button
-                                  key={val}
-                                  type="button"
-                                  onClick={() => !isReadOnly && handleScoreChange(question.id, val)}
-                                  className={cn(
-                                    "flex flex-col items-center gap-1 transition-all duration-300",
-                                    (answers[question.id]?.score === val) ? "scale-110" : "opacity-40 hover:opacity-100"
-                                  )}
-                                >
-                                  <div className={cn(
-                                    "h-10 w-10 md:h-12 md:w-12 rounded-2xl flex items-center justify-center font-black text-lg transition-colors border-2",
-                                    answers[question.id]?.score === val
-                                      ? "bg-indigo-600 text-white border-indigo-500 shadow-lg shadow-indigo-100"
-                                      : "bg-slate-50 text-slate-400 border-slate-100"
-                                  )}>
-                                    {val}
+                              <div className="flex justify-between w-full px-1">
+                                {[0, 1, 2, 3, 4, 5].map((val) => (
+                                  <div key={val} className="flex flex-col items-center gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => !isReadOnly && handleScoreChange(question.id, val)}
+                                      disabled={isReadOnly}
+                                      className={cn(
+                                        "h-8 w-8 rounded-full flex items-center justify-center text-sm font-medium transition-all border",
+                                        answers[question.id]?.score === val
+                                          ? "bg-primary text-primary-foreground border-primary shadow-sm scale-110"
+                                          : "bg-background text-muted-foreground border-input hover:bg-accent hover:text-accent-foreground"
+                                      )}
+                                    >
+                                      {val}
+                                    </button>
+                                    <span className={cn(
+                                      "text-[10px] uppercase font-semibold tracking-wider",
+                                      answers[question.id]?.score === val ? "text-primary" : "text-muted-foreground/60"
+                                    )}>
+                                      {val === 0 ? "N/A" : val === 5 ? "Excel" : ""}
+                                    </span>
                                   </div>
-                                  <span className={cn(
-                                    "text-[8px] font-black uppercase tracking-tighter text-center",
-                                    answers[question.id]?.score === val ? "text-indigo-600" : "text-slate-400"
-                                  )}>
-                                    {val === 0 ? "N/A" : val === 5 ? "Brilhante" : ""}
-                                  </span>
-                                </button>
-                              ))}
+                                ))}
+                              </div>
                             </div>
-                            <div className="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-50 flex items-center justify-center gap-3">
-                              <Lightbulb className="h-5 w-5 text-indigo-500" />
-                              <span className={cn("text-sm font-black uppercase tracking-wider", getScoreColor(answers[question.id]?.score || 0))}>
-                                {getScoreLabel(answers[question.id]?.score || 0)}
-                              </span>
+                          ) : (
+                            <div className="space-y-2">
+                              <Textarea
+                                value={answers[question.id]?.textAnswer || ''}
+                                onChange={(e) => handleTextChange(question.id, e.target.value)}
+                                placeholder="Descreva sua resposta aqui..."
+                                className="min-h-[120px] resize-none"
+                                disabled={isReadOnly}
+                              />
+                              <div className="flex justify-end text-xs text-muted-foreground">
+                                {answers[question.id]?.textAnswer?.length || 0} caracteres
+                              </div>
                             </div>
-                          </div>
-                        ) : (
-                          <div className="space-y-4">
-                            <Textarea
-                              value={answers[question.id]?.textAnswer || ''}
-                              onChange={(e) => handleTextChange(question.id, e.target.value)}
-                              placeholder="Descreva detalhadamente sua percepção aqui..."
-                              className="min-h-[160px] rounded-2xl border-2 border-slate-100 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100 transition-all font-medium text-slate-700 p-6 shadow-sm"
-                              disabled={isReadOnly}
-                            />
-                            <div className="flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2">
-                              <span>Mínimo recomendado: 10 caracteres</span>
-                              <span>{answers[question.id]?.textAnswer?.length || 0} caracteres</span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          ))
-        ) : (
-          <Card className="border-2 border-dashed border-slate-200 bg-slate-50/50 rounded-[40px] text-center p-20">
-            <div className="h-20 w-20 bg-white rounded-3xl shadow-xl flex items-center justify-center mx-auto mb-6">
-              <BrainCircuit className="h-10 w-10 text-slate-300" />
-            </div>
-            <h3 className="text-2xl font-black text-slate-400 uppercase tracking-widest">Nenhuma pergunta carregada</h3>
-            <p className="text-slate-400 font-medium max-w-sm mx-auto mt-2">
-              Não foram encontradas perguntas vinculadas a este formulário de avaliação. Por favor, contate o RH.
-            </p>
-          </Card>
-        )}
-
-        {/* Feedback Consolidado */}
-        <div className="space-y-6">
-          <div className="flex items-center gap-4">
-            <div className="h-10 w-10 rounded-xl bg-violet-600 text-white flex items-center justify-center">
-              <BrainCircuit className="h-5 w-5" />
-            </div>
-            <h3 className="text-2xl font-black text-slate-800 tracking-tight">Feedback Consolidado</h3>
-            <div className="flex-1 h-[2px] bg-slate-100 rounded-full" />
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <Card className="border-dashed shadow-none bg-muted/30">
+                <CardContent className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
+                  <Info className="h-8 w-8 mb-4 opacity-50" />
+                  <p>Nenhuma pergunta disponível.</p>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
-          <Card className="border-0 shadow-2xl shadow-slate-200/50 overflow-hidden rounded-[32px]">
-            <div className="p-10 space-y-10">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <Trophy className="h-5 w-5 text-amber-500" />
-                    <Label className="text-sm font-black text-slate-700 uppercase tracking-widest">Pontos Fortes</Label>
-                  </div>
+          {/* Qualitative Feedback */}
+          <div className="space-y-4 pt-4 border-t">
+            <h3 className="text-lg font-semibold tracking-tight">Feedback Qualitativo</h3>
+
+            <Card className="shadow-sm">
+              <CardContent className="p-6 space-y-6">
+                <div className="space-y-2">
+                  <Label>Pontos Fortes</Label>
                   <Textarea
                     value={strengths}
                     onChange={(e) => setStrengths(e.target.value)}
                     placeholder="Quais foram as principais conquistas e diferenciais?"
-                    className="min-h-[180px] rounded-[24px] border-2 border-slate-100 bg-emerald-50/5 p-6 font-medium focus:border-emerald-500 focus:ring-emerald-50 transition-all"
+                    className="min-h-[100px]"
                     disabled={isReadOnly}
                   />
                 </div>
 
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <ChevronRight className="h-5 w-5 text-rose-500" />
-                    <Label className="text-sm font-black text-slate-700 uppercase tracking-widest">Oportunidades de Melhoria</Label>
-                  </div>
+                <div className="space-y-2">
+                  <Label>Oportunidades de Melhoria</Label>
                   <Textarea
                     value={improvements}
                     onChange={(e) => setImprovements(e.target.value)}
-                    placeholder="Quais áreas precisam de maior atenção e desenvolvimento?"
-                    className="min-h-[180px] rounded-[24px] border-2 border-slate-100 bg-rose-50/5 p-6 font-medium focus:border-rose-500 focus:ring-rose-50 transition-all"
+                    placeholder="Quais áreas precisam de desenvolvimento?"
+                    className="min-h-[100px]"
                     disabled={isReadOnly}
                   />
                 </div>
-              </div>
 
-              <div className="space-y-4 pt-4">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-indigo-500" />
-                  <Label className="text-sm font-black text-slate-700 uppercase tracking-widest">Feedback Geral e Sugestões</Label>
+                <div className="space-y-2">
+                  <Label>Comentários Gerais</Label>
+                  <Textarea
+                    value={feedback}
+                    onChange={(e) => setFeedback(e.target.value)}
+                    placeholder="Mensagem final ou observações..."
+                    className="min-h-[100px]"
+                    disabled={isReadOnly}
+                  />
                 </div>
-                <Textarea
-                  value={feedback}
-                  onChange={(e) => setFeedback(e.target.value)}
-                  placeholder="Deixe uma mensagem final ou recomendações para o próximo ciclo..."
-                  className="min-h-[150px] rounded-[24px] border-2 border-slate-100 bg-indigo-50/5 p-6 font-medium focus:border-indigo-600 focus:ring-indigo-50 transition-all text-lg leading-relaxed"
-                  disabled={isReadOnly}
-                />
-              </div>
-            </div>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Sidebar Info & Actions */}
+        <div className="lg:col-span-1 space-y-6">
+          <div className="sticky top-8 space-y-6">
+
+            {/* Info Card */}
+            <Card className="shadow-sm bg-muted/40 border-muted">
+              <CardHeader>
+                <CardTitle className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Detalhes da Avaliação</CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm space-y-3">
+                <div className="flex justify-between border-b pb-2 border-border/50">
+                  <span className="text-muted-foreground">Tipo</span>
+                  <span className="font-medium">
+                    {evaluation.evaluatorType === 'SELF' ? 'Autoavaliação' :
+                      evaluation.evaluatorType === 'MANAGER' ? 'Gestor' : 'Pares'}
+                  </span>
+                </div>
+                <div className="flex justify-between border-b pb-2 border-border/50">
+                  <span className="text-muted-foreground">Perguntas</span>
+                  <span className="font-medium">{questions.length}</span>
+                </div>
+                <div className="flex justify-between pt-1">
+                  <span className="text-muted-foreground">Obrigatórias</span>
+                  <span className="font-medium">{questions.filter(q => q.required).length}</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Actions Card */}
+            {!isReadOnly && (
+              <Card className="shadow-md border-primary/10">
+                <CardHeader>
+                  <CardTitle className="text-base font-semibold">Ações</CardTitle>
+                  <CardDescription>Suas alterações são salvas automaticamente, mas lembre-se de enviar ao final.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Button
+                    className="w-full font-semibold"
+                    size="lg"
+                    onClick={handleSubmit}
+                    disabled={progress < 100 || submitting}
+                  >
+                    {submitting ? 'Enviando...' : 'Finalizar e Enviar'}
+                    <Send className="ml-2 h-4 w-4" />
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={handleSave}
+                    disabled={saving}
+                  >
+                    {saving ? 'Salvando...' : 'Salvar Rascunho'}
+                    <Save className="ml-2 h-4 w-4" />
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {isReadOnly && evaluation.finalScore && (
+              <Card className="bg-primary text-primary-foreground border-none shadow-lg">
+                <CardContent className="flex flex-col items-center justify-center p-8 text-center space-y-2">
+                  <p className="text-xs uppercase font-bold tracking-widest opacity-80">Nota Final</p>
+                  <div className="text-5xl font-black">{evaluation.finalScore.toFixed(1)}</div>
+                  {evaluation.calibratedScore && (
+                    <div className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full mt-2">
+                      Calibrada: {evaluation.calibratedScore.toFixed(1)}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+          </div>
         </div>
       </div>
-
-      {/* Barra de Ações Flutuante */}
-      {!isReadOnly && (
-        <div className="sticky bottom-8 left-0 right-0 z-50 px-4">
-          <div className="max-w-4xl mx-auto bg-slate-900/90 backdrop-blur-xl rounded-[32px] p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-3xl shadow-indigo-500/20 ring-1 ring-white/10">
-            <div className="flex items-center gap-4 pl-4">
-              <div className="flex flex-col">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Status da Edição</span>
-                <span className="text-xs font-bold text-white flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  Salvamento automático habilitado
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              <Button
-                variant="ghost"
-                onClick={handleSave}
-                disabled={saving}
-                className="flex-1 sm:flex-none h-14 px-8 rounded-2xl text-white font-black hover:bg-white/10 transition-all"
-              >
-                <Save className="h-5 w-5 mr-3" />
-                {saving ? 'Arquivando...' : 'Salvar como Rascunho'}
-              </Button>
-
-              <Button
-                disabled={progress < 100 || submitting}
-                onClick={handleSubmit}
-                className={cn(
-                  "flex-1 sm:flex-none h-14 px-10 rounded-2xl font-black shadow-xl transition-all border-0",
-                  progress >= 100
-                    ? "bg-gradient-to-r from-indigo-600 to-violet-600 hover:scale-105 hover:shadow-indigo-500/40 text-white"
-                    : "bg-slate-800 text-slate-500 cursor-not-allowed"
-                )}
-              >
-                <Send className="h-5 w-5 mr-3" />
-                {submitting ? 'Consolidando...' : 'Finalizar & Enviar'}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Resultado Final (se concluída) */}
-      {(evaluation.status === 'COMPLETED' || evaluation.status === 'CALIBRATED') && evaluation.finalScore && (
-        <Card className="border-0 bg-gradient-to-br from-indigo-600 to-violet-700 text-white rounded-[40px] shadow-3xl shadow-indigo-200 overflow-hidden relative">
-          <div className="absolute top-0 right-0 p-12 opacity-10">
-            <Trophy className="h-40 w-40" />
-          </div>
-          <CardContent className="p-12 text-center space-y-4 relative z-10">
-            <p className="text-[10px] font-black uppercase tracking-[0.5em] text-indigo-100">Performance Score Resultado</p>
-            <div className="text-8xl font-black tracking-tighter drop-shadow-2xl">
-              {evaluation.finalScore.toFixed(1)}
-            </div>
-            <div className="flex items-center justify-center gap-6 pt-4">
-              <div className="bg-white/10 px-6 py-3 rounded-2xl backdrop-blur-md">
-                <p className="text-[10px] font-black uppercase tracking-widest text-indigo-200">Score Bruto</p>
-                <p className="text-xl font-bold">{(evaluation.finalScore || 0).toFixed(1)}</p>
-              </div>
-              {evaluation.calibratedScore && (
-                <div className="bg-white/20 px-6 py-3 rounded-2xl backdrop-blur-md ring-2 ring-white/30">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-indigo-100">Nota Calibrada</p>
-                  <p className="text-xl font-bold">{evaluation.calibratedScore.toFixed(1)}</p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }

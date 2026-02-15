@@ -310,21 +310,27 @@ export default function CycleDashboardPage() {
                                         <div className="h-5 w-5 rounded-full bg-indigo-100 flex items-center justify-center text-[10px] font-bold">2</div>
                                         <span className="text-xs font-bold uppercase tracking-widest">Sua Ação</span>
                                     </div>
-                                    <p className="text-xs text-slate-600 leading-relaxed font-medium">Clique na aba **"Minha Performance"** abaixo para encontrar seus formulários pendentes.</p>
+                                    <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                                        Clique na aba <span className="font-bold text-emerald-600">"Minha Performance"</span> abaixo para encontrar seus formulários pendentes.
+                                    </p>
                                 </div>
                                 <div className="space-y-2">
                                     <div className="flex items-center gap-2 text-emerald-600">
                                         <div className="h-5 w-5 rounded-full bg-emerald-100 flex items-center justify-center text-[10px] font-bold">3</div>
                                         <span className="text-xs font-bold uppercase tracking-widest">Preenchimento</span>
                                     </div>
-                                    <p className="text-xs text-slate-600 leading-relaxed font-medium">Utilize o botão **"Iniciar"** para abrir o formulário e salvar suas respostas.</p>
+                                    <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                                        Utilize o botão <span className="font-bold text-blue-600">"Iniciar"</span> para abrir o formulário e salvar suas respostas.
+                                    </p>
                                 </div>
                                 <div className="space-y-2">
                                     <div className="flex items-center gap-2 text-amber-600">
                                         <div className="h-5 w-5 rounded-full bg-amber-100 flex items-center justify-center text-[10px] font-bold">4</div>
                                         <span className="text-xs font-bold uppercase tracking-widest">Gestão</span>
                                     </div>
-                                    <p className="text-xs text-slate-600 leading-relaxed font-medium">Se você é gestor, acompanhe o progresso do time na aba **"Visão Gestor"**.</p>
+                                    <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                                        Se você é gestor, acompanhe o progresso do time na aba <span className="font-bold text-blue-600">"Visão Gestor"</span>.
+                                    </p>
                                 </div>
                             </div>
                         </div>
