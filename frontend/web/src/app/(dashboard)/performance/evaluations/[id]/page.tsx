@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { evaluationsApi, Evaluation, EvaluationAnswer } from '@/lib/api/performance';
+import { employeesApi, Employee } from '@/lib/api/employees';
 import { getErrorMessage } from '@/lib/api/client';
 import { useToast } from '@/hooks/use-toast';
 import { useConfirm } from '@/components/providers/ConfirmProvider';
@@ -49,6 +50,7 @@ export default function EvaluationPage() {
   const evaluationId = params.id as string;
 
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
+  const [employee, setEmployee] = useState<Employee | null>(null);
   const [questions, setQuestions] = useState<FormQuestion[]>([]);
   const [answers, setAnswers] = useState<Record<string, EvaluationAnswer>>({});
   const [feedback, setFeedback] = useState('');
@@ -64,6 +66,16 @@ export default function EvaluationPage() {
         setLoading(true);
         const data = await evaluationsApi.get(evaluationId);
         setEvaluation(data);
+
+        // Carregar dados do funcionário para pegar a foto
+        if (data.employeeId) {
+          try {
+            const emp = await employeesApi.getById(data.employeeId);
+            setEmployee(emp);
+          } catch (err) {
+            console.error("Erro ao carregar dados do funcionário", err);
+          }
+        }
 
         if (data.answers && data.answers.length > 0) {
           const derivedQuestions: FormQuestion[] = data.answers.map(ans => ({
@@ -243,7 +255,7 @@ export default function EvaluationPage() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-100px)] space-y-4">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
         <p className="text-muted-foreground text-sm font-medium">Carregando avaliação...</p>
       </div>
     );
@@ -260,14 +272,16 @@ export default function EvaluationPage() {
           <p className="text-muted-foreground max-w-[400px]">O link pode estar expirado ou você não tem permissão para acessá-lo.</p>
         </div>
         <Link href="/performance">
-          <Button>Voltar para Dashboard</Button>
+          <Button className="bg-slate-900 text-white hover:bg-slate-800">Voltar para Dashboard</Button>
         </Link>
       </div>
     );
   }
 
   const isReadOnly = ['COMPLETED', 'SUBMITTED', 'CALIBRATED'].includes(evaluation.status);
-  const isSelfEvaluation = evaluation.evaluatorType === 'SELF';
+
+  // Usar foto do funcionário carregado, ou do usuário logado se for autoavaliação (fallback)
+  const avatarUrl = employee?.photoUrl || (evaluation.evaluatorType === 'SELF' ? user?.avatarUrl : undefined);
 
   return (
     <div className="w-full max-w-[1600px] mx-auto p-6 md:p-8 space-y-8 animate-in fade-in duration-500">
@@ -282,39 +296,39 @@ export default function EvaluationPage() {
 
       {/* Hero Header Card */}
       <Card className="border-none shadow-md bg-white overflow-hidden relative">
-        <div className="absolute top-0 left-0 w-1.5 h-full bg-primary" />
+        <div className="absolute top-0 left-0 w-1.5 h-full bg-indigo-600" />
         <CardContent className="p-0">
           <div className="flex flex-col md:flex-row">
             {/* User Info Section */}
             <div className="flex-1 p-8 flex items-center gap-6">
-              <Avatar className="h-24 w-24 border-4 border-muted shadow-sm">
-                <AvatarImage src={isSelfEvaluation ? user?.avatarUrl : undefined} />
-                <AvatarFallback className="text-2xl font-bold bg-primary/5 text-primary">
+              <Avatar className="h-24 w-24 border-4 border-slate-50 shadow-sm">
+                <AvatarImage src={avatarUrl} />
+                <AvatarFallback className="text-2xl font-bold bg-indigo-50 text-indigo-600">
                   {getInitials(evaluation.employeeName || 'Colaborador')}
                 </AvatarFallback>
               </Avatar>
 
               <div className="space-y-1">
                 <div className="flex items-center gap-3 mb-1">
-                  <Badge variant="secondary" className="text-xs font-normal">
+                  <Badge variant="secondary" className="text-xs font-normal bg-slate-100 text-slate-600 hover:bg-slate-200">
                     {evaluation.evaluatorType === 'SELF' ? 'Autoavaliação' :
                       evaluation.evaluatorType === 'MANAGER' ? 'Avaliação do Gestor' : 'Avaliação de Pares'}
                   </Badge>
                   {getStatusBadge(evaluation.status)}
                 </div>
 
-                <h1 className="text-3xl font-bold tracking-tight text-foreground">
+                <h1 className="text-3xl font-bold tracking-tight text-slate-900">
                   {evaluation.employeeName}
                 </h1>
 
-                <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground pt-1">
+                <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500 pt-1">
                   <div className="flex items-center gap-1.5">
-                    <Target className="h-4 w-4" />
+                    <Target className="h-4 w-4 text-indigo-500" />
                     <span>{evaluation.cycleName}</span>
                   </div>
                   {evaluation.dueDate && (
                     <div className="flex items-center gap-1.5">
-                      <Calendar className="h-4 w-4" />
+                      <Calendar className="h-4 w-4 text-slate-400" />
                       <span>Prazo: {new Date(evaluation.dueDate).toLocaleDateString('pt-BR')}</span>
                     </div>
                   )}
@@ -324,30 +338,30 @@ export default function EvaluationPage() {
 
             {/* Score/Status Section (Right Side) */}
             {(evaluation.status === 'COMPLETED' || evaluation.status === 'CALIBRATED') && evaluation.finalScore ? (
-              <div className="w-full md:w-64 bg-primary/5 border-l border-primary/10 p-8 flex flex-col items-center justify-center text-center">
-                <span className="text-xs uppercase font-bold tracking-widest text-primary/70 mb-1">Nota Final</span>
-                <span className="text-5xl font-black text-primary">{evaluation.finalScore.toFixed(1)}</span>
+              <div className="w-full md:w-64 bg-indigo-50/50 border-l border-indigo-100 p-8 flex flex-col items-center justify-center text-center">
+                <span className="text-xs uppercase font-bold tracking-widest text-indigo-400 mb-1">Nota Final</span>
+                <span className="text-5xl font-black text-indigo-600">{evaluation.finalScore.toFixed(1)}</span>
                 {evaluation.calibratedScore && (
-                  <span className="text-xs font-medium text-muted-foreground mt-2 bg-white px-2 py-1 rounded-full shadow-sm">
+                  <span className="text-xs font-medium text-slate-500 mt-2 bg-white px-2 py-1 rounded-full shadow-sm border border-slate-100">
                     Calibrada: {evaluation.calibratedScore.toFixed(1)}
                   </span>
                 )}
               </div>
             ) : (
               <div className={cn(
-                "w-full md:w-80 p-8 border-t md:border-t-0 md:border-l border-border bg-gray-50/50 flex flex-col justify-center",
-                progress >= 100 ? "bg-emerald-50/50" : ""
+                "w-full md:w-80 p-8 border-t md:border-t-0 md:border-l border-slate-100 bg-slate-50/30 flex flex-col justify-center",
+                progress >= 100 ? "bg-emerald-50/20" : ""
               )}>
                 <div className="flex justify-between items-end mb-2">
-                  <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">Progresso</h3>
-                  <span className={cn("text-2xl font-bold", progress >= 100 ? "text-emerald-600" : "text-primary")}>
+                  <h3 className="font-semibold text-sm uppercase tracking-wide text-slate-500">Progresso</h3>
+                  <span className={cn("text-2xl font-bold", progress >= 100 ? "text-emerald-600" : "text-indigo-600")}>
                     {progress.toFixed(0)}%
                   </span>
                 </div>
-                <Progress value={progress} className={cn("h-3", progress >= 100 ? "[&>div]:bg-emerald-500" : "")} />
-                <p className="text-xs text-muted-foreground mt-3">
+                <Progress value={progress} className={cn("h-3 bg-slate-200", progress >= 100 ? "[&>div]:bg-emerald-500" : "[&>div]:bg-indigo-600")} />
+                <p className="text-xs text-slate-400 mt-3">
                   {progress < 100
-                    ? `Responda ${questions.filter(q => q.required && !answers[q.id]?.score).length} perguntas obrigatórias para enviar.`
+                    ? `Responda ${questions.filter(q => q.required && !answers[q.id]?.score).length} perguntas obrigatórias.`
                     : "Todas as perguntas respondidas!"}
                 </p>
               </div>
@@ -366,31 +380,31 @@ export default function EvaluationPage() {
               Object.entries(groupedQuestions).map(([section, sectionQuestions]) => (
                 <div key={section} className="space-y-6">
                   <div className="flex items-center gap-4">
-                    <div className="h-10 w-1 bg-primary rounded-full"></div>
-                    <h2 className="text-xl font-bold tracking-tight text-foreground">{section}</h2>
+                    <div className="h-8 w-1.5 bg-indigo-600 rounded-full"></div>
+                    <h2 className="text-xl font-bold tracking-tight text-slate-800">{section}</h2>
                   </div>
 
                   <div className="grid gap-6">
                     {sectionQuestions.map((question) => (
                       <Card key={question.id} className={cn(
                         "shadow-sm transition-all duration-200 border-l-4",
-                        answers[question.id]?.score !== undefined ? "border-l-primary" : "border-l-transparent hover:border-l-muted-foreground/30"
+                        answers[question.id]?.score !== undefined ? "border-l-indigo-500" : "border-l-transparent hover:border-l-slate-300"
                       )}>
                         <CardHeader className="pb-4">
                           <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                             <div className="space-y-2">
-                              <CardTitle className="text-base font-semibold leading-relaxed text-foreground/90">
+                              <CardTitle className="text-base font-semibold leading-relaxed text-slate-800">
                                 {question.text}
-                                {question.required && <span className="text-destructive ml-1" title="Obrigatória">*</span>}
+                                {question.required && <span className="text-rose-500 ml-1" title="Obrigatória">*</span>}
                               </CardTitle>
 
                               {question.type === 'SCALE' && (
                                 <div className="flex items-center gap-2">
-                                  <Badge variant="secondary" className="text-[10px] font-normal opacity-70">
+                                  <Badge variant="secondary" className="text-[10px] font-normal opacity-70 bg-slate-100 text-slate-600">
                                     Escala 0-5
                                   </Badge>
                                   {question.weight > 1 && (
-                                    <Badge variant="outline" className="text-[10px] font-normal border-primary/20 text-primary">
+                                    <Badge variant="outline" className="text-[10px] font-normal border-indigo-200 text-indigo-600 bg-indigo-50">
                                       Peso x{question.weight}
                                     </Badge>
                                   )}
@@ -409,7 +423,7 @@ export default function EvaluationPage() {
                                 min={0}
                                 step={1}
                                 disabled={isReadOnly}
-                                className="w-full py-4 cursor-pointer"
+                                className={cn("w-full py-4 cursor-pointer", isReadOnly && "opacity-60 cursor-not-allowed")}
                               />
 
                               <div className="grid grid-cols-6 gap-2 sm:gap-4">
@@ -427,14 +441,14 @@ export default function EvaluationPage() {
                                     <div className={cn(
                                       "h-10 w-10 sm:h-12 sm:w-12 rounded-xl flex items-center justify-center text-sm font-bold transition-all border-2",
                                       answers[question.id]?.score === val
-                                        ? "bg-primary text-primary-foreground border-primary shadow-md scale-110"
-                                        : "bg-white text-muted-foreground border-border group-hover:border-primary/50 group-hover:bg-primary/5"
+                                        ? "bg-indigo-600 text-white border-indigo-600 shadow-md scale-110"
+                                        : "bg-white text-slate-400 border-slate-200 group-hover:border-indigo-300 group-hover:bg-indigo-50/50"
                                     )}>
                                       {val}
                                     </div>
                                     <span className={cn(
                                       "text-[10px] uppercase font-bold tracking-wider transition-colors text-center hidden sm:block",
-                                      answers[question.id]?.score === val ? "text-primary" : "text-muted-foreground/40"
+                                      answers[question.id]?.score === val ? "text-indigo-600" : "text-slate-300"
                                     )}>
                                       {val === 0 ? "N/A" : val === 1 ? "Ruim" : val === 5 ? "Excel" : "-"}
                                     </span>
@@ -448,10 +462,10 @@ export default function EvaluationPage() {
                                 value={answers[question.id]?.textAnswer || ''}
                                 onChange={(e) => handleTextChange(question.id, e.target.value)}
                                 placeholder="Digite sua resposta detalhada aqui..."
-                                className="min-h-[140px] resize-none text-base p-4 focus-visible:ring-primary/20"
+                                className="min-h-[140px] resize-none text-base p-4 focus-visible:ring-indigo-500/20 border-slate-200"
                                 disabled={isReadOnly}
                               />
-                              <div className="flex justify-end text-xs text-muted-foreground font-medium">
+                              <div className="flex justify-end text-xs text-slate-400 font-medium">
                                 {answers[question.id]?.textAnswer?.length || 0} caracteres
                               </div>
                             </div>
@@ -463,27 +477,27 @@ export default function EvaluationPage() {
                 </div>
               ))
             ) : (
-              <div className="text-center py-20 bg-muted/20 rounded-3xl border-2 border-dashed border-muted">
-                <Info className="h-10 w-10 text-muted-foreground/30 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-muted-foreground">Nenhuma pergunta encontrada</h3>
-                <p className="text-sm text-muted-foreground/70">Este formulário não possui perguntas configuradas.</p>
+              <div className="text-center py-20 bg-slate-50/50 rounded-3xl border-2 border-dashed border-slate-200">
+                <Info className="h-10 w-10 text-slate-300 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-slate-500">Nenhuma pergunta encontrada</h3>
+                <p className="text-sm text-slate-400">Este formulário não possui perguntas configuradas.</p>
               </div>
             )}
           </div>
 
-          <Separator className="my-8" />
+          <Separator className="my-8 bg-slate-100" />
 
           {/* Qualitative Feedback Section */}
           <div className="space-y-6">
             <div className="flex items-center gap-4 mb-6">
-              <div className="h-10 w-1 bg-primary rounded-full"></div>
-              <h2 className="text-xl font-bold tracking-tight text-foreground">Feedback Qualitativo</h2>
+              <div className="h-8 w-1.5 bg-indigo-600 rounded-full"></div>
+              <h2 className="text-xl font-bold tracking-tight text-slate-800">Feedback Qualitativo</h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card className="shadow-sm border-l-4 border-l-emerald-500">
                 <CardHeader>
-                  <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-800">
                     <span className="text-xl">🌟</span> Pontos Fortes
                   </CardTitle>
                 </CardHeader>
@@ -492,7 +506,7 @@ export default function EvaluationPage() {
                     value={strengths}
                     onChange={(e) => setStrengths(e.target.value)}
                     placeholder="Liste as principais qualidades e entregas..."
-                    className="min-h-[160px] resize-none focus-visible:ring-emerald-500/20"
+                    className="min-h-[160px] resize-none focus-visible:ring-emerald-500/20 border-slate-200"
                     disabled={isReadOnly}
                   />
                 </CardContent>
@@ -500,7 +514,7 @@ export default function EvaluationPage() {
 
               <Card className="shadow-sm border-l-4 border-l-amber-500">
                 <CardHeader>
-                  <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-800">
                     <span className="text-xl">📈</span> Oportunidades
                   </CardTitle>
                 </CardHeader>
@@ -509,7 +523,7 @@ export default function EvaluationPage() {
                     value={improvements}
                     onChange={(e) => setImprovements(e.target.value)}
                     placeholder="Áreas para desenvolvimento e melhoria..."
-                    className="min-h-[160px] resize-none focus-visible:ring-amber-500/20"
+                    className="min-h-[160px] resize-none focus-visible:ring-amber-500/20 border-slate-200"
                     disabled={isReadOnly}
                   />
                 </CardContent>
@@ -518,14 +532,14 @@ export default function EvaluationPage() {
 
             <Card className="shadow-sm">
               <CardHeader>
-                <CardTitle className="text-base font-semibold">Considerações Finais</CardTitle>
+                <CardTitle className="text-base font-semibold text-slate-800">Considerações Finais</CardTitle>
               </CardHeader>
               <CardContent>
                 <Textarea
                   value={feedback}
                   onChange={(e) => setFeedback(e.target.value)}
                   placeholder="Feedback geral sobre o desempenho..."
-                  className="min-h-[120px] resize-none"
+                  className="min-h-[120px] resize-none border-slate-200 focus-visible:ring-indigo-500/20"
                   disabled={isReadOnly}
                 />
               </CardContent>
@@ -538,17 +552,22 @@ export default function EvaluationPage() {
           <div className="sticky top-8 space-y-6">
 
             {!isReadOnly && (
-              <Card className="shadow-lg border-primary/20 bg-card overflow-hidden">
-                <div className="h-1 w-full bg-primary" />
+              <Card className="shadow-lg border-indigo-100 bg-white overflow-hidden ring-1 ring-slate-100">
+                <div className="h-1.5 w-full bg-gradient-to-r from-indigo-500 to-indigo-600" />
                 <CardHeader>
-                  <CardTitle className="text-lg font-bold">Ações</CardTitle>
-                  <CardDescription className="text-xs">
+                  <CardTitle className="text-lg font-bold text-slate-900">Ações</CardTitle>
+                  <CardDescription className="text-xs text-slate-500">
                     Dados salvos como rascunho automaticamente.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3 pt-0">
                   <Button
-                    className="w-full h-12 text-base font-bold shadow-md hover:shadow-lg transition-all"
+                    className={cn(
+                      "w-full h-12 text-base font-bold shadow-md hover:shadow-lg transition-all text-white border-0",
+                      progress >= 100
+                        ? "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200"
+                        : "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200"
+                    )}
                     onClick={handleSubmit}
                     disabled={progress < 100 || submitting}
                   >
@@ -558,7 +577,7 @@ export default function EvaluationPage() {
 
                   <Button
                     variant="outline"
-                    className="w-full h-10 border-muted-foreground/30 hover:bg-muted/50"
+                    className="w-full h-10 border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                     onClick={handleSave}
                     disabled={saving}
                   >
@@ -569,37 +588,37 @@ export default function EvaluationPage() {
               </Card>
             )}
 
-            <Card className="shadow-sm bg-muted/10 border-muted">
+            <Card className="shadow-sm bg-slate-50/50 border-slate-200">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                <CardTitle className="text-sm font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-2">
                   <Info className="h-4 w-4" />
                   Resumo
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4 text-sm">
                 <div className="space-y-1">
-                  <p className="text-muted-foreground text-xs">Avaliado</p>
-                  <p className="font-medium truncate">{evaluation.employeeName}</p>
+                  <p className="text-slate-400 text-xs uppercase tracking-wider">Avaliado</p>
+                  <p className="font-bold text-slate-800 truncate">{evaluation.employeeName}</p>
                 </div>
-                <Separator />
+                <Separator className="bg-slate-200" />
                 <div className="space-y-1">
-                  <p className="text-muted-foreground text-xs">Ciclo</p>
-                  <p className="font-medium truncate">{evaluation.cycleName}</p>
+                  <p className="text-slate-400 text-xs uppercase tracking-wider">Ciclo</p>
+                  <p className="font-medium text-slate-700 truncate">{evaluation.cycleName}</p>
                 </div>
-                <Separator />
+                <Separator className="bg-slate-200" />
                 <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Perguntas</span>
-                  <span className="font-bold bg-muted px-2 py-0.5 rounded">{questions.length}</span>
+                  <span className="text-slate-500">Perguntas</span>
+                  <span className="font-bold bg-white px-2 py-0.5 rounded border border-slate-200 text-slate-700">{questions.length}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Obrigatórias</span>
-                  <span className="font-bold bg-muted px-2 py-0.5 rounded">{questions.filter(q => q.required).length}</span>
+                  <span className="text-slate-500">Obrigatórias</span>
+                  <span className="font-bold bg-white px-2 py-0.5 rounded border border-slate-200 text-slate-700">{questions.filter(q => q.required).length}</span>
                 </div>
               </CardContent>
             </Card>
 
-            <div className="text-[10px] text-center text-muted-foreground opacity-60">
-              ID da Avaliação: <br /> {evaluationId}
+            <div className="text-[10px] text-center text-slate-300 font-mono">
+              ID: {evaluationId.split('-')[0]}...
             </div>
 
           </div>
