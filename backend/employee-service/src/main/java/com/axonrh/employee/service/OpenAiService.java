@@ -39,6 +39,7 @@ public class OpenAiService {
             return new HashMap<>();
         }
 
+        long startTime = System.currentTimeMillis();
         try {
             // Prepare prompt specifically for Employee Data
             String prompt = """
@@ -57,12 +58,16 @@ public class OpenAiService {
                     "addressNeighborhood": "Bairro",
                     "addressCity": "Cidade",
                     "addressState": "UF",
-                    "addressZipCode": "00000-000",
+                    "addressZipCode": "00000000",
                     "nationality": "Brasileira",
                     "gender": "MALE/FEMALE",
                     "pisPasep": "1234567890"
                 }
-                Se for uma única face do documento, extraia o que estiver disponível.
+                IMPORTANTE: 
+                - O campo 'addressZipCode' (CEP) deve conter EXATAMENTE 8 DÍGITOS numéricos, sem hifen ou pontos.
+                - 'birthDate' deve estar no formato YYYY-MM-DD.
+                - Se não tiver certeza absoluta de um campo, retorne null.
+                - Se for uma única face do documento, extraia o que estiver disponível.
                 """;
 
             Map<String, Object> payload = new HashMap<>();
@@ -133,7 +138,11 @@ public class OpenAiService {
                 content = content.trim();
 
                 try {
-                    return objectMapper.readValue(content, Map.class);
+                    Map<String, Object> result = new HashMap<>(objectMapper.readValue(content, Map.class));
+                    long duration = System.currentTimeMillis() - startTime;
+                    result.put("_executionTimeMs", duration);
+                    log.info("Extração IA completada em {}ms", duration);
+                    return result;
                 } catch (Exception e) {
                     log.error("Erro ao converter conteúdo JSON da OpenAI. Conteúdo recebido: {}", content);
                     throw e;
