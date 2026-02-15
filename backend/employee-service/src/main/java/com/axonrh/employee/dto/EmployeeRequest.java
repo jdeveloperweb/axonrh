@@ -25,7 +25,7 @@ public class EmployeeRequest {
     private String registrationNumber;
 
     @NotBlank(message = "CPF e obrigatorio")
-    @Pattern(regexp = "\\d{11}", message = "CPF deve conter 11 digitos")
+    @Pattern(regexp = "[0-9.\\-/]{11,14}", message = "CPF invalido")
     private String cpf;
 
     @NotBlank(message = "Nome completo e obrigatorio")
@@ -73,7 +73,6 @@ public class EmployeeRequest {
 
     // ==================== Contato ====================
 
-    @NotBlank(message = "Email e obrigatorio")
     @Email(message = "Email invalido")
     private String email;
 
@@ -113,10 +112,8 @@ public class EmployeeRequest {
     private UUID costCenterId;
     private UUID managerId;
 
-    @NotNull(message = "Data de admissao e obrigatoria")
     private LocalDate hireDate;
 
-    @NotNull(message = "Tipo de contrato e obrigatorio")
     private EmploymentType employmentType;
 
     private WorkRegime workRegime;

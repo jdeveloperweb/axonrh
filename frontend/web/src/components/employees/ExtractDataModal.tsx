@@ -118,14 +118,33 @@ export function ExtractDataModal({
         }
     };
 
+    const fieldLabels: Record<string, string> = {
+        fullName: 'Nome Completo',
+        cpf: 'CPF',
+        rgNumber: 'RG',
+        rgIssuer: 'Órgão Emissor',
+        birthDate: 'Data de Nascimento',
+        motherName: 'Nome da Mãe',
+        fatherName: 'Nome do Pai',
+        addressStreet: 'Logradouro',
+        addressNumber: 'Número',
+        addressNeighborhood: 'Bairro',
+        addressCity: 'Cidade',
+        addressState: 'Estado (UF)',
+        addressZipCode: 'CEP',
+        nationality: 'Nacionalidade',
+        gender: 'Gênero',
+        pisPasep: 'PIS/PASEP',
+    };
+
     if (!isOpen) return null;
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className={extractedData ? "sm:max-w-2xl" : "sm:max-w-md"}>
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
-                        <Sparkles className="w-5 h-5 text-purple-500" />
+                        <Sparkles className="w-5 h-5 text-purple-600" />
                         Completar Cadastro com IA
                     </DialogTitle>
                     <DialogDescription>
@@ -135,41 +154,57 @@ export function ExtractDataModal({
 
                 <div className="space-y-4 py-4">
                     {!extractedData ? (
-                        <div className="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center hover:bg-gray-50 transition-colors relative cursor-pointer">
+                        <div className="border-2 border-dashed border-gray-200 rounded-xl p-10 text-center hover:border-purple-300 hover:bg-purple-50/30 transition-all relative cursor-pointer group">
                             <input
                                 type="file"
                                 accept="image/*,.pdf"
                                 onChange={handleFileChange}
                                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                             />
-                            <div className="flex flex-col items-center gap-2 text-gray-500">
+                            <div className="flex flex-col items-center gap-3 text-gray-500">
                                 {file ? (
                                     <>
-                                        <CheckCircle2 className="w-8 h-8 text-green-500" />
-                                        <span className="text-sm font-medium text-gray-900">{file.name}</span>
-                                        <span className="text-xs text-green-600">Pronto para processar</span>
+                                        <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                                            <CheckCircle2 className="w-6 h-6 text-green-600" />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-semibold text-gray-900">{file.name}</span>
+                                            <span className="text-xs text-green-600 font-medium">Documento selecionado</span>
+                                        </div>
                                     </>
                                 ) : (
                                     <>
-                                        <Upload className="w-8 h-8 text-gray-400" />
-                                        <span className="text-sm font-medium">Arraste ou clique para selecionar</span>
-                                        <span className="text-xs">Imagens (JPG, PNG) ou PDF</span>
+                                        <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center group-hover:bg-purple-100 transition-colors">
+                                            <Upload className="w-6 h-6 text-gray-400 group-hover:text-purple-500" />
+                                        </div>
+                                        <div className="flex flex-col gap-1">
+                                            <span className="text-sm font-semibold text-gray-700">Clique ou arraste o documento</span>
+                                            <span className="text-xs">Formatos aceitos: JPG, PNG ou PDF</span>
+                                        </div>
                                     </>
                                 )}
                             </div>
                         </div>
                     ) : (
-                        <div className="bg-purple-50 border border-purple-100 rounded-lg p-4 space-y-2">
-                            <h4 className="text-sm font-bold text-purple-800 flex items-center gap-2">
-                                <Sparkles className="w-4 h-4" /> Dados Encontrados:
-                            </h4>
-                            <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="bg-gradient-to-br from-purple-50 to-white border border-purple-100 rounded-xl p-5 shadow-sm">
+                            <div className="flex items-center justify-between mb-4 pb-2 border-b border-purple-100">
+                                <h4 className="text-sm font-bold text-purple-900 flex items-center gap-2">
+                                    <Sparkles className="w-4 h-4 text-purple-500" /> Dados Identificados
+                                </h4>
+                                <span className="text-[10px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                                    IA Extraction
+                                </span>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-4 gap-x-6">
                                 {Object.entries(extractedData).map(([key, value]) => {
-                                    if (key === '_storedPath') return null;
+                                    if (key === '_storedPath' || !value || value === "null") return null;
+                                    const label = fieldLabels[key] || key;
                                     return (
-                                        <div key={key} className="flex flex-col">
-                                            <span className="text-gray-500 uppercase text-[10px]">{key}</span>
-                                            <span className="font-medium text-gray-900 truncate" title={String(value)}>{String(value)}</span>
+                                        <div key={key} className="flex flex-col gap-1">
+                                            <span className="text-gray-400 font-bold text-[9px] uppercase tracking-widest">{label}</span>
+                                            <span className="text-sm font-medium text-gray-800 break-words" title={String(value)}>
+                                                {String(value)}
+                                            </span>
                                         </div>
                                     );
                                 })}
@@ -177,6 +212,7 @@ export function ExtractDataModal({
                         </div>
                     )}
                 </div>
+
 
                 <DialogFooter className="flex gap-2 sm:justify-end">
                     <Button variant="outline" onClick={onClose} disabled={loading}>
