@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { apiClient } from "@/lib/api/client";
 import axios from "axios";
 import { cn } from "@/lib/utils";
-import { Wifi, WifiOff, ServerCrash } from "lucide-react";
+import { ShieldCheck, ShieldAlert, ShieldOff, Activity } from "lucide-react";
 
 interface StatusIndicatorProps {
     className?: string;
@@ -23,26 +23,21 @@ export function StatusIndicator({ className, variant = "sidebar" }: StatusIndica
 
         try {
             const apiBase = apiClient.defaults.baseURL || "http://localhost:8180/api/v1";
-            // Remove /api/v1 or /api/v1/ suffix robustly
             const baseUrl = apiBase.replace(/\/api\/v1\/?$/, "");
             const healthUrl = `${baseUrl}/actuator/health`;
 
-            await axios.get(healthUrl, { timeout: 5000 });
+            await axios.get(healthUrl, { timeout: 8000 });
             setStatus("connected");
             setErrorMessage(null);
         } catch (error: any) {
             if (error.response) {
-                // The server responded with a status code that falls out of the range of 2xx
-                // This means the server IS reachable, so we are connected (just the health check failed or is 404/401)
                 setStatus("connected");
                 setErrorMessage(null);
             } else if (error.request) {
-                // The request was made but no response was received (network error or timeout)
                 setStatus("server-error");
                 setErrorMessage("Servidor indisponível");
             } else {
-                // Something happened in setting up the request
-                setStatus("connected"); // Assume okay if strictly logic error
+                setStatus("connected");
                 console.error("Health check setup error", error);
             }
         }
@@ -50,15 +45,12 @@ export function StatusIndicator({ className, variant = "sidebar" }: StatusIndica
 
     useEffect(() => {
         checkStatus();
-
-        // Listen to network changes
         const handleOnline = () => checkStatus();
         const handleOffline = () => setStatus("offline");
 
         window.addEventListener('online', handleOnline);
         window.addEventListener('offline', handleOffline);
-
-        const interval = setInterval(checkStatus, 30000); // Check every 30s
+        const interval = setInterval(checkStatus, 45000);
 
         return () => {
             clearInterval(interval);
@@ -73,56 +65,81 @@ export function StatusIndicator({ className, variant = "sidebar" }: StatusIndica
         switch (status) {
             case "connected":
                 return {
-                    icon: Wifi,
-                    text: "Online",
-                    styles: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/20",
-                    dot: "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"
+                    icon: ShieldCheck,
+                    text: "SISTEMA ONLINE",
+                    styles: "bg-emerald-500/5 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/10 shadow-[0_0_15px_rgba(16,185,129,0.05)]",
+                    dot: "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.6)]",
+                    glow: "after:bg-emerald-500/20"
                 };
             case "offline":
                 return {
-                    icon: WifiOff,
-                    text: "Sem Internet",
-                    styles: "bg-red-500/10 text-red-600 border-red-500/20 hover:bg-red-500/20",
-                    dot: "bg-red-500"
+                    icon: ShieldOff,
+                    text: "SEM INTERNET",
+                    styles: "bg-rose-500/5 text-rose-500 border-rose-500/20 hover:bg-rose-500/10",
+                    dot: "bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.4)]",
+                    glow: "after:bg-rose-500/10"
                 };
             case "server-error":
                 return {
-                    icon: ServerCrash,
-                    text: "Servidor Offline",
-                    styles: "bg-amber-500/10 text-amber-600 border-amber-500/20 hover:bg-amber-500/20",
-                    dot: "bg-amber-500"
+                    icon: ShieldAlert,
+                    text: "CONEXÃO INSTÁVEL",
+                    styles: "bg-amber-500/5 text-amber-500 border-amber-500/20 hover:bg-amber-500/10",
+                    dot: "bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.4)]",
+                    glow: "after:bg-amber-500/10"
                 };
             default:
                 return {
-                    icon: Wifi,
-                    text: "Verificando...",
-                    styles: "bg-slate-100 text-slate-500",
-                    dot: "bg-slate-400"
+                    icon: Activity,
+                    text: "VERIFICANDO",
+                    styles: "bg-slate-500/5 text-slate-500 border-slate-500/20",
+                    dot: "bg-slate-400",
+                    glow: ""
                 };
         }
     };
 
     const config = getStatusConfig();
-    // const Icon = config.icon; // Not used in sidebar variant currently, but available
+    const Icon = config.icon;
 
     if (variant === "sidebar") {
+        const isCompact = className?.includes("w-8") || className?.includes("h-8");
+
         return (
             <div
                 className={cn(
-                    "flex items-center gap-2.5 px-3 py-2 rounded-full border text-xs font-medium transition-all duration-300 backdrop-blur-sm cursor-help select-none",
+                    "group relative flex items-center transition-all duration-500 backdrop-blur-md cursor-help select-none overflow-hidden",
+                    !isCompact ? "gap-3 px-4 py-2.5 rounded-2xl border" : "justify-center rounded-full border",
                     config.styles,
                     className
                 )}
-                title={errorMessage || "Sistema Operacional"}
+                title={errorMessage || "Monitor de Integridade do Sistema"}
             >
-                <span className={cn("relative flex h-2 w-2")}>
+                {/* Glossy overlay effect */}
+                {!isCompact && (
+                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 -translate-x-full group-hover:translate-x-full" />
+                )}
+
+                <span className={cn("relative flex h-2.5 w-2.5 flex-shrink-0")}>
                     {status === 'connected' && (
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-current"></span>
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-40 bg-current"></span>
                     )}
-                    <span className={cn("relative inline-flex rounded-full h-2 w-2", config.dot)}></span>
+                    <span className={cn("relative inline-flex rounded-full h-2.5 w-2.5", config.dot)}></span>
                 </span>
 
-                <span className="truncate">{config.text}</span>
+                {!isCompact && (
+                    <>
+                        <div className="flex flex-col min-w-0">
+                            <span className="text-[10px] font-bold tracking-[0.15em] leading-tight">
+                                {config.text}
+                            </span>
+                            <span className="text-[9px] opacity-60 font-medium truncate">
+                                {status === 'connected' ? 'Secure Encryption Active' : 'Check Connectivity'}
+                            </span>
+                        </div>
+
+                        <Icon className="ml-auto w-3.5 h-3.5 opacity-40 group-hover:opacity-100 transition-opacity duration-300" />
+                    </>
+                )}
             </div>
         );
     }
@@ -131,21 +148,25 @@ export function StatusIndicator({ className, variant = "sidebar" }: StatusIndica
     return (
         <div
             className={cn(
-                "fixed bottom-4 right-4 p-2.5 rounded-full shadow-lg border backdrop-blur-md flex items-center gap-2 transition-all duration-300 z-50 group hover:pr-4",
+                "fixed bottom-6 right-6 p-1 rounded-full shadow-2xl border backdrop-blur-xl flex items-center transition-all duration-500 z-50 group hover:pr-4",
                 config.styles,
                 className
             )}
             title={errorMessage || "System Status"}
         >
-            <span className={cn("relative flex h-2.5 w-2.5")}>
-                {status === 'connected' && (
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-current"></span>
-                )}
-                <span className={cn("relative inline-flex rounded-full h-2.5 w-2.5", config.dot)}></span>
-            </span>
-            <span className="w-0 overflow-hidden group-hover:w-auto transition-all duration-300 whitespace-nowrap opacity-0 group-hover:opacity-100 font-medium text-xs">
-                {config.text}
-            </span>
+            <div className="flex items-center gap-3 px-3 py-2">
+                <span className={cn("relative flex h-2.5 w-2.5")}>
+                    {status === 'connected' && (
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-40 bg-current"></span>
+                    )}
+                    <span className={cn("relative inline-flex rounded-full h-2.5 w-2.5", config.dot)}></span>
+                </span>
+
+                <span className="w-0 overflow-hidden group-hover:w-auto transition-all duration-500 whitespace-nowrap opacity-0 group-hover:opacity-100 font-bold text-[10px] tracking-wider">
+                    {config.text}
+                </span>
+            </div>
         </div>
     );
 }
+
