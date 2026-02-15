@@ -143,7 +143,7 @@ export const payrollApi = {
      */
     getCompetencyPayrolls: async (month: number, year: number): Promise<Payroll[]> => {
         const response = await api.get<Page<Payroll>, Page<Payroll>>('/payroll/competency', {
-            params: { month, year }
+            params: { month, year, size: 999 }
         });
         return response.content;
     },

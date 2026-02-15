@@ -27,6 +27,7 @@ export default function PayrollPage() {
         return { month: today.getMonth() + 1, year: today.getFullYear() };
     });
     const [payrolls, setPayrolls] = useState<Payroll[]>([]);
+    const [searchTerm, setSearchTerm] = useState('');
     const [stats, setStats] = useState({
         totalEmployees: 0,
         totalGross: 0,
@@ -179,6 +180,8 @@ export default function PayrollPage() {
                             type="text"
                             placeholder="Buscar colaborador..."
                             className="input pl-10 w-full"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
                     <div className="flex items-center gap-2">
@@ -232,31 +235,33 @@ export default function PayrollPage() {
                                     </td>
                                 </tr>
                             ) : (
-                                payrolls.map((payroll) => (
-                                    <tr key={payroll.id} className="hover:bg-[var(--color-surface-variant)] transition-colors">
-                                        <td className="px-6 py-4 font-medium">{payroll.employeeName}</td>
-                                        <td className="px-6 py-4 text-right text-blue-600">{formatCurrency(payroll.totalEarnings)}</td>
-                                        <td className="px-6 py-4 text-right text-red-600">{formatCurrency(payroll.totalDeductions)}</td>
-                                        <td className="px-6 py-4 text-right font-bold">{formatCurrency(payroll.netValue)}</td>
-                                        <td className="px-6 py-4 text-center">
-                                            <span className={cn(
-                                                "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
-                                                payroll.status === 'CLOSED' ? "bg-green-100 text-green-700" :
-                                                    payroll.status === 'DRAFT' ? "bg-yellow-100 text-yellow-700" :
-                                                        "bg-blue-100 text-blue-700"
-                                            )}>
-                                                {payroll.statusLabel || payroll.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <Link href={`/payroll/${payroll.id}`}>
-                                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                                    <ChevronRight className="w-4 h-4" />
-                                                </Button>
-                                            </Link>
-                                        </td>
-                                    </tr>
-                                ))
+                                payrolls
+                                    .filter(p => p.employeeName.toLowerCase().includes(searchTerm.toLowerCase()))
+                                    .map((payroll) => (
+                                        <tr key={payroll.id} className="hover:bg-[var(--color-surface-variant)] transition-colors">
+                                            <td className="px-6 py-4 font-medium">{payroll.employeeName}</td>
+                                            <td className="px-6 py-4 text-right text-blue-600">{formatCurrency(payroll.totalEarnings)}</td>
+                                            <td className="px-6 py-4 text-right text-red-600">{formatCurrency(payroll.totalDeductions)}</td>
+                                            <td className="px-6 py-4 text-right font-bold">{formatCurrency(payroll.netValue)}</td>
+                                            <td className="px-6 py-4 text-center">
+                                                <span className={cn(
+                                                    "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
+                                                    payroll.status === 'CLOSED' ? "bg-green-100 text-green-700" :
+                                                        payroll.status === 'DRAFT' ? "bg-yellow-100 text-yellow-700" :
+                                                            "bg-blue-100 text-blue-700"
+                                                )}>
+                                                    {payroll.statusLabel || payroll.status}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <Link href={`/payroll/${payroll.id}`}>
+                                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                                        <ChevronRight className="w-4 h-4" />
+                                                    </Button>
+                                                </Link>
+                                            </td>
+                                        </tr>
+                                    ))
                             )}
                         </tbody>
                     </table>
