@@ -16,6 +16,7 @@ public class EmployeeDTO {
     private UUID id;
     private UUID tenantId;
     private UUID userId;
+    @com.fasterxml.jackson.annotation.JsonProperty("fullName")
     private String fullName;
     private String email;
     private ManagerDTO manager;

@@ -124,10 +124,46 @@ public class EvaluationService {
     }
 
     private Evaluation createEvaluationIfNotExists(UUID tenantId, EvaluationCycle cycle, com.axonrh.performance.dto.EmployeeDTO employee, UUID evaluatorId, String evaluatorName, EvaluatorType type) {
-        boolean exists = evaluationRepository.existsByTenantIdAndCycle_IdAndEmployeeIdAndEvaluatorIdAndEvaluatorType(
+        Optional<Evaluation> existingOpt = evaluationRepository.findOptByTenantIdAndCycle_IdAndEmployeeIdAndEvaluatorIdAndEvaluatorType(
                 tenantId, cycle.getId(), employee.getId(), evaluatorId, type);
 
-        if (!exists) {
+        Evaluation evaluation;
+        boolean isNew = false;
+        boolean needsSave = false;
+        
+        if (existingOpt.isPresent()) {
+            evaluation = existingOpt.get();
+        } else {
+            evaluation = new Evaluation();
+            evaluation.setTenantId(tenantId);
+            evaluation.setCycle(cycle);
+            evaluation.setEmployeeId(employee.getId());
+            evaluation.setEvaluatorId(evaluatorId);
+            evaluation.setEvaluatorType(type);
+            evaluation.setStatus(EvaluationStatus.PENDING);
+            isNew = true;
+            needsSave = true;
+        }
+
+        // Atualizar/Corrigir dados do colaborador se necessário
+        String empName = employee.getFullName();
+        if (empName == null || empName.trim().isEmpty()) {
+            empName = "Colaborador " + employee.getId().toString().substring(0, 8);
+            log.warn("Nome do colaborador (ID: {}) veio nulo/vazio. Usando fallback: {}", employee.getId(), empName);
+        }
+        
+        if (isNew || evaluation.getEmployeeName() == null || evaluation.getEmployeeName().trim().isEmpty() || "Colaborador não identificado".equals(evaluation.getEmployeeName())) {
+            evaluation.setEmployeeName(empName);
+            needsSave = true;
+        }
+        
+        if (isNew || evaluation.getEvaluatorName() == null) {
+            evaluation.setEvaluatorName(evaluatorName);
+            needsSave = true;
+        }
+
+        // Se for novo ou se não tiver perguntas (repair), buscar form e preencher
+        if (isNew || evaluation.getAnswers() == null || evaluation.getAnswers().isEmpty()) {
             EvaluationForm form = null;
             if (cycle.getDefaultFormId() != null) {
                 form = formRepository.findById(cycle.getDefaultFormId()).orElse(null);
@@ -136,30 +172,41 @@ public class EvaluationService {
             if (form == null) {
                 form = getOrCreateDefaultForm(tenantId);
             }
-            
-            Evaluation evaluation = new Evaluation();
-            evaluation.setTenantId(tenantId);
-            evaluation.setCycle(cycle);
-            evaluation.setEmployeeId(employee.getId());
-            evaluation.setEmployeeName(employee.getFullName());
-            evaluation.setEvaluatorId(evaluatorId);
-            evaluation.setEvaluatorName(evaluatorName);
-            evaluation.setEvaluatorType(type);
-            evaluation.setFormId(form.getId());
-            evaluation.setStatus(EvaluationStatus.PENDING);
-            
+
+            if (isNew) {
+                evaluation.setFormId(form.getId());
+            }
+
+            // Se for existing mas sem answers, garante que o formId esteja setado se estava nulo
+            if (!isNew && evaluation.getFormId() == null) {
+                evaluation.setFormId(form.getId());
+            }
+
             // Adicionar perguntas do formulario
             addQuestionsFromForm(evaluation, form);
-
+            needsSave = true;
+            log.info("{} avaliação (ID: {}) com {} perguntas para o colaborador {}", isNew ? "Criada" : "Reparada", evaluation.getId(), evaluation.getAnswers().size(), empName);
+        }
+        
+        if (needsSave) {
             return evaluationRepository.save(evaluation);
         }
-        return null;
+
+        return evaluation;
     }
 
     private EvaluationForm getOrCreateDefaultForm(UUID tenantId) {
         List<EvaluationForm> forms = formRepository.findByTenantIdAndActiveTrue(tenantId);
         if (!forms.isEmpty()) {
-            return forms.get(0);
+            EvaluationForm existing = forms.get(0);
+            // Validar se o form tem seções e perguntas. Se não tiver, pode ser um form corrompido de testes anteriores.
+            if (existing.getSections() == null || existing.getSections().isEmpty()) {
+                log.warn("Formulário padrão encontrado (ID: {}) mas não possui seções. Recriando...", existing.getId());
+                formRepository.delete(existing);
+                formRepository.flush();
+            } else {
+                return existing;
+            }
         }
 
         // Criar Formulario Padrao se nao existir

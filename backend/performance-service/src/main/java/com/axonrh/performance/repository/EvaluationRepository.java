@@ -87,4 +87,14 @@ public interface EvaluationRepository extends JpaRepository<Evaluation, UUID> {
     long countByTenantIdAndCycle_Id(UUID tenantId, UUID cycleId);
 
     List<Evaluation> findByTenantIdAndCycle_Id(UUID tenantId, UUID cycleId);
+    // Buscar avaliacao especifica para validacao e recovery
+    @Query("SELECT e FROM Evaluation e LEFT JOIN FETCH e.answers WHERE e.tenantId = :tenantId " +
+           "AND e.cycle.id = :cycleId AND e.employeeId = :employeeId " +
+           "AND e.evaluatorId = :evaluatorId AND e.evaluatorType = :evaluatorType")
+    Optional<Evaluation> findOptByTenantIdAndCycle_IdAndEmployeeIdAndEvaluatorIdAndEvaluatorType(
+            @Param("tenantId") UUID tenantId, 
+            @Param("cycleId") UUID cycleId, 
+            @Param("employeeId") UUID employeeId, 
+            @Param("evaluatorId") UUID evaluatorId, 
+            @Param("evaluatorType") EvaluatorType evaluatorType);
 }
