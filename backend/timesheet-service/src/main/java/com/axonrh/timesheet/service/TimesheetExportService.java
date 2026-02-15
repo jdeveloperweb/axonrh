@@ -460,7 +460,7 @@ public class TimesheetExportService {
         sb.append(".info-row { display: table; width: 100%; table-layout: fixed; }");
         sb.append(".info-item { display: table-cell; padding: 6px 10px; border-right: 1px solid #e2e8f0; vertical-align: top; }");
         sb.append(".info-item:last-child { border-right: none; }");
-        sb.append(".label { font-size: 6.5px; color: #94a3b8; font-weight: 800; text-transform: uppercase; margin-bottom: 2px; letter-spacing: 0.5px; }");
+        sb.append(".label { font-size: 5.8px; color: #94a3b8; font-weight: 800; text-transform: uppercase; margin-bottom: 2px; letter-spacing: 0.3px; white-space: nowrap; }");
         sb.append(".value { font-size: 9px; font-weight: 600; color: #0f172a; display: block; }");
         sb.append(".bg-light { background-color: #f8fafc; }");
 
@@ -486,7 +486,7 @@ public class TimesheetExportService {
         
         // Summary box
         sb.append(".summary-container { margin-top: 15px; display: table; width: 100%; table-layout: fixed; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; }");
-        sb.append(".summary-item { display: table-cell; padding: 10px; text-align: center; border-right: 1px solid #e2e8f0; background: #f8fafc; }");
+        sb.append(".summary-item { display: table-cell; padding: 10px 2px; text-align: center; border-right: 1px solid #e2e8f0; background: #f8fafc; }");
         sb.append(".summary-item:last-child { border-right: none; }");
         sb.append(".summary-value { font-size: 14px; font-weight: 800; color: #0f172a; margin-top: 4px; display: block; }");
         
