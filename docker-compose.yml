@@ -271,6 +271,8 @@ services:
   employee-service:
     <<: *backend-service
     container_name: axonrh-employee-service
+    env_file:
+      - .env
     command: mvn -pl employee-service -am spring-boot:run -Dspring-boot.run.fork=false
     ports:
       - "8083:8083"
