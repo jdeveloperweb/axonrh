@@ -108,12 +108,11 @@ employee:
   documents:
     max-size-mb: 10
     allowed-types: pdf,jpg,jpeg,png,doc,docx
+    upload-dir: uploads/employee-documents
   photos:
     max-size-kb: 500
     allowed-types: jpg,jpeg,png
     upload-dir: uploads/employee-photos
-  documents:
-    upload-dir: uploads/employee-documents
 
   cpf:
     validate: true
