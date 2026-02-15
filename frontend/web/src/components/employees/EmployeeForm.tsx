@@ -15,9 +15,12 @@ import {
     Eye,
     EyeOff,
     ShieldCheck,
-    ShieldAlert
+    ShieldAlert,
+    Sparkles
 } from 'lucide-react';
+import { ExtractDataModal } from './ExtractDataModal';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { employeesApi, EmployeeCreateRequest, Department, Position, CostCenter } from '@/lib/api/employees';
@@ -140,6 +143,8 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
     const [errors, setErrors] = useState<FormErrors>({});
     const [loading, setLoading] = useState(false);
     const [loadingCep, setLoadingCep] = useState(false);
+    const [extractModalOpen, setExtractModalOpen] = useState(false);
+
 
     // Reference data
     const [departments, setDepartments] = useState<Department[]>([]);
@@ -323,6 +328,29 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                 return newErrors;
             });
         }
+    };
+
+    const handleDataExtracted = (data: Record<string, any>) => {
+        setFormData(prev => ({
+            ...prev,
+            fullName: data.fullName || data.nome || prev.fullName,
+            cpf: data.cpf || prev.cpf,
+            birthDate: data.birthDate || data.dataNascimento || prev.birthDate,
+            gender: data.gender || data.genero || prev.gender,
+            maritalStatus: data.maritalStatus || data.estadoCivil || prev.maritalStatus,
+            nationality: data.nationality || data.nacionalidade || prev.nationality,
+            email: data.email || prev.email,
+            phone: data.phone || data.telefone || prev.phone,
+            address: {
+                ...prev.address,
+                street: data.addressStreet || data.logradouro || prev.address.street,
+                number: data.addressNumber || data.numero || prev.address.number,
+                neighborhood: data.addressNeighborhood || data.bairro || prev.address.neighborhood,
+                city: data.addressCity || data.cidade || prev.address.city,
+                state: data.addressState || data.uf || prev.address.state,
+                zipCode: data.addressZipCode || data.cep || prev.address.zipCode,
+            }
+        }));
     };
 
     const handleCepBlur = async () => {
@@ -565,8 +593,18 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
             {
                 activeTab === 'personal' && (
                     <Card>
-                        <CardHeader>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0">
                             <CardTitle>Dados Pessoais</CardTitle>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setExtractModalOpen(true)}
+                                className="text-purple-600 border-purple-200 hover:bg-purple-50 flex items-center gap-2"
+                            >
+                                <Sparkles className="w-4 h-4" />
+                                Preencher com IA
+                            </Button>
                         </CardHeader>
                         <CardContent className="space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -997,6 +1035,13 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                     </div>
                 )
             }
+            {/* AI Extraction Modal */}
+            <ExtractDataModal
+                isOpen={extractModalOpen}
+                onClose={() => setExtractModalOpen(false)}
+                employee={employeeId ? { id: employeeId, fullName: formData.fullName } as any : null}
+                onDataExtracted={handleDataExtracted}
+            />
         </form >
     );
 }

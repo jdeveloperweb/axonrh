@@ -22,7 +22,8 @@ import {
   Coins,
   Clock,
   Calendar,
-  AlertCircle
+  AlertCircle,
+  Sparkles
 } from 'lucide-react';
 import {
   Tooltip,
@@ -42,6 +43,11 @@ import { employeesApi, Employee, EmployeeStatus, EmployeeListParams, Department,
 import { useToast } from '@/hooks/use-toast';
 import { formatDate, formatCpf, getPhotoUrl, formatCurrency } from '@/lib/utils';
 import { TerminationModal } from '@/components/employees/TerminationModal';
+import { ExtractDataModal } from '@/components/employees/ExtractDataModal';
+
+// ... imports
+
+
 
 
 const statusColors: Record<EmployeeStatus, { bg: string; text: string; label: string }> = {
@@ -83,7 +89,7 @@ export default function EmployeesPage() {
 
   // Filters
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<EmployeeStatus | ''>('');
+  const [statusFilter, setStatusFilter] = useState<EmployeeStatus | ''>('ACTIVE');
   const [departmentFilter, setDepartmentFilter] = useState('');
   const [workRegimeFilter, setWorkRegimeFilter] = useState<WorkRegime | ''>('');
   const [hybridDayFilter, setHybridDayFilter] = useState('');
@@ -95,6 +101,10 @@ export default function EmployeesPage() {
   // Termination modal state
   const [terminationModalOpen, setTerminationModalOpen] = useState(false);
   const [selectedEmployeeForTermination, setSelectedEmployeeForTermination] = useState<Employee | null>(null);
+
+  // AI Extraction modal state
+  const [extractModalOpen, setExtractModalOpen] = useState(false);
+  const [selectedEmployeeForExtraction, setSelectedEmployeeForExtraction] = useState<Employee | null>(null);
 
 
   // Stats
@@ -248,6 +258,12 @@ export default function EmployeesPage() {
   const handleTerminateClick = (employee: Employee) => {
     setSelectedEmployeeForTermination(employee);
     setTerminationModalOpen(true);
+  };
+
+  const handleSmartFill = (employee: Employee, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedEmployeeForExtraction(employee);
+    setExtractModalOpen(true);
   };
 
 
@@ -580,18 +596,24 @@ export default function EmployeesPage() {
                                 <TooltipProvider>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <span className="inline-flex ml-2 cursor-help">
-                                        <AlertCircle className="w-4 h-4 text-orange-500" />
-                                      </span>
+                                      <button
+                                        onClick={(e) => handleSmartFill(employee, e)}
+                                        className="inline-flex ml-2 cursor-pointer hover:bg-orange-50 p-1 rounded-full transition-colors group"
+                                      >
+                                        <AlertCircle className="w-4 h-4 text-orange-500 group-hover:text-orange-600" />
+                                      </button>
                                     </TooltipTrigger>
                                     <TooltipContent>
                                       <div className="text-xs">
                                         <p className="font-bold mb-1">Dados pendentes:</p>
-                                        <ul className="list-disc pl-4">
+                                        <ul className="list-disc pl-4 mb-2">
                                           {employee.missingFields.map((field) => (
                                             <li key={field}>{field}</li>
                                           ))}
                                         </ul>
+                                        <p className="text-[10px] text-purple-600 font-bold border-t border-gray-100 pt-1 mt-1 flex items-center gap-1">
+                                          <TrendingUp className="w-3 h-3" /> Clique para completar com IA
+                                        </p>
                                       </div>
                                     </TooltipContent>
                                   </Tooltip>
@@ -637,6 +659,18 @@ export default function EmployeesPage() {
                             <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}/edit`)}>
                               Editar
                             </DropdownMenuItem>
+                            {employee.missingFields && employee.missingFields.length > 0 && (
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSmartFill(employee, e as any);
+                                }}
+                                className="text-purple-600 font-medium"
+                              >
+                                <Sparkles className="w-4 h-4 mr-2" />
+                                Completar com IA
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem
                               className="text-red-600"
                               onClick={() => handleDelete(employee.id, employee.fullName)}
@@ -695,25 +729,12 @@ export default function EmployeesPage() {
                         <p className="font-bold text-gray-900 leading-tight">
                           {employee.fullName}
                           {employee.missingFields && employee.missingFields.length > 0 && (
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <span className="inline-flex ml-2 cursor-help align-text-bottom">
-                                    <AlertCircle className="w-3 h-3 text-orange-500" />
-                                  </span>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <div className="text-xs">
-                                    <p className="font-bold mb-1">Dados pendentes:</p>
-                                    <ul className="list-disc pl-4">
-                                      {employee.missingFields.map((field) => (
-                                        <li key={field}>{field}</li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
+                            <button
+                              onClick={(e) => handleSmartFill(employee, e)}
+                              className="inline-flex ml-2 cursor-pointer p-1 rounded-full active:bg-orange-100"
+                            >
+                              <AlertCircle className="w-3 h-3 text-orange-500" />
+                            </button>
                           )}
                         </p>
                         {employee.socialName && (
@@ -753,6 +774,18 @@ export default function EmployeesPage() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}`)}>Visualizar</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}/edit`)}>Editar</DropdownMenuItem>
+                          {employee.missingFields && employee.missingFields.length > 0 && (
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSmartFill(employee, e as any);
+                              }}
+                              className="text-purple-600 font-medium"
+                            >
+                              <Sparkles className="w-4 h-4 mr-2" />
+                              Completar com IA
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem className="text-red-600" onClick={() => handleDelete(employee.id, employee.fullName)}>Excluir</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -812,6 +845,13 @@ export default function EmployeesPage() {
         isOpen={terminationModalOpen}
         onClose={() => setTerminationModalOpen(false)}
         employee={selectedEmployeeForTermination}
+        onSuccess={fetchEmployees}
+      />
+
+      <ExtractDataModal
+        isOpen={extractModalOpen}
+        onClose={() => setExtractModalOpen(false)}
+        employee={selectedEmployeeForExtraction}
         onSuccess={fetchEmployees}
       />
     </div>

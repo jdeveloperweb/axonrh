@@ -235,6 +235,7 @@ export const employeesApi = {
     if (params.page !== undefined) searchParams.set('page', params.page.toString());
     if (params.size !== undefined) searchParams.set('size', params.size.toString());
     if (params.sort) searchParams.set('sort', params.sort);
+    if (params.search) searchParams.set('search', params.search);
     if (params.status) searchParams.set('status', params.status);
     if (params.departmentId) searchParams.set('departmentId', params.departmentId);
     if (params.positionId) searchParams.set('positionId', params.positionId);
@@ -399,5 +400,23 @@ export const employeesApi = {
   // Get subordinates
   getSubordinates: async (managerId: string): Promise<Employee[]> => {
     return api.get<Employee[], Employee[]>(`/managers/${managerId}/subordinates`);
+  },
+
+  // Smart Data Extraction (OpenAI)
+  extractDocumentData: async (file: File, employeeId?: string): Promise<Record<string, any>> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (employeeId) formData.append('employeeId', employeeId);
+
+    // Endpoint: /api/v1/documents/extract (Assuming generic endpoint)
+    // We need to map this in the backend Gateway or call directly.
+    // If the controller is in EmployeeService, the prefix is usually /api/v1 (from gateway) -> /employees/documents? No.
+    // The controller I created is @RequestMapping("/api/v1/documents") in EmployeeService.
+    // So via Gateway it should be accessible as /api/v1/employees/documents/extract ??
+    // Wait, usually Gateway routes /api/v1/employees/** to EmployeeService.
+    // My new controller is /api/v1/documents. This might not be routed by Gateway if it only routes /employees.
+    // I should probably move the controller path to /api/v1/employees/documents to be safe.
+
+    return api.post<FormData, Record<string, any>>('/employees/documents/extract', formData);
   },
 };

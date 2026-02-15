@@ -88,10 +88,11 @@ public class EmployeeService {
 
             if (status != null) {
                 predicates.add(cb.equal(root.get("status"), status));
-            } else {
-                // Por padrao, mostra apenas profissionais ativos no sistema
-                predicates.add(cb.equal(root.get("isActive"), true));
             }
+            
+            // Removido filtro padrao isActive=true para permitir que "Todos" (status=null) retorne
+            // realmente todos os colaboradores, inclusive inativos/desligados.
+            // O Frontend deve enviar status=ACTIVE explicitamente para a visao padrao.
 
             if (departmentId != null) {
                 predicates.add(cb.equal(root.get("department").get("id"), departmentId));
@@ -111,13 +112,18 @@ public class EmployeeService {
             }
 
             if (search != null && !search.trim().isEmpty()) {
-                String likePattern = "%" + search.trim().toLowerCase() + "%";
+                String cleanSearch = search.trim();
+                String likePattern = "%" + cleanSearch.toLowerCase() + "%";
+                
+                // Trata CPF: Remove caracteres nao numericos para buscar no banco
+                String digitsOnly = cleanSearch.replaceAll("\\D", "");
+                
                 predicates.add(cb.or(
                         cb.like(cb.lower(root.get("fullName")), likePattern),
                         cb.like(cb.lower(root.get("socialName")), likePattern),
                         cb.like(cb.lower(root.get("registrationNumber")), likePattern),
-                        cb.like(cb.lower(root.get("cpf")), likePattern),
-                        cb.like(cb.lower(root.get("email")), likePattern)
+                        cb.like(cb.lower(root.get("email")), likePattern),
+                        digitsOnly.length() >= 3 ? cb.like(root.get("cpf"), "%" + digitsOnly + "%") : cb.disjunction()
                 ));
             }
 
@@ -152,13 +158,16 @@ public class EmployeeService {
                 predicates.add(cb.isMember(hybridDay, root.get("hybridWorkDays")));
             }
             if (search != null && !search.trim().isEmpty()) {
-                String likePattern = "%" + search.trim().toLowerCase() + "%";
+                String cleanSearch = search.trim();
+                String likePattern = "%" + cleanSearch.toLowerCase() + "%";
+                String digitsOnly = cleanSearch.replaceAll("\\D", "");
+                
                 predicates.add(cb.or(
                         cb.like(cb.lower(root.get("fullName")), likePattern),
                         cb.like(cb.lower(root.get("socialName")), likePattern),
                         cb.like(cb.lower(root.get("registrationNumber")), likePattern),
-                        cb.like(cb.lower(root.get("cpf")), likePattern),
-                        cb.like(cb.lower(root.get("email")), likePattern)
+                        cb.like(cb.lower(root.get("email")), likePattern),
+                        digitsOnly.length() >= 3 ? cb.like(root.get("cpf"), "%" + digitsOnly + "%") : cb.disjunction()
                 ));
             }
             return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));

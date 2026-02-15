@@ -21,16 +21,20 @@ import java.util.UUID;
 public class FileStorageService {
 
     private final Path fileStorageLocation;
+    private final Path documentStorageLocation;
 
-    public FileStorageService(@Value("${employee.photos.upload-dir:uploads/employee-photos}") String uploadDir) {
+    public FileStorageService(@Value("${employee.photos.upload-dir:uploads/employee-photos}") String uploadDir,
+                              @Value("${employee.documents.upload-dir:uploads/employee-documents}") String docUploadDir) {
         this.fileStorageLocation = Paths.get(uploadDir).toAbsolutePath().normalize();
+        this.documentStorageLocation = Paths.get(docUploadDir).toAbsolutePath().normalize();
         
         try {
             Files.createDirectories(this.fileStorageLocation);
-            log.info("Diretório de upload criado: {}", this.fileStorageLocation);
+            Files.createDirectories(this.documentStorageLocation);
+            log.info("Diretórios de upload criados: {} e {}", this.fileStorageLocation, this.documentStorageLocation);
         } catch (Exception ex) {
-            log.error("Não foi possível criar o diretório de upload", ex);
-            throw new RuntimeException("Não foi possível criar o diretório de upload", ex);
+            log.error("Não foi possível criar os diretórios de upload", ex);
+            throw new RuntimeException("Não foi possível criar os diretórios de upload", ex);
         }
     }
 
@@ -95,6 +99,29 @@ public class FileStorageService {
             log.info("Foto deletada com sucesso: {}", filename);
         } catch (IOException ex) {
             log.error("Erro ao deletar foto: {}", photoUrl, ex);
+        }
+    }
+
+    public String storeDocument(MultipartFile file, UUID employeeId, String type) {
+        try {
+            if (file.isEmpty()) {
+                throw new RuntimeException("Falha ao armazenar arquivo vazio.");
+            }
+            
+            String cleanType = type != null ? type.replaceAll("[^a-zA-Z0-9_-]", "") : "misc";
+            String originalFilename = file.getOriginalFilename();
+            String extension = "";
+            if (originalFilename != null && originalFilename.contains(".")) {
+                extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            }
+            
+            String filename = employeeId + "_" + cleanType + "_" + UUID.randomUUID() + extension;
+            
+            Path targetLocation = this.documentStorageLocation.resolve(filename);
+            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+            return filename;
+        } catch (IOException ex) {
+            throw new RuntimeException("Não foi possível armazenar o arquivo", ex);
         }
     }
 }
