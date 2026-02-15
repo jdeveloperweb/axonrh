@@ -21,7 +21,8 @@ import {
   Clock,
   Briefcase,
   Hourglass,
-  FileEdit
+  FileEdit,
+  Search,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,6 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import {
   Table,
   TableBody,
@@ -82,8 +84,14 @@ export default function TimesheetMirrorPage() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedEmployee, setSelectedEmployee] = useState<string | null>(employeeIdParam);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [employeeSearch, setEmployeeSearch] = useState('');
   const [timesheet, setTimesheet] = useState<DailySummary[]>([]);
   const [totals, setTotals] = useState<PeriodTotals | null>(null);
+
+  const filteredEmployees = employees.filter(emp =>
+    emp.fullName.toLowerCase().includes(employeeSearch.toLowerCase()) ||
+    (emp.registrationNumber && emp.registrationNumber.toLowerCase().includes(employeeSearch.toLowerCase()))
+  );
 
   // Load employees list (All for admins, Subordinates for managers)
   useEffect(() => {
@@ -189,7 +197,7 @@ export default function TimesheetMirrorPage() {
         ? timesheetApi.exportMassTimesheet(startDate, endDate, format, managerIdFilter)
         : timesheetApi.exportTimesheet(employeeId, startDate, endDate, format));
 
-      if (blob) {
+      if (blob && blob.size > 0) {
         const downloadUrl = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = downloadUrl;
@@ -201,6 +209,8 @@ export default function TimesheetMirrorPage() {
         window.URL.revokeObjectURL(downloadUrl);
         document.body.removeChild(a);
         toast.success(`Exportação ${format.toUpperCase()} concluída.`);
+      } else {
+        toast.error("Nenhum registro encontrado para exportação no período selecionado.");
       }
     } catch (error) {
       console.error('Erro ao exportar:', error);
@@ -276,25 +286,38 @@ export default function TimesheetMirrorPage() {
         <CardContent className="p-4">
           <div className="flex flex-col md:flex-row items-center gap-4">
             {/* Employee Selector (for managers) */}
-            {canViewOthers && employees.length > 0 && (
-              <div className="flex items-center gap-2 w-full md:w-auto">
-                <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
+            {canViewOthers && (
+              <div className="flex flex-col md:flex-row items-center gap-2 w-full md:w-auto">
+                <div className="relative w-full md:w-[220px]">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar colaborador..."
+                    className="pl-9 h-10"
+                    value={employeeSearch}
+                    onChange={(e) => setEmployeeSearch(e.target.value)}
+                  />
+                </div>
                 <Select
                   value={selectedEmployee || 'me'}
                   onValueChange={(value) => setSelectedEmployee(value === 'me' ? null : value)}
                 >
-                  <SelectTrigger className="w-full md:w-[280px] bg-background">
+                  <SelectTrigger className="w-full md:w-[280px] h-10 bg-background">
                     <SelectValue placeholder="Selecione o colaborador" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="me">Meu espelho de ponto</SelectItem>
-                    {employees
+                    {filteredEmployees
                       .filter((emp) => emp.id !== user?.id)
                       .map((emp) => (
                         <SelectItem key={emp.id} value={emp.id}>
                           {emp.fullName}
                         </SelectItem>
                       ))}
+                    {filteredEmployees.length === 0 && employeeSearch && (
+                      <div className="p-2 text-xs text-center text-muted-foreground">
+                        Nenhum colaborador encontrado
+                      </div>
+                    )}
                   </SelectContent>
                 </Select>
               </div>

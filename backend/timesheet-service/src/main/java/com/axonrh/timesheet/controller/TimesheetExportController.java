@@ -58,12 +58,13 @@ public class TimesheetExportController {
 
     @GetMapping("/export/mass")
     @Operation(summary = "Exportar espelho em massa", description = "Gera um único PDF com o espelho de ponto de todos os colaboradores")
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'RH', 'GESTOR_RH', 'ANALISTA_DP')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'RH', 'GESTOR_RH', 'ANALISTA_DP', 'MANAGER', 'GESTOR', 'LIDER')")
     public ResponseEntity<byte[]> exportMass(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) java.util.UUID managerId) {
 
-        byte[] data = exportService.exportMassToPdf(startDate, endDate);
+        byte[] data = exportService.exportMassToPdf(startDate, endDate, managerId);
         String filename = "espelho-ponto-massa.pdf";
 
         return ResponseEntity.ok()

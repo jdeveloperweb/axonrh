@@ -77,29 +77,51 @@ public class TimesheetExportService {
         return target.toByteArray();
     }
 
-    public byte[] exportMassToPdf(LocalDate startDate, LocalDate endDate) {
+    public byte[] exportMassToPdf(LocalDate startDate, LocalDate endDate, UUID managerId) {
         UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
-        
-        // Identificar todos os colaboradores que tiveram atividade (resumos) no período
-        List<com.axonrh.timesheet.entity.DailySummary> summaries = dailySummaryRepository
-                .findByTenantIdAndSummaryDateBetweenOrderBySummaryDateAsc(tenantId, startDate, endDate);
-        
-        List<UUID> employeeIds = summaries.stream()
-                .map(com.axonrh.timesheet.entity.DailySummary::getEmployeeId)
-                .distinct()
-                .toList();
+        List<UUID> employeeIds;
+
+        try {
+            if (managerId != null) {
+                // Se informou gestor, busca subordinados via Feign Client
+                log.info("Buscando subordinados do gestor {} para exportação em massa", managerId);
+                List<com.axonrh.timesheet.dto.EmployeeDTO> subordinates = employeeClient.getSubordinates(managerId);
+                employeeIds = subordinates.stream().map(com.axonrh.timesheet.dto.EmployeeDTO::getId).toList();
+            } else {
+                // Caso contrário (Admin/RH), busca todos os colaboradores que tiveram atividade no período
+                // ou melhor ainda, buscar todos os funcionários ativos para garantir que todos apareçam
+                log.info("Buscando todos os colaboradores ativos para exportação em massa");
+                List<com.axonrh.timesheet.entity.DailySummary> summaries = dailySummaryRepository
+                        .findByTenantIdAndSummaryDateBetweenOrderBySummaryDateAsc(tenantId, startDate, endDate);
+                
+                employeeIds = summaries.stream()
+                        .map(com.axonrh.timesheet.entity.DailySummary::getEmployeeId)
+                        .distinct()
+                        .toList();
+            }
+        } catch (Exception e) {
+            log.error("Erro ao obter lista de colaboradores para exportação: {}", e.getMessage());
+            return new byte[0];
+        }
  
         if (employeeIds.isEmpty()) {
-            log.warn("Nenhum dado de ponto encontrado para exportacao em massa no periodo {} a {}", startDate, endDate);
+            log.warn("Nenhum colaborador encontrado para exportação em massa no período {} a {}", startDate, endDate);
             return new byte[0];
         }
 
-        log.info("Iniciando exportacao em massa para {} colaboradores", employeeIds.size());
+        log.info("Iniciando exportação em massa para {} colaboradores", employeeIds.size());
         
         List<ExportData> exportList = employeeIds.stream().map(id -> {
             try {
+                // Garante que o resumo diário exista para o período, se não existir, tenta carregar
                 List<DailySummaryResponse> timesheet = dailySummaryService.getTimesheetByPeriod(id, startDate, endDate);
                 DailySummaryService.PeriodTotals totals = dailySummaryService.getPeriodTotals(id, startDate, endDate);
+                
+                // Só inclui se tiver registros ou se for esperado registros (carga horária > 0)
+                if (timesheet.isEmpty() && totals.workedMinutes() == 0) {
+                    return null;
+                }
+
                 com.axonrh.timesheet.dto.EmployeeDTO employee = null;
                 try {
                     employee = employeeClient.getEmployee(id);
@@ -114,10 +136,15 @@ public class TimesheetExportService {
 
                 return new ExportData(id, employee != null ? employee.getFullName() : getEmployeeName(tenantId, id), employee, timesheet, totals, workSchedule);
             } catch (Exception e) {
-                log.error("Erro ao processar dados do colaborador {} para exportacao em massa: {}", id, e.getMessage());
+                log.error("Erro ao processar dados do colaborador {} para exportação em massa: {}", id, e.getMessage());
                 return null;
             }
         }).filter(java.util.Objects::nonNull).toList();
+
+        if (exportList.isEmpty()) {
+            log.warn("Nenhum dado de ponto processado para os colaboradores selecionados.");
+            return new byte[0];
+        }
 
         com.axonrh.timesheet.client.CoreServiceClient.CompanyProfileDTO company = null;
         try {
