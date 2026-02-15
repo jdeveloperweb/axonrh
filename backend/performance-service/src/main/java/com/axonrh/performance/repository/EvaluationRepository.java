@@ -28,7 +28,7 @@ public interface EvaluationRepository extends JpaRepository<Evaluation, UUID> {
     List<Evaluation> findByTenantIdAndEmployeeIdOrderByCreatedAtDesc(UUID tenantId, UUID employeeId);
 
     // Avaliacoes por ciclo
-    @Query("SELECT e FROM Evaluation e WHERE e.tenantId = :tenantId AND e.cycle.id = :cycleId")
+    @Query("SELECT e FROM Evaluation e JOIN FETCH e.cycle WHERE e.tenantId = :tenantId AND e.cycle.id = :cycleId")
     Page<Evaluation> findByTenantIdAndCycle_Id(@Param("tenantId") UUID tenantId, 
                                              @Param("cycleId") UUID cycleId, 
                                              Pageable pageable);
