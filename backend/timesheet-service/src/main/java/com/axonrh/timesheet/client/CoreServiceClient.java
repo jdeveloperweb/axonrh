@@ -13,6 +13,7 @@ public interface CoreServiceClient {
     CompanyProfileDTO getCompanyProfile(@RequestHeader("X-Tenant-ID") UUID tenantId);
 
     @lombok.Data
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
     class CompanyProfileDTO {
         private String legalName;
         private String tradeName;
