@@ -34,12 +34,13 @@ import { WellbeingTab } from '@/components/employees/WellbeingTab';
 import { DiscTab } from '@/components/employees/DiscTab';
 import { PerformanceTab } from '@/components/employees/PerformanceTab';
 import { TrainingTab } from '@/components/employees/TrainingTab';
+import { TerminationTab } from '@/components/employees/TerminationTab';
 import { useThemeStore } from '@/stores/theme-store';
 import { useAuthStore } from '@/stores/auth-store';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
-type TabKey = 'overview' | 'documents' | 'dependents' | 'timesheet' | 'history' | 'wellbeing' | 'performance' | 'disc' | 'training';
+type TabKey = 'overview' | 'documents' | 'dependents' | 'timesheet' | 'history' | 'wellbeing' | 'performance' | 'disc' | 'training' | 'termination';
 
 const statusColors = {
   ACTIVE: { bg: 'bg-emerald-50 border-emerald-100', text: 'text-emerald-700', label: 'Ativo' },
@@ -286,18 +287,6 @@ export default function EmployeeDetailPage() {
     setSelectedImage(null);
   };
 
-  const tabs = [
-    { key: 'overview' as TabKey, label: 'Visão Geral', icon: User },
-    { key: 'timesheet' as TabKey, label: 'Ponto / Jornada', icon: Clock },
-    { key: 'documents' as TabKey, label: 'Documentos', icon: FileText },
-    { key: 'dependents' as TabKey, label: 'Dependentes', icon: Users },
-    { key: 'wellbeing' as TabKey, label: 'Bem-Estar (RH)', icon: HeartHandshake },
-    { key: 'performance' as TabKey, label: 'Desempenho', icon: Target },
-    { key: 'training' as TabKey, label: 'Treinamentos', icon: BookOpen },
-    { key: 'disc' as TabKey, label: 'Perfil DISC', icon: BrainCircuit },
-    { key: 'history' as TabKey, label: 'Histórico', icon: History },
-  ];
-
   if (loading) {
     return (
       <div className="p-6">
@@ -310,6 +299,19 @@ export default function EmployeeDetailPage() {
   }
 
   if (!employee) return null;
+
+  const tabs = [
+    { key: 'overview' as TabKey, label: 'Visão Geral', icon: User },
+    { key: 'timesheet' as TabKey, label: 'Ponto / Jornada', icon: Clock },
+    { key: 'documents' as TabKey, label: 'Documentos', icon: FileText },
+    { key: 'dependents' as TabKey, label: 'Dependentes', icon: Users },
+    { key: 'wellbeing' as TabKey, label: 'Bem-Estar (RH)', icon: HeartHandshake },
+    { key: 'performance' as TabKey, label: 'Desempenho', icon: Target },
+    { key: 'training' as TabKey, label: 'Treinamentos', icon: BookOpen },
+    { key: 'disc' as TabKey, label: 'Perfil DISC', icon: BrainCircuit },
+    { key: 'history' as TabKey, label: 'Histórico', icon: History },
+    ...(employee.status === 'TERMINATED' ? [{ key: 'termination' as TabKey, label: 'Desligamento', icon: UserX }] : []),
+  ];
 
   const statusInfo = statusColors[employee.status] || statusColors.PENDING;
 
@@ -986,6 +988,12 @@ export default function EmployeeDetailPage() {
         }
 
         {
+          activeTab === 'termination' && (
+            <TerminationTab employeeId={employeeId} />
+          )
+        }
+
+        {
           activeTab === 'history' && (
             <Card>
               <CardHeader>
@@ -1040,7 +1048,10 @@ export default function EmployeeDetailPage() {
           isOpen={terminationModalOpen}
           onClose={() => setTerminationModalOpen(false)}
           employee={employee}
-          onSuccess={fetchEmployee}
+          onSuccess={() => {
+            fetchEmployee();
+            setActiveTab('termination');
+          }}
         />
         {/* Hidden Badge for Rendering */}
         <div

@@ -188,17 +188,17 @@ export default function LearningDashboard() {
       </section>
 
       {/* --- CONTEÚDO --- */}
-      <div className="grid lg:grid-cols-12 gap-10">
+      <div className="grid lg:grid-cols-12 gap-8">
 
         {/* Sidebar (Limpa e Moderna) */}
-        <aside className="lg:col-span-3 space-y-8">
-          <div className="space-y-4">
+        <aside className="lg:col-span-3 space-y-6">
+          <div className="space-y-3">
             <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-2">Categorias</h3>
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-1">
               <button
                 onClick={() => setSelectedCategory(null)}
                 className={cn(
-                  "flex items-center gap-4 px-5 py-4 rounded-xl text-sm font-bold transition-all",
+                  "flex items-center gap-3 px-5 py-2.5 rounded-xl text-sm font-bold transition-all",
                   selectedCategory === null
                     ? "bg-slate-900 text-white shadow-lg shadow-slate-200"
                     : "text-slate-500 hover:bg-slate-100/80"
@@ -212,7 +212,7 @@ export default function LearningDashboard() {
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.name)}
                   className={cn(
-                    "flex items-center gap-4 px-5 py-4 rounded-xl text-sm font-bold transition-all",
+                    "flex items-center gap-3 px-5 py-2.5 rounded-xl text-sm font-bold transition-all",
                     selectedCategory === cat.name
                       ? "bg-slate-900 text-white shadow-lg shadow-slate-200"
                       : "text-slate-500 hover:bg-slate-100/80"
@@ -226,9 +226,9 @@ export default function LearningDashboard() {
           </div>
 
           <Link href="/learning/certificates">
-            <div className="p-8 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 hover:bg-white hover:border-primary/30 transition-all text-center group cursor-pointer">
-              <div className="h-12 w-12 bg-white rounded-lg shadow-sm flex items-center justify-center mx-auto mb-4 border border-slate-100 group-hover:scale-110 transition-transform">
-                <Award className="h-6 w-6 text-slate-300 group-hover:text-primary transition-colors" />
+            <div className="p-6 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 hover:bg-white hover:border-primary/30 transition-all text-center group cursor-pointer">
+              <div className="h-10 w-10 bg-white rounded-lg shadow-sm flex items-center justify-center mx-auto mb-3 border border-slate-100 group-hover:scale-110 transition-transform">
+                <Award className="h-5 w-5 text-slate-300 group-hover:text-primary transition-colors" />
               </div>
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">RECONHECIMENTO</p>
               <p className="text-sm font-black text-slate-800 tracking-tight">CENTRAL DE TÍTULOS</p>
@@ -237,7 +237,7 @@ export default function LearningDashboard() {
         </aside>
 
         {/* Catalog Main Area */}
-        <main className="lg:col-span-9 space-y-12">
+        <main className="lg:col-span-9 space-y-10">
 
           {/* Busca Premium */}
           <div className="relative group max-w-3xl">
@@ -267,7 +267,7 @@ export default function LearningDashboard() {
                     <div className="bg-white border border-slate-200 rounded-xl p-6 flex items-center gap-6 hover:shadow-xl transition-all group cursor-pointer border-l-4 border-l-primary">
                       <div className="h-20 w-20 bg-slate-50 rounded-lg overflow-hidden flex-shrink-0 border border-slate-100">
                         {en.courseThumbnail ? (
-                          <img src={getPhotoUrl(en.courseThumbnail)} alt={en.courseName} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                          <img src={getPhotoUrl(en.courseThumbnail) || ''} alt={en.courseName} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                         ) : <BookOpen className="h-full w-full p-6 text-slate-200" />}
                       </div>
                       <div className="flex-1 space-y-3 min-w-0">
@@ -317,7 +317,7 @@ export default function LearningDashboard() {
                 <BookOpen className="h-16 w-16 text-slate-200 mb-6" />
                 <h4 className="text-xl font-black text-slate-800 mb-2">BUSCA SEM RESULTADOS</h4>
                 <p className="text-sm font-medium text-slate-400 max-w-xs mx-auto">Tente ajustar seus filtros ou pesquisar por termos mais genéricos.</p>
-                <Button variant="link" onClick={() => { setSearchQuery(''); setSelectedCategory(null); }} className="text-primary font-black mt-6 uppercase text-xs tracking-widest">
+                <Button variant="ghost" onClick={() => { setSearchQuery(''); setSelectedCategory(null); }} className="text-primary font-black mt-6 uppercase text-xs tracking-widest hover:bg-primary/5">
                   Limpar todos os filtros
                 </Button>
               </div>

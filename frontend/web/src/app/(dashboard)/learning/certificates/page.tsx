@@ -33,7 +33,7 @@ export default function CertificatesPage() {
     return (
         <div className="max-w-[1400px] mx-auto py-12 px-6 space-y-12 animate-in fade-in duration-700">
             <header className="space-y-4">
-                <Button variant="ghost" onClick={() => router.back()} className="font-bold text-muted-foreground hover:bg-muted">
+                <Button variant="ghost" onClick={() => router.push('/learning')} className="font-bold text-muted-foreground hover:bg-muted">
                     <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
                 </Button>
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">

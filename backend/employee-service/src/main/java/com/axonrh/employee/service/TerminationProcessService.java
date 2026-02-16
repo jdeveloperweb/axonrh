@@ -21,6 +21,7 @@ public class TerminationProcessService {
 
     private final TerminationProcessRepository repository;
     private final EmployeeRepository employeeRepository;
+    private final EmployeeService employeeService;
 
     @Transactional
     public TerminationResponse initiateTermination(TerminationRequest request, UUID tenantId) {
@@ -64,10 +65,13 @@ public class TerminationProcessService {
         process.setCompletedAt(LocalDateTime.now());
         process.setCompletedBy(completedBy);
         
-        // Finalize employee status
-        Employee employee = process.getEmployee();
-        employee.terminate(process.getTerminationDate());
-        employeeRepository.save(employee);
+        // Finalize employee status using EmployeeService to trigger events and history
+        employeeService.terminate(
+                process.getEmployee().getId(),
+                process.getTerminationDate(),
+                process.getReason(),
+                completedBy
+        );
 
         process = repository.save(process);
         return mapToResponse(process);

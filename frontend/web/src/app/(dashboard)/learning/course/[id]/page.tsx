@@ -179,9 +179,9 @@ export default function CourseDetails() {
     return (
         <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-8 pb-20">
             {/* Breadcrumbs / Back button */}
-            <Button variant="ghost" onClick={() => router.push('/learning/catalog')} className="mb-4 -ml-4 hover:bg-muted font-medium text-muted-foreground">
+            <Button variant="ghost" onClick={() => router.push('/learning')} className="mb-4 -ml-4 hover:bg-muted font-medium text-muted-foreground">
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Voltar para o catálogo
+                Voltar para o aprendizado
             </Button>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
