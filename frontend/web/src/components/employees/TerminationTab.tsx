@@ -220,6 +220,15 @@ export function TerminationTab({ employeeId, employee }: TerminationTabProps) {
                         </div>
                     </div>
                     <CardContent className="p-6">
+                        {!process.completedAt && (
+                            <div className="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-2xl flex items-start gap-3">
+                                <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="text-sm font-bold text-blue-900">Processo em andamento</p>
+                                    <p className="text-xs text-blue-700">Você pode atualizar os checklists de equipamentos e exames clicando diretamente nos itens abaixo. As alterações são salvas automaticamente.</p>
+                                </div>
+                            </div>
+                        )}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                             <div className="space-y-6">
                                 <div>

@@ -31,7 +31,8 @@ public class TerminationProcessController {
             @PathVariable UUID id,
             @AuthenticationPrincipal Jwt jwt) {
         UUID userId = UUID.fromString(jwt.getSubject());
-        return ResponseEntity.ok(service.completeTermination(id, userId));
+        UUID tenantId = UUID.fromString(jwt.getClaimAsString("tenant_id"));
+        return ResponseEntity.ok(service.completeTermination(id, userId, tenantId));
     }
 
     @PostMapping("/{id}/reopen")
@@ -39,7 +40,8 @@ public class TerminationProcessController {
             @PathVariable UUID id,
             @AuthenticationPrincipal Jwt jwt) {
         UUID userId = UUID.fromString(jwt.getSubject());
-        return ResponseEntity.ok(service.reopenTermination(id, userId));
+        UUID tenantId = UUID.fromString(jwt.getClaimAsString("tenant_id"));
+        return ResponseEntity.ok(service.reopenTermination(id, userId, tenantId));
     }
 
     @GetMapping("/employee/{employeeId}")

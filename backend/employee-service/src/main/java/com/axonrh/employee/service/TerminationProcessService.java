@@ -70,37 +70,52 @@ public class TerminationProcessService {
     }
 
     @Transactional
-    public TerminationResponse completeTermination(UUID processId, UUID userId) {
+    public TerminationResponse completeTermination(UUID processId, UUID userId, UUID tenantId) {
         TerminationProcess process = repository.findById(processId)
                 .orElseThrow(() -> new ResourceNotFoundException("Processo não encontrado"));
+
+        if (!process.getTenantId().equals(tenantId)) {
+             throw new ResourceNotFoundException("Processo não pertence ao tenant");
+        }
 
         process.setCompletedAt(LocalDateTime.now());
         process.setCompletedBy(userId);
         process.setStatus(com.axonrh.employee.entity.enums.TerminationStatus.COMPLETED);
         
-        // Finalize employee status
-        employeeService.terminate(
-                process.getEmployee().getId(),
-                process.getTerminationDate(),
-                process.getReason(),
-                userId
-        );
+        // Finalize employee status diretamente para evitar problemas de contexto/proxy
+        Employee employee = process.getEmployee();
+        employee.terminate(process.getTerminationDate());
+        employee.setUpdatedBy(userId);
+        employeeRepository.save(employee);
+        
+        // Registrar no histórico via EmployeeService para manter padrão
+        employeeService.terminate(employee.getId(), process.getTerminationDate(), process.getReason(), userId);
 
         process = repository.save(process);
         return mapToResponse(process);
     }
 
     @Transactional
-    public TerminationResponse reopenTermination(UUID processId, UUID userId) {
+    public TerminationResponse reopenTermination(UUID processId, UUID userId, UUID tenantId) {
         TerminationProcess process = repository.findById(processId)
                 .orElseThrow(() -> new ResourceNotFoundException("Processo não encontrado"));
+
+        if (!process.getTenantId().equals(tenantId)) {
+             throw new ResourceNotFoundException("Processo não pertence ao tenant");
+        }
 
         process.setCompletedAt(null);
         process.setCompletedBy(null);
         process.setStatus(com.axonrh.employee.entity.enums.TerminationStatus.IN_PROGRESS);
 
-        // Reativar colaborador
-        employeeService.reactivate(process.getEmployee().getId(), userId);
+        // Reativar colaborador diretamente
+        Employee employee = process.getEmployee();
+        employee.reactivate();
+        employee.setUpdatedBy(userId);
+        employeeRepository.save(employee);
+
+        // Registrar no histórico e disparar eventos via EmployeeService
+        employeeService.reactivate(employee.getId(), userId);
 
         process = repository.save(process);
         return mapToResponse(process);
