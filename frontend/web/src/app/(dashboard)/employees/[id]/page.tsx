@@ -346,6 +346,8 @@ export default function EmployeeDetailPage() {
 
   if (!employee) return null;
 
+  const isRH = user?.roles?.some((role: string) => ['ADMIN', 'RH', 'GESTOR_RH', 'ANALISTA_DP'].includes(role));
+
   const tabs = [
     { key: 'overview' as TabKey, label: 'Visão Geral', icon: User },
     { key: 'timesheet' as TabKey, label: 'Ponto / Jornada', icon: Clock },
@@ -356,7 +358,7 @@ export default function EmployeeDetailPage() {
     { key: 'training' as TabKey, label: 'Treinamentos', icon: BookOpen },
     { key: 'disc' as TabKey, label: 'Perfil DISC', icon: BrainCircuit },
     { key: 'history' as TabKey, label: 'Histórico', icon: History },
-    ...(employee.status === 'TERMINATED' || activeTab === 'termination' ? [{ key: 'termination' as TabKey, label: 'Desligamento', icon: UserX }] : []),
+    ...(isRH || employee.status === 'TERMINATED' || !!terminationProcess || activeTab === 'termination' ? [{ key: 'termination' as TabKey, label: 'Desligamento', icon: UserX }] : []),
   ];
 
   const statusInfo = (terminationProcess && !terminationProcess.completedAt)
