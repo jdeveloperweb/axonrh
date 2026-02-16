@@ -23,6 +23,7 @@ public class TerminationProcessController {
             @RequestBody TerminationRequest request,
             @AuthenticationPrincipal Jwt jwt) {
         UUID tenantId = UUID.fromString(jwt.getClaimAsString("tenant_id"));
+        com.axonrh.employee.config.TenantContext.setCurrentTenant(tenantId.toString());
         return ResponseEntity.ok(service.initiateTermination(request, tenantId));
     }
 
@@ -32,6 +33,7 @@ public class TerminationProcessController {
             @AuthenticationPrincipal Jwt jwt) {
         UUID userId = UUID.fromString(jwt.getSubject());
         UUID tenantId = UUID.fromString(jwt.getClaimAsString("tenant_id"));
+        com.axonrh.employee.config.TenantContext.setCurrentTenant(tenantId.toString());
         return ResponseEntity.ok(service.completeTermination(id, userId, tenantId));
     }
 
@@ -41,6 +43,7 @@ public class TerminationProcessController {
             @AuthenticationPrincipal Jwt jwt) {
         UUID userId = UUID.fromString(jwt.getSubject());
         UUID tenantId = UUID.fromString(jwt.getClaimAsString("tenant_id"));
+        com.axonrh.employee.config.TenantContext.setCurrentTenant(tenantId.toString());
         return ResponseEntity.ok(service.reopenTermination(id, userId, tenantId));
     }
 

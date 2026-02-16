@@ -89,14 +89,8 @@ public class TerminationProcessService {
         process.setCompletedBy(userId);
         process.setStatus(com.axonrh.employee.entity.enums.TerminationStatus.COMPLETED);
         
-        // Finalize employee status diretamente para evitar problemas de contexto/proxy
-        Employee employee = process.getEmployee();
-        employee.terminate(process.getTerminationDate());
-        employee.setUpdatedBy(userId);
-        employeeRepository.save(employee);
-        
-        // Registrar no histórico via EmployeeService para manter padrão
-        employeeService.terminate(employee.getId(), process.getTerminationDate(), process.getReason(), userId);
+        // Finalizar status do colaborador, registrar no histórico e disparar eventos via EmployeeService
+        employeeService.terminate(process.getEmployee().getId(), process.getTerminationDate(), process.getReason(), userId);
 
         process = repository.save(process);
         return mapToResponse(process);
@@ -115,13 +109,8 @@ public class TerminationProcessService {
         process.setCompletedBy(null);
         process.setStatus(com.axonrh.employee.entity.enums.TerminationStatus.IN_PROGRESS);
 
-        // Reativar colaborador diretamente
+        // Reativar colaborador, registrar no histórico e disparar eventos via EmployeeService
         Employee employee = process.getEmployee();
-        employee.reactivate();
-        employee.setUpdatedBy(userId);
-        employeeRepository.save(employee);
-
-        // Registrar no histórico e disparar eventos via EmployeeService
         employeeService.reactivate(employee.getId(), userId);
 
         process = repository.save(process);
