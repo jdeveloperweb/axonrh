@@ -108,16 +108,20 @@ export default function LearnCourse() {
                 status: 'COMPLETED',
                 timeSpent: currentLesson.durationMinutes || 0
             });
-            setEnrollment(res as any);
+            const updatedEnrollment = res as any;
+            setEnrollment(updatedEnrollment);
             toast.success('Lição concluída!');
 
-            // Go to next lesson
+            // Go to next lesson or finish
             const allLessons = course?.modules.flatMap(m => m.lessons) || [];
             const currentIndex = allLessons.findIndex(l => l.id === currentLesson.id);
-            if (currentIndex < allLessons.length - 1) {
+            const isLastLesson = currentIndex === allLessons.length - 1;
+
+            if (isLastLesson) {
+                // Se for a última lição, chama o finalizar curso
+                await handleFinishCourse(updatedEnrollment);
+            } else if (currentIndex < allLessons.length - 1) {
                 setCurrentLesson(allLessons[currentIndex + 1]);
-            } else {
-                toast.success('Parabéns! Você concluiu todas as lições do curso.');
             }
         } catch (error) {
             console.error('Erro ao completar lição:', error);
@@ -143,8 +147,9 @@ export default function LearnCourse() {
         }
     };
 
-    const handleFinishCourse = async () => {
-        if (!enrollment || completing) return;
+    const handleFinishCourse = async (updatedEnrollment?: Enrollment) => {
+        const activeEnrollment = updatedEnrollment || enrollment;
+        if (!activeEnrollment || completing) return;
         try {
             if (!await confirm({
                 title: 'Finalizar Treinamento',
@@ -154,7 +159,7 @@ export default function LearnCourse() {
             })) return;
 
             setCompleting(true);
-            const res = (await enrollmentsApi.complete(enrollment.id, 100)) as any;
+            const res = (await enrollmentsApi.complete(activeEnrollment.id, 100)) as any;
             setEnrollment(res);
             toast.success('Treinamento concluído com sucesso!');
 
@@ -187,6 +192,12 @@ export default function LearnCourse() {
 
     const isLessonCompleted = (lessonId: string) => {
         return enrollment.lessonProgresses?.some(p => p.lessonId === lessonId && p.status === 'COMPLETED');
+    };
+
+    const isModuleCompleted = (moduleId: string) => {
+        const module = course.modules.find(m => m.id === moduleId);
+        if (!module) return false;
+        return module.lessons.every(l => isLessonCompleted(l.id));
     };
 
     const getEmbedUrl = (url?: string) => {
@@ -415,7 +426,15 @@ export default function LearnCourse() {
                                 {course.modules.map((module, mIdx) => (
                                     <div key={module.id} className="mb-2">
                                         <div className="px-6 py-3 flex items-center justify-between group cursor-default">
-                                            <h4 className="text-xs font-black uppercase tracking-wider text-muted-foreground group-hover:text-foreground transition-colors">Módulo {mIdx + 1} - {module.title}</h4>
+                                            <div className="flex items-center gap-2">
+                                                <h4 className={cn(
+                                                    "text-xs font-black uppercase tracking-wider transition-colors",
+                                                    isModuleCompleted(module.id) ? "text-green-500" : "text-muted-foreground group-hover:text-foreground"
+                                                )}>
+                                                    Módulo {mIdx + 1} - {module.title}
+                                                </h4>
+                                                {isModuleCompleted(module.id) && <CheckCircle2 className="h-3 w-3 text-green-500" />}
+                                            </div>
                                         </div>
                                         <div className="space-y-1">
                                             {module.lessons.map((lesson) => (
