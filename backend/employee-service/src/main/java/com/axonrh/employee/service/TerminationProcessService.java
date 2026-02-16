@@ -52,6 +52,13 @@ public class TerminationProcessService {
         process.setEmailDeactivated(request.getEmailDeactivated() != null && request.getEmailDeactivated());
         process.setExitInterviewDone(request.getExitInterviewDone() != null && request.getExitInterviewDone());
 
+        // Garantir que o processo esteja em andamento se estivermos (re)iniciando
+        if (process.getCompletedAt() != null || process.getStatus() == com.axonrh.employee.entity.enums.TerminationStatus.COMPLETED) {
+            process.setCompletedAt(null);
+            process.setCompletedBy(null);
+            process.setStatus(com.axonrh.employee.entity.enums.TerminationStatus.IN_PROGRESS);
+        }
+
         // Novos campos
         if (request.getStatus() != null) {
             process.setStatus(com.axonrh.employee.entity.enums.TerminationStatus.valueOf(request.getStatus()));
