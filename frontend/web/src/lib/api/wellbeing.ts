@@ -28,6 +28,23 @@ export interface EapRequest {
     createdAt: string;
 }
 
+export interface PreventionGuide {
+    id: string;
+    title: string;
+    description: string;
+    url: string;
+    type: string;
+}
+
+export interface WellbeingCampaign {
+    id: string;
+    title: string;
+    description: string;
+    date: string;
+    location: string;
+    status: string;
+}
+
 export interface WellbeingStats {
     totalCheckins: number;
     averageScore: number;
@@ -35,6 +52,8 @@ export interface WellbeingStats {
     highRiskCount: number;
     totalEapRequests: number;
     eapRequests: EapRequest[];
+    preventionGuides: PreventionGuide[];
+    activeCampaigns: WellbeingCampaign[];
 }
 
 export const wellbeingApi = {

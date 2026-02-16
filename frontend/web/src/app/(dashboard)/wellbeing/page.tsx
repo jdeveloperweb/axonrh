@@ -8,7 +8,8 @@ import {
     CheckCircle,
     Clock,
     Search,
-    Filter
+    Filter,
+    Info
 } from 'lucide-react';
 import {
     Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
@@ -28,9 +29,22 @@ import {
     ChevronRight
 } from 'lucide-react';
 
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+} from '@/components/ui/dialog';
+import {
+    Tooltip as UITooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { useAuthStore } from '@/stores/auth-store';
-import { wellbeingApi, WellbeingStats, EapRequest } from '@/lib/api/wellbeing';
+import { wellbeingApi, WellbeingStats, EapRequest, WellbeingCampaign, PreventionGuide } from '@/lib/api/wellbeing';
 import { cn } from '@/lib/utils'; // Assuming this exists based on sidebar import
 
 // ==================== Types ====================
@@ -48,6 +62,8 @@ export default function WellbeingPage() {
     const [statsData, setStatsData] = useState<WellbeingStats | null>(null);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<'ALL' | 'PENDING' | 'HANDLED'>('ALL');
+    const [isCampaignModalOpen, setIsCampaignModalOpen] = useState(false);
+    const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
 
     useEffect(() => {
         loadStats();
@@ -86,13 +102,38 @@ export default function WellbeingPage() {
     // --- Data Prep ---
     const totalCheckins = statsData?.totalCheckins || 1;
 
-    // Improved Radar Data with calculated or fallback values
+    // Improved Radar Data with descriptions for clarity
     const radarData = [
-        { subject: 'Saúde Mental', value: Math.max(30, ((statsData?.sentimentDistribution['POSITIVE'] || 0) / totalCheckins) * 100), fullMark: 100 },
-        { subject: 'Equilíbrio de Carga', value: Math.max(25, 85 - (statsData?.highRiskCount || 0) * 3), fullMark: 100 },
-        { subject: 'Segurança Psicológica', value: Math.max(30, 65 + (statsData?.averageScore || 0) * 3), fullMark: 100 },
-        { subject: 'Clima Organizacional', value: Math.max(40, ((statsData?.averageScore || 0) / 5) * 100), fullMark: 100 },
-        { subject: 'Engajamento e Vitalidade', value: Math.max(30, 70 + (totalCheckins > 0 ? (statsData?.averageScore || 0) * 2 : 0)), fullMark: 100 },
+        {
+            subject: 'Saúde Mental',
+            description: 'Avaliação do bem-estar psicológico baseada na positividade dos check-ins diários.',
+            value: Math.max(30, ((statsData?.sentimentDistribution['POSITIVE'] || 0) / (totalCheckins || 1)) * 100),
+            fullMark: 100
+        },
+        {
+            subject: 'Equilíbrio de Carga',
+            description: 'Mede se a intensidade de trabalho está sustentável ou gerando sobrecarga.',
+            value: Math.max(25, 85 - (statsData?.highRiskCount || 0) * 3),
+            fullMark: 100
+        },
+        {
+            subject: 'Segurança Psicológica',
+            description: 'Nível de confiança dos colaboradores em expressar opiniões e vulnerabilidades.',
+            value: Math.max(30, 65 + (statsData?.averageScore || 0) * 3),
+            fullMark: 100
+        },
+        {
+            subject: 'Clima Organizacional',
+            description: 'Percepção geral sobre o ambiente de trabalho e relações interpessoais.',
+            value: Math.max(40, ((statsData?.averageScore || 0) / 5) * 100),
+            fullMark: 100
+        },
+        {
+            subject: 'Engajamento e Vitalidade',
+            description: 'Conexão emocional e energia investida nas atividades da empresa.',
+            value: Math.max(30, 70 + (totalCheckins > 0 ? (statsData?.averageScore || 0) * 2 : 0)),
+            fullMark: 100
+        },
     ];
 
     const sentimentDataArr = [
@@ -347,26 +388,39 @@ export default function WellbeingPage() {
                             </div>
 
                             <div className="space-y-4">
-                                {radarData.map((item, idx) => (
-                                    <div key={idx} className="group cursor-default">
-                                        <div className="flex items-center justify-between mb-1.5 px-1">
-                                            <div className="flex items-center gap-2">
-                                                <div className={`w-2 h-2 rounded-full ${item.value < 40 ? 'bg-red-400' : item.value > 70 ? 'bg-emerald-400' : 'bg-blue-400'}`} />
-                                                <span className="text-xs font-bold text-gray-600 group-hover:text-gray-900 transition-colors">{item.subject}</span>
+                                <TooltipProvider>
+                                    {radarData.map((item, idx) => (
+                                        <div key={idx} className="group cursor-default">
+                                            <div className="flex items-center justify-between mb-1.5 px-1">
+                                                <div className="flex items-center gap-2">
+                                                    <div className={`w-2 h-2 rounded-full ${item.value < 40 ? 'bg-red-400' : item.value > 70 ? 'bg-emerald-400' : 'bg-blue-400'}`} />
+                                                    <span className="text-xs font-bold text-gray-600 group-hover:text-gray-900 transition-colors">{item.subject}</span>
+                                                    <UITooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Info className="w-3 h-3 text-gray-300 hover:text-purple-500 cursor-help transition-colors" />
+                                                        </TooltipTrigger>
+                                                        <TooltipContent side="right" className="max-w-[200px] bg-white p-3 shadow-xl border-purple-100">
+                                                            <p className="text-[11px] leading-relaxed text-gray-600">
+                                                                <span className="font-bold text-purple-600 block mb-1">{item.subject}</span>
+                                                                {item.description}
+                                                            </p>
+                                                        </TooltipContent>
+                                                    </UITooltip>
+                                                </div>
+                                                <span className="text-xs font-black text-gray-900">{Math.round(item.value)}%</span>
                                             </div>
-                                            <span className="text-xs font-black text-gray-900">{Math.round(item.value)}%</span>
+                                            <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden p-[1px] border border-gray-50">
+                                                <div
+                                                    className={`h-full rounded-full transition-all duration-1000 ${item.value < 40 ? 'bg-gradient-to-r from-red-400 to-rose-500' :
+                                                        item.value > 70 ? 'bg-gradient-to-r from-emerald-400 to-teal-500' :
+                                                            'bg-gradient-to-r from-purple-500 to-indigo-600'
+                                                        }`}
+                                                    style={{ width: `${item.value}%` }}
+                                                />
+                                            </div>
                                         </div>
-                                        <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden p-[1px] border border-gray-50">
-                                            <div
-                                                className={`h-full rounded-full transition-all duration-1000 ${item.value < 40 ? 'bg-gradient-to-r from-red-400 to-rose-500' :
-                                                    item.value > 70 ? 'bg-gradient-to-r from-emerald-400 to-teal-500' :
-                                                        'bg-gradient-to-r from-purple-500 to-indigo-600'
-                                                    }`}
-                                                style={{ width: `${item.value}%` }}
-                                            />
-                                        </div>
-                                    </div>
-                                ))}
+                                    ))}
+                                </TooltipProvider>
                             </div>
                         </div>
                     </CardContent>
@@ -434,12 +488,15 @@ export default function WellbeingPage() {
                     </Card>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-[250px]">
-                        <Card className="border-none shadow-lg bg-gradient-to-br from-indigo-600 to-purple-700 text-white group cursor-pointer hover:scale-[1.02] transition-transform">
+                        <Card
+                            className="border-none shadow-lg bg-gradient-to-br from-indigo-600 to-purple-700 text-white group cursor-pointer hover:scale-[1.02] transition-transform"
+                            onClick={() => setIsGuideModalOpen(true)}
+                        >
                             <CardContent className="p-6 flex flex-col justify-between h-full">
                                 <Brain className="w-8 h-8 opacity-80" />
                                 <div>
-                                    <h4 className="text-lg font-bold">Guia de Prevenção</h4>
-                                    <p className="text-white/70 text-sm mt-1">Materiais para gestores sobre saúde mental.</p>
+                                    <h4 className="text-lg font-bold">{statsData?.preventionGuides?.[0]?.title || 'Guia de Prevenção'}</h4>
+                                    <p className="text-white/70 text-sm mt-1">{statsData?.preventionGuides?.[0]?.description || 'Materiais para gestores sobre saúde mental.'}</p>
                                 </div>
                                 <div className="flex items-center gap-2 text-sm font-bold mt-4">
                                     Acessar Agora
@@ -447,15 +504,24 @@ export default function WellbeingPage() {
                                 </div>
                             </CardContent>
                         </Card>
-                        <Card className="border-none shadow-lg bg-white border border-purple-100 group cursor-pointer hover:scale-[1.02] transition-transform overflow-hidden relative">
+                        <Card
+                            className="border-none shadow-lg bg-white border border-purple-100 group cursor-pointer hover:scale-[1.02] transition-transform overflow-hidden relative"
+                            onClick={() => setIsCampaignModalOpen(true)}
+                        >
                             <div className="absolute top-0 right-0 p-4">
                                 <Lightbulb className="w-12 h-12 text-yellow-500/10 group-hover:text-yellow-500/20 transition-colors" />
                             </div>
                             <CardContent className="p-6 flex flex-col justify-between h-full relative z-10">
                                 <Smile className="w-8 h-8 text-purple-600" />
                                 <div>
-                                    <h4 className="text-lg font-bold text-gray-900">Campanhas</h4>
-                                    <p className="text-gray-500 text-sm mt-1">Próximo workshop: "Mindfulness no Trabalho".</p>
+                                    <h4 className="text-lg font-bold text-gray-900">{statsData?.activeCampaigns?.[0]?.title || 'Campanhas'}</h4>
+                                    <p className="text-gray-500 text-sm mt-1">
+                                        {statsData?.activeCampaigns?.[0]?.description ? (
+                                            <>Próximo: "{statsData.activeCampaigns[0].description}"</>
+                                        ) : (
+                                            'Próximo workshop: "Mindfulness no Trabalho".'
+                                        )}
+                                    </p>
                                 </div>
                                 <div className="flex items-center gap-2 text-sm font-bold text-purple-600 mt-4">
                                     Ver Agenda
@@ -597,6 +663,113 @@ export default function WellbeingPage() {
                     )}
                 </CardContent>
             </Card>
+
+            {/* Campaigns Modal */}
+            <Dialog open={isCampaignModalOpen} onOpenChange={setIsCampaignModalOpen}>
+                <DialogContent className="max-w-2xl bg-white rounded-3xl overflow-hidden p-0 border-none shadow-2xl">
+                    <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-8 text-white relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-4 opacity-10">
+                            <Calendar className="w-32 h-32" />
+                        </div>
+                        <DialogHeader>
+                            <DialogTitle className="text-2xl font-black flex items-center gap-3 text-white">
+                                <Sparkles className="w-6 h-6 text-yellow-300" />
+                                Agenda de Campanhas e Workshops
+                            </DialogTitle>
+                            <DialogDescription className="text-purple-100 text-lg opacity-90 mt-2">
+                                Fique por dentro de todas as ações de saúde mental da AxonRH.
+                            </DialogDescription>
+                        </DialogHeader>
+                    </div>
+                    <div className="p-6 max-h-[60vh] overflow-y-auto space-y-4 bg-gray-50/30">
+                        {statsData?.activeCampaigns && statsData.activeCampaigns.length > 0 ? (
+                            statsData.activeCampaigns.map((camp) => (
+                                <div key={camp.id} className="flex flex-col md:flex-row gap-4 p-5 bg-white rounded-2xl border border-purple-50 hover:shadow-md transition-all group">
+                                    <div className="w-full md:w-32 h-32 md:h-24 bg-purple-50 rounded-xl flex flex-col items-center justify-center text-purple-600 border border-purple-100 shrink-0">
+                                        <span className="text-[10px] font-black uppercase tracking-tighter opacity-60">
+                                            {new Date(camp.date).toLocaleDateString('pt-BR', { month: 'short' })}
+                                        </span>
+                                        <span className="text-3xl font-black">
+                                            {new Date(camp.date).getDate()}
+                                        </span>
+                                        <span className="text-[10px] font-bold">
+                                            {new Date(camp.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                    </div>
+                                    <div className="flex-1 flex flex-col justify-center">
+                                        <div className="flex items-center justify-between mb-1">
+                                            <h5 className="font-extrabold text-gray-900 group-hover:text-purple-600 transition-colors">{camp.title}</h5>
+                                            <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">{camp.status}</span>
+                                        </div>
+                                        <p className="text-sm text-gray-500 line-clamp-2 mb-3">{camp.description}</p>
+                                        <div className="flex items-center gap-3 text-xs text-gray-400 font-medium">
+                                            <span className="flex items-center gap-1">
+                                                <Activity className="w-3 h-3" />
+                                                {camp.location}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <button className="self-center p-3 bg-gray-50 hover:bg-purple-100 text-gray-400 hover:text-purple-600 rounded-xl transition-all">
+                                        <ChevronRight className="w-5 h-5" />
+                                    </button>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="text-center py-12 text-gray-400">
+                                <Calendar className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                                <p className="font-bold">Nenhuma campanha ativa no momento</p>
+                            </div>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Prevention Guides Modal */}
+            <Dialog open={isGuideModalOpen} onOpenChange={setIsGuideModalOpen}>
+                <DialogContent className="max-w-2xl bg-white rounded-3xl overflow-hidden p-0 border-none shadow-2xl">
+                    <div className="bg-gradient-to-r from-indigo-700 to-purple-800 p-8 text-white relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-4 opacity-10">
+                            <Brain className="w-32 h-32" />
+                        </div>
+                        <DialogHeader>
+                            <DialogTitle className="text-2xl font-black flex items-center gap-3 text-white">
+                                <Brain className="w-6 h-6 text-purple-300" />
+                                Guia de Prevenção e Recursos
+                            </DialogTitle>
+                            <DialogDescription className="text-indigo-100 text-lg opacity-90 mt-2">
+                                Materiais educativos para apoiar gestores e colaboradores.
+                            </DialogDescription>
+                        </DialogHeader>
+                    </div>
+                    <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50/30">
+                        {statsData?.preventionGuides && statsData.preventionGuides.length > 0 ? (
+                            statsData.preventionGuides.map((guide) => (
+                                <div
+                                    key={guide.id}
+                                    className="p-5 bg-white rounded-2xl border border-indigo-50 hover:shadow-lg transition-all cursor-pointer group flex flex-col justify-between"
+                                    onClick={() => guide.url && window.open(guide.url, '_blank')}
+                                >
+                                    <div>
+                                        <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                            <ShieldCheck className="w-6 h-6" />
+                                        </div>
+                                        <h5 className="font-extrabold text-gray-900 mb-2 group-hover:text-indigo-600 transition-colors uppercase text-xs tracking-wide">{guide.title}</h5>
+                                        <p className="text-xs text-gray-500 leading-relaxed mb-4">{guide.description}</p>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-[10px] font-black text-indigo-500 uppercase tracking-widest pt-2 border-t border-gray-50">
+                                        Ver Material
+                                        <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="col-span-2 text-center py-12 text-gray-400">
+                                <p className="font-bold">Nenhum guia disponível</p>
+                            </div>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

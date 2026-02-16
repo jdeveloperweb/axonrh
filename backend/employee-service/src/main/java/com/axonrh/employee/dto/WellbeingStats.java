@@ -18,4 +18,6 @@ public class WellbeingStats {
     private long highRiskCount;
     private long totalEapRequests;
     private java.util.List<EapRequestDTO> eapRequests;
+    private java.util.List<WellbeingResourceDTO> preventionGuides;
+    private java.util.List<WellbeingCampaignDTO> activeCampaigns;
 }

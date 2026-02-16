@@ -152,8 +152,6 @@ public class QueryBuilderService {
             code VARCHAR(20) NOT NULL,
             name VARCHAR(100) NOT NULL,
             description TEXT,
-            parent_id UUID,
-            manager_id UUID,
             is_active BOOLEAN,
             created_at TIMESTAMP
         )
@@ -168,82 +166,190 @@ public class QueryBuilderService {
             salary_range_min DECIMAL(15,2),
             salary_range_max DECIMAL(15,2),
             level VARCHAR(20),
-            department_id UUID,
             is_active BOOLEAN,
             created_at TIMESTAMP
         )
         
-        -- TABELA: shared.cost_centers
-        shared.cost_centers (
+        -- TABELA: shared.termination_processes
+        -- Processos de desligamento de colaboradores
+        shared.termination_processes (
             id UUID PRIMARY KEY,
             tenant_id UUID NOT NULL,
-            code VARCHAR(20) NOT NULL,
-            name VARCHAR(100) NOT NULL,
-            description TEXT,
-            parent_id UUID,
-            is_active BOOLEAN,
+            employee_id UUID NOT NULL, -- FK para shared.employees
+            termination_type VARCHAR(30), -- SEM_JUSTA_CAUSA, JUSTA_CAUSA, PEDIDO_DEMISSAO, ACORDO
+            notice_period VARCHAR(20),
+            last_work_day DATE,
+            termination_date DATE,
+            reason TEXT,
+            returned_laptop BOOLEAN,
+            returned_badge BOOLEAN,
+            account_deactivated BOOLEAN,
+            email_deactivated BOOLEAN,
+            exit_interview_done BOOLEAN,
+            status VARCHAR(20), -- PENDING, COMPLETED
             created_at TIMESTAMP
         )
 
-        -- TABELA: shared.employee_dependents
-        shared.employee_dependents (
+        -- TABELA: shared.employee_wellbeing
+        -- Registros de saúde mental e bem-estar
+        shared.employee_wellbeing (
+            id UUID PRIMARY KEY,
+            employee_id UUID NOT NULL,
+            tenant_id UUID NOT NULL,
+            score INTEGER, -- 1 a 5 (Estrela de Sentimentos)
+            sentiment VARCHAR(255),
+            risk_level VARCHAR(255), -- LOW, MEDIUM, HIGH
+            wants_eap_contact BOOLEAN,
+            created_at TIMESTAMP
+        )
+
+        -- ==================== MÓDULO: BANCO DE TALENTOS (TALENT POOL) ====================
+
+        -- TABELA: shared.job_vacancies
+        -- Vagas abertas para recrutamento
+        shared.job_vacancies (
+            id UUID PRIMARY KEY,
+            tenant_id UUID NOT NULL,
+            position_id UUID NOT NULL,
+            title VARCHAR(200) NOT NULL,
+            description TEXT,
+            requirements TEXT,
+            vacancy_type VARCHAR(30), -- INTERNAL, EXTERNAL, BOTH
+            employment_type VARCHAR(30), -- CLT, PJ, ESTAGIO
+            work_regime VARCHAR(30), -- PRESENCIAL, REMOTO, HIBRIDO
+            status VARCHAR(20), -- DRAFT, OPEN, CLOSED, CANCELLED
+            deadline DATE,
+            created_at TIMESTAMP
+        )
+
+        -- TABELA: shared.talent_candidates
+        -- Candidatos inscritos em vagas ou no banco
+        shared.talent_candidates (
+            id UUID PRIMARY KEY,
+            tenant_id UUID NOT NULL,
+            vacancy_id UUID NOT NULL, -- FK para job_vacancies
+            full_name VARCHAR(200) NOT NULL,
+            email VARCHAR(200) NOT NULL,
+            phone VARCHAR(20),
+            skills TEXT,
+            education TEXT,
+            experience_summary TEXT,
+            status VARCHAR(30), -- NEW, SCREENING, INTERVIEW, APPROVED, REJECTED, HIRED
+            rating INTEGER, -- 1 a 5
+            ai_insight TEXT, -- Comentário gerado por IA sobre o candidato
+            applied_at TIMESTAMP
+        )
+
+        -- ==================== MÓDULO: FOLHA DE PAGAMENTO (PAYROLL) ====================
+
+        -- TABELA: payroll_runs (Fechamentos mensais)
+        payroll_runs (
+            id UUID PRIMARY KEY,
+            tenant_id UUID NOT NULL,
+            reference_month INTEGER,
+            reference_year INTEGER,
+            description VARCHAR(255),
+            status VARCHAR(20), -- OPEN, PROCESSING, PROCESSED, CLOSED, CANCELLED
+            total_net_salary NUMERIC(14,2),
+            total_earnings NUMERIC(14,2),
+            total_deductions NUMERIC(14,2),
+            created_at TIMESTAMP
+        )
+
+        -- TABELA: payrolls (Folha individual por colaborador)
+        payrolls (
             id UUID PRIMARY KEY,
             tenant_id UUID NOT NULL,
             employee_id UUID NOT NULL,
-            full_name VARCHAR(200) NOT NULL,
-            relationship VARCHAR(30) NOT NULL,
-            birth_date DATE NOT NULL,
-            cpf VARCHAR(11),
-            is_ir_dependent BOOLEAN,
-            is_health_plan_dependent BOOLEAN,
-            is_active BOOLEAN,
-            created_at TIMESTAMP
+            employee_name VARCHAR(200),
+            reference_month INTEGER,
+            reference_year INTEGER,
+            status VARCHAR(20), -- DRAFT, CALCULTAED, APPROVED, CLOSED
+            base_salary NUMERIC(12,2),
+            total_earnings NUMERIC(12,2),
+            total_deductions NUMERIC(12,2),
+            net_salary NUMERIC(12,2),
+            fgts_amount NUMERIC(12,2)
         )
 
-        -- ==================== MÓDULO: CORE E CONFIGURAÇÃO ====================
+        -- ==================== MÓDULO: DESEMPENHO E DISC ====================
 
-        -- TABELA: company_profiles
-        company_profiles (
+        -- TABELA: evaluations (Avaliações de desempenho)
+        evaluations (
             id UUID PRIMARY KEY,
             tenant_id UUID NOT NULL,
-            legal_name VARCHAR(200) NOT NULL,
-            trade_name VARCHAR(200),
-            cnpj VARCHAR(14) NOT NULL,
-            email VARCHAR(255),
-            phone VARCHAR(20),
-            website VARCHAR(255),
-            address_city VARCHAR(100),
-            address_state VARCHAR(2),
-            company_size VARCHAR(20),
-            industry VARCHAR(100),
-            employee_count INTEGER,
-            legal_representative_name VARCHAR(200),
-            created_at TIMESTAMP
-        )
-
-        -- TABELA: notifications
-        notifications (
-            id UUID PRIMARY KEY,
-            tenant_id UUID NOT NULL,
-            user_id UUID NOT NULL,
-            employee_id UUID,
-            type VARCHAR(50),
-            title VARCHAR(200) NOT NULL,
-            message TEXT NOT NULL,
-            is_read BOOLEAN NOT NULL,
-            priority VARCHAR(20),
+            evaluatee_id UUID NOT NULL, -- employee_id
+            evaluator_name VARCHAR(200),
+            status VARCHAR(20), -- PENDING, COMPLETED
+            final_score DECIMAL(5,2),
+            performance_score DECIMAL(5,2),
+            potential_score DECIMAL(5,2),
             created_at TIMESTAMP
         )
         
-        -- TABELA: digital_certificates
-        digital_certificates (
+        -- TABELA: disc_assignments (Atribuições de testes DISC)
+        disc_assignments (
             id UUID PRIMARY KEY,
             tenant_id UUID NOT NULL,
-            name VARCHAR(255) NOT NULL,
-            type VARCHAR(20) NOT NULL, -- A1, A3
-            valid_from DATE,
-            valid_until DATE,
-            is_active BOOLEAN,
+            employee_id UUID NOT NULL,
+            employee_name VARCHAR(255),
+            assigned_by_name VARCHAR(255),
+            status VARCHAR(30), -- PENDING, COMPLETED
+            due_date DATE,
+            created_at TIMESTAMP
+        )
+
+        -- TABELA: disc_profile_descriptions (Descrições dos perfis DISC)
+        disc_profile_descriptions (
+            id UUID PRIMARY KEY,
+            profile_type VARCHAR(20), -- DOMINANCE, INFLUENCE, STEADINESS, CONSCIENTIOUSNESS
+            title VARCHAR(100),
+            description TEXT,
+            strengths TEXT,
+            weaknesses TEXT,
+            communication_style TEXT
+        )
+
+        -- ==================== MÓDULO: BENEFÍCIOS ====================
+
+        -- TABELA: benefit_types
+        benefit_types (
+            id UUID PRIMARY KEY,
+            tenant_id UUID NOT NULL,
+            name VARCHAR(150) NOT NULL,
+            category VARCHAR(20), -- EARNING, DEDUCTION
+            calculation_type VARCHAR(30), -- FIXED_VALUE, SALARY_PERCENTAGE
+            default_value NUMERIC(12,2),
+            is_active BOOLEAN
+        )
+
+        -- TABELA: employee_benefits
+        employee_benefits (
+            id UUID PRIMARY KEY,
+            tenant_id UUID NOT NULL,
+            employee_id UUID NOT NULL,
+            employee_name VARCHAR(200),
+            benefit_type_id UUID NOT NULL,
+            fixed_value NUMERIC(12,2),
+            status VARCHAR(20), -- ACTIVE, INACTIVE
+            start_date DATE
+        )
+
+        -- ==================== MÓDULO: PONTO E JORNADA ====================
+
+        -- TABELA: daily_summaries (Resumo diário de ponto)
+        daily_summaries (
+            id UUID PRIMARY KEY,
+            tenant_id UUID NOT NULL,
+            employee_id UUID NOT NULL,
+            summary_date DATE NOT NULL,
+            first_entry TIME,
+            last_exit TIME,
+            worked_minutes INTEGER,
+            overtime_minutes INTEGER,
+            deficit_minutes INTEGER,
+            night_shift_minutes INTEGER,
+            is_absent BOOLEAN,
             created_at TIMESTAMP
         )
 
@@ -256,172 +362,12 @@ public class QueryBuilderService {
             employee_id UUID NOT NULL,
             start_date DATE NOT NULL,
             end_date DATE NOT NULL,
-            days_count INTEGER NOT NULL,
-            sell_days BOOLEAN,
-            sold_days_count INTEGER,
+            days_count INTEGER,
             status VARCHAR(20) NOT NULL, -- PENDING, APPROVED, REJECTED
-            approver_name VARCHAR(200),
             payment_value DECIMAL(15,2),
             created_at TIMESTAMP
         )
 
-        -- TABELA: vacation_periods
-        vacation_periods (
-            id UUID PRIMARY KEY,
-            tenant_id UUID NOT NULL,
-            employee_id UUID NOT NULL,
-            acquisition_start DATE NOT NULL,
-            acquisition_end DATE NOT NULL,
-            enjoyment_deadline DATE NOT NULL,
-            total_days INTEGER,
-            used_days INTEGER,
-            remaining_days INTEGER,
-            status VARCHAR(20),
-            created_at TIMESTAMP
-        )
-
-        -- ==================== MÓDULO: PONTO E JORNADA ====================
-
-        -- TABELA: time_records (Registros atômicos)
-        time_records (
-            id UUID PRIMARY KEY,
-            tenant_id UUID NOT NULL,
-            employee_id UUID NOT NULL,
-            record_date DATE NOT NULL,
-            record_time TIME NOT NULL,
-            record_type VARCHAR(20), -- CLOCK_IN, CLOCK_OUT, BREAK_START, BREAK_END
-            status VARCHAR(20),
-            latitude DECIMAL(10,8),
-            longitude DECIMAL(11,8),
-            notes VARCHAR(500),
-            created_at TIMESTAMP
-        )
-
-        -- TABELA: daily_summaries (Resumo diário)
-        daily_summaries (
-            id UUID PRIMARY KEY,
-            tenant_id UUID NOT NULL,
-            employee_id UUID NOT NULL,
-            summary_date DATE NOT NULL,
-            first_entry TIME,
-            last_exit TIME,
-            expected_work_minutes INTEGER,
-            worked_minutes INTEGER,
-            overtime_minutes INTEGER,
-            deficit_minutes INTEGER,
-            night_shift_minutes INTEGER,
-            is_absent BOOLEAN,
-            absence_type VARCHAR(50),
-            has_missing_records BOOLEAN,
-            notes VARCHAR(1000),
-            created_at TIMESTAMP
-        )
-
-        -- TABELA: overtime_bank
-        overtime_bank (
-            id UUID PRIMARY KEY,
-            tenant_id UUID NOT NULL,
-            employee_id UUID NOT NULL,
-            reference_month DATE NOT NULL,
-            hours_balance DECIMAL(8,2), -- Saldo acumulado
-            hours_worked DECIMAL(8,2),
-            hours_compensated DECIMAL(8,2),
-            created_at TIMESTAMP
-        )
-
-        -- ==================== MÓDULO: DESEMPENHO ====================
-
-        -- TABELA: evaluation_cycles
-        evaluation_cycles (
-            id UUID PRIMARY KEY,
-            tenant_id UUID NOT NULL,
-            name VARCHAR(200) NOT NULL,
-            status VARCHAR(20),
-            start_date DATE,
-            end_date DATE,
-            cycle_type VARCHAR(20),
-            evaluation_type VARCHAR(20),
-            created_at TIMESTAMP
-        )
-
-        -- TABELA: evaluations
-        evaluations (
-            id UUID PRIMARY KEY,
-            tenant_id UUID NOT NULL,
-            cycle_id UUID NOT NULL,
-            evaluatee_id UUID NOT NULL, -- employee_id
-            evaluator_id UUID NOT NULL,
-            evaluator_name VARCHAR(200),
-            evaluator_type VARCHAR(20), -- SELF, MANAGER, PEER
-            status VARCHAR(20), -- PENDING, IN_PROGRESS, SUBMITTED, COMPLETED
-            final_score DECIMAL(5,2),
-            performance_score DECIMAL(5,2),
-            potential_score DECIMAL(5,2),
-            strengths TEXT,
-            areas_for_improvement TEXT,
-            created_at TIMESTAMP
-        )
-        
-        -- TABELA: goals
-        goals (
-            id UUID PRIMARY KEY,
-            tenant_id UUID NOT NULL,
-            employee_id UUID,
-            owner_id UUID,
-            title VARCHAR(200) NOT NULL,
-            description TEXT,
-            target_value DECIMAL(15,2),
-            current_value DECIMAL(15,2),
-            progress_percentage DECIMAL(5,2),
-            status VARCHAR(20), -- NOT_STARTED, IN_PROGRESS, COMPLETED
-            start_date DATE,
-            due_date DATE,
-            goal_type VARCHAR(20),
-            created_at TIMESTAMP
-        )
-        
-        -- TABELA: pdis
-        pdis (
-            id UUID PRIMARY KEY,
-            tenant_id UUID NOT NULL,
-            employee_id UUID NOT NULL,
-            title VARCHAR(255) NOT NULL,
-            status VARCHAR(20),
-            overall_progress INTEGER,
-            start_date DATE,
-            end_date DATE,
-            created_at TIMESTAMP
-        )
-
-        -- ==================== MÓDULO: TREINAMENTO ====================
-
-        -- TABELA: courses
-        courses (
-            id UUID PRIMARY KEY,
-            tenant_id UUID NOT NULL,
-            title VARCHAR(200) NOT NULL,
-            description TEXT,
-            duration_minutes INTEGER,
-            instructor_name VARCHAR(200),
-            status VARCHAR(20),
-            is_mandatory BOOLEAN,
-            price DECIMAL(15,2),
-            created_at TIMESTAMP
-        )
-        
-        -- TABELA: enrollments
-        enrollments (
-            id UUID PRIMARY KEY,
-            tenant_id UUID NOT NULL,
-            employee_id UUID NOT NULL,
-            course_id UUID NOT NULL,
-            status VARCHAR(20), -- ENROLLED, IN_PROGRESS, COMPLETED
-            progress_percentage DECIMAL(5,2),
-            final_score DECIMAL(5,2),
-            enrollment_date DATE,
-            completion_date DATE,
-            created_at TIMESTAMP
-        )
         """;
 
     public QueryResult buildAndExecuteQuery(String question, Map<String, Object> entities, UUID tenantId, List<Object> permissions) {

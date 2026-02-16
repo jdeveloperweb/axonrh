@@ -219,6 +219,16 @@ public class NluService {
                     .build();
         }
 
+        // Benefits queries
+        if (containsAny(normalizedMessage, "benefício", "benefícios", "plano de saúde", "vale refeição", "vale transporte", "seguro de vida")) {
+            return NluResult.builder()
+                    .intent("query_benefits")
+                    .confidence(0.88)
+                    .entities(Map.of())
+                    .actionType(AiIntent.ActionType.DATABASE_QUERY)
+                    .build();
+        }
+
         // Notifications
         if (containsAny(normalizedMessage, "notificação", "notificações", "alerta", "aviso", "mensagens")) {
             return NluResult.builder()
@@ -254,6 +264,46 @@ public class NluService {
             return NluResult.builder()
                     .intent("query_pdi")
                     .confidence(0.88)
+                    .entities(Map.of())
+                    .actionType(AiIntent.ActionType.DATABASE_QUERY)
+                    .build();
+        }
+
+        // Talent Pool / Vagas
+        if (containsAny(normalizedMessage, "vaga", "vagas", "candidato", "candidatos", "banco de talentos", "processo seletivo")) {
+            return NluResult.builder()
+                    .intent("query_talent_pool")
+                    .confidence(0.90)
+                    .entities(Map.of())
+                    .actionType(AiIntent.ActionType.DATABASE_QUERY)
+                    .build();
+        }
+
+        // Wellbeing / Bem-estar
+        if (containsAny(normalizedMessage, "bem-estar", "saúde mental", "clima", "sentimento", "estrela de sentimentos")) {
+            return NluResult.builder()
+                    .intent("query_wellbeing")
+                    .confidence(0.90)
+                    .entities(Map.of())
+                    .actionType(AiIntent.ActionType.DATABASE_QUERY)
+                    .build();
+        }
+
+        // DISC
+        if (containsAny(normalizedMessage, "disc", "perfil comportamental", "teste comportamental", "dominância", "influência", "estabilidade", "conformidade")) {
+            return NluResult.builder()
+                    .intent("query_disc")
+                    .confidence(0.90)
+                    .entities(Map.of())
+                    .actionType(AiIntent.ActionType.DATABASE_QUERY)
+                    .build();
+        }
+
+        // Termination Approval / Process
+        if (containsAny(normalizedMessage, "processo de desligamento", "workflow de demissão", "checklist de saída")) {
+            return NluResult.builder()
+                    .intent("query_termination_process")
+                    .confidence(0.90)
                     .entities(Map.of())
                     .actionType(AiIntent.ActionType.DATABASE_QUERY)
                     .build();

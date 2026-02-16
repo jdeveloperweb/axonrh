@@ -188,8 +188,50 @@ public class WellbeingService {
                 .sentimentDistribution(sentimentMap)
                 .highRiskCount(highRiskCount)
                 .totalEapRequests(eapRequests.stream().filter(r -> !r.isHandled()).count())
-                .eapRequests(eapRequests) // Send all, front will handle display/filtering if needed but usually we show recent handled too? user said "marcar que ja foi atendido", so we should show them differently or filter out.
+                .eapRequests(eapRequests)
+                .preventionGuides(getPreventionGuides())
+                .activeCampaigns(getActiveCampaigns())
                 .build();
+    }
+
+    private List<com.axonrh.employee.dto.WellbeingResourceDTO> getPreventionGuides() {
+        return List.of(
+            com.axonrh.employee.dto.WellbeingResourceDTO.builder()
+                .id("1")
+                .title("Guia de Saúde Mental para Lideranças")
+                .description("Como identificar sinais de burnout na equipe e agir preventivamente.")
+                .url("/resources/guide-burnout.pdf")
+                .type("GUIDE")
+                .build(),
+            com.axonrh.employee.dto.WellbeingResourceDTO.builder()
+                .id("2")
+                .title("Cartilha de Primeiros Socorros Emocionais")
+                .description("Protocolos básicos de acolhimento em momentos de crise.")
+                .url("/resources/emotional-first-aid.pdf")
+                .type("GUIDE")
+                .build()
+        );
+    }
+
+    private List<com.axonrh.employee.dto.WellbeingCampaignDTO> getActiveCampaigns() {
+        return List.of(
+            com.axonrh.employee.dto.WellbeingCampaignDTO.builder()
+                .id("1")
+                .title("Workshop: Mindfulness no Trabalho")
+                .description("Sessão prática de meditação guiada e foco pleno.")
+                .date(LocalDateTime.now().plusDays(2).withHour(10).withMinute(0))
+                .location("Online / Teams")
+                .status("UPCOMING")
+                .build(),
+            com.axonrh.employee.dto.WellbeingCampaignDTO.builder()
+                .id("2")
+                .title("Setembro Amarelo: Falar é a melhor solução")
+                .description("Palestra com psicólogos especialistas sobre prevenção.")
+                .date(LocalDateTime.now().plusMonths(1))
+                .location("Auditório Principal")
+                .status("UPCOMING")
+                .build()
+        );
     }
 
     public void markAsHandled(UUID id) {
