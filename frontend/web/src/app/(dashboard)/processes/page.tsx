@@ -13,7 +13,9 @@ import {
     AlertCircle,
     UserX,
     TrendingDown,
-    CalendarDays
+    CalendarDays,
+    ChevronUp,
+    ChevronDown
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -48,6 +50,22 @@ const admissionStatusMap: Record<AdmissionStatus, { label: string, color: string
     REJECTED: { label: 'Rejeitado', color: 'bg-red-100 text-red-800', icon: AlertCircle },
 };
 
+const terminationTypeLabels: Record<string, string> = {
+    RESIGNATION: 'Pedido de Demissão',
+    TERMINATION_WITHOUT_CAUSE: 'Sem Justa Causa',
+    TERMINATION_WITH_CAUSE: 'Com Justa Causa',
+    AGREEMENT: 'Acordo',
+    RETIREMENT: 'Aposentadoria',
+    DEATH: 'Falecimento',
+    END_OF_CONTRACT: 'Término de Contrato'
+};
+
+const noticePeriodLabels: Record<string, string> = {
+    WORKED: 'Trabalhado',
+    PAID: 'Indenizado',
+    WAIVED: 'Dispensado'
+};
+
 export default function ProcessesPage() {
     const router = useRouter();
     const { toast } = useToast();
@@ -56,6 +74,8 @@ export default function ProcessesPage() {
     const [admissions, setAdmissions] = useState<AdmissionProcess[]>([]);
     const [terminations, setTerminations] = useState<TerminationProcess[]>([]);
     const [search, setSearch] = useState('');
+    const [sortField, setSortField] = useState<string>('employeeName');
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
     const fetchAdmissions = useCallback(async () => {
         try {
@@ -92,14 +112,42 @@ export default function ProcessesPage() {
     }, [toast]);
 
     useEffect(() => {
-        if (activeTab === 'admissions') fetchAdmissions();
-        else fetchTerminations();
-    }, [activeTab, fetchAdmissions, fetchTerminations]);
+        fetchAdmissions();
+        fetchTerminations();
+    }, [fetchAdmissions, fetchTerminations]);
 
     const filteredAdmissions = admissions.filter(a =>
         a.candidateName.toLowerCase().includes(search.toLowerCase()) ||
         a.candidateEmail.toLowerCase().includes(search.toLowerCase())
     );
+
+    const sortedTerminations = [...terminations].sort((a, b) => {
+        let valA = a[sortField as keyof TerminationProcess] as any;
+        let valB = b[sortField as keyof TerminationProcess] as any;
+
+        if (typeof valA === 'string') {
+            valA = valA.toLowerCase();
+            valB = valB.toLowerCase();
+        }
+
+        if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
+        if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
+        return 0;
+    });
+
+    const handleSort = (field: string) => {
+        if (sortField === field) {
+            setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortField(field);
+            setSortOrder('asc');
+        }
+    };
+
+    const SortIcon = ({ field }: { field: string }) => {
+        if (sortField !== field) return null;
+        return sortOrder === 'asc' ? <ChevronUp className="w-3 h-3 ml-1 inline" /> : <ChevronDown className="w-3 h-3 ml-1 inline" />;
+    };
 
     return (
         <div className="p-6 space-y-6">
@@ -274,11 +322,36 @@ export default function ProcessesPage() {
                                 <table className="w-full">
                                     <thead>
                                         <tr className="border-b border-gray-100 bg-gray-50/50">
-                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Colaborador</th>
-                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Tipo / Aviso</th>
-                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Último Dia / Rescisão</th>
-                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Financeiro</th>
-                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                                            <th
+                                                className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                                                onClick={() => handleSort('employeeName')}
+                                            >
+                                                <div className="flex items-center">Colaborador <SortIcon field="employeeName" /></div>
+                                            </th>
+                                            <th
+                                                className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                                                onClick={() => handleSort('terminationType')}
+                                            >
+                                                <div className="flex items-center">Tipo / Aviso <SortIcon field="terminationType" /></div>
+                                            </th>
+                                            <th
+                                                className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                                                onClick={() => handleSort('terminationDate')}
+                                            >
+                                                <div className="flex items-center">Último Dia / Rescisão <SortIcon field="terminationDate" /></div>
+                                            </th>
+                                            <th
+                                                className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                                                onClick={() => handleSort('severancePayAmount')}
+                                            >
+                                                <div className="flex items-center">Financeiro <SortIcon field="severancePayAmount" /></div>
+                                            </th>
+                                            <th
+                                                className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                                                onClick={() => handleSort('completedAt')}
+                                            >
+                                                <div className="flex items-center">Status <SortIcon field="completedAt" /></div>
+                                            </th>
                                             <th className="px-6 py-4 text-right"></th>
                                         </tr>
                                     </thead>
@@ -289,14 +362,14 @@ export default function ProcessesPage() {
                                                     <td colSpan={6} className="px-6 py-4 h-16 bg-gray-50/20" />
                                                 </tr>
                                             ))
-                                        ) : terminations.length === 0 ? (
+                                        ) : sortedTerminations.length === 0 ? (
                                             <tr>
                                                 <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
                                                     Nenhum processo de desligamento em aberto.
                                                 </td>
                                             </tr>
                                         ) : (
-                                            terminations.map(proc => (
+                                            sortedTerminations.map(proc => (
                                                 <tr key={proc.id} className="hover:bg-gray-50/50 transition-colors">
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-center gap-3">
@@ -317,8 +390,8 @@ export default function ProcessesPage() {
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4 text-sm text-gray-600">
-                                                        <p className="font-medium">{proc.terminationType}</p>
-                                                        <p className="text-xs text-gray-500">{proc.noticePeriod}</p>
+                                                        <p className="font-medium">{terminationTypeLabels[proc.terminationType] || proc.terminationType}</p>
+                                                        <p className="text-xs text-gray-500">{noticePeriodLabels[proc.noticePeriod] || proc.noticePeriod}</p>
                                                     </td>
                                                     <td className="px-6 py-4 text-sm text-gray-600">
                                                         <p>Trab: {formatDate(proc.lastWorkDay)}</p>
