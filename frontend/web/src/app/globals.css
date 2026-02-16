@@ -427,4 +427,48 @@
   .glass-dark {
     @apply bg-black/40 backdrop-blur-md border border-white/10 shadow-xl;
   }
+
+  @keyframes orb-float {
+
+    0%,
+    100% {
+      transform: translate(0, 0);
+    }
+
+    33% {
+      transform: translate(10px, -15px);
+    }
+
+    66% {
+      transform: translate(-10px, 10px);
+    }
+  }
+
+  @keyframes orb-pulse {
+
+    0%,
+    100% {
+      box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+    }
+
+    50% {
+      box-shadow: 0 0 40px rgba(139, 92, 246, 0.4);
+    }
+  }
+
+  .animate-orb-float-1 {
+    animation: orb-float 8s ease-in-out infinite;
+  }
+
+  .animate-orb-float-2 {
+    animation: orb-float 10s ease-in-out infinite reverse;
+  }
+
+  .animate-orb-float-3 {
+    animation: orb-float 12s ease-in-out infinite;
+  }
+
+  .animate-orb-pulse {
+    animation: orb-pulse 4s ease-in-out infinite;
+  }
 }

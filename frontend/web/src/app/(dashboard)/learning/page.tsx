@@ -105,30 +105,31 @@ export default function LearningDashboard() {
   }
 
   return (
-    <div className="max-w-[1500px] mx-auto space-y-12 pb-24 px-2 md:px-4">
+    <div className="w-full space-y-12 pb-24 px-4 md:px-8">
 
       {/* --- HERO SECTION --- */}
       <section className="grid lg:grid-cols-12 gap-8 items-stretch pt-2">
-        <div className="lg:col-span-8 relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-white via-slate-50/50 to-primary/5 p-10 md:p-14 shadow-sm backdrop-blur-sm flex flex-col justify-center min-h-[400px] group/hero">
+        <div className="lg:col-span-8 relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-slate-50/50 to-primary/5 p-10 md:p-14 shadow-sm backdrop-blur-sm flex flex-col justify-center min-h-[400px] group/hero">
           {/* Efeitos de fundo dinâmicos mais sutis */}
-          <div className="absolute -top-24 -right-24 w-80 h-80 bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
+          <div className="absolute -top-24 -right-24 w-80 h-80 bg-primary/10 rounded-full blur-[100px] pointer-events-none" />
+          <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-blue-400/5 rounded-full blur-[80px] pointer-events-none" />
 
           <div className="relative z-10 space-y-8">
             <div className="space-y-4">
-              <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-bold px-4 py-1.5 rounded-full text-[10px] tracking-wider mb-2">
+              <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-black px-4 py-1.5 rounded-full text-[10px] tracking-wider mb-2">
                 <Sparkles className="h-3 w-3 mr-2" />
                 AXON ACADEMY PRO
               </Badge>
-              <h1 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tight leading-[1.1]">
+              <h1 className="text-4xl md:text-7xl font-black text-slate-900 tracking-tight leading-[1.1]">
                 {greeting}, <br />
                 <span className="text-primary">
                   {user?.name?.split(' ')[0]}
                 </span>!
-                <div className="mt-2 flex items-center gap-3">
-                  <div className="h-1 w-16 bg-primary/10 rounded-full overflow-hidden">
-                    <div className="h-full bg-primary w-1/2" />
+                <div className="mt-4 flex items-center gap-4">
+                  <div className="h-1.5 w-24 bg-primary/10 rounded-full overflow-hidden">
+                    <div className="h-full bg-primary w-2/3 animate-pulse" />
                   </div>
-                  <span className="text-slate-400 font-bold text-2xl md:text-3xl tracking-tight">Sua jornada evolutiva.</span>
+                  <span className="text-slate-400 font-bold text-2xl md:text-4xl tracking-tight">Sua jornada evolutiva.</span>
                 </div>
               </h1>
             </div>
@@ -136,25 +137,25 @@ export default function LearningDashboard() {
             <div className="flex flex-wrap items-center gap-4">
               <Button
                 onClick={() => router.push('/learning/certificates')}
-                className="h-14 px-10 rounded-xl font-black text-xs transition-all shadow-md hover:shadow-primary/20 hover:-translate-y-0.5 flex gap-3 group bg-primary"
+                className="h-16 px-12 rounded-2xl font-black text-sm transition-all shadow-xl shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-1 flex gap-3 group bg-primary"
               >
-                <Award className="h-5 w-5 transition-transform group-hover:scale-110" />
+                <Award className="h-6 w-6 transition-transform group-hover:scale-110" />
                 VER MEUS CERTIFICADOS
               </Button>
 
-              <div className="flex items-center gap-2 p-1 bg-slate-100/50 border border-slate-200 rounded-xl">
-                <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-sm border border-slate-100 group cursor-default">
-                  <Flame className="h-4 w-4 text-orange-500 fill-orange-500" />
+              <div className="flex items-center gap-2 p-1.5 bg-white/50 backdrop-blur-md border border-slate-200 rounded-2xl shadow-sm">
+                <div className="flex items-center gap-3 px-5 py-3 bg-white rounded-xl shadow-sm border border-slate-100 group cursor-default">
+                  <Flame className="h-5 w-5 text-orange-500 fill-orange-500 animate-bounce" />
                   <div className="flex flex-col">
-                    <span className="text-[9px] font-black text-slate-400 leading-none">STREAK</span>
-                    <span className="text-xs font-black text-slate-700">12 DIAS</span>
+                    <span className="text-[9px] font-black text-slate-400 leading-none tracking-widest">STREAK</span>
+                    <span className="text-sm font-black text-slate-800 tracking-tight">12 DIAS</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 px-5 py-2 group cursor-default">
-                  <Trophy className="h-4 w-4 text-amber-500 fill-amber-500" />
+                <div className="flex items-center gap-3 px-5 py-3 group cursor-default">
+                  <Trophy className="h-5 w-5 text-amber-500 fill-amber-500" />
                   <div className="flex flex-col">
-                    <span className="text-[9px] font-black text-slate-400 leading-none">PONTOS</span>
-                    <span className="text-xs font-black text-slate-700">2.450 PTS</span>
+                    <span className="text-[9px] font-black text-slate-400 leading-none tracking-widest">PONTOS</span>
+                    <span className="text-sm font-black text-slate-800 tracking-tight">2.450 PTS</span>
                   </div>
                 </div>
               </div>
@@ -164,197 +165,242 @@ export default function LearningDashboard() {
 
         {/* Dash de Progresso & Próximo Passo */}
         <div className="lg:col-span-4 flex flex-col gap-6">
-          <div className="bg-[#0f172a] rounded-2xl p-8 text-white relative overflow-hidden shadow-xl flex-1 flex flex-col justify-between group">
+          <div className="bg-[#0f172a] rounded-3xl p-10 text-white relative overflow-hidden shadow-2xl flex-1 flex flex-col justify-between group">
             {/* Efeitos Visuais de Fundo */}
-            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-transform duration-700">
-              <TrendingUp className="h-32 w-32" />
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-transform duration-1000">
+              <TrendingUp className="h-48 w-48" />
             </div>
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-transparent to-transparent pointer-events-none" />
 
-            <div className="space-y-6 relative z-10">
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Progresso Geral</p>
-              <div className="flex items-baseline gap-2">
-                <h3 className="text-6xl font-black tracking-tighter">{Math.round(stats?.averageProgress || 0)}%</h3>
+            <div className="space-y-8 relative z-10">
+              <div className="space-y-2">
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">Progresso Geral</p>
+                <div className="flex items-baseline gap-2">
+                  <h3 className="text-7xl font-black tracking-tighter">{Math.round(stats?.averageProgress || 0)}%</h3>
+                </div>
               </div>
-              <Progress value={stats?.averageProgress} className="h-2 bg-white/10" />
+              <Progress value={stats?.averageProgress} className="h-3 bg-white/10" />
             </div>
 
-            <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-widest pt-6 border-t border-white/5 text-slate-400 relative z-10">
+            <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-[0.2em] pt-8 border-t border-white/5 text-slate-400 relative z-10">
               <span>{stats?.completed || 0} Certificados</span>
-              <Award className="h-5 w-5 text-primary" />
+              <Award className="h-6 w-6 text-primary" />
             </div>
           </div>
 
-          <div className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-8 shadow-sm flex flex-col justify-between group hover:border-emerald-200 transition-all">
-            <div className="space-y-4">
+          <div className="bg-emerald-50/50 border border-emerald-100 rounded-3xl p-10 shadow-sm flex flex-col justify-between group hover:border-emerald-200 transition-all cursor-pointer relative overflow-hidden">
+            <div className="absolute -top-10 -right-10 h-32 w-32 bg-emerald-100/50 rounded-full blur-3xl pointer-events-none" />
+            <div className="space-y-4 relative z-10">
               <div className="flex items-center gap-2 text-emerald-600">
-                <Zap className="h-4 w-4 fill-emerald-600" />
-                <span className="text-[10px] font-black uppercase tracking-widest">Recomendado para você</span>
+                <Zap className="h-5 w-5 fill-emerald-600" />
+                <span className="text-[11px] font-black uppercase tracking-[0.2em]">Recomendado para você</span>
               </div>
-              <h4 className="font-black text-slate-800 leading-tight line-clamp-2 text-lg uppercase tracking-tight">
+              <h4 className="font-black text-slate-800 leading-tight line-clamp-2 text-xl uppercase tracking-tight">
                 {recommendedCourse?.title || "Treinamento de Liderança Alpha"}
               </h4>
             </div>
-            <Link href={recommendedCourse ? `/learning/course/${recommendedCourse.id}` : '#'} className="mt-6">
-              <button className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-600 hover:gap-3 transition-all font-bold">
-                Ver detalhes do curso <ArrowRight className="h-3 w-3" />
+            <Link href={recommendedCourse ? `/learning/course/${recommendedCourse.id}` : '#'} className="mt-8 relative z-10">
+              <button className="flex items-center gap-3 text-[11px] font-black uppercase tracking-[0.2em] text-emerald-600 hover:gap-5 transition-all">
+                Ver detalhes do curso <ArrowRight className="h-4 w-4" />
               </button>
             </Link>
           </div>
         </div>
       </section>
 
-      {/* --- CONTEÚDO --- */}
-      <div className="grid lg:grid-cols-12 gap-8">
-
-        {/* Sidebar */}
-        <aside className="lg:col-span-3 space-y-6">
-          <div className="space-y-3">
-            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-2">Categorias</h3>
-            <div className="flex flex-col gap-1">
-              <button
-                onClick={() => setSelectedCategory(null)}
-                className={cn(
-                  "flex items-center gap-3 px-5 py-2.5 rounded-xl text-sm font-bold transition-all",
-                  selectedCategory === null
-                    ? "bg-slate-900 text-white shadow-lg shadow-slate-200"
-                    : "text-slate-500 hover:bg-slate-100/80"
-                )}
-              >
-                <LayoutGrid className="h-4 w-4" />
-                Todos os Cursos
-              </button>
-              {categories.map(cat => (
-                <button
-                  key={cat.id}
-                  onClick={() => setSelectedCategory(cat.name)}
-                  className={cn(
-                    "flex items-center gap-3 px-5 py-2.5 rounded-xl text-sm font-bold transition-all",
-                    selectedCategory === cat.name
-                      ? "bg-slate-900 text-white shadow-lg shadow-slate-200"
-                      : "text-slate-500 hover:bg-slate-100/80"
-                  )}
-                >
-                  <Zap className="h-4 w-4" />
-                  {cat.name}
-                </button>
-              ))}
-            </div>
+      {/* --- CATEGORIAS (NEW PREMIUM AREA) --- */}
+      <section className="space-y-6 pt-4">
+        <div className="flex items-center justify-between px-2">
+          <div className="space-y-1">
+            <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">Explorar por área</h3>
+            <p className="text-sm font-bold text-slate-600">Selecione uma categoria para filtrar as trilhas de conhecimento.</p>
           </div>
+        </div>
 
-          <Link href="/learning/certificates">
-            <div className="p-6 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 hover:bg-white hover:border-primary/30 transition-all text-center group cursor-pointer">
-              <div className="h-10 w-10 bg-white rounded-lg shadow-sm flex items-center justify-center mx-auto mb-3 border border-slate-100 group-hover:scale-110 transition-transform">
-                <Award className="h-5 w-5 text-slate-300 group-hover:text-primary transition-colors" />
+        <div className="flex flex-wrap gap-4 overflow-x-auto pb-4 no-scrollbar">
+          <button
+            onClick={() => setSelectedCategory(null)}
+            className={cn(
+              "flex items-center gap-4 px-8 py-5 rounded-2xl text-sm font-black transition-all shrink-0 border-2",
+              selectedCategory === null
+                ? "bg-slate-900 border-slate-900 text-white shadow-2xl shadow-slate-200 translate-y-[-4px]"
+                : "bg-white border-slate-100 text-slate-500 hover:border-primary/30 hover:bg-slate-50"
+            )}
+          >
+            <div className={cn(
+              "h-10 w-10 rounded-xl flex items-center justify-center transition-colors",
+              selectedCategory === null ? "bg-white/10" : "bg-slate-50"
+            )}>
+              <LayoutGrid className="h-5 w-5" />
+            </div>
+            <div className="flex flex-col items-start leading-none">
+              <span className="uppercase tracking-widest text-[10px] mb-1 opacity-50">Geral</span>
+              <span>Todos os Cursos</span>
+            </div>
+          </button>
+
+          {categories.map(cat => (
+            <button
+              key={cat.id}
+              onClick={() => setSelectedCategory(cat.name)}
+              className={cn(
+                "flex items-center gap-4 px-8 py-5 rounded-2xl text-sm font-black transition-all shrink-0 border-2",
+                selectedCategory === cat.name
+                  ? "bg-primary border-primary text-white shadow-2xl shadow-primary/20 translate-y-[-4px]"
+                  : "bg-white border-slate-100 text-slate-500 hover:border-primary/30 hover:bg-slate-50"
+              )}
+            >
+              <div className={cn(
+                "h-10 w-10 rounded-xl flex items-center justify-center transition-colors",
+                selectedCategory === cat.name ? "bg-white/10" : "bg-primary/5 text-primary"
+              )}>
+                <Zap className="h-5 w-5" />
               </div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">RECONHECIMENTO</p>
-              <p className="text-sm font-black text-slate-800 tracking-tight">CENTRAL DE TÍTULOS</p>
-            </div>
-          </Link>
-        </aside>
+              <div className="flex flex-col items-start leading-none">
+                <span className="uppercase tracking-widest text-[10px] mb-1 opacity-50">Explorar</span>
+                <span>{cat.name}</span>
+              </div>
+            </button>
+          ))}
+        </div>
+      </section>
 
-        {/* Catalog Main Area */}
-        <main className="lg:col-span-9 space-y-10">
+      {/* --- CONTEÚDO PRINCIPAL --- */}
+      <main className="space-y-12">
+        {/* Busca Premium */}
+        <div className="relative group max-w-4xl mx-auto">
+          <div className="absolute inset-0 bg-primary/5 blur-3xl rounded-full opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none" />
+          <Search className="absolute left-8 top-1/2 -translate-y-1/2 h-6 w-6 text-slate-300 group-focus-within:text-primary transition-colors pointer-events-none" />
+          <Input
+            placeholder="O que você deseja aprender hoje? Digite o tema ou habilidade..."
+            className="h-20 pl-16 pr-8 rounded-[2rem] border-slate-100 focus:ring-primary shadow-xl shadow-slate-100 text-xl font-bold placeholder:text-slate-300 bg-white/80 backdrop-blur-md transition-all border-2"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
 
-          {/* Busca Premium */}
-          <div className="relative group max-w-3xl">
-            <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-300 group-focus-within:text-primary transition-colors pointer-events-none" />
-            <Input
-              placeholder="O que você deseja aprender hoje?"
-              className="h-16 pl-14 rounded-xl border-slate-200 focus:ring-primary shadow-sm text-base font-medium placeholder:text-slate-300 bg-white"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-
-          {/* Ativos */}
-          {myEnrollments.length > 0 && (
-            <section className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+        {/* Ativos (Em Andamento) */}
+        {myEnrollments.length > 0 && (
+          <section className="space-y-8">
+            <div className="flex items-center justify-between px-2">
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 bg-orange-100 rounded-2xl flex items-center justify-center">
                   <Flame className="h-6 w-6 text-orange-500 animate-pulse" />
-                  EM ANDAMENTO
-                </h2>
-                <span className="bg-slate-100 text-[10px] font-black px-3 py-1 rounded-full text-slate-500">{myEnrollments.length} CURSOS</span>
+                </div>
+                <div>
+                  <h2 className="text-3xl font-black text-slate-900 tracking-tight uppercase">Continuar Aprendendo</h2>
+                  <p className="text-sm font-medium text-slate-400">Você possui {myEnrollments.length} trilhas iniciadas.</p>
+                </div>
               </div>
+            </div>
 
-              <div className="grid md:grid-cols-2 gap-6">
-                {myEnrollments.map((en) => (
-                  <Link key={en.id} href={`/learning/course/${en.courseId || (en.course as any)?.id}`}>
-                    <div className="bg-white border border-slate-100 rounded-2xl p-6 flex items-center gap-6 hover:shadow-xl transition-all group cursor-pointer hover:border-primary/30">
-                      <div className="h-20 w-20 bg-slate-50 rounded-xl overflow-hidden flex-shrink-0 border border-slate-100">
+            <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-8">
+              {myEnrollments.map((en) => (
+                <Link key={en.id} href={`/learning/course/${en.courseId || (en.course as any)?.id}`}>
+                  <div className="bg-white border-2 border-slate-50 rounded-[2.5rem] p-8 flex flex-col gap-6 hover:shadow-2xl transition-all group cursor-pointer hover:border-primary/20 relative overflow-hidden active:scale-[0.98]">
+                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                      <BookOpen className="h-24 w-24" />
+                    </div>
+
+                    <div className="flex items-center gap-6 relative z-10">
+                      <div className="h-24 w-24 bg-slate-50 rounded-3xl overflow-hidden flex-shrink-0 border border-slate-100 shadow-inner">
                         {en.courseThumbnail ? (
-                          <img src={getPhotoUrl(en.courseThumbnail) || ''} alt={en.courseName} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                        ) : <BookOpen className="h-full w-full p-6 text-slate-200" />}
+                          <img src={getPhotoUrl(en.courseThumbnail) || ''} alt={en.courseName} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                        ) : <BookOpen className="h-full w-full p-7 text-slate-200" />}
                       </div>
-                      <div className="flex-1 space-y-3 min-w-0">
-                        <h3 className="font-black text-slate-900 truncate pr-4 text-lg tracking-tight group-hover:text-primary transition-colors">{en.courseName}</h3>
-                        <div className="space-y-1.5">
-                          <div className="flex justify-between text-[10px] font-black text-slate-400 uppercase">
-                            <span>Progresso</span>
-                            <span className="text-primary italic font-bold">{Math.round(en.progressPercentage)}%</span>
-                          </div>
-                          <Progress value={en.progressPercentage} className="h-1.5" />
-                        </div>
+                      <div className="flex-1 space-y-2 min-w-0">
+                        <Badge className="bg-orange-100 text-orange-600 border-none font-black text-[9px] px-2 py-0.5 rounded-md self-start uppercase tracking-widest">
+                          Em Andamento
+                        </Badge>
+                        <h3 className="font-black text-slate-900 truncate pr-4 text-xl tracking-tight group-hover:text-primary transition-colors">{en.courseName}</h3>
                       </div>
-                      <div className="h-10 w-10 rounded-full flex items-center justify-center text-slate-200 group-hover:bg-primary/5 group-hover:text-primary transition-all">
+                    </div>
+
+                    <div className="space-y-3 relative z-10">
+                      <div className="flex justify-between text-[11px] font-black text-slate-400 uppercase tracking-widest">
+                        <span>Progresso da Trilha</span>
+                        <span className="text-primary font-bold italic">{Math.round(en.progressPercentage)}%</span>
+                      </div>
+                      <div className="h-2.5 bg-slate-50 rounded-full overflow-hidden border border-slate-100 shadow-inner">
+                        <div
+                          className="h-full bg-gradient-to-r from-primary to-blue-400 transition-all duration-1000"
+                          style={{ width: `${en.progressPercentage}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="pt-2 flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-slate-400 text-[10px] font-black uppercase tracking-widest">
+                        <Clock className="h-4 w-4" />
+                        <span>Retomar de onde parou</span>
+                      </div>
+                      <div className="h-12 w-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
                         <ChevronRight className="h-6 w-6" />
                       </div>
                     </div>
-                  </Link>
-                ))}
-              </div>
-            </section>
-          )}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
-          {/* Catálogo Principal */}
-          <section className="space-y-8">
-            <div className="flex items-center justify-between border-b-2 border-slate-50 pb-6 px-2">
-              <div className="space-y-1">
-                <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase">Catálogo de trilhas</h2>
-                <p className="text-sm font-medium text-slate-400">Encontre o treinamento ideal para seu próximo passo.</p>
-              </div>
-              <Button variant="outline" className="text-[10px] font-black uppercase tracking-widest border-2 hover:bg-slate-50 rounded-xl px-6" onClick={() => router.push('/learning/catalog')}>
-                VER TODOS
+        {/* Catálogo Principal */}
+        <section className="space-y-10">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b-2 border-slate-50 pb-10 px-2">
+            <div className="space-y-2">
+              <h2 className="text-4xl font-black text-slate-900 tracking-tight uppercase">Catálogo de trilhas</h2>
+              <p className="text-lg font-medium text-slate-400">Descubra novos conhecimentos e expanda sua carreira na Axon.</p>
+            </div>
+            <div className="flex gap-4">
+              <Link href="/learning/history">
+                <Button variant="outline" className="h-14 px-8 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] border-2 bg-white hover:bg-slate-50">
+                  MEU HISTÓRICO
+                </Button>
+              </Link>
+              <Button
+                onClick={() => router.push('/learning/catalog')}
+                className="h-14 px-10 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-xl shadow-primary/10 transition-all hover:-translate-y-1"
+              >
+                VER TUDO
               </Button>
             </div>
+          </div>
 
-            {filteredCourses.length > 0 ? (
-              <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-8">
-                {filteredCourses.map((course) => (
-                  <CourseCard
-                    key={course.id}
-                    course={course}
-                    isEnrolled={myEnrollments.some(e => e.courseId === course.id)}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="py-24 flex flex-col items-center">
-                <Alert className="max-w-md bg-slate-50 border-slate-200 flex flex-col items-center text-center p-12 rounded-3xl">
-                  <div className="h-16 w-16 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center mb-6">
-                    <BookOpen className="h-8 w-8 text-slate-300" />
-                  </div>
-                  <AlertTitle className="text-xl font-black text-slate-800 mb-2 uppercase tracking-tight">Busca sem resultados</AlertTitle>
-                  <AlertDescription className="text-slate-400 font-medium mb-6">
-                    Tente ajustar seus filtros ou pesquisar por termos mais genéricos para encontrar o curso desejado.
-                  </AlertDescription>
-                  <Button
-                    variant="outline"
-                    onClick={() => { setSearchQuery(''); setSelectedCategory(null); }}
-                    className="h-11 px-8 rounded-xl font-black text-[10px] uppercase tracking-widest border-2 hover:bg-white"
-                  >
-                    LIMPAR TODOS OS FILTROS
-                  </Button>
-                </Alert>
-              </div>
-            )}
-          </section>
-        </main>
-      </div>
+          {filteredCourses.length > 0 ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
+              {filteredCourses.map((course) => (
+                <CourseCard
+                  key={course.id}
+                  course={course}
+                  isEnrolled={myEnrollments.some(e => e.courseId === course.id)}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="py-32 flex flex-col items-center">
+              <Alert className="max-w-xl bg-slate-50 border-slate-200 border-dashed border-4 flex flex-col items-center text-center p-20 rounded-[3rem]">
+                <div className="h-24 w-24 bg-white rounded-[2rem] shadow-xl border border-slate-100 flex items-center justify-center mb-8">
+                  <Search className="h-10 w-10 text-slate-200" />
+                </div>
+                <AlertTitle className="text-2xl font-black text-slate-800 mb-4 uppercase tracking-tight">Nenhuma trilha encontrada</AlertTitle>
+                <AlertDescription className="text-slate-400 font-medium mb-10 text-lg">
+                  Não encontramos resultados para sua busca atual. Tente usar termos diferentes ou limpar os filtros de categoria abaixo.
+                </AlertDescription>
+                <Button
+                  variant="outline"
+                  onClick={() => { setSearchQuery(''); setSelectedCategory(null); }}
+                  className="h-16 px-12 rounded-2xl font-black text-xs uppercase tracking-widest border-2 bg-white hover:bg-slate-100 shadow-sm"
+                >
+                  LIMPAR TODOS OS FILTROS
+                </Button>
+              </Alert>
+            </div>
+          )}
+        </section>
+      </main>
     </div>
   );
-
 }
 
 // --- COURSE CARD (UPGRADED) ---

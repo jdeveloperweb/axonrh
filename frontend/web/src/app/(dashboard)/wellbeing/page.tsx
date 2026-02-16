@@ -233,71 +233,135 @@ export default function WellbeingPage() {
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                {/* Radar Chart Panel */}
+                {/* Dynamic Wellbeing Ecosystem */}
                 <Card className="border-none shadow-lg bg-white overflow-hidden flex flex-col h-[600px] border border-gray-100">
                     <div className="p-6 flex items-center justify-between border-b border-gray-100 bg-gray-50/30">
                         <div>
                             <CardTitle className="text-lg font-bold flex items-center gap-2">
-                                <Sparkles className="w-5 h-5 text-yellow-500" />
-                                Estrela de Bem-Estar Corporativo
+                                <Sparkles className="w-5 h-5 text-purple-500" />
+                                Ecossistema de Vitalidade Corporativa
                             </CardTitle>
-                            <p className="text-sm text-gray-500">Indicadores de saúde e clima organizacional via IA</p>
+                            <p className="text-sm text-gray-500">Representação viva da energia e saúde da organização</p>
                         </div>
                         <div className="px-3 py-1 bg-purple-50 rounded-lg">
-                            <span className="text-xs font-bold text-purple-700">Visão Geral</span>
+                            <span className="text-xs font-bold text-purple-700">IA Monitor</span>
                         </div>
                     </div>
-                    <CardContent className="flex-1 p-6 flex flex-col lg:flex-row gap-6">
-                        <div className="flex-1 h-full min-h-[300px]">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
-                                    <defs>
-                                        <linearGradient id="radarGradient" x1="0" y1="0" x2="1" y2="1">
-                                            <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8} />
-                                            <stop offset="95%" stopColor="#6366f1" stopOpacity={0.4} />
-                                        </linearGradient>
-                                    </defs>
-                                    <PolarGrid stroke="#f1f5f9" strokeWidth={2} />
-                                    <PolarAngleAxis
-                                        dataKey="subject"
-                                        tick={{ fill: '#475569', fontSize: 13, fontWeight: 600 }}
-                                    />
-                                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                                    <Radar
-                                        name="Clima Atual"
-                                        dataKey="value"
-                                        stroke="#6366f1"
-                                        strokeWidth={3}
-                                        fill="url(#radarGradient)"
-                                        fillOpacity={0.7}
-                                    />
-                                    <Tooltip
-                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                                    />
-                                </RadarChart>
-                            </ResponsiveContainer>
+                    <CardContent className="flex-1 p-6 flex flex-col lg:flex-row gap-10 items-center justify-center relative bg-gradient-to-b from-white to-purple-50/20 px-10">
+                        {/* Organic Ecosystem Visual Area */}
+                        <div className="relative w-full h-[400px] flex items-center justify-center">
+                            {/* Decorative Grid/Lines for Depth */}
+                            <div className="absolute inset-0 opacity-20 pointer-events-none">
+                                <div className="absolute top-1/2 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-purple-300 to-transparent" />
+                                <div className="absolute top-0 left-1/2 w-[1px] h-full bg-gradient-to-b from-transparent via-purple-300 to-transparent" />
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] border border-purple-200 rounded-full border-dashed animate-[spin_60s_linear_infinite]" />
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[250px] h-[250px] border border-purple-100 rounded-full border-dashed animate-[spin_40s_linear_infinite_reverse]" />
+                            </div>
+
+                            {/* Center Heart Orb */}
+                            <div
+                                className="relative z-20 group"
+                                style={{ transform: `scale(${0.8 + (statsData?.averageScore || 2.5) / 10})` }}
+                            >
+                                <div className="w-32 h-32 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 shadow-[0_0_50px_rgba(139,92,246,0.4)] animate-orb-pulse flex flex-col items-center justify-center text-white relative cursor-help transition-all duration-500 hover:scale-105 active:scale-95 overflow-hidden">
+                                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20" />
+                                    <Sparkles className="w-6 h-6 mb-1 drop-shadow-md" />
+                                    <span className="text-2xl font-black">{statsData?.averageScore ? statsData.averageScore.toFixed(1) : '3.5'}</span>
+                                    <span className="text-[10px] uppercase font-bold tracking-tighter opacity-80">Vitalidade</span>
+                                </div>
+                                <div className="absolute -inset-4 bg-purple-400/20 rounded-full blur-2xl animate-pulse -z-10" />
+                            </div>
+
+                            {/* Satellite Orbs */}
+                            {radarData.map((item, idx) => {
+                                // Positions based on index (pentagon-like layout)
+                                const angle = (idx * 360 / 5) - 90;
+                                const radius = 160;
+                                const x = Math.cos(angle * Math.PI / 180) * radius;
+                                const y = Math.sin(angle * Math.PI / 180) * radius;
+
+                                const orbSize = 65 + (item.value / 100) * 35;
+                                const floatClass = idx % 2 === 0 ? 'animate-orb-float-1' : 'animate-orb-float-2';
+
+                                // Color logic
+                                const isWarning = item.value < 40;
+                                const isHealthy = item.value > 70;
+
+                                const colorClass = isWarning
+                                    ? 'from-red-400 to-rose-500 border-red-200 shadow-red-200'
+                                    : isHealthy
+                                        ? 'from-emerald-400 to-teal-500 border-emerald-200 shadow-emerald-200'
+                                        : 'from-blue-400 to-indigo-500 border-blue-200 shadow-indigo-200';
+
+                                return (
+                                    <div
+                                        key={idx}
+                                        className={`absolute z-30 flex flex-col items-center gap-2 group transition-all duration-700 hover:scale-110 ${floatClass}`}
+                                        style={{
+                                            left: `calc(50% + ${x}px)`,
+                                            top: `calc(50% + ${y}px)`,
+                                            transform: 'translate(-50%, -50%)',
+                                            animationDelay: `${idx * 0.5}s`
+                                        }}
+                                    >
+                                        <div
+                                            className={`rounded-3xl bg-gradient-to-br ${colorClass} shadow-lg border-2 flex flex-col items-center justify-center p-4 relative cursor-pointer`}
+                                            style={{ width: `${orbSize}px`, height: `${orbSize}px` }}
+                                        >
+                                            <span className="text-white font-black text-lg drop-shadow-sm">{Math.round(item.value)}%</span>
+                                            <div className="absolute inset-0 rounded-3xl bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity backdrop-brightness-110" />
+                                        </div>
+                                        <div className="glass px-3 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 -translate-y-2 group-hover:translate-y-0 shadow-lg">
+                                            <span className="text-[10px] font-bold text-gray-800 whitespace-nowrap">{item.subject}</span>
+                                        </div>
+
+                                        {/* Connector line effect */}
+                                        <div
+                                            className="absolute top-1/2 left-1/2 w-[1px] bg-gradient-to-r from-purple-200 to-transparent -z-10 origin-left"
+                                            style={{
+                                                width: `${radius}px`,
+                                                transform: `rotate(${angle + 180}deg) scaleX(${0.5})`,
+                                                opacity: 0.3
+                                            }}
+                                        />
+                                    </div>
+                                );
+                            })}
                         </div>
 
-                        {/* Sidebar Info */}
-                        <div className="w-full lg:w-48 space-y-4 flex flex-col justify-center">
-                            <div className="p-4 bg-purple-50/50 rounded-2xl border border-purple-100">
-                                <p className="text-xs text-purple-600 font-bold uppercase tracking-widest mb-2">Insight de IA</p>
-                                <p className="text-sm text-gray-700 leading-relaxed italic">
+                        {/* Sidebar Legend/Info */}
+                        <div className="w-full lg:w-64 space-y-6 shrink-0 relative z-40">
+                            <div className="p-5 bg-white/60 backdrop-blur-md rounded-2xl border border-purple-100 shadow-sm relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 p-2 opacity-5 group-hover:rotate-12 transition-transform">
+                                    <Sparkles className="w-8 h-8 text-purple-500" />
+                                </div>
+                                <p className="text-[10px] text-purple-600 font-bold uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                                    <Brain className="w-3 h-3" />
+                                    Insight da IA Axon
+                                </p>
+                                <p className="text-sm text-gray-700 leading-relaxed italic font-medium">
                                     "{statsData && statsData.averageScore >= 3
-                                        ? "O clima organizacional está positivo. Mantenha as práticas de suporte e feedback."
-                                        : "Atenção: Níveis de carga elevados detectados. Recomenda-se ações de alívio e segurança psicológica."}"
+                                        ? "O ecossistema apresenta uma tendência expansiva. Foco em manter o equilíbrio de carga."
+                                        : "Atenção: Percebemos contração nas esferas de vitalidade. Recomenda-se ações imediatas de acolhimento."}"
                                 </p>
                             </div>
-                            <div className="space-y-3">
+
+                            <div className="space-y-4">
                                 {radarData.map((item, idx) => (
-                                    <div key={idx} className="flex flex-col gap-1">
-                                        <div className="flex items-center justify-between text-xs">
-                                            <span className="text-gray-500 font-medium">{item.subject}</span>
-                                            <span className="text-gray-900 font-bold">{Math.round(item.value)}%</span>
+                                    <div key={idx} className="group cursor-default">
+                                        <div className="flex items-center justify-between mb-1.5 px-1">
+                                            <div className="flex items-center gap-2">
+                                                <div className={`w-2 h-2 rounded-full ${item.value < 40 ? 'bg-red-400' : item.value > 70 ? 'bg-emerald-400' : 'bg-blue-400'}`} />
+                                                <span className="text-xs font-bold text-gray-600 group-hover:text-gray-900 transition-colors">{item.subject}</span>
+                                            </div>
+                                            <span className="text-xs font-black text-gray-900">{Math.round(item.value)}%</span>
                                         </div>
-                                        <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
+                                        <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden p-[1px] border border-gray-50">
                                             <div
-                                                className="bg-purple-600 h-full rounded-full transition-all duration-1000"
+                                                className={`h-full rounded-full transition-all duration-1000 ${item.value < 40 ? 'bg-gradient-to-r from-red-400 to-rose-500' :
+                                                    item.value > 70 ? 'bg-gradient-to-r from-emerald-400 to-teal-500' :
+                                                        'bg-gradient-to-r from-purple-500 to-indigo-600'
+                                                    }`}
                                                 style={{ width: `${item.value}%` }}
                                             />
                                         </div>
@@ -307,6 +371,7 @@ export default function WellbeingPage() {
                         </div>
                     </CardContent>
                 </Card>
+
 
                 {/* Sentiment Distribution and Resources */}
                 <div className="space-y-8 flex flex-col h-[600px]">
