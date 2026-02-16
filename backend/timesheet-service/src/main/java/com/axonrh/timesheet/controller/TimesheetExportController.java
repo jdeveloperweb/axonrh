@@ -66,9 +66,16 @@ public class TimesheetExportController {
             @AuthenticationPrincipal org.springframework.security.oauth2.jwt.Jwt jwt) {
 
         // Se o usuário não for do RH/Admin, ele só pode exportar seus próprios subordinados
-        boolean isHR = jwt.getAuthorities().stream()
-                .anyMatch(a -> java.util.Arrays.asList("ADMIN", "RH", "GESTOR_RH", "ANALISTA_DP")
-                        .contains(a.getAuthority().toUpperCase()));
+        java.util.List<String> roles = jwt.getClaimAsStringList("roles");
+        if (roles == null) roles = java.util.Collections.emptyList();
+        
+        java.util.List<String> permissions = jwt.getClaimAsStringList("permissions");
+        if (permissions == null) permissions = java.util.Collections.emptyList();
+
+        boolean isHR = roles.stream().anyMatch(r -> 
+                java.util.Arrays.asList("ROLE_ADMIN", "ROLE_RH", "ROLE_GESTOR_RH", "ROLE_ANALISTA_DP", "ADMIN", "RH", "GESTOR_RH", "ANALISTA_DP")
+                        .contains(r.toUpperCase()))
+                || permissions.contains("ADMIN");
 
         java.util.UUID finalManagerId = managerId;
         
