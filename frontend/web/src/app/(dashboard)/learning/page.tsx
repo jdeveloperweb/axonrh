@@ -35,6 +35,8 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle, CheckCircle2 } from 'lucide-react';
 
 export default function LearningDashboard() {
   const { user } = useAuthStore();
@@ -183,20 +185,19 @@ export default function LearningDashboard() {
             </div>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm flex flex-col justify-between group hover:border-primary/40 transition-all border-l-4 border-l-emerald-500 relative overflow-hidden">
-            <div className="space-y-4 relative z-10">
+          <div className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-8 shadow-sm flex flex-col justify-between group hover:border-emerald-200 transition-all">
+            <div className="space-y-4">
               <div className="flex items-center gap-2 text-emerald-600">
                 <Zap className="h-4 w-4 fill-emerald-600" />
                 <span className="text-[10px] font-black uppercase tracking-widest">Recomendado para você</span>
               </div>
-              <h4 className="font-black text-slate-900 leading-tight line-clamp-2 text-lg">
+              <h4 className="font-black text-slate-800 leading-tight line-clamp-2 text-lg uppercase tracking-tight">
                 {recommendedCourse?.title || "Treinamento de Liderança Alpha"}
               </h4>
             </div>
-            <Link href={recommendedCourse ? `/learning/course/${recommendedCourse.id}` : '#'} className="mt-6 relative z-10">
-              <button className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary hover:gap-3 transition-all group/btn">
-                Ver detalhes do curso
-                <ArrowRight className="h-3 w-3 transition-transform group-hover/btn:translate-x-1" />
+            <Link href={recommendedCourse ? `/learning/course/${recommendedCourse.id}` : '#'} className="mt-6">
+              <button className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-600 hover:gap-3 transition-all font-bold">
+                Ver detalhes do curso <ArrowRight className="h-3 w-3" />
               </button>
             </Link>
           </div>
@@ -280,8 +281,8 @@ export default function LearningDashboard() {
               <div className="grid md:grid-cols-2 gap-6">
                 {myEnrollments.map((en) => (
                   <Link key={en.id} href={`/learning/course/${en.courseId || (en.course as any)?.id}`}>
-                    <div className="bg-white border border-slate-200 rounded-2xl p-6 flex items-center gap-6 hover:shadow-xl transition-all group cursor-pointer border-l-4 border-l-primary relative overflow-hidden">
-                      <div className="h-20 w-20 bg-slate-50 rounded-lg overflow-hidden flex-shrink-0 border border-slate-100">
+                    <div className="bg-white border border-slate-100 rounded-2xl p-6 flex items-center gap-6 hover:shadow-xl transition-all group cursor-pointer hover:border-primary/30">
+                      <div className="h-20 w-20 bg-slate-50 rounded-xl overflow-hidden flex-shrink-0 border border-slate-100">
                         {en.courseThumbnail ? (
                           <img src={getPhotoUrl(en.courseThumbnail) || ''} alt={en.courseName} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                         ) : <BookOpen className="h-full w-full p-6 text-slate-200" />}
@@ -329,13 +330,23 @@ export default function LearningDashboard() {
                 ))}
               </div>
             ) : (
-              <div className="py-24 text-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center">
-                <BookOpen className="h-16 w-16 text-slate-200 mb-6" />
-                <h4 className="text-xl font-black text-slate-800 mb-2">BUSCA SEM RESULTADOS</h4>
-                <p className="text-sm font-medium text-slate-400 max-w-xs mx-auto">Tente ajustar seus filtros ou pesquisar por termos mais genéricos.</p>
-                <Button variant="ghost" onClick={() => { setSearchQuery(''); setSelectedCategory(null); }} className="text-primary font-black mt-6 uppercase text-xs tracking-widest hover:bg-primary/5">
-                  Limpar todos os filtros
-                </Button>
+              <div className="py-24 flex flex-col items-center">
+                <Alert className="max-w-md bg-slate-50 border-slate-200 flex flex-col items-center text-center p-12 rounded-3xl">
+                  <div className="h-16 w-16 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center mb-6">
+                    <BookOpen className="h-8 w-8 text-slate-300" />
+                  </div>
+                  <AlertTitle className="text-xl font-black text-slate-800 mb-2 uppercase tracking-tight">Busca sem resultados</AlertTitle>
+                  <AlertDescription className="text-slate-400 font-medium mb-6">
+                    Tente ajustar seus filtros ou pesquisar por termos mais genéricos para encontrar o curso desejado.
+                  </AlertDescription>
+                  <Button
+                    variant="outline"
+                    onClick={() => { setSearchQuery(''); setSelectedCategory(null); }}
+                    className="h-11 px-8 rounded-xl font-black text-[10px] uppercase tracking-widest border-2 hover:bg-white"
+                  >
+                    LIMPAR TODOS OS FILTROS
+                  </Button>
+                </Alert>
               </div>
             )}
           </section>
@@ -376,8 +387,11 @@ function CourseCard({ course, isEnrolled }: { course: any, isEnrolled?: boolean 
           )}
 
           {isEnrolled && (
-            <div className="absolute inset-0 bg-primary/10 backdrop-blur-[1px] flex items-center justify-center border-b-4 border-b-primary z-10">
-              <Badge className="bg-primary text-white font-black px-4 py-1.5 shadow-xl select-none uppercase text-[9px] tracking-wider">MATRICULADO</Badge>
+            <div className="absolute inset-0 bg-primary/5 backdrop-blur-[1px] flex items-center justify-center z-10 transition-all duration-500">
+              <Badge className="bg-primary text-white font-black px-4 py-1.5 shadow-xl select-none uppercase text-[9px] tracking-wider border-none rounded-lg">
+                <CheckCircle2 className="h-3 w-3 mr-1.5" />
+                MATRICULADO
+              </Badge>
             </div>
           )}
         </div>
