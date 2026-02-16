@@ -238,6 +238,18 @@ public class EmployeeController {
         return ResponseEntity.ok(terminated);
     }
 
+    @PostMapping("/{id}/reactivate")
+    @PreAuthorize("hasAuthority('EMPLOYEE:UPDATE')")
+    @Operation(summary = "Reativa (religa) um colaborador desligado")
+    public ResponseEntity<EmployeeResponse> reactivate(
+            @PathVariable UUID id,
+            @RequestHeader(value = "X-User-Id", required = false) UUID userId) {
+
+        log.info("Religando colaborador: {}", id);
+        EmployeeResponse reactivated = employeeService.reactivate(id, userId);
+        return ResponseEntity.ok(reactivated);
+    }
+
     @GetMapping("/count")
     @PreAuthorize("hasAuthority('EMPLOYEE:READ')")
     @Operation(summary = "Conta colaboradores ativos")

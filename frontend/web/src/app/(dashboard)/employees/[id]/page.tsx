@@ -287,6 +287,31 @@ export default function EmployeeDetailPage() {
     setSelectedImage(null);
   };
 
+  const handleReactivate = async () => {
+    const confirmed = window.confirm('Deseja realmente religar este colaborador? O status será alterado para Ativo e o acesso será restabelecido.');
+    if (!confirmed) return;
+
+    try {
+      setLoading(true);
+      await employeesApi.reactivate(employeeId);
+      toast({
+        title: 'Sucesso',
+        description: 'Colaborador religado com sucesso!',
+      });
+      await fetchEmployee();
+      setActiveTab('overview');
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: 'Erro',
+        description: 'Falha ao religar colaborador',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="p-6">
@@ -427,7 +452,7 @@ export default function EmployeeDetailPage() {
                 Editar
               </Button>
 
-              {employee.status !== 'TERMINATED' && (
+              {employee.status !== 'TERMINATED' ? (
                 <Button
                   variant="ghost"
                   onClick={() => setTerminationModalOpen(true)}
@@ -435,6 +460,15 @@ export default function EmployeeDetailPage() {
                 >
                   <UserX className="w-4 h-4" />
                   Desligar
+                </Button>
+              ) : (
+                <Button
+                  variant="ghost"
+                  onClick={handleReactivate}
+                  className="flex-1 lg:flex-none h-11 px-6 rounded-xl text-emerald-600 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/20 dark:hover:bg-emerald-950/40 transition-all font-bold text-xs uppercase tracking-widest gap-2"
+                >
+                  <User className="w-4 h-4" />
+                  Religar Colaborador
                 </Button>
               )}
             </div>

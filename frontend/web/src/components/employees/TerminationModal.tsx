@@ -40,7 +40,8 @@ import {
     ShieldAlert,
     ClipboardCheck,
     Building2,
-    Home
+    Home,
+    DollarSign
 } from 'lucide-react';
 
 interface TerminationModalProps {
@@ -69,6 +70,13 @@ export function TerminationModal({ employee, isOpen, onClose, onSuccess }: Termi
         accountDeactivated: false,
         emailDeactivated: false,
         exitInterviewDone: false,
+        dismissalExamDone: false,
+        dismissalExamDate: '',
+        severancePayAmount: 0,
+        severancePayDate: '',
+        severancePayMethod: 'TRANSFERENCE',
+        financialNotes: '',
+        generalNotes: '',
     });
 
     const terminationTypeLabels: Record<string, string> = {
@@ -101,9 +109,10 @@ export function TerminationModal({ employee, isOpen, onClose, onSuccess }: Termi
             setLoading(true);
             const process = await processesApi.terminations.initiate(formData);
 
-            // Auto-complete if everything is checked? Or just initiate.
-            // The user wants to "follow a process", so maybe just initiating is enough for now, 
-            // or we can have a "Finalizar Desligamento" button in the modal.
+            // Se o usuário clicar em "Confirmar Desligamento", nós finalizamos.
+            // Se mudarmos o botão para "Salvar Rascunho", poderíamos só iniciar.
+            // Por enquanto, vamos seguir o que o usuário sugeriu: Ter um processo.
+            // Para ser prático, se ele preencheu tudo aqui, finaliza.
 
             await processesApi.terminations.complete(process.id);
 
@@ -339,6 +348,84 @@ export function TerminationModal({ employee, isOpen, onClose, onSuccess }: Termi
                                 </Label>
                             </div>
                         </div>
+                    </div>
+
+                    {/* Exames e Atividades */}
+                    <div className="space-y-3">
+                        <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+                            <ClipboardCheck className="w-4 h-4 text-gray-500" />
+                            Exames e Atividades
+                        </h4>
+                        <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg border border-gray-100">
+                            <div className="flex items-center space-x-2">
+                                <Checkbox
+                                    id="exam"
+                                    checked={formData.dismissalExamDone}
+                                    onCheckedChange={(v: boolean) => setFormData({ ...formData, dismissalExamDone: !!v })}
+                                />
+                                <Label htmlFor="exam" className="flex items-center gap-2 cursor-pointer">
+                                    Exame Demissional Realizado
+                                </Label>
+                            </div>
+                            <div className="space-y-1">
+                                <Label className="text-xs">Data do Exame</Label>
+                                <Input
+                                    type="date"
+                                    value={formData.dismissalExamDate}
+                                    onChange={(e) => setFormData({ ...formData, dismissalExamDate: e.target.value })}
+                                    className="h-8 text-xs bg-white border-gray-200"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Financeiro */}
+                    <div className="space-y-3">
+                        <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+                            <DollarSign className="w-4 h-4 text-emerald-500" />
+                            Informações Financeiras
+                        </h4>
+                        <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg border border-gray-100">
+                            <div className="space-y-1">
+                                <Label className="text-xs">Valor da Rescisão (Previsto)</Label>
+                                <Input
+                                    type="number"
+                                    step="0.01"
+                                    placeholder="0,00"
+                                    value={formData.severancePayAmount}
+                                    onChange={(e) => setFormData({ ...formData, severancePayAmount: parseFloat(e.target.value) })}
+                                    className="h-8 text-xs bg-white border-gray-200"
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <Label className="text-xs">Data de Pagamento</Label>
+                                <Input
+                                    type="date"
+                                    value={formData.severancePayDate}
+                                    onChange={(e) => setFormData({ ...formData, severancePayDate: e.target.value })}
+                                    className="h-8 text-xs bg-white border-gray-200"
+                                />
+                            </div>
+                            <div className="space-y-1 col-span-2">
+                                <Label className="text-xs">Método de Pagamento</Label>
+                                <Input
+                                    placeholder="Ex: Transferência Bancária, PIX, Cheque..."
+                                    value={formData.severancePayMethod}
+                                    onChange={(e) => setFormData({ ...formData, severancePayMethod: e.target.value })}
+                                    className="h-8 text-xs bg-white border-gray-200"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>Comentários Finais</Label>
+                        <Textarea
+                            placeholder="Observações gerais sobre o desligamento..."
+                            value={formData.generalNotes}
+                            onChange={(e) => setFormData({ ...formData, generalNotes: e.target.value })}
+                            className="bg-white border-gray-200 min-h-[60px] text-sm"
+                        />
                     </div>
                 </form>
 

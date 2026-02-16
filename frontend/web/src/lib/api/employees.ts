@@ -489,4 +489,9 @@ export const employeesApi = {
 
     return api.post<FormData, Record<string, any>>('/employees/documents/extract', formData);
   },
+
+  // Reactivate employee
+  reactivate: async (id: string): Promise<Employee> => {
+    return api.post<unknown, Employee>(`/employees/${id}/reactivate`, {});
+  },
 };

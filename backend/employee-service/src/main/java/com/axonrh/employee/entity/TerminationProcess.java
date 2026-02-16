@@ -2,9 +2,11 @@ package com.axonrh.employee.entity;
 
 import com.axonrh.employee.entity.enums.TerminationNoticePeriod;
 import com.axonrh.employee.entity.enums.TerminationType;
+import com.axonrh.employee.entity.enums.TerminationStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedBy;
+import java.math.BigDecimal;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -53,6 +55,11 @@ public class TerminationProcess {
 
     @Column(name = "reason", columnDefinition = "TEXT")
     private String reason;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 30)
+    @Builder.Default
+    private TerminationStatus status = TerminationStatus.IN_PROGRESS;
 
     // ==================== Checklist de Devolução ====================
 
@@ -103,6 +110,34 @@ public class TerminationProcess {
     @Column(name = "esocial_sent")
     @Builder.Default
     private Boolean esocialSent = false;
+
+    // ==================== Exames e Atividades ====================
+
+    @Column(name = "dismissal_exam_done")
+    @Builder.Default
+    private Boolean dismissalExamDone = false;
+
+    @Column(name = "dismissal_exam_date")
+    private LocalDate dismissalExamDate;
+
+    // ==================== Financeiro ====================
+
+    @Column(name = "severance_pay_amount", precision = 19, scale = 2)
+    private BigDecimal severancePayAmount;
+
+    @Column(name = "severance_pay_date")
+    private LocalDate severancePayDate;
+
+    @Column(name = "severance_pay_method", length = 50)
+    private String severancePayMethod;
+
+    @Column(name = "financial_notes", columnDefinition = "TEXT")
+    private String financialNotes;
+
+    // ==================== Comentários Gerais ====================
+
+    @Column(name = "general_notes", columnDefinition = "TEXT")
+    private String generalNotes;
 
     // ==================== Auditoria ====================
 

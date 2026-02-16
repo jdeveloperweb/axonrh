@@ -35,4 +35,14 @@ public class TerminationResponse {
     
     private LocalDateTime createdAt;
     private LocalDateTime completedAt;
+
+    // Novos campos
+    private String status;
+    private Boolean dismissalExamDone;
+    private LocalDate dismissalExamDate;
+    private java.math.BigDecimal severancePayAmount;
+    private LocalDate severancePayDate;
+    private String severancePayMethod;
+    private String financialNotes;
+    private String generalNotes;
 }

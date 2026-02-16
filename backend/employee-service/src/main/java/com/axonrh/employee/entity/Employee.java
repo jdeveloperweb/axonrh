@@ -359,4 +359,10 @@ public class Employee {
         this.status = EmployeeStatus.TERMINATED;
         this.isActive = false;
     }
+
+    public void reactivate() {
+        this.terminationDate = null;
+        this.status = EmployeeStatus.ACTIVE;
+        this.isActive = true;
+    }
 }

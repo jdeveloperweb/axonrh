@@ -52,6 +52,18 @@ public class TerminationProcessService {
         process.setEmailDeactivated(request.getEmailDeactivated() != null && request.getEmailDeactivated());
         process.setExitInterviewDone(request.getExitInterviewDone() != null && request.getExitInterviewDone());
 
+        // Novos campos
+        if (request.getStatus() != null) {
+            process.setStatus(com.axonrh.employee.entity.enums.TerminationStatus.valueOf(request.getStatus()));
+        }
+        process.setDismissalExamDone(request.getDismissalExamDone() != null && request.getDismissalExamDone());
+        process.setDismissalExamDate(request.getDismissalExamDate());
+        process.setSeverancePayAmount(request.getSeverancePayAmount());
+        process.setSeverancePayDate(request.getSeverancePayDate());
+        process.setSeverancePayMethod(request.getSeverancePayMethod());
+        process.setFinancialNotes(request.getFinancialNotes());
+        process.setGeneralNotes(request.getGeneralNotes());
+
         process = repository.save(process);
 
         return mapToResponse(process);
@@ -64,6 +76,7 @@ public class TerminationProcessService {
 
         process.setCompletedAt(LocalDateTime.now());
         process.setCompletedBy(completedBy);
+        process.setStatus(com.axonrh.employee.entity.enums.TerminationStatus.COMPLETED);
         
         // Finalize employee status using EmployeeService to trigger events and history
         employeeService.terminate(
@@ -77,6 +90,7 @@ public class TerminationProcessService {
         return mapToResponse(process);
     }
 
+    @Transactional(readOnly = true)
     public TerminationResponse getByEmployeeId(UUID employeeId) {
         TerminationProcess process = repository.findByEmployeeId(employeeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Processo de desligamento não encontrado para este colaborador"));
@@ -110,6 +124,16 @@ public class TerminationProcessService {
         
         response.setCreatedAt(process.getCreatedAt());
         response.setCompletedAt(process.getCompletedAt());
+        
+        // Novos campos
+        response.setStatus(process.getStatus() != null ? process.getStatus().name() : null);
+        response.setDismissalExamDone(process.getDismissalExamDone());
+        response.setDismissalExamDate(process.getDismissalExamDate());
+        response.setSeverancePayAmount(process.getSeverancePayAmount());
+        response.setSeverancePayDate(process.getSeverancePayDate());
+        response.setSeverancePayMethod(process.getSeverancePayMethod());
+        response.setFinancialNotes(process.getFinancialNotes());
+        response.setGeneralNotes(process.getGeneralNotes());
         return response;
     }
 }

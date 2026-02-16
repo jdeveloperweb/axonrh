@@ -62,6 +62,16 @@ export interface TerminationProcess {
 
     createdAt: string;
     completedAt?: string;
+
+    // Novos campos
+    status?: string;
+    dismissalExamDone: boolean;
+    dismissalExamDate?: string;
+    severancePayAmount?: number;
+    severancePayDate?: string;
+    severancePayMethod?: string;
+    financialNotes?: string;
+    generalNotes?: string;
 }
 
 export interface TerminationRequest {
@@ -84,6 +94,16 @@ export interface TerminationRequest {
     accountDeactivated?: boolean;
     emailDeactivated?: boolean;
     exitInterviewDone?: boolean;
+
+    // Novos campos
+    status?: string;
+    dismissalExamDone?: boolean;
+    dismissalExamDate?: string;
+    severancePayAmount?: number;
+    severancePayDate?: string;
+    severancePayMethod?: string;
+    financialNotes?: string;
+    generalNotes?: string;
 }
 
 export const processesApi = {

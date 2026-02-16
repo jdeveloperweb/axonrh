@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { processesApi, TerminationProcess, TerminationType, NoticePeriod } from '@/lib/api/processes';
 import { formatDate } from '@/lib/utils';
-import { AlertTriangle, CheckCircle2, XCircle, Info, Calendar, ShieldCheck, Laptop, Mouse, Keyboard, Headphones, CreditCard, Key } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, XCircle, Info, Calendar, ShieldCheck, Laptop, Mouse, Keyboard, Headphones, CreditCard, Key, DollarSign, FileText, Activity } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
 
 interface TerminationTabProps {
     employeeId: string;
@@ -168,9 +169,60 @@ export function TerminationTab({ employeeId }: TerminationTabProps) {
                         </div>
                     </CardContent>
                 </Card>
+
+                {/* Informações Financeiras */}
+                <Card className="md:col-span-1 border-emerald-100 dark:border-emerald-900/30">
+                    <CardHeader className="bg-emerald-50 dark:bg-emerald-950/20 border-b border-emerald-100 dark:border-emerald-900/30">
+                        <CardTitle className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-emerald-800 dark:text-emerald-400">
+                            <DollarSign className="w-4 h-4" />
+                            Financeiro (Rescisão)
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6 space-y-4">
+                        <div>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Valor Total Previsto</p>
+                            <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                                {process.severancePayAmount ? formatCurrency(process.severancePayAmount) : 'R$ 0,00'}
+                            </p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                            <div>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Data Pagto.</p>
+                                <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                                    {process.severancePayDate ? formatDate(process.severancePayDate) : '--/--/----'}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Método</p>
+                                <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                                    {process.severancePayMethod || 'Não informado'}
+                                </p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Exames e Atividades */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-sm font-black uppercase tracking-widest">
+                            <Activity className="w-4 h-4 text-rose-500" />
+                            Exames e Saída
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <ChecklistItem checked={process.dismissalExamDone} label="Exame Demissional" icon={Activity} />
+                        {process.dismissalExamDate && (
+                            <div className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
+                                <span className="text-[10px] font-black text-slate-400 uppercase">Data da Realização</span>
+                                <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{formatDate(process.dismissalExamDate)}</span>
+                            </div>
+                        )}
+                        <ChecklistItem checked={process.exitInterviewDone} label="Entrevista de Desligamento" icon={Info} />
+                    </CardContent>
+                </Card>
                 {/* Devolução de Equipamentos */}
                 <Card>
                     <CardHeader>
@@ -199,16 +251,31 @@ export function TerminationTab({ employeeId }: TerminationTabProps) {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-sm font-black uppercase tracking-widest">
                             <ShieldCheck className="w-4 h-4 text-indigo-500" />
-                            Checklist de Processos
+                            Checklist de Acessos
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                        <ChecklistItem checked={process.accountDeactivated} label="Inativação de Acessos (Sistemas)" icon={Key} />
-                        <ChecklistItem checked={process.emailDeactivated} label="Desativação de E-mail" icon={Laptop} />
-                        <ChecklistItem checked={process.exitInterviewDone} label="Entrevista de Desligamento" icon={Info} />
+                        <ChecklistItem checked={process.accountDeactivated} label="Inativação de Acesso (ERP/Sistemas)" icon={Key} />
+                        <ChecklistItem checked={process.emailDeactivated} label="Desativação de E-mail Corp." icon={Laptop} />
                     </CardContent>
                 </Card>
             </div>
+
+            {process.generalNotes && (
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-sm font-black uppercase tracking-widest">
+                            <FileText className="w-4 h-4 text-slate-500" />
+                            Observações Gerais
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                        <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl text-slate-700 dark:text-slate-300">
+                            {process.generalNotes}
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
         </div>
     );
 }

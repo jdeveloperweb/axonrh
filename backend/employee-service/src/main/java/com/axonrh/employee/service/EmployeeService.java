@@ -496,6 +496,32 @@ public class EmployeeService {
         return employeeMapper.toResponse(saved);
     }
 
+    @Transactional
+    @CacheEvict(value = "employees", key = "#id")
+    public EmployeeResponse reactivate(UUID id, UUID userId) {
+        UUID tenantId = getTenantId();
+        log.info("Religando colaborador: {} - tenant: {}", id, tenantId);
+
+        Employee employee = employeeRepository.findByTenantIdAndId(tenantId, id)
+                .orElseThrow(() -> new ResourceNotFoundException("Colaborador nao encontrado: " + id));
+
+        if (employee.getStatus() != EmployeeStatus.TERMINATED) {
+            throw new IllegalStateException("Apenas colaboradores desligados podem ser religados.");
+        }
+
+        employee.reactivate();
+        employee.setUpdatedBy(userId);
+
+        Employee saved = employeeRepository.save(employee);
+        saveHistory(saved, "RELIGAMENTO", "TERMINATED", "ACTIVE", "Colaborador religado no sistema", userId);
+        
+        // Poderiamos publicar um evento de Re-contratacao? 
+        // publishUpdatedEvent(saved, Collections.singletonMap("status", "TERMINATED"), Collections.singletonMap("status", "ACTIVE"));
+
+        log.info("Colaborador religado: {}", id);
+        return employeeMapper.toResponse(saved);
+    }
+
     /**
      * Conta colaboradores ativos.
      */
