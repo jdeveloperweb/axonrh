@@ -153,6 +153,12 @@ public class TerminationProcessService {
         response.setTerminationDate(process.getTerminationDate());
         response.setReason(process.getReason());
         
+        if (process.getEmployee() != null) {
+            response.setDepartmentName(process.getEmployee().getDepartment() != null ? process.getEmployee().getDepartment().getName() : null);
+            response.setPositionTitle(process.getEmployee().getPosition() != null ? process.getEmployee().getPosition().getTitle() : null);
+            response.setPhotoUrl(process.getEmployee().getPhotoUrl());
+        }
+        
         response.setReturnedLaptop(process.getReturnedLaptop());
         response.setReturnedMouse(process.getReturnedMouse());
         response.setReturnedKeyboard(process.getReturnedKeyboard());

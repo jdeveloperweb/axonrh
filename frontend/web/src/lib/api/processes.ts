@@ -43,6 +43,9 @@ export interface TerminationProcess {
     lastWorkDay: string;
     terminationDate: string;
     reason?: string;
+    departmentName?: string;
+    positionTitle?: string;
+    photoUrl?: string;
 
     // Equipment checklist
     returnedLaptop: boolean;

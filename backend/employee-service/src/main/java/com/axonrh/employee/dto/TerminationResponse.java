@@ -18,6 +18,10 @@ public class TerminationResponse {
     private LocalDate lastWorkDay;
     private LocalDate terminationDate;
     private String reason;
+
+    private String departmentName;
+    private String positionTitle;
+    private String photoUrl;
     
     private Boolean returnedLaptop;
     private Boolean returnedMouse;

@@ -136,7 +136,7 @@ export default function ProcessesPage() {
                         : 'border-transparent text-gray-500 hover:text-gray-700'
                         }`}
                 >
-                    Contratações (Admissão Digital)
+                    Contratações ({admissions.length})
                 </button>
                 <button
                     onClick={() => setActiveTab('terminations')}
@@ -145,7 +145,7 @@ export default function ProcessesPage() {
                         : 'border-transparent text-gray-500 hover:text-gray-700'
                         }`}
                 >
-                    Desligamentos
+                    Desligamentos ({terminations.length})
                 </button>
             </div>
 
@@ -300,10 +300,20 @@ export default function ProcessesPage() {
                                                 <tr key={proc.id} className="hover:bg-gray-50/50 transition-colors">
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-center gap-3">
-                                                            <div className="w-8 h-8 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center font-bold text-xs">
-                                                                {proc.employeeName.charAt(0)}
+                                                            <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center font-bold text-sm overflow-hidden flex-shrink-0">
+                                                                {proc.photoUrl ? (
+                                                                    <img src={proc.photoUrl} alt={proc.employeeName} className="w-full h-full object-cover" />
+                                                                ) : (
+                                                                    proc.employeeName.charAt(0)
+                                                                )}
                                                             </div>
-                                                            <p className="font-semibold text-gray-900">{proc.employeeName}</p>
+                                                            <div>
+                                                                <p className="font-semibold text-gray-900">{proc.employeeName}</p>
+                                                                <div className="text-xs text-gray-500">
+                                                                    <p>{proc.positionTitle || 'Cargo não definido'}</p>
+                                                                    <p>{proc.departmentName || 'Depto não definido'}</p>
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4 text-sm text-gray-600">
