@@ -3,12 +3,17 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { processesApi, TerminationProcess, TerminationType, NoticePeriod } from '@/lib/api/processes';
+import { Employee } from '@/lib/api/employees';
 import { formatDate } from '@/lib/utils';
-import { AlertTriangle, CheckCircle2, XCircle, Info, Calendar, ShieldCheck, Laptop, Mouse, Keyboard, Headphones, CreditCard, Key, DollarSign, FileText, Activity } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, XCircle, Info, Calendar, ShieldCheck, Laptop, Mouse, Keyboard, Headphones, CreditCard, Key, DollarSign, FileText, Activity, Edit, Play } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
+import { TerminationModal } from './TerminationModal';
 
 interface TerminationTabProps {
     employeeId: string;
+    employee: Employee | null;
 }
 
 const terminationTypeLabels: Record<TerminationType, string> = {
@@ -27,24 +32,55 @@ const noticePeriodLabels: Record<NoticePeriod, string> = {
     WAIVED: 'Dispensado'
 };
 
-export function TerminationTab({ employeeId }: TerminationTabProps) {
+export function TerminationTab({ employeeId, employee }: TerminationTabProps) {
+    const { toast } = useToast();
     const [process, setProcess] = useState<TerminationProcess | null>(null);
     const [loading, setLoading] = useState(true);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [finishing, setFinishing] = useState(false);
+
+    const loadProcess = async () => {
+        try {
+            setLoading(true);
+            const data = await processesApi.terminations.getByEmployeeId(employeeId);
+            setProcess(data);
+        } catch (error) {
+            console.error('Failed to load termination process:', error);
+        } finally {
+            setLoading(false);
+        }
+    }
 
     useEffect(() => {
-        async function loadProcess() {
-            try {
-                setLoading(true);
-                const data = await processesApi.terminations.getByEmployeeId(employeeId);
-                setProcess(data);
-            } catch (error) {
-                console.error('Failed to load termination process:', error);
-            } finally {
-                setLoading(false);
-            }
-        }
         loadProcess();
     }, [employeeId]);
+
+    const handleFinalize = async () => {
+        if (!process) return;
+        const confirm = window.confirm('Deseja realmente FINALIZAR o desligamento? Esta ação irá inativar o colaborador no sistema.');
+        if (!confirm) return;
+
+        try {
+            setFinishing(true);
+            await processesApi.terminations.complete(process.id);
+            toast({
+                title: 'Sucesso',
+                description: 'Desligamento finalizado com sucesso.',
+            });
+            await loadProcess();
+            // Recarregar a página ou notificar pai para atualizar status do employee
+            window.location.reload();
+        } catch (error) {
+            console.error(error);
+            toast({
+                title: 'Erro',
+                description: 'Falha ao finalizar desligamento.',
+                variant: 'destructive',
+            });
+        } finally {
+            setFinishing(false);
+        }
+    };
 
     if (loading) {
         return <div className="p-12 text-center animate-pulse text-slate-400">Carregando detalhes do desligamento...</div>;
@@ -80,11 +116,36 @@ export function TerminationTab({ employeeId }: TerminationTabProps) {
                             <AlertTriangle className="w-4 h-4" />
                             Resumo do Desligamento
                         </h3>
-                        {process.completedAt && (
-                            <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-black rounded-full uppercase tracking-tighter">
-                                Processo Finalizado
-                            </span>
-                        )}
+                        <div className="flex gap-2">
+                            {!process.completedAt ? (
+                                <>
+                                    <span className="px-3 py-1 bg-amber-100 text-amber-700 text-[10px] font-black rounded-full uppercase tracking-tighter flex items-center gap-1">
+                                        <Activity className="w-3 h-3" />
+                                        Em Processo de Desligamento
+                                    </span>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-7 text-[10px] font-black uppercase tracking-widest border-slate-200 bg-white"
+                                        onClick={() => setIsEditModalOpen(true)}
+                                    >
+                                        <Edit className="w-3 h-3 mr-1" /> Editar
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        className="h-7 text-[10px] font-black uppercase tracking-widest bg-rose-600 hover:bg-rose-700 text-white"
+                                        onClick={handleFinalize}
+                                        disabled={finishing}
+                                    >
+                                        <Play className="w-3 h-3 mr-1" /> Finalizar Desligamento
+                                    </Button>
+                                </>
+                            ) : (
+                                <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-black rounded-full uppercase tracking-tighter">
+                                    Processo Finalizado
+                                </span>
+                            )}
+                        </div>
                     </div>
                     <CardContent className="p-6">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
@@ -276,6 +337,14 @@ export function TerminationTab({ employeeId }: TerminationTabProps) {
                     </CardContent>
                 </Card>
             )}
+
+            <TerminationModal
+                employee={employee}
+                initialData={process}
+                isOpen={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+                onSuccess={loadProcess}
+            />
         </div>
     );
 }

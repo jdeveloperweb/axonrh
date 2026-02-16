@@ -10,4 +10,5 @@ import java.util.UUID;
 @Repository
 public interface TerminationProcessRepository extends JpaRepository<TerminationProcess, UUID> {
     Optional<TerminationProcess> findByEmployeeId(UUID employeeId);
+    java.util.List<TerminationProcess> findAllByTenantId(UUID tenantId);
 }

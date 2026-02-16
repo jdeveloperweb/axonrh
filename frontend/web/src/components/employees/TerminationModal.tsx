@@ -24,7 +24,8 @@ import {
     processesApi,
     TerminationType,
     NoticePeriod,
-    TerminationRequest
+    TerminationRequest,
+    TerminationProcess
 } from '@/lib/api/processes';
 import { Employee } from '@/lib/api/employees';
 import { useToast } from '@/hooks/use-toast';
@@ -46,12 +47,13 @@ import {
 
 interface TerminationModalProps {
     employee: Employee | null;
+    initialData?: TerminationProcess | null;
     isOpen: boolean;
     onClose: () => void;
     onSuccess: () => void;
 }
 
-export function TerminationModal({ employee, isOpen, onClose, onSuccess }: TerminationModalProps) {
+export function TerminationModal({ employee, initialData, isOpen, onClose, onSuccess }: TerminationModalProps) {
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState<TerminationRequest>({
@@ -78,6 +80,37 @@ export function TerminationModal({ employee, isOpen, onClose, onSuccess }: Termi
         financialNotes: '',
         generalNotes: '',
     });
+
+    useEffect(() => {
+        if (initialData) {
+            setFormData({
+                employeeId: initialData.employeeId,
+                terminationType: initialData.terminationType,
+                noticePeriod: initialData.noticePeriod,
+                lastWorkDay: initialData.lastWorkDay,
+                terminationDate: initialData.terminationDate,
+                reason: initialData.reason || '',
+                returnedLaptop: initialData.returnedLaptop,
+                returnedMouse: initialData.returnedMouse,
+                returnedKeyboard: initialData.returnedKeyboard,
+                returnedHeadset: initialData.returnedHeadset,
+                returnedBadge: initialData.returnedBadge,
+                returnedToken: initialData.returnedToken,
+                otherEquipment: initialData.otherEquipment || '',
+                equipmentNotes: initialData.equipmentNotes || '',
+                accountDeactivated: initialData.accountDeactivated,
+                emailDeactivated: initialData.emailDeactivated,
+                exitInterviewDone: initialData.exitInterviewDone,
+                dismissalExamDone: initialData.dismissalExamDone,
+                dismissalExamDate: initialData.dismissalExamDate || '',
+                severancePayAmount: initialData.severancePayAmount || 0,
+                severancePayDate: initialData.severancePayDate || '',
+                severancePayMethod: initialData.severancePayMethod || 'TRANSFERENCE',
+                financialNotes: initialData.financialNotes || '',
+                generalNotes: initialData.generalNotes || '',
+            });
+        }
+    }, [initialData]);
 
     const terminationTypeLabels: Record<string, string> = {
         'RESIGNATION': 'Pedido de Demissão',
@@ -107,18 +140,13 @@ export function TerminationModal({ employee, isOpen, onClose, onSuccess }: Termi
 
         try {
             setLoading(true);
-            const process = await processesApi.terminations.initiate(formData);
-
-            // Se o usuário clicar em "Confirmar Desligamento", nós finalizamos.
-            // Se mudarmos o botão para "Salvar Rascunho", poderíamos só iniciar.
-            // Por enquanto, vamos seguir o que o usuário sugeriu: Ter um processo.
-            // Para ser prático, se ele preencheu tudo aqui, finaliza.
-
-            await processesApi.terminations.complete(process.id);
+            await processesApi.terminations.initiate(formData);
 
             toast({
                 title: 'Sucesso',
-                description: `Processo de desligamento de ${employee.fullName} concluído com sucesso.`,
+                description: initialData
+                    ? `Informações de desligamento atualizadas.`
+                    : `Processo de desligamento de ${employee.fullName} iniciado.`,
             });
             onSuccess();
             onClose();
@@ -434,12 +462,11 @@ export function TerminationModal({ employee, isOpen, onClose, onSuccess }: Termi
                         Cancelar
                     </Button>
                     <Button
-                        variant="danger"
                         onClick={handleSubmit}
                         disabled={loading}
-                        className="bg-red-600 hover:bg-red-700 text-white font-bold px-8"
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-8"
                     >
-                        {loading ? 'Processando...' : 'Confirmar Desligamento'}
+                        {loading ? 'Salvando...' : initialData ? 'Salvar Alterações' : 'Iniciar Desligamento'}
                     </Button>
                 </DialogFooter>
             </DialogContent>

@@ -10,7 +10,10 @@ import {
     MoreHorizontal,
     Clock,
     CheckCircle2,
-    AlertCircle
+    AlertCircle,
+    UserX,
+    TrendingDown,
+    CalendarDays
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,7 +21,8 @@ import { Input } from '@/components/ui/input';
 import {
     processesApi,
     AdmissionProcess,
-    AdmissionStatus
+    AdmissionStatus,
+    TerminationProcess
 } from '@/lib/api/processes';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/utils';
@@ -50,6 +54,7 @@ export default function ProcessesPage() {
     const [activeTab, setActiveTab] = useState<'admissions' | 'terminations'>('admissions');
     const [loading, setLoading] = useState(true);
     const [admissions, setAdmissions] = useState<AdmissionProcess[]>([]);
+    const [terminations, setTerminations] = useState<TerminationProcess[]>([]);
     const [search, setSearch] = useState('');
 
     const fetchAdmissions = useCallback(async () => {
@@ -69,9 +74,27 @@ export default function ProcessesPage() {
         }
     }, [toast]);
 
+    const fetchTerminations = useCallback(async () => {
+        try {
+            setLoading(true);
+            const data = await processesApi.terminations.list();
+            setTerminations(data);
+        } catch (error) {
+            console.error(error);
+            toast({
+                title: 'Erro',
+                description: 'Falha ao carregar processos de desligamento',
+                variant: 'destructive',
+            });
+        } finally {
+            setLoading(false);
+        }
+    }, [toast]);
+
     useEffect(() => {
-        fetchAdmissions();
-    }, [fetchAdmissions]);
+        if (activeTab === 'admissions') fetchAdmissions();
+        else fetchTerminations();
+    }, [activeTab, fetchAdmissions, fetchTerminations]);
 
     const filteredAdmissions = admissions.filter(a =>
         a.candidateName.toLowerCase().includes(search.toLowerCase()) ||
@@ -244,11 +267,84 @@ export default function ProcessesPage() {
                     </Card>
                 </div>
             ) : (
-                <div className="flex flex-col items-center justify-center py-20 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                    <UserMinus className="w-12 h-12 text-gray-300 mb-4" />
-                    <p className="text-lg font-medium text-gray-900">Histórico de Desligamentos</p>
-                    <p className="text-sm text-gray-500 mb-6">Esta funcionalidade está sendo atualizada com os novos dados de devolução de equipamentos.</p>
-                    <Button variant="outline" onClick={() => router.push('/employees')}>Ir para Colaboradores para Iniciar Desligamento</Button>
+                <div className="space-y-4">
+                    <Card>
+                        <CardContent className="p-0">
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead>
+                                        <tr className="border-b border-gray-100 bg-gray-50/50">
+                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Colaborador</th>
+                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Tipo / Aviso</th>
+                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Último Dia / Rescisão</th>
+                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Financeiro</th>
+                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                                            <th className="px-6 py-4 text-right"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100">
+                                        {loading ? (
+                                            [1, 2, 3].map(i => (
+                                                <tr key={i} className="animate-pulse">
+                                                    <td colSpan={6} className="px-6 py-4 h-16 bg-gray-50/20" />
+                                                </tr>
+                                            ))
+                                        ) : terminations.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                                                    Nenhum processo de desligamento em aberto.
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            terminations.map(proc => (
+                                                <tr key={proc.id} className="hover:bg-gray-50/50 transition-colors">
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-8 h-8 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center font-bold text-xs">
+                                                                {proc.employeeName.charAt(0)}
+                                                            </div>
+                                                            <p className="font-semibold text-gray-900">{proc.employeeName}</p>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-sm text-gray-600">
+                                                        <p className="font-medium">{proc.terminationType}</p>
+                                                        <p className="text-xs text-gray-500">{proc.noticePeriod}</p>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-sm text-gray-600">
+                                                        <p>Trab: {formatDate(proc.lastWorkDay)}</p>
+                                                        <p className="text-xs">Desc: {formatDate(proc.terminationDate)}</p>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-sm font-bold text-emerald-600">
+                                                        {proc.severancePayAmount ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(proc.severancePayAmount) : '-'}
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        {!proc.completedAt ? (
+                                                            <Badge className="bg-amber-100 text-amber-700 shadow-none border-none">
+                                                                <Clock className="w-3 h-3 mr-1" /> Em Processo
+                                                            </Badge>
+                                                        ) : (
+                                                            <Badge className="bg-green-100 text-green-700 shadow-none border-none">
+                                                                <CheckCircle2 className="w-3 h-3 mr-1" /> Finalizado
+                                                            </Badge>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => router.push(`/employees/${proc.employeeId}?tab=termination`)}
+                                                        >
+                                                            Movimentar
+                                                        </Button>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
             )}
         </div>

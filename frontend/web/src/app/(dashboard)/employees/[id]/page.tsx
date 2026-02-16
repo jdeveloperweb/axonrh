@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Edit, MoreHorizontal, User, MapPin, Briefcase, FileText, Users, History, Mail, Phone, Calendar, Building2, Camera, Download, DollarSign, Plus, UserX, Copy, ExternalLink, Clock, AlertTriangle, MessageCircle, Check, HeartHandshake, Target, BookOpen } from 'lucide-react';
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ImageCropDialog } from '@/components/ui/image-crop-dialog';
 import { employeesApi, Employee, EmployeeDocument } from '@/lib/api/employees';
+import { processesApi, TerminationProcess } from '@/lib/api/processes';
 import { userApi, UserDTO } from '@/lib/api/users';
 import { timesheetApi, WorkSchedule } from '@/lib/api/timesheet';
 import { useToast } from '@/hooks/use-toast';
@@ -62,13 +63,14 @@ const raceTranslations: Record<string, string> = {
 export default function EmployeeDetailPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const employeeId = params.id as string;
 
   // State
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<TabKey>('overview');
+  const [activeTab, setActiveTab] = useState<TabKey>((searchParams.get('tab') as TabKey) || 'overview');
   const [documents, setDocuments] = useState<EmployeeDocument[]>([]);
 
   interface HistoryEntry {
@@ -83,6 +85,7 @@ export default function EmployeeDetailPage() {
   const [terminationModalOpen, setTerminationModalOpen] = useState(false);
   const [schedules, setSchedules] = useState<WorkSchedule[]>([]);
   const [loadingSchedules, setLoadingSchedules] = useState(false);
+  const [terminationProcess, setTerminationProcess] = useState<TerminationProcess | null>(null);
 
   // Platform Access State
   const [platformUser, setPlatformUser] = useState<UserDTO | null>(null);
@@ -134,9 +137,19 @@ export default function EmployeeDetailPage() {
     }
   }, [employeeId]);
 
+  const fetchTerminationProcess = useCallback(async () => {
+    try {
+      const data = await processesApi.terminations.getByEmployeeId(employeeId);
+      setTerminationProcess(data);
+    } catch (error) {
+      // Silent fail if no process
+    }
+  }, [employeeId]);
+
   useEffect(() => {
     fetchEmployee();
-  }, [fetchEmployee]);
+    fetchTerminationProcess();
+  }, [fetchEmployee, fetchTerminationProcess]);
 
   // Check platform access whenever employee data (email) changes
   useEffect(() => {
@@ -335,10 +348,12 @@ export default function EmployeeDetailPage() {
     { key: 'training' as TabKey, label: 'Treinamentos', icon: BookOpen },
     { key: 'disc' as TabKey, label: 'Perfil DISC', icon: BrainCircuit },
     { key: 'history' as TabKey, label: 'Histórico', icon: History },
-    ...(employee.status === 'TERMINATED' ? [{ key: 'termination' as TabKey, label: 'Desligamento', icon: UserX }] : []),
+    ...(employee.status === 'TERMINATED' || activeTab === 'termination' ? [{ key: 'termination' as TabKey, label: 'Desligamento', icon: UserX }] : []),
   ];
 
-  const statusInfo = statusColors[employee.status] || statusColors.PENDING;
+  const statusInfo = (terminationProcess && !terminationProcess.completedAt)
+    ? { bg: 'bg-amber-50 border-amber-100', text: 'text-amber-700', label: 'Em Processo de Desligamento' }
+    : (statusColors[employee.status] || statusColors.PENDING);
 
   return (
     <div className="p-0 space-y-8 animate-fade-in">
@@ -1023,7 +1038,7 @@ export default function EmployeeDetailPage() {
 
         {
           activeTab === 'termination' && (
-            <TerminationTab employeeId={employeeId} />
+            <TerminationTab employeeId={employeeId} employee={employee} />
           )
         }
 

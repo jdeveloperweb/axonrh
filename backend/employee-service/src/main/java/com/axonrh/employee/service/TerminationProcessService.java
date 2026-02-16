@@ -97,6 +97,13 @@ public class TerminationProcessService {
         return mapToResponse(process);
     }
 
+    @Transactional(readOnly = true)
+    public java.util.List<TerminationResponse> listByTenant(UUID tenantId) {
+        return repository.findAllByTenantId(tenantId).stream()
+                .map(this::mapToResponse)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
     private TerminationResponse mapToResponse(TerminationProcess process) {
         TerminationResponse response = new TerminationResponse();
         response.setId(process.getId());

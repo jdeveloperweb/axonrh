@@ -38,4 +38,10 @@ public class TerminationProcessController {
     public ResponseEntity<TerminationResponse> getByEmployee(@PathVariable UUID employeeId) {
         return ResponseEntity.ok(service.getByEmployeeId(employeeId));
     }
+
+    @GetMapping
+    public ResponseEntity<java.util.List<TerminationResponse>> list(@AuthenticationPrincipal Jwt jwt) {
+        UUID tenantId = UUID.fromString(jwt.getClaimAsString("tenant_id"));
+        return ResponseEntity.ok(service.listByTenant(tenantId));
+    }
 }

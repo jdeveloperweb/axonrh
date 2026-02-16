@@ -109,6 +109,9 @@ export interface TerminationRequest {
 export const processesApi = {
     admissions: admissionsApi,
     terminations: {
+        list: async (): Promise<TerminationProcess[]> => {
+            return api.get<unknown, TerminationProcess[]>('/terminations');
+        },
         getByEmployeeId: async (employeeId: string): Promise<TerminationProcess> => {
             return api.get<unknown, TerminationProcess>(`/terminations/employee/${employeeId}`);
         },
