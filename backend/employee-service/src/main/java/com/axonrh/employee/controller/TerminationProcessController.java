@@ -34,6 +34,14 @@ public class TerminationProcessController {
         return ResponseEntity.ok(service.completeTermination(id, userId));
     }
 
+    @PostMapping("/{id}/reopen")
+    public ResponseEntity<TerminationResponse> reopen(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal Jwt jwt) {
+        UUID userId = UUID.fromString(jwt.getSubject());
+        return ResponseEntity.ok(service.reopenTermination(id, userId));
+    }
+
     @GetMapping("/employee/{employeeId}")
     public ResponseEntity<TerminationResponse> getByEmployee(@PathVariable UUID employeeId) {
         return ResponseEntity.ok(service.getByEmployeeId(employeeId));

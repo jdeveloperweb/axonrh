@@ -70,21 +70,37 @@ public class TerminationProcessService {
     }
 
     @Transactional
-    public TerminationResponse completeTermination(UUID processId, UUID completedBy) {
+    public TerminationResponse completeTermination(UUID processId, UUID userId) {
         TerminationProcess process = repository.findById(processId)
-                .orElseThrow(() -> new ResourceNotFoundException("Processo de desligamento não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Processo não encontrado"));
 
         process.setCompletedAt(LocalDateTime.now());
-        process.setCompletedBy(completedBy);
+        process.setCompletedBy(userId);
         process.setStatus(com.axonrh.employee.entity.enums.TerminationStatus.COMPLETED);
         
-        // Finalize employee status using EmployeeService to trigger events and history
+        // Finalize employee status
         employeeService.terminate(
                 process.getEmployee().getId(),
                 process.getTerminationDate(),
                 process.getReason(),
-                completedBy
+                userId
         );
+
+        process = repository.save(process);
+        return mapToResponse(process);
+    }
+
+    @Transactional
+    public TerminationResponse reopenTermination(UUID processId, UUID userId) {
+        TerminationProcess process = repository.findById(processId)
+                .orElseThrow(() -> new ResourceNotFoundException("Processo não encontrado"));
+
+        process.setCompletedAt(null);
+        process.setCompletedBy(null);
+        process.setStatus(com.axonrh.employee.entity.enums.TerminationStatus.IN_PROGRESS);
+
+        // Reativar colaborador
+        employeeService.reactivate(process.getEmployee().getId(), userId);
 
         process = repository.save(process);
         return mapToResponse(process);

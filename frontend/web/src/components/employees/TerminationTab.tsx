@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { processesApi, TerminationProcess, TerminationType, NoticePeriod } from '@/lib/api/processes';
 import { Employee } from '@/lib/api/employees';
 import { formatDate } from '@/lib/utils';
-import { AlertTriangle, CheckCircle2, XCircle, Info, Calendar, ShieldCheck, Laptop, Mouse, Keyboard, Headphones, CreditCard, Key, DollarSign, FileText, Activity, Edit, Play } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, XCircle, Info, Calendar, ShieldCheck, Laptop, Mouse, Keyboard, Headphones, CreditCard, Key, DollarSign, FileText, Activity, Edit, Play, RotateCcw } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -38,6 +38,7 @@ export function TerminationTab({ employeeId, employee }: TerminationTabProps) {
     const [loading, setLoading] = useState(true);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [finishing, setFinishing] = useState(false);
+    const [reopening, setReopening] = useState(false);
 
     const loadProcess = async () => {
         try {
@@ -68,7 +69,7 @@ export function TerminationTab({ employeeId, employee }: TerminationTabProps) {
                 description: 'Desligamento finalizado com sucesso.',
             });
             await loadProcess();
-            // Recarregar a página ou notificar pai para atualizar status do employee
+            // Recarregar a página para atualizar status do employee
             window.location.reload();
         } catch (error) {
             console.error(error);
@@ -79,6 +80,61 @@ export function TerminationTab({ employeeId, employee }: TerminationTabProps) {
             });
         } finally {
             setFinishing(false);
+        }
+    };
+
+    const handleToggleCheck = async (field: keyof TerminationProcess, value: boolean) => {
+        if (!process || process.completedAt) return;
+
+        try {
+            await processesApi.terminations.initiate({
+                ...process,
+                [field]: value
+            } as any);
+
+            // Local update for better UX
+            setProcess({
+                ...process,
+                [field]: value
+            } as TerminationProcess);
+
+            toast({
+                title: 'Atualizado',
+                description: 'Informação salva com sucesso.',
+            });
+        } catch (error) {
+            console.error(error);
+            toast({
+                title: 'Erro',
+                description: 'Falha ao salvar alteração.',
+                variant: 'destructive',
+            });
+        }
+    };
+
+    const handleReopen = async () => {
+        if (!process) return;
+        const confirm = window.confirm('Deseja realmente REABRIR o desligamento? Isso permitirá novas edições e o colaborador voltará a ficar ativo no sistema.');
+        if (!confirm) return;
+
+        try {
+            setReopening(true);
+            await processesApi.terminations.reopen(process.id);
+            toast({
+                title: 'Sucesso',
+                description: 'Desligamento reaberto com sucesso.',
+            });
+            await loadProcess();
+            window.location.reload();
+        } catch (error) {
+            console.error(error);
+            toast({
+                title: 'Erro',
+                description: 'Falha ao reabrir desligamento.',
+                variant: 'destructive',
+            });
+        } finally {
+            setReopening(false);
         }
     };
 
@@ -96,16 +152,21 @@ export function TerminationTab({ employeeId, employee }: TerminationTabProps) {
         );
     }
 
-    const ChecklistItem = ({ checked, label, icon: Icon }: { checked: boolean, label: string, icon: any }) => (
-        <div className={`flex items-center gap-3 p-3 rounded-xl border ${checked ? 'bg-emerald-50/50 border-emerald-100 text-emerald-800' : 'bg-slate-50 border-slate-100 text-slate-500'}`}>
+    const ChecklistItem = ({ checked, label, icon: Icon, field }: { checked: boolean, label: string, icon: any, field: keyof TerminationProcess }) => (
+        <div
+            onClick={() => !process?.completedAt && handleToggleCheck(field, !checked)}
+            className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer ${checked
+                ? 'bg-emerald-50/50 border-emerald-100 text-emerald-800'
+                : 'bg-slate-50 border-slate-100 text-slate-500 hover:border-slate-300'
+                } ${process?.completedAt ? 'opacity-70 cursor-not-allowed' : ''}`}
+        >
             <div className={`p-2 rounded-lg ${checked ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
                 <Icon className="w-4 h-4" />
             </div>
             <span className="flex-1 text-xs font-bold uppercase tracking-wider">{label}</span>
-            {checked ? <CheckCircle2 className="w-5 h-5 text-emerald-500" /> : <XCircle className="w-5 h-5 text-slate-300" />}
+            {checked ? <CheckCircle2 className="w-5 h-5 text-emerald-500" /> : <div className="w-5 h-5 rounded-full border-2 border-slate-200" />}
         </div>
     );
-
     return (
         <div className="space-y-6 animate-fade-in">
             {/* Resumo do Desligamento */}
@@ -141,9 +202,20 @@ export function TerminationTab({ employeeId, employee }: TerminationTabProps) {
                                     </Button>
                                 </>
                             ) : (
-                                <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-black rounded-full uppercase tracking-tighter">
-                                    Processo Finalizado
-                                </span>
+                                <>
+                                    <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-black rounded-full uppercase tracking-tighter">
+                                        Processo Finalizado
+                                    </span>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-7 text-[10px] font-black uppercase tracking-widest border-slate-200 bg-white"
+                                        onClick={handleReopen}
+                                        disabled={reopening}
+                                    >
+                                        <RotateCcw className="w-3 h-3 mr-1" /> Reabrir
+                                    </Button>
+                                </>
                             )}
                         </div>
                     </div>
@@ -274,14 +346,14 @@ export function TerminationTab({ employeeId, employee }: TerminationTabProps) {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <ChecklistItem checked={process.dismissalExamDone} label="Exame Demissional" icon={Activity} />
+                        <ChecklistItem checked={process.dismissalExamDone} label="Exame Demissional" icon={Activity} field="dismissalExamDone" />
                         {process.dismissalExamDate && (
                             <div className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
                                 <span className="text-[10px] font-black text-slate-400 uppercase">Data da Realização</span>
                                 <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{formatDate(process.dismissalExamDate)}</span>
                             </div>
                         )}
-                        <ChecklistItem checked={process.exitInterviewDone} label="Entrevista de Desligamento" icon={Info} />
+                        <ChecklistItem checked={process.exitInterviewDone} label="Entrevista de Desligamento" icon={Info} field="exitInterviewDone" />
                     </CardContent>
                 </Card>
                 {/* Devolução de Equipamentos */}
@@ -293,12 +365,12 @@ export function TerminationTab({ employeeId, employee }: TerminationTabProps) {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <ChecklistItem checked={process.returnedLaptop} label="Notebook" icon={Laptop} />
-                        <ChecklistItem checked={process.returnedMouse} label="Mouse" icon={Mouse} />
-                        <ChecklistItem checked={process.returnedKeyboard} label="Teclado" icon={Keyboard} />
-                        <ChecklistItem checked={process.returnedHeadset} label="Headset" icon={Headphones} />
-                        <ChecklistItem checked={process.returnedBadge} label="Crachá" icon={CreditCard} />
-                        <ChecklistItem checked={process.returnedToken} label="Token/Acesso" icon={Key} />
+                        <ChecklistItem checked={process.returnedLaptop} label="Notebook" icon={Laptop} field="returnedLaptop" />
+                        <ChecklistItem checked={process.returnedMouse} label="Mouse" icon={Mouse} field="returnedMouse" />
+                        <ChecklistItem checked={process.returnedKeyboard} label="Teclado" icon={Keyboard} field="returnedKeyboard" />
+                        <ChecklistItem checked={process.returnedHeadset} label="Headset" icon={Headphones} field="returnedHeadset" />
+                        <ChecklistItem checked={process.returnedBadge} label="Crachá" icon={CreditCard} field="returnedBadge" />
+                        <ChecklistItem checked={process.returnedToken} label="Token/Acesso" icon={Key} field="returnedToken" />
                         {process.otherEquipment && (
                             <div className="col-span-full mt-2 text-xs font-bold text-slate-500 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
                                 Outros: <span className="text-slate-700 dark:text-slate-300">{process.otherEquipment}</span>
@@ -316,8 +388,8 @@ export function TerminationTab({ employeeId, employee }: TerminationTabProps) {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                        <ChecklistItem checked={process.accountDeactivated} label="Inativação de Acesso (ERP/Sistemas)" icon={Key} />
-                        <ChecklistItem checked={process.emailDeactivated} label="Desativação de E-mail Corp." icon={Laptop} />
+                        <ChecklistItem checked={process.accountDeactivated} label="Inativação de Acesso (ERP/Sistemas)" icon={Key} field="accountDeactivated" />
+                        <ChecklistItem checked={process.emailDeactivated} label="Desativação de E-mail Corp." icon={Laptop} field="emailDeactivated" />
                     </CardContent>
                 </Card>
             </div>

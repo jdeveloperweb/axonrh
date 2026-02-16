@@ -120,6 +120,9 @@ export const processesApi = {
         },
         complete: async (id: string): Promise<TerminationProcess> => {
             return api.post<unknown, TerminationProcess>(`/terminations/${id}/complete`, {});
+        },
+        reopen: async (id: string): Promise<TerminationProcess> => {
+            return api.post<unknown, TerminationProcess>(`/terminations/${id}/reopen`, {});
         }
     }
 };

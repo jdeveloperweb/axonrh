@@ -189,6 +189,14 @@ export default function EmployeeDetailPage() {
     }
   }, [activeTab, fetchDocuments, fetchHistory]);
 
+  // Sync activeTab with URL search params
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab && tab !== activeTab) {
+      setActiveTab(tab as TabKey);
+    }
+  }, [searchParams]);
+
   const handleGenerateBadge = async () => {
     try {
       setGeneratingBadge(true);
@@ -469,12 +477,20 @@ export default function EmployeeDetailPage() {
 
               {employee.status !== 'TERMINATED' ? (
                 <Button
-                  variant="ghost"
-                  onClick={() => setTerminationModalOpen(true)}
-                  className="flex-1 lg:flex-none h-11 px-6 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all font-bold text-xs uppercase tracking-widest gap-2"
+                  variant={terminationProcess && !terminationProcess.completedAt ? 'outline' : 'danger'}
+                  onClick={() => {
+                    if (terminationProcess && !terminationProcess.completedAt) {
+                      setActiveTab('termination');
+                    } else {
+                      setTerminationModalOpen(true);
+                    }
+                  }}
+                  className={terminationProcess && !terminationProcess.completedAt
+                    ? "border-rose-200 text-rose-700 hover:bg-rose-50 font-bold"
+                    : "bg-red-600 hover:bg-red-700 text-white font-bold"}
                 >
-                  <UserX className="w-4 h-4" />
-                  Desligar
+                  <UserX className="w-4 h-4 mr-2" />
+                  {terminationProcess && !terminationProcess.completedAt ? 'Gerenciar Desligamento' : 'Desligar'}
                 </Button>
               ) : (
                 <Button

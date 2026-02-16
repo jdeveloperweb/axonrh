@@ -88,11 +88,11 @@ export default function WellbeingPage() {
 
     // Improved Radar Data with calculated or fallback values
     const radarData = [
-        { subject: 'Bem-estar', value: Math.max(30, ((statsData?.sentimentDistribution['POSITIVE'] || 0) / totalCheckins) * 100), fullMark: 100 },
-        { subject: 'Equilíbrio', value: 82, fullMark: 100 },
-        { subject: 'Atenção', value: 74, fullMark: 100 },
-        { subject: 'Satisfação', value: Math.max(40, ((statsData?.averageScore || 0) / 5) * 100), fullMark: 100 },
-        { subject: 'Engajamento', value: 78, fullMark: 100 },
+        { subject: 'Saúde Mental', value: Math.max(30, ((statsData?.sentimentDistribution['POSITIVE'] || 0) / totalCheckins) * 100), fullMark: 100 },
+        { subject: 'Equilíbrio de Carga', value: Math.max(25, 85 - (statsData?.highRiskCount || 0) * 3), fullMark: 100 },
+        { subject: 'Segurança Psicológica', value: Math.max(30, 65 + (statsData?.averageScore || 0) * 3), fullMark: 100 },
+        { subject: 'Clima Organizacional', value: Math.max(40, ((statsData?.averageScore || 0) / 5) * 100), fullMark: 100 },
+        { subject: 'Engajamento e Vitalidade', value: Math.max(30, 70 + (totalCheckins > 0 ? (statsData?.averageScore || 0) * 2 : 0)), fullMark: 100 },
     ];
 
     const sentimentDataArr = [
@@ -239,9 +239,9 @@ export default function WellbeingPage() {
                         <div>
                             <CardTitle className="text-lg font-bold flex items-center gap-2">
                                 <Sparkles className="w-5 h-5 text-yellow-500" />
-                                Estrela de Sentimentos
+                                Estrela de Bem-Estar Corporativo
                             </CardTitle>
-                            <p className="text-sm text-gray-500">Análise multidimensional baseada na IA</p>
+                            <p className="text-sm text-gray-500">Indicadores de saúde e clima organizacional via IA</p>
                         </div>
                         <div className="px-3 py-1 bg-purple-50 rounded-lg">
                             <span className="text-xs font-bold text-purple-700">Visão Geral</span>
@@ -284,8 +284,8 @@ export default function WellbeingPage() {
                                 <p className="text-xs text-purple-600 font-bold uppercase tracking-widest mb-2">Insight de IA</p>
                                 <p className="text-sm text-gray-700 leading-relaxed italic">
                                     "{statsData && statsData.averageScore >= 3
-                                        ? "O engajamento está em alta, com foco em equilíbrio vida-trabalho."
-                                        : "Níveis de atenção elevados. Recomenda-se pausa ativa para as equipes."}"
+                                        ? "O clima organizacional está positivo. Mantenha as práticas de suporte e feedback."
+                                        : "Atenção: Níveis de carga elevados detectados. Recomenda-se ações de alívio e segurança psicológica."}"
                                 </p>
                             </div>
                             <div className="space-y-3">
