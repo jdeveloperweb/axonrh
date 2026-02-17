@@ -110,15 +110,16 @@ export default function EmployeesPage() {
   const [statusFilter, setStatusFilter] = useState<EmployeeStatus | ''>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('employees_status_filter');
-      if (saved === 'null' || saved === 'undefined') return 'ACTIVE';
-      return saved !== null ? (saved as any) : 'ACTIVE';
+      // Garantir que se estiver vazio ou nulo, retorne 'ACTIVE' como padrão de visualização
+      if (!saved || saved === 'null' || saved === 'undefined' || saved === '') return 'ACTIVE';
+      return saved as any;
     }
     return 'ACTIVE';
   });
   const [departmentFilter, setDepartmentFilter] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('employees_dept_filter');
-      return (saved && saved !== 'null') ? saved : '';
+      return (saved && saved !== 'null' && saved !== 'undefined' && saved !== '') ? saved : '';
     }
     return '';
   });
@@ -233,16 +234,9 @@ export default function EmployeesPage() {
   // Fetch Stats
   const fetchStats = useCallback(async () => {
     try {
-      const isDeptView = viewMode === 'department';
       const params: EmployeeListParams = {};
       if (search) params.search = search;
-
-      // No modo departamento, queremos os totais gerais para os badges, 
-      // mas mantemos o filtro se o usuário o alterou manualmente longe do padrão ACTIVE
-      if (statusFilter) {
-        params.status = statusFilter as EmployeeStatus;
-      }
-
+      if (statusFilter) params.status = statusFilter as EmployeeStatus;
       if (departmentFilter) params.departmentId = departmentFilter;
       if (workRegimeFilter) params.workRegime = workRegimeFilter;
       if (hybridDayFilter) params.hybridDay = hybridDayFilter;
@@ -252,14 +246,14 @@ export default function EmployeesPage() {
     } catch (error) {
       console.error('Failed to load stats:', error);
     }
-  }, [search, statusFilter, departmentFilter, workRegimeFilter, hybridDayFilter, viewMode]);
+  }, [search, statusFilter, departmentFilter, workRegimeFilter, hybridDayFilter]);
 
   // Fetch employees
   const fetchEmployees = useCallback(async () => {
     try {
       setLoading(true);
       const params: EmployeeListParams = {
-        page: 0,
+        page: 0, // Por enquanto fixo em 0 para Depto/AZ, mas idealmente usaria currentPage
         size: viewMode === 'department' ? 1000 : (viewMode === 'alphabetical' ? 2000 : pageSize),
         sort: viewMode === 'alphabetical' ? `fullName,${sortDirection}` :
           viewMode === 'department' ? `department.name,asc,fullName,${sortDirection}` :
@@ -267,29 +261,15 @@ export default function EmployeesPage() {
       };
 
       if (search) params.search = search;
-
-      // Status filter. If 'ACTIVE' is the desired default, it should be set in the state.
-      // If statusFilter is '', we should not send any status to show 'Todos'
-      if (statusFilter) {
-        params.status = statusFilter as EmployeeStatus;
-      }
-
+      if (statusFilter) params.status = statusFilter as EmployeeStatus;
       if (departmentFilter) params.departmentId = departmentFilter;
       if (workRegimeFilter) params.workRegime = workRegimeFilter;
       if (hybridDayFilter) params.hybridDay = hybridDayFilter;
 
-      console.log('>>> [DEBUG] fetchEmployees final params:', params);
       const response = await employeesApi.list(params);
-
-      // Debug log (visível no console do navegador do usuário se necessário)
-      console.log(`[Employees] Loaded ${response.content?.length} of ${response.totalElements} employees. Mode: ${viewMode}`);
-
       setEmployees(response.content || []);
       setTotalElements(response.totalElements || 0);
       setTotalPages(response.totalPages || 0);
-
-      // Sincroniza os stats com os mesmos filtros
-      fetchStats();
     } catch (error) {
       console.error(error);
       toast({
@@ -300,7 +280,7 @@ export default function EmployeesPage() {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, pageSize, search, statusFilter, departmentFilter, workRegimeFilter, hybridDayFilter, viewMode, sortDirection, toast, fetchStats]);
+  }, [pageSize, search, statusFilter, departmentFilter, workRegimeFilter, hybridDayFilter, viewMode, sortDirection, toast]);
 
   // Fetch departments
   const fetchDepartments = useCallback(async () => {
@@ -318,7 +298,8 @@ export default function EmployeesPage() {
 
   useEffect(() => {
     fetchEmployees();
-  }, [fetchEmployees]);
+    fetchStats();
+  }, [fetchEmployees, fetchStats]);
 
   useEffect(() => {
     fetchDepartments();
