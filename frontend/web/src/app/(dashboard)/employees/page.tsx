@@ -663,96 +663,105 @@ export default function EmployeesPage() {
                     return (
                       <Fragment key={deptName}>
                         <tr
-                          className="bg-orange-50/30 cursor-pointer hover:bg-orange-100/40 transition-colors"
+                          className="bg-orange-50/20 cursor-pointer hover:bg-orange-100/30 transition-colors"
                           onClick={() => toggleDept(deptName)}
                         >
-                          <td colSpan={6} className="px-6 py-1.5">
+                          <td colSpan={6} className="px-6 py-2 border-l-4 border-[var(--color-primary)]">
                             <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                {isCollapsed ? <ChevronRight className="w-3.5 h-3.5 text-[var(--color-primary)]" /> : <ChevronDown className="w-3.5 h-3.5 text-[var(--color-primary)]" />}
-                                <Building2 className="w-4 h-4 text-[var(--color-primary)]" />
-                                <span className="text-xs font-bold text-[var(--color-primary)] uppercase tracking-wider">
-                                  {deptName}
-                                </span>
-                                <span className="text-[10px] bg-orange-100 text-[var(--color-primary)] px-2 py-0.5 rounded-full font-bold">
-                                  {employees.filter(e => (e.department?.name || 'Sem Departamento') === deptName).length}
-                                </span>
+                              <div className="flex items-center gap-3">
+                                {isCollapsed ? <ChevronRight className="w-4 h-4 text-[var(--color-primary)]" /> : <ChevronDown className="w-4 h-4 text-[var(--color-primary)]" />}
+                                <div className="flex items-center gap-2">
+                                  <Building2 className="w-4 h-4 text-[var(--color-primary)]" />
+                                  <span className="text-sm font-black text-gray-800 uppercase tracking-tighter">
+                                    {deptName}
+                                  </span>
+                                  <span className="flex items-center justify-center min-w-[24px] h-[18px] text-[10px] bg-[var(--color-primary)] text-white px-1.5 rounded-full font-bold shadow-sm shadow-orange-100">
+                                    {employees.filter(e => (e.department?.name || 'Sem Departamento') === deptName).length}
+                                  </span>
+                                </div>
                               </div>
-                              <span className="text-[10px] text-[var(--color-primary)]/60 font-medium">
-                                {isCollapsed ? 'Clique para expandir' : 'Clique para recolher'}
+                              <span className="text-[10px] font-bold text-[var(--color-primary)]/50 uppercase tracking-widest flex items-center gap-1">
+                                {isCollapsed ? 'Expandir' : 'Recolher'}
+                                {isCollapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                               </span>
                             </div>
                           </td>
                         </tr>
-                        {!isCollapsed && employees.filter(e => (e.department?.name || 'Sem Departamento') === deptName).map((employee) => (
-                          <tr
-                            key={employee.id}
-                            className="hover:bg-gray-50/50 cursor-pointer transition-colors border-l-2 border-transparent hover:border-[var(--color-primary)]"
-                            onClick={() => router.push(`/employees/${employee.id}`)}
-                          >
-                            <td className="px-6 py-2">
-                              <div className="flex items-center gap-2">
-                                <div className="w-8 h-8">
-                                  <ExpandablePhoto
-                                    src={getPhotoUrl(employee.photoUrl, employee.updatedAt)}
-                                    alt={employee.fullName}
-                                    containerClassName="w-8 h-8 rounded-full border border-white shadow-sm"
-                                    fallback={
-                                      <div className="w-full h-full rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] flex items-center justify-center font-bold text-xs">
-                                        {employee.fullName.charAt(0).toUpperCase()}
+                        {!isCollapsed && (
+                          <tr>
+                            <td colSpan={6} className="p-4 bg-gray-50/10">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
+                                {employees
+                                  .filter(e => (e.department?.name || 'Sem Departamento') === deptName)
+                                  .sort((a, b) => {
+                                    const getRank = (e: any) => {
+                                      const t = (e.position?.title || e.position?.name || '').toLowerCase();
+                                      if (t.includes('diretor')) return 1;
+                                      if (t.includes('gerente')) return 2;
+                                      if (t.includes('coordenador')) return 3;
+                                      if (t.includes('supervisor')) return 4;
+                                      if (t.includes('líder') || t.includes('lider')) return 5;
+                                      return 6;
+                                    };
+                                    const rankA = getRank(a);
+                                    const rankB = getRank(b);
+                                    if (rankA !== rankB) return rankA - rankB;
+                                    return a.fullName.localeCompare(b.fullName);
+                                  })
+                                  .map((employee) => (
+                                    <div
+                                      key={employee.id}
+                                      className="bg-white border border-gray-100 rounded-xl p-3 hover:shadow-md hover:border-[var(--color-primary)]/30 transition-all cursor-pointer group relative flex flex-col"
+                                      onClick={() => router.push(`/employees/${employee.id}`)}
+                                    >
+                                      <div className="flex items-start gap-3">
+                                        <div className="relative">
+                                          <ExpandablePhoto
+                                            src={getPhotoUrl(employee.photoUrl, employee.updatedAt)}
+                                            alt={employee.fullName}
+                                            containerClassName="w-12 h-12 rounded-lg border border-gray-100 shadow-sm overflow-hidden"
+                                            fallback={
+                                              <div className="w-full h-full bg-[var(--color-primary)]/5 text-[var(--color-primary)] flex items-center justify-center font-bold text-lg">
+                                                {employee.fullName.charAt(0).toUpperCase()}
+                                              </div>
+                                            }
+                                          />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                          <div className="flex items-start justify-between">
+                                            <h4 className="font-bold text-gray-900 truncate text-xs group-hover:text-[var(--color-primary)] transition-colors leading-tight">
+                                              {employee.fullName}
+                                            </h4>
+                                            <span className={`inline-flex px-1.5 py-0.5 rounded-full text-[8px] font-bold uppercase ${statusColors[employee.status].bg} ${statusColors[employee.status].text}`}>
+                                              {statusColors[employee.status].label}
+                                            </span>
+                                          </div>
+                                          <p className="text-[10px] text-gray-500 font-medium truncate mt-0.5">
+                                            {employee.position?.title || '-'}
+                                          </p>
+                                          <div className="flex items-center gap-2 mt-1.5">
+                                            <span className="text-[9px] text-gray-400 font-mono">
+                                              #{employee.registrationNumber}
+                                            </span>
+                                            {(() => {
+                                              const t = (employee.position?.title || employee.position?.name || '').toLowerCase();
+                                              const isManager = t.includes('diretor') || t.includes('gerente') || t.includes('coordenador') || t.includes('lider') || t.includes('líder');
+                                              return isManager && (
+                                                <div className="flex items-center gap-1 text-[8px] text-orange-600 font-bold bg-orange-50 px-1.5 py-0.5 rounded">
+                                                  <UserCheck className="w-2 h-2" />
+                                                  GESTÃO
+                                                </div>
+                                              );
+                                            })()}
+                                          </div>
+                                        </div>
                                       </div>
-                                    }
-                                  />
-                                </div>
-                                <div className="flex flex-col">
-                                  <p className="font-bold text-gray-900 leading-tight text-sm">
-                                    {employee.fullName}
-                                  </p>
-                                  <p className="text-[10px] text-gray-400">
-                                    Mat: {employee.registrationNumber}
-                                  </p>
-                                </div>
+                                    </div>
+                                  ))}
                               </div>
                             </td>
-                            <td className="px-6 py-2 text-xs text-gray-600">
-                              {formatCpf(employee.cpf)}
-                            </td>
-                            <td className="px-6 py-2 text-xs text-gray-600">
-                              {employee.department?.name || '-'}
-                            </td>
-                            <td className="px-6 py-2 text-xs text-gray-600">
-                              {employee.position?.title || '-'}
-                            </td>
-                            <td className="px-6 py-2">
-                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${statusColors[employee.status].bg} ${statusColors[employee.status].text}`}>
-                                {statusColors[employee.status].label}
-                              </span>
-                            </td>
-                            <td className="px-6 py-2 text-right" onClick={(e) => e.stopPropagation()}>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <button className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
-                                    <MoreHorizontal className="w-3.5 h-3.5 text-gray-400" />
-                                  </button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-40">
-                                  <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}`)}>
-                                    Visualizar
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}/edit`)}>
-                                    Editar
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    className="text-red-600"
-                                    onClick={() => handleDelete(employee.id, employee.fullName)}
-                                  >
-                                    Excluir
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </td>
                           </tr>
-                        ))}
+                        )}
                       </Fragment>
                     );
                   })
@@ -913,45 +922,62 @@ export default function EmployeesPage() {
                         </span>
                       </div>
                     </div>
-                    {!isCollapsed && employees.filter(e => (e.department?.name || 'Sem Departamento') === deptName).map((employee) => (
-                      <div
-                        key={employee.id}
-                        className="p-3 active:bg-gray-50 transition-colors border-l-4 border-transparent active:border-[var(--color-primary)]"
-                        onClick={() => router.push(`/employees/${employee.id}`)}
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <div className="w-10 h-10">
-                              <ExpandablePhoto
-                                src={getPhotoUrl(employee.photoUrl, employee.updatedAt)}
-                                alt={employee.fullName}
-                                containerClassName="w-10 h-10 rounded-full border border-white shadow-md"
-                                fallback={
-                                  <div className="w-full h-full rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] flex items-center justify-center font-bold text-xs">
-                                    {employee.fullName.charAt(0).toUpperCase()}
-                                  </div>
-                                }
-                              />
-                            </div>
-                            <div className="flex flex-col">
-                              <p className="font-bold text-gray-900 leading-tight text-sm">
+                    {!isCollapsed && (
+                      <div className="p-3 bg-gray-50/10 grid grid-cols-2 gap-2">
+                        {employees
+                          .filter(e => (e.department?.name || 'Sem Departamento') === deptName)
+                          .sort((a, b) => {
+                            const getRank = (e: any) => {
+                              const t = (e.position?.title || e.position?.name || '').toLowerCase();
+                              if (t.includes('diretor')) return 1;
+                              if (t.includes('gerente')) return 2;
+                              if (t.includes('coordenador')) return 3;
+                              if (t.includes('supervisor')) return 4;
+                              if (t.includes('líder') || t.includes('lider')) return 5;
+                              return 6;
+                            };
+                            const rankA = getRank(a);
+                            const rankB = getRank(b);
+                            if (rankA !== rankB) return rankA - rankB;
+                            return a.fullName.localeCompare(b.fullName);
+                          })
+                          .map((employee) => (
+                            <div
+                              key={employee.id}
+                              className="bg-white border border-gray-100 rounded-lg p-2 active:bg-gray-50 transition-colors flex flex-col items-center text-center"
+                              onClick={() => router.push(`/employees/${employee.id}`)}
+                            >
+                              <div className="relative mb-1.5">
+                                <ExpandablePhoto
+                                  src={getPhotoUrl(employee.photoUrl, employee.updatedAt)}
+                                  alt={employee.fullName}
+                                  containerClassName="w-10 h-10 rounded-full border border-gray-100 shadow-sm"
+                                  fallback={
+                                    <div className="w-10 h-10 rounded-full bg-[var(--color-primary)]/5 text-[var(--color-primary)] flex items-center justify-center font-bold text-sm">
+                                      {employee.fullName.charAt(0).toUpperCase()}
+                                    </div>
+                                  }
+                                />
+                                {(() => {
+                                  const t = (employee.position?.title || employee.position?.name || '').toLowerCase();
+                                  const isManager = t.includes('diretor') || t.includes('gerente') || t.includes('coordenador') || t.includes('lider') || t.includes('líder');
+                                  return isManager && (
+                                    <div className="absolute -top-1 -right-1 bg-orange-500 text-white rounded-full p-0.5 border border-white">
+                                      <UserCheck className="w-2 h-2" />
+                                    </div>
+                                  );
+                                })()}
+                              </div>
+                              <p className="font-bold text-gray-900 text-[10px] line-clamp-1 leading-tight w-full">
                                 {employee.fullName}
                               </p>
-                              <p className="text-[10px] text-gray-400">
-                                Mat: {employee.registrationNumber}
+                              <p className="text-[8px] text-gray-500 line-clamp-1 w-full mt-0.5 uppercase">
+                                {employee.position?.title || '-'}
                               </p>
                             </div>
-                          </div>
-                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase ${statusColors[employee.status].bg} ${statusColors[employee.status].text}`}>
-                            {statusColors[employee.status].label}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between text-[10px] text-gray-500">
-                          <span>{employee.position?.title || '-'}</span>
-                          <span className="font-medium">{formatCpf(employee.cpf)}</span>
-                        </div>
+                          ))}
                       </div>
-                    ))}
+                    )}
                   </Fragment>
                 );
               })

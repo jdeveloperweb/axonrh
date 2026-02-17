@@ -307,84 +307,88 @@ export default function WellbeingPage() {
                     </div>
                     <CardContent className="flex-1 p-6 flex flex-col lg:flex-row gap-10 items-center justify-center relative bg-gradient-to-b from-white to-purple-50/20 px-10">
                         {/* Organic Ecosystem Visual Area */}
-                        <div className="relative w-full h-[400px] flex items-center justify-center">
+                        <div className="relative w-full h-[500px] flex items-center justify-center">
                             {/* Decorative Grid/Lines for Depth */}
                             <div className="absolute inset-0 opacity-20 pointer-events-none">
                                 <div className="absolute top-1/2 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-purple-300 to-transparent" />
                                 <div className="absolute top-0 left-1/2 w-[1px] h-full bg-gradient-to-b from-transparent via-purple-300 to-transparent" />
-                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] border border-purple-200 rounded-full border-dashed animate-[spin_60s_linear_infinite]" />
-                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[250px] h-[250px] border border-purple-100 rounded-full border-dashed animate-[spin_40s_linear_infinite_reverse]" />
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[450px] h-[450px] border border-purple-200 rounded-full border-dashed animate-[spin_60s_linear_infinite]" />
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] border border-purple-100 rounded-full border-dashed animate-[spin_40s_linear_infinite_reverse]" />
                             </div>
 
                             {/* Center Heart Orb */}
                             <div
                                 className="relative z-20 group"
-                                style={{ transform: `scale(${0.8 + (statsData?.averageScore || 2.5) / 10})` }}
+                                style={{ transform: `scale(${0.9 + (statsData?.averageScore || 2.5) / 10})` }}
                             >
-                                <div className="w-32 h-32 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 shadow-[0_0_50px_rgba(139,92,246,0.4)] animate-orb-pulse flex flex-col items-center justify-center text-white relative cursor-help transition-all duration-500 hover:scale-105 active:scale-95 overflow-hidden">
+                                <div className="w-36 h-36 rounded-full bg-gradient-to-br from-purple-600 to-indigo-700 shadow-[0_0_60px_rgba(139,92,246,0.5)] animate-orb-pulse flex flex-col items-center justify-center text-white relative cursor-help transition-all duration-500 hover:scale-105 active:scale-95 overflow-hidden border-4 border-white/20">
                                     <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20" />
-                                    <Sparkles className="w-6 h-6 mb-1 drop-shadow-md" />
+                                    <Sparkles className="w-8 h-8 mb-1 drop-shadow-lg text-yellow-300" />
                                     <div className="flex items-baseline gap-0.5">
-                                        <span className="text-2xl font-black">{statsData?.averageScore ? statsData.averageScore.toFixed(1) : '3.5'}</span>
-                                        <span className="text-[10px] opacity-70 font-bold">/5.0</span>
+                                        <span className="text-3xl font-black drop-shadow-md">{statsData?.averageScore ? statsData.averageScore.toFixed(1) : '3.5'}</span>
+                                        <span className="text-xs opacity-80 font-bold">/5.0</span>
                                     </div>
-                                    <span className="text-[10px] uppercase font-bold tracking-tighter opacity-80">Vitalidade Geral</span>
-                                    <div className="mt-1 px-2 py-0.5 bg-white/20 rounded-full text-[8px] font-black uppercase tracking-widest border border-white/20">
+                                    <span className="text-[10px] uppercase font-black tracking-widest opacity-90 drop-shadow-sm">Vitalidade Geral</span>
+                                    <div className={`mt-2 px-3 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border border-white/30 shadow-inner ${statsData && statsData.averageScore >= 4 ? 'bg-emerald-500/40' : statsData && statsData.averageScore >= 3 ? 'bg-blue-500/40' : 'bg-rose-500/40'}`}>
                                         {statsData && statsData.averageScore >= 4 ? 'Alta' : statsData && statsData.averageScore >= 3 ? 'Média' : 'Baixa'}
                                     </div>
                                 </div>
-                                <div className="absolute -inset-4 bg-purple-400/20 rounded-full blur-2xl animate-pulse -z-10" />
+                                <div className="absolute -inset-6 bg-purple-500/30 rounded-full blur-3xl animate-pulse -z-10" />
                             </div>
 
                             {/* Satellite Orbs */}
                             {radarData.map((item, idx) => {
                                 // Positions based on index (pentagon-like layout)
                                 const angle = (idx * 360 / 5) - 90;
-                                const radius = 160;
+                                const radius = 175; // Increased radius
                                 const x = Math.cos(angle * Math.PI / 180) * radius;
                                 const y = Math.sin(angle * Math.PI / 180) * radius;
 
-                                const orbSize = 65 + (item.value / 100) * 35;
+                                const orbSize = 70 + (item.value / 100) * 30;
                                 const floatClass = idx % 2 === 0 ? 'animate-orb-float-1' : 'animate-orb-float-2';
 
                                 // Color logic
                                 const isWarning = item.value < 40;
-                                const isHealthy = item.value > 70;
+                                const isHealthy = item.value > 75;
 
                                 const colorClass = isWarning
-                                    ? 'from-red-400 to-rose-500 border-red-200 shadow-red-200'
+                                    ? 'from-red-400 to-rose-600 border-red-200 shadow-red-200/50'
                                     : isHealthy
-                                        ? 'from-emerald-400 to-teal-500 border-emerald-200 shadow-emerald-200'
-                                        : 'from-blue-400 to-indigo-500 border-blue-200 shadow-indigo-200';
+                                        ? 'from-emerald-400 to-teal-600 border-emerald-200 shadow-emerald-200/50'
+                                        : 'from-blue-400 to-indigo-600 border-blue-200 shadow-indigo-200/50';
 
                                 return (
                                     <div
                                         key={idx}
-                                        className={`absolute z-30 flex flex-col items-center gap-2 group transition-all duration-700 hover:scale-110 ${floatClass}`}
+                                        className="absolute z-30 flex flex-col items-center gap-3 group transition-all duration-700"
                                         style={{
                                             left: `calc(50% + ${x}px)`,
                                             top: `calc(50% + ${y}px)`,
                                             transform: 'translate(-50%, -50%)',
-                                            animationDelay: `${idx * 0.5}s`
                                         }}
                                     >
                                         <div
-                                            className={`rounded-3xl bg-gradient-to-br ${colorClass} shadow-lg border-2 flex flex-col items-center justify-center p-3 relative cursor-help`}
-                                            style={{ width: `${orbSize}px`, height: `${orbSize}px` }}
+                                            className={`${floatClass} flex flex-col items-center gap-3`}
+                                            style={{ animationDelay: `${idx * 0.8}s` }}
                                         >
-                                            <div className="text-white opacity-80 mb-1 group-hover:scale-110 transition-transform">
-                                                {item.icon}
+                                            <div
+                                                className={`rounded-[2rem] bg-gradient-to-br ${colorClass} shadow-xl border-4 flex flex-col items-center justify-center p-3 relative cursor-help transition-all duration-500 group-hover:scale-110 group-hover:rotate-3`}
+                                                style={{ width: `${orbSize}px`, height: `${orbSize}px` }}
+                                            >
+                                                <div className="text-white opacity-90 mb-1 drop-shadow-sm">
+                                                    {React.cloneElement(item.icon as React.ReactElement<any>, { className: 'w-6 h-6' })}
+                                                </div>
+                                                <span className="text-white font-black text-xl drop-shadow-md leading-none">{Math.round(item.value)}%</span>
+                                                <div className="absolute inset-0 rounded-[2rem] bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity backdrop-brightness-110" />
                                             </div>
-                                            <span className="text-white font-black text-lg drop-shadow-sm leading-none">{Math.round(item.value)}%</span>
-                                            <div className="absolute inset-0 rounded-3xl bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity backdrop-brightness-110" />
-                                        </div>
 
-                                        <div className="flex flex-col items-center">
-                                            <div className="bg-white/90 backdrop-blur-md px-3 py-1 rounded-full shadow-sm border border-gray-100 mb-1">
-                                                <span className="text-[11px] font-extrabold text-gray-800 whitespace-nowrap">{item.subject}</span>
-                                            </div>
-                                            <div className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm ${getStatusInfo(item.value).bg} ${getStatusInfo(item.value).color} ${getStatusInfo(item.value).border} border`}>
-                                                {getStatusInfo(item.value).label}
+                                            <div className="flex flex-col items-center scale-90 sm:scale-100 origin-top transition-transform group-hover:scale-105">
+                                                <div className="bg-white/95 backdrop-blur-md px-4 py-1.5 rounded-2xl shadow-lg border border-gray-100 mb-1 pointer-events-none">
+                                                    <span className="text-[12px] font-black text-gray-800 whitespace-nowrap tracking-tight">{item.subject}</span>
+                                                </div>
+                                                <div className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm border ${getStatusInfo(item.value).bg} ${getStatusInfo(item.value).color} ${getStatusInfo(item.value).border}`}>
+                                                    {getStatusInfo(item.value).label}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
