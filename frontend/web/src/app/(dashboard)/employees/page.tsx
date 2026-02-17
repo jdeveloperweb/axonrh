@@ -101,23 +101,39 @@ export default function EmployeesPage() {
 
   // Filters & State Persistence
   const [search, setSearch] = useState(() => {
-    if (typeof window !== 'undefined') return localStorage.getItem('employees_search') || '';
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('employees_search');
+      return (saved && saved !== 'null' && saved !== 'undefined') ? saved : '';
+    }
     return '';
   });
   const [statusFilter, setStatusFilter] = useState<EmployeeStatus | ''>(() => {
-    if (typeof window !== 'undefined') return (localStorage.getItem('employees_status_filter') as any) || 'ACTIVE';
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('employees_status_filter');
+      if (saved === 'null' || saved === 'undefined') return 'ACTIVE';
+      return saved !== null ? (saved as any) : 'ACTIVE';
+    }
     return 'ACTIVE';
   });
   const [departmentFilter, setDepartmentFilter] = useState(() => {
-    if (typeof window !== 'undefined') return localStorage.getItem('employees_dept_filter') || '';
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('employees_dept_filter');
+      return (saved && saved !== 'null') ? saved : '';
+    }
     return '';
   });
   const [workRegimeFilter, setWorkRegimeFilter] = useState<WorkRegime | ''>(() => {
-    if (typeof window !== 'undefined') return (localStorage.getItem('employees_regime_filter') as any) || '';
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('employees_regime_filter');
+      return (saved && saved !== 'null' && saved !== 'undefined') ? (saved as any) : '';
+    }
     return '';
   });
   const [hybridDayFilter, setHybridDayFilter] = useState(() => {
-    if (typeof window !== 'undefined') return localStorage.getItem('employees_day_filter') || '';
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('employees_day_filter');
+      return (saved && saved !== 'null' && saved !== 'undefined') ? saved : '';
+    }
     return '';
   });
 
@@ -136,7 +152,7 @@ export default function EmployeesPage() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('employees_view_mode', viewMode);
-      localStorage.setItem('employees_status_filter', statusFilter || 'ACTIVE');
+      localStorage.setItem('employees_status_filter', statusFilter);
       localStorage.setItem('employees_sort_direction', sortDirection);
       localStorage.setItem('employees_search', search);
       localStorage.setItem('employees_dept_filter', departmentFilter);
@@ -746,10 +762,10 @@ export default function EmployeesPage() {
                       <td className="px-6 py-4"><div className="w-8 h-8 bg-gray-100 rounded ml-auto" /></td>
                     </tr>
                   ))
-                ) : employees.length === 0 ? (
+                ) : (viewMode !== 'department' && employees.length === 0) ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-gray-400">
-                      Nenhum colaborador encontrado
+                    <td colSpan={6} className="px-6 py-12 text-center text-gray-400 font-medium">
+                      Nenhum colaborador encontrado com os filtros atuais
                     </td>
                   </tr>
                 ) : viewMode === 'department' ? (

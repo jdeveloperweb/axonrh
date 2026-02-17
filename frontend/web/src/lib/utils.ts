@@ -316,7 +316,8 @@ export function getPhotoUrl(
 
   // 1. Trata URLs do MinIO com localhost
   if (path.startsWith('http://localhost:9000/')) {
-    const targetPath = type === 'photo' ? '/api/v1/employees/photos/' : '/api/v1/config/logos/';
+    let targetPath = type === 'photo' ? '/api/v1/employees/photos/' : '/api/v1/config/logos/';
+    if (path.includes('learning-thumbnails')) targetPath = '/api/v1/learning/courses/thumbnails/';
     finalUrl = path.replace(/http:\/\/localhost:9000\/[^\/]+\//, targetPath);
   }
 
@@ -327,7 +328,7 @@ export function getPhotoUrl(
 
   // 3. Garante que se o path não começar com / nem http, ele receba o prefixo correto
   if (!finalUrl.startsWith('/') && !finalUrl.startsWith('http')) {
-    if (finalUrl.includes('employees/photos/') || finalUrl.includes('config/logos/')) {
+    if (finalUrl.includes('employees/photos/') || finalUrl.includes('config/logos/') || finalUrl.includes('learning/courses/thumbnails/')) {
       finalUrl = `/${finalUrl}`;
     } else {
       const prefix = type === 'logo' ? '/api/v1/config/logos/' : '/api/v1/employees/photos/';

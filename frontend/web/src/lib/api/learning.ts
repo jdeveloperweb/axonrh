@@ -236,6 +236,16 @@ export const coursesApi = {
   getStatistics: (id: string) =>
     api.get<CourseStatistics>(`/learning/courses/${id}/statistics`),
 
+  uploadThumbnail: (id: string, file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post<Course>(`/learning/courses/${id}/thumbnail`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+
   // Modules
   addModule: (courseId: string, data: Partial<CourseModule>) =>
     api.post<Course>(`/learning/courses/${courseId}/modules`, data),

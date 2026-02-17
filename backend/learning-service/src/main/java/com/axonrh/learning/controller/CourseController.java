@@ -18,9 +18,11 @@ import java.util.UUID;
 public class CourseController {
 
     private final CourseService courseService;
+    private final com.axonrh.learning.service.LearningFileStorageService storageService;
 
-    public CourseController(CourseService courseService) {
+    public CourseController(CourseService courseService, com.axonrh.learning.service.LearningFileStorageService storageService) {
         this.courseService = courseService;
+        this.storageService = storageService;
     }
 
     private UUID getTenantId() {
@@ -123,5 +125,37 @@ public class CourseController {
     @DeleteMapping("/{id}/modules/{moduleId}/lessons/{lessonId}")
     public ResponseEntity<Course> removeLesson(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, @PathVariable UUID id, @PathVariable UUID moduleId, @PathVariable UUID lessonId) {
         return ResponseEntity.ok(courseService.removeLesson(getTenantId(tenantIdHeader), id, moduleId, lessonId));
+    }
+
+    // Thumbnails
+    @PostMapping("/{id}/thumbnail")
+    public ResponseEntity<Course> uploadThumbnail(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, @PathVariable UUID id, @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+        String thumbnailUrl = storageService.storeCourseThumbnail(file, id);
+        Course updates = new Course();
+        updates.setThumbnailUrl(thumbnailUrl);
+        return ResponseEntity.ok(courseService.update(getTenantId(tenantIdHeader), id, updates));
+    }
+
+    @GetMapping("/thumbnails/{filename:.+}")
+    public ResponseEntity<org.springframework.core.io.Resource> getThumbnail(@PathVariable String filename) {
+        try {
+            java.nio.file.Path filePath = java.nio.file.Paths.get("uploads/learning-thumbnails").resolve(filename).normalize();
+            org.springframework.core.io.Resource resource = new org.springframework.core.io.UrlResource(filePath.toUri());
+            
+            if (resource.exists()) {
+                String contentType = "image/jpeg";
+                if (filename.toLowerCase().endsWith(".png")) contentType = "image/png";
+                else if (filename.toLowerCase().endsWith(".gif")) contentType = "image/gif";
+                else if (filename.toLowerCase().endsWith(".webp")) contentType = "image/webp";
+
+                return ResponseEntity.ok()
+                        .contentType(org.springframework.http.MediaType.parseMediaType(contentType))
+                        .body(resource);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (java.io.IOException e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 }

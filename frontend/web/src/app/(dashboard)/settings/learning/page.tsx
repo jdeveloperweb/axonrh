@@ -75,7 +75,7 @@ import {
 } from '@/lib/api/learning';
 import { employeesApi, Employee } from '@/lib/api/employees';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
+import { cn, getPhotoUrl } from '@/lib/utils';
 
 export default function LearningManagementPage() {
     const { confirm } = useConfirm();
@@ -127,6 +127,8 @@ export default function LearningManagementPage() {
     const [isLessonDialogOpen, setIsLessonDialogOpen] = useState(false);
     const [selectedModule, setSelectedModule] = useState<CourseModule | null>(null);
     const [lessonTab, setLessonTab] = useState<'edit' | 'preview'>('edit');
+    const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+    const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
 
 
     useEffect(() => {
@@ -261,6 +263,8 @@ export default function LearningManagementPage() {
     const handleEdit = (course: Course) => {
         setFormData(course);
         setSelectedCourse(course);
+        setThumbnailFile(null);
+        setThumbnailPreview(course.thumbnailUrl ? getPhotoUrl(course.thumbnailUrl) : null);
         setActiveView('EDITOR');
     };
 
@@ -289,6 +293,18 @@ export default function LearningManagementPage() {
 
                 toast.success('Treinamento criado com sucesso!');
             }
+
+            // Handle Thumbnail Upload if any
+            if (thumbnailFile && savedCourse.id) {
+                try {
+                    await coursesApi.uploadThumbnail(savedCourse.id, thumbnailFile);
+                    setThumbnailFile(null);
+                } catch (error) {
+                    console.error('Error uploading thumbnail:', error);
+                    toast.error('O treinamento foi salvo, mas houve um erro no upload da capa.');
+                }
+            }
+
             loadInitialData();
         } catch (error) {
             toast.error('Erro ao salvar treinamento');
@@ -764,6 +780,62 @@ export default function LearningManagementPage() {
                     </div>
 
                     <aside className="lg:col-span-4 space-y-6">
+                        {/* Course Cover Card */}
+                        <div className="bg-white border border-slate-100 rounded-2xl p-8 shadow-xl shadow-slate-200/20 space-y-6">
+                            <div className="space-y-2">
+                                <h3 className="font-black text-lg">Capa do Treinamento</h3>
+                                <p className="text-xs text-slate-500">Imagem que aparecerá no card do treinamento.</p>
+                            </div>
+
+                            <div className="relative group aspect-video rounded-2xl overflow-hidden border-2 border-slate-100 bg-slate-50 shadow-inner">
+                                {thumbnailPreview ? (
+                                    <img src={thumbnailPreview} alt="Capa" className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 gap-2">
+                                        <ImageIcon className="h-10 w-10 opacity-30" />
+                                        <span className="text-[10px] font-black uppercase tracking-widest">Sem Imagem</span>
+                                    </div>
+                                )}
+
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 backdrop-blur-sm">
+                                    <label className="h-10 px-4 rounded-xl bg-white text-slate-900 text-[10px] font-black uppercase flex items-center cursor-pointer hover:bg-slate-100 transition-colors">
+                                        Subir Arquivo
+                                        <input
+                                            type="file"
+                                            className="hidden"
+                                            accept="image/*"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) {
+                                                    setThumbnailFile(file);
+                                                    setThumbnailPreview(URL.createObjectURL(file));
+                                                    // Clear manual URL if uploading file
+                                                    setFormData(prev => ({ ...prev, thumbnailUrl: undefined }));
+                                                }
+                                            }}
+                                        />
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Ou link da internet</label>
+                                <div className="relative">
+                                    <Input
+                                        className="h-10 pl-10 rounded-xl border-slate-200 text-[11px] font-bold"
+                                        placeholder="https://..."
+                                        value={formData.thumbnailUrl || ''}
+                                        onChange={(e) => {
+                                            setFormData({ ...formData, thumbnailUrl: e.target.value });
+                                            setThumbnailPreview(e.target.value);
+                                            setThumbnailFile(null); // Clear file if URL is provided
+                                        }}
+                                    />
+                                    <Link2 className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                                </div>
+                            </div>
+                        </div>
+
                         <div className="bg-white border border-slate-100 rounded-2xl p-8 shadow-xl shadow-slate-200/20 space-y-8 sticky top-6">
                             <div className="space-y-2">
                                 <h3 className="font-black text-lg">Ações e Status</h3>
