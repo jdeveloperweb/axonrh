@@ -157,9 +157,10 @@ export default function EmployeesPage() {
   const fetchEmployees = useCallback(async () => {
     try {
       setLoading(true);
+      const isDeptView = viewMode === 'department';
       const params: EmployeeListParams = {
-        page: currentPage,
-        size: pageSize,
+        page: isDeptView ? 0 : currentPage,
+        size: isDeptView ? 1000 : pageSize,
         sort: viewMode === 'alphabetical' ? `fullName,${sortDirection}` :
           viewMode === 'department' ? `department.name,asc,fullName,${sortDirection}` :
             `registrationNumber,${sortDirection}`,
@@ -199,6 +200,10 @@ export default function EmployeesPage() {
       console.error('Failed to load departments:', error);
     }
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [viewMode]);
 
   useEffect(() => {
     fetchEmployees();
@@ -1046,7 +1051,7 @@ export default function EmployeesPage() {
 
 
       {/* Pagination */}
-      {!loading && totalPages > 0 && (
+      {!loading && totalPages > 0 && viewMode !== 'department' && (
         <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
           <p className="text-sm text-[var(--color-text-secondary)]">
             Mostrando {currentPage * pageSize + 1} a {Math.min((currentPage + 1) * pageSize, totalElements)} de {totalElements} resultados
