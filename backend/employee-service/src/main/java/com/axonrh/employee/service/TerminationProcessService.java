@@ -117,6 +117,20 @@ public class TerminationProcessService {
         return mapToResponse(process);
     }
 
+    @Transactional
+    public TerminationResponse archiveTermination(UUID processId, UUID tenantId) {
+        TerminationProcess process = repository.findById(processId)
+                .orElseThrow(() -> new ResourceNotFoundException("Processo não encontrado"));
+
+        if (!process.getTenantId().equals(tenantId)) {
+             throw new ResourceNotFoundException("Processo não pertence ao tenant");
+        }
+
+        process.setStatus(com.axonrh.employee.entity.enums.TerminationStatus.ARCHIVED);
+        process = repository.save(process);
+        return mapToResponse(process);
+    }
+
     @Transactional(readOnly = true)
     public TerminationResponse getByEmployeeId(UUID employeeId) {
         TerminationProcess process = repository.findByEmployeeId(employeeId)

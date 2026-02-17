@@ -6,5 +6,6 @@ public enum TerminationStatus {
     PENDING_FINANCIAL,
     PENDING_EXAMS,
     COMPLETED,
-    CANCELLED
+    CANCELLED,
+    ARCHIVED
 }

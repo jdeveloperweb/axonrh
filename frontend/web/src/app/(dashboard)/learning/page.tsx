@@ -217,7 +217,7 @@ export default function LearningDashboard() {
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-4 overflow-x-auto pb-4 no-scrollbar">
+        <div className="flex flex-nowrap gap-4 overflow-x-auto pt-4 pb-4 no-scrollbar">
           <button
             onClick={() => setSelectedCategory(null)}
             className={cn(

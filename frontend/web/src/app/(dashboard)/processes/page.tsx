@@ -15,7 +15,8 @@ import {
     TrendingDown,
     CalendarDays,
     ChevronUp,
-    ChevronDown
+    ChevronDown,
+    Archive
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -69,7 +70,7 @@ const noticePeriodLabels: Record<string, string> = {
 export default function ProcessesPage() {
     const router = useRouter();
     const { toast } = useToast();
-    const [activeTab, setActiveTab] = useState<'admissions' | 'terminations'>('admissions');
+    const [activeTab, setActiveTab] = useState<'admissions' | 'terminations' | 'archived'>('admissions');
     const [loading, setLoading] = useState(true);
     const [admissions, setAdmissions] = useState<AdmissionProcess[]>([]);
     const [terminations, setTerminations] = useState<TerminationProcess[]>([]);
@@ -121,19 +122,43 @@ export default function ProcessesPage() {
         a.candidateEmail.toLowerCase().includes(search.toLowerCase())
     );
 
-    const sortedTerminations = [...terminations].sort((a, b) => {
-        let valA = a[sortField as keyof TerminationProcess] as any;
-        let valB = b[sortField as keyof TerminationProcess] as any;
+    const sortedTerminations = [...terminations]
+        .filter(t => {
+            if (activeTab === 'terminations') return t.status !== 'ARCHIVED';
+            if (activeTab === 'archived') return t.status === 'ARCHIVED';
+            return true;
+        })
+        .sort((a, b) => {
+            let valA = a[sortField as keyof TerminationProcess] as any;
+            let valB = b[sortField as keyof TerminationProcess] as any;
 
-        if (typeof valA === 'string') {
-            valA = valA.toLowerCase();
-            valB = valB.toLowerCase();
+            if (typeof valA === 'string') {
+                valA = valA.toLowerCase();
+                valB = valB.toLowerCase();
+            }
+
+            if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
+            if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
+            return 0;
+        });
+
+    const handleArchive = async (id: string, name: string) => {
+        try {
+            await processesApi.terminations.archive(id);
+            toast({
+                title: 'Sucesso',
+                description: `${name} arquivado com sucesso.`,
+            });
+            fetchTerminations();
+        } catch (error) {
+            console.error(error);
+            toast({
+                title: 'Erro',
+                description: 'Falha ao arquivar processo',
+                variant: 'destructive',
+            });
         }
-
-        if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
-        if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
-        return 0;
-    });
+    };
 
     const handleSort = (field: string) => {
         if (sortField === field) {
@@ -193,7 +218,16 @@ export default function ProcessesPage() {
                         : 'border-transparent text-gray-500 hover:text-gray-700'
                         }`}
                 >
-                    Desligamentos ({terminations.length})
+                    Desligamentos ({terminations.filter(t => t.status !== 'ARCHIVED').length})
+                </button>
+                <button
+                    onClick={() => setActiveTab('archived')}
+                    className={`px-6 py-3 font-medium transition-colors border-b-2 ${activeTab === 'archived'
+                        ? 'border-[var(--color-primary)] text-[var(--color-primary)]'
+                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                        }`}
+                >
+                    Arquivados ({terminations.filter(t => t.status === 'ARCHIVED').length})
                 </button>
             </div>
 
@@ -401,7 +435,11 @@ export default function ProcessesPage() {
                                                         {proc.severancePayAmount ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(proc.severancePayAmount) : '-'}
                                                     </td>
                                                     <td className="px-6 py-4">
-                                                        {!proc.completedAt ? (
+                                                        {proc.status === 'ARCHIVED' ? (
+                                                            <Badge className="bg-gray-100 text-gray-700 shadow-none border-none">
+                                                                <Archive className="w-3 h-3 mr-1" /> Arquivado
+                                                            </Badge>
+                                                        ) : !proc.completedAt ? (
                                                             <Badge className="bg-amber-100 text-amber-700 shadow-none border-none">
                                                                 <Clock className="w-3 h-3 mr-1" /> Em Processo
                                                             </Badge>
@@ -412,13 +450,29 @@ export default function ProcessesPage() {
                                                         )}
                                                     </td>
                                                     <td className="px-6 py-4 text-right">
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => router.push(`/employees/${proc.employeeId}?tab=termination`)}
-                                                        >
-                                                            Movimentar
-                                                        </Button>
+                                                        <div className="flex items-center justify-end gap-2">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={() => router.push(`/employees/${proc.employeeId}?tab=termination`)}
+                                                            >
+                                                                Movimentar
+                                                            </Button>
+                                                            {proc.status !== 'ARCHIVED' && (
+                                                                <DropdownMenu>
+                                                                    <DropdownMenuTrigger asChild>
+                                                                        <Button variant="ghost" size="icon">
+                                                                            <MoreHorizontal className="w-4 h-4" />
+                                                                        </Button>
+                                                                    </DropdownMenuTrigger>
+                                                                    <DropdownMenuContent align="end" className="bg-white border border-gray-200">
+                                                                        <DropdownMenuItem onClick={() => handleArchive(proc.id, proc.employeeName)}>
+                                                                            <Archive className="w-4 h-4 mr-2" /> Arquivar
+                                                                        </DropdownMenuItem>
+                                                                    </DropdownMenuContent>
+                                                                </DropdownMenu>
+                                                            )}
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             ))

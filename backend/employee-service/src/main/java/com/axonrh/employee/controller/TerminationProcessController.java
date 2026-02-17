@@ -47,6 +47,15 @@ public class TerminationProcessController {
         return ResponseEntity.ok(service.reopenTermination(id, userId, tenantId));
     }
 
+    @PostMapping("/{id}/archive")
+    public ResponseEntity<TerminationResponse> archive(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal Jwt jwt) {
+        UUID tenantId = UUID.fromString(jwt.getClaimAsString("tenant_id"));
+        com.axonrh.employee.config.TenantContext.setCurrentTenant(tenantId.toString());
+        return ResponseEntity.ok(service.archiveTermination(id, tenantId));
+    }
+
     @GetMapping("/employee/{employeeId}")
     public ResponseEntity<TerminationResponse> getByEmployee(@PathVariable UUID employeeId) {
         return ResponseEntity.ok(service.getByEmployeeId(employeeId));
