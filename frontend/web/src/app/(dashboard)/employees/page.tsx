@@ -99,16 +99,34 @@ export default function EmployeesPage() {
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize] = useState(1000);
 
-  // Filters
+  // Filters & State Persistence
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<EmployeeStatus | ''>('ACTIVE');
+  const [statusFilter, setStatusFilter] = useState<EmployeeStatus | ''>(() => {
+    if (typeof window !== 'undefined') return (localStorage.getItem('employees_status_filter') as any) || 'ACTIVE';
+    return 'ACTIVE';
+  });
   const [departmentFilter, setDepartmentFilter] = useState('');
   const [workRegimeFilter, setWorkRegimeFilter] = useState<WorkRegime | ''>('');
   const [hybridDayFilter, setHybridDayFilter] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const [viewMode, setViewMode] = useState<'list' | 'alphabetical' | 'department'>('alphabetical');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [viewMode, setViewMode] = useState<'list' | 'alphabetical' | 'department'>(() => {
+    if (typeof window !== 'undefined') return (localStorage.getItem('employees_view_mode') as any) || 'alphabetical';
+    return 'alphabetical';
+  });
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(() => {
+    if (typeof window !== 'undefined') return (localStorage.getItem('employees_sort_direction') as any) || 'asc';
+    return 'asc';
+  });
   const [collapsedDepts, setCollapsedDepts] = useState<Set<string>>(new Set());
+
+  // Persist preferences
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('employees_view_mode', viewMode);
+      localStorage.setItem('employees_status_filter', statusFilter);
+      localStorage.setItem('employees_sort_direction', sortDirection);
+    }
+  }, [viewMode, statusFilter, sortDirection]);
 
   // Reference data
   const [departments, setDepartments] = useState<Department[]>([]);
