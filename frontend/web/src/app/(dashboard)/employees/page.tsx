@@ -161,22 +161,25 @@ export default function EmployeesPage() {
       const isDeptView = viewMode === 'department';
       const params: EmployeeListParams = {
         page: isDeptView ? 0 : currentPage,
-        size: isDeptView ? 999 : pageSize, // 999 é mais seguro que 2000 em alguns backends
+        size: isDeptView ? 2000 : pageSize, // Aumentado para garantir visualização completa
         sort: viewMode === 'alphabetical' ? `fullName,${sortDirection}` :
           viewMode === 'department' ? `department.name,asc,fullName,${sortDirection}` :
             `registrationNumber,${sortDirection}`,
       };
 
       if (search) params.search = search;
-      if (statusFilter) params.status = statusFilter;
+      // No modo departamento, se o filtro for o padrão (ACTIVE), removemos para mostrar todos e dar visão completa
+      if (statusFilter && (!isDeptView || statusFilter !== 'ACTIVE')) {
+        params.status = statusFilter;
+      }
       if (departmentFilter) params.departmentId = departmentFilter;
       if (workRegimeFilter) params.workRegime = workRegimeFilter;
       if (hybridDayFilter) params.hybridDay = hybridDayFilter;
 
       const response = await employeesApi.list(params);
-      setEmployees(response.content);
-      setTotalElements(response.totalElements);
-      setTotalPages(response.totalPages);
+      setEmployees(response.content || []);
+      setTotalElements(response.totalElements || 0);
+      setTotalPages(response.totalPages || 0);
 
       // Also update stats
       fetchStats();
@@ -686,7 +689,7 @@ export default function EmployeesPage() {
                                     <span className="text-sm font-black text-gray-800 uppercase tracking-tighter">
                                       {deptName}
                                     </span>
-                                    <span className="flex items-center justify-center min-w-[24px] h-[18px] text-[10px] bg-[var(--color-primary)] text-white px-1.5 rounded-full font-bold shadow-sm shadow-orange-100">
+                                    <span className="flex items-center justify-center min-w-[28px] h-[20px] text-[10px] bg-[var(--color-primary)] text-white px-2 rounded-full font-black shadow-sm ring-2 ring-orange-100/50">
                                       {deptEmployees.length}
                                     </span>
                                   </div>
@@ -702,8 +705,8 @@ export default function EmployeesPage() {
                             <tr>
                               <td colSpan={6} className="p-4 bg-gray-50/5">
                                 {deptEmployees.length === 0 ? (
-                                  <div className="py-2 text-center text-[10px] text-gray-400 font-medium uppercase tracking-widest italic">
-                                    Nenhum colaborador ativo neste setor
+                                  <div className="py-4 text-center text-[10px] text-gray-400 font-medium uppercase tracking-widest italic opacity-60">
+                                    Nenhum colaborador encontrado neste setor
                                   </div>
                                 ) : (
                                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
@@ -977,8 +980,8 @@ export default function EmployeesPage() {
                       {!isCollapsed && (
                         <div className="p-3 bg-gray-50/10 grid grid-cols-2 gap-2">
                           {deptEmployees.length === 0 ? (
-                            <div className="col-span-2 py-2 text-center text-[8px] text-gray-400 font-medium uppercase tracking-widest italic">
-                              Nenhum colaborador ativo neste setor
+                            <div className="col-span-2 py-4 text-center text-[8px] text-gray-400 font-medium uppercase tracking-widest italic opacity-60">
+                              Nenhum colaborador encontrado neste setor
                             </div>
                           ) : (
                             deptEmployees
