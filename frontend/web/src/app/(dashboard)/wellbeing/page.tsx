@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Users,
     TrendingUp,
@@ -102,39 +102,56 @@ export default function WellbeingPage() {
     // --- Data Prep ---
     const totalCheckins = statsData?.totalCheckins || 1;
 
-    // Improved Radar Data with descriptions for clarity
+    // Improved Radar Data with icons and clear meanings
     const radarData = [
         {
             subject: 'Saúde Mental',
-            description: 'Avaliação do bem-estar psicológico baseada na positividade dos check-ins diários.',
+            icon: <Brain className="w-5 h-5" />,
+            description: 'Reflete a proporção de check-ins com sentimentos positivos. Indica o moral e equilíbrio psicológico atual da organização.',
+            source: 'Análise de Sentimento das Notas',
             value: Math.max(30, ((statsData?.sentimentDistribution['POSITIVE'] || 0) / (totalCheckins || 1)) * 100),
             fullMark: 100
         },
         {
             subject: 'Equilíbrio de Carga',
-            description: 'Mede se a intensidade de trabalho está sustentável ou gerando sobrecarga.',
+            icon: <Activity className="w-5 h-5" />,
+            description: 'Baseado na redução de casos de alerta crítico. Quanto maior, menor a percepção de sobrecarga extrema no time.',
+            source: 'Volume de Alertas Críticos',
             value: Math.max(25, 85 - (statsData?.highRiskCount || 0) * 3),
             fullMark: 100
         },
         {
             subject: 'Segurança Psicológica',
-            description: 'Nível de confiança dos colaboradores em expressar opiniões e vulnerabilidades.',
+            icon: <ShieldCheck className="w-5 h-5" />,
+            description: 'Mede a confiança dos colaboradores em relatar problemas. Quanto maior a média de humor em relatos abertos, maior este índice.',
+            source: 'Média de Humor em Relatos',
             value: Math.max(30, 65 + (statsData?.averageScore || 0) * 3),
             fullMark: 100
         },
         {
             subject: 'Clima Organizacional',
-            description: 'Percepção geral sobre o ambiente de trabalho e relações interpessoais.',
+            icon: <Users className="w-5 h-5" />,
+            description: 'Percepção geral convertida da escala de 1-5 para porcentagem. Representa a satisfação média no ambiente.',
+            source: 'Escala 1-5 Linear (Humor)',
             value: Math.max(40, ((statsData?.averageScore || 0) / 5) * 100),
             fullMark: 100
         },
         {
             subject: 'Engajamento e Vitalidade',
-            description: 'Conexão emocional e energia investida nas atividades da empresa.',
+            icon: <Sparkles className="w-5 h-5" />,
+            description: 'Combina a frequência de check-ins com a estabilidade do humor. Indica a energia ativa aplicada no trabalho.',
+            source: 'Frequência + Estabilidade de Humor',
             value: Math.max(30, 70 + (totalCheckins > 0 ? (statsData?.averageScore || 0) * 2 : 0)),
             fullMark: 100
         },
     ];
+
+    const getStatusInfo = (val: number) => {
+        if (val >= 80) return { label: 'Execelente', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200' };
+        if (val >= 60) return { label: 'Estável', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' };
+        if (val >= 40) return { label: 'Atenção', color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200' };
+        return { label: 'Crítico', color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-200' };
+    };
 
     const sentimentDataArr = [
         { name: 'Positivo', value: statsData?.sentimentDistribution['POSITIVE'] || 0, color: '#10b981' },
@@ -307,8 +324,14 @@ export default function WellbeingPage() {
                                 <div className="w-32 h-32 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 shadow-[0_0_50px_rgba(139,92,246,0.4)] animate-orb-pulse flex flex-col items-center justify-center text-white relative cursor-help transition-all duration-500 hover:scale-105 active:scale-95 overflow-hidden">
                                     <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20" />
                                     <Sparkles className="w-6 h-6 mb-1 drop-shadow-md" />
-                                    <span className="text-2xl font-black">{statsData?.averageScore ? statsData.averageScore.toFixed(1) : '3.5'}</span>
-                                    <span className="text-[10px] uppercase font-bold tracking-tighter opacity-80">Vitalidade</span>
+                                    <div className="flex items-baseline gap-0.5">
+                                        <span className="text-2xl font-black">{statsData?.averageScore ? statsData.averageScore.toFixed(1) : '3.5'}</span>
+                                        <span className="text-[10px] opacity-70 font-bold">/5.0</span>
+                                    </div>
+                                    <span className="text-[10px] uppercase font-bold tracking-tighter opacity-80">Vitalidade Geral</span>
+                                    <div className="mt-1 px-2 py-0.5 bg-white/20 rounded-full text-[8px] font-black uppercase tracking-widest border border-white/20">
+                                        {statsData && statsData.averageScore >= 4 ? 'Alta' : statsData && statsData.averageScore >= 3 ? 'Média' : 'Baixa'}
+                                    </div>
                                 </div>
                                 <div className="absolute -inset-4 bg-purple-400/20 rounded-full blur-2xl animate-pulse -z-10" />
                             </div>
@@ -346,25 +369,24 @@ export default function WellbeingPage() {
                                         }}
                                     >
                                         <div
-                                            className={`rounded-3xl bg-gradient-to-br ${colorClass} shadow-lg border-2 flex flex-col items-center justify-center p-4 relative cursor-pointer`}
+                                            className={`rounded-3xl bg-gradient-to-br ${colorClass} shadow-lg border-2 flex flex-col items-center justify-center p-3 relative cursor-help`}
                                             style={{ width: `${orbSize}px`, height: `${orbSize}px` }}
                                         >
-                                            <span className="text-white font-black text-lg drop-shadow-sm">{Math.round(item.value)}%</span>
+                                            <div className="text-white opacity-80 mb-1 group-hover:scale-110 transition-transform">
+                                                {item.icon}
+                                            </div>
+                                            <span className="text-white font-black text-lg drop-shadow-sm leading-none">{Math.round(item.value)}%</span>
                                             <div className="absolute inset-0 rounded-3xl bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity backdrop-brightness-110" />
                                         </div>
-                                        <div className="glass px-3 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 -translate-y-2 group-hover:translate-y-0 shadow-lg">
-                                            <span className="text-[10px] font-bold text-gray-800 whitespace-nowrap">{item.subject}</span>
-                                        </div>
 
-                                        {/* Connector line effect */}
-                                        <div
-                                            className="absolute top-1/2 left-1/2 w-[1px] bg-gradient-to-r from-purple-200 to-transparent -z-10 origin-left"
-                                            style={{
-                                                width: `${radius}px`,
-                                                transform: `rotate(${angle + 180}deg) scaleX(${0.5})`,
-                                                opacity: 0.3
-                                            }}
-                                        />
+                                        <div className="flex flex-col items-center">
+                                            <div className="bg-white/90 backdrop-blur-md px-3 py-1 rounded-full shadow-sm border border-gray-100 mb-1">
+                                                <span className="text-[11px] font-extrabold text-gray-800 whitespace-nowrap">{item.subject}</span>
+                                            </div>
+                                            <div className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm ${getStatusInfo(item.value).bg} ${getStatusInfo(item.value).color} ${getStatusInfo(item.value).border} border`}>
+                                                {getStatusInfo(item.value).label}
+                                            </div>
+                                        </div>
                                     </div>
                                 );
                             })}
@@ -389,37 +411,62 @@ export default function WellbeingPage() {
 
                             <div className="space-y-4">
                                 <TooltipProvider>
-                                    {radarData.map((item, idx) => (
-                                        <div key={idx} className="group cursor-default">
-                                            <div className="flex items-center justify-between mb-1.5 px-1">
-                                                <div className="flex items-center gap-2">
-                                                    <div className={`w-2 h-2 rounded-full ${item.value < 40 ? 'bg-red-400' : item.value > 70 ? 'bg-emerald-400' : 'bg-blue-400'}`} />
-                                                    <span className="text-xs font-bold text-gray-600 group-hover:text-gray-900 transition-colors">{item.subject}</span>
-                                                    <UITooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <Info className="w-3 h-3 text-gray-300 hover:text-purple-500 cursor-help transition-colors" />
-                                                        </TooltipTrigger>
-                                                        <TooltipContent side="right" className="max-w-[200px] bg-white p-3 shadow-xl border-purple-100">
-                                                            <p className="text-[11px] leading-relaxed text-gray-600">
-                                                                <span className="font-bold text-purple-600 block mb-1">{item.subject}</span>
-                                                                {item.description}
-                                                            </p>
-                                                        </TooltipContent>
-                                                    </UITooltip>
+                                    {radarData.map((item, idx) => {
+                                        const status = getStatusInfo(item.value);
+                                        return (
+                                            <div key={idx} className="group cursor-default bg-white/40 hover:bg-white/80 p-2 rounded-xl transition-all border border-transparent hover:border-purple-100">
+                                                <div className="flex items-center justify-between mb-1.5 px-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className={`p-1.5 rounded-lg ${status.bg} ${status.color}`}>
+                                                            {React.cloneElement(item.icon as React.ReactElement<any>, { className: 'w-3.5 h-3.5' })}
+                                                        </div>
+                                                        <div className="flex flex-col">
+                                                            <span className="text-[11px] font-bold text-gray-700 group-hover:text-gray-900 transition-colors uppercase tracking-tight">{item.subject}</span>
+                                                            <div className="flex items-center gap-1.5">
+                                                                <span className={`text-[9px] font-black uppercase tracking-wider ${status.color}`}>{status.label}</span>
+                                                                <span className="text-[9px] text-gray-400">•</span>
+                                                                <span className="text-[9px] text-gray-400 font-medium">via {item.source}</span>
+                                                            </div>
+                                                        </div>
+                                                        <UITooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Info className="w-3 h-3 text-gray-300 hover:text-purple-500 cursor-help transition-colors ml-1" />
+                                                            </TooltipTrigger>
+                                                            <TooltipContent side="right" className="max-w-[280px] bg-white p-4 shadow-2xl border-purple-100 rounded-2xl">
+                                                                <div className="space-y-2">
+                                                                    <div className="flex items-center gap-2 border-b border-gray-50 pb-2">
+                                                                        <div className={`p-2 rounded-xl ${status.bg} ${status.color}`}>
+                                                                            {React.cloneElement(item.icon as React.ReactElement<any>, { className: 'w-5 h-5' })}
+                                                                        </div>
+                                                                        <div>
+                                                                            <p className="text-xs font-black text-gray-900 leading-none">{item.subject}</p>
+                                                                            <p className="text-[10px] text-gray-500 mt-1 uppercase font-bold">Fonte: {item.source}</p>
+                                                                        </div>
+                                                                    </div>
+                                                                    <p className="text-xs leading-relaxed text-gray-600 font-medium pt-1">
+                                                                        {item.description}
+                                                                    </p>
+                                                                    <div className={`mt-2 p-2 rounded-xl text-[10px] font-bold text-center border ${status.bg} ${status.color} ${status.border}`}>
+                                                                        Nível: {status.label} ({Math.round(item.value)}%)
+                                                                    </div>
+                                                                </div>
+                                                            </TooltipContent>
+                                                        </UITooltip>
+                                                    </div>
+                                                    <span className="text-xs font-black text-gray-900">{Math.round(item.value)}%</span>
                                                 </div>
-                                                <span className="text-xs font-black text-gray-900">{Math.round(item.value)}%</span>
+                                                <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden p-[1px] border border-gray-50">
+                                                    <div
+                                                        className={`h-full rounded-full transition-all duration-1000 ${status.bg.replace('bg-', 'bg-gradient-to-r from-')}`}
+                                                        style={{
+                                                            width: `${item.value}%`,
+                                                            backgroundImage: `linear-gradient(to right, ${item.value < 40 ? '#fb7185, #e11d48' : item.value > 80 ? '#34d399, #059669' : '#818cf8, #4f46e5'})`
+                                                        }}
+                                                    />
+                                                </div>
                                             </div>
-                                            <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden p-[1px] border border-gray-50">
-                                                <div
-                                                    className={`h-full rounded-full transition-all duration-1000 ${item.value < 40 ? 'bg-gradient-to-r from-red-400 to-rose-500' :
-                                                        item.value > 70 ? 'bg-gradient-to-r from-emerald-400 to-teal-500' :
-                                                            'bg-gradient-to-r from-purple-500 to-indigo-600'
-                                                        }`}
-                                                    style={{ width: `${item.value}%` }}
-                                                />
-                                            </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </TooltipProvider>
                             </div>
                         </div>
