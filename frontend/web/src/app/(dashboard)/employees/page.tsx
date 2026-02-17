@@ -160,7 +160,7 @@ export default function EmployeesPage() {
       const isDeptView = viewMode === 'department';
       const params: EmployeeListParams = {
         page: isDeptView ? 0 : currentPage,
-        size: isDeptView ? 2000 : pageSize, // Aumentado para garantir todos os 179+
+        size: isDeptView ? 999 : pageSize, // 999 é mais seguro que 2000 em alguns backends
         sort: viewMode === 'alphabetical' ? `fullName,${sortDirection}` :
           viewMode === 'department' ? `department.name,asc,fullName,${sortDirection}` :
             `registrationNumber,${sortDirection}`,
@@ -658,143 +658,390 @@ export default function EmployeesPage() {
                     </td>
                   </tr>
                 ) : viewMode === 'department' ? (
+                  (() => {
+                    const allDeptNames = Array.from(new Set([
+                      ...departments.map(d => d.name),
+                      ...Array.from(new Set(employees.map(e => e.department?.name || 'Sem Departamento')))
+                    ])).sort();
+
+                    return allDeptNames.map(deptName => {
+                      const deptEmployees = employees.filter(e => (e.department?.name || 'Sem Departamento') === deptName);
+                      if (deptEmployees.length === 0 && !departments.find(d => d.name === deptName)) return null;
+                      const isCollapsed = collapsedDepts.has(deptName);
+                      return (
+                        <Fragment key={deptName}>
+                          <tr
+                            className="bg-orange-50/20 cursor-pointer hover:bg-orange-100/30 transition-colors"
+                            onClick={() => toggleDept(deptName)}
+                          >
+                            <td colSpan={6} className="px-6 py-2 border-l-4 border-[var(--color-primary)]">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  {isCollapsed ? <ChevronRight className="w-4 h-4 text-[var(--color-primary)]" /> : <ChevronDown className="w-4 h-4 text-[var(--color-primary)]" />}
+                                  <div className="flex items-center gap-2">
+                                    <Building2 className="w-4 h-4 text-[var(--color-primary)]" />
+                                    <span className="text-sm font-black text-gray-800 uppercase tracking-tighter">
+                                      {deptName}
+                                    </span>
+                                    <span className="flex items-center justify-center min-w-[24px] h-[18px] text-[10px] bg-[var(--color-primary)] text-white px-1.5 rounded-full font-bold shadow-sm shadow-orange-100">
+                                      {employees.filter(e => (e.department?.name || 'Sem Departamento') === deptName).length}
+                                    </span>
+                                  </div>
+                                </div>
+                                <span className="text-[10px] font-bold text-[var(--color-primary)]/50 uppercase tracking-widest flex items-center gap-1">
+                                  {isCollapsed ? 'Expandir' : 'Recolher'}
+                                  {isCollapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                                </span>
+                              </div>
+                            </td>
+                          </tr>
+                          {!isCollapsed && (
+                            <tr>
+                              <td colSpan={6} className="p-4 bg-gray-50/10">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
+                                  {employees
+                                    .filter(e => (e.department?.name || 'Sem Departamento') === deptName)
+                                    .sort((a, b) => {
+                                      const getRank = (e: any) => {
+                                        const t = (e.position?.title || e.position?.name || '').toLowerCase();
+                                        if (t.includes('diretor')) return 1;
+                                        if (t.includes('gerente')) return 2;
+                                        if (t.includes('coordenador')) return 3;
+                                        if (t.includes('supervisor')) return 4;
+                                        if (t.includes('líder') || t.includes('lider')) return 5;
+                                        return 6;
+                                      };
+                                      const rankA = getRank(a);
+                                      const rankB = getRank(b);
+                                      if (rankA !== rankB) return rankA - rankB;
+                                      return a.fullName.localeCompare(b.fullName);
+                                    })
+                                    .map((employee) => (
+                                      <div
+                                        key={employee.id}
+                                        className="bg-white border border-gray-100 rounded-xl p-3 hover:shadow-md hover:border-[var(--color-primary)]/30 transition-all cursor-pointer group relative flex flex-col"
+                                        onClick={() => router.push(`/employees/${employee.id}`)}
+                                      >
+                                        {/* Menu de Ações no Card */}
+                                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                                          <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                              <button className="p-1 hover:bg-gray-100 rounded-lg transition-colors bg-white/80 backdrop-blur-sm border border-gray-100">
+                                                <MoreHorizontal className="w-3.5 h-3.5 text-gray-400" />
+                                              </button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="w-40">
+                                              <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}`)}>Visualizar</DropdownMenuItem>
+                                              <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}/edit`)}>Editar</DropdownMenuItem>
+                                              <DropdownMenuItem className="text-red-600" onClick={() => handleDelete(employee.id, employee.fullName)}>Excluir</DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                          </DropdownMenu>
+                                        </div>
+
+                                        <div className="flex items-start gap-3">
+                                          <div className="relative">
+                                            <ExpandablePhoto
+                                              src={getPhotoUrl(employee.photoUrl, employee.updatedAt)}
+                                              alt={employee.fullName}
+                                              containerClassName="w-12 h-12 rounded-lg border border-gray-100 shadow-sm overflow-hidden"
+                                              fallback={
+                                                <div className="w-full h-full bg-[var(--color-primary)]/5 text-[var(--color-primary)] flex items-center justify-center font-bold text-lg">
+                                                  {employee.fullName.charAt(0).toUpperCase()}
+                                                </div>
+                                              }
+                                            />
+                                          </div>
+                                          <div className="flex-1 min-w-0">
+                                            <div className="flex items-start justify-between pr-4">
+                                              <h4 className="font-bold text-gray-900 truncate text-[11px] group-hover:text-[var(--color-primary)] transition-colors leading-tight">
+                                                {employee.fullName}
+                                              </h4>
+                                            </div>
+                                            <p className="text-[9px] text-gray-500 font-medium truncate mt-0.5">
+                                              {employee.position?.title || '-'}
+                                            </p>
+                                            <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                                              <span className={`inline-flex px-1 py-0.5 rounded-full text-[7px] font-bold uppercase ${statusColors[employee.status].bg} ${statusColors[employee.status].text}`}>
+                                                {statusColors[employee.status].label}
+                                              </span>
+                                              <span className="text-[8px] text-gray-400 font-mono">
+                                                {formatCpf(employee.cpf)}
+                                              </span>
+                                              {(() => {
+                                                const t = (employee.position?.title || employee.position?.name || '').toLowerCase();
+                                                const isManager = t.includes('diretor') || t.includes('gerente') || t.includes('coordenador') || t.includes('lider') || t.includes('líder');
+                                                return isManager && (
+                                                  <div className="flex items-center gap-1 text-[7px] text-orange-600 font-extrabold bg-orange-50 px-1 py-0.5 rounded">
+                                                    <UserCheck className="w-2 h-2" />
+                                                    GESTÃO
+                                                  </div>
+                                                );
+                                              })()}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                </div>
+                          )}
+                              </Fragment>
+                              );
+                    });
+                  })() : (
+                  employees.map((employee) => (
+                              <tr
+                                key={employee.id}
+                                className="hover:bg-gray-50/50 cursor-pointer transition-colors"
+                                onClick={() => router.push(`/employees/${employee.id}`)}
+                              >
+                                <td className="px-6 py-4">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10">
+                                      <ExpandablePhoto
+                                        src={getPhotoUrl(employee.photoUrl, employee.updatedAt)}
+                                        alt={employee.fullName}
+                                        containerClassName="w-10 h-10 rounded-full border border-white shadow-sm"
+                                        fallback={
+                                          <div className="w-full h-full rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] flex items-center justify-center font-bold">
+                                            {employee.fullName.charAt(0).toUpperCase()}
+                                          </div>
+                                        }
+                                      />
+                                    </div>
+                                    <div className="flex flex-col">
+                                      <p className="font-bold text-gray-900 leading-tight">
+                                        {employee.fullName}
+                                        {employee.missingFields && employee.missingFields.length > 0 && (
+                                          <TooltipProvider>
+                                            <Tooltip>
+                                              <TooltipTrigger asChild>
+                                                <button
+                                                  onClick={(e) => handleSmartFill(employee, e)}
+                                                  className="inline-flex ml-2 cursor-pointer hover:bg-orange-50 p-1 rounded-full transition-colors group"
+                                                >
+                                                  <AlertCircle className="w-4 h-4 text-orange-500 group-hover:text-orange-600" />
+                                                </button>
+                                              </TooltipTrigger>
+                                              <TooltipContent>
+                                                <div className="text-xs">
+                                                  <p className="font-bold mb-1">Dados pendentes:</p>
+                                                  <ul className="list-disc pl-4 mb-2">
+                                                    {employee.missingFields.map((field) => (
+                                                      <li key={field}>{field}</li>
+                                                    ))}
+                                                  </ul>
+                                                  <p className="text-[10px] text-purple-600 font-bold border-t border-gray-100 pt-1 mt-1 flex items-center gap-1">
+                                                    <TrendingUp className="w-3 h-3" /> Clique para completar com IA
+                                                  </p>
+                                                </div>
+                                              </TooltipContent>
+                                            </Tooltip>
+                                          </TooltipProvider>
+                                        )}
+                                      </p>
+                                      {employee.socialName && (
+                                        <p className="text-xs text-gray-500 font-medium">
+                                          {employee.socialName}
+                                        </p>
+                                      )}
+                                      <p className="text-[10px] text-gray-400 mt-0.5">
+                                        Mat: {employee.registrationNumber}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 text-sm text-gray-600">
+                                  {formatCpf(employee.cpf)}
+                                </td>
+                                <td className="px-6 py-4 text-sm text-gray-600">
+                                  {employee.department?.name || '-'}
+                                </td>
+                                <td className="px-6 py-4 text-sm text-gray-600">
+                                  {employee.position?.title || '-'}
+                                </td>
+                                <td className="px-6 py-4">
+                                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusColors[employee.status].bg} ${statusColors[employee.status].text}`}>
+                                    {statusColors[employee.status].label}
+                                  </span>
+                                </td>
+                                <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                                        <MoreHorizontal className="w-4 h-4 text-gray-400" />
+                                      </button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-40">
+                                      <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}`)}>
+                                        Visualizar
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}/edit`)}>
+                                        Editar
+                                      </DropdownMenuItem>
+                                      {employee.missingFields && employee.missingFields.length > 0 && (
+                                        <DropdownMenuItem
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleSmartFill(employee, e as any);
+                                          }}
+                                          className="text-purple-600 font-medium"
+                                        >
+                                          <Sparkles className="w-4 h-4 mr-2" />
+                                          Completar com IA
+                                        </DropdownMenuItem>
+                                      )}
+                                      <DropdownMenuItem
+                                        className="text-red-600"
+                                        onClick={() => handleDelete(employee.id, employee.fullName)}
+                                      >
+                                        Excluir
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </td>
+                              </tr>
+                              ))
+                )}
+                            </tbody>
+            </table>
+          </div>
+
+              {/* Mobile Cards */}
+              <div className="lg:hidden divide-y divide-gray-100">
+                {loading ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="p-4 space-y-3 animate-pulse">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-gray-100 rounded-full" />
+                        <div className="space-y-2 flex-1">
+                          <div className="w-1/2 h-4 bg-gray-100 rounded" />
+                          <div className="w-1/3 h-3 bg-gray-100 rounded" />
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : employees.length === 0 ? (
+                  <div className="p-8 text-center text-gray-400">
+                    Nenhum colaborador encontrado
+                  </div>
+                ) : viewMode === 'department' ? (
                   Array.from(new Set(employees.map(e => e.department?.name || 'Sem Departamento'))).map(deptName => {
                     const isCollapsed = collapsedDepts.has(deptName);
                     return (
                       <Fragment key={deptName}>
-                        <tr
-                          className="bg-orange-50/20 cursor-pointer hover:bg-orange-100/30 transition-colors"
+                        <div
+                          className="bg-orange-50/30 px-4 py-2 flex items-center justify-between border-y border-gray-100 first:border-t-0 cursor-pointer active:bg-orange-100/50"
                           onClick={() => toggleDept(deptName)}
                         >
-                          <td colSpan={6} className="px-6 py-2 border-l-4 border-[var(--color-primary)]">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                {isCollapsed ? <ChevronRight className="w-4 h-4 text-[var(--color-primary)]" /> : <ChevronDown className="w-4 h-4 text-[var(--color-primary)]" />}
-                                <div className="flex items-center gap-2">
-                                  <Building2 className="w-4 h-4 text-[var(--color-primary)]" />
-                                  <span className="text-sm font-black text-gray-800 uppercase tracking-tighter">
-                                    {deptName}
-                                  </span>
-                                  <span className="flex items-center justify-center min-w-[24px] h-[18px] text-[10px] bg-[var(--color-primary)] text-white px-1.5 rounded-full font-bold shadow-sm shadow-orange-100">
-                                    {employees.filter(e => (e.department?.name || 'Sem Departamento') === deptName).length}
-                                  </span>
-                                </div>
-                              </div>
-                              <span className="text-[10px] font-bold text-[var(--color-primary)]/50 uppercase tracking-widest flex items-center gap-1">
-                                {isCollapsed ? 'Expandir' : 'Recolher'}
-                                {isCollapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                              </span>
-                            </div>
-                          </td>
-                        </tr>
+                          <div className="flex items-center gap-2">
+                            {isCollapsed ? <ChevronRight className="w-3 h-3 text-[var(--color-primary)]" /> : <ChevronDown className="w-3 h-3 text-[var(--color-primary)]" />}
+                            <Building2 className="w-3.5 h-3.5 text-[var(--color-primary)]" />
+                            <span className="text-[10px] font-bold text-[var(--color-primary)] uppercase tracking-wider">
+                              {deptName}
+                            </span>
+                            <span className="text-[10px] bg-orange-100 text-[var(--color-primary)] px-1.5 py-0.5 rounded-full font-bold">
+                              {employees.filter(e => (e.department?.name || 'Sem Departamento') === deptName).length}
+                            </span>
+                          </div>
+                        </div>
                         {!isCollapsed && (
-                          <tr>
-                            <td colSpan={6} className="p-4 bg-gray-50/10">
-                              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
-                                {employees
-                                  .filter(e => (e.department?.name || 'Sem Departamento') === deptName)
-                                  .sort((a, b) => {
-                                    const getRank = (e: any) => {
-                                      const t = (e.position?.title || e.position?.name || '').toLowerCase();
-                                      if (t.includes('diretor')) return 1;
-                                      if (t.includes('gerente')) return 2;
-                                      if (t.includes('coordenador')) return 3;
-                                      if (t.includes('supervisor')) return 4;
-                                      if (t.includes('líder') || t.includes('lider')) return 5;
-                                      return 6;
-                                    };
-                                    const rankA = getRank(a);
-                                    const rankB = getRank(b);
-                                    if (rankA !== rankB) return rankA - rankB;
-                                    return a.fullName.localeCompare(b.fullName);
-                                  })
-                                  .map((employee) => (
-                                    <div
-                                      key={employee.id}
-                                      className="bg-white border border-gray-100 rounded-xl p-3 hover:shadow-md hover:border-[var(--color-primary)]/30 transition-all cursor-pointer group relative flex flex-col"
-                                      onClick={() => router.push(`/employees/${employee.id}`)}
-                                    >
-                                      {/* Menu de Ações no Card */}
-                                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
-                                        <DropdownMenu>
-                                          <DropdownMenuTrigger asChild>
-                                            <button className="p-1 hover:bg-gray-100 rounded-lg transition-colors bg-white/80 backdrop-blur-sm border border-gray-100">
-                                              <MoreHorizontal className="w-3.5 h-3.5 text-gray-400" />
-                                            </button>
-                                          </DropdownMenuTrigger>
-                                          <DropdownMenuContent align="end" className="w-40">
-                                            <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}`)}>Visualizar</DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}/edit`)}>Editar</DropdownMenuItem>
-                                            <DropdownMenuItem className="text-red-600" onClick={() => handleDelete(employee.id, employee.fullName)}>Excluir</DropdownMenuItem>
-                                          </DropdownMenuContent>
-                                        </DropdownMenu>
-                                      </div>
+                          <div className="p-3 bg-gray-50/10 grid grid-cols-2 gap-2">
+                            {deptEmployees
+                              .sort((a, b) => {
+                                const getRank = (e: any) => {
+                                  const t = (e.position?.title || e.position?.name || '').toLowerCase();
+                                  if (t.includes('diretor')) return 1;
+                                  if (t.includes('gerente')) return 2;
+                                  if (t.includes('coordenador')) return 3;
+                                  if (t.includes('supervisor')) return 4;
+                                  if (t.includes('líder') || t.includes('lider')) return 5;
+                                  return 6;
+                                };
+                                const rankA = getRank(a);
+                                const rankB = getRank(b);
+                                if (rankA !== rankB) return rankA - rankB;
+                                return a.fullName.localeCompare(b.fullName);
+                              })
+                              .map((employee) => (
+                                <div
+                                  key={employee.id}
+                                  className="bg-white border border-gray-100 rounded-lg p-2 active:bg-gray-50 transition-colors flex flex-col items-center text-center relative group"
+                                  onClick={() => router.push(`/employees/${employee.id}`)}
+                                >
+                                  {/* Menu de Ações Mobile no Card */}
+                                  <div className="absolute top-1 right-1" onClick={(e) => e.stopPropagation()}>
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <button className="p-1 hover:bg-gray-50 rounded-full">
+                                          <MoreHorizontal className="w-3 h-3 text-gray-400" />
+                                        </button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end">
+                                        <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}`)}>Ver</DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}/edit`)}>Editar</DropdownMenuItem>
+                                        {employee.missingFields && employee.missingFields.length > 0 && (
+                                          <DropdownMenuItem
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleSmartFill(employee, e as any);
+                                            }}
+                                            className="text-purple-600 font-bold"
+                                          >
+                                            IA
+                                          </DropdownMenuItem>
+                                        )}
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  </div>
 
-                                      <div className="flex items-start gap-3">
-                                        <div className="relative">
-                                          <ExpandablePhoto
-                                            src={getPhotoUrl(employee.photoUrl, employee.updatedAt)}
-                                            alt={employee.fullName}
-                                            containerClassName="w-12 h-12 rounded-lg border border-gray-100 shadow-sm overflow-hidden"
-                                            fallback={
-                                              <div className="w-full h-full bg-[var(--color-primary)]/5 text-[var(--color-primary)] flex items-center justify-center font-bold text-lg">
-                                                {employee.fullName.charAt(0).toUpperCase()}
-                                              </div>
-                                            }
-                                          />
+                                  <div className="relative mb-1.5">
+                                    <ExpandablePhoto
+                                      src={getPhotoUrl(employee.photoUrl, employee.updatedAt)}
+                                      alt={employee.fullName}
+                                      containerClassName="w-10 h-10 rounded-full border border-gray-100 shadow-sm"
+                                      fallback={
+                                        <div className="w-10 h-10 rounded-full bg-[var(--color-primary)]/5 text-[var(--color-primary)] flex items-center justify-center font-bold text-sm">
+                                          {employee.fullName.charAt(0).toUpperCase()}
                                         </div>
-                                        <div className="flex-1 min-w-0">
-                                          <div className="flex items-start justify-between pr-4">
-                                            <h4 className="font-bold text-gray-900 truncate text-[11px] group-hover:text-[var(--color-primary)] transition-colors leading-tight">
-                                              {employee.fullName}
-                                            </h4>
-                                          </div>
-                                          <p className="text-[9px] text-gray-500 font-medium truncate mt-0.5">
-                                            {employee.position?.title || '-'}
-                                          </p>
-                                          <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-                                            <span className={`inline-flex px-1 py-0.5 rounded-full text-[7px] font-bold uppercase ${statusColors[employee.status].bg} ${statusColors[employee.status].text}`}>
-                                              {statusColors[employee.status].label}
-                                            </span>
-                                            <span className="text-[8px] text-gray-400 font-mono">
-                                              {formatCpf(employee.cpf)}
-                                            </span>
-                                            {(() => {
-                                              const t = (employee.position?.title || employee.position?.name || '').toLowerCase();
-                                              const isManager = t.includes('diretor') || t.includes('gerente') || t.includes('coordenador') || t.includes('lider') || t.includes('líder');
-                                              return isManager && (
-                                                <div className="flex items-center gap-1 text-[7px] text-orange-600 font-extrabold bg-orange-50 px-1 py-0.5 rounded">
-                                                  <UserCheck className="w-2 h-2" />
-                                                  GESTÃO
-                                                </div>
-                                              );
-                                            })()}
-                                          </div>
+                                      }
+                                    />
+                                    {(() => {
+                                      const t = (employee.position?.title || employee.position?.name || '').toLowerCase();
+                                      const isManager = t.includes('diretor') || t.includes('gerente') || t.includes('coordenador') || t.includes('lider') || t.includes('líder');
+                                      return isManager && (
+                                        <div className="absolute -top-1 -right-1 bg-orange-500 text-white rounded-full p-0.5 border border-white">
+                                          <UserCheck className="w-2 h-2" />
                                         </div>
-                                      </div>
-                                    </div>
-                                  ))}
-                              </div>
-                            </td>
-                          </tr>
+                                      );
+                                    })()}
+                                  </div>
+                                  <p className="font-bold text-gray-900 text-[10px] line-clamp-1 leading-tight w-full">
+                                    {employee.fullName}
+                                  </p>
+                                  <p className="text-[8px] text-gray-500 line-clamp-1 w-full mt-0.5 uppercase">
+                                    {employee.position?.title || '-'}
+                                  </p>
+                                </div>
+                              ))}
+                          </div>
                         )}
                       </Fragment>
                     );
                   })
                 ) : (
                   employees.map((employee) => (
-                    <tr
+                    <div
                       key={employee.id}
-                      className="hover:bg-gray-50/50 cursor-pointer transition-colors"
+                      className="p-4 active:bg-gray-50 transition-colors"
                       onClick={() => router.push(`/employees/${employee.id}`)}
                     >
-                      <td className="px-6 py-4">
+                      <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10">
+                          <div className="w-12 h-12">
                             <ExpandablePhoto
                               src={getPhotoUrl(employee.photoUrl, employee.updatedAt)}
                               alt={employee.fullName}
-                              containerClassName="w-10 h-10 rounded-full border border-white shadow-sm"
+                              containerClassName="w-12 h-12 rounded-full border-2 border-white shadow-md"
                               fallback={
                                 <div className="w-full h-full rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] flex items-center justify-center font-bold">
                                   {employee.fullName.charAt(0).toUpperCase()}
@@ -806,31 +1053,12 @@ export default function EmployeesPage() {
                             <p className="font-bold text-gray-900 leading-tight">
                               {employee.fullName}
                               {employee.missingFields && employee.missingFields.length > 0 && (
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <button
-                                        onClick={(e) => handleSmartFill(employee, e)}
-                                        className="inline-flex ml-2 cursor-pointer hover:bg-orange-50 p-1 rounded-full transition-colors group"
-                                      >
-                                        <AlertCircle className="w-4 h-4 text-orange-500 group-hover:text-orange-600" />
-                                      </button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <div className="text-xs">
-                                        <p className="font-bold mb-1">Dados pendentes:</p>
-                                        <ul className="list-disc pl-4 mb-2">
-                                          {employee.missingFields.map((field) => (
-                                            <li key={field}>{field}</li>
-                                          ))}
-                                        </ul>
-                                        <p className="text-[10px] text-purple-600 font-bold border-t border-gray-100 pt-1 mt-1 flex items-center gap-1">
-                                          <TrendingUp className="w-3 h-3" /> Clique para completar com IA
-                                        </p>
-                                      </div>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
+                                <button
+                                  onClick={(e) => handleSmartFill(employee, e)}
+                                  className="inline-flex ml-2 cursor-pointer p-1 rounded-full active:bg-orange-100"
+                                >
+                                  <AlertCircle className="w-3 h-3 text-orange-500" />
+                                </button>
                               )}
                             </p>
                             {employee.socialName && (
@@ -843,325 +1071,113 @@ export default function EmployeesPage() {
                             </p>
                           </div>
                         </div>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {formatCpf(employee.cpf)}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {employee.department?.name || '-'}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {employee.position?.title || '-'}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusColors[employee.status].bg} ${statusColors[employee.status].text}`}>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${statusColors[employee.status].bg} ${statusColors[employee.status].text}`}>
                           {statusColors[employee.status].label}
                         </span>
-                      </td>
-                      <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                              <MoreHorizontal className="w-4 h-4 text-gray-400" />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-40">
-                            <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}`)}>
-                              Visualizar
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}/edit`)}>
-                              Editar
-                            </DropdownMenuItem>
-                            {employee.missingFields && employee.missingFields.length > 0 && (
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleSmartFill(employee, e as any);
-                                }}
-                                className="text-purple-600 font-medium"
-                              >
-                                <Sparkles className="w-4 h-4 mr-2" />
-                                Completar com IA
-                              </DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem
-                              className="text-red-600"
-                              onClick={() => handleDelete(employee.id, employee.fullName)}
-                            >
-                              Excluir
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </td>
-                    </tr>
+                      </div>
+                      <div className="grid grid-cols-2 gap-y-2 text-xs">
+                        <div>
+                          <p className="text-gray-400 mb-0.5">Departamento</p>
+                          <p className="font-medium text-gray-700">{employee.department?.name || '-'}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400 mb-0.5">Cargo</p>
+                          <p className="font-medium text-gray-700">{employee.position?.title || '-'}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400 mb-0.5">CPF</p>
+                          <p className="font-medium text-gray-700">{formatCpf(employee.cpf)}</p>
+                        </div>
+                        <div className="flex justify-end pt-1" onClick={(e) => e.stopPropagation()}>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button className="p-1 px-2 border rounded-md text-gray-500 flex items-center gap-1">
+                                Ações <MoreHorizontal className="w-3 h-3" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}`)}>Visualizar</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}/edit`)}>Editar</DropdownMenuItem>
+                              {employee.missingFields && employee.missingFields.length > 0 && (
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleSmartFill(employee, e as any);
+                                  }}
+                                  className="text-purple-600 font-medium"
+                                >
+                                  <Sparkles className="w-4 h-4 mr-2" />
+                                  Completar com IA
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem className="text-red-600" onClick={() => handleDelete(employee.id, employee.fullName)}>Excluir</DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
+                    </div>
                   ))
                 )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Mobile Cards */}
-          <div className="lg:hidden divide-y divide-gray-100">
-            {loading ? (
-              Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="p-4 space-y-3 animate-pulse">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-gray-100 rounded-full" />
-                    <div className="space-y-2 flex-1">
-                      <div className="w-1/2 h-4 bg-gray-100 rounded" />
-                      <div className="w-1/3 h-3 bg-gray-100 rounded" />
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : employees.length === 0 ? (
-              <div className="p-8 text-center text-gray-400">
-                Nenhum colaborador encontrado
               </div>
-            ) : viewMode === 'department' ? (
-              Array.from(new Set(employees.map(e => e.department?.name || 'Sem Departamento'))).map(deptName => {
-                const isCollapsed = collapsedDepts.has(deptName);
-                return (
-                  <Fragment key={deptName}>
-                    <div
-                      className="bg-orange-50/30 px-4 py-2 flex items-center justify-between border-y border-gray-100 first:border-t-0 cursor-pointer active:bg-orange-100/50"
-                      onClick={() => toggleDept(deptName)}
-                    >
-                      <div className="flex items-center gap-2">
-                        {isCollapsed ? <ChevronRight className="w-3 h-3 text-[var(--color-primary)]" /> : <ChevronDown className="w-3 h-3 text-[var(--color-primary)]" />}
-                        <Building2 className="w-3.5 h-3.5 text-[var(--color-primary)]" />
-                        <span className="text-[10px] font-bold text-[var(--color-primary)] uppercase tracking-wider">
-                          {deptName}
-                        </span>
-                        <span className="text-[10px] bg-orange-100 text-[var(--color-primary)] px-1.5 py-0.5 rounded-full font-bold">
-                          {employees.filter(e => (e.department?.name || 'Sem Departamento') === deptName).length}
-                        </span>
-                      </div>
-                    </div>
-                    {!isCollapsed && (
-                      <div className="p-3 bg-gray-50/10 grid grid-cols-2 gap-2">
-                        {employees
-                          .filter(e => (e.department?.name || 'Sem Departamento') === deptName)
-                          .sort((a, b) => {
-                            const getRank = (e: any) => {
-                              const t = (e.position?.title || e.position?.name || '').toLowerCase();
-                              if (t.includes('diretor')) return 1;
-                              if (t.includes('gerente')) return 2;
-                              if (t.includes('coordenador')) return 3;
-                              if (t.includes('supervisor')) return 4;
-                              if (t.includes('líder') || t.includes('lider')) return 5;
-                              return 6;
-                            };
-                            const rankA = getRank(a);
-                            const rankB = getRank(b);
-                            if (rankA !== rankB) return rankA - rankB;
-                            return a.fullName.localeCompare(b.fullName);
-                          })
-                          .map((employee) => (
-                            <div
-                              key={employee.id}
-                              className="bg-white border border-gray-100 rounded-lg p-2 active:bg-gray-50 transition-colors flex flex-col items-center text-center relative group"
-                              onClick={() => router.push(`/employees/${employee.id}`)}
-                            >
-                              {/* Menu de Ações Mobile no Card */}
-                              <div className="absolute top-1 right-1" onClick={(e) => e.stopPropagation()}>
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <button className="p-1 hover:bg-gray-50 rounded-full">
-                                      <MoreHorizontal className="w-3 h-3 text-gray-400" />
-                                    </button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}`)}>Ver</DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}/edit`)}>Editar</DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </div>
-
-                              <div className="relative mb-1.5">
-                                <ExpandablePhoto
-                                  src={getPhotoUrl(employee.photoUrl, employee.updatedAt)}
-                                  alt={employee.fullName}
-                                  containerClassName="w-10 h-10 rounded-full border border-gray-100 shadow-sm"
-                                  fallback={
-                                    <div className="w-10 h-10 rounded-full bg-[var(--color-primary)]/5 text-[var(--color-primary)] flex items-center justify-center font-bold text-sm">
-                                      {employee.fullName.charAt(0).toUpperCase()}
-                                    </div>
-                                  }
-                                />
-                                {(() => {
-                                  const t = (employee.position?.title || employee.position?.name || '').toLowerCase();
-                                  const isManager = t.includes('diretor') || t.includes('gerente') || t.includes('coordenador') || t.includes('lider') || t.includes('líder');
-                                  return isManager && (
-                                    <div className="absolute -top-1 -right-1 bg-orange-500 text-white rounded-full p-0.5 border border-white">
-                                      <UserCheck className="w-2 h-2" />
-                                    </div>
-                                  );
-                                })()}
-                              </div>
-                              <p className="font-bold text-gray-900 text-[10px] line-clamp-1 leading-tight w-full">
-                                {employee.fullName}
-                              </p>
-                              <p className="text-[8px] text-gray-500 line-clamp-1 w-full mt-0.5 uppercase">
-                                {employee.position?.title || '-'}
-                              </p>
-                            </div>
-                          ))}
-                      </div>
-                    )}
-                  </Fragment>
-                );
-              })
-            ) : (
-              employees.map((employee) => (
-                <div
-                  key={employee.id}
-                  className="p-4 active:bg-gray-50 transition-colors"
-                  onClick={() => router.push(`/employees/${employee.id}`)}
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12">
-                        <ExpandablePhoto
-                          src={getPhotoUrl(employee.photoUrl, employee.updatedAt)}
-                          alt={employee.fullName}
-                          containerClassName="w-12 h-12 rounded-full border-2 border-white shadow-md"
-                          fallback={
-                            <div className="w-full h-full rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] flex items-center justify-center font-bold">
-                              {employee.fullName.charAt(0).toUpperCase()}
-                            </div>
-                          }
-                        />
-                      </div>
-                      <div className="flex flex-col">
-                        <p className="font-bold text-gray-900 leading-tight">
-                          {employee.fullName}
-                          {employee.missingFields && employee.missingFields.length > 0 && (
-                            <button
-                              onClick={(e) => handleSmartFill(employee, e)}
-                              className="inline-flex ml-2 cursor-pointer p-1 rounded-full active:bg-orange-100"
-                            >
-                              <AlertCircle className="w-3 h-3 text-orange-500" />
-                            </button>
-                          )}
-                        </p>
-                        {employee.socialName && (
-                          <p className="text-xs text-gray-500 font-medium">
-                            {employee.socialName}
-                          </p>
-                        )}
-                        <p className="text-[10px] text-gray-400 mt-0.5">
-                          Mat: {employee.registrationNumber}
-                        </p>
-                      </div>
-                    </div>
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${statusColors[employee.status].bg} ${statusColors[employee.status].text}`}>
-                      {statusColors[employee.status].label}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-y-2 text-xs">
-                    <div>
-                      <p className="text-gray-400 mb-0.5">Departamento</p>
-                      <p className="font-medium text-gray-700">{employee.department?.name || '-'}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-400 mb-0.5">Cargo</p>
-                      <p className="font-medium text-gray-700">{employee.position?.title || '-'}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-400 mb-0.5">CPF</p>
-                      <p className="font-medium text-gray-700">{formatCpf(employee.cpf)}</p>
-                    </div>
-                    <div className="flex justify-end pt-1" onClick={(e) => e.stopPropagation()}>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className="p-1 px-2 border rounded-md text-gray-500 flex items-center gap-1">
-                            Ações <MoreHorizontal className="w-3 h-3" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}`)}>Visualizar</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}/edit`)}>Editar</DropdownMenuItem>
-                          {employee.missingFields && employee.missingFields.length > 0 && (
-                            <DropdownMenuItem
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleSmartFill(employee, e as any);
-                              }}
-                              className="text-purple-600 font-medium"
-                            >
-                              <Sparkles className="w-4 h-4 mr-2" />
-                              Completar com IA
-                            </DropdownMenuItem>
-                          )}
-                          <DropdownMenuItem className="text-red-600" onClick={() => handleDelete(employee.id, employee.fullName)}>Excluir</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
 
 
-      {/* Pagination */}
-      {!loading && totalPages > 0 && viewMode !== 'department' && (
-        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
-          <p className="text-sm text-[var(--color-text-secondary)]">
-            Mostrando {currentPage * pageSize + 1} a {Math.min((currentPage + 1) * pageSize, totalElements)} de {totalElements} resultados
-          </p>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
-              disabled={currentPage === 0}
-              className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-
-            {Array.from({ length: Math.min(5, totalPages) }).map((_, i) => {
-              const page = currentPage < 3 ? i : currentPage - 2 + i;
-              if (page >= totalPages) return null;
-              return (
+          {/* Pagination */}
+          {!loading && totalPages > 0 && viewMode !== 'department' && (
+            <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
+              <p className="text-sm text-[var(--color-text-secondary)]">
+                Mostrando {currentPage * pageSize + 1} a {Math.min((currentPage + 1) * pageSize, totalElements)} de {totalElements} resultados
+              </p>
+              <div className="flex items-center gap-2">
                 <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${page === currentPage
-                    ? 'bg-[var(--color-primary)] text-white'
-                    : 'hover:bg-gray-50'
-                    }`}
+                  onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
+                  disabled={currentPage === 0}
+                  className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {page + 1}
+                  <ChevronLeft className="w-4 h-4" />
                 </button>
-              );
-            })}
 
-            <button
-              onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
-              disabled={currentPage >= totalPages - 1}
-              className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
+                {Array.from({ length: Math.min(5, totalPages) }).map((_, i) => {
+                  const page = currentPage < 3 ? i : currentPage - 2 + i;
+                  if (page >= totalPages) return null;
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${page === currentPage
+                        ? 'bg-[var(--color-primary)] text-white'
+                        : 'hover:bg-gray-50'
+                        }`}
+                    >
+                      {page + 1}
+                    </button>
+                  );
+                })}
+
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
+                  disabled={currentPage >= totalPages - 1}
+                  className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
+          <TerminationModal
+            isOpen={terminationModalOpen}
+            onClose={() => setTerminationModalOpen(false)}
+            employee={selectedEmployeeForTermination}
+            onSuccess={fetchEmployees}
+          />
+
+          <ExtractDataModal
+            isOpen={extractModalOpen}
+            onClose={() => setExtractModalOpen(false)}
+            employee={selectedEmployeeForExtraction}
+            onSuccess={fetchEmployees}
+          />
         </div>
-      )}
-      <TerminationModal
-        isOpen={terminationModalOpen}
-        onClose={() => setTerminationModalOpen(false)}
-        employee={selectedEmployeeForTermination}
-        onSuccess={fetchEmployees}
-      />
-
-      <ExtractDataModal
-        isOpen={extractModalOpen}
-        onClose={() => setExtractModalOpen(false)}
-        employee={selectedEmployeeForExtraction}
-        onSuccess={fetchEmployees}
-      />
-    </div>
-  );
+        );
 }
