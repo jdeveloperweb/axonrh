@@ -140,9 +140,18 @@ export default function EmployeesPage() {
   // Fetch Stats
   const fetchStats = useCallback(async () => {
     try {
+      const isDeptView = viewMode === 'department';
       const params: EmployeeListParams = {};
       if (search) params.search = search;
-      if (statusFilter) params.status = statusFilter;
+
+      // No modo departamento, queremos os totais gerais para os badges, 
+      // mas mantemos o filtro se o usuário o alterou manualmente longe do padrão ACTIVE
+      if (statusFilter && (!isDeptView || statusFilter !== 'ACTIVE')) {
+        params.status = statusFilter;
+      } else if (!isDeptView && statusFilter) {
+        params.status = statusFilter;
+      }
+
       if (departmentFilter) params.departmentId = departmentFilter;
       if (workRegimeFilter) params.workRegime = workRegimeFilter;
       if (hybridDayFilter) params.hybridDay = hybridDayFilter;
@@ -152,7 +161,7 @@ export default function EmployeesPage() {
     } catch (error) {
       console.error('Failed to load stats:', error);
     }
-  }, [search, statusFilter, departmentFilter, workRegimeFilter, hybridDayFilter]);
+  }, [search, statusFilter, departmentFilter, workRegimeFilter, hybridDayFilter, viewMode]);
 
   // Fetch employees
   const fetchEmployees = useCallback(async () => {
@@ -161,27 +170,34 @@ export default function EmployeesPage() {
       const isDeptView = viewMode === 'department';
       const params: EmployeeListParams = {
         page: isDeptView ? 0 : currentPage,
-        size: isDeptView ? 2000 : pageSize, // Aumentado para garantir visualização completa
+        size: isDeptView ? 1000 : pageSize, // Reduzido de 2000 para 1000 para ser mais aceitável por gateways
         sort: viewMode === 'alphabetical' ? `fullName,${sortDirection}` :
           viewMode === 'department' ? `department.name,asc,fullName,${sortDirection}` :
             `registrationNumber,${sortDirection}`,
       };
 
       if (search) params.search = search;
-      // No modo departamento, se o filtro for o padrão (ACTIVE), removemos para mostrar todos e dar visão completa
+
+      // Se estiver no modo departamento e o filtro for o padrão (ACTIVE), 
+      // trazemos todos para dar a visão completa da estrutura da empresa.
       if (statusFilter && (!isDeptView || statusFilter !== 'ACTIVE')) {
         params.status = statusFilter;
       }
+
       if (departmentFilter) params.departmentId = departmentFilter;
       if (workRegimeFilter) params.workRegime = workRegimeFilter;
       if (hybridDayFilter) params.hybridDay = hybridDayFilter;
 
       const response = await employeesApi.list(params);
+
+      // Debug log (visível no console do navegador do usuário se necessário)
+      console.log(`[Employees] Loaded ${response.content?.length} of ${response.totalElements} employees. Mode: ${viewMode}`);
+
       setEmployees(response.content || []);
       setTotalElements(response.totalElements || 0);
       setTotalPages(response.totalPages || 0);
 
-      // Also update stats
+      // Sincroniza os stats com os mesmos filtros
       fetchStats();
     } catch (error) {
       console.error(error);
