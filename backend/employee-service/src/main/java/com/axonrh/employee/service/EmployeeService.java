@@ -130,8 +130,10 @@ public class EmployeeService {
             return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
         };
 
-        return employeeRepository.findAll(spec, pageable)
-                .map(employeeMapper::toResponse);
+        Page<Employee> result = employeeRepository.findAll(spec, pageable);
+        log.info(">>> [DEBUG-TRACE] findWithFilters returned {} of {} elements. Page size: {}", 
+                result.getContent().size(), result.getTotalElements(), pageable.getPageSize());
+        return result.map(employeeMapper::toResponse);
     }
 
     @Transactional(readOnly = true)

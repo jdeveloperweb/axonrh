@@ -61,7 +61,7 @@ public class EmployeeController {
             @RequestParam(required = false) UUID positionId,
             @RequestParam(required = false) com.axonrh.employee.entity.enums.WorkRegime workRegime,
             @RequestParam(required = false) String hybridDay,
-            @PageableDefault(size = 20, sort = "fullName", direction = Sort.Direction.ASC) Pageable pageable) {
+            @PageableDefault(size = 1000, sort = "fullName", direction = Sort.Direction.ASC) Pageable pageable) {
 
         log.info("Listing employees with filters: search={}, status={}, dept={}, pos={}, regime={}, day={}", search, status, departmentId, positionId, workRegime, hybridDay);
         Page<EmployeeResponse> employees = employeeService.findWithFilters(search, status, departmentId, positionId, workRegime, hybridDay, pageable);
