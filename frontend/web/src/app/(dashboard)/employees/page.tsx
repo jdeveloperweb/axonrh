@@ -25,7 +25,11 @@ import {
   AlertCircle,
   Sparkles,
   CaseSensitive,
-  LayoutList
+  LayoutList,
+  ChevronDown,
+  ChevronUp,
+  ArrowUpAZ,
+  ArrowDownAZ
 } from 'lucide-react';
 import {
   Tooltip,
@@ -102,6 +106,8 @@ export default function EmployeesPage() {
   const [hybridDayFilter, setHybridDayFilter] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'alphabetical' | 'department'>('alphabetical');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [collapsedDepts, setCollapsedDepts] = useState<Set<string>>(new Set());
 
   // Reference data
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -154,9 +160,9 @@ export default function EmployeesPage() {
       const params: EmployeeListParams = {
         page: currentPage,
         size: pageSize,
-        sort: viewMode === 'alphabetical' ? 'fullName,asc' :
-          viewMode === 'department' ? 'department.name,asc,fullName,asc' :
-            'registrationNumber,asc',
+        sort: viewMode === 'alphabetical' ? `fullName,${sortDirection}` :
+          viewMode === 'department' ? `department.name,asc,fullName,${sortDirection}` :
+            `registrationNumber,${sortDirection}`,
       };
 
       if (search) params.search = search;
@@ -182,7 +188,7 @@ export default function EmployeesPage() {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, pageSize, search, statusFilter, departmentFilter, workRegimeFilter, hybridDayFilter, viewMode, toast, fetchStats]);
+  }, [currentPage, pageSize, search, statusFilter, departmentFilter, workRegimeFilter, hybridDayFilter, viewMode, sortDirection, toast, fetchStats]);
 
   // Fetch departments
   const fetchDepartments = useCallback(async () => {
@@ -284,6 +290,15 @@ export default function EmployeesPage() {
     setWorkRegimeFilter('');
     setHybridDayFilter('');
     setCurrentPage(0);
+  };
+
+  const toggleDept = (deptName: string) => {
+    setCollapsedDepts(prev => {
+      const next = new Set(prev);
+      if (next.has(deptName)) next.delete(deptName);
+      else next.add(deptName);
+      return next;
+    });
   };
 
   return (
@@ -475,6 +490,27 @@ export default function EmployeesPage() {
                   <span className="hidden xl:inline">Depto</span>
                 </button>
               </div>
+
+              {/* Sort Direction Toggle */}
+              {viewMode !== 'department' && (
+                <button
+                  onClick={() => setSortDirection(d => d === 'asc' ? 'desc' : 'asc')}
+                  className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-xs font-semibold text-gray-600"
+                  title={sortDirection === 'asc' ? 'Crescente' : 'Decrescente'}
+                >
+                  {sortDirection === 'asc' ? (
+                    <>
+                      <ArrowUpAZ className="w-4 h-4" />
+                      <span className="hidden sm:inline">A-Z</span>
+                    </>
+                  ) : (
+                    <>
+                      <ArrowDownAZ className="w-4 h-4" />
+                      <span className="hidden sm:inline">Z-A</span>
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           </div>
 
@@ -617,136 +653,104 @@ export default function EmployeesPage() {
                     </td>
                   </tr>
                 ) : viewMode === 'department' ? (
-                  Array.from(new Set(employees.map(e => e.department?.name || 'Sem Departamento'))).map(deptName => (
-                    <Fragment key={deptName}>
-                      <tr className="bg-orange-50/30">
-                        <td colSpan={6} className="px-6 py-2.5">
-                          <div className="flex items-center gap-2">
-                            <Building2 className="w-4 h-4 text-[var(--color-primary)]" />
-                            <span className="text-xs font-bold text-[var(--color-primary)] uppercase tracking-wider">
-                              {deptName}
-                            </span>
-                            <span className="text-[10px] bg-orange-100 text-[var(--color-primary)] px-2 py-0.5 rounded-full font-bold">
-                              {employees.filter(e => (e.department?.name || 'Sem Departamento') === deptName).length}
-                            </span>
-                          </div>
-                        </td>
-                      </tr>
-                      {employees.filter(e => (e.department?.name || 'Sem Departamento') === deptName).map((employee) => (
+                  Array.from(new Set(employees.map(e => e.department?.name || 'Sem Departamento'))).map(deptName => {
+                    const isCollapsed = collapsedDepts.has(deptName);
+                    return (
+                      <Fragment key={deptName}>
                         <tr
-                          key={employee.id}
-                          className="hover:bg-gray-50/50 cursor-pointer transition-colors"
-                          onClick={() => router.push(`/employees/${employee.id}`)}
+                          className="bg-orange-50/30 cursor-pointer hover:bg-orange-100/40 transition-colors"
+                          onClick={() => toggleDept(deptName)}
                         >
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10">
-                                <ExpandablePhoto
-                                  src={getPhotoUrl(employee.photoUrl, employee.updatedAt)}
-                                  alt={employee.fullName}
-                                  containerClassName="w-10 h-10 rounded-full border border-white shadow-sm"
-                                  fallback={
-                                    <div className="w-full h-full rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] flex items-center justify-center font-bold">
-                                      {employee.fullName.charAt(0).toUpperCase()}
-                                    </div>
-                                  }
-                                />
+                          <td colSpan={6} className="px-6 py-1.5">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                {isCollapsed ? <ChevronRight className="w-3.5 h-3.5 text-[var(--color-primary)]" /> : <ChevronDown className="w-3.5 h-3.5 text-[var(--color-primary)]" />}
+                                <Building2 className="w-4 h-4 text-[var(--color-primary)]" />
+                                <span className="text-xs font-bold text-[var(--color-primary)] uppercase tracking-wider">
+                                  {deptName}
+                                </span>
+                                <span className="text-[10px] bg-orange-100 text-[var(--color-primary)] px-2 py-0.5 rounded-full font-bold">
+                                  {employees.filter(e => (e.department?.name || 'Sem Departamento') === deptName).length}
+                                </span>
                               </div>
-                              <div className="flex flex-col">
-                                <p className="font-bold text-gray-900 leading-tight">
-                                  {employee.fullName}
-                                  {employee.missingFields && employee.missingFields.length > 0 && (
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <button
-                                            onClick={(e) => handleSmartFill(employee, e)}
-                                            className="inline-flex ml-2 cursor-pointer hover:bg-orange-50 p-1 rounded-full transition-colors group"
-                                          >
-                                            <AlertCircle className="w-4 h-4 text-orange-500 group-hover:text-orange-600" />
-                                          </button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          <div className="text-xs">
-                                            <p className="font-bold mb-1">Dados pendentes:</p>
-                                            <ul className="list-disc pl-4 mb-2">
-                                              {employee.missingFields.map((field) => (
-                                                <li key={field}>{field}</li>
-                                              ))}
-                                            </ul>
-                                            <p className="text-[10px] text-purple-600 font-bold border-t border-gray-100 pt-1 mt-1 flex items-center gap-1">
-                                              <TrendingUp className="w-3 h-3" /> Clique para completar com IA
-                                            </p>
-                                          </div>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                  )}
-                                </p>
-                                {employee.socialName && (
-                                  <p className="text-xs text-gray-500 font-medium">
-                                    {employee.socialName}
-                                  </p>
-                                )}
-                                <p className="text-[10px] text-gray-400 mt-0.5">
-                                  Mat: {employee.registrationNumber}
-                                </p>
-                              </div>
+                              <span className="text-[10px] text-[var(--color-primary)]/60 font-medium">
+                                {isCollapsed ? 'Clique para expandir' : 'Clique para recolher'}
+                              </span>
                             </div>
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-600">
-                            {formatCpf(employee.cpf)}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-600">
-                            {employee.department?.name || '-'}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-600">
-                            {employee.position?.title || '-'}
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusColors[employee.status].bg} ${statusColors[employee.status].text}`}>
-                              {statusColors[employee.status].label}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                                  <MoreHorizontal className="w-4 h-4 text-gray-400" />
-                                </button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-40">
-                                <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}`)}>
-                                  Visualizar
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}/edit`)}>
-                                  Editar
-                                </DropdownMenuItem>
-                                {employee.missingFields && employee.missingFields.length > 0 && (
-                                  <DropdownMenuItem
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleSmartFill(employee, e as any);
-                                    }}
-                                    className="text-purple-600 font-medium"
-                                  >
-                                    <Sparkles className="w-4 h-4 mr-2" />
-                                    Completar com IA
-                                  </DropdownMenuItem>
-                                )}
-                                <DropdownMenuItem
-                                  className="text-red-600"
-                                  onClick={() => handleDelete(employee.id, employee.fullName)}
-                                >
-                                  Excluir
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </td>
                         </tr>
-                      ))}
-                    </Fragment>
-                  ))
+                        {!isCollapsed && employees.filter(e => (e.department?.name || 'Sem Departamento') === deptName).map((employee) => (
+                          <tr
+                            key={employee.id}
+                            className="hover:bg-gray-50/50 cursor-pointer transition-colors border-l-2 border-transparent hover:border-[var(--color-primary)]"
+                            onClick={() => router.push(`/employees/${employee.id}`)}
+                          >
+                            <td className="px-6 py-2">
+                              <div className="flex items-center gap-2">
+                                <div className="w-8 h-8">
+                                  <ExpandablePhoto
+                                    src={getPhotoUrl(employee.photoUrl, employee.updatedAt)}
+                                    alt={employee.fullName}
+                                    containerClassName="w-8 h-8 rounded-full border border-white shadow-sm"
+                                    fallback={
+                                      <div className="w-full h-full rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] flex items-center justify-center font-bold text-xs">
+                                        {employee.fullName.charAt(0).toUpperCase()}
+                                      </div>
+                                    }
+                                  />
+                                </div>
+                                <div className="flex flex-col">
+                                  <p className="font-bold text-gray-900 leading-tight text-sm">
+                                    {employee.fullName}
+                                  </p>
+                                  <p className="text-[10px] text-gray-400">
+                                    Mat: {employee.registrationNumber}
+                                  </p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-2 text-xs text-gray-600">
+                              {formatCpf(employee.cpf)}
+                            </td>
+                            <td className="px-6 py-2 text-xs text-gray-600">
+                              {employee.department?.name || '-'}
+                            </td>
+                            <td className="px-6 py-2 text-xs text-gray-600">
+                              {employee.position?.title || '-'}
+                            </td>
+                            <td className="px-6 py-2">
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${statusColors[employee.status].bg} ${statusColors[employee.status].text}`}>
+                                {statusColors[employee.status].label}
+                              </span>
+                            </td>
+                            <td className="px-6 py-2 text-right" onClick={(e) => e.stopPropagation()}>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <button className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+                                    <MoreHorizontal className="w-3.5 h-3.5 text-gray-400" />
+                                  </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-40">
+                                  <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}`)}>
+                                    Visualizar
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}/edit`)}>
+                                    Editar
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    className="text-red-600"
+                                    onClick={() => handleDelete(employee.id, employee.fullName)}
+                                  >
+                                    Excluir
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </td>
+                          </tr>
+                        ))}
+                      </Fragment>
+                    );
+                  })
                 ) : (
                   employees.map((employee) => (
                     <tr
@@ -885,107 +889,67 @@ export default function EmployeesPage() {
                 Nenhum colaborador encontrado
               </div>
             ) : viewMode === 'department' ? (
-              Array.from(new Set(employees.map(e => e.department?.name || 'Sem Departamento'))).map(deptName => (
-                <Fragment key={deptName}>
-                  <div className="bg-orange-50/30 px-4 py-2 flex items-center gap-2 border-y border-gray-100 first:border-t-0">
-                    <Building2 className="w-3.5 h-3.5 text-[var(--color-primary)]" />
-                    <span className="text-[10px] font-bold text-[var(--color-primary)] uppercase tracking-wider">
-                      {deptName}
-                    </span>
-                    <span className="text-[10px] bg-orange-100 text-[var(--color-primary)] px-1.5 py-0.5 rounded-full font-bold">
-                      {employees.filter(e => (e.department?.name || 'Sem Departamento') === deptName).length}
-                    </span>
-                  </div>
-                  {employees.filter(e => (e.department?.name || 'Sem Departamento') === deptName).map((employee) => (
+              Array.from(new Set(employees.map(e => e.department?.name || 'Sem Departamento'))).map(deptName => {
+                const isCollapsed = collapsedDepts.has(deptName);
+                return (
+                  <Fragment key={deptName}>
                     <div
-                      key={employee.id}
-                      className="p-4 active:bg-gray-50 transition-colors"
-                      onClick={() => router.push(`/employees/${employee.id}`)}
+                      className="bg-orange-50/30 px-4 py-2 flex items-center justify-between border-y border-gray-100 first:border-t-0 cursor-pointer active:bg-orange-100/50"
+                      onClick={() => toggleDept(deptName)}
                     >
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-12">
-                            <ExpandablePhoto
-                              src={getPhotoUrl(employee.photoUrl, employee.updatedAt)}
-                              alt={employee.fullName}
-                              containerClassName="w-12 h-12 rounded-full border-2 border-white shadow-md"
-                              fallback={
-                                <div className="w-full h-full rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] flex items-center justify-center font-bold">
-                                  {employee.fullName.charAt(0).toUpperCase()}
-                                </div>
-                              }
-                            />
-                          </div>
-                          <div className="flex flex-col">
-                            <p className="font-bold text-gray-900 leading-tight">
-                              {employee.fullName}
-                              {employee.missingFields && employee.missingFields.length > 0 && (
-                                <button
-                                  onClick={(e) => handleSmartFill(employee, e)}
-                                  className="inline-flex ml-2 cursor-pointer p-1 rounded-full active:bg-orange-100"
-                                >
-                                  <AlertCircle className="w-3 h-3 text-orange-500" />
-                                </button>
-                              )}
-                            </p>
-                            {employee.socialName && (
-                              <p className="text-xs text-gray-500 font-medium">
-                                {employee.socialName}
-                              </p>
-                            )}
-                            <p className="text-[10px] text-gray-400 mt-0.5">
-                              Mat: {employee.registrationNumber}
-                            </p>
-                          </div>
-                        </div>
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${statusColors[employee.status].bg} ${statusColors[employee.status].text}`}>
-                          {statusColors[employee.status].label}
+                      <div className="flex items-center gap-2">
+                        {isCollapsed ? <ChevronRight className="w-3 h-3 text-[var(--color-primary)]" /> : <ChevronDown className="w-3 h-3 text-[var(--color-primary)]" />}
+                        <Building2 className="w-3.5 h-3.5 text-[var(--color-primary)]" />
+                        <span className="text-[10px] font-bold text-[var(--color-primary)] uppercase tracking-wider">
+                          {deptName}
+                        </span>
+                        <span className="text-[10px] bg-orange-100 text-[var(--color-primary)] px-1.5 py-0.5 rounded-full font-bold">
+                          {employees.filter(e => (e.department?.name || 'Sem Departamento') === deptName).length}
                         </span>
                       </div>
-                      <div className="grid grid-cols-2 gap-y-2 text-xs">
-                        <div>
-                          <p className="text-gray-400 mb-0.5">Departamento</p>
-                          <p className="font-medium text-gray-700">{employee.department?.name || '-'}</p>
+                    </div>
+                    {!isCollapsed && employees.filter(e => (e.department?.name || 'Sem Departamento') === deptName).map((employee) => (
+                      <div
+                        key={employee.id}
+                        className="p-3 active:bg-gray-50 transition-colors border-l-4 border-transparent active:border-[var(--color-primary)]"
+                        onClick={() => router.push(`/employees/${employee.id}`)}
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <div className="w-10 h-10">
+                              <ExpandablePhoto
+                                src={getPhotoUrl(employee.photoUrl, employee.updatedAt)}
+                                alt={employee.fullName}
+                                containerClassName="w-10 h-10 rounded-full border border-white shadow-md"
+                                fallback={
+                                  <div className="w-full h-full rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] flex items-center justify-center font-bold text-xs">
+                                    {employee.fullName.charAt(0).toUpperCase()}
+                                  </div>
+                                }
+                              />
+                            </div>
+                            <div className="flex flex-col">
+                              <p className="font-bold text-gray-900 leading-tight text-sm">
+                                {employee.fullName}
+                              </p>
+                              <p className="text-[10px] text-gray-400">
+                                Mat: {employee.registrationNumber}
+                              </p>
+                            </div>
+                          </div>
+                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase ${statusColors[employee.status].bg} ${statusColors[employee.status].text}`}>
+                            {statusColors[employee.status].label}
+                          </span>
                         </div>
-                        <div>
-                          <p className="text-gray-400 mb-0.5">Cargo</p>
-                          <p className="font-medium text-gray-700">{employee.position?.title || '-'}</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-400 mb-0.5">CPF</p>
-                          <p className="font-medium text-gray-700">{formatCpf(employee.cpf)}</p>
-                        </div>
-                        <div className="flex justify-end pt-1" onClick={(e) => e.stopPropagation()}>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <button className="p-1 px-2 border rounded-md text-gray-500 flex items-center gap-1">
-                                Ações <MoreHorizontal className="w-3 h-3" />
-                              </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}`)}>Visualizar</DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}/edit`)}>Editar</DropdownMenuItem>
-                              {employee.missingFields && employee.missingFields.length > 0 && (
-                                <DropdownMenuItem
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleSmartFill(employee, e as any);
-                                  }}
-                                  className="text-purple-600 font-medium"
-                                >
-                                  <Sparkles className="w-4 h-4 mr-2" />
-                                  Completar com IA
-                                </DropdownMenuItem>
-                              )}
-                              <DropdownMenuItem className="text-red-600" onClick={() => handleDelete(employee.id, employee.fullName)}>Excluir</DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                        <div className="flex items-center justify-between text-[10px] text-gray-500">
+                          <span>{employee.position?.title || '-'}</span>
+                          <span className="font-medium">{formatCpf(employee.cpf)}</span>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </Fragment>
-              ))
+                    ))}
+                  </Fragment>
+                );
+              })
             ) : (
               employees.map((employee) => (
                 <div
