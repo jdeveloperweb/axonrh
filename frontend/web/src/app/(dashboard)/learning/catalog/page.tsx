@@ -126,9 +126,15 @@ export default function CourseCatalog() {
     }, []);
 
     const filteredCourses = courses.filter(course => {
-        const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            course.description?.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesCategory = !selectedCategory || (course.categoryId === selectedCategory || (course as any).categoryName === selectedCategory);
+        const search = searchQuery.toLowerCase().trim();
+        const matchesSearch = course.title.toLowerCase().includes(search) ||
+            course.description?.toLowerCase().includes(search);
+
+        const matchesCategory = !selectedCategory ||
+            course.categoryId === selectedCategory ||
+            course.categoryName === selectedCategory ||
+            course.categoryName === categories.find(c => c.id === selectedCategory)?.name;
+
         const matchesLevel = !selectedLevel || course.difficultyLevel === selectedLevel;
         return matchesSearch && matchesCategory && matchesLevel;
     });
@@ -295,7 +301,14 @@ export default function CourseCatalog() {
                             viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "flex flex-col"
                         )}>
                             {filteredCourses.map((course) => (
-                                <CourseCard key={course.id} course={course} viewMode={viewMode} />
+                                <CourseCard
+                                    key={course.id}
+                                    course={{
+                                        ...course,
+                                        categoryName: course.categoryName || categories.find(c => c.id === course.categoryId)?.name
+                                    } as any}
+                                    viewMode={viewMode}
+                                />
                             ))}
                         </div>
                     )}

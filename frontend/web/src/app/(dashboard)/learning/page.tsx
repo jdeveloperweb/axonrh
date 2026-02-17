@@ -84,11 +84,18 @@ export default function LearningDashboard() {
 
   const filteredCourses = useMemo(() => {
     return publishedCourses.filter((course) => {
-      const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCategory = !selectedCategory || course.categoryName === selectedCategory || course.categoryId === selectedCategory;
+      const search = searchQuery.toLowerCase().trim();
+      const matchesSearch = course.title.toLowerCase().includes(search) ||
+        course.description?.toLowerCase().includes(search);
+
+      const matchesCategory = !selectedCategory ||
+        course.categoryId === selectedCategory ||
+        course.categoryName === selectedCategory ||
+        course.categoryName === categories.find(c => c.id === selectedCategory)?.name;
+
       return matchesSearch && matchesCategory;
     });
-  }, [publishedCourses, searchQuery, selectedCategory]);
+  }, [publishedCourses, searchQuery, selectedCategory, categories]);
 
   const recommendedCourse = useMemo(() => {
     if (!publishedCourses || publishedCourses.length === 0) return null;
@@ -242,17 +249,17 @@ export default function LearningDashboard() {
           {categories.map(cat => (
             <button
               key={cat.id}
-              onClick={() => setSelectedCategory(cat.name)}
+              onClick={() => setSelectedCategory(selectedCategory === cat.id ? null : cat.id)}
               className={cn(
                 "flex items-center gap-4 px-8 py-5 rounded-2xl text-sm font-black transition-all shrink-0 border-2",
-                selectedCategory === cat.name
+                selectedCategory === cat.id
                   ? "bg-primary border-primary text-white shadow-2xl shadow-primary/20 translate-y-[-4px]"
                   : "bg-white border-slate-100 text-slate-500 hover:border-primary/30 hover:bg-slate-50"
               )}
             >
               <div className={cn(
                 "h-10 w-10 rounded-xl flex items-center justify-center transition-colors",
-                selectedCategory === cat.name ? "bg-white/10" : "bg-primary/5 text-primary"
+                selectedCategory === cat.id ? "bg-white/10" : "bg-primary/5 text-primary"
               )}>
                 <Zap className="h-5 w-5" />
               </div>
@@ -372,7 +379,10 @@ export default function LearningDashboard() {
               {filteredCourses.map((course) => (
                 <CourseCard
                   key={course.id}
-                  course={course}
+                  course={{
+                    ...course,
+                    categoryName: course.categoryName || categories.find(c => c.id === course.categoryId)?.name
+                  }}
                   isEnrolled={myEnrollments.some(e => e.courseId === course.id)}
                 />
               ))}

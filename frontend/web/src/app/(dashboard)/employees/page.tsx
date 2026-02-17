@@ -660,15 +660,15 @@ export default function EmployeesPage() {
                   </tr>
                 ) : viewMode === 'department' ? (
                   (() => {
-                    const deptsWithEmployees = Array.from(new Set(employees.map(e => e.department?.name || 'Sem Departamento')));
+                    const deptsWithEmployees = Array.from(new Set((employees || []).map(e => e?.department?.name || 'Sem Departamento')));
                     const allDeptNames = Array.from(new Set([
-                      ...departments.map(d => d.name),
+                      ...(departments || []).map(d => d?.name),
                       ...deptsWithEmployees
-                    ])).sort();
+                    ])).filter(Boolean).sort() as string[];
 
                     return allDeptNames.map(deptName => {
-                      const deptEmployees = employees.filter(e => (e.department?.name || 'Sem Departamento') === deptName);
-                      if (deptEmployees.length === 0 && !departments.find(d => d.name === deptName)) return null;
+                      const deptEmployees = (employees || []).filter(e => (e?.department?.name || 'Sem Departamento') === deptName);
+                      if (deptEmployees.length === 0 && !(departments || []).find(d => d?.name === deptName)) return null;
 
                       const isCollapsed = collapsedDepts.has(deptName);
                       return (
@@ -721,7 +721,7 @@ export default function EmployeesPage() {
                                         const rankA = getRank(a);
                                         const rankB = getRank(b);
                                         if (rankA !== rankB) return rankA - rankB;
-                                        return a.fullName.localeCompare(b.fullName);
+                                        return (a.fullName || '').localeCompare(b.fullName || '');
                                       })
                                       .map((employee) => (
                                         <div
@@ -739,10 +739,10 @@ export default function EmployeesPage() {
                                               </DropdownMenuTrigger>
                                               <DropdownMenuContent align="end" className="w-48">
                                                 <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}`)}>
-                                                  <User className="w-3.5 h-3.5 mr-2" /> Visualizar
+                                                  <Eye className="w-3.5 h-3.5 mr-2" /> Visualizar
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}/edit`)}>
-                                                  <Edit2 className="w-3.5 h-3.5 mr-2" /> Editar
+                                                  <Edit className="w-3.5 h-3.5 mr-2" /> Editar
                                                 </DropdownMenuItem>
                                                 {employee.missingFields && employee.missingFields.length > 0 && (
                                                   <DropdownMenuItem
@@ -786,8 +786,8 @@ export default function EmployeesPage() {
                                                 {employee.position?.title || '-'}
                                               </p>
                                               <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-                                                <span className={`inline-flex px-1 py-0.5 rounded-full text-[7px] font-bold uppercase ${statusColors[employee.status].bg} ${statusColors[employee.status].text}`}>
-                                                  {statusColors[employee.status].label}
+                                                <span className={`inline-flex px-1 py-0.5 rounded-full text-[7px] font-bold uppercase ${statusColors[employee.status]?.bg || 'bg-gray-100'} ${statusColors[employee.status]?.text || 'text-gray-800'}`}>
+                                                  {statusColors[employee.status]?.label || employee.status}
                                                 </span>
                                                 <span className="text-[8px] text-gray-400 font-mono">
                                                   {formatCpf(employee.cpf)}
@@ -879,8 +879,8 @@ export default function EmployeesPage() {
                         {employee.position?.title || '-'}
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusColors[employee.status].bg} ${statusColors[employee.status].text}`}>
-                          {statusColors[employee.status].label}
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusColors[employee.status]?.bg || 'bg-gray-100'} ${statusColors[employee.status]?.text || 'text-gray-800'}`}>
+                          {statusColors[employee.status]?.label || employee.status}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
@@ -946,15 +946,15 @@ export default function EmployeesPage() {
               </div>
             ) : viewMode === 'department' ? (
               (() => {
-                const deptsWithEmployees = Array.from(new Set(employees.map(e => e.department?.name || 'Sem Departamento')));
+                const deptsWithEmployees = Array.from(new Set((employees || []).map(e => e?.department?.name || 'Sem Departamento')));
                 const allDeptNames = Array.from(new Set([
-                  ...departments.map(d => d.name),
+                  ...(departments || []).map(d => d?.name),
                   ...deptsWithEmployees
-                ])).sort();
+                ])).filter(Boolean).sort() as string[];
 
                 return allDeptNames.map(deptName => {
-                  const deptEmployees = employees.filter(e => (e.department?.name || 'Sem Departamento') === deptName);
-                  if (deptEmployees.length === 0 && !departments.find(d => d.name === deptName)) return null;
+                  const deptEmployees = (employees || []).filter(e => (e?.department?.name || 'Sem Departamento') === deptName);
+                  if (deptEmployees.length === 0 && !(departments || []).find(d => d?.name === deptName)) return null;
 
                   const isCollapsed = collapsedDepts.has(deptName);
                   return (
@@ -995,7 +995,7 @@ export default function EmployeesPage() {
                                 const rankA = getRank(a);
                                 const rankB = getRank(b);
                                 if (rankA !== rankB) return rankA - rankB;
-                                return a.fullName.localeCompare(b.fullName);
+                                return (a.fullName || '').localeCompare(b.fullName || '');
                               })
                               .map((employee) => (
                                 <div
@@ -1099,8 +1099,8 @@ export default function EmployeesPage() {
                         </p>
                       </div>
                     </div>
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${statusColors[employee.status].bg} ${statusColors[employee.status].text}`}>
-                      {statusColors[employee.status].label}
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${statusColors[employee.status]?.bg || 'bg-gray-100'} ${statusColors[employee.status]?.text || 'text-gray-800'}`}>
+                      {statusColors[employee.status]?.label || employee.status}
                     </span>
                   </div>
                   <div className="grid grid-cols-2 gap-y-2 text-xs">
