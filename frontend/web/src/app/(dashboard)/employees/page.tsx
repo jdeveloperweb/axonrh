@@ -97,7 +97,7 @@ export default function EmployeesPage() {
   const [totalElements, setTotalElements] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(0);
-  const [pageSize] = useState(10);
+  const [pageSize] = useState(1000);
 
   // Filters
   const [search, setSearch] = useState('');
@@ -209,10 +209,9 @@ export default function EmployeesPage() {
   const fetchEmployees = useCallback(async () => {
     try {
       setLoading(true);
-      const isDeptView = viewMode === 'department';
       const params: EmployeeListParams = {
-        page: isDeptView ? 0 : currentPage,
-        size: isDeptView ? 1000 : pageSize, // Reduzido de 2000 para 1000 para ser mais aceitável por gateways
+        page: 0,
+        size: viewMode === 'department' ? 1000 : (viewMode === 'alphabetical' ? 2000 : pageSize),
         sort: viewMode === 'alphabetical' ? `fullName,${sortDirection}` :
           viewMode === 'department' ? `department.name,asc,fullName,${sortDirection}` :
             `registrationNumber,${sortDirection}`,
@@ -220,9 +219,9 @@ export default function EmployeesPage() {
 
       if (search) params.search = search;
 
-      // Se estiver no modo departamento e o filtro for o padrão (ACTIVE), 
-      // trazemos todos para dar a visão completa da estrutura da empresa.
-      if (statusFilter && (!isDeptView || statusFilter !== 'ACTIVE')) {
+      // No modo departamento ou alfabético (A-Z), queremos ver todos sem filtros restritivos iniciais
+      const isFullView = viewMode === 'department' || viewMode === 'alphabetical';
+      if (statusFilter && (!isFullView || statusFilter !== 'ACTIVE')) {
         params.status = statusFilter;
       }
 
