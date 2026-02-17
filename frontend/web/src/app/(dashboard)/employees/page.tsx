@@ -100,14 +100,27 @@ export default function EmployeesPage() {
   const [pageSize] = useState(1000);
 
   // Filters & State Persistence
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(() => {
+    if (typeof window !== 'undefined') return localStorage.getItem('employees_search') || '';
+    return '';
+  });
   const [statusFilter, setStatusFilter] = useState<EmployeeStatus | ''>(() => {
     if (typeof window !== 'undefined') return (localStorage.getItem('employees_status_filter') as any) || 'ACTIVE';
     return 'ACTIVE';
   });
-  const [departmentFilter, setDepartmentFilter] = useState('');
-  const [workRegimeFilter, setWorkRegimeFilter] = useState<WorkRegime | ''>('');
-  const [hybridDayFilter, setHybridDayFilter] = useState('');
+  const [departmentFilter, setDepartmentFilter] = useState(() => {
+    if (typeof window !== 'undefined') return localStorage.getItem('employees_dept_filter') || '';
+    return '';
+  });
+  const [workRegimeFilter, setWorkRegimeFilter] = useState<WorkRegime | ''>(() => {
+    if (typeof window !== 'undefined') return (localStorage.getItem('employees_regime_filter') as any) || '';
+    return '';
+  });
+  const [hybridDayFilter, setHybridDayFilter] = useState(() => {
+    if (typeof window !== 'undefined') return localStorage.getItem('employees_day_filter') || '';
+    return '';
+  });
+
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'alphabetical' | 'department'>(() => {
     if (typeof window !== 'undefined') return (localStorage.getItem('employees_view_mode') as any) || 'alphabetical';
@@ -123,10 +136,14 @@ export default function EmployeesPage() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('employees_view_mode', viewMode);
-      localStorage.setItem('employees_status_filter', statusFilter);
+      localStorage.setItem('employees_status_filter', statusFilter || 'ACTIVE');
       localStorage.setItem('employees_sort_direction', sortDirection);
+      localStorage.setItem('employees_search', search);
+      localStorage.setItem('employees_dept_filter', departmentFilter);
+      localStorage.setItem('employees_regime_filter', workRegimeFilter);
+      localStorage.setItem('employees_day_filter', hybridDayFilter);
     }
-  }, [viewMode, statusFilter, sortDirection]);
+  }, [viewMode, statusFilter, sortDirection, search, departmentFilter, workRegimeFilter, hybridDayFilter]);
 
   // Reference data
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -206,10 +223,8 @@ export default function EmployeesPage() {
 
       // No modo departamento, queremos os totais gerais para os badges, 
       // mas mantemos o filtro se o usuário o alterou manualmente longe do padrão ACTIVE
-      if (statusFilter && (!isDeptView || statusFilter !== 'ACTIVE')) {
-        params.status = statusFilter;
-      } else if (!isDeptView && statusFilter) {
-        params.status = statusFilter;
+      if (statusFilter) {
+        params.status = statusFilter as EmployeeStatus;
       }
 
       if (departmentFilter) params.departmentId = departmentFilter;
@@ -237,16 +252,17 @@ export default function EmployeesPage() {
 
       if (search) params.search = search;
 
-      // No modo departamento ou alfabético (A-Z), queremos ver todos sem filtros restritivos iniciais
-      const isFullView = viewMode === 'department' || viewMode === 'alphabetical';
-      if (statusFilter && (!isFullView || statusFilter !== 'ACTIVE')) {
-        params.status = statusFilter;
+      // Status filter. If 'ACTIVE' is the desired default, it should be set in the state.
+      // If statusFilter is '', we should not send any status to show 'Todos'
+      if (statusFilter) {
+        params.status = statusFilter as EmployeeStatus;
       }
 
       if (departmentFilter) params.departmentId = departmentFilter;
       if (workRegimeFilter) params.workRegime = workRegimeFilter;
       if (hybridDayFilter) params.hybridDay = hybridDayFilter;
 
+      console.log('>>> [DEBUG] fetchEmployees final params:', params);
       const response = await employeesApi.list(params);
 
       // Debug log (visível no console do navegador do usuário se necessário)
@@ -369,7 +385,7 @@ export default function EmployeesPage() {
 
   const clearFilters = () => {
     setSearch('');
-    setStatusFilter('');
+    setStatusFilter('ACTIVE');
     setDepartmentFilter('');
     setWorkRegimeFilter('');
     setHybridDayFilter('');

@@ -88,6 +88,7 @@ public class EmployeeService {
 
             if (status != null) {
                 predicates.add(cb.equal(root.get("status"), status));
+
             }
             
             // Removido filtro padrao isActive=true para permitir que "Todos" (status=null) retorne
@@ -146,6 +147,7 @@ public class EmployeeService {
             
             if (status != null) {
                 predicates.add(cb.equal(root.get("status"), status));
+
             }
             if (departmentId != null) {
                 predicates.add(cb.equal(root.get("department").get("id"), departmentId));
