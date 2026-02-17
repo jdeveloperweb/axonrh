@@ -160,7 +160,7 @@ export default function EmployeesPage() {
       const isDeptView = viewMode === 'department';
       const params: EmployeeListParams = {
         page: isDeptView ? 0 : currentPage,
-        size: isDeptView ? 1000 : pageSize,
+        size: isDeptView ? 2000 : pageSize, // Aumentado para garantir todos os 179+
         sort: viewMode === 'alphabetical' ? `fullName,${sortDirection}` :
           viewMode === 'department' ? `department.name,asc,fullName,${sortDirection}` :
             `registrationNumber,${sortDirection}`,
@@ -714,6 +714,22 @@ export default function EmployeesPage() {
                                       className="bg-white border border-gray-100 rounded-xl p-3 hover:shadow-md hover:border-[var(--color-primary)]/30 transition-all cursor-pointer group relative flex flex-col"
                                       onClick={() => router.push(`/employees/${employee.id}`)}
                                     >
+                                      {/* Menu de Ações no Card */}
+                                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                                        <DropdownMenu>
+                                          <DropdownMenuTrigger asChild>
+                                            <button className="p-1 hover:bg-gray-100 rounded-lg transition-colors bg-white/80 backdrop-blur-sm border border-gray-100">
+                                              <MoreHorizontal className="w-3.5 h-3.5 text-gray-400" />
+                                            </button>
+                                          </DropdownMenuTrigger>
+                                          <DropdownMenuContent align="end" className="w-40">
+                                            <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}`)}>Visualizar</DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}/edit`)}>Editar</DropdownMenuItem>
+                                            <DropdownMenuItem className="text-red-600" onClick={() => handleDelete(employee.id, employee.fullName)}>Excluir</DropdownMenuItem>
+                                          </DropdownMenuContent>
+                                        </DropdownMenu>
+                                      </div>
+
                                       <div className="flex items-start gap-3">
                                         <div className="relative">
                                           <ExpandablePhoto
@@ -728,26 +744,26 @@ export default function EmployeesPage() {
                                           />
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                          <div className="flex items-start justify-between">
-                                            <h4 className="font-bold text-gray-900 truncate text-xs group-hover:text-[var(--color-primary)] transition-colors leading-tight">
+                                          <div className="flex items-start justify-between pr-4">
+                                            <h4 className="font-bold text-gray-900 truncate text-[11px] group-hover:text-[var(--color-primary)] transition-colors leading-tight">
                                               {employee.fullName}
                                             </h4>
-                                            <span className={`inline-flex px-1.5 py-0.5 rounded-full text-[8px] font-bold uppercase ${statusColors[employee.status].bg} ${statusColors[employee.status].text}`}>
-                                              {statusColors[employee.status].label}
-                                            </span>
                                           </div>
-                                          <p className="text-[10px] text-gray-500 font-medium truncate mt-0.5">
+                                          <p className="text-[9px] text-gray-500 font-medium truncate mt-0.5">
                                             {employee.position?.title || '-'}
                                           </p>
-                                          <div className="flex items-center gap-2 mt-1.5">
-                                            <span className="text-[9px] text-gray-400 font-mono">
-                                              #{employee.registrationNumber}
+                                          <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                                            <span className={`inline-flex px-1 py-0.5 rounded-full text-[7px] font-bold uppercase ${statusColors[employee.status].bg} ${statusColors[employee.status].text}`}>
+                                              {statusColors[employee.status].label}
+                                            </span>
+                                            <span className="text-[8px] text-gray-400 font-mono">
+                                              {formatCpf(employee.cpf)}
                                             </span>
                                             {(() => {
                                               const t = (employee.position?.title || employee.position?.name || '').toLowerCase();
                                               const isManager = t.includes('diretor') || t.includes('gerente') || t.includes('coordenador') || t.includes('lider') || t.includes('líder');
                                               return isManager && (
-                                                <div className="flex items-center gap-1 text-[8px] text-orange-600 font-bold bg-orange-50 px-1.5 py-0.5 rounded">
+                                                <div className="flex items-center gap-1 text-[7px] text-orange-600 font-extrabold bg-orange-50 px-1 py-0.5 rounded">
                                                   <UserCheck className="w-2 h-2" />
                                                   GESTÃO
                                                 </div>
@@ -944,9 +960,24 @@ export default function EmployeesPage() {
                           .map((employee) => (
                             <div
                               key={employee.id}
-                              className="bg-white border border-gray-100 rounded-lg p-2 active:bg-gray-50 transition-colors flex flex-col items-center text-center"
+                              className="bg-white border border-gray-100 rounded-lg p-2 active:bg-gray-50 transition-colors flex flex-col items-center text-center relative group"
                               onClick={() => router.push(`/employees/${employee.id}`)}
                             >
+                              {/* Menu de Ações Mobile no Card */}
+                              <div className="absolute top-1 right-1" onClick={(e) => e.stopPropagation()}>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <button className="p-1 hover:bg-gray-50 rounded-full">
+                                      <MoreHorizontal className="w-3 h-3 text-gray-400" />
+                                    </button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}`)}>Ver</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}/edit`)}>Editar</DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+
                               <div className="relative mb-1.5">
                                 <ExpandablePhoto
                                   src={getPhotoUrl(employee.photoUrl, employee.updatedAt)}

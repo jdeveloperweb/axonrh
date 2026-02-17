@@ -174,11 +174,9 @@ export default function WellbeingPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-gray-100 pb-8">
                 <div className="space-y-1">
                     <div className="flex items-center gap-2 mb-1">
-                        <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-[10px] font-bold rounded-full uppercase tracking-wider">Módulo de IA</span>
-                        <span className="text-gray-300">|</span>
                         <span className="text-xs text-gray-400 flex items-center gap-1">
-                            <Activity className="w-3 h-3" />
-                            Atualizado hoje
+                            <Activity className="w-3 h-3 text-purple-500" />
+                            Dados Analisados Hoje
                         </span>
                     </div>
                     <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-3">
@@ -189,11 +187,25 @@ export default function WellbeingPage() {
                 </div>
                 <div className="flex items-center gap-3">
                     <div className="hidden lg:flex flex-col items-end mr-4">
-                        <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">Status Geral</p>
-                        <p className="text-sm font-semibold text-green-600 flex items-center gap-1.5">
-                            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                            Clima Estável
-                        </p>
+                        <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest text-right">Clima Organizacional</p>
+                        {(() => {
+                            const avg = statsData?.averageScore || 0;
+                            let label = 'Calculando...';
+                            let color = 'text-gray-400';
+                            let dot = 'bg-gray-400';
+
+                            if (avg >= 4) { label = 'Excelente'; color = 'text-emerald-600'; dot = 'bg-emerald-500'; }
+                            else if (avg >= 3) { label = 'Estável'; color = 'text-blue-600'; dot = 'bg-blue-500'; }
+                            else if (avg >= 2) { label = 'Atenção'; color = 'text-amber-600'; dot = 'bg-amber-500'; }
+                            else if (avg > 0) { label = 'Crítico'; color = 'text-rose-600'; dot = 'bg-rose-500'; }
+
+                            return (
+                                <p className={cn("text-sm font-bold flex items-center gap-1.5", color)}>
+                                    <span className={cn("w-2 h-2 rounded-full animate-pulse", dot)} />
+                                    {label}
+                                </p>
+                            );
+                        })()}
                     </div>
                     <button className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-medium shadow-lg shadow-purple-200 hover:shadow-purple-300 transition-all active:scale-95">
                         <MessageCircle className="w-4 h-4" />
@@ -295,72 +307,60 @@ export default function WellbeingPage() {
                 <Card className="border-none shadow-lg bg-white overflow-hidden flex flex-col h-[600px] border border-gray-100">
                     <div className="p-6 flex items-center justify-between border-b border-gray-100 bg-gray-50/30">
                         <div>
-                            <CardTitle className="text-lg font-bold flex items-center gap-2">
+                            <CardTitle className="text-lg font-bold flex items-center gap-2 text-gray-800">
                                 <Sparkles className="w-5 h-5 text-purple-500" />
-                                Ecossistema de Vitalidade Corporativa
+                                Ecossistema de Vitalidade
                             </CardTitle>
-                            <p className="text-sm text-gray-500">Representação viva da energia e saúde da organização</p>
-                        </div>
-                        <div className="px-3 py-1 bg-purple-50 rounded-lg">
-                            <span className="text-xs font-bold text-purple-700">IA Monitor</span>
+                            <p className="text-xs text-gray-500">Saúde e energia da organização</p>
                         </div>
                     </div>
-                    <CardContent className="flex-1 p-6 flex flex-col lg:flex-row gap-10 items-center justify-center relative bg-gradient-to-b from-white to-purple-50/20 px-10">
+                    <CardContent className="flex-1 p-4 flex flex-col lg:flex-row gap-6 items-center justify-between relative bg-gradient-to-b from-white to-purple-50/10">
                         {/* Organic Ecosystem Visual Area */}
-                        <div className="relative w-full h-[500px] flex items-center justify-center">
+                        <div className="relative flex-1 w-full h-[380px] flex items-center justify-center">
                             {/* Decorative Grid/Lines for Depth */}
-                            <div className="absolute inset-0 opacity-20 pointer-events-none">
-                                <div className="absolute top-1/2 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-purple-300 to-transparent" />
-                                <div className="absolute top-0 left-1/2 w-[1px] h-full bg-gradient-to-b from-transparent via-purple-300 to-transparent" />
-                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[450px] h-[450px] border border-purple-200 rounded-full border-dashed animate-[spin_60s_linear_infinite]" />
-                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] border border-purple-100 rounded-full border-dashed animate-[spin_40s_linear_infinite_reverse]" />
+                            <div className="absolute inset-0 opacity-10 pointer-events-none">
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] border border-purple-200 rounded-full border-dashed animate-[spin_60s_linear_infinite]" />
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[220px] h-[220px] border border-purple-100 rounded-full border-dashed animate-[spin_40s_linear_infinite_reverse]" />
                             </div>
 
                             {/* Center Heart Orb */}
                             <div
-                                className="relative z-20 group"
+                                className="relative z-20"
                                 style={{ transform: `scale(${0.9 + (statsData?.averageScore || 2.5) / 10})` }}
                             >
-                                <div className="w-36 h-36 rounded-full bg-gradient-to-br from-purple-600 to-indigo-700 shadow-[0_0_60px_rgba(139,92,246,0.5)] animate-orb-pulse flex flex-col items-center justify-center text-white relative cursor-help transition-all duration-500 hover:scale-105 active:scale-95 overflow-hidden border-4 border-white/20">
-                                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20" />
-                                    <Sparkles className="w-8 h-8 mb-1 drop-shadow-lg text-yellow-300" />
+                                <div className="w-28 h-28 rounded-full bg-gradient-to-br from-purple-600 to-indigo-700 shadow-xl animate-orb-pulse flex flex-col items-center justify-center text-white relative border-4 border-white/20">
+                                    <Sparkles className="w-6 h-6 mb-1 text-yellow-300" />
                                     <div className="flex items-baseline gap-0.5">
-                                        <span className="text-3xl font-black drop-shadow-md">{statsData?.averageScore ? statsData.averageScore.toFixed(1) : '3.5'}</span>
-                                        <span className="text-xs opacity-80 font-bold">/5.0</span>
+                                        <span className="text-2xl font-black">{statsData?.averageScore ? statsData.averageScore.toFixed(1) : '3.5'}</span>
+                                        <span className="text-[10px] opacity-80 font-bold">/5</span>
                                     </div>
-                                    <span className="text-[10px] uppercase font-black tracking-widest opacity-90 drop-shadow-sm">Vitalidade Geral</span>
-                                    <div className={`mt-2 px-3 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border border-white/30 shadow-inner ${statsData && statsData.averageScore >= 4 ? 'bg-emerald-500/40' : statsData && statsData.averageScore >= 3 ? 'bg-blue-500/40' : 'bg-rose-500/40'}`}>
+                                    <span className="text-[8px] uppercase font-black tracking-widest opacity-90">Vitalidade</span>
+                                    <div className={`mt-1 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest border border-white/30 ${statsData && statsData.averageScore >= 4 ? 'bg-emerald-500/40' : statsData && statsData.averageScore >= 3 ? 'bg-blue-500/40' : 'bg-rose-500/40'}`}>
                                         {statsData && statsData.averageScore >= 4 ? 'Alta' : statsData && statsData.averageScore >= 3 ? 'Média' : 'Baixa'}
                                     </div>
                                 </div>
-                                <div className="absolute -inset-6 bg-purple-500/30 rounded-full blur-3xl animate-pulse -z-10" />
                             </div>
 
                             {/* Satellite Orbs */}
                             {radarData.map((item, idx) => {
-                                // Positions based on index (pentagon-like layout)
                                 const angle = (idx * 360 / 5) - 90;
-                                const radius = 175; // Increased radius
+                                const radius = 125; // Compact radius
                                 const x = Math.cos(angle * Math.PI / 180) * radius;
                                 const y = Math.sin(angle * Math.PI / 180) * radius;
 
-                                const orbSize = 70 + (item.value / 100) * 30;
+                                const orbSize = 55 + (item.value / 100) * 20;
                                 const floatClass = idx % 2 === 0 ? 'animate-orb-float-1' : 'animate-orb-float-2';
 
-                                // Color logic
-                                const isWarning = item.value < 40;
-                                const isHealthy = item.value > 75;
-
-                                const colorClass = isWarning
-                                    ? 'from-red-400 to-rose-600 border-red-200 shadow-red-200/50'
-                                    : isHealthy
-                                        ? 'from-emerald-400 to-teal-600 border-emerald-200 shadow-emerald-200/50'
-                                        : 'from-blue-400 to-indigo-600 border-blue-200 shadow-indigo-200/50';
+                                const colorClass = item.value < 40
+                                    ? 'from-red-400 to-rose-600 shadow-red-200/40'
+                                    : item.value > 75
+                                        ? 'from-emerald-400 to-teal-600 shadow-emerald-200/40'
+                                        : 'from-blue-400 to-indigo-600 shadow-indigo-200/40';
 
                                 return (
                                     <div
                                         key={idx}
-                                        className="absolute z-30 flex flex-col items-center gap-3 group transition-all duration-700"
+                                        className="absolute z-30 flex flex-col items-center group transition-all duration-300"
                                         style={{
                                             left: `calc(50% + ${x}px)`,
                                             top: `calc(50% + ${y}px)`,
@@ -368,27 +368,21 @@ export default function WellbeingPage() {
                                         }}
                                     >
                                         <div
-                                            className={`${floatClass} flex flex-col items-center gap-3`}
+                                            className={`${floatClass} flex flex-col items-center`}
                                             style={{ animationDelay: `${idx * 0.8}s` }}
                                         >
                                             <div
-                                                className={`rounded-[2rem] bg-gradient-to-br ${colorClass} shadow-xl border-4 flex flex-col items-center justify-center p-3 relative cursor-help transition-all duration-500 group-hover:scale-110 group-hover:rotate-3`}
+                                                className={`rounded-2xl bg-gradient-to-br ${colorClass} shadow-lg flex flex-col items-center justify-center p-2 relative border-2 border-white/30`}
                                                 style={{ width: `${orbSize}px`, height: `${orbSize}px` }}
                                             >
-                                                <div className="text-white opacity-90 mb-1 drop-shadow-sm">
-                                                    {React.cloneElement(item.icon as React.ReactElement<any>, { className: 'w-6 h-6' })}
+                                                <div className="text-white opacity-90 mb-0.5">
+                                                    {React.cloneElement(item.icon as React.ReactElement<any>, { className: 'w-4 h-4' })}
                                                 </div>
-                                                <span className="text-white font-black text-xl drop-shadow-md leading-none">{Math.round(item.value)}%</span>
-                                                <div className="absolute inset-0 rounded-[2rem] bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity backdrop-brightness-110" />
+                                                <span className="text-white font-black text-xs leading-none">{Math.round(item.value)}%</span>
                                             </div>
 
-                                            <div className="flex flex-col items-center scale-90 sm:scale-100 origin-top transition-transform group-hover:scale-105">
-                                                <div className="bg-white/95 backdrop-blur-md px-4 py-1.5 rounded-2xl shadow-lg border border-gray-100 mb-1 pointer-events-none">
-                                                    <span className="text-[12px] font-black text-gray-800 whitespace-nowrap tracking-tight">{item.subject}</span>
-                                                </div>
-                                                <div className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm border ${getStatusInfo(item.value).bg} ${getStatusInfo(item.value).color} ${getStatusInfo(item.value).border}`}>
-                                                    {getStatusInfo(item.value).label}
-                                                </div>
+                                            <div className="mt-1 px-2 py-0.5 bg-white/90 backdrop-blur-md rounded-lg shadow-sm border border-gray-100 scale-75 lg:scale-90">
+                                                <span className="text-[9px] font-black text-gray-700 whitespace-nowrap uppercase tracking-tighter">{item.subject}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -397,71 +391,37 @@ export default function WellbeingPage() {
                         </div>
 
                         {/* Sidebar Legend/Info */}
-                        <div className="w-full lg:w-64 space-y-6 shrink-0 relative z-40">
-                            <div className="p-5 bg-white/60 backdrop-blur-md rounded-2xl border border-purple-100 shadow-sm relative overflow-hidden group">
-                                <div className="absolute top-0 right-0 p-2 opacity-5 group-hover:rotate-12 transition-transform">
-                                    <Sparkles className="w-8 h-8 text-purple-500" />
-                                </div>
-                                <p className="text-[10px] text-purple-600 font-bold uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                        <div className="w-full lg:w-56 space-y-4 shrink-0 relative z-40 bg-white/20 p-4 rounded-2xl border border-white/40">
+                            <div className="p-3 bg-white/80 backdrop-blur-md rounded-xl border border-purple-100 shadow-sm relative overflow-hidden group">
+                                <p className="text-[9px] text-purple-600 font-bold uppercase tracking-widest mb-1 flex items-center gap-1">
                                     <Brain className="w-3 h-3" />
-                                    Insight da IA Axon
+                                    Insights
                                 </p>
-                                <p className="text-sm text-gray-700 leading-relaxed italic font-medium">
-                                    "{statsData && statsData.averageScore >= 3
-                                        ? "O ecossistema apresenta uma tendência expansiva. Foco em manter o equilíbrio de carga."
-                                        : "Atenção: Percebemos contração nas esferas de vitalidade. Recomenda-se ações imediatas de acolhimento."}"
+                                <p className="text-[11px] text-gray-700 leading-tight italic font-medium">
+                                    {statsData && statsData.averageScore >= 3
+                                        ? "Tendência expansiva detectada. Manter equilíbrio."
+                                        : "Atenção: Necessário ações imediatas de acolhimento."}
                                 </p>
                             </div>
 
-                            <div className="space-y-4">
+                            <div className="space-y-2">
                                 <TooltipProvider>
                                     {radarData.map((item, idx) => {
                                         const status = getStatusInfo(item.value);
                                         return (
-                                            <div key={idx} className="group cursor-default bg-white/40 hover:bg-white/80 p-2 rounded-xl transition-all border border-transparent hover:border-purple-100">
-                                                <div className="flex items-center justify-between mb-1.5 px-1">
+                                            <div key={idx} className="bg-white/60 p-2 rounded-xl border border-transparent hover:border-purple-100 transition-all">
+                                                <div className="flex items-center justify-between mb-1 px-1">
                                                     <div className="flex items-center gap-2">
-                                                        <div className={`p-1.5 rounded-lg ${status.bg} ${status.color}`}>
-                                                            {React.cloneElement(item.icon as React.ReactElement<any>, { className: 'w-3.5 h-3.5' })}
+                                                        <div className={`p-1 rounded-md ${status.bg} ${status.color}`}>
+                                                            {React.cloneElement(item.icon as React.ReactElement<any>, { className: 'w-3 h-3' })}
                                                         </div>
-                                                        <div className="flex flex-col">
-                                                            <span className="text-[11px] font-bold text-gray-700 group-hover:text-gray-900 transition-colors uppercase tracking-tight">{item.subject}</span>
-                                                            <div className="flex items-center gap-1.5">
-                                                                <span className={`text-[9px] font-black uppercase tracking-wider ${status.color}`}>{status.label}</span>
-                                                                <span className="text-[9px] text-gray-400">•</span>
-                                                                <span className="text-[9px] text-gray-400 font-medium">via {item.source}</span>
-                                                            </div>
-                                                        </div>
-                                                        <UITooltip>
-                                                            <TooltipTrigger asChild>
-                                                                <Info className="w-3 h-3 text-gray-300 hover:text-purple-500 cursor-help transition-colors ml-1" />
-                                                            </TooltipTrigger>
-                                                            <TooltipContent side="right" className="max-w-[280px] bg-white p-4 shadow-2xl border-purple-100 rounded-2xl">
-                                                                <div className="space-y-2">
-                                                                    <div className="flex items-center gap-2 border-b border-gray-50 pb-2">
-                                                                        <div className={`p-2 rounded-xl ${status.bg} ${status.color}`}>
-                                                                            {React.cloneElement(item.icon as React.ReactElement<any>, { className: 'w-5 h-5' })}
-                                                                        </div>
-                                                                        <div>
-                                                                            <p className="text-xs font-black text-gray-900 leading-none">{item.subject}</p>
-                                                                            <p className="text-[10px] text-gray-500 mt-1 uppercase font-bold">Fonte: {item.source}</p>
-                                                                        </div>
-                                                                    </div>
-                                                                    <p className="text-xs leading-relaxed text-gray-600 font-medium pt-1">
-                                                                        {item.description}
-                                                                    </p>
-                                                                    <div className={`mt-2 p-2 rounded-xl text-[10px] font-bold text-center border ${status.bg} ${status.color} ${status.border}`}>
-                                                                        Nível: {status.label} ({Math.round(item.value)}%)
-                                                                    </div>
-                                                                </div>
-                                                            </TooltipContent>
-                                                        </UITooltip>
+                                                        <span className="text-[10px] font-bold text-gray-700 uppercase tracking-tighter">{item.subject}</span>
                                                     </div>
-                                                    <span className="text-xs font-black text-gray-900">{Math.round(item.value)}%</span>
+                                                    <span className="text-[10px] font-black text-gray-900">{Math.round(item.value)}%</span>
                                                 </div>
-                                                <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden p-[1px] border border-gray-50">
+                                                <div className="w-full bg-gray-200/50 h-1.5 rounded-full overflow-hidden">
                                                     <div
-                                                        className={`h-full rounded-full transition-all duration-1000 ${status.bg.replace('bg-', 'bg-gradient-to-r from-')}`}
+                                                        className="h-full rounded-full transition-all duration-1000"
                                                         style={{
                                                             width: `${item.value}%`,
                                                             backgroundImage: `linear-gradient(to right, ${item.value < 40 ? '#fb7185, #e11d48' : item.value > 80 ? '#34d399, #059669' : '#818cf8, #4f46e5'})`
