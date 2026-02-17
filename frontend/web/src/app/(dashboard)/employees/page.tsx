@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, Fragment } from 'react';
+import { useState, useEffect, useCallback, useMemo, Fragment } from 'react';
 import { useConfirm } from '@/components/providers/ConfirmProvider';
 import { useRouter } from 'next/navigation';
 import {
@@ -136,6 +136,48 @@ export default function EmployeesPage() {
     averageSalary: 0,
     byDepartment: {}
   });
+
+  // Agrupamento de departamentos otimizado
+  const groupedDepartments = useMemo(() => {
+    const map = new Map<string, { id?: string; name: string; employees: Employee[] }>();
+
+    // 1. Preenche com departamentos oficiais da empresa
+    (departments || []).forEach(d => {
+      map.set(d.id, { id: d.id, name: d.name, employees: [] });
+    });
+
+    // 2. Distribui colaboradores nos grupos
+    (employees || []).forEach(e => {
+      const deptId = e.department?.id;
+      const deptName = e.department?.name || 'Sem Departamento';
+
+      // Prioriza vínculo por ID
+      if (deptId && map.has(deptId)) {
+        map.get(deptId)!.employees.push(e);
+      } else {
+        // Fallback por nome para evitar duplicados (ex: "Tecnologia" vs "Tecnologia")
+        let groupByName = Array.from(map.values()).find(
+          g => g.name.trim().toLowerCase() === deptName.trim().toLowerCase()
+        );
+
+        if (groupByName) {
+          groupByName.employees.push(e);
+        } else {
+          // Cria novo grupo para setores não cadastrados oficialmente ou "Sem Departamento"
+          const key = deptId || deptName;
+          if (!map.has(key)) {
+            map.set(key, { id: deptId, name: deptName, employees: [] });
+          }
+          map.get(key)!.employees.push(e);
+        }
+      }
+    });
+
+    // 3. Retorna apenas grupos que tenham pessoas ou que sejam departamentos oficiais conhecidos
+    return Array.from(map.values())
+      .filter(g => g.employees.length > 0 || (departments || []).some(d => d.id === g.id))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [employees, departments]);
 
   // Fetch Stats
   const fetchStats = useCallback(async () => {
@@ -678,153 +720,144 @@ export default function EmployeesPage() {
                     </td>
                   </tr>
                 ) : viewMode === 'department' ? (
-                  (() => {
-                    const deptsWithEmployees = Array.from(new Set((employees || []).map(e => e?.department?.name || 'Sem Departamento')));
-                    const allDeptNames = Array.from(new Set([
-                      ...(departments || []).map(d => d?.name),
-                      ...deptsWithEmployees
-                    ])).filter(Boolean).sort() as string[];
-
-                    return allDeptNames.map(deptName => {
-                      const deptEmployees = (employees || []).filter(e => (e?.department?.name || 'Sem Departamento') === deptName);
-                      if (deptEmployees.length === 0 && !(departments || []).find(d => d?.name === deptName)) return null;
-
-                      const isCollapsed = collapsedDepts.has(deptName);
-                      return (
-                        <Fragment key={deptName}>
-                          <tr
-                            className="bg-orange-50/20 cursor-pointer hover:bg-orange-100/30 transition-colors"
-                            onClick={() => toggleDept(deptName)}
-                          >
-                            <td colSpan={6} className="px-6 py-2 border-l-4 border-[var(--color-primary)]">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                  {isCollapsed ? <ChevronRight className="w-4 h-4 text-[var(--color-primary)]" /> : <ChevronDown className="w-4 h-4 text-[var(--color-primary)]" />}
-                                  <div className="flex items-center gap-2">
-                                    <Building2 className="w-4 h-4 text-[var(--color-primary)]" />
-                                    <span className="text-sm font-black text-gray-800 uppercase tracking-tighter">
-                                      {deptName}
-                                    </span>
-                                    <span className="flex items-center justify-center min-w-[28px] h-[20px] text-[10px] bg-[var(--color-primary)] text-white px-2 rounded-full font-black shadow-sm ring-2 ring-orange-100/50">
-                                      {deptEmployees.length}
-                                    </span>
-                                  </div>
+                  groupedDepartments.map(dept => {
+                    const isCollapsed = collapsedDepts.has(dept.name);
+                    const deptEmployees = dept.employees;
+                    const deptName = dept.name;
+                    return (
+                      <Fragment key={deptName}>
+                        <tr
+                          className="bg-orange-50/20 cursor-pointer hover:bg-orange-100/30 transition-colors"
+                          onClick={() => toggleDept(deptName)}
+                        >
+                          <td colSpan={6} className="px-6 py-2 border-l-4 border-[var(--color-primary)]">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                {isCollapsed ? <ChevronRight className="w-4 h-4 text-[var(--color-primary)]" /> : <ChevronDown className="w-4 h-4 text-[var(--color-primary)]" />}
+                                <div className="flex items-center gap-2">
+                                  <Building2 className="w-4 h-4 text-[var(--color-primary)]" />
+                                  <span className="text-sm font-black text-gray-800 uppercase tracking-tighter">
+                                    {deptName}
+                                  </span>
+                                  <span className="flex items-center justify-center min-w-[28px] h-[20px] text-[10px] bg-[var(--color-primary)] text-white px-2 rounded-full font-black shadow-sm ring-2 ring-orange-100/50">
+                                    {deptEmployees.length}
+                                  </span>
                                 </div>
-                                <span className="text-[10px] font-bold text-[var(--color-primary)]/50 uppercase tracking-widest flex items-center gap-1">
-                                  {isCollapsed ? 'Expandir' : 'Recolher'}
-                                  {isCollapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                                </span>
                               </div>
-                            </td>
-                          </tr>
-                          {!isCollapsed && (
-                            <tr>
-                              <td colSpan={6} className="p-4 bg-gray-50/5">
-                                {deptEmployees.length === 0 ? (
-                                  <div className="py-4 text-center text-[10px] text-gray-400 font-medium uppercase tracking-widest italic opacity-60">
-                                    Nenhum colaborador encontrado neste setor
-                                  </div>
-                                ) : (
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
-                                    {deptEmployees
-                                      .sort((a, b) => {
-                                        const getRank = (e: any) => {
-                                          const t = (e.position?.title || e.position?.name || '').toLowerCase();
-                                          if (t.includes('diretor')) return 1;
-                                          if (t.includes('gerente')) return 2;
-                                          if (t.includes('coordenador')) return 3;
-                                          if (t.includes('supervisor')) return 4;
-                                          if (t.includes('líder') || t.includes('lider')) return 5;
-                                          return 6;
-                                        };
-                                        const rankA = getRank(a);
-                                        const rankB = getRank(b);
-                                        if (rankA !== rankB) return rankA - rankB;
-                                        return (a.fullName || '').localeCompare(b.fullName || '');
-                                      })
-                                      .map((employee) => (
-                                        <div
-                                          key={employee.id}
-                                          className="bg-white border border-gray-100 rounded-xl p-3 hover:shadow-md hover:border-[var(--color-primary)]/30 transition-all cursor-pointer group relative flex flex-col"
-                                          onClick={() => router.push(`/employees/${employee.id}`)}
-                                        >
-                                          {/* Menu de Ações no Card */}
-                                          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
-                                            <DropdownMenu>
-                                              <DropdownMenuTrigger asChild>
-                                                <button className="p-1 hover:bg-gray-100 rounded-lg transition-colors bg-white/80 backdrop-blur-sm border border-gray-100">
-                                                  <MoreHorizontal className="w-3.5 h-3.5 text-gray-400" />
-                                                </button>
-                                              </DropdownMenuTrigger>
-                                              <DropdownMenuContent align="end" className="w-48">
-                                                <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}`)}>
-                                                  <Eye className="w-3.5 h-3.5 mr-2" /> Visualizar
+                              <span className="text-[10px] font-bold text-[var(--color-primary)]/50 uppercase tracking-widest flex items-center gap-1">
+                                {isCollapsed ? 'Expandir' : 'Recolher'}
+                                {isCollapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                              </span>
+                            </div>
+                          </td>
+                        </tr>
+                        {!isCollapsed && (
+                          <tr>
+                            <td colSpan={6} className="p-4 bg-gray-50/5">
+                              {deptEmployees.length === 0 ? (
+                                <div className="py-4 text-center text-[10px] text-gray-400 font-medium uppercase tracking-widest italic opacity-60">
+                                  Nenhum colaborador encontrado neste setor
+                                </div>
+                              ) : (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
+                                  {deptEmployees
+                                    .sort((a, b) => {
+                                      const getRank = (e: any) => {
+                                        const t = (e.position?.title || e.position?.name || '').toLowerCase();
+                                        if (t.includes('diretor')) return 1;
+                                        if (t.includes('gerente')) return 2;
+                                        if (t.includes('coordenador')) return 3;
+                                        if (t.includes('supervisor')) return 4;
+                                        if (t.includes('líder') || t.includes('lider')) return 5;
+                                        return 6;
+                                      };
+                                      const rankA = getRank(a);
+                                      const rankB = getRank(b);
+                                      if (rankA !== rankB) return rankA - rankB;
+                                      return (a.fullName || '').localeCompare(b.fullName || '');
+                                    })
+                                    .map((employee) => (
+                                      <div
+                                        key={employee.id}
+                                        className="bg-white border border-gray-100 rounded-xl p-3 hover:shadow-md hover:border-[var(--color-primary)]/30 transition-all cursor-pointer group relative flex flex-col"
+                                        onClick={() => router.push(`/employees/${employee.id}`)}
+                                      >
+                                        {/* Menu de Ações no Card */}
+                                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                                          <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                              <button className="p-1 hover:bg-gray-100 rounded-lg transition-colors bg-white/80 backdrop-blur-sm border border-gray-100">
+                                                <MoreHorizontal className="w-3.5 h-3.5 text-gray-400" />
+                                              </button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="w-48">
+                                              <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}`)}>
+                                                <Eye className="w-3.5 h-3.5 mr-2" /> Visualizar
+                                              </DropdownMenuItem>
+                                              <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}/edit`)}>
+                                                <Edit className="w-3.5 h-3.5 mr-2" /> Editar
+                                              </DropdownMenuItem>
+                                              {employee.missingFields && employee.missingFields.length > 0 && (
+                                                <DropdownMenuItem
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleSmartFill(employee, e as any);
+                                                  }}
+                                                  className="text-purple-600 font-bold"
+                                                >
+                                                  <Sparkles className="w-3.5 h-3.5 mr-2" /> Completar com IA
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}/edit`)}>
-                                                  <Edit className="w-3.5 h-3.5 mr-2" /> Editar
-                                                </DropdownMenuItem>
-                                                {employee.missingFields && employee.missingFields.length > 0 && (
-                                                  <DropdownMenuItem
-                                                    onClick={(e) => {
-                                                      e.stopPropagation();
-                                                      handleSmartFill(employee, e as any);
-                                                    }}
-                                                    className="text-purple-600 font-bold"
-                                                  >
-                                                    <Sparkles className="w-3.5 h-3.5 mr-2" /> Completar com IA
-                                                  </DropdownMenuItem>
-                                                )}
-                                                <DropdownMenuSeparator />
-                                                <DropdownMenuItem className="text-red-600" onClick={() => handleDelete(employee.id, employee.fullName)}>
-                                                  <Trash2 className="w-3.5 h-3.5 mr-2" /> Excluir
-                                                </DropdownMenuItem>
-                                              </DropdownMenuContent>
-                                            </DropdownMenu>
-                                          </div>
+                                              )}
+                                              <DropdownMenuSeparator />
+                                              <DropdownMenuItem className="text-red-600" onClick={() => handleDelete(employee.id, employee.fullName)}>
+                                                <Trash2 className="w-3.5 h-3.5 mr-2" /> Excluir
+                                              </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                          </DropdownMenu>
+                                        </div>
 
-                                          <div className="flex items-start gap-3">
-                                            <div className="relative">
-                                              <ExpandablePhoto
-                                                src={getPhotoUrl(employee.photoUrl, employee.updatedAt)}
-                                                alt={employee.fullName}
-                                                containerClassName="w-12 h-12 rounded-lg border border-gray-100 shadow-sm overflow-hidden"
-                                                fallback={
-                                                  <div className="w-full h-full bg-[var(--color-primary)]/5 text-[var(--color-primary)] flex items-center justify-center font-bold text-lg">
-                                                    {employee.fullName.charAt(0).toUpperCase()}
-                                                  </div>
-                                                }
-                                              />
+                                        <div className="flex items-start gap-3">
+                                          <div className="relative">
+                                            <ExpandablePhoto
+                                              src={getPhotoUrl(employee.photoUrl, employee.updatedAt)}
+                                              alt={employee.fullName}
+                                              containerClassName="w-12 h-12 rounded-lg border border-gray-100 shadow-sm overflow-hidden"
+                                              fallback={
+                                                <div className="w-full h-full bg-[var(--color-primary)]/5 text-[var(--color-primary)] flex items-center justify-center font-bold text-lg">
+                                                  {employee.fullName.charAt(0).toUpperCase()}
+                                                </div>
+                                              }
+                                            />
+                                          </div>
+                                          <div className="flex-1 min-w-0">
+                                            <div className="flex items-start justify-between pr-4">
+                                              <h4 className="font-bold text-gray-900 truncate text-[11px] group-hover:text-[var(--color-primary)] transition-colors leading-tight">
+                                                {employee.fullName}
+                                              </h4>
                                             </div>
-                                            <div className="flex-1 min-w-0">
-                                              <div className="flex items-start justify-between pr-4">
-                                                <h4 className="font-bold text-gray-900 truncate text-[11px] group-hover:text-[var(--color-primary)] transition-colors leading-tight">
-                                                  {employee.fullName}
-                                                </h4>
-                                              </div>
-                                              <p className="text-[9px] text-gray-500 font-medium truncate mt-0.5 uppercase tracking-tighter">
-                                                {employee.position?.title || '-'}
-                                              </p>
-                                              <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-                                                <span className={`inline-flex px-1 py-0.5 rounded-full text-[7px] font-bold uppercase ${statusColors[employee.status]?.bg || 'bg-gray-100'} ${statusColors[employee.status]?.text || 'text-gray-800'}`}>
-                                                  {statusColors[employee.status]?.label || employee.status}
-                                                </span>
-                                                <span className="text-[8px] text-gray-400 font-mono">
-                                                  {formatCpf(employee.cpf)}
-                                                </span>
-                                              </div>
+                                            <p className="text-[9px] text-gray-500 font-medium truncate mt-0.5 uppercase tracking-tighter">
+                                              {employee.position?.title || '-'}
+                                            </p>
+                                            <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                                              <span className={`inline-flex px-1 py-0.5 rounded-full text-[7px] font-bold uppercase ${statusColors[employee.status]?.bg || 'bg-gray-100'} ${statusColors[employee.status]?.text || 'text-gray-800'}`}>
+                                                {statusColors[employee.status]?.label || employee.status}
+                                              </span>
+                                              <span className="text-[8px] text-gray-400 font-mono">
+                                                {formatCpf(employee.cpf)}
+                                              </span>
                                             </div>
                                           </div>
                                         </div>
-                                      ))}
-                                  </div>
-                                )}
-                              </td>
-                            </tr>
-                          )}
-                        </Fragment>
-                      );
-                    });
-                  })()
+                                      </div>
+                                    ))}
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
+                    );
+                  })
                 ) : (
                   employees.map((employee) => (
                     <tr
@@ -964,117 +997,108 @@ export default function EmployeesPage() {
                 Nenhum colaborador encontrado
               </div>
             ) : viewMode === 'department' ? (
-              (() => {
-                const deptsWithEmployees = Array.from(new Set((employees || []).map(e => e?.department?.name || 'Sem Departamento')));
-                const allDeptNames = Array.from(new Set([
-                  ...(departments || []).map(d => d?.name),
-                  ...deptsWithEmployees
-                ])).filter(Boolean).sort() as string[];
-
-                return allDeptNames.map(deptName => {
-                  const deptEmployees = (employees || []).filter(e => (e?.department?.name || 'Sem Departamento') === deptName);
-                  if (deptEmployees.length === 0 && !(departments || []).find(d => d?.name === deptName)) return null;
-
-                  const isCollapsed = collapsedDepts.has(deptName);
-                  return (
-                    <Fragment key={deptName}>
-                      <div
-                        className="bg-orange-50/30 px-4 py-2 flex items-center justify-between border-y border-gray-100 first:border-t-0 cursor-pointer active:bg-orange-100/50"
-                        onClick={() => toggleDept(deptName)}
-                      >
-                        <div className="flex items-center gap-2">
-                          {isCollapsed ? <ChevronRight className="w-3 h-3 text-[var(--color-primary)]" /> : <ChevronDown className="w-3 h-3 text-[var(--color-primary)]" />}
-                          <Building2 className="w-3.5 h-3.5 text-[var(--color-primary)]" />
-                          <span className="text-[10px] font-bold text-[var(--color-primary)] uppercase tracking-wider">
-                            {deptName}
-                          </span>
-                          <span className="text-[10px] bg-orange-100 text-[var(--color-primary)] px-1.5 py-0.5 rounded-full font-bold">
-                            {deptEmployees.length}
-                          </span>
-                        </div>
+              groupedDepartments.map(dept => {
+                const isCollapsed = collapsedDepts.has(dept.name);
+                const deptEmployees = dept.employees;
+                const deptName = dept.name;
+                return (
+                  <Fragment key={deptName}>
+                    <div
+                      className="bg-orange-50/30 px-4 py-2 flex items-center justify-between border-y border-gray-100 first:border-t-0 cursor-pointer active:bg-orange-100/50"
+                      onClick={() => toggleDept(deptName)}
+                    >
+                      <div className="flex items-center gap-2">
+                        {isCollapsed ? <ChevronRight className="w-3 h-3 text-[var(--color-primary)]" /> : <ChevronDown className="w-3 h-3 text-[var(--color-primary)]" />}
+                        <Building2 className="w-3.5 h-3.5 text-[var(--color-primary)]" />
+                        <span className="text-[10px] font-bold text-[var(--color-primary)] uppercase tracking-wider">
+                          {deptName}
+                        </span>
+                        <span className="text-[10px] bg-orange-100 text-[var(--color-primary)] px-1.5 py-0.5 rounded-full font-bold">
+                          {deptEmployees.length}
+                        </span>
                       </div>
-                      {!isCollapsed && (
-                        <div className="p-3 bg-gray-50/10 grid grid-cols-2 gap-2">
-                          {deptEmployees.length === 0 ? (
-                            <div className="col-span-2 py-4 text-center text-[8px] text-gray-400 font-medium uppercase tracking-widest italic opacity-60">
-                              Nenhum colaborador encontrado neste setor
-                            </div>
-                          ) : (
-                            deptEmployees
-                              .sort((a, b) => {
-                                const getRank = (e: any) => {
-                                  const t = (e.position?.title || e.position?.name || '').toLowerCase();
-                                  if (t.includes('diretor')) return 1;
-                                  if (t.includes('gerente')) return 2;
-                                  if (t.includes('coordenador')) return 3;
-                                  if (t.includes('supervisor')) return 4;
-                                  if (t.includes('líder') || t.includes('lider')) return 5;
-                                  return 6;
-                                };
-                                const rankA = getRank(a);
-                                const rankB = getRank(b);
-                                if (rankA !== rankB) return rankA - rankB;
-                                return (a.fullName || '').localeCompare(b.fullName || '');
-                              })
-                              .map((employee) => (
-                                <div
-                                  key={employee.id}
-                                  className="bg-white border border-gray-100 rounded-lg p-2 active:bg-gray-50 transition-colors flex flex-col items-center text-center relative group"
-                                  onClick={() => router.push(`/employees/${employee.id}`)}
-                                >
-                                  {/* Menu de Ações Mobile no Card */}
-                                  <div className="absolute top-1 right-1" onClick={(e) => e.stopPropagation()}>
-                                    <DropdownMenu>
-                                      <DropdownMenuTrigger asChild>
-                                        <button className="p-1 hover:bg-gray-50 rounded-full">
-                                          <MoreHorizontal className="w-3 h-3 text-gray-400" />
-                                        </button>
-                                      </DropdownMenuTrigger>
-                                      <DropdownMenuContent align="end">
-                                        <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}`)}>Visualizar</DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}/edit`)}>Editar</DropdownMenuItem>
-                                        {employee.missingFields && employee.missingFields.length > 0 && (
-                                          <DropdownMenuItem
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              handleSmartFill(employee, e as any);
-                                            }}
-                                            className="text-purple-600 font-bold"
-                                          >
-                                            IA
-                                          </DropdownMenuItem>
-                                        )}
-                                      </DropdownMenuContent>
-                                    </DropdownMenu>
-                                  </div>
-
-                                  <div className="relative mb-1.5">
-                                    <ExpandablePhoto
-                                      src={getPhotoUrl(employee.photoUrl, employee.updatedAt)}
-                                      alt={employee.fullName}
-                                      containerClassName="w-10 h-10 rounded-full border border-gray-100 shadow-sm"
-                                      fallback={
-                                        <div className="w-10 h-10 rounded-full bg-[var(--color-primary)]/5 text-[var(--color-primary)] flex items-center justify-center font-bold text-sm">
-                                          {employee.fullName.charAt(0).toUpperCase()}
-                                        </div>
-                                      }
-                                    />
-                                  </div>
-                                  <p className="font-bold text-gray-900 text-[10px] line-clamp-1 leading-tight w-full">
-                                    {employee.fullName}
-                                  </p>
-                                  <p className="text-[8px] text-gray-500 line-clamp-1 w-full mt-0.5 uppercase">
-                                    {employee.position?.title || '-'}
-                                  </p>
+                    </div>
+                    {!isCollapsed && (
+                      <div className="p-3 bg-gray-50/10 grid grid-cols-2 gap-2">
+                        {deptEmployees.length === 0 ? (
+                          <div className="col-span-2 py-4 text-center text-[8px] text-gray-400 font-medium uppercase tracking-widest italic opacity-60">
+                            Nenhum colaborador encontrado neste setor
+                          </div>
+                        ) : (
+                          deptEmployees
+                            .sort((a, b) => {
+                              const getRank = (e: any) => {
+                                const t = (e.position?.title || e.position?.name || '').toLowerCase();
+                                if (t.includes('diretor')) return 1;
+                                if (t.includes('gerente')) return 2;
+                                if (t.includes('coordenador')) return 3;
+                                if (t.includes('supervisor')) return 4;
+                                if (t.includes('líder') || t.includes('lider')) return 5;
+                                return 6;
+                              };
+                              const rankA = getRank(a);
+                              const rankB = getRank(b);
+                              if (rankA !== rankB) return rankA - rankB;
+                              return (a.fullName || '').localeCompare(b.fullName || '');
+                            })
+                            .map((employee) => (
+                              <div
+                                key={employee.id}
+                                className="bg-white border border-gray-100 rounded-lg p-2 active:bg-gray-50 transition-colors flex flex-col items-center text-center relative group"
+                                onClick={() => router.push(`/employees/${employee.id}`)}
+                              >
+                                {/* Menu de Ações Mobile no Card */}
+                                <div className="absolute top-1 right-1" onClick={(e) => e.stopPropagation()}>
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <button className="p-1 hover:bg-gray-50 rounded-full">
+                                        <MoreHorizontal className="w-3 h-3 text-gray-400" />
+                                      </button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}`)}>Visualizar</DropdownMenuItem>
+                                      <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}/edit`)}>Editar</DropdownMenuItem>
+                                      {employee.missingFields && employee.missingFields.length > 0 && (
+                                        <DropdownMenuItem
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleSmartFill(employee, e as any);
+                                          }}
+                                          className="text-purple-600 font-bold"
+                                        >
+                                          IA
+                                        </DropdownMenuItem>
+                                      )}
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
                                 </div>
-                              ))
-                          )}
-                        </div>
-                      )}
-                    </Fragment>
-                  );
-                });
-              })()
+
+                                <div className="relative mb-1.5">
+                                  <ExpandablePhoto
+                                    src={getPhotoUrl(employee.photoUrl, employee.updatedAt)}
+                                    alt={employee.fullName}
+                                    containerClassName="w-10 h-10 rounded-full border border-gray-100 shadow-sm"
+                                    fallback={
+                                      <div className="w-10 h-10 rounded-full bg-[var(--color-primary)]/5 text-[var(--color-primary)] flex items-center justify-center font-bold text-sm">
+                                        {employee.fullName.charAt(0).toUpperCase()}
+                                      </div>
+                                    }
+                                  />
+                                </div>
+                                <p className="font-bold text-gray-900 text-[10px] line-clamp-1 leading-tight w-full">
+                                  {employee.fullName}
+                                </p>
+                                <p className="text-[8px] text-gray-500 line-clamp-1 w-full mt-0.5 uppercase">
+                                  {employee.position?.title || '-'}
+                                </p>
+                              </div>
+                            ))
+                        )}
+                      </div>
+                    )}
+                  </Fragment>
+                );
+              })
             ) : (
               employees.map((employee) => (
                 <div
