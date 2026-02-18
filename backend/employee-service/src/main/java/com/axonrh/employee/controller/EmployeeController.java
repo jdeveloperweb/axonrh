@@ -64,8 +64,18 @@ public class EmployeeController {
             @PageableDefault(size = 1000, sort = "fullName", direction = Sort.Direction.ASC) Pageable pageable) {
 
         log.info("Listing employees with filters: search={}, status={}, dept={}, pos={}, regime={}, day={}", search, status, departmentId, positionId, workRegime, hybridDay);
-        Page<EmployeeResponse> employees = employeeService.findWithFilters(search, status, departmentId, positionId, workRegime, hybridDay, pageable);
-        return ResponseEntity.ok(employees);
+        log.info(">>> [DEBUG-SORT] Pageable received: {}", pageable);
+        
+        try {
+            Page<EmployeeResponse> employees = employeeService.findWithFilters(search, status, departmentId, positionId, workRegime, hybridDay, pageable);
+            return ResponseEntity.ok(employees);
+        } catch (Exception e) {
+            log.error(">>> [ERROR-FINDALL] Failed to list employees: {}", e.getMessage());
+            if (e instanceof org.springframework.data.mapping.PropertyReferenceException) {
+                log.error(">>> [ERROR-SORT] Invalid property: {}", ((org.springframework.data.mapping.PropertyReferenceException) e).getPropertyName());
+            }
+            throw e;
+        }
     }
 
     @GetMapping("/stats")

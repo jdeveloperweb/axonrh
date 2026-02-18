@@ -304,7 +304,26 @@ export const employeesApi = {
     const searchParams = new URLSearchParams();
     if (params.page !== undefined) searchParams.set('page', params.page.toString());
     if (params.size !== undefined) searchParams.set('size', params.size.toString());
-    if (params.sort) searchParams.set('sort', params.sort);
+
+    if (params.sort) {
+      // Se o sort for uma string composta por vírgulas (ex: "dept,asc,name,desc"),
+      // enviamos como múltiplos parâmetros 'sort' para o Spring Data JPA interpretar corretamente.
+      if (params.sort.includes(',')) {
+        const parts = params.sort.split(',');
+        // O padrão do Spring é property,direction. 
+        // Se temos "prop1,dir1,prop2,dir2", agrupamos de 2 em 2.
+        for (let i = 0; i < parts.length; i += 2) {
+          if (i + 1 < parts.length) {
+            searchParams.append('sort', `${parts[i]},${parts[i + 1]}`);
+          } else {
+            searchParams.append('sort', parts[i]);
+          }
+        }
+      } else {
+        searchParams.set('sort', params.sort);
+      }
+    }
+
     if (params.search) searchParams.set('search', params.search);
     if (params.status) searchParams.set('status', params.status);
     if (params.departmentId) searchParams.set('departmentId', params.departmentId);
