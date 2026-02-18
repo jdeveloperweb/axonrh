@@ -100,58 +100,45 @@ export default function EmployeesPage() {
   const [pageSize] = useState(1000);
 
   // Filters & State Persistence
-  const [search, setSearch] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('employees_search');
-      return (saved && saved !== 'null' && saved !== 'undefined') ? saved : '';
-    }
-    return '';
-  });
-  const [statusFilter, setStatusFilter] = useState<EmployeeStatus | ''>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('employees_status_filter');
-      // Garantir que se estiver vazio ou nulo, retorne 'ACTIVE' como padrão de visualização
-      if (!saved || saved === 'null' || saved === 'undefined' || saved === '') return 'ACTIVE';
-      return saved as any;
-    }
-    return 'ACTIVE';
-  });
-  const [departmentFilter, setDepartmentFilter] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('employees_dept_filter');
-      return (saved && saved !== 'null' && saved !== 'undefined' && saved !== '') ? saved : '';
-    }
-    return '';
-  });
-  const [workRegimeFilter, setWorkRegimeFilter] = useState<WorkRegime | ''>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('employees_regime_filter');
-      return (saved && saved !== 'null' && saved !== 'undefined') ? (saved as any) : '';
-    }
-    return '';
-  });
-  const [hybridDayFilter, setHybridDayFilter] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('employees_day_filter');
-      return (saved && saved !== 'null' && saved !== 'undefined') ? saved : '';
-    }
-    return '';
-  });
+  // Hydration control
+  const [isHydrated, setIsHydrated] = useState(false);
+  const [viewMode, setViewMode] = useState<'list' | 'alphabetical' | 'department'>('alphabetical');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<EmployeeStatus | ''>('ACTIVE');
+  const [departmentFilter, setDepartmentFilter] = useState('');
+  const [workRegimeFilter, setWorkRegimeFilter] = useState<WorkRegime | ''>('');
+  const [hybridDayFilter, setHybridDayFilter] = useState('');
 
-  const [showFilters, setShowFilters] = useState(false);
-  const [viewMode, setViewMode] = useState<'list' | 'alphabetical' | 'department'>(() => {
-    if (typeof window !== 'undefined') return (localStorage.getItem('employees_view_mode') as any) || 'alphabetical';
-    return 'alphabetical';
-  });
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(() => {
-    if (typeof window !== 'undefined') return (localStorage.getItem('employees_sort_direction') as any) || 'asc';
-    return 'asc';
-  });
-  const [collapsedDepts, setCollapsedDepts] = useState<Set<string>>(new Set());
-
-  // Persist preferences
+  // Initial Hydration
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      const savedMode = localStorage.getItem('employees_view_mode');
+      const savedSort = localStorage.getItem('employees_sort_direction');
+      const savedSearch = localStorage.getItem('employees_search');
+      const savedStatus = localStorage.getItem('employees_status_filter');
+      const savedDept = localStorage.getItem('employees_dept_filter');
+      const savedRegime = localStorage.getItem('employees_regime_filter');
+      const savedDay = localStorage.getItem('employees_day_filter');
+
+      if (savedMode) setViewMode(savedMode as any);
+      if (savedSort) setSortDirection(savedSort as any);
+      if (savedSearch && savedSearch !== 'null') setSearch(savedSearch);
+      if (savedStatus && savedStatus !== 'null' && savedStatus !== 'undefined') setStatusFilter(savedStatus as any);
+      if (savedDept && savedDept !== 'null' && savedDept !== 'undefined') setDepartmentFilter(savedDept);
+      if (savedRegime && savedRegime !== 'null') setWorkRegimeFilter(savedRegime as any);
+      if (savedDay && savedDay !== 'null') setHybridDayFilter(savedDay);
+
+      setIsHydrated(true);
+    }
+  }, []);
+
+  const [showFilters, setShowFilters] = useState(false);
+  const [collapsedDepts, setCollapsedDepts] = useState<Set<string>>(new Set());
+
+  // Persist preferences (only after hydration)
+  useEffect(() => {
+    if (isHydrated && typeof window !== 'undefined') {
       localStorage.setItem('employees_view_mode', viewMode);
       localStorage.setItem('employees_status_filter', statusFilter);
       localStorage.setItem('employees_sort_direction', sortDirection);
@@ -160,7 +147,7 @@ export default function EmployeesPage() {
       localStorage.setItem('employees_regime_filter', workRegimeFilter);
       localStorage.setItem('employees_day_filter', hybridDayFilter);
     }
-  }, [viewMode, statusFilter, sortDirection, search, departmentFilter, workRegimeFilter, hybridDayFilter]);
+  }, [isHydrated, viewMode, statusFilter, sortDirection, search, departmentFilter, workRegimeFilter, hybridDayFilter]);
 
   // Reference data
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -231,29 +218,24 @@ export default function EmployeesPage() {
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [employees, departments]);
 
-  // Fetch Stats
-  const fetchStats = useCallback(async () => {
+  // Fetch Stats helper
+  const fetchStats = useCallback(async (params: EmployeeListParams) => {
     try {
-      const params: EmployeeListParams = {};
-      if (search) params.search = search;
-      if (statusFilter) params.status = statusFilter as EmployeeStatus;
-      if (departmentFilter) params.departmentId = departmentFilter;
-      if (workRegimeFilter) params.workRegime = workRegimeFilter;
-      if (hybridDayFilter) params.hybridDay = hybridDayFilter;
-
       const data = await employeesApi.getStats(params);
       setStats(data);
     } catch (error) {
       console.error('Failed to load stats:', error);
     }
-  }, [search, statusFilter, departmentFilter, workRegimeFilter, hybridDayFilter]);
+  }, []);
 
-  // Fetch employees
-  const fetchEmployees = useCallback(async () => {
+  // Combined Fetch to ensure list and stats are in sync
+  const fetchData = useCallback(async () => {
+    if (!isHydrated) return;
+
     try {
       setLoading(true);
       const params: EmployeeListParams = {
-        page: 0, // Por enquanto fixo em 0 para Depto/AZ, mas idealmente usaria currentPage
+        page: 0,
         size: viewMode === 'department' ? 1000 : (viewMode === 'alphabetical' ? 2000 : pageSize),
         sort: viewMode === 'alphabetical' ? `fullName,${sortDirection}` :
           viewMode === 'department' ? `department.name,asc,fullName,${sortDirection}` :
@@ -266,18 +248,17 @@ export default function EmployeesPage() {
       if (workRegimeFilter) params.workRegime = workRegimeFilter;
       if (hybridDayFilter) params.hybridDay = hybridDayFilter;
 
-      console.log('>>> [FRONTEND-DEBUG] fetchEmployees calling list with:', params);
-      const response = await employeesApi.list(params);
-      console.log(`>>> [FRONTEND-DEBUG] fetchEmployees list returned: ${response.content?.length} of ${response.totalElements}`);
+      console.log('>>> [FRONTEND-DEBUG] fetchData calling APIs with:', params);
 
-      setEmployees(response.content || []);
-      setTotalElements(response.totalElements || 0);
-      setTotalPages(response.totalPages || 0);
+      const [listResult] = await Promise.all([
+        employeesApi.list(params),
+        fetchStats(params)
+      ]);
 
-      // Sincroniza os stats sempre que a lista for carregada para garantir consistência
-      if (response.totalElements > 0 || stats.total === 0) {
-        fetchStats();
-      }
+      setEmployees(listResult.content || []);
+      setTotalElements(listResult.totalElements || 0);
+      setTotalPages(listResult.totalPages || 0);
+
     } catch (error) {
       console.error(error);
       toast({
@@ -288,7 +269,9 @@ export default function EmployeesPage() {
     } finally {
       setLoading(false);
     }
-  }, [pageSize, search, statusFilter, departmentFilter, workRegimeFilter, hybridDayFilter, viewMode, sortDirection, toast]);
+  }, [isHydrated, pageSize, search, statusFilter, departmentFilter, workRegimeFilter, hybridDayFilter, viewMode, sortDirection, toast, fetchStats]);
+
+
 
   // Fetch departments
   const fetchDepartments = useCallback(async () => {
@@ -301,28 +284,16 @@ export default function EmployeesPage() {
   }, []);
 
   useEffect(() => {
-    setCurrentPage(0);
-  }, [viewMode]);
-
-  useEffect(() => {
-    fetchEmployees();
-    fetchDepartments();
-    // fetchStats deixamos ser chamado dentro do fetchEmployees ou por dependência
-  }, [fetchEmployees, fetchDepartments]);
-
-  // Se o total geral é positivo mas a lista está vazia, força um re-load (failsafe para race conditions)
-  useEffect(() => {
-    if (!loading && employees.length === 0 && stats.total > 0 && !search) {
-      console.log('>>> [FRONTEND-FAILSAFE] Stats has data but list is empty. Retrying fetch...');
-      fetchEmployees();
+    if (isHydrated) {
+      fetchData();
+      fetchDepartments();
     }
-  }, [loading, employees.length, stats.total, search, fetchEmployees]);
+  }, [isHydrated, fetchData, fetchDepartments]);
 
-  // Handlers
+  // Sincroniza a busca manual do form
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setCurrentPage(0);
-    fetchEmployees();
+    fetchData();
   };
 
   const handleExport = async (format: 'xlsx' | 'csv' | 'pdf') => {
@@ -1294,14 +1265,14 @@ export default function EmployeesPage() {
         isOpen={terminationModalOpen}
         onClose={() => setTerminationModalOpen(false)}
         employee={selectedEmployeeForTermination}
-        onSuccess={fetchEmployees}
+        onSuccess={fetchData}
       />
 
       <ExtractDataModal
         isOpen={extractModalOpen}
         onClose={() => setExtractModalOpen(false)}
         employee={selectedEmployeeForExtraction}
-        onSuccess={fetchEmployees}
+        onSuccess={fetchData}
       />
     </div >
   );
