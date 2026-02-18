@@ -266,10 +266,18 @@ export default function EmployeesPage() {
       if (workRegimeFilter) params.workRegime = workRegimeFilter;
       if (hybridDayFilter) params.hybridDay = hybridDayFilter;
 
+      console.log('>>> [FRONTEND-DEBUG] fetchEmployees calling list with:', params);
       const response = await employeesApi.list(params);
+      console.log(`>>> [FRONTEND-DEBUG] fetchEmployees list returned: ${response.content?.length} of ${response.totalElements}`);
+
       setEmployees(response.content || []);
       setTotalElements(response.totalElements || 0);
       setTotalPages(response.totalPages || 0);
+
+      // Sincroniza os stats sempre que a lista for carregada para garantir consistência
+      if (response.totalElements > 0 || stats.total === 0) {
+        fetchStats();
+      }
     } catch (error) {
       console.error(error);
       toast({
@@ -298,12 +306,17 @@ export default function EmployeesPage() {
 
   useEffect(() => {
     fetchEmployees();
-    fetchStats();
-  }, [fetchEmployees, fetchStats]);
-
-  useEffect(() => {
     fetchDepartments();
-  }, [fetchDepartments]);
+    // fetchStats deixamos ser chamado dentro do fetchEmployees ou por dependência
+  }, [fetchEmployees, fetchDepartments]);
+
+  // Se o total geral é positivo mas a lista está vazia, força um re-load (failsafe para race conditions)
+  useEffect(() => {
+    if (!loading && employees.length === 0 && stats.total > 0 && !search) {
+      console.log('>>> [FRONTEND-FAILSAFE] Stats has data but list is empty. Retrying fetch...');
+      fetchEmployees();
+    }
+  }, [loading, employees.length, stats.total, search, fetchEmployees]);
 
   // Handlers
   const handleSearch = (e: React.FormEvent) => {

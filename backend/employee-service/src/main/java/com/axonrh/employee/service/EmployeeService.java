@@ -82,6 +82,13 @@ public class EmployeeService {
                 search, status, departmentId, positionId, workRegime, hybridDay);
 
         org.springframework.data.jpa.domain.Specification<Employee> spec = (root, query, cb) -> {
+            // Se for consulta de dados (não contagem), faz fetch para evitar N+1 e problemas de ordenação.
+            // O Hibernate/JPA as vezes tem dificuldade em ordenar por campos aninhados de Lazy associations em Specifications paginadas.
+            if (query.getResultType() != Long.class && query.getResultType() != long.class) {
+                root.fetch("department", jakarta.persistence.criteria.JoinType.LEFT);
+                root.fetch("position", jakarta.persistence.criteria.JoinType.LEFT);
+            }
+
             java.util.List<jakarta.persistence.criteria.Predicate> predicates = new java.util.ArrayList<>();
 
             predicates.add(cb.equal(root.get("tenantId"), tenantId));
