@@ -155,21 +155,44 @@ function LeaveRequestContent() {
             if (analysis) {
                 if (analysis.cid) {
                     form.setValue('cid', analysis.cid);
+                    handleCidSearch(analysis.cid); // Trigger search to find description
                     toast({
                         title: '🤖 IA: Dados Extraídos',
-                        description: `Identificamos o CID ${analysis.cid} (${analysis.cidDescription || ''}) no documento.`,
+                        description: `Identificamos o CID ${analysis.cid} no documento.`,
                     });
                 }
 
-                if (analysis.doctorName) {
-                    // Preencher campo de observação se necessário ou guardar o texto bruto
-                    form.setValue('certificateText', `Médico: ${analysis.doctorName}\nCRM: ${analysis.crm || '-'}\nDias: ${analysis.days || '-'}\nData: ${analysis.date || '-'}`);
+                // AI Data structuring in Observations
+                let structuredReason = form.getValues('reason') || '';
+                const aiData = [
+                    analysis.doctorName ? `Médico: ${analysis.doctorName}` : null,
+                    analysis.crm ? `CRM: ${analysis.crm}` : null,
+                    analysis.days ? `Quantidade de Dias: ${analysis.days}` : null,
+                    analysis.date ? `Data do Atestado: ${analysis.date}` : null
+                ].filter(Boolean).join('\n');
+
+                if (aiData) {
+                    structuredReason = structuredReason
+                        ? `${structuredReason}\n\n--- DADOS EXTRAÍDOS PELA IA ---\n${aiData}`
+                        : `--- DADOS EXTRAÍDOS PELA IA ---\n${aiData}`;
+                    form.setValue('reason', structuredReason);
                 }
 
-                if (analysis.days && !form.getValues('startDate')) {
-                    const today = new Date().toISOString().split('T')[0];
-                    form.setValue('startDate', today);
-                    // Opcional: calcular data fim baseada nos dias da IA
+                // Automatic Date Calculation
+                if (analysis.days) {
+                    const start = analysis.date || new Date().toISOString().split('T')[0];
+                    form.setValue('startDate', start);
+
+                    try {
+                        const startDateObj = new Date(start + 'T12:00:00');
+                        const endDateObj = new Date(startDateObj);
+                        endDateObj.setDate(startDateObj.getDate() + (parseInt(analysis.days.toString()) - 1));
+                        form.setValue('endDate', endDateObj.toISOString().split('T')[0]);
+                    } catch (e) {
+                        console.error('Erro ao calcular data final', e);
+                    }
+                } else if (analysis.date) {
+                    form.setValue('startDate', analysis.date);
                 }
             }
 
@@ -375,7 +398,7 @@ function LeaveRequestContent() {
                                         )}
                                     </div>
 
-                                    {cidResults.length > 0 && isReview && (
+                                    {cidResults.length > 0 && (
                                         <div className="absolute z-20 w-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl max-h-72 overflow-y-auto animate-in zoom-in-95 duration-200">
                                             <div className="p-2 border-b border-slate-50 bg-slate-50/50">
                                                 <p className="text-[10px] font-black text-slate-400 uppercase px-2">CIDs Encontrados</p>
