@@ -39,4 +39,5 @@ export const leavesApi = {
     createLeave: (data: any) => api.post<LeaveRequest, LeaveRequest>('/leaves', data),
     updateStatus: (id: string, status: string, notes?: string) =>
         api.patch(`/leaves/${id}/status`, { status, notes }),
+    seedLeaves: (count: number = 10) => api.post(`/mock/leaves/seed?count=${count}`, {}),
 };

@@ -90,7 +90,7 @@ spring:
         - id: vacation-service
           uri: http://axonrh-vacation-service:8085
           predicates:
-            - Path=/api/v1/vacations/**, /api/v1/leaves/**
+            - Path=/api/v1/vacations/**, /api/v1/leaves/**, /api/v1/mock/leaves/**
           filters:
             # - StripPrefix=2
             - name: JwtAuthFilter
