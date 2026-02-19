@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { leavesApi } from '@/lib/api/leaves';
+import { API_BASE_URL } from '@/lib/api/client';
 import {
     ArrowLeft,
     Loader2,
@@ -81,6 +82,19 @@ function LeaveRequestContent() {
     const [existingRequest, setExistingRequest] = useState<any>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [isZoomed, setIsZoomed] = useState(false);
+
+    const roles = user?.roles || [];
+    const isAdmin = roles.some(r => r.includes('ADMIN'));
+    const isRH = roles.some(r => r.includes('RH') || r.includes('GESTOR_RH') || r.includes('ANALISTA_DP'));
+    const isManager = roles.some(r => r.includes('GESTOR') || r.includes('LIDER') || r.includes('MANAGER'));
+    const canApprove = isAdmin || isRH;
+
+    const formatDocumentUrl = (url: string | null | undefined) => {
+        if (!url) return undefined;
+        if (url.startsWith('blob:') || url.startsWith('http')) return url;
+        const apiBase = API_BASE_URL.replace('/api/v1', '');
+        return `${apiBase}${url}`;
+    };
 
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
@@ -460,26 +474,30 @@ function LeaveRequestContent() {
                             <div className="flex gap-3">
                                 {isReview ? (
                                     <>
-                                        <Button
-                                            variant="ghost"
-                                            onClick={handleReject}
-                                            disabled={submitting}
-                                            className="h-12 px-6 rounded-xl border border-red-100 text-red-600 hover:bg-red-50 font-bold transition-all"
-                                        >
-                                            {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Rejeitar Licença'}
-                                        </Button>
-                                        <Button
-                                            onClick={form.handleSubmit(onSubmit)}
-                                            disabled={submitting}
-                                            className="h-12 px-8 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-200 transition-all active:scale-95 flex gap-2"
-                                        >
-                                            {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : (
-                                                <>
-                                                    <CheckCircle2 className="h-5 w-5" />
-                                                    Validar e Aprovar
-                                                </>
-                                            )}
-                                        </Button>
+                                        {canApprove && (
+                                            <>
+                                                <Button
+                                                    variant="ghost"
+                                                    onClick={handleReject}
+                                                    disabled={submitting}
+                                                    className="h-12 px-6 rounded-xl border border-red-100 text-red-600 hover:bg-red-50 font-bold transition-all"
+                                                >
+                                                    {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Rejeitar Licença'}
+                                                </Button>
+                                                <Button
+                                                    onClick={form.handleSubmit(onSubmit)}
+                                                    disabled={submitting}
+                                                    className="h-12 px-8 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-200 transition-all active:scale-95 flex gap-2"
+                                                >
+                                                    {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : (
+                                                        <>
+                                                            <CheckCircle2 className="h-5 w-5" />
+                                                            Validar e Aprovar
+                                                        </>
+                                                    )}
+                                                </Button>
+                                            </>
+                                        )}
                                     </>
                                 ) : (
                                     <Button
@@ -532,7 +550,7 @@ function LeaveRequestContent() {
                                                 onClick={() => setIsZoomed(true)}
                                             >
                                                 <img
-                                                    src={previewUrl || existingRequest?.certificateUrl}
+                                                    src={formatDocumentUrl(previewUrl || existingRequest?.certificateUrl)}
                                                     alt="Atestado médico"
                                                     className="max-w-full max-h-full object-contain transition-all duration-500 group-hover/img:scale-[1.02]"
                                                 />
@@ -670,7 +688,7 @@ function LeaveRequestContent() {
                 >
                     <div className="relative max-w-5xl w-full h-full flex items-center justify-center">
                         <img
-                            src={previewUrl || existingRequest?.certificateUrl}
+                            src={formatDocumentUrl(previewUrl || existingRequest?.certificateUrl)}
                             className="max-w-full max-h-full object-contain shadow-2xl rounded-lg"
                             alt="Atestado Ampliado"
                         />

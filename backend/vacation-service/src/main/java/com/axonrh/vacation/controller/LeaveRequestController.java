@@ -3,6 +3,7 @@ package com.axonrh.vacation.controller;
 import com.axonrh.vacation.entity.LeaveRequest;
 import com.axonrh.vacation.entity.enums.VacationRequestStatus;
 import com.axonrh.vacation.service.LeaveRequestService;
+import com.axonrh.vacation.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,7 @@ import java.util.UUID;
 public class LeaveRequestController {
 
     private final LeaveRequestService leaveRequestService;
+    private final FileStorageService fileStorageService;
 
     @PostMapping(consumes = {"multipart/form-data"})
     public ResponseEntity<LeaveRequest> createLeave(
@@ -34,6 +36,8 @@ public class LeaveRequestController {
             @RequestParam(value = "certificateText", required = false) String certificateText,
             @RequestParam(value = "certificate", required = false) org.springframework.web.multipart.MultipartFile certificate) {
         
+        log.info("Recebendo solicitação de licença: tenant={}, employee={}, type={}", tenantId, employeeId, type);
+
         LeaveRequest request = LeaveRequest.builder()
                 .tenantId(tenantId)
                 .employeeId(employeeId)
@@ -46,10 +50,14 @@ public class LeaveRequestController {
                 .status(VacationRequestStatus.PENDING)
                 .build();
         
-        // Em um sistema real, salvaríamos o arquivo no S3/Storage e pegaríamos a URL
         if (certificate != null && !certificate.isEmpty()) {
-            request.setCertificateUrl("uploads/" + certificate.getOriginalFilename());
-            // Se o texto não veio do frontend, o service pode extrair do PDF/Imagem via OCR
+            try {
+                String fileUrl = fileStorageService.storeCertificate(certificate);
+                request.setCertificateUrl(fileUrl);
+                log.info("Arquivo de atestado salvo em: {}", fileUrl);
+            } catch (Exception e) {
+                log.error("Erro ao salvar arquivo de atestado", e);
+            }
         }
 
         return ResponseEntity.ok(leaveRequestService.createLeaveRequest(request, certificateText));
