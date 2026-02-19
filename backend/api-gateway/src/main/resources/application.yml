@@ -60,6 +60,25 @@ spring:
           filters:
             - name: JwtAuthFilter
 
+        # Employee Photos (Public/Static)
+        - id: employee-photos-public
+          uri: http://axonrh-employee-service:8083
+          predicates:
+            - Path=/api/v1/employees/photos/**
+
+        # Learning Thumbnails (Public/Static)
+        - id: learning-thumbnails-public
+          uri: http://axonrh-learning-service:8087
+          predicates:
+            - Path=/api/v1/learning/courses/thumbnails/**
+
+        # Config Logos (Public/Static)
+        - id: config-logos-public
+          uri: http://axonrh-config-service:8888
+          predicates:
+            - Path=/api/v1/config/logos/**
+
+
         # Employee Service
         - id: employee-service
           uri: http://axonrh-employee-service:8083

@@ -84,7 +84,10 @@ public class QueryTemplate {
         private String name;
         private String type;
         private boolean required;
+        
+        @com.fasterxml.jackson.annotation.JsonProperty("default")
         private Object defaultValue;
+        
         private String description;
     }
 

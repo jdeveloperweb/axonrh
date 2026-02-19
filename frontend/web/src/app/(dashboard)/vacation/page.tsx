@@ -67,6 +67,20 @@ export default function VacationPage() {
   const [activeLeaves, setActiveLeaves] = useState<any[]>([]);
   const [expiringPeriods, setExpiringPeriods] = useState<VacationPeriod[]>([]);
   const [filterType, setFilterType] = useState<string>('ALL');
+  const [filterStatus, setFilterStatus] = useState<string>('ALL');
+
+  // Persistence logic for filters
+  useEffect(() => {
+    const savedType = localStorage.getItem('vacation_filter_type');
+    const savedStatus = localStorage.getItem('vacation_filter_status');
+    if (savedType) setFilterType(savedType);
+    if (savedStatus) setFilterStatus(savedStatus);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('vacation_filter_type', filterType);
+    localStorage.setItem('vacation_filter_status', filterStatus);
+  }, [filterType, filterStatus]);
 
   const roles = user?.roles || [];
   const isAdmin = roles.some(r => r.includes('ADMIN'));
@@ -297,8 +311,51 @@ export default function VacationPage() {
                   <CardDescription className="font-medium">Visualize e controle todas as solicitações</CardDescription>
                 </div>
                 <div className="flex gap-2 items-center">
+                  {(filterType !== 'ALL' || filterStatus !== 'ALL') && (
+                    <div className="flex bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg items-center gap-2 border border-blue-100 transition-all animate-in fade-in zoom-in duration-300">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                      </span>
+                      <span className="text-[10px] font-black uppercase tracking-wider">Filtro Ativo</span>
+                      <button
+                        onClick={() => {
+                          setFilterType('ALL');
+                          setFilterStatus('ALL');
+                        }}
+                        className="ml-1 p-0.5 hover:bg-blue-200 rounded-full text-blue-500 hover:text-blue-800 transition-colors"
+                        title="Limpar filtros"
+                      >
+                        <XCircle className="h-3 w-3" />
+                      </button>
+                    </div>
+                  )}
+
+                  <Select value={filterStatus} onValueChange={setFilterStatus}>
+                    <SelectTrigger className={cn(
+                      "w-[140px] h-9 text-xs font-bold border-slate-200 focus:ring-0 transition-colors rounded-lg",
+                      filterStatus !== 'ALL' ? "bg-blue-50 border-blue-200 text-blue-700 shadow-sm" : "bg-slate-50 text-slate-600"
+                    )}>
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ALL">Todos os Status</SelectItem>
+                      <SelectItem value="PENDING">Pendente</SelectItem>
+                      <SelectItem value="MANAGER_APPROVED">Aprov. Gestor</SelectItem>
+                      <SelectItem value="APPROVED">Aprovada</SelectItem>
+                      <SelectItem value="SCHEDULED">Agendada</SelectItem>
+                      <SelectItem value="IN_PROGRESS">Em Andamento</SelectItem>
+                      <SelectItem value="COMPLETED">Concluída</SelectItem>
+                      <SelectItem value="REJECTED">Rejeitada</SelectItem>
+                      <SelectItem value="CANCELLED">Cancelada</SelectItem>
+                    </SelectContent>
+                  </Select>
+
                   <Select value={filterType} onValueChange={setFilterType}>
-                    <SelectTrigger className="w-[180px] h-9 text-xs font-bold bg-slate-50 border-slate-200 focus:ring-0">
+                    <SelectTrigger className={cn(
+                      "w-[160px] h-9 text-xs font-bold border-slate-200 focus:ring-0 transition-colors rounded-lg",
+                      filterType !== 'ALL' ? "bg-blue-50 border-blue-200 text-blue-700 shadow-sm" : "bg-slate-50 text-slate-600"
+                    )}>
                       <SelectValue placeholder="Filtrar por tipo" />
                     </SelectTrigger>
                     <SelectContent>
@@ -314,7 +371,7 @@ export default function VacationPage() {
                       <SelectItem value="OTHER">Outros</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Button variant="ghost" size="sm" onClick={loadData} className="rounded-lg h-8 w-8 p-0">
+                  <Button variant="ghost" size="sm" onClick={loadData} className="rounded-lg h-8 w-8 p-0 ml-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100" title="Atualizar">
                     <History className="h-4 w-4" />
                   </Button>
                 </div>
@@ -333,7 +390,7 @@ export default function VacationPage() {
 
                 <TabsContent value="mine" className="mt-4">
                   <LeaveTable
-                    requests={myRequests.filter(r => filterType === 'ALL' || r.type === filterType)}
+                    requests={myRequests.filter(r => (filterType === 'ALL' || r.type === filterType) && (filterStatus === 'ALL' || r.status === filterStatus))}
                     handleUpdateStatus={handleUpdateStatus}
                     getStatusBadge={getStatusBadge}
                     getLeaveTypeBadge={getLeaveTypeBadge}
@@ -346,7 +403,7 @@ export default function VacationPage() {
                 {(isRH || isAdmin || isManager) && (
                   <TabsContent value="all" className="mt-4">
                     <LeaveTable
-                      requests={requests.filter(r => filterType === 'ALL' || r.type === filterType)}
+                      requests={requests.filter(r => (filterType === 'ALL' || r.type === filterType) && (filterStatus === 'ALL' || r.status === filterStatus))}
                       handleUpdateStatus={handleUpdateStatus}
                       getStatusBadge={getStatusBadge}
                       getLeaveTypeBadge={getLeaveTypeBadge}

@@ -14,7 +14,7 @@ import java.nio.file.Paths;
 @Configuration
 public class FileUploadConfig implements WebMvcConfigurer {
 
-    @Value("${vacation.leaves.upload-dir:C:/Users/Jaime.Vicente/axonrh/uploads/medical-certificates}")
+    @Value("${vacation.leaves.upload-dir:${user.home}/axonrh/uploads/medical-certificates}")
     private String uploadDir;
 
     @Override
@@ -23,6 +23,11 @@ public class FileUploadConfig implements WebMvcConfigurer {
         
         // Usar toUri().toString() garante que o path comece com file:/// corretamente em Windows/Linux
         String uploadPathUri = uploadPath.toUri().toString();
+        
+        // Spring requer que locations terminem com /
+        if (!uploadPathUri.endsWith("/")) {
+            uploadPathUri += "/";
+        }
         
         registry.addResourceHandler("/api/v1/leaves/certificates/**")
                 .addResourceLocations(uploadPathUri);
