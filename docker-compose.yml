@@ -312,7 +312,7 @@ services:
     volumes:
       - ./backend:/workspace/backend
       - maven_repo:/root/.m2
-      - ./CID10CSV:/workspace/CID10CSV
+      - ./CID10CSV:/workspace/CID10CSV:z
     ports:
       - "8185:8085"
     environment:

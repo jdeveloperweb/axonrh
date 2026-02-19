@@ -24,24 +24,55 @@ public class CidService {
     public void importFromCsv(String directoryPath) {
         log.info("Iniciando importação de CIDs do diretório: {}", directoryPath);
         
-        // Limpa antes de importar para evitar duplicidade ou inconsistência se rodar de novo
+        java.io.File dir = new java.io.File(directoryPath);
+        if (!dir.exists()) {
+            log.error("Diretório não encontrado: {}", directoryPath);
+            throw new RuntimeException("Diretório de CIDs não encontrado no path: " + directoryPath);
+        }
+
+        String[] files = dir.list();
+        if (files != null) {
+            log.info("Arquivos encontrados no diretório: {}", String.join(", ", files));
+        } else {
+            log.warn("Nenhum arquivo listado no diretório: {}", directoryPath);
+        }
+
+        // Limpa antes de importar
         cidCodeRepository.deleteAll();
 
         try {
-            // 1. Capítulos
-            importCapitulos(directoryPath + "/CID-10-CAPITULOS.CSV");
-            // 2. Grupos
-            importGrupos(directoryPath + "/CID-10-GRUPOS.CSV");
-            // 3. Categorias
-            importCategorias(directoryPath + "/CID-10-CATEGORIAS.CSV");
-            // 4. Subcategorias
-            importSubcategorias(directoryPath + "/CID-10-SUBCATEGORIAS.CSV");
+            // Tenta encontrar os arquivos ignorando case se necessário
+            String capitulos = findFile(dir, "CID-10-CAPITULOS.CSV");
+            String grupos = findFile(dir, "CID-10-GRUPOS.CSV");
+            String categorias = findFile(dir, "CID-10-CATEGORIAS.CSV");
+            String subcategorias = findFile(dir, "CID-10-SUBCATEGORIAS.CSV");
+
+            importCapitulos(capitulos);
+            importGrupos(grupos);
+            importCategorias(categorias);
+            importSubcategorias(subcategorias);
             
             log.info("Importação de CIDs concluída com sucesso.");
         } catch (Exception e) {
             log.error("Erro na importação de CIDs: {}", e.getMessage(), e);
             throw new RuntimeException("Falha ao importar CIDs: " + e.getMessage());
         }
+    }
+
+    private String findFile(java.io.File dir, String target) {
+        java.io.File exact = new java.io.File(dir, target);
+        if (exact.exists()) return exact.getAbsolutePath();
+
+        // Tenta achar ignorando case
+        String[] files = dir.list();
+        if (files != null) {
+            for (String f : files) {
+                if (f.equalsIgnoreCase(target)) {
+                    return new java.io.File(dir, f).getAbsolutePath();
+                }
+            }
+        }
+        throw new RuntimeException("Arquivo não encontrado: " + target + " em " + dir.getAbsolutePath());
     }
 
     private void importCapitulos(String path) throws Exception {
