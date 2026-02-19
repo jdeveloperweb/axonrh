@@ -114,6 +114,10 @@ public class LeaveRequestService {
         return leaveRequestRepository.save(request);
     }
 
+    public MedicalCertificateAnalysisResponse analyzeCertificate(UUID tenantId, MedicalCertificateAnalysisRequest request) {
+        return aiAssistantClient.analyzeCertificate(tenantId, request);
+    }
+
     @Transactional
     public void deleteLeave(UUID id) {
         leaveRequestRepository.deleteById(id);

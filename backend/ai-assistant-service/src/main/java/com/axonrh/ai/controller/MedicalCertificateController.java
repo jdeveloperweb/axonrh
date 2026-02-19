@@ -51,19 +51,25 @@ public class MedicalCertificateController {
             Se não encontrar alguma informação, retorne null para o campo.
             """;
 
-        String userPrompt = String.format("""
-            TEXTO DO ATESTADO:
+        String userPrompt = request.getCertificateText() != null ? String.format("""
+            TEXTO DO ATESTADO (Extraído via OCR inicial):
             %s
-            """, request.getCertificateText());
-
-        ChatRequest chatRequest = ChatRequest.builder()
-                .messages(List.of(
-                        ChatMessage.builder().role(ChatMessage.Role.SYSTEM).content(systemPrompt).build(),
-                        ChatMessage.builder().role(ChatMessage.Role.USER).content(userPrompt).build()
-                ))
-                .temperature(0.1)
-                .responseFormat("json_object")
-                .build();
+            
+            Por favor, valide as informações acima olhando para a imagem anexa e corrija se necessário.
+            """, request.getCertificateText()) : "Por favor, analise a imagem anexa deste atestado médico e extraia as informações.";
+ 
+         ChatRequest chatRequest = ChatRequest.builder()
+                 .messages(List.of(
+                         ChatMessage.builder().role(ChatMessage.Role.SYSTEM).content(systemPrompt).build(),
+                         ChatMessage.builder()
+                                 .role(ChatMessage.Role.USER)
+                                 .content(userPrompt)
+                                 .imageBase64(request.getImageBase64())
+                                 .build()
+                 ))
+                 .temperature(0.1)
+                 .responseFormat("json_object")
+                 .build();
 
         try {
             ChatResponse response = llmService.chat(chatRequest);

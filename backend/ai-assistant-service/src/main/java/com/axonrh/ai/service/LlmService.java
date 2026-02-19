@@ -368,9 +368,24 @@ public class LlmService {
                 .map(m -> {
                     Map<String, Object> msg = new java.util.HashMap<>();
                     msg.put("role", m.getRole().name().toLowerCase());
-
-                    // Handle tool response messages
-                    if (m.getRole() == ChatMessage.Role.TOOL) {
+                    // Handle message content as either string or list (for vision)
+                    if (m.getImageBase64() != null && !m.getImageBase64().isBlank()) {
+                        List<Map<String, Object>> contentList = new ArrayList<>();
+                        
+                        Map<String, Object> textMap = new java.util.HashMap<>();
+                        textMap.put("type", "text");
+                        textMap.put("text", m.getContent());
+                        contentList.add(textMap);
+                        
+                        Map<String, Object> imageMap = new java.util.HashMap<>();
+                        imageMap.put("type", "image_url");
+                        Map<String, String> imageUrl = new java.util.HashMap<>();
+                        imageUrl.put("url", "data:image/jpeg;base64," + m.getImageBase64());
+                        imageMap.put("image_url", imageUrl);
+                        contentList.add(imageMap);
+                        
+                        msg.put("content", contentList);
+                    } else if (m.getRole() == ChatMessage.Role.TOOL) {
                         msg.put("content", m.getContent());
                         msg.put("tool_call_id", m.getToolCallId());
                     } else if (m.getRole() == ChatMessage.Role.ASSISTANT && m.getToolCalls() != null && !m.getToolCalls().isEmpty()) {

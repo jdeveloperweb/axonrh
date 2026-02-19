@@ -77,6 +77,7 @@ function LeaveRequestContent() {
     const [cidResults, setCidResults] = useState<any[]>([]);
     const [searchingCid, setSearchingCid] = useState(false);
     const [existingRequest, setExistingRequest] = useState<any>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
@@ -140,30 +141,48 @@ function LeaveRequestContent() {
         if (!file) return;
         setFile(file);
 
+        // Crate preview URL
+        const url = URL.createObjectURL(file);
+        setPreviewUrl(url);
+
         setAnalyzing(true);
 
         try {
-            // Simulated AI extraction
-            const mockText = "Atesto para os devidos fins que o Sr. Colaborador esteve sob cuidados médicos nesta data devido a Dorsalgia (CID M54.5). Recomendo afastamento por 5 dias.";
+            // Real AI extraction via OCR/Vision in Backend
+            const analysis = await leavesApi.analyzeCertificate(file);
 
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            if (analysis) {
+                if (analysis.cid) {
+                    form.setValue('cid', analysis.cid);
+                    toast({
+                        title: '🤖 IA: Dados Extraídos',
+                        description: `Identificamos o CID ${analysis.cid} (${analysis.cidDescription || ''}) no documento.`,
+                    });
+                }
 
-            form.setValue('certificateText', mockText);
+                if (analysis.doctorName) {
+                    // Preencher campo de observação se necessário ou guardar o texto bruto
+                    form.setValue('certificateText', `Médico: ${analysis.doctorName}\nCRM: ${analysis.crm || '-'}\nDias: ${analysis.days || '-'}\nData: ${analysis.date || '-'}`);
+                }
 
-            if (mockText.includes('M54.5')) {
-                form.setValue('cid', 'M54.5');
-                toast({
-                    title: 'IA: CID Extraído',
-                    description: 'Identificamos o CID M54.5 (Dorsalgia) no documento.',
-                });
+                if (analysis.days && !form.getValues('startDate')) {
+                    const today = new Date().toISOString().split('T')[0];
+                    form.setValue('startDate', today);
+                    // Opcional: calcular data fim baseada nos dias da IA
+                }
             }
 
             toast({
-                title: 'Documento Analisado',
-                description: 'As informações foram extraídas e preenchidas automaticamente.',
+                title: 'Concluído!',
+                description: 'Atestado processado com sucesso via IA.',
             });
-        } catch (error) {
+        } catch (error: any) {
             console.error('Erro ao ler documento:', error);
+            toast({
+                title: 'Atenção',
+                description: 'Não foi possível extrair dados automaticamente, mas o arquivo foi anexado.',
+                variant: 'destructive'
+            });
         } finally {
             setAnalyzing(false);
         }
@@ -334,22 +353,27 @@ function LeaveRequestContent() {
                                         </div>
                                         <Input
                                             {...form.register('cid')}
-                                            placeholder="Busque pelo código ou descrição (ex: Dorsalgia)"
-                                            className="h-14 pl-11 rounded-2xl border-blue-100 bg-blue-50/30 font-bold text-blue-900 focus-visible:ring-blue-500 placeholder:text-blue-300"
+                                            placeholder={isReview ? "Busque pelo código ou descrição (ex: Dorsalgia)" : "Aguardando análise da IA..."}
+                                            readOnly={!isReview}
+                                            className={cn(
+                                                "h-14 pl-11 rounded-2xl border-blue-100 bg-blue-50/30 font-bold text-blue-900 focus-visible:ring-blue-500 placeholder:text-blue-300",
+                                                !isReview && "cursor-not-allowed opacity-80"
+                                            )}
                                             onChange={(e) => {
+                                                if (!isReview) return;
                                                 const val = e.target.value;
                                                 form.setValue('cid', val);
                                                 handleCidSearch(val);
                                             }}
                                         />
-                                        {searchingCid && (
+                                        {searchingCid && isReview && (
                                             <div className="absolute right-4 top-1/2 -translate-y-1/2">
                                                 <Loader2 className="h-4 w-4 animate-spin text-blue-300" />
                                             </div>
                                         )}
                                     </div>
 
-                                    {cidResults.length > 0 && (
+                                    {cidResults.length > 0 && isReview && (
                                         <div className="absolute z-20 w-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl max-h-72 overflow-y-auto animate-in zoom-in-95 duration-200">
                                             <div className="p-2 border-b border-slate-50 bg-slate-50/50">
                                                 <p className="text-[10px] font-black text-slate-400 uppercase px-2">CIDs Encontrados</p>
@@ -461,40 +485,39 @@ function LeaveRequestContent() {
                                     )}
                                 </div>
                             ) : (
-                                <div className="w-full h-full bg-white flex flex-col items-center justify-center p-6 relative">
-                                    {/* Simulated document visualizer */}
-                                    <div className="w-full max-w-[200px] aspect-[1/1.4] bg-slate-50 border border-slate-100 rounded shadow-sm p-4 space-y-3 relative">
-                                        <div className="h-2 w-1/2 bg-slate-200 rounded" />
-                                        <div className="h-8 w-full bg-slate-100 rounded-sm flex items-center px-2">
-                                            <div className="h-3 w-1/3 bg-slate-200 rounded" />
-                                        </div>
-                                        <div className="space-y-1">
-                                            <div className="h-1.5 w-full bg-slate-100 rounded" />
-                                            <div className="h-1.5 w-full bg-slate-100 rounded" />
-                                            <div className="h-1.5 w-4/5 bg-slate-100 rounded" />
-                                        </div>
-                                        <div className="pt-8 flex flex-col items-center">
-                                            <div className="h-10 w-10 border-2 border-slate-200 rounded-full flex items-center justify-center text-slate-200 mb-2">
-                                                <Stethoscope className="h-6 w-6" />
+                                <>
+                                    <div className="w-full h-full bg-slate-50 flex flex-col items-center justify-center relative p-2">
+                                        {(previewUrl || existingRequest?.certificateUrl) ? (
+                                            <div className="w-full h-full flex items-center justify-center bg-white rounded-lg shadow-inner overflow-hidden border border-slate-200">
+                                                <img
+                                                    src={previewUrl || existingRequest?.certificateUrl}
+                                                    alt="Atestado médico"
+                                                    className="max-w-full max-h-full object-contain transition-transform duration-500 group-hover:scale-105"
+                                                />
+                                                <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[1px]">
+                                                    <Button size="sm" variant="secondary" className="rounded-full shadow-lg gap-2 bg-white/90 hover:bg-white text-slate-900 font-bold border-none">
+                                                        <Eye className="h-3 w-3" /> Ampliar Documento
+                                                    </Button>
+                                                </div>
                                             </div>
-                                            <div className="h-2 w-1/2 bg-slate-200 rounded" />
-                                        </div>
-
-                                        <div className="absolute inset-0 bg-blue-600/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[1px]">
-                                            <Button size="sm" variant="secondary" className="rounded-full shadow-lg gap-2">
-                                                <Eye className="h-3 w-3" /> Ampliar
-                                            </Button>
-                                        </div>
+                                        ) : (
+                                            <div className="text-center p-8 space-y-4">
+                                                <div className="h-20 w-20 mx-auto bg-slate-200 rounded-full flex items-center justify-center text-slate-300">
+                                                    <FileText className="h-10 w-10" />
+                                                </div>
+                                                <p className="text-sm text-slate-400 font-medium">Arquivos suportados: JPEG, PNG, PDF</p>
+                                            </div>
+                                        )}
                                     </div>
-                                    <p className="mt-6 text-xs font-bold text-slate-400 uppercase tracking-widest leading-loose">
-                                        {file ? file.name : (existingRequest?.certificateUrl || 'atestado_medico.pdf')}
-                                    </p>
-                                    <div className="flex gap-2 mt-2">
+                                    <div className="p-3 bg-white border-t border-slate-100 flex items-center justify-between w-full">
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate max-w-[200px] px-2">
+                                            {file ? file.name : (existingRequest?.certificateUrl?.split('/').pop() || 'atestado_medico.pdf')}
+                                        </p>
                                         <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full text-slate-400 hover:text-blue-600">
                                             <Download className="h-4 w-4" />
                                         </Button>
                                     </div>
-                                </div>
+                                </>
                             )}
 
                             {analyzing && (

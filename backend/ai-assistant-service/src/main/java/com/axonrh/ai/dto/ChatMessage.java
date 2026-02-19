@@ -17,6 +17,7 @@ public class ChatMessage {
     private String name;
     private List<ToolCall> toolCalls;
     private String toolCallId;
+    private String imageBase64;
 
     public enum Role {
         SYSTEM,

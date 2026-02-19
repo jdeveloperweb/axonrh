@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -113,6 +114,23 @@ public class LeaveRequestController {
         String notes = payload.get("notes");
         String cid = payload.get("cid");
         return ResponseEntity.ok(leaveRequestService.updateStatus(id, status, notes, cid));
+    }
+
+    @PostMapping("/analyze-certificate")
+    public ResponseEntity<?> analyzeCertificate(
+            @RequestHeader("X-Tenant-ID") UUID tenantId,
+            @RequestParam("certificate") org.springframework.web.multipart.MultipartFile certificate) {
+        try {
+            String base64 = Base64.getEncoder().encodeToString(certificate.getBytes());
+            com.axonrh.vacation.dto.MedicalCertificateAnalysisRequest request = com.axonrh.vacation.dto.MedicalCertificateAnalysisRequest.builder()
+                    .imageBase64(base64)
+                    .fileName(certificate.getOriginalFilename())
+                    .build();
+            
+            return ResponseEntity.ok(leaveRequestService.analyzeCertificate(tenantId, request));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Erro ao processar certificado: " + e.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")

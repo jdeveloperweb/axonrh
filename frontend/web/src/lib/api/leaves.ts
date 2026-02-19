@@ -59,4 +59,11 @@ export const leavesApi = {
     importCids: () => api.post('/leaves/cid/import', {}),
 
     seedLeaves: (count: number = 10) => api.post(`/mock/leaves/seed?count=${count}`, {}),
+    analyzeCertificate: (file: File) => {
+        const formData = new FormData();
+        formData.append('certificate', file);
+        return api.post<any, any>('/leaves/analyze-certificate', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+    }
 };

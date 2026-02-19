@@ -11,5 +11,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class MedicalCertificateAnalysisRequest {
     private String certificateText;
+    private String imageBase64;
     private String fileName;
 }

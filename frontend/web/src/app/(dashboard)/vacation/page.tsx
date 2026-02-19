@@ -387,19 +387,21 @@ export default function VacationPage() {
           </Card>
 
           {/* Indicators Hub */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-black text-slate-500 uppercase tracking-widest px-1">Indicadores Rápidos</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-50">
-                <p className="text-[10px] font-black text-amber-500 mb-1">PENDENTES</p>
-                <p className="text-2xl font-black text-slate-900">{statistics.pendingRequests}</p>
-              </div>
-              <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-50">
-                <p className="text-[10px] font-black text-blue-500 mb-1">AGENDADOS</p>
-                <p className="text-2xl font-black text-slate-900">{statistics.upcomingVacations}</p>
+          {(isAdmin || isRH) && (
+            <div className="space-y-4">
+              <h3 className="text-sm font-black text-slate-500 uppercase tracking-widest px-1">Indicadores Rápidos</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-50">
+                  <p className="text-[10px] font-black text-amber-500 mb-1">PENDENTES</p>
+                  <p className="text-2xl font-black text-slate-900">{statistics.pendingRequests}</p>
+                </div>
+                <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-50">
+                  <p className="text-[10px] font-black text-blue-500 mb-1">AGENDADOS</p>
+                  <p className="text-2xl font-black text-slate-900">{statistics.upcomingVacations}</p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Expiring Vacations (RH/Manager only) */}
           {(isRH || isAdmin || isManager) && expiringPeriods.length > 0 && (
@@ -427,7 +429,7 @@ export default function VacationPage() {
                   </Card>
                 ))}
                 {expiringPeriods.length > 3 && (
-                  <Button variant="ghost" className="text-xs text-slate-400 hover:text-red-500 font-bold p-0" onClick={() => router.push('/vacation/expiring')}>
+                  <Button variant="ghost" className="text-xs text-slate-400 hover:text-red-500 font-bold p-0" onClick={() => router.push('/vacation/admin')}>
                     Ver todos os {expiringPeriods.length} períodos em risco <ArrowRight className="ml-1 w-3 h-3" />
                   </Button>
                 )}
@@ -453,22 +455,24 @@ export default function VacationPage() {
               >
                 Subir Documento
               </Button>
-              <Button
-                variant="ghost"
-                className="w-full text-blue-100 hover:text-white hover:bg-white/10 text-[10px] font-bold"
-                onClick={async () => {
-                  if (confirm('Deseja iniciar a importação da base CID-10? Isso pode levar alguns segundos.')) {
-                    try {
-                      await leavesApi.importCids();
-                      toast({ title: 'Importação Iniciada', description: 'A base CID-10 está sendo carregada no banco.' });
-                    } catch (e) {
-                      toast({ title: 'Erro ao importar', variant: 'destructive' });
+              {isAdmin && (
+                <Button
+                  variant="ghost"
+                  className="w-full text-blue-100 hover:text-white hover:bg-white/10 text-[10px] font-bold"
+                  onClick={async () => {
+                    if (confirm('Deseja iniciar a importação da base CID-10? Isso pode levar alguns segundos.')) {
+                      try {
+                        await leavesApi.importCids();
+                        toast({ title: 'Importação Iniciada', description: 'A base CID-10 está sendo carregada no banco.' });
+                      } catch (e) {
+                        toast({ title: 'Erro ao importar', variant: 'destructive' });
+                      }
                     }
-                  }
-                }}
-              >
-                Importar Base CID-10 (Admin)
-              </Button>
+                  }}
+                >
+                  Importar Base CID-10 (Admin)
+                </Button>
+              )}
             </CardContent>
           </Card>
         </div>
