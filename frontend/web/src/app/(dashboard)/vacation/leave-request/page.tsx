@@ -34,7 +34,12 @@ import {
     Download,
     User,
     Trash2,
-    RefreshCw
+    RefreshCw,
+    ZoomIn,
+    ZoomOut,
+    RotateCcw,
+    Maximize,
+    Minimize
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
@@ -93,6 +98,9 @@ function LeaveRequestContent() {
     const [existingRequest, setExistingRequest] = useState<any>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [isZoomed, setIsZoomed] = useState(false);
+    const [imgScale, setImgScale] = useState(1);
+    const [imgRotation, setImgRotation] = useState(0);
+    const [isImgLoading, setIsImgLoading] = useState(false);
 
     const roles = user?.roles || [];
     const isAdmin = roles.some(r => r.includes('ADMIN'));
@@ -134,6 +142,9 @@ function LeaveRequestContent() {
                 cid: data.cid || '',
                 certificateText: data.certificateText || '',
             });
+            if (data.certificateUrl) {
+                setIsImgLoading(true);
+            }
         } catch (error) {
             toast({ title: 'Erro ao carregar', description: 'Não foi possível encontrar a solicitação.', variant: 'destructive' });
             router.push('/vacation');
@@ -169,9 +180,10 @@ function LeaveRequestContent() {
         if (!file) return;
         setFile(file);
 
-        // Crate preview URL
+        // Create preview URL
         const url = URL.createObjectURL(file);
         setPreviewUrl(url);
+        setIsImgLoading(true);
 
         setAnalyzing(true);
 
@@ -555,31 +567,44 @@ function LeaveRequestContent() {
                                 </div>
                             ) : (
                                 <>
-                                    <div className="flex-1 bg-slate-900 flex items-center justify-center relative p-4 overflow-hidden">
+                                    <div className="flex-1 bg-slate-900/5 flex items-center justify-center relative p-4 overflow-hidden border-2 border-dashed border-slate-200 m-4 rounded-xl">
                                         {(previewUrl || existingRequest?.certificateUrl) ? (
                                             <div
-                                                className="relative w-full h-full flex items-center justify-center bg-white rounded shadow-2xl overflow-hidden cursor-zoom-in group/img"
-                                                onClick={() => setIsZoomed(true)}
+                                                className={cn(
+                                                    "relative w-full h-full flex items-center justify-center bg-white rounded-lg shadow-sm overflow-hidden cursor-zoom-in group/img transition-all",
+                                                    isImgLoading && "bg-slate-50"
+                                                )}
+                                                onClick={() => {
+                                                    setImgScale(1);
+                                                    setImgRotation(0);
+                                                    setIsZoomed(true);
+                                                }}
                                             >
+                                                {isImgLoading && (
+                                                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                                                        <Loader2 className="h-6 w-6 animate-spin text-blue-400" />
+                                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Carregando visualização...</span>
+                                                    </div>
+                                                )}
                                                 <img
                                                     src={formatDocumentUrl(previewUrl || existingRequest?.certificateUrl)}
                                                     alt="Atestado médico"
-                                                    className="max-w-full max-h-full object-contain transition-all duration-500 group-hover/img:scale-[1.02]"
+                                                    onLoad={() => setIsImgLoading(false)}
+                                                    className={cn(
+                                                        "max-w-full max-h-full object-contain transition-all duration-700",
+                                                        isImgLoading ? "opacity-0 scale-95" : "opacity-100 scale-100",
+                                                        "group-hover/img:scale-105"
+                                                    )}
                                                 />
-                                                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
-                                                    <Button
-                                                        size="sm"
-                                                        variant="secondary"
-                                                        className="rounded-full shadow-lg gap-2 bg-white text-slate-900 font-bold border-none"
-                                                        onClick={(e) => { e.stopPropagation(); setIsZoomed(true); }}
-                                                    >
-                                                        <Eye className="h-3 w-3" /> Ampliar
-                                                    </Button>
+                                                <div className="absolute inset-0 bg-blue-600/10 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[1px]">
+                                                    <div className="bg-white/90 backdrop-blur p-2 rounded-full shadow-lg transform translate-y-4 group-hover/img:translate-y-0 transition-transform duration-300">
+                                                        <Maximize className="h-4 w-4 text-blue-600" />
+                                                    </div>
                                                 </div>
                                             </div>
                                         ) : (
-                                            <div className="text-center p-8 space-y-4 text-white/50">
-                                                <div className="h-20 w-20 mx-auto bg-white/10 rounded-full flex items-center justify-center">
+                                            <div className="text-center p-8 space-y-4 text-slate-300">
+                                                <div className="h-20 w-20 mx-auto bg-slate-100 rounded-full flex items-center justify-center border-2 border-dashed border-slate-200">
                                                     <FileText className="h-10 w-10" />
                                                 </div>
                                                 <p className="text-sm font-medium">Formato não suportado para visualização.</p>
@@ -627,15 +652,17 @@ function LeaveRequestContent() {
                             )}
 
                             {analyzing && (
-                                <div className="absolute inset-0 bg-blue-600/90 backdrop-blur-md flex flex-col items-center justify-center p-8 text-center text-white z-10">
-                                    <Loader2 className="h-12 w-12 animate-spin mb-6 text-blue-200" />
-                                    <Brain className="h-8 w-8 absolute top-8 text-blue-300 animate-pulse" />
-                                    <h4 className="font-black text-xl mb-2">IA Assistant</h4>
-                                    <p className="text-sm font-medium text-blue-100 leading-relaxed">
-                                        Analisando atestado médico...<br />Extraindo CID e validando datas.
-                                    </p>
-                                    <div className="mt-8 w-full bg-blue-500/30 h-1 rounded-full overflow-hidden">
-                                        <div className="h-full bg-white w-1/2 animate-[progress_2s_ease-in-out_infinite]" />
+                                <div className="absolute inset-0 bg-blue-600/40 backdrop-blur-[2px] flex flex-col items-center justify-center p-8 text-center text-white z-10 overflow-hidden">
+                                    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                                        <div className="absolute w-full h-[2px] bg-gradient-to-r from-transparent via-white to-transparent shadow-[0_0_15px_rgba(255,255,255,0.8)] animate-scan" style={{ top: '0%' }} />
+                                    </div>
+                                    <div className="bg-white/20 backdrop-blur-md p-6 rounded-3xl border border-white/30 shadow-2xl relative z-20 animate-in zoom-in-90 duration-300">
+                                        <Loader2 className="h-10 w-10 animate-spin mb-4 mx-auto text-white" />
+                                        <Brain className="h-6 w-6 absolute top-4 right-4 text-blue-200 animate-pulse" />
+                                        <h4 className="font-black text-lg mb-1 tracking-tight">IA ANALISANDO</h4>
+                                        <p className="text-[10px] font-bold text-blue-50 uppercase tracking-widest opacity-80 leading-relaxed">
+                                            Lendo documento...<br />Validando CID e Datas.
+                                        </p>
                                     </div>
                                 </div>
                             )}
@@ -700,25 +727,107 @@ function LeaveRequestContent() {
                     )}
                 </div>
             </div>
-            {/* Zoom Modal */}
+            {/* Premium Zoom Modal */}
             {isZoomed && (previewUrl || existingRequest?.certificateUrl) && (
                 <div
-                    className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300"
-                    onClick={() => setIsZoomed(false)}
+                    className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex flex-col animate-in fade-in duration-300"
+                    onKeyDown={(e) => {
+                        if (e.key === 'Escape') setIsZoomed(false);
+                    }}
                 >
-                    <div className="relative max-w-5xl w-full h-full flex items-center justify-center">
-                        <img
-                            src={formatDocumentUrl(previewUrl || existingRequest?.certificateUrl)}
-                            className="max-w-full max-h-full object-contain shadow-2xl rounded-lg"
-                            alt="Atestado Ampliado"
-                        />
+                    {/* Header Controls */}
+                    <div className="h-20 px-8 flex items-center justify-between border-b border-white/5 bg-black/20 backdrop-blur-xl shrink-0">
+                        <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-xl bg-blue-600 flex items-center justify-center">
+                                <FileText className="h-5 w-5 text-white" />
+                            </div>
+                            <div>
+                                <h3 className="text-white font-black tracking-tight">Visualização do Atestado</h3>
+                                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Use o scroll para zoom ou as ferramentas abaixo</p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 bg-white/5 p-1.5 rounded-2xl border border-white/10">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-10 w-10 text-white hover:bg-white/10 rounded-xl"
+                                onClick={(e) => { e.stopPropagation(); setImgScale(s => Math.min(s + 0.2, 3)); }}
+                                title="Zoom In"
+                            >
+                                <ZoomIn className="h-5 w-5" />
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-10 w-10 text-white hover:bg-white/10 rounded-xl"
+                                onClick={(e) => { e.stopPropagation(); setImgScale(s => Math.max(s - 0.2, 0.5)); }}
+                                title="Zoom Out"
+                            >
+                                <ZoomOut className="h-5 w-5" />
+                            </Button>
+                            <div className="w-[1px] h-6 bg-white/10 mx-1" />
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-10 w-10 text-white hover:bg-white/10 rounded-xl"
+                                onClick={(e) => { e.stopPropagation(); setImgRotation(r => (r + 90) % 360); }}
+                                title="Rotate"
+                            >
+                                <RotateCcw className="h-5 w-5" />
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-10 w-10 text-white hover:bg-white/10 rounded-xl"
+                                onClick={(e) => { e.stopPropagation(); setImgScale(1); setImgRotation(0); }}
+                                title="Reset"
+                            >
+                                <RefreshCw className="h-5 w-5" />
+                            </Button>
+                        </div>
+
                         <Button
-                            variant="secondary"
-                            className="absolute top-0 right-0 rounded-full h-12 w-12 p-0 -mt-2 -mr-2 shadow-xl"
+                            variant="danger"
+                            className="rounded-xl h-12 px-6 font-black uppercase text-xs tracking-widest shadow-2xl transition-all hover:scale-105 active:scale-95"
                             onClick={() => setIsZoomed(false)}
                         >
-                            <XCircle className="h-6 w-6" />
+                            Fechar [ESC]
                         </Button>
+                    </div>
+
+                    {/* Viewport */}
+                    <div
+                        className="flex-1 overflow-auto flex items-center justify-center p-12 cursor-grab active:cursor-grabbing custom-scrollbar"
+                        onClick={() => setIsZoomed(false)}
+                        onWheel={(e) => {
+                            if (e.ctrlKey) {
+                                e.preventDefault();
+                                setImgScale(s => Math.min(Math.max(s + (e.deltaY < 0 ? 0.1 : -0.1), 0.5), 3));
+                            }
+                        }}
+                    >
+                        <div
+                            className="relative transition-transform duration-300 ease-out shadow-[0_0_100px_rgba(0,0,0,0.5)] bg-white rounded-lg overflow-hidden"
+                            style={{
+                                transform: `scale(${imgScale}) rotate(${imgRotation}deg)`,
+                                maxHeight: '90vh'
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <img
+                                src={formatDocumentUrl(previewUrl || existingRequest?.certificateUrl)}
+                                className="block max-w-full max-h-full"
+                                alt="Atestado Ampliado"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Footer / Status */}
+                    <div className="h-12 px-8 flex items-center justify-center bg-black/40 border-t border-white/5">
+                        <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em]">
+                            Zoom: {Math.round(imgScale * 100)}% • Rotação: {imgRotation}° • AxonRH AI Vision
+                        </p>
                     </div>
                 </div>
             )}
