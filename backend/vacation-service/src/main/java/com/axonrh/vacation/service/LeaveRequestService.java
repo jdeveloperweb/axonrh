@@ -8,6 +8,7 @@ import com.axonrh.vacation.dto.MedicalCertificateAnalysisResponse;
 import com.axonrh.vacation.entity.LeaveRequest;
 import com.axonrh.vacation.entity.enums.LeaveType;
 import com.axonrh.vacation.entity.enums.VacationRequestStatus;
+import com.axonrh.vacation.repository.CidCodeRepository;
 import com.axonrh.vacation.repository.LeaveRequestRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +28,7 @@ public class LeaveRequestService {
     private final LeaveRequestRepository leaveRequestRepository;
     private final AiAssistantClient aiAssistantClient;
     private final EmployeeServiceClient employeeServiceClient;
+    private final CidCodeRepository cidCodeRepository;
 
     @Transactional
     public LeaveRequest createLeaveRequest(LeaveRequest request, String certificateText) {
@@ -83,6 +85,12 @@ public class LeaveRequestService {
             request.setDaysCount((int) ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate()) + 1);
         }
 
+        // Validate CID and populate description if missing
+        if (request.getCid() != null && (request.getCidDescription() == null || request.getCidDescription().isEmpty())) {
+            cidCodeRepository.findById(request.getCid())
+                    .ifPresent(c -> request.setCidDescription(c.getDescription()));
+        }
+
         return leaveRequestRepository.save(request);
     }
 
@@ -107,9 +115,20 @@ public class LeaveRequestService {
     public LeaveRequest updateLeave(UUID id, Map<String, Object> payload) {
         LeaveRequest request = getLeaveById(id);
         
-        if (payload.containsKey("cid")) request.setCid((String) payload.get("cid"));
         if (payload.containsKey("startDate")) request.setStartDate(java.time.LocalDate.parse((String) payload.get("startDate")));
         if (payload.containsKey("endDate")) request.setEndDate(java.time.LocalDate.parse((String) payload.get("endDate")));
+        
+        // Update CID Description if CID changed
+        if (payload.containsKey("cid")) {
+            String newCid = (String) payload.get("cid");
+            request.setCid(newCid);
+            if (newCid != null && !newCid.isEmpty()) {
+                cidCodeRepository.findById(newCid)
+                        .ifPresent(c -> request.setCidDescription(c.getDescription()));
+            } else {
+                request.setCidDescription(null);
+            }
+        }
         // Recalcular dias
         if (request.getStartDate() != null && request.getEndDate() != null) {
             request.setDaysCount((int) ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate()) + 1);
@@ -124,7 +143,16 @@ public class LeaveRequestService {
         
         request.setStatus(status);
         if (notes != null) request.setReason(notes); // TODO: idealmente ter um campo notes separado
-        if (cid != null) request.setCid(cid);
+        
+        if (cid != null) {
+            request.setCid(cid);
+            if (!cid.isEmpty()) {
+                cidCodeRepository.findById(cid)
+                        .ifPresent(c -> request.setCidDescription(c.getDescription()));
+            } else {
+                request.setCidDescription(null);
+            }
+        }
         
         request.setUpdatedBy(userId);
 

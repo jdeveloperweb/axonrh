@@ -22,16 +22,17 @@ export function ExpandablePhoto({
     onExpand
 }: ExpandablePhotoProps) {
     const [isExpanded, setIsExpanded] = useState(false);
+    const [hasError, setHasError] = useState(false);
 
     const handleExpand = (e: React.MouseEvent) => {
         e.stopPropagation();
-        if (src) {
+        if (src && !hasError) {
             setIsExpanded(true);
             onExpand?.();
         }
     };
 
-    if (!src) return <>{fallback}</>;
+    if (!src || hasError) return <>{fallback}</>;
 
     return (
         <>
@@ -45,12 +46,13 @@ export function ExpandablePhoto({
                 <img
                     src={src}
                     alt={alt}
+                    onError={() => setHasError(true)}
                     className={cn("w-full h-full object-cover transition-transform group-hover/photo-expand:scale-110", className)}
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover/photo-expand:bg-black/10 transition-colors" />
             </div>
 
-            <Dialog open={isExpanded} onOpenChange={setIsExpanded}>
+            <Dialog open={isExpanded && !hasError} onOpenChange={setIsExpanded}>
                 <DialogContent className="sm:max-w-md p-0 overflow-hidden border-none bg-transparent shadow-none [&>button]:text-white [&>button]:bg-black/20 [&>button]:hover:bg-black/40 [&>button]:rounded-full [&>button]:transition-colors">
                     <div className="relative">
                         <img

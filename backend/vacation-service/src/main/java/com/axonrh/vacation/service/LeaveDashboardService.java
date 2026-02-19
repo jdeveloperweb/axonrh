@@ -5,6 +5,7 @@ import com.axonrh.vacation.dto.EmployeeDTO;
 import com.axonrh.vacation.dto.LeaveDashboardDTO;
 import com.axonrh.vacation.entity.LeaveRequest;
 import com.axonrh.vacation.entity.enums.LeaveType;
+import com.axonrh.vacation.repository.CidCodeRepository;
 import com.axonrh.vacation.repository.LeaveRequestRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ public class LeaveDashboardService {
 
     private final LeaveRequestRepository leaveRequestRepository;
     private final EmployeeServiceClient employeeServiceClient;
+    private final CidCodeRepository cidCodeRepository;
 
     public LeaveDashboardDTO getDashboardData(UUID tenantId) {
         List<EmployeeDTO> allEmployees = employeeServiceClient.getActiveEmployees();
@@ -153,10 +155,19 @@ public class LeaveDashboardService {
                 .entrySet().stream()
                 .map(entry -> {
                     LeaveRequest first = entry.getValue().get(0);
+                    String description = first.getCidDescription();
+                    
+                    // Fallback to repository if description is missing
+                    if (description == null || description.isEmpty()) {
+                        description = cidCodeRepository.findById(entry.getKey())
+                                .map(com.axonrh.vacation.entity.CidCode::getDescription)
+                                .orElse("Descrição não encontrada");
+                    }
+
                     return LeaveDashboardDTO.CidStat.builder()
                             .cid(entry.getKey())
                             .chapter(getChapterDescription(entry.getKey()))
-                            .description(first.getCidDescription())
+                            .description(description)
                             .count(entry.getValue().size())
                             .year(LocalDate.now().getYear())
                             .build();
