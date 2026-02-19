@@ -26,7 +26,8 @@ import {
   CalendarCheck2,
   Stethoscope,
   Heart,
-  Brain
+  Brain,
+  Filter
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -68,19 +69,40 @@ export default function VacationPage() {
   const [expiringPeriods, setExpiringPeriods] = useState<VacationPeriod[]>([]);
   const [filterType, setFilterType] = useState<string>('ALL');
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
+  const [filterDay, setFilterDay] = useState<string>('');
+  const [filterMonthStart, setFilterMonthStart] = useState<string>('ALL');
+  const [filterMonthEnd, setFilterMonthEnd] = useState<string>('ALL');
+  const [filterSector, setFilterSector] = useState<string>('ALL');
+
+  const [departments, setDepartments] = useState<any[]>([]);
+  const [employeesMap, setEmployeesMap] = useState<Record<string, any>>({});
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   // Persistence logic for filters
   useEffect(() => {
     const savedType = localStorage.getItem('vacation_filter_type');
     const savedStatus = localStorage.getItem('vacation_filter_status');
+    const savedDay = localStorage.getItem('vacation_filter_day');
+    const savedMonthStart = localStorage.getItem('vacation_filter_month_start');
+    const savedMonthEnd = localStorage.getItem('vacation_filter_month_end');
+    const savedSector = localStorage.getItem('vacation_filter_sector');
+
     if (savedType) setFilterType(savedType);
     if (savedStatus) setFilterStatus(savedStatus);
+    if (savedDay) setFilterDay(savedDay);
+    if (savedMonthStart) setFilterMonthStart(savedMonthStart);
+    if (savedMonthEnd) setFilterMonthEnd(savedMonthEnd);
+    if (savedSector) setFilterSector(savedSector);
   }, []);
 
   useEffect(() => {
     localStorage.setItem('vacation_filter_type', filterType);
     localStorage.setItem('vacation_filter_status', filterStatus);
-  }, [filterType, filterStatus]);
+    localStorage.setItem('vacation_filter_day', filterDay);
+    localStorage.setItem('vacation_filter_month_start', filterMonthStart);
+    localStorage.setItem('vacation_filter_month_end', filterMonthEnd);
+    localStorage.setItem('vacation_filter_sector', filterSector);
+  }, [filterType, filterStatus, filterDay, filterMonthStart, filterMonthEnd, filterSector]);
 
   const roles = user?.roles || [];
   const isAdmin = roles.some(r => r.includes('ADMIN'));
@@ -97,6 +119,10 @@ export default function VacationPage() {
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
+
+      // Dynamic imports to avoid issues if files are not ready
+      const { employeesApi } = await import('@/lib/api/employees');
+
       const [
         periodsData,
         vacRequestsData,
@@ -105,7 +131,9 @@ export default function VacationPage() {
         myLeavesData,
         statsData,
         activeData,
-        expiringData
+        expiringData,
+        deptsData,
+        emplsData
       ] = await Promise.all([
         vacationApi.getMyPeriods().catch(() => []),
         (isRH || isAdmin || isManager) ? vacationApi.getPendingRequests(0, 100).then(r => r.content).catch(() => []) : Promise.resolve([]),
@@ -114,24 +142,48 @@ export default function VacationPage() {
         (user?.employeeId || user?.id) ? leavesApi.getMyLeaves(user?.employeeId || user?.id || '').catch(() => []) : Promise.resolve([]),
         vacationApi.getStatistics().catch(() => ({})),
         leavesApi.getActiveLeaves().catch(() => []),
-        (isRH || isAdmin || isManager) ? vacationApi.getExpiringPeriods(90).catch(() => []) : Promise.resolve([])
+        (isRH || isAdmin || isManager) ? vacationApi.getExpiringPeriods(90).catch(() => []) : Promise.resolve([]),
+        (isRH || isAdmin || isManager) ? employeesApi.getDepartments().catch(() => []) : Promise.resolve([]),
+        (isRH || isAdmin || isManager) ? employeesApi.list({ page: 0, size: 2000 }).then(r => r.content).catch(() => []) : Promise.resolve([])
       ]);
 
       setPeriods(periodsData);
+      setDepartments(deptsData);
+
+      const eMap: Record<string, any> = {};
+      emplsData?.forEach((e: any) => {
+        eMap[e.id] = e;
+      });
+      setEmployeesMap(eMap);
 
       // Merge all for management
       const mergedAll = [
         ...vacRequestsData.map((r: any) => ({ ...r, type: r.type || 'VACATION' })),
-        ...leavesData
-      ].sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
+        ...leavesData.map((r: any) => ({ ...r, type: r.type || 'LEAVE' })) // Ensure fallback
+      ].map((r: any) => {
+        // Enriquecer com dados do setor se disponível
+        const emp = eMap[r.employeeId];
+        return {
+          ...r,
+          employeeDepartmentId: emp?.department?.id,
+          employeeDepartmentName: emp?.department?.name
+        };
+      }).sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
 
       setRequests(mergedAll);
 
       // Merge personal
       const mergedMine = [
         ...myVacRequests.map((r: any) => ({ ...r, type: r.type || 'VACATION' })),
-        ...myLeavesData
-      ].sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
+        ...myLeavesData.map((r: any) => ({ ...r, type: r.type || 'LEAVE' }))
+      ].map((r: any) => {
+        const emp = eMap[r.employeeId];
+        return {
+          ...r,
+          employeeDepartmentId: emp?.department?.id,
+          employeeDepartmentName: emp?.department?.name
+        };
+      }).sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
 
       setMyRequests(mergedMine);
 
@@ -163,6 +215,40 @@ export default function VacationPage() {
       toast({ title: 'Erro ao atualizar', variant: 'destructive' });
     }
   };
+
+  const applyFilters = useCallback((reqs: any[]) => {
+    return reqs.filter(r => {
+      const matchesType = filterType === 'ALL' || r.type === filterType;
+      const matchesStatus = filterStatus === 'ALL' || r.status === filterStatus;
+
+      const startDate = new Date(r.startDate + 'T00:00:00');
+      const endDate = new Date(r.endDate + 'T00:00:00');
+
+      const matchesMonthStart = filterMonthStart === 'ALL' || (startDate.getMonth() + 1).toString() === filterMonthStart;
+      const matchesMonthEnd = filterMonthEnd === 'ALL' || (endDate.getMonth() + 1).toString() === filterMonthEnd;
+
+      let matchesDay = true;
+      if (filterDay) {
+        const filterDate = new Date(filterDay + 'T00:00:00');
+        matchesDay = filterDate >= startDate && filterDate <= endDate;
+      }
+
+      const matchesSector = filterSector === 'ALL' || r.employeeDepartmentId === filterSector;
+
+      return matchesType && matchesStatus && matchesMonthStart && matchesMonthEnd && matchesDay && matchesSector;
+    });
+  }, [filterType, filterStatus, filterDay, filterMonthStart, filterMonthEnd, filterSector]);
+
+  const clearFilters = () => {
+    setFilterType('ALL');
+    setFilterStatus('ALL');
+    setFilterDay('');
+    setFilterMonthStart('ALL');
+    setFilterMonthEnd('ALL');
+    setFilterSector('ALL');
+  };
+
+  const isFilterActive = filterType !== 'ALL' || filterStatus !== 'ALL' || filterDay !== '' || filterMonthStart !== 'ALL' || filterMonthEnd !== 'ALL' || filterSector !== 'ALL';
 
   const getStatusBadge = (status: string) => {
     const config: any = {
@@ -225,20 +311,20 @@ export default function VacationPage() {
   }
 
   return (
-    <div className="p-6 space-y-8 animate-in fade-in duration-500 w-full">
+    <div className="p-6 space-y-8 animate-in fade-in duration-500 w-full font-inter">
 
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Licenças e Afastamentos</h1>
-          <p className="text-slate-500 font-medium font-inter">
+          <p className="text-slate-500 font-medium">
             Controle unificado de férias, licenças médicas e outros afastamentos.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <Button
             onClick={() => router.push('/vacation/request')}
-            className="flex items-center gap-2 px-6 bg-[var(--color-secondary)] text-white rounded-xl hover:opacity-90 transition-all shadow-lg active:scale-95 border-none"
+            className="flex items-center gap-2 px-6 bg-[var(--color-secondary)] text-white rounded-xl hover:opacity-90 transition-all shadow-lg active:scale-95 border-none font-bold"
           >
             <Umbrella className="w-4 h-4" />
             Nova Férias
@@ -246,7 +332,7 @@ export default function VacationPage() {
 
           <Button
             onClick={() => router.push('/vacation/leave-request')}
-            className="flex items-center gap-2 px-6 bg-[var(--color-primary)] text-white rounded-xl hover:opacity-90 transition-all shadow-lg shadow-[var(--color-primary)]/10 active:scale-95 border-none"
+            className="flex items-center gap-2 px-6 bg-[var(--color-primary)] text-white rounded-xl hover:opacity-90 transition-all shadow-lg shadow-[var(--color-primary)]/10 active:scale-95 border-none font-bold"
           >
             <Plus className="w-4 h-4" />
             Nova Licença
@@ -255,7 +341,7 @@ export default function VacationPage() {
           <Button
             variant="outline"
             onClick={() => router.push('/vacation/approvals')}
-            className="flex items-center gap-2 border-[var(--color-border)] rounded-xl hover:bg-[var(--color-surface)] text-[var(--color-text-secondary)] font-bold"
+            className="flex items-center gap-2 border-[var(--color-border)] rounded-xl hover:bg-[var(--color-surface)] text-[var(--color-text-secondary)] font-bold px-6"
           >
             <CheckCircle2 className="w-4 h-4 text-[var(--color-success)]" />
             Aprovações
@@ -283,7 +369,7 @@ export default function VacationPage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {activeLeaves.map((leaf) => (
-                  <Card key={leaf.id} className="border-none shadow-sm bg-white hover:shadow-md transition-all overflow-hidden group">
+                  <Card key={leaf.id} className="border-none shadow-sm bg-white hover:shadow-md transition-all overflow-hidden group rounded-2xl">
                     <CardContent className="p-4 flex items-center gap-4">
                       <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500 group-hover:bg-blue-50 transition-colors">
                         {leaf.employeeName?.charAt(0) || 'E'}
@@ -305,92 +391,158 @@ export default function VacationPage() {
           {/* Unified Management List */}
           <Card className="border-none shadow-xl shadow-slate-200/50 bg-white rounded-3xl overflow-hidden">
             <CardHeader className="border-b border-slate-50 px-8 py-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-xl font-black">Histórico e Gerenciamento</CardTitle>
-                  <CardDescription className="font-medium">Visualize e controle todas as solicitações</CardDescription>
-                </div>
-                <div className="flex gap-2 items-center">
-                  {(filterType !== 'ALL' || filterStatus !== 'ALL') && (
-                    <div className="flex bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg items-center gap-2 border border-blue-100 transition-all animate-in fade-in zoom-in duration-300">
-                      <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-                      </span>
-                      <span className="text-[10px] font-black uppercase tracking-wider">Filtro Ativo</span>
-                      <button
-                        onClick={() => {
-                          setFilterType('ALL');
-                          setFilterStatus('ALL');
-                        }}
-                        className="ml-1 p-0.5 hover:bg-blue-200 rounded-full text-blue-500 hover:text-blue-800 transition-colors"
-                        title="Limpar filtros"
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-xl font-black">Histórico e Gerenciamento</CardTitle>
+                    <CardDescription className="font-medium">Visualize e controle todas as solicitações</CardDescription>
+                  </div>
+                  <div className="flex gap-2 items-center">
+                    {isFilterActive && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={clearFilters}
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50 font-bold gap-2 rounded-xl transition-all h-9 px-4"
                       >
-                        <XCircle className="h-3 w-3" />
-                      </button>
-                    </div>
-                  )}
+                        <XCircle className="h-4 w-4" />
+                        Limpar Filtros
+                      </Button>
+                    )}
 
-                  <Select value={filterStatus} onValueChange={setFilterStatus}>
-                    <SelectTrigger className={cn(
-                      "w-[140px] h-9 text-xs font-bold border-slate-200 focus:ring-0 transition-colors rounded-lg",
-                      filterStatus !== 'ALL' ? "bg-blue-50 border-blue-200 text-blue-700 shadow-sm" : "bg-slate-50 text-slate-600"
-                    )}>
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ALL">Todos os Status</SelectItem>
-                      <SelectItem value="PENDING">Pendente</SelectItem>
-                      <SelectItem value="MANAGER_APPROVED">Aprov. Gestor</SelectItem>
-                      <SelectItem value="APPROVED">Aprovada</SelectItem>
-                      <SelectItem value="SCHEDULED">Agendada</SelectItem>
-                      <SelectItem value="IN_PROGRESS">Em Andamento</SelectItem>
-                      <SelectItem value="COMPLETED">Concluída</SelectItem>
-                      <SelectItem value="REJECTED">Rejeitada</SelectItem>
-                      <SelectItem value="CANCELLED">Cancelada</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    <Button
+                      variant="ghost"
+                      onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                      className={cn(
+                        "rounded-xl h-9 px-4 font-bold gap-2",
+                        showAdvancedFilters ? "bg-blue-50 text-blue-600" : "text-slate-500"
+                      )}
+                    >
+                      <Filter className="h-4 w-4" />
+                      Filtros
+                    </Button>
 
-                  <Select value={filterType} onValueChange={setFilterType}>
-                    <SelectTrigger className={cn(
-                      "w-[160px] h-9 text-xs font-bold border-slate-200 focus:ring-0 transition-colors rounded-lg",
-                      filterType !== 'ALL' ? "bg-blue-50 border-blue-200 text-blue-700 shadow-sm" : "bg-slate-50 text-slate-600"
-                    )}>
-                      <SelectValue placeholder="Filtrar por tipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ALL">Todos os Tipos</SelectItem>
-                      <SelectItem value="VACATION">Férias</SelectItem>
-                      <SelectItem value="MEDICAL">Licença Médica</SelectItem>
-                      <SelectItem value="MATERNITY">Maternidade</SelectItem>
-                      <SelectItem value="PATERNITY">Paternidade</SelectItem>
-                      <SelectItem value="BEREAVEMENT">Luto / Óbito</SelectItem>
-                      <SelectItem value="MARRIAGE">Casamento</SelectItem>
-                      <SelectItem value="MILITARY">Serviço Militar</SelectItem>
-                      <SelectItem value="UNPAID">Não Remunerada</SelectItem>
-                      <SelectItem value="OTHER">Outros</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button variant="ghost" size="sm" onClick={loadData} className="rounded-lg h-8 w-8 p-0 ml-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100" title="Atualizar">
-                    <History className="h-4 w-4" />
-                  </Button>
+                    <Button variant="ghost" size="sm" onClick={loadData} className="rounded-xl h-9 w-9 p-0 text-slate-400 hover:text-slate-700 hover:bg-slate-100" title="Atualizar">
+                      <History className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
+
+                {showAdvancedFilters && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 animate-in slide-in-from-top-2 duration-300">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black uppercase text-slate-400 px-1">Status</label>
+                      <Select value={filterStatus} onValueChange={setFilterStatus}>
+                        <SelectTrigger className="bg-white border-slate-200 rounded-xl h-10 text-xs font-bold font-inter">
+                          <SelectValue placeholder="Status" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl border-slate-100 shadow-xl overflow-hidden">
+                          <SelectItem value="ALL" className="font-bold text-xs py-2.5">Todos os Status</SelectItem>
+                          <SelectItem value="PENDING" className="font-bold text-xs py-2.5">Pendente</SelectItem>
+                          <SelectItem value="MANAGER_APPROVED" className="font-bold text-xs py-2.5">Aprov. Gestor</SelectItem>
+                          <SelectItem value="APPROVED" className="font-bold text-xs py-2.5">Aprovada</SelectItem>
+                          <SelectItem value="SCHEDULED" className="font-bold text-xs py-2.5">Agendada</SelectItem>
+                          <SelectItem value="IN_PROGRESS" className="font-bold text-xs py-2.5">Em Andamento</SelectItem>
+                          <SelectItem value="COMPLETED" className="font-bold text-xs py-2.5">Concluída</SelectItem>
+                          <SelectItem value="REJECTED" className="font-bold text-xs py-2.5">Rejeitada</SelectItem>
+                          <SelectItem value="CANCELLED" className="font-bold text-xs py-2.5">Cancelada</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black uppercase text-slate-400 px-1">Tipo</label>
+                      <Select value={filterType} onValueChange={setFilterType}>
+                        <SelectTrigger className="bg-white border-slate-200 rounded-xl h-10 text-xs font-bold font-inter">
+                          <SelectValue placeholder="Tipo" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl border-slate-100 shadow-xl overflow-hidden">
+                          <SelectItem value="ALL" className="font-bold text-xs py-2.5">Todos os Tipos</SelectItem>
+                          <SelectItem value="VACATION" className="font-bold text-xs py-2.5">Férias</SelectItem>
+                          <SelectItem value="MEDICAL" className="font-bold text-xs py-2.5">Licença Médica</SelectItem>
+                          <SelectItem value="MATERNITY" className="font-bold text-xs py-2.5">Maternidade</SelectItem>
+                          <SelectItem value="PATERNITY" className="font-bold text-xs py-2.5">Paternidade</SelectItem>
+                          <SelectItem value="BEREAVEMENT" className="font-bold text-xs py-2.5">Luto / Óbito</SelectItem>
+                          <SelectItem value="MARRIAGE" className="font-bold text-xs py-2.5">Casamento</SelectItem>
+                          <SelectItem value="MILITARY" className="font-bold text-xs py-2.5">Serviço Militar</SelectItem>
+                          <SelectItem value="UNPAID" className="font-bold text-xs py-2.5">Não Remunerada</SelectItem>
+                          <SelectItem value="OTHER" className="font-bold text-xs py-2.5">Outros</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black uppercase text-slate-400 px-1">Setor / Departamento</label>
+                      <Select value={filterSector} onValueChange={setFilterSector}>
+                        <SelectTrigger className="bg-white border-slate-200 rounded-xl h-10 text-xs font-bold font-inter">
+                          <SelectValue placeholder="Setor" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl border-slate-100 shadow-xl overflow-hidden">
+                          <SelectItem value="ALL" className="font-bold text-xs py-2.5">Todos os Setores</SelectItem>
+                          {departments.map(d => (
+                            <SelectItem key={d.id} value={d.id} className="font-bold text-xs py-2.5">{d.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black uppercase text-slate-400 px-1">Dia Específico</label>
+                      <input
+                        type="date"
+                        value={filterDay}
+                        onChange={(e) => setFilterDay(e.target.value)}
+                        className="w-full bg-white border border-slate-200 rounded-xl h-10 px-3 text-xs font-bold font-inter focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black uppercase text-slate-400 px-1">Mês Início</label>
+                      <Select value={filterMonthStart} onValueChange={setFilterMonthStart}>
+                        <SelectTrigger className="bg-white border-slate-200 rounded-xl h-10 text-xs font-bold font-inter">
+                          <SelectValue placeholder="Mês Início" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl border-slate-100 shadow-xl overflow-hidden">
+                          <SelectItem value="ALL" className="font-bold text-xs py-2.5">Qualquer Mês</SelectItem>
+                          {['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'].map((m, i) => (
+                            <SelectItem key={m} value={(i + 1).toString()} className="font-bold text-xs py-2.5">{m}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black uppercase text-slate-400 px-1">Mês Término</label>
+                      <Select value={filterMonthEnd} onValueChange={setFilterMonthEnd}>
+                        <SelectTrigger className="bg-white border-slate-200 rounded-xl h-10 text-xs font-bold font-inter">
+                          <SelectValue placeholder="Mês Término" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl border-slate-100 shadow-xl overflow-hidden">
+                          <SelectItem value="ALL" className="font-bold text-xs py-2.5">Qualquer Mês</SelectItem>
+                          {['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'].map((m, i) => (
+                            <SelectItem key={m} value={(i + 1).toString()} className="font-bold text-xs py-2.5">{m}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                )}
               </div>
             </CardHeader>
             <CardContent className="p-0">
               <Tabs defaultValue={isRH || isAdmin || isManager ? "all" : "mine"} className="w-full">
                 <div className="px-8 pt-4">
                   <TabsList className="bg-slate-100 rounded-xl p-1 h-12">
-                    <TabsTrigger value="mine" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm px-6 font-bold">Minhas Solicitações</TabsTrigger>
+                    <TabsTrigger value="mine" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm px-6 font-bold transition-all">Minhas Solicitações</TabsTrigger>
                     {(isRH || isAdmin || isManager) && (
-                      <TabsTrigger value="all" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm px-6 font-bold">Gestão da Empresa</TabsTrigger>
+                      <TabsTrigger value="all" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm px-6 font-bold transition-all">Gestão da Empresa</TabsTrigger>
                     )}
                   </TabsList>
                 </div>
 
                 <TabsContent value="mine" className="mt-4">
                   <LeaveTable
-                    requests={myRequests.filter(r => (filterType === 'ALL' || r.type === filterType) && (filterStatus === 'ALL' || r.status === filterStatus))}
+                    requests={applyFilters(myRequests)}
                     handleUpdateStatus={handleUpdateStatus}
                     getStatusBadge={getStatusBadge}
                     getLeaveTypeBadge={getLeaveTypeBadge}
@@ -403,7 +555,7 @@ export default function VacationPage() {
                 {(isRH || isAdmin || isManager) && (
                   <TabsContent value="all" className="mt-4">
                     <LeaveTable
-                      requests={requests.filter(r => (filterType === 'ALL' || r.type === filterType) && (filterStatus === 'ALL' || r.status === filterStatus))}
+                      requests={applyFilters(requests)}
                       handleUpdateStatus={handleUpdateStatus}
                       getStatusBadge={getStatusBadge}
                       getLeaveTypeBadge={getLeaveTypeBadge}
