@@ -62,7 +62,7 @@ const navGroups: NavGroup[] = [
       // { label: 'Cargos', href: '/positions', icon: Briefcase }, // Future
       // { label: 'Vagas', href: '/vacancies', icon: Target }, // Future
       { label: 'Ponto', href: '/timesheet/record', icon: Clock, module: 'moduleTimesheet' },
-      { label: 'Férias', href: '/vacation', icon: Calendar, module: 'moduleVacation' },
+      { label: 'Licenças', href: '/vacation', icon: Calendar, module: 'moduleVacation' },
       { label: 'Desempenho', href: '/performance', icon: BarChart3, module: 'modulePerformance' },
       { label: 'Folha de Pagamento', href: '/payroll', icon: Banknote, module: 'modulePayroll' },
       { label: 'Treinamentos', href: '/learning', icon: BookOpen, module: 'moduleLearning' },

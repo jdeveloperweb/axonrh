@@ -36,6 +36,7 @@ export interface LeaveRequest {
 export const leavesApi = {
     getDashboardStats: () => api.get<LeaveDashboardStats, LeaveDashboardStats>('/leaves/dashboard'),
     getLeaves: () => api.get<LeaveRequest[], LeaveRequest[]>('/leaves'),
+    getMyLeaves: (employeeId: string) => api.get<LeaveRequest[], LeaveRequest[]>(`/leaves/employee/${employeeId}`),
     getActiveLeaves: () => api.get<LeaveRequest[], LeaveRequest[]>('/leaves/active'),
     createLeave: (data: any) => {
         if (data instanceof FormData) {
@@ -48,5 +49,10 @@ export const leavesApi = {
     updateStatus: (id: string, status: string, notes?: string) =>
         api.patch(`/leaves/${id}/status`, { status, notes }),
     deleteLeave: (id: string) => api.delete(`/leaves/${id}`),
+
+    // CID 10
+    searchCid: (query: string) => api.get<any[], any[]>(`/leaves/cid/search?q=${query}`),
+    importCids: () => api.post('/leaves/cid/import', {}),
+
     seedLeaves: (count: number = 10) => api.post(`/mock/leaves/seed?count=${count}`, {}),
 };

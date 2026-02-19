@@ -157,7 +157,7 @@ export default function VacationPage() {
   }
 
   return (
-    <div className="p-6 space-y-8 animate-in fade-in duration-500 w-full max-w-7xl mx-auto">
+    <div className="p-6 space-y-8 animate-in fade-in duration-500 w-full">
 
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -250,97 +250,44 @@ export default function VacationPage() {
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader className="bg-slate-50/50">
-                  <TableRow className="hover:bg-transparent border-none">
-                    <TableHead className="px-8 font-black text-slate-500 uppercase text-[10px] tracking-wider">Colaborador</TableHead>
-                    <TableHead className="font-black text-slate-500 uppercase text-[10px] tracking-wider">Tipo</TableHead>
-                    <TableHead className="font-black text-slate-500 uppercase text-[10px] tracking-wider">Período</TableHead>
-                    <TableHead className="font-black text-slate-500 uppercase text-[10px] tracking-wider text-center">Dias</TableHead>
-                    <TableHead className="font-black text-slate-500 uppercase text-[10px] tracking-wider text-center">Status</TableHead>
-                    <TableHead className="px-8 font-black text-slate-500 uppercase text-[10px] tracking-wider text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {requests.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="h-32 text-center text-slate-400 font-medium">
-                        Nenhuma solicitação encontrada.
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    requests.map((request) => (
-                      <TableRow key={request.id} className="hover:bg-slate-50/50 group transition-colors">
-                        <td className="px-8 py-4">
-                          <p className="font-bold text-slate-900">{typeof request.employeeName === 'string' ? request.employeeName : 'Colaborador'}</p>
-                          <p className="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">ID: {request.id.toString().substring(0, 8)}</p>
-                        </td>
-                        <td className="py-4">{getLeaveTypeBadge(request.type)}</td>
-                        <td className="py-4">
-                          <p className="text-sm font-bold text-slate-700">{formatDate(request.startDate)}</p>
-                          <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest text-center">até</p>
-                          <p className="text-sm font-bold text-slate-700">{formatDate(request.endDate)}</p>
-                        </td>
-                        <td className="py-4 text-center">
-                          <span className="inline-flex items-center px-3 py-1 bg-slate-100 rounded-lg text-sm font-black text-slate-700 tabular-nums">
-                            {request.daysCount} d
-                          </span>
-                        </td>
-                        <td className="py-4 text-center">{getStatusBadge(request.status)}</td>
-                        <td className="px-8 py-4 text-right">
-                          <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            {request.status === 'PENDING' && (isRH || isManager) && (
-                              <>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-8 w-8 p-0 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
-                                  onClick={() => handleUpdateStatus(request.id, 'APPROVED')}
-                                >
-                                  <CheckCircle2 className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                                  onClick={() => handleUpdateStatus(request.id, 'REJECTED')}
-                                >
-                                  <XCircle className="h-4 w-4" />
-                                </Button>
-                              </>
-                            )}
+              <Tabs defaultValue={isRH || isAdmin || isManager ? "all" : "mine"} className="w-full">
+                <div className="px-8 pt-4">
+                  <TabsList className="bg-slate-100 rounded-xl p-1 h-12">
+                    <TabsTrigger value="mine" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm px-6 font-bold">Minhas Solicitações</TabsTrigger>
+                    {(isRH || isAdmin || isManager) && (
+                      <TabsTrigger value="all" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm px-6 font-bold">Gestão da Empresa</TabsTrigger>
+                    )}
+                  </TabsList>
+                </div>
 
-                            {(isRH || isAdmin || (request.status === 'PENDING' && request.employeeId === user?.id)) && (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-8 w-8 p-0 text-red-400 hover:text-red-600 hover:bg-red-50"
-                                onClick={async () => {
-                                  if (confirm('Tem certeza que deseja remover esta solicitação?')) {
-                                    await leavesApi.deleteLeave(request.id);
-                                    loadData();
-                                  }
-                                }}
-                              >
-                                <XCircle className="h-4 w-4" />
-                              </Button>
-                            )}
+                <TabsContent value="mine" className="mt-4">
+                  <LeaveTable
+                    requests={requests.filter((r: any) => r.employeeId === user?.id)}
+                    handleUpdateStatus={handleUpdateStatus}
+                    getStatusBadge={getStatusBadge}
+                    getLeaveTypeBadge={getLeaveTypeBadge}
+                    formatDate={formatDate}
+                    canDelete={true}
+                    loadData={loadData}
+                  />
+                </TabsContent>
 
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-8 w-8 p-0 text-slate-400 hover:text-slate-900"
-                              onClick={() => router.push(`/vacation/requests/${request.id}`)}
-                            >
-                              <ArrowRight className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </td>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+                {(isRH || isAdmin || isManager) && (
+                  <TabsContent value="all" className="mt-4">
+                    <LeaveTable
+                      requests={requests}
+                      handleUpdateStatus={handleUpdateStatus}
+                      getStatusBadge={getStatusBadge}
+                      getLeaveTypeBadge={getLeaveTypeBadge}
+                      formatDate={formatDate}
+                      isRH={isRH || isAdmin || isManager}
+                      canDelete={isRH || isAdmin}
+                      showEmployee={true}
+                      loadData={loadData}
+                    />
+                  </TabsContent>
+                )}
+              </Tabs>
             </CardContent>
           </Card>
         </div>
@@ -428,10 +375,132 @@ export default function VacationPage() {
               >
                 Subir Documento
               </Button>
+              <Button
+                variant="ghost"
+                className="w-full text-blue-100 hover:text-white hover:bg-white/10 text-[10px] font-bold"
+                onClick={async () => {
+                  if (confirm('Deseja iniciar a importação da base CID-10? Isso pode levar alguns segundos.')) {
+                    try {
+                      await leavesApi.importCids();
+                      toast({ title: 'Importação Iniciada', description: 'A base CID-10 está sendo carregada no banco.' });
+                    } catch (e) {
+                      toast({ title: 'Erro ao importar', variant: 'destructive' });
+                    }
+                  }
+                }}
+              >
+                Importar Base CID-10 (Admin)
+              </Button>
             </CardContent>
           </Card>
         </div>
       </div>
     </div>
+  );
+}
+
+// Sub-componente para a tabela de licenças
+function LeaveTable({ requests, handleUpdateStatus, getStatusBadge, getLeaveTypeBadge, formatDate, isRH, canDelete, showEmployee, loadData }: any) {
+  const router = useRouter();
+  const { user } = useAuthStore();
+
+  return (
+    <Table>
+      <TableHeader className="bg-slate-50/50">
+        <TableRow className="hover:bg-transparent border-none">
+          {showEmployee && <TableHead className="px-8 font-black text-slate-500 uppercase text-[10px] tracking-wider">Colaborador</TableHead>}
+          <TableHead className={cn("font-black text-slate-500 uppercase text-[10px] tracking-wider", !showEmployee && "px-8")}>Tipo</TableHead>
+          <TableHead className="font-black text-slate-500 uppercase text-[10px] tracking-wider">Período</TableHead>
+          <TableHead className="font-black text-slate-500 uppercase text-[10px] tracking-wider text-center">Dias</TableHead>
+          <TableHead className="font-black text-slate-500 uppercase text-[10px] tracking-wider text-center">Status</TableHead>
+          <TableHead className="px-8 font-black text-slate-500 uppercase text-[10px] tracking-wider text-right">Ações</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {requests.length === 0 ? (
+          <TableRow>
+            <TableCell colSpan={showEmployee ? 6 : 5} className="h-32 text-center text-slate-400 font-medium">
+              Nenhuma solicitação encontrada.
+            </TableCell>
+          </TableRow>
+        ) : (
+          requests.map((request: any) => (
+            <TableRow key={request.id} className="hover:bg-slate-50/50 group transition-colors">
+              {showEmployee && (
+                <td className="px-8 py-4">
+                  <p className="font-bold text-slate-900">{typeof request.employeeName === 'string' ? request.employeeName : 'Colaborador'}</p>
+                  <p className="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">ID: {request.id.toString().substring(0, 8)}</p>
+                </td>
+              )}
+              <td className={cn("py-4", !showEmployee && "px-8")}>{getLeaveTypeBadge(request.type)}</td>
+              <td className="py-4">
+                <p className="text-sm font-bold text-slate-700">{formatDate(request.startDate)}</p>
+                <div className="flex items-center gap-1">
+                  <div className="h-[1px] flex-1 bg-slate-100" />
+                  <span className="text-[8px] font-bold text-slate-300 uppercase">até</span>
+                  <div className="h-[1px] flex-1 bg-slate-100" />
+                </div>
+                <p className="text-sm font-bold text-slate-700">{formatDate(request.endDate)}</p>
+              </td>
+              <td className="py-4 text-center">
+                <span className="inline-flex items-center px-3 py-1 bg-slate-100 rounded-lg text-sm font-black text-slate-700 tabular-nums">
+                  {request.daysCount} d
+                </span>
+              </td>
+              <td className="py-4 text-center">{getStatusBadge(request.status)}</td>
+              <td className="px-8 py-4 text-right">
+                <div className="flex items-center justify-end gap-1 transition-opacity">
+                  {request.status === 'PENDING' && isRH && (
+                    <>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 w-8 p-0 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                        onClick={() => handleUpdateStatus(request.id, 'APPROVED')}
+                      >
+                        <CheckCircle2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        onClick={() => handleUpdateStatus(request.id, 'REJECTED')}
+                      >
+                        <XCircle className="h-4 w-4" />
+                      </Button>
+                    </>
+                  )}
+
+                  {(canDelete || (request.status === 'PENDING' && request.employeeId === user?.id)) && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 w-8 p-0 text-red-400 hover:text-red-600 hover:bg-red-50"
+                      onClick={async () => {
+                        if (confirm('Tem certeza que deseja remover esta solicitação?')) {
+                          await leavesApi.deleteLeave(request.id);
+                          loadData();
+                        }
+                      }}
+                    >
+                      <XCircle className="h-4 w-4" />
+                    </Button>
+                  )}
+
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 w-8 p-0 text-slate-400 hover:text-slate-900"
+                    onClick={() => router.push(`/vacation/requests/${request.id}`)}
+                  >
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </td>
+            </TableRow>
+          ))
+        )}
+      </TableBody>
+    </Table>
   );
 }

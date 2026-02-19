@@ -60,6 +60,24 @@ export default function LeaveRequestPage() {
     const [analyzing, setAnalyzing] = useState(false);
     const [selectedType, setSelectedType] = useState('MEDICAL');
     const [file, setFile] = useState<File | null>(null);
+    const [cidResults, setCidResults] = useState<any[]>([]);
+    const [searchingCid, setSearchingCid] = useState(false);
+
+    const handleCidSearch = async (query: string) => {
+        if (query.length < 2) {
+            setCidResults([]);
+            return;
+        }
+        setSearchingCid(true);
+        try {
+            const results = await leavesApi.searchCid(query);
+            setCidResults(results);
+        } catch (error) {
+            console.error('Erro ao buscar CID:', error);
+        } finally {
+            setSearchingCid(false);
+        }
+    };
 
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
@@ -142,7 +160,7 @@ export default function LeaveRequestPage() {
     };
 
     return (
-        <div className="p-6 w-full max-w-7xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="p-6 w-full space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="flex items-center gap-4">
                 <Button variant="outline" size="icon" onClick={() => router.back()} className="rounded-xl">
                     <ArrowLeft className="h-5 w-5" />
@@ -174,11 +192,8 @@ export default function LeaveRequestPage() {
                                     </SelectTrigger>
                                     <SelectContent className="rounded-xl">
                                         {LEAVE_TYPES.map(t => (
-                                            <SelectItem key={t.id} value={t.id} className="py-3">
-                                                <div className="flex items-center gap-3">
-                                                    <t.icon className="h-4 w-4 text-blue-600" />
-                                                    <span>{t.label}</span>
-                                                </div>
+                                            <SelectItem key={t.id} value={t.id} className="py-2">
+                                                {t.label}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -222,9 +237,40 @@ export default function LeaveRequestPage() {
                                 )}
 
                                 {selectedType === 'MEDICAL' && (
-                                    <div className="space-y-2 pt-2 animate-in slide-in-from-top-2">
+                                    <div className="space-y-2 pt-2 animate-in slide-in-from-top-2 relative">
                                         <Label className="text-blue-800 text-xs font-black uppercase tracking-widest">Código CID (Auto-preenchido pela IA)</Label>
-                                        <Input {...form.register('cid')} placeholder="M54.5" className="h-12 rounded-xl border-blue-200 bg-white font-mono" />
+                                        <Input
+                                            {...form.register('cid')}
+                                            placeholder="Ex: M54.5"
+                                            className="h-12 rounded-xl border-blue-200 bg-white font-mono"
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                form.setValue('cid', val);
+                                                handleCidSearch(val);
+                                            }}
+                                        />
+                                        {cidResults.length > 0 && (
+                                            <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-60 overflow-y-auto">
+                                                {cidResults.map((cid) => (
+                                                    <div
+                                                        key={cid.code}
+                                                        className="p-3 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-none transition-colors"
+                                                        onClick={() => {
+                                                            form.setValue('cid', cid.code);
+                                                            setCidResults([]);
+                                                        }}
+                                                    >
+                                                        <p className="text-xs font-black text-blue-600">{cid.code}</p>
+                                                        <p className="text-xs text-slate-600 font-medium">{cid.description}</p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                        {searchingCid && (
+                                            <div className="absolute right-3 top-9">
+                                                <Loader2 className="h-4 w-4 animate-spin text-blue-300" />
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
