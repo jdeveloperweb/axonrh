@@ -15,7 +15,9 @@ import {
     Download,
     Search,
     ChevronRight,
-    User
+    User,
+    Database,
+    Loader2
 } from 'lucide-react';
 import {
     PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
@@ -26,6 +28,8 @@ import {
 
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 import { leavesApi, LeaveDashboardStats } from '@/lib/api/leaves';
 import { cn } from '@/lib/utils';
 
@@ -34,18 +38,42 @@ const COLORS = ['#2563EB', '#F59E0B', '#10B981', '#EF4444', '#8B5CF6', '#EC4899'
 export function AvailabilityDashboard() {
     const [stats, setStats] = useState<LeaveDashboardStats | null>(null);
     const [loading, setLoading] = useState(true);
+    const [seeding, setSeeding] = useState(false);
+    const { toast } = useToast();
+
+    async function loadStats() {
+        try {
+            setLoading(true);
+            const data = await leavesApi.getDashboardStats();
+            setStats(data);
+        } catch (error) {
+            console.error('Error loading leave stats:', error);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    const handleSeed = async () => {
+        try {
+            setSeeding(true);
+            await leavesApi.seedLeaves(20);
+            toast({
+                title: 'Carga finalizada',
+                description: '20 novas licenças foram geradas aleatoriamente.',
+            });
+            await loadStats();
+        } catch (error) {
+            toast({
+                title: 'Erro na carga',
+                description: 'Não foi possível gerar dados de teste.',
+                variant: 'destructive',
+            });
+        } finally {
+            setSeeding(false);
+        }
+    };
 
     useEffect(() => {
-        async function loadStats() {
-            try {
-                const data = await leavesApi.getDashboardStats();
-                setStats(data);
-            } catch (error) {
-                console.error('Error loading leave stats:', error);
-            } finally {
-                setLoading(false);
-            }
-        }
         loadStats();
     }, []);
 
@@ -92,6 +120,17 @@ export function AvailabilityDashboard() {
                     <Badge variant="outline" className="px-4 py-2 border-none bg-slate-50 text-slate-600 cursor-pointer hover:bg-slate-100 transition-colors">
                         01/01/2026 - 31/12/2026
                     </Badge>
+                    <div className="w-[1px] h-6 bg-slate-100 mx-1" />
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleSeed}
+                        disabled={seeding}
+                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 font-bold gap-2"
+                    >
+                        {seeding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />}
+                        Carga de Teste
+                    </Button>
                     <div className="w-[1px] h-6 bg-slate-100 mx-1" />
                     <button className="p-2 text-slate-400 hover:text-blue-600 transition-colors">
                         <Filter className="w-4 h-4" />
