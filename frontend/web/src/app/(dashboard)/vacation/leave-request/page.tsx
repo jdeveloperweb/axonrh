@@ -87,7 +87,7 @@ function LeaveRequestContent() {
     const isAdmin = roles.some(r => r.includes('ADMIN'));
     const isRH = roles.some(r => r.includes('RH') || r.includes('GESTOR_RH') || r.includes('ANALISTA_DP'));
     const isManager = roles.some(r => r.includes('GESTOR') || r.includes('LIDER') || r.includes('MANAGER'));
-    const canApprove = isAdmin || isRH;
+    const canApprove = isAdmin || isRH || isManager;
 
     const formatDocumentUrl = (url: string | null | undefined) => {
         if (!url) return undefined;
@@ -351,7 +351,7 @@ function LeaveRequestContent() {
                                 <div className="space-y-2">
                                     <Label className="text-slate-700 font-bold">Tipo de Licença</Label>
                                     <Select
-                                        disabled={isReview}
+                                        disabled={isReview && !canApprove}
                                         onValueChange={(val) => { setSelectedType(val); form.setValue('type', val); }}
                                         value={selectedType}
                                     >
@@ -371,11 +371,11 @@ function LeaveRequestContent() {
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <Label className="text-slate-700 font-bold">Data de Início</Label>
-                                        <Input disabled={isReview} type="date" {...form.register('startDate')} className="h-12 rounded-xl border-slate-200 bg-slate-50/50" />
+                                        <Input disabled={isReview && !canApprove} type="date" {...form.register('startDate')} className="h-12 rounded-xl border-slate-200 bg-slate-50/50" />
                                     </div>
                                     <div className="space-y-2">
                                         <Label className="text-slate-700 font-bold">Data de Fim</Label>
-                                        <Input disabled={isReview} type="date" {...form.register('endDate')} className="h-12 rounded-xl border-slate-200 bg-slate-50/50" />
+                                        <Input disabled={isReview && !canApprove} type="date" {...form.register('endDate')} className="h-12 rounded-xl border-slate-200 bg-slate-50/50" />
                                     </div>
                                 </div>
                             </div>
@@ -405,7 +405,7 @@ function LeaveRequestContent() {
                                                 <Input
                                                     {...form.register('cid')}
                                                     placeholder={analyzing ? "IA analisando documento..." : "Código do CID (ex: M54.5)"}
-                                                    disabled={analyzing}
+                                                    disabled={analyzing || (isReview && !canApprove)}
                                                     className={cn(
                                                         "h-14 pl-11 rounded-2xl border-blue-100 bg-blue-50/30 font-bold text-blue-900 focus-visible:ring-blue-500 placeholder:text-blue-300",
                                                         analyzing && "cursor-not-allowed opacity-80"
@@ -461,6 +461,7 @@ function LeaveRequestContent() {
                                 <Label className="text-slate-700 font-bold">Observações / {isReview ? 'Notas do Gestor' : 'Descrição do Motivo'}</Label>
                                 <Textarea
                                     {...form.register('reason')}
+                                    disabled={isReview && !canApprove}
                                     className="min-h-[100px] rounded-2xl border-slate-200 bg-slate-50/50 resize-none focus:bg-white transition-all shadow-inner"
                                     placeholder={isReview ? "Notas adicionais sobre a aprovação ou rejeição..." : "Descreva brevemente o motivo da solicitação..."}
                                 />

@@ -86,6 +86,13 @@ spring:
             # - StripPrefix=2
             - name: JwtAuthFilter
 
+        # Vacation Service - Certificates (Public/Direct)
+        - id: vacation-certificates
+          uri: http://axonrh-vacation-service:8085
+          predicates:
+            - Path=/api/v1/leaves/certificates/**
+          # Nao usamos JwtAuthFilter para documentos estaticos acessados por img tags
+
         # Vacation Service
         - id: vacation-service
           uri: http://axonrh-vacation-service:8085
