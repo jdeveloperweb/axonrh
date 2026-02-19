@@ -90,7 +90,7 @@ spring:
         - id: vacation-service
           uri: http://axonrh-vacation-service:8085
           predicates:
-            - Path=/api/v1/vacations/**
+            - Path=/api/v1/vacations/**, /api/v1/leaves/**
           filters:
             # - StripPrefix=2
             - name: JwtAuthFilter
@@ -187,6 +187,15 @@ spring:
             allowCredentials: true
             maxAge: 3600
 
+      # Timeouts globais para evitar conexoes presas
+      httpclient:
+        connect-timeout: 5000
+        response-timeout: 30s
+        pool:
+          type: elastic
+          max-idle-time: 30s
+          max-life-time: 60s
+
 # Actuator e metricas
 management:
   endpoints:
@@ -210,7 +219,7 @@ logging:
   level:
     root: INFO
     com.axonrh: DEBUG
-    org.springframework.cloud.gateway: DEBUG
+    org.springframework.cloud.gateway: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 

@@ -21,6 +21,8 @@ public class EmployeeDTO {
     private java.time.LocalDate hireDate;
     private EmployeeDTO manager;
     private String photoUrl;
+    private java.time.LocalDate birthDate;
+    private String gender;
     private UUID tenantId;
 }
 

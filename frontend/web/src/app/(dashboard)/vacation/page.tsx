@@ -23,7 +23,9 @@ import {
   Plane,
   ArrowRight,
   Info,
-  CalendarCheck2
+  CalendarCheck2,
+  Stethoscope,
+  Heart
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -154,10 +156,19 @@ export default function VacationPage() {
         <div className="flex items-center gap-3">
           <Button
             onClick={() => router.push('/vacation/request')}
-            className="flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 transition-opacity"
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:opacity-90 transition-opacity"
           >
-            <Plus className="w-4 h-4" />
-            Nova Solicitação
+            <Umbrella className="w-4 h-4" />
+            Nova Férias
+          </Button>
+
+          <Button
+            onClick={() => router.push('/vacation/leave-request')}
+            variant="outline"
+            className="flex items-center gap-2 px-4 py-2 border-blue-200 text-blue-700 rounded-lg hover:bg-blue-50 transition-all font-bold"
+          >
+            <Stethoscope className="w-4 h-4" />
+            Outros Afastamentos
           </Button>
 
           {(isManager || isRH || isAdmin) && (
@@ -426,6 +437,7 @@ export default function VacationPage() {
                 }] : []),
                 { icon: DollarSign, label: 'Simulador', desc: 'Cálculos de férias', path: '/vacation/simulator', color: 'text-emerald-600', bg: 'bg-emerald-50' },
                 { icon: Users, label: 'Escala Equipe', desc: 'Ausências de colegas', path: '/vacation/team', color: 'text-blue-600', bg: 'bg-blue-50' },
+                { icon: Heart, label: 'Outras Licenças', desc: 'Saúde, Gala, Luto, etc', path: '/vacation/leave-request', color: 'text-pink-600', bg: 'bg-pink-50' },
                 { icon: FileText, label: 'Políticas', desc: 'Regras de férias', path: '#', color: 'text-purple-600', bg: 'bg-purple-50' },
               ].map((item, idx) => (
                 <button

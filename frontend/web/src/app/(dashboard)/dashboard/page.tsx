@@ -34,6 +34,7 @@ import { useAuthStore } from '@/stores/auth-store';
 import { dashboardApi, DashboardStats, LearningStats } from '@/lib/api/dashboard';
 import { wellbeingApi, WellbeingStats } from '@/lib/api/wellbeing';
 import { CollaboratorDashboard } from '@/components/dashboard/CollaboratorDashboard';
+import { AvailabilityDashboard } from '@/components/dashboard/AvailabilityDashboard';
 import { useThemeStore } from '@/stores/theme-store';
 import { cn } from '@/lib/utils';
 
@@ -1066,6 +1067,7 @@ export default function DashboardPage() {
           { id: 'geral', label: 'Geral', icon: BarChart3 },
           { id: 'hiring', label: 'Contratação & Retenção', icon: Users },
           { id: 'diversity', label: 'Diversidade', icon: Brain },
+          { id: 'disponibilidade', label: 'Disponibilidade', icon: Calendar },
           { id: 'learning', label: 'Aprendizagem', icon: GraduationCap, module: 'moduleLearning' },
           { id: 'wellbeing', label: 'Bem-estar', icon: CheckCircle, module: 'modulePerformance' }
         ].filter(tab => {
@@ -1100,6 +1102,7 @@ export default function DashboardPage() {
         {activeTab === 'diversity' && renderDiversityTab()}
         {activeTab === 'learning' && renderLearningTab()}
         {activeTab === 'wellbeing' && renderWellbeingTab()}
+        {activeTab === 'disponibilidade' && <AvailabilityDashboard />}
       </div>
     </div>
   );
