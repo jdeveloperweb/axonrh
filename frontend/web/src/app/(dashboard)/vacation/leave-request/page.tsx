@@ -354,80 +354,82 @@ function LeaveRequestContent() {
                                 </div>
                             </div>
 
-                            <Separator />
-
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <Stethoscope className="h-5 w-5 text-blue-600" />
-                                        <h4 className="font-bold text-blue-900 uppercase text-sm tracking-widest">Validação Médica / CID</h4>
-                                    </div>
-                                    <Badge className="bg-blue-600 text-white border-none font-black flex gap-1 items-center">
-                                        <Brain className="h-3 w-3" /> AI Powered
-                                    </Badge>
-                                </div>
-
-                                <div className="relative">
-                                    <Label className="text-blue-800 text-xs font-black uppercase tracking-widest mb-2 block">
-                                        Código CID {reviewId ? '(Corrigir se necessário)' : '(Extraído ou manual)'}
-                                    </Label>
-                                    <div className="relative group">
-                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-400 group-focus-within:text-blue-600 transition-colors">
-                                            <Search className="h-4 w-4" />
+                            {selectedType === 'MEDICAL' && (
+                                <>
+                                    <Separator />
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <Stethoscope className="h-5 w-5 text-blue-600" />
+                                                <h4 className="font-bold text-blue-900 uppercase text-sm tracking-widest">Validação Médica / CID</h4>
+                                            </div>
+                                            <Badge className="bg-blue-600 text-white border-none font-black flex gap-1 items-center">
+                                                <Brain className="h-3 w-3" /> AI Powered
+                                            </Badge>
                                         </div>
-                                        <Input
-                                            {...form.register('cid')}
-                                            placeholder={analyzing ? "IA analisando documento..." : "Código do CID (ex: M54.5)"}
-                                            disabled={analyzing}
-                                            className={cn(
-                                                "h-14 pl-11 rounded-2xl border-blue-100 bg-blue-50/30 font-bold text-blue-900 focus-visible:ring-blue-500 placeholder:text-blue-300",
-                                                analyzing && "cursor-not-allowed opacity-80"
-                                            )}
-                                            onChange={(e) => {
-                                                const val = e.target.value;
-                                                form.setValue('cid', val);
-                                                if (isReview || val.length > 2) {
-                                                    handleCidSearch(val);
-                                                }
-                                            }}
-                                        />
-                                        {searchingCid && isReview && (
-                                            <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                                                <Loader2 className="h-4 w-4 animate-spin text-blue-300" />
-                                            </div>
-                                        )}
-                                    </div>
 
-                                    {cidResults.length > 0 && (
-                                        <div className="absolute z-20 w-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl max-h-72 overflow-y-auto animate-in zoom-in-95 duration-200">
-                                            <div className="p-2 border-b border-slate-50 bg-slate-50/50">
-                                                <p className="text-[10px] font-black text-slate-400 uppercase px-2">CIDs Encontrados</p>
-                                            </div>
-                                            {cidResults.map((cid) => (
-                                                <div
-                                                    key={cid.code}
-                                                    className="p-4 hover:bg-blue-50 cursor-pointer flex items-center justify-between group transition-colors border-b border-slate-50 last:border-none"
-                                                    onClick={() => {
-                                                        form.setValue('cid', cid.code);
-                                                        setCidResults([]);
-                                                        toast({ title: 'CID Selecionado', description: `${cid.code}: ${cid.description}` });
-                                                    }}
-                                                >
-                                                    <div>
-                                                        <p className="text-sm font-black text-blue-600">{cid.code}</p>
-                                                        <p className="text-xs text-slate-600 font-medium group-hover:text-slate-900">{cid.description}</p>
-                                                    </div>
-                                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <Check className="h-4 w-4 text-blue-600" />
-                                                    </div>
+                                        <div className="relative">
+                                            <Label className="text-blue-800 text-xs font-black uppercase tracking-widest mb-2 block">
+                                                Código CID {reviewId ? '(Corrigir se necessário)' : '(Extraído ou manual)'}
+                                            </Label>
+                                            <div className="relative group">
+                                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-400 group-focus-within:text-blue-600 transition-colors">
+                                                    <Search className="h-4 w-4" />
                                                 </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
+                                                <Input
+                                                    {...form.register('cid')}
+                                                    placeholder={analyzing ? "IA analisando documento..." : "Código do CID (ex: M54.5)"}
+                                                    disabled={analyzing}
+                                                    className={cn(
+                                                        "h-14 pl-11 rounded-2xl border-blue-100 bg-blue-50/30 font-bold text-blue-900 focus-visible:ring-blue-500 placeholder:text-blue-300",
+                                                        analyzing && "cursor-not-allowed opacity-80"
+                                                    )}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        form.setValue('cid', val);
+                                                        if (isReview || val.length > 2) {
+                                                            handleCidSearch(val);
+                                                        }
+                                                    }}
+                                                />
+                                                {searchingCid && isReview && (
+                                                    <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                                                        <Loader2 className="h-4 w-4 animate-spin text-blue-300" />
+                                                    </div>
+                                                )}
+                                            </div>
 
-                            <Separator />
+                                            {cidResults.length > 0 && (
+                                                <div className="absolute z-20 w-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl max-h-72 overflow-y-auto animate-in zoom-in-95 duration-200">
+                                                    <div className="p-2 border-b border-slate-50 bg-slate-50/50">
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase px-2">CIDs Encontrados</p>
+                                                    </div>
+                                                    {cidResults.map((cid) => (
+                                                        <div
+                                                            key={cid.code}
+                                                            className="p-4 hover:bg-blue-50 cursor-pointer flex items-center justify-between group transition-colors border-b border-slate-50 last:border-none"
+                                                            onClick={() => {
+                                                                form.setValue('cid', cid.code);
+                                                                setCidResults([]);
+                                                                toast({ title: 'CID Selecionado', description: `${cid.code}: ${cid.description}` });
+                                                            }}
+                                                        >
+                                                            <div>
+                                                                <p className="text-sm font-black text-blue-600">{cid.code}</p>
+                                                                <p className="text-xs text-slate-600 font-medium group-hover:text-slate-900">{cid.description}</p>
+                                                            </div>
+                                                            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                <Check className="h-4 w-4 text-blue-600" />
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <Separator />
+                                </>
+                            )}
 
                             <div className="space-y-4">
                                 <Label className="text-slate-700 font-bold">Observações / {isReview ? 'Notas do Gestor' : 'Descrição do Motivo'}</Label>
