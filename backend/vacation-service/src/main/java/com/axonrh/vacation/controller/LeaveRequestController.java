@@ -4,6 +4,7 @@ import com.axonrh.vacation.entity.LeaveRequest;
 import com.axonrh.vacation.entity.enums.VacationRequestStatus;
 import com.axonrh.vacation.service.LeaveRequestService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,6 +16,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/leaves")
 @RequiredArgsConstructor
+@Slf4j
 public class LeaveRequestController {
 
     private final LeaveRequestService leaveRequestService;
