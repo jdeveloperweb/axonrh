@@ -208,7 +208,7 @@ export default function VacationPage() {
         <div className="flex flex-wrap items-center gap-3">
           <Button
             onClick={() => router.push('/vacation/request')}
-            className="flex items-center gap-2 px-6 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all shadow-lg active:scale-95"
+            className="flex items-center gap-2 px-6 bg-[var(--color-secondary)] text-white rounded-xl hover:opacity-90 transition-all shadow-lg active:scale-95 border-none"
           >
             <Umbrella className="w-4 h-4" />
             Nova Férias
@@ -216,7 +216,7 @@ export default function VacationPage() {
 
           <Button
             onClick={() => router.push('/vacation/leave-request')}
-            className="flex items-center gap-2 px-6 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 active:scale-95"
+            className="flex items-center gap-2 px-6 bg-[var(--color-primary)] text-white rounded-xl hover:opacity-90 transition-all shadow-lg shadow-[var(--color-primary)]/10 active:scale-95 border-none"
           >
             <Plus className="w-4 h-4" />
             Nova Licença
@@ -225,9 +225,9 @@ export default function VacationPage() {
           <Button
             variant="outline"
             onClick={() => router.push('/vacation/approvals')}
-            className="flex items-center gap-2 border-slate-200 rounded-xl hover:bg-slate-50 text-slate-700 font-bold"
+            className="flex items-center gap-2 border-[var(--color-border)] rounded-xl hover:bg-[var(--color-surface)] text-[var(--color-text-secondary)] font-bold"
           >
-            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+            <CheckCircle2 className="w-4 h-4 text-[var(--color-success)]" />
             Aprovações
           </Button>
         </div>
@@ -238,10 +238,10 @@ export default function VacationPage() {
 
           {/* Active Absences Section */}
           <div className="space-y-4">
-            <h2 className="text-xl font-black text-slate-800 flex items-center gap-2">
-              <Users className="h-5 w-5 text-blue-600" />
+            <h2 className="text-xl font-black text-[var(--color-text-primary)] flex items-center gap-2">
+              <Users className="h-5 w-5 text-[var(--color-primary)]" />
               Quem está afastado hoje
-              <Badge variant="secondary" className="ml-2 bg-blue-50 text-blue-600 border-none font-bold">
+              <Badge variant="secondary" className="ml-2 bg-[var(--color-primary)]/10 text-[var(--color-primary)] border-none font-bold">
                 {activeLeaves.length} pessoas
               </Badge>
             </h2>
@@ -333,10 +333,10 @@ export default function VacationPage() {
         {/* Sidebar */}
         <div className="lg:col-span-4 space-y-8">
           {/* Vacation Periods (CLT specific) */}
-          <Card className="border-none shadow-lg bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-3xl overflow-hidden">
+          <Card className="border-none shadow-lg bg-gradient-to-br from-[var(--color-secondary-dark)] to-[var(--color-secondary)] text-white rounded-3xl overflow-hidden">
             <CardHeader>
               <CardTitle className="text-lg font-black flex items-center gap-2 text-white">
-                <Umbrella className="h-5 w-5 text-blue-400" />
+                <Umbrella className="h-5 w-5 text-[var(--color-primary-light)]" />
                 Seu Saldo de Férias
               </CardTitle>
             </CardHeader>
@@ -391,13 +391,13 @@ export default function VacationPage() {
             <div className="space-y-4">
               <h3 className="text-sm font-black text-slate-500 uppercase tracking-widest px-1">Indicadores Rápidos</h3>
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-50">
-                  <p className="text-[10px] font-black text-amber-500 mb-1">PENDENTES</p>
-                  <p className="text-2xl font-black text-slate-900">{statistics.pendingRequests}</p>
+                <div className="bg-white p-4 rounded-2xl shadow-sm border border-[var(--color-border)]">
+                  <p className="text-[10px] font-black text-[var(--color-warning)] mb-1">PENDENTES</p>
+                  <p className="text-2xl font-black text-[var(--color-text-primary)]">{statistics.pendingRequests}</p>
                 </div>
-                <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-50">
-                  <p className="text-[10px] font-black text-blue-500 mb-1">AGENDADOS</p>
-                  <p className="text-2xl font-black text-slate-900">{statistics.upcomingVacations}</p>
+                <div className="bg-white p-4 rounded-2xl shadow-sm border border-[var(--color-border)]">
+                  <p className="text-[10px] font-black text-[var(--color-primary)] mb-1">AGENDADOS</p>
+                  <p className="text-2xl font-black text-[var(--color-text-primary)]">{statistics.upcomingVacations}</p>
                 </div>
               </div>
             </div>
@@ -438,7 +438,7 @@ export default function VacationPage() {
           )}
 
           {/* Quick Actions */}
-          <Card className="border-none shadow-sm bg-blue-600 text-white rounded-3xl p-2">
+          <Card className="border-none shadow-sm bg-[var(--color-primary)] text-white rounded-3xl p-2">
             <CardContent className="p-4 space-y-4">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 bg-white/20 rounded-xl flex items-center justify-center">
@@ -450,7 +450,7 @@ export default function VacationPage() {
                 Use nossa IA para ler e validar atestados médicos instantaneamente.
               </p>
               <Button
-                className="w-full bg-white text-blue-600 hover:bg-blue-50 font-black rounded-xl border-none shadow-lg active:scale-95 transition-all"
+                className="w-full bg-white text-[var(--color-primary)] hover:bg-white/90 font-black rounded-xl border-none shadow-lg active:scale-95 transition-all"
                 onClick={() => router.push('/vacation/leave-request')}
               >
                 Subir Documento
