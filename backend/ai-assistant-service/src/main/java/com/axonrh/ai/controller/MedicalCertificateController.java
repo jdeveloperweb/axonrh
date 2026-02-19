@@ -59,7 +59,7 @@ public class MedicalCertificateController {
         ChatRequest chatRequest = ChatRequest.builder()
                 .messages(List.of(
                         ChatMessage.builder().role(ChatMessage.Role.SYSTEM).content(systemPrompt).build(),
-                        ChatMessage.builder().role(ChatMessage.USER).content(userPrompt).build()
+                        ChatMessage.builder().role(ChatMessage.Role.USER).content(userPrompt).build()
                 ))
                 .temperature(0.1)
                 .responseFormat("json_object")

@@ -32,7 +32,7 @@ public class LeaveRequestService {
         // Obter dados do colaborador
         EmployeeDTO employee = employeeServiceClient.getEmployee(request.getEmployeeId());
         if (employee != null) {
-            request.setEmployeeName(employee.getName());
+            request.setEmployeeName(employee.getFullName());
         }
 
         // Se for licença médica e tiver texto do atestado, analisar com IA
