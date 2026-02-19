@@ -519,6 +519,8 @@ function LeaveTable({ requests, handleUpdateStatus, getStatusBadge, getLeaveType
   const router = useRouter();
   const { user } = useAuthStore();
 
+  const isAdmin = user?.roles?.some((r: string) => r.includes('ADMIN')) || false;
+
   return (
     <Table>
       <TableHeader className="bg-slate-50/50">
@@ -586,7 +588,7 @@ function LeaveTable({ requests, handleUpdateStatus, getStatusBadge, getLeaveType
                     </>
                   )}
 
-                  {(canDelete || (request.status === 'PENDING' && request.employeeId === user?.id)) && (
+                  {((request.status === 'APPROVED' ? isAdmin : (canDelete || (request.status === 'PENDING' && request.employeeId === user?.id)))) && (
                     <Button
                       size="sm"
                       variant="ghost"
