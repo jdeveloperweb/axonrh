@@ -29,19 +29,22 @@ public class NotificationService {
     private final SimpMessagingTemplate messagingTemplate;
     private final PushNotificationService pushService;
     private final PreferenceService preferenceService;
+    private final EmailService emailService;
 
     public NotificationService(NotificationRepository notificationRepository,
                                SimpMessagingTemplate messagingTemplate,
                                PushNotificationService pushService,
-                               PreferenceService preferenceService) {
+                               PreferenceService preferenceService,
+                               EmailService emailService) {
         this.notificationRepository = notificationRepository;
         this.messagingTemplate = messagingTemplate;
         this.pushService = pushService;
         this.preferenceService = preferenceService;
+        this.emailService = emailService;
     }
 
     /**
-     * Cria e envia notificacao in-app.
+     * Cria e envia notificacao in-app, push e email.
      */
     public Notification createNotification(UUID tenantId, UUID userId, UUID employeeId,
                                            NotificationType type, String category,
@@ -50,27 +53,33 @@ public class NotificationService {
                                            ActionType actionType, String actionUrl,
                                            String actionData, Priority priority,
                                            String sourceType, UUID sourceId,
-                                           boolean sendPush) {
+                                           boolean sendPush,
+                                           String recipientEmail, String recipientName,
+                                           String templateCode, Map<String, String> emailVariables) {
         
         // 1. Get user preferences
         var prefs = preferenceService.getPreferences(tenantId, userId);
         
-        log.info("Preferencias do usuario {}: inApp={}, push={}", userId, prefs.isInAppEnabled(), prefs.isPushEnabled());
+        log.info("Preferencias do usuario {}: inApp={}, push={}, email={}", 
+            userId, prefs.isInAppEnabled(), prefs.isPushEnabled(), prefs.isEmailEnabled());
         
         // 2. Check category-specific preferences if category is provided
         boolean inAppEnabled = prefs.isInAppEnabled();
         boolean pushEnabled = prefs.isPushEnabled() && sendPush;
+        boolean emailEnabled = prefs.isEmailEnabled() && recipientEmail != null && templateCode != null;
         
         if (category != null) {
             var catPrefs = prefs.getCategoryPreferences() != null ? prefs.getCategoryPreferences().get(category) : null;
             if (catPrefs != null) {
                 inAppEnabled = inAppEnabled && catPrefs.isInApp();
                 pushEnabled = pushEnabled && catPrefs.isPush();
-                log.info("Preferencias da categoria {}: inApp={}, push={}", category, catPrefs.isInApp(), catPrefs.isPush());
+                emailEnabled = emailEnabled && catPrefs.isEmail();
+                log.info("Preferencias da categoria {}: inApp={}, push={}, email={}", 
+                    category, catPrefs.isInApp(), catPrefs.isPush(), catPrefs.isEmail());
             }
         }
 
-        log.info("Notificacao sera criada? inApp={}, push={}", inAppEnabled, pushEnabled);
+        log.info("Notificacao sera criada? inApp={}, push={}, email={}", inAppEnabled, pushEnabled, emailEnabled);
 
         Notification saved = null;
         
@@ -114,7 +123,33 @@ public class NotificationService {
             pushService.sendToUser(tenantId, userId, title, message, data, imageUrl);
         }
 
+        // 5. Send email if enabled
+        if (emailEnabled) {
+            log.info("Enviando email para {} usando o template {}", recipientEmail, templateCode);
+            try {
+                emailService.sendTemplateEmail(tenantId, templateCode, recipientEmail, recipientName, emailVariables);
+            } catch (Exception e) {
+                log.error("Erro ao enviar email na notificacao: {}", e.getMessage());
+            }
+        }
+
         return saved;
+    }
+
+    /**
+     * Wrapper para compatibilidade com chamadas antigas.
+     */
+    public Notification createNotification(UUID tenantId, UUID userId, UUID employeeId,
+                                           NotificationType type, String category,
+                                           String title, String message,
+                                           String icon, String imageUrl,
+                                           ActionType actionType, String actionUrl,
+                                           String actionData, Priority priority,
+                                           String sourceType, UUID sourceId,
+                                           boolean sendPush) {
+        return createNotification(tenantId, userId, employeeId, type, category, title, message,
+                icon, imageUrl, actionType, actionUrl, actionData, priority, sourceType, sourceId,
+                sendPush, null, null, null, null);
     }
 
     /**

@@ -990,16 +990,31 @@ public class VacationService {
         event.put("tenantId", request.getTenantId().toString());
         event.put("requestId", request.getId().toString());
         event.put("employeeId", request.getEmployeeId().toString());
+        event.put("employeeName", request.getEmployeeName());
         event.put("status", request.getStatus().name());
         event.put("startDate", request.getStartDate().toString());
         event.put("endDate", request.getEndDate().toString());
         event.put("timestamp", LocalDateTime.now().toString());
-        event.put("requesterUserId", request.getCreatedBy().toString());
+        
+        if (request.getCreatedBy() != null) {
+            event.put("requesterUserId", request.getCreatedBy().toString());
+        }
+
         if (managerId != null) {
             event.put("managerId", managerId.toString());
         }
         if (managerUserId != null) {
             event.put("managerUserId", managerUserId.toString());
+        }
+
+        // Tentar obter o email do colaborador para a notificação
+        try {
+            EmployeeDTO employee = employeeServiceClient.getEmployee(request.getEmployeeId());
+            if (employee != null) {
+                event.put("employeeEmail", employee.getEmail());
+            }
+        } catch (Exception e) {
+            log.warn("Nao foi possivel obter detalhes do colaborador para o evento: {}", e.getMessage());
         }
 
         kafkaTemplate.send("vacation.domain.events", request.getEmployeeId().toString(), event);

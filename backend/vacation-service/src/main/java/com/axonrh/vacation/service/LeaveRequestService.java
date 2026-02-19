@@ -22,13 +22,26 @@ import java.util.UUID;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class LeaveRequestService {
 
     private final LeaveRequestRepository leaveRequestRepository;
     private final AiAssistantClient aiAssistantClient;
     private final EmployeeServiceClient employeeServiceClient;
     private final CidCodeRepository cidCodeRepository;
+    private final org.springframework.kafka.core.KafkaTemplate<String, Object> kafkaTemplate;
+
+    public LeaveRequestService(
+            LeaveRequestRepository leaveRequestRepository,
+            AiAssistantClient aiAssistantClient,
+            EmployeeServiceClient employeeServiceClient,
+            CidCodeRepository cidCodeRepository,
+            @org.springframework.beans.factory.annotation.Qualifier("vacationKafkaTemplate") org.springframework.kafka.core.KafkaTemplate<String, Object> kafkaTemplate) {
+        this.leaveRequestRepository = leaveRequestRepository;
+        this.aiAssistantClient = aiAssistantClient;
+        this.employeeServiceClient = employeeServiceClient;
+        this.cidCodeRepository = cidCodeRepository;
+        this.kafkaTemplate = kafkaTemplate;
+    }
 
     @Transactional
     public LeaveRequest createLeaveRequest(LeaveRequest request, String certificateText) {
@@ -86,12 +99,15 @@ public class LeaveRequestService {
         }
 
         // Validate CID and populate description if missing
+        // Validate CID and populate description if missing
         if (request.getCid() != null && (request.getCidDescription() == null || request.getCidDescription().isEmpty())) {
             cidCodeRepository.findById(request.getCid())
                     .ifPresent(c -> request.setCidDescription(c.getDescription()));
         }
 
-        return leaveRequestRepository.save(request);
+        LeaveRequest saved = leaveRequestRepository.save(request);
+        publishEvent("LEAVE_REQUESTED", saved);
+        return saved;
     }
 
     public List<LeaveRequest> getLeavesByTenant(UUID tenantId) {
@@ -161,7 +177,15 @@ public class LeaveRequestService {
             request.setApprovedAt(java.time.LocalDateTime.now());
         }
         
-        return leaveRequestRepository.save(request);
+        LeaveRequest saved = leaveRequestRepository.save(request);
+        
+        if (status == VacationRequestStatus.APPROVED) {
+            publishEvent("LEAVE_APPROVED", saved);
+        } else if (status == VacationRequestStatus.REJECTED) {
+            publishEvent("LEAVE_REJECTED", saved);
+        }
+        
+        return saved;
     }
 
     public MedicalCertificateAnalysisResponse analyzeCertificate(UUID tenantId, MedicalCertificateAnalysisRequest request) {
@@ -194,5 +218,42 @@ public class LeaveRequestService {
         }
 
         leaveRequestRepository.deleteById(id);
+    }
+
+    private void publishEvent(String eventType, LeaveRequest request) {
+        Map<String, Object> event = new java.util.HashMap<>();
+        event.put("eventType", eventType);
+        event.put("tenantId", request.getTenantId().toString());
+        event.put("requestId", request.getId().toString());
+        event.put("employeeId", request.getEmployeeId().toString());
+        event.put("employeeName", request.getEmployeeName());
+        event.put("status", request.getStatus().name());
+        event.put("type", request.getType().name());
+        event.put("startDate", request.getStartDate().toString());
+        event.put("endDate", request.getEndDate().toString());
+        event.put("timestamp", java.time.LocalDateTime.now().toString());
+        
+        if (request.getCreatedBy() != null) {
+            event.put("requesterUserId", request.getCreatedBy().toString());
+        }
+
+        // Tentar obter o email do colaborador para a notificação
+        try {
+            EmployeeDTO employee = employeeServiceClient.getEmployee(request.getEmployeeId());
+            if (employee != null) {
+                event.put("employeeEmail", employee.getEmail());
+                if (employee.getManager() != null) {
+                    event.put("managerId", employee.getManager().getId().toString());
+                    if (employee.getManager().getUserId() != null) {
+                        event.put("managerUserId", employee.getManager().getUserId().toString());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Nao foi possivel obter detalhes do colaborador para o evento: {}", e.getMessage());
+        }
+
+        kafkaTemplate.send("vacation.domain.events", request.getEmployeeId().toString(), event);
+        log.info("Evento {} enviado para o Kafka para a licença {}", eventType, request.getId());
     }
 }
