@@ -31,7 +31,9 @@ import {
     Check,
     XCircle,
     Download,
-    User
+    User,
+    Trash2,
+    RefreshCw
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
@@ -230,7 +232,7 @@ function LeaveRequestContent() {
                 if (values.cid) formData.append('cid', values.cid);
                 if (values.certificateText) formData.append('certificateText', values.certificateText);
                 if (file) formData.append('certificate', file);
-                formData.append('employeeId', user?.id || '');
+                formData.append('employeeId', user?.employeeId || user?.id || '');
 
                 await leavesApi.createLeave(formData);
                 toast({ title: 'Solicitação Enviada', description: 'Sua licença foi registrada com sucesso.' });
@@ -248,6 +250,16 @@ function LeaveRequestContent() {
         }
     };
 
+    const handleRemoveFile = () => {
+        setFile(null);
+        setPreviewUrl(null);
+        // Opcional: não limpamos os campos preenchidos pela IA para poupar trabalho do usuário
+        // se ele apenas estiver trocando por uma foto melhor do mesmo documento.
+        toast({
+            title: 'Documento Removido',
+            description: 'Você pode anexar um novo arquivo agora.',
+        });
+    };
     const handleReject = async () => {
         if (!reviewId) return;
         try {
@@ -551,9 +563,35 @@ function LeaveRequestContent() {
                                                 {file ? file.name : (existingRequest?.certificateUrl?.split('/').pop() || 'atestado_medico.pdf')}
                                             </p>
                                         </div>
-                                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full text-slate-400 hover:text-blue-600">
-                                            <Download className="h-4 w-4" />
-                                        </Button>
+                                        {!isReview && (
+                                            <div className="flex gap-1">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-8 w-8 p-0 rounded-full text-red-400 hover:text-red-600 hover:bg-red-50"
+                                                    onClick={handleRemoveFile}
+                                                    title="Remover arquivo"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                                <div className="relative">
+                                                    <input
+                                                        type="file"
+                                                        onChange={handleFileUpload}
+                                                        className="absolute inset-0 opacity-0 cursor-pointer"
+                                                        title="Trocar arquivo"
+                                                    />
+                                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full text-blue-400 hover:text-blue-600 hover:bg-blue-50">
+                                                        <RefreshCw className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        )}
+                                        {isReview && (
+                                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full text-slate-400 hover:text-blue-600">
+                                                <Download className="h-4 w-4" />
+                                            </Button>
+                                        )}
                                     </div>
                                 </>
                             )}

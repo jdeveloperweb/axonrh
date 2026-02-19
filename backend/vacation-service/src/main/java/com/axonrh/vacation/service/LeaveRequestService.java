@@ -30,10 +30,25 @@ public class LeaveRequestService {
 
     @Transactional
     public LeaveRequest createLeaveRequest(LeaveRequest request, String certificateText) {
-        // Obter dados do colaborador
-        EmployeeDTO employee = employeeServiceClient.getEmployee(request.getEmployeeId());
-        if (employee != null) {
-            request.setEmployeeName(employee.getFullName());
+        // Obter dados do colaborador de forma resiliente
+        try {
+            EmployeeDTO employee = null;
+            try {
+                employee = employeeServiceClient.getEmployee(request.getEmployeeId());
+            } catch (Exception e) {
+                log.warn("Falha ao buscar colaborador por ID: {}. Tentando por UserID...", request.getEmployeeId());
+                try {
+                    employee = employeeServiceClient.getEmployeeByUserId(request.getEmployeeId(), null);
+                } catch (Exception e2) {
+                    log.error("Falha ao buscar colaborador por UserID: {}", e2.getMessage());
+                }
+            }
+
+            if (employee != null) {
+                request.setEmployeeName(employee.getFullName());
+            }
+        } catch (Exception e) {
+            log.error("Erro geral ao tentar obter dados do colaborador para a licença", e);
         }
 
         // Se for licença médica e tiver texto do atestado, analisar com IA

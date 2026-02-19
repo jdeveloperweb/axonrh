@@ -89,7 +89,7 @@ export default function VacationPage() {
         (isRH || isAdmin || isManager) ? vacationApi.getPendingRequests(0, 100).then(r => r.content).catch(() => []) : Promise.resolve([]),
         (isRH || isAdmin || isManager) ? leavesApi.getLeaves().catch(() => []) : Promise.resolve([]),
         vacationApi.getMyRequests().catch(() => []),
-        user?.id ? leavesApi.getMyLeaves(user.id).catch(() => []) : Promise.resolve([]),
+        (user?.employeeId || user?.id) ? leavesApi.getMyLeaves(user?.employeeId || user?.id || '').catch(() => []) : Promise.resolve([]),
         vacationApi.getStatistics().catch(() => ({})),
         leavesApi.getActiveLeaves().catch(() => []),
         (isRH || isAdmin || isManager) ? vacationApi.getExpiringPeriods(90).catch(() => []) : Promise.resolve([])
