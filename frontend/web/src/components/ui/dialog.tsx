@@ -5,6 +5,8 @@ import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
+import { createPortal } from "react-dom"
+
 interface DialogContextValue {
   open: boolean
   setOpen: (open: boolean) => void
@@ -45,13 +47,16 @@ const DialogTrigger = React.forwardRef<
   const { setOpen } = useDialog()
 
   if (asChild && React.isValidElement(children)) {
-    return React.cloneElement(children as React.ReactElement<{ onClick?: () => void }>, {
-      onClick: () => setOpen(true),
+    return React.cloneElement(children as React.ReactElement<{ onClick?: (e: React.MouseEvent) => void }>, {
+      onClick: (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setOpen(true);
+      },
     })
   }
 
   return (
-    <button ref={ref} onClick={() => setOpen(true)} {...props}>
+    <button ref={ref} onClick={(e) => { e.stopPropagation(); setOpen(true); }} {...props}>
       {children}
     </button>
   )
@@ -60,9 +65,22 @@ DialogTrigger.displayName = "DialogTrigger"
 
 const DialogPortal = ({ children }: { children: React.ReactNode }) => {
   const { open } = useDialog()
-  if (!open) return null
+  const [mounted, setMounted] = React.useState(false)
 
-  return <>{children}</>
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!open || !mounted) return null
+
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none">
+      <div className="pointer-events-auto contents">
+        {children}
+      </div>
+    </div>,
+    document.body
+  )
 }
 
 const DialogClose = React.forwardRef<
@@ -86,7 +104,7 @@ const DialogOverlay = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      "fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm animate-in fade-in duration-300",
       className
     )}
     {...props}
@@ -98,34 +116,34 @@ const DialogContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, children, ...props }, ref) => {
-  const { open, setOpen } = useDialog()
-
-  if (!open) return null
+  const { setOpen } = useDialog()
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      onClick={(e) => e.stopPropagation()}
-    >
-      <DialogOverlay onClick={() => setOpen(false)} />
+    <DialogPortal>
       <div
-        ref={ref}
-        className={cn(
-          "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 sm:rounded-lg",
-          className
-        )}
-        {...props}
+        className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+        onClick={(e) => e.stopPropagation()}
       >
-        {children}
-        <button
-          className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
-          onClick={() => setOpen(false)}
+        <DialogOverlay onClick={() => setOpen(false)} />
+        <div
+          ref={ref}
+          className={cn(
+            "relative z-[10000] w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-300",
+            className
+          )}
+          {...props}
         >
-          <X className="h-4 w-4" />
-          <span className="sr-only">Close</span>
-        </button>
+          {children}
+          <button
+            className="absolute right-4 top-4 rounded-full bg-black/20 p-2 text-white transition-opacity hover:opacity-100 z-[10001]"
+            onClick={() => setOpen(false)}
+          >
+            <X className="h-4 w-4" />
+            <span className="sr-only">Close</span>
+          </button>
+        </div>
       </div>
-    </div>
+    </DialogPortal>
   )
 })
 DialogContent.displayName = "DialogContent"
