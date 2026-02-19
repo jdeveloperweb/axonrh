@@ -89,7 +89,8 @@ public class LlmService {
                     .bodyValue(body)
                     .retrieve()
                     .bodyToMono(JsonNode.class)
-                    .retryWhen(Retry.backoff(3, Duration.ofSeconds(2))
+                    .timeout(Duration.ofSeconds(60))
+                    .retryWhen(Retry.backoff(2, Duration.ofSeconds(1))
                             .filter(this::isRetryable))
                     .block();
             
@@ -380,7 +381,11 @@ public class LlmService {
                         Map<String, Object> imageMap = new java.util.HashMap<>();
                         imageMap.put("type", "image_url");
                         Map<String, String> imageUrl = new java.util.HashMap<>();
-                        imageUrl.put("url", "data:image/jpeg;base64," + m.getImageBase64());
+                        String mimeType = "image/jpeg";
+                        if (m.getImageBase64().startsWith("iVBORw0KGgo")) mimeType = "image/png";
+                        else if (m.getImageBase64().startsWith("IVBORw0KGgo")) mimeType = "image/png";
+                        
+                        imageUrl.put("url", "data:" + mimeType + ";base64," + m.getImageBase64());
                         imageMap.put("image_url", imageUrl);
                         contentList.add(imageMap);
                         

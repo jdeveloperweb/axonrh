@@ -78,6 +78,7 @@ function LeaveRequestContent() {
     const [searchingCid, setSearchingCid] = useState(false);
     const [existingRequest, setExistingRequest] = useState<any>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [isZoomed, setIsZoomed] = useState(false);
 
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
@@ -180,7 +181,7 @@ function LeaveRequestContent() {
             console.error('Erro ao ler documento:', error);
             toast({
                 title: 'Atenção',
-                description: 'Não foi possível extrair dados automaticamente, mas o arquivo foi anexado.',
+                description: 'Não foi possível extrair dados automaticamente. Por favor, preencha o CID manualmente.',
                 variant: 'destructive'
             });
         } finally {
@@ -353,17 +354,18 @@ function LeaveRequestContent() {
                                         </div>
                                         <Input
                                             {...form.register('cid')}
-                                            placeholder={isReview ? "Busque pelo código ou descrição (ex: Dorsalgia)" : "Aguardando análise da IA..."}
-                                            readOnly={!isReview}
+                                            placeholder={analyzing ? "IA analisando documento..." : "Código do CID (ex: M54.5)"}
+                                            disabled={analyzing}
                                             className={cn(
                                                 "h-14 pl-11 rounded-2xl border-blue-100 bg-blue-50/30 font-bold text-blue-900 focus-visible:ring-blue-500 placeholder:text-blue-300",
-                                                !isReview && "cursor-not-allowed opacity-80"
+                                                analyzing && "cursor-not-allowed opacity-80"
                                             )}
                                             onChange={(e) => {
-                                                if (!isReview) return;
                                                 const val = e.target.value;
                                                 form.setValue('cid', val);
-                                                handleCidSearch(val);
+                                                if (isReview || val.length > 2) {
+                                                    handleCidSearch(val);
+                                                }
                                             }}
                                         />
                                         {searchingCid && isReview && (
@@ -486,16 +488,24 @@ function LeaveRequestContent() {
                                 </div>
                             ) : (
                                 <>
-                                    <div className="w-full h-full bg-slate-50 flex flex-col items-center justify-center relative p-2">
+                                    <div className="w-full h-full bg-slate-800 flex flex-col items-center justify-center relative p-2 shadow-inner">
                                         {(previewUrl || existingRequest?.certificateUrl) ? (
-                                            <div className="w-full h-full flex items-center justify-center bg-white rounded-lg shadow-inner overflow-hidden border border-slate-200">
+                                            <div
+                                                className="w-full h-full flex items-center justify-center bg-white rounded-lg shadow-inner overflow-hidden border border-slate-200 cursor-zoom-in"
+                                                onClick={() => setIsZoomed(true)}
+                                            >
                                                 <img
                                                     src={previewUrl || existingRequest?.certificateUrl}
                                                     alt="Atestado médico"
                                                     className="max-w-full max-h-full object-contain transition-transform duration-500 group-hover:scale-105"
                                                 />
                                                 <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[1px]">
-                                                    <Button size="sm" variant="secondary" className="rounded-full shadow-lg gap-2 bg-white/90 hover:bg-white text-slate-900 font-bold border-none">
+                                                    <Button
+                                                        size="sm"
+                                                        variant="secondary"
+                                                        className="rounded-full shadow-lg gap-2 bg-white/90 hover:bg-white text-slate-900 font-bold border-none"
+                                                        onClick={(e) => { e.stopPropagation(); setIsZoomed(true); }}
+                                                    >
                                                         <Eye className="h-3 w-3" /> Ampliar Documento
                                                     </Button>
                                                 </div>
@@ -548,7 +558,8 @@ function LeaveRequestContent() {
                         <p className="text-xs text-blue-100 font-medium relative z-10 leading-relaxed">
                             {analyzing ? 'Nossa inteligência artificial está lendo o conteúdo para agilizar a conferência.' :
                                 form.getValues('cid') ? 'A IA identificou um CID compatível. Verifique se as datas coincidem com o documento.' :
-                                    'Anexe um atestado para que a IA possa extrair automaticamente o CID e período.'}
+                                    file ? 'A análise automática falhou ou não identificou o CID. Você pode preenchê-lo manualmente.' :
+                                        'Anexe um atestado para que a IA possa extrair automaticamente o CID e período.'}
                         </p>
                         {form.getValues('certificateText') && (
                             <div className="mt-4 p-3 bg-white/10 rounded-xl relative z-10">
@@ -585,6 +596,28 @@ function LeaveRequestContent() {
                     )}
                 </div>
             </div>
+            {/* Zoom Modal */}
+            {isZoomed && (previewUrl || existingRequest?.certificateUrl) && (
+                <div
+                    className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300"
+                    onClick={() => setIsZoomed(false)}
+                >
+                    <div className="relative max-w-5xl w-full h-full flex items-center justify-center">
+                        <img
+                            src={previewUrl || existingRequest?.certificateUrl}
+                            className="max-w-full max-h-full object-contain shadow-2xl rounded-lg"
+                            alt="Atestado Ampliado"
+                        />
+                        <Button
+                            variant="secondary"
+                            className="absolute top-0 right-0 rounded-full h-12 w-12 p-0 -mt-2 -mr-2 shadow-xl"
+                            onClick={() => setIsZoomed(false)}
+                        >
+                            <XCircle className="h-6 w-6" />
+                        </Button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

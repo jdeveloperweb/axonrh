@@ -77,19 +77,20 @@ public class MedicalCertificateController {
             
             log.debug("AI Medical Response: {}", content);
             
-            // Clean up markdown
-            if (content.startsWith("```json")) content = content.substring(7);
-            if (content.startsWith("```")) content = content.substring(3);
-            if (content.endsWith("```")) content = content.substring(0, content.length() - 3);
-            content = content.trim();
+            // Clean up content to find the JSON object if it's wrapped in text or markdown
+            if (content.contains("{") && content.contains("}")) {
+                int firstBrace = content.indexOf("{");
+                int lastBrace = content.lastIndexOf("}");
+                content = content.substring(firstBrace, lastBrace + 1);
+            }
 
             MedicalCertificateAnalysisResponse analysisResponse = objectMapper.readValue(content, MedicalCertificateAnalysisResponse.class);
             return ResponseEntity.ok(analysisResponse);
 
         } catch (Exception e) {
             log.error("Error analyzing medical certificate", e);
-            return ResponseEntity.ok(MedicalCertificateAnalysisResponse.builder()
-                    .cidDescription("Falha na análise: " + e.getMessage())
+            return ResponseEntity.status(500).body(MedicalCertificateAnalysisResponse.builder()
+                    .cidDescription("Erro ao processar documento: " + e.getMessage())
                     .build());
         }
     }
