@@ -309,6 +309,10 @@ services:
     <<: *backend-service
     container_name: axonrh-vacation-service
     command: mvn -pl vacation-service -am spring-boot:run -Dspring-boot.run.fork=false
+    volumes:
+      - ./backend:/workspace/backend
+      - maven_repo:/root/.m2
+      - ./CID10CSV:/workspace/CID10CSV
     ports:
       - "8185:8085"
     environment:
