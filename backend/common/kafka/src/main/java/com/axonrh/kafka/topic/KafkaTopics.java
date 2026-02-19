@@ -42,6 +42,11 @@ public final class KafkaTopics {
      */
     public static final String BENEFITS_DOMAIN_EVENTS = "benefits.domain.events";
 
+    /**
+     * Eventos de contratacao digital (6 particoes).
+     */
+    public static final String DIGITAL_HIRING_DOMAIN_EVENTS = "digital-hiring.domain.events";
+
     // ==================== System Events ====================
 
     /**

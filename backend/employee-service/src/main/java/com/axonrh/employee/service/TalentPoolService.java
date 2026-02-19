@@ -54,6 +54,7 @@ public class TalentPoolService {
     private final JobVacancyMapper vacancyMapper;
     private final TalentCandidateMapper candidateMapper;
     private final ResumeAnalysisClient resumeAnalysisClient;
+    private final DigitalHiringService digitalHiringService;
 
     private static final String UPLOAD_DIR = "uploads/resumes";
 
@@ -475,6 +476,20 @@ public class TalentPoolService {
 
         candidate = candidateRepository.save(candidate);
         log.info("Status do candidato {} atualizado para: {}", id, request.getStatus());
+
+        // Dispara contratacao digital automaticamente quando candidato e aprovado
+        if (request.getStatus() == CandidateStatus.APPROVED) {
+            try {
+                DigitalHiringTriggerRequest triggerRequest = DigitalHiringTriggerRequest.builder()
+                        .candidateId(candidate.getId())
+                        .vacancyId(candidate.getVacancy() != null ? candidate.getVacancy().getId() : null)
+                        .build();
+                digitalHiringService.triggerFromRecruitment(triggerRequest, userId);
+                log.info("Contratacao digital disparada automaticamente para candidato aprovado: {}", id);
+            } catch (Exception e) {
+                log.warn("Falha ao disparar contratacao digital para candidato {}: {}", id, e.getMessage());
+            }
+        }
 
         return candidateMapper.toResponse(candidate);
     }
