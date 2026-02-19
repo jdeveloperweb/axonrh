@@ -33,6 +33,8 @@ export interface LeaveRequest {
     reason?: string;
     certificateText?: string;
     certificateUrl?: string;
+    approvedAt?: string;
+    approvedBy?: string;
 }
 
 export const leavesApi = {

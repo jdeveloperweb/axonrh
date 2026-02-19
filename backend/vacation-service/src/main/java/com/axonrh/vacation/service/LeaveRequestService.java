@@ -119,12 +119,19 @@ public class LeaveRequestService {
     }
 
     @Transactional
-    public LeaveRequest updateStatus(UUID id, VacationRequestStatus status, String notes, String cid) {
+    public LeaveRequest updateStatus(UUID id, VacationRequestStatus status, String notes, String cid, UUID userId) {
         LeaveRequest request = getLeaveById(id);
         
         request.setStatus(status);
-        if (notes != null) request.setReason(notes);
+        if (notes != null) request.setReason(notes); // TODO: idealmente ter um campo notes separado
         if (cid != null) request.setCid(cid);
+        
+        request.setUpdatedBy(userId);
+
+        if (status == VacationRequestStatus.APPROVED) {
+            request.setApprovedBy(userId);
+            request.setApprovedAt(java.time.LocalDateTime.now());
+        }
         
         return leaveRequestRepository.save(request);
     }

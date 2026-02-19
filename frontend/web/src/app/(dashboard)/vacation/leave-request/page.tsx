@@ -475,7 +475,7 @@ function LeaveRequestContent() {
                             <div className="flex gap-3">
                                 {isReview ? (
                                     <>
-                                        {canApprove && (
+                                        {canApprove && existingRequest?.status === 'PENDING' && (
                                             <>
                                                 <Button
                                                     variant="ghost"
@@ -670,10 +670,18 @@ function LeaveRequestContent() {
                                     </div>
                                 </div>
                                 <div className="flex gap-3">
-                                    <div className="h-2 w-2 rounded-full bg-blue-500 mt-1.5 animate-pulse" />
+                                    <div className={`h-2 w-2 rounded-full mt-1.5 ${existingRequest?.status === 'APPROVED' ? 'bg-emerald-500' : existingRequest?.status === 'REJECTED' ? 'bg-red-500' : 'bg-blue-500 animate-pulse'}`} />
                                     <div>
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-blue-400">Em Análise</p>
-                                        <p className="text-xs font-bold text-white">Aguardando validação do CID</p>
+                                        <p className={`text-[10px] font-black uppercase tracking-widest ${existingRequest?.status === 'APPROVED' ? 'text-emerald-400' : existingRequest?.status === 'REJECTED' ? 'text-red-400' : 'text-blue-400'}`}>
+                                            {existingRequest?.status === 'APPROVED' ? 'Aprovado' : existingRequest?.status === 'REJECTED' ? 'Rejeitado' : 'Em Análise'}
+                                        </p>
+                                        <p className="text-xs font-bold text-white">
+                                            {existingRequest?.status === 'APPROVED'
+                                                ? `Aprovado por ${existingRequest?.approvedBy ? 'Gestor' : 'Sistema'} em ${existingRequest?.approvedAt ? format(new Date(existingRequest.approvedAt), 'dd/MM/yyyy HH:mm') : '-'}`
+                                                : existingRequest?.status === 'REJECTED'
+                                                    ? 'Solicitação rejeitada.'
+                                                    : 'Aguardando validação do CID'}
+                                        </p>
                                     </div>
                                 </div>
                             </div>

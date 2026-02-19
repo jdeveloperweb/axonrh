@@ -95,4 +95,11 @@ public class LeaveRequest {
 
     @Column(name = "updated_by")
     private UUID updatedBy;
+
+    // Aprovacao
+    @Column(name = "approved_at")
+    private LocalDateTime approvedAt;
+
+    @Column(name = "approved_by")
+    private UUID approvedBy;
 }

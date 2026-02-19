@@ -118,12 +118,13 @@ public class LeaveRequestController {
 
     @PatchMapping("/{id}/status")
     public ResponseEntity<LeaveRequest> updateStatus(
+            @RequestHeader(value = "X-User-ID", required = false) UUID userId,
             @PathVariable UUID id,
             @RequestBody Map<String, String> payload) {
         VacationRequestStatus status = VacationRequestStatus.valueOf(payload.get("status"));
         String notes = payload.get("notes");
         String cid = payload.get("cid");
-        return ResponseEntity.ok(leaveRequestService.updateStatus(id, status, notes, cid));
+        return ResponseEntity.ok(leaveRequestService.updateStatus(id, status, notes, cid, userId));
     }
 
     @PostMapping("/analyze-certificate")
