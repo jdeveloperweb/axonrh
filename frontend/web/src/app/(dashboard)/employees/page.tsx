@@ -49,6 +49,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogContent
 } from '@/components/ui/dialog';
 import { ExpandablePhoto } from '@/components/ui/expandable-photo';
 import { employeesApi, Employee, EmployeeStatus, EmployeeListParams, Department, WorkRegime, EmployeeStats } from '@/lib/api/employees';
@@ -688,275 +689,434 @@ export default function EmployeesPage() {
       </Card>
 
       {/* Employees Table/Cards */}
-      <Card className="border-none shadow-sm overflow-hidden bg-white">
-        <CardContent className="p-0">
-          {/* Desktop Table */}
-          <div className="hidden lg:block overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-100 bg-gray-50/50">
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Colaborador
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    CPF
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Departamento
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Cargo
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Ações
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {loading ? (
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <tr key={i} className="animate-pulse">
-                      <td className="px-6 py-4"><div className="flex items-center gap-3"><div className="w-10 h-10 bg-gray-100 rounded-full" /><div className="space-y-2"><div className="w-32 h-4 bg-gray-100 rounded" /><div className="w-20 h-3 bg-gray-100 rounded" /></div></div></td>
-                      <td className="px-6 py-4"><div className="w-24 h-4 bg-gray-100 rounded" /></td>
-                      <td className="px-6 py-4"><div className="w-24 h-4 bg-gray-100 rounded" /></td>
-                      <td className="px-6 py-4"><div className="w-32 h-4 bg-gray-100 rounded" /></td>
-                      <td className="px-6 py-4"><div className="w-16 h-6 bg-gray-100 rounded-full" /></td>
-                      <td className="px-6 py-4"><div className="w-8 h-8 bg-gray-100 rounded ml-auto" /></td>
-                    </tr>
-                  ))
-                ) : (viewMode !== 'department' && employees.length === 0) ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-gray-400 font-medium">
-                      Nenhum colaborador encontrado com os filtros atuais
-                    </td>
-                  </tr>
-                ) : viewMode === 'department' ? (
-                  groupedDepartments.map(dept => {
-                    const isCollapsed = collapsedDepts.has(dept.name);
-                    const deptEmployees = dept.employees;
-                    const deptName = dept.name;
-                    return (
-                      <Fragment key={deptName}>
-                        <tr
-                          className="bg-orange-50/20 cursor-pointer hover:bg-orange-100/30 transition-colors"
-                          onClick={() => toggleDept(deptName)}
-                        >
-                          <td colSpan={6} className="px-6 py-2 border-l-4 border-[var(--color-primary)]">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                {isCollapsed ? <ChevronRight className="w-4 h-4 text-[var(--color-primary)]" /> : <ChevronDown className="w-4 h-4 text-[var(--color-primary)]" />}
-                                <div className="flex items-center gap-2">
-                                  <Building2 className="w-4 h-4 text-[var(--color-primary)]" />
-                                  <span className="text-sm font-black text-gray-800 uppercase tracking-tighter">
-                                    {deptName}
-                                  </span>
-                                  <span className="flex items-center justify-center min-w-[28px] h-[20px] text-[10px] bg-[var(--color-primary)] text-white px-2 rounded-full font-black shadow-sm ring-2 ring-orange-100/50">
-                                    {deptEmployees.length}
-                                  </span>
+      {viewMode === 'department' ? (
+        <div className="space-y-4 animate-in fade-in duration-300">
+          {groupedDepartments.map(dept => {
+            const isCollapsed = collapsedDepts.has(dept.name);
+            const deptEmployees = dept.employees;
+            const deptName = dept.name;
+
+            return (
+              <div
+                key={deptName}
+                className={`bg-white rounded-xl border transition-all duration-200 overflow-hidden ${isCollapsed
+                  ? 'border-gray-200 shadow-sm hover:shadow-md hover:border-[var(--color-primary)]/30'
+                  : 'border-[var(--color-primary)]/20 shadow-lg ring-1 ring-[var(--color-primary)]/10'
+                  }`}
+              >
+                {/* Accordion Header */}
+                <div
+                  className={`px-6 py-4 flex items-center justify-between cursor-pointer transition-colors ${isCollapsed
+                    ? 'bg-white hover:bg-gray-50'
+                    : 'bg-gradient-to-r from-orange-50/50 to-white'
+                    }`}
+                  onClick={() => toggleDept(deptName)}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={`p-2.5 rounded-xl transition-colors ${isCollapsed
+                        ? 'bg-gray-100 text-gray-500'
+                        : 'bg-[var(--color-primary)] text-white shadow-lg shadow-orange-200'
+                      }`}>
+                      <Building2 className="w-5 h-5" />
+                    </div>
+
+                    <div>
+                      <h3 className={`text-base font-bold transition-colors ${isCollapsed ? 'text-gray-700' : 'text-[var(--color-primary)]'
+                        }`}>
+                        {deptName}
+                      </h3>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-xs text-gray-500 font-medium">
+                          {deptEmployees.length} {deptEmployees.length === 1 ? 'colaborador' : 'colaboradores'}
+                        </span>
+                        {!isCollapsed && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-green-50 text-green-700 border border-green-100">
+                            {deptEmployees.filter(e => e.status === 'ACTIVE').length} ativos
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={`p-2 rounded-full transition-all duration-300 transform ${isCollapsed
+                      ? 'text-gray-400 hover:bg-gray-100 rotate-0'
+                      : 'text-[var(--color-primary)] bg-[var(--color-primary)]/10 rotate-180'
+                    }`}>
+                    <ChevronDown className="w-5 h-5" />
+                  </div>
+                </div>
+
+                {/* Accordion Body */}
+                <div
+                  className={`transition-all duration-300 ease-in-out origin-top ${isCollapsed ? 'max-h-0 opacity-0' : 'max-h-[5000px] opacity-100'
+                    }`}
+                >
+                  <div className="p-6 border-t border-gray-100 bg-gray-50/30">
+                    {deptEmployees.length === 0 ? (
+                      <div className="py-8 text-center">
+                        <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                          <Users className="w-5 h-5 text-gray-400" />
+                        </div>
+                        <p className="text-sm text-gray-500 font-medium">Nenhum colaborador neste departamento</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+                        {deptEmployees
+                          .sort((a, b) => {
+                            const getRank = (e: any) => {
+                              const t = (e.position?.title || e.position?.name || '').toLowerCase();
+                              if (t.includes('diretor')) return 1;
+                              if (t.includes('gerente')) return 2;
+                              if (t.includes('coordenador')) return 3;
+                              if (t.includes('supervisor')) return 4;
+                              if (t.includes('líder') || t.includes('lider')) return 5;
+                              return 6;
+                            };
+                            const rankA = getRank(a);
+                            const rankB = getRank(b);
+                            if (rankA !== rankB) return rankA - rankB;
+                            return (a.fullName || '').localeCompare(b.fullName || '');
+                          })
+                          .map((employee) => (
+                            <div
+                              key={employee.id}
+                              className="bg-white border border-gray-100 rounded-xl p-4 hover:shadow-lg hover:border-[var(--color-primary)]/20 transition-all duration-300 cursor-pointer group relative flex flex-col"
+                              onClick={() => router.push(`/employees/${employee.id}`)}
+                            >
+                              {/* Quick Actions (Hover) */}
+                              <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10" onClick={(e) => e.stopPropagation()}>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <button className="h-8 w-8 flex items-center justify-center rounded-lg bg-white shadow-sm border border-gray-100 hover:bg-gray-50 transition-colors">
+                                      <MoreHorizontal className="w-4 h-4 text-gray-500" />
+                                    </button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="w-48">
+                                    <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}`)}>
+                                      <Eye className="w-3.5 h-3.5 mr-2" /> Visualizar
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}/edit`)}>
+                                      <Edit className="w-3.5 h-3.5 mr-2" /> Editar
+                                    </DropdownMenuItem>
+                                    {employee.missingFields && employee.missingFields.length > 0 && (
+                                      <DropdownMenuItem
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleSmartFill(employee, e as any);
+                                        }}
+                                        className="text-purple-600 font-bold"
+                                      >
+                                        <Sparkles className="w-3.5 h-3.5 mr-2" /> Completar com IA
+                                      </DropdownMenuItem>
+                                    )}
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem className="text-red-600" onClick={() => handleDelete(employee.id, employee.fullName)}>
+                                      <Trash2 className="w-3.5 h-3.5 mr-2" /> Excluir
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+
+                              {/* Card Header */}
+                              <div className="flex flex-col items-center text-center pt-2">
+                                <div className="relative mb-3 group-hover:scale-105 transition-transform duration-300">
+                                  <ExpandablePhoto
+                                    src={getPhotoUrl(employee.photoUrl, employee.updatedAt)}
+                                    alt={employee.fullName}
+                                    containerClassName={`w-16 h-16 rounded-2xl shadow-sm overflow-hidden border-2 ${statusColors[employee.status]?.bg.replace('bg-', 'border-') || 'border-gray-100'
+                                      }`}
+                                    fallback={
+                                      <div className={`w-full h-full bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center text-xl font-bold text-gray-400`}>
+                                        {employee.fullName.charAt(0).toUpperCase()}
+                                      </div>
+                                    }
+                                  />
+                                  <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${employee.status === 'ACTIVE' ? 'bg-green-500' :
+                                      employee.status === 'ON_LEAVE' ? 'bg-yellow-500' : 'bg-gray-300'
+                                    }`} />
+                                </div>
+
+                                <h4 className="font-bold text-gray-900 text-sm line-clamp-1 w-full px-2" title={employee.fullName}>
+                                  {employee.fullName}
+                                </h4>
+                                <p className="text-xs text-gray-500 font-medium mt-1 mb-3 line-clamp-1 w-full px-2">
+                                  {employee.position?.title || 'Sem Cargo'}
+                                </p>
+                              </div>
+
+                              {/* Card Footer */}
+                              <div className="mt-auto pt-3 border-t border-gray-50 grid grid-cols-2 gap-2 text-[10px] text-gray-500">
+                                <div className="bg-gray-50 rounded-lg p-1.5 text-center">
+                                  <span className="block font-bold text-gray-700">{formatCpf(employee.cpf).slice(0, 3)}.***</span>
+                                  <span className="text-[9px]">CPF</span>
+                                </div>
+                                <div className="bg-gray-50 rounded-lg p-1.5 text-center">
+                                  <span className="block font-bold text-gray-700">{employee.registrationNumber || '-'}</span>
+                                  <span className="text-[9px]">Matrícula</span>
                                 </div>
                               </div>
-                              <span className="text-[10px] font-bold text-[var(--color-primary)]/50 uppercase tracking-widest flex items-center gap-1">
-                                {isCollapsed ? 'Expandir' : 'Recolher'}
-                                {isCollapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                              </span>
                             </div>
-                          </td>
-                        </tr>
-                        {!isCollapsed && (
-                          <tr>
-                            <td colSpan={6} className="p-4 bg-gray-50/5">
-                              {deptEmployees.length === 0 ? (
-                                <div className="py-4 text-center text-[10px] text-gray-400 font-medium uppercase tracking-widest italic opacity-60">
-                                  Nenhum colaborador encontrado neste setor
-                                </div>
-                              ) : (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
-                                  {deptEmployees
-                                    .sort((a, b) => {
-                                      const getRank = (e: any) => {
-                                        const t = (e.position?.title || e.position?.name || '').toLowerCase();
-                                        if (t.includes('diretor')) return 1;
-                                        if (t.includes('gerente')) return 2;
-                                        if (t.includes('coordenador')) return 3;
-                                        if (t.includes('supervisor')) return 4;
-                                        if (t.includes('líder') || t.includes('lider')) return 5;
-                                        return 6;
-                                      };
-                                      const rankA = getRank(a);
-                                      const rankB = getRank(b);
-                                      if (rankA !== rankB) return rankA - rankB;
-                                      return (a.fullName || '').localeCompare(b.fullName || '');
-                                    })
-                                    .map((employee) => (
-                                      <div
-                                        key={employee.id}
-                                        className="bg-white border border-gray-100 rounded-xl p-3 hover:shadow-md hover:border-[var(--color-primary)]/30 transition-all cursor-pointer group relative flex flex-col"
-                                        onClick={() => router.push(`/employees/${employee.id}`)}
-                                      >
-                                        {/* Menu de Ações no Card */}
-                                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
-                                          <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                              <button className="p-1 hover:bg-gray-100 rounded-lg transition-colors bg-white/80 backdrop-blur-sm border border-gray-100">
-                                                <MoreHorizontal className="w-3.5 h-3.5 text-gray-400" />
-                                              </button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end" className="w-48">
-                                              <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}`)}>
-                                                <Eye className="w-3.5 h-3.5 mr-2" /> Visualizar
-                                              </DropdownMenuItem>
-                                              <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}/edit`)}>
-                                                <Edit className="w-3.5 h-3.5 mr-2" /> Editar
-                                              </DropdownMenuItem>
-                                              {employee.missingFields && employee.missingFields.length > 0 && (
-                                                <DropdownMenuItem
-                                                  onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleSmartFill(employee, e as any);
-                                                  }}
-                                                  className="text-purple-600 font-bold"
-                                                >
-                                                  <Sparkles className="w-3.5 h-3.5 mr-2" /> Completar com IA
-                                                </DropdownMenuItem>
-                                              )}
-                                              <DropdownMenuSeparator />
-                                              <DropdownMenuItem className="text-red-600" onClick={() => handleDelete(employee.id, employee.fullName)}>
-                                                <Trash2 className="w-3.5 h-3.5 mr-2" /> Excluir
-                                              </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                          </DropdownMenu>
+                          ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <Card className="border-none shadow-sm overflow-hidden bg-white">
+          <CardContent className="p-0">
+            {/* Desktop Table */}
+            <div className="hidden lg:block overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-100 bg-gray-50/50">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Colaborador
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      CPF
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Departamento
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Cargo
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Ações
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {loading ? (
+                    Array.from({ length: 5 }).map((_, i) => (
+                      <tr key={i} className="animate-pulse">
+                        <td className="px-6 py-4"><div className="flex items-center gap-3"><div className="w-10 h-10 bg-gray-100 rounded-full" /><div className="space-y-2"><div className="w-32 h-4 bg-gray-100 rounded" /><div className="w-20 h-3 bg-gray-100 rounded" /></div></div></td>
+                        <td className="px-6 py-4"><div className="w-24 h-4 bg-gray-100 rounded" /></td>
+                        <td className="px-6 py-4"><div className="w-24 h-4 bg-gray-100 rounded" /></td>
+                        <td className="px-6 py-4"><div className="w-32 h-4 bg-gray-100 rounded" /></td>
+                        <td className="px-6 py-4"><div className="w-16 h-6 bg-gray-100 rounded-full" /></td>
+                        <td className="px-6 py-4"><div className="w-8 h-8 bg-gray-100 rounded ml-auto" /></td>
+                      </tr>
+                    ))
+                  ) : (viewMode !== 'department' && employees.length === 0) ? (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-12 text-center text-gray-400 font-medium">
+                        Nenhum colaborador encontrado com os filtros atuais
+                      </td>
+                    </tr>
+                  ) : (
+                    employees.map((employee) => (
+                      <tr
+                        key={employee.id}
+                        className="hover:bg-gray-50/50 cursor-pointer transition-colors"
+                        onClick={() => router.push(`/employees/${employee.id}`)}
+                      >
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10">
+                              <ExpandablePhoto
+                                src={getPhotoUrl(employee.photoUrl, employee.updatedAt)}
+                                alt={employee.fullName}
+                                containerClassName="w-10 h-10 rounded-full border border-white shadow-sm"
+                                fallback={
+                                  <div className="w-full h-full rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] flex items-center justify-center font-bold">
+                                    {employee.fullName.charAt(0).toUpperCase()}
+                                  </div>
+                                }
+                              />
+                            </div>
+                            <div className="flex flex-col">
+                              <p className="font-bold text-gray-900 leading-tight">
+                                {employee.fullName}
+                                {employee.missingFields && employee.missingFields.length > 0 && (
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <button
+                                          onClick={(e) => handleSmartFill(employee, e)}
+                                          className="inline-flex ml-2 cursor-pointer hover:bg-orange-50 p-1 rounded-full transition-colors group"
+                                        >
+                                          <AlertCircle className="w-4 h-4 text-orange-500 group-hover:text-orange-600" />
+                                        </button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <div className="text-xs">
+                                          <p className="font-bold mb-1">Dados pendentes:</p>
+                                          <ul className="list-disc pl-4 mb-2">
+                                            {employee.missingFields.map((field) => (
+                                              <li key={field}>{field}</li>
+                                            ))}
+                                          </ul>
+                                          <p className="text-[10px] text-purple-600 font-bold border-t border-gray-100 pt-1 mt-1 flex items-center gap-1">
+                                            <TrendingUp className="w-3 h-3" /> Clique para completar com IA
+                                          </p>
                                         </div>
-
-                                        <div className="flex items-start gap-3">
-                                          <div className="relative">
-                                            <ExpandablePhoto
-                                              src={getPhotoUrl(employee.photoUrl, employee.updatedAt)}
-                                              alt={employee.fullName}
-                                              containerClassName="w-12 h-12 rounded-lg border border-gray-100 shadow-sm overflow-hidden"
-                                              fallback={
-                                                <div className="w-full h-full bg-[var(--color-primary)]/5 text-[var(--color-primary)] flex items-center justify-center font-bold text-lg">
-                                                  {employee.fullName.charAt(0).toUpperCase()}
-                                                </div>
-                                              }
-                                            />
-                                          </div>
-                                          <div className="flex-1 min-w-0">
-                                            <div className="flex items-start justify-between pr-4">
-                                              <h4 className="font-bold text-gray-900 truncate text-[11px] group-hover:text-[var(--color-primary)] transition-colors leading-tight">
-                                                {employee.fullName}
-                                              </h4>
-                                            </div>
-                                            <p className="text-[9px] text-gray-500 font-medium truncate mt-0.5 uppercase tracking-tighter">
-                                              {employee.position?.title || '-'}
-                                            </p>
-                                            <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-                                              <span className={`inline-flex px-1 py-0.5 rounded-full text-[7px] font-bold uppercase ${statusColors[employee.status]?.bg || 'bg-gray-100'} ${statusColors[employee.status]?.text || 'text-gray-800'}`}>
-                                                {statusColors[employee.status]?.label || employee.status}
-                                              </span>
-                                              <span className="text-[8px] text-gray-400 font-mono">
-                                                {formatCpf(employee.cpf)}
-                                              </span>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    ))}
-                                </div>
-                              )}
-                            </td>
-                          </tr>
-                        )}
-                      </Fragment>
-                    );
-                  })
-                ) : (
-                  employees.map((employee) => (
-                    <tr
-                      key={employee.id}
-                      className="hover:bg-gray-50/50 cursor-pointer transition-colors"
-                      onClick={() => router.push(`/employees/${employee.id}`)}
-                    >
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10">
-                            <ExpandablePhoto
-                              src={getPhotoUrl(employee.photoUrl, employee.updatedAt)}
-                              alt={employee.fullName}
-                              containerClassName="w-10 h-10 rounded-full border border-white shadow-sm"
-                              fallback={
-                                <div className="w-full h-full rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] flex items-center justify-center font-bold">
-                                  {employee.fullName.charAt(0).toUpperCase()}
-                                </div>
-                              }
-                            />
-                          </div>
-                          <div className="flex flex-col">
-                            <p className="font-bold text-gray-900 leading-tight">
-                              {employee.fullName}
-                              {employee.missingFields && employee.missingFields.length > 0 && (
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <button
-                                        onClick={(e) => handleSmartFill(employee, e)}
-                                        className="inline-flex ml-2 cursor-pointer hover:bg-orange-50 p-1 rounded-full transition-colors group"
-                                      >
-                                        <AlertCircle className="w-4 h-4 text-orange-500 group-hover:text-orange-600" />
-                                      </button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <div className="text-xs">
-                                        <p className="font-bold mb-1">Dados pendentes:</p>
-                                        <ul className="list-disc pl-4 mb-2">
-                                          {employee.missingFields.map((field) => (
-                                            <li key={field}>{field}</li>
-                                          ))}
-                                        </ul>
-                                        <p className="text-[10px] text-purple-600 font-bold border-t border-gray-100 pt-1 mt-1 flex items-center gap-1">
-                                          <TrendingUp className="w-3 h-3" /> Clique para completar com IA
-                                        </p>
-                                      </div>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              )}
-                            </p>
-                            {employee.socialName && (
-                              <p className="text-xs text-gray-500 font-medium">
-                                {employee.socialName}
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                )}
                               </p>
-                            )}
-                            <p className="text-[10px] text-gray-400 mt-0.5">
-                              Mat: {employee.registrationNumber}
-                            </p>
+                              {employee.socialName && (
+                                <p className="text-xs text-gray-500 font-medium">
+                                  {employee.socialName}
+                                </p>
+                              )}
+                              <p className="text-[10px] text-gray-400 mt-0.5">
+                                Mat: {employee.registrationNumber}
+                              </p>
+                            </div>
                           </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-600">
+                          {formatCpf(employee.cpf)}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-600">
+                          {employee.department?.name || '-'}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-600">
+                          {employee.position?.title || '-'}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusColors[employee.status]?.bg || 'bg-gray-100'} ${statusColors[employee.status]?.text || 'text-gray-800'}`}>
+                            {statusColors[employee.status]?.label || employee.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                                <MoreHorizontal className="w-4 h-4 text-gray-400" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-40">
+                              <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}`)}>
+                                <Eye className="w-3.5 h-3.5 mr-2" /> Visualizar
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}/edit`)}>
+                                <Edit className="w-3.5 h-3.5 mr-2" /> Editar
+                              </DropdownMenuItem>
+                              {employee.missingFields && employee.missingFields.length > 0 && (
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleSmartFill(employee, e as any);
+                                  }}
+                                  className="text-purple-600 font-medium"
+                                >
+                                  <Sparkles className="w-4 h-4 mr-2" />
+                                  Completar com IA
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="text-red-600"
+                                onClick={() => handleDelete(employee.id, employee.fullName)}
+                              >
+                                <Trash2 className="w-3.5 h-3.5 mr-2" /> Excluir
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Cards */}
+            <div className="lg:hidden divide-y divide-gray-100">
+              {loading ? (
+                Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="p-4 space-y-3 animate-pulse">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-gray-100 rounded-full" />
+                      <div className="space-y-2 flex-1">
+                        <div className="w-1/2 h-4 bg-gray-100 rounded" />
+                        <div className="w-1/3 h-3 bg-gray-100 rounded" />
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : employees.length === 0 ? (
+                <div className="p-8 text-center text-gray-400">
+                  Nenhum colaborador encontrado
+                </div>
+              ) : (
+                employees.map((employee) => (
+                  <div
+                    key={employee.id}
+                    className="p-4 active:bg-gray-50 transition-colors"
+                    onClick={() => router.push(`/employees/${employee.id}`)}
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12">
+                          <ExpandablePhoto
+                            src={getPhotoUrl(employee.photoUrl, employee.updatedAt)}
+                            alt={employee.fullName}
+                            containerClassName="w-12 h-12 rounded-full border-2 border-white shadow-md"
+                            fallback={
+                              <div className="w-full h-full rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] flex items-center justify-center font-bold">
+                                {employee.fullName.charAt(0).toUpperCase()}
+                              </div>
+                            }
+                          />
                         </div>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {formatCpf(employee.cpf)}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {employee.department?.name || '-'}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {employee.position?.title || '-'}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusColors[employee.status]?.bg || 'bg-gray-100'} ${statusColors[employee.status]?.text || 'text-gray-800'}`}>
-                          {statusColors[employee.status]?.label || employee.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex flex-col">
+                          <p className="font-bold text-gray-900 leading-tight">
+                            {employee.fullName}
+                            {employee.missingFields && employee.missingFields.length > 0 && (
+                              <button
+                                onClick={(e) => handleSmartFill(employee, e)}
+                                className="inline-flex ml-2 cursor-pointer p-1 rounded-full active:bg-orange-100"
+                              >
+                                <AlertCircle className="w-3 h-3 text-orange-500" />
+                              </button>
+                            )}
+                          </p>
+                          {employee.socialName && (
+                            <p className="text-xs text-gray-500 font-medium">
+                              {employee.socialName}
+                            </p>
+                          )}
+                          <p className="text-[10px] text-gray-400 mt-0.5">
+                            Mat: {employee.registrationNumber}
+                          </p>
+                        </div>
+                      </div>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${statusColors[employee.status]?.bg || 'bg-gray-100'} ${statusColors[employee.status]?.text || 'text-gray-800'}`}>
+                        {statusColors[employee.status]?.label || employee.status}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-y-2 text-xs">
+                      <div>
+                        <p className="text-gray-400 mb-0.5">Departamento</p>
+                        <p className="font-medium text-gray-700">{employee.department?.name || '-'}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-400 mb-0.5">Cargo</p>
+                        <p className="font-medium text-gray-700">{employee.position?.title || '-'}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-400 mb-0.5">CPF</p>
+                        <p className="font-medium text-gray-700">{formatCpf(employee.cpf)}</p>
+                      </div>
+                      <div className="flex justify-end pt-1" onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                              <MoreHorizontal className="w-4 h-4 text-gray-400" />
+                            <button className="p-1 px-2 border rounded-md text-gray-500 flex items-center gap-1">
+                              Ações <MoreHorizontal className="w-3 h-3" />
                             </button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-40">
+                          <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}`)}>
                               <Eye className="w-3.5 h-3.5 mr-2" /> Visualizar
                             </DropdownMenuItem>
@@ -969,10 +1129,9 @@ export default function EmployeesPage() {
                                   e.stopPropagation();
                                   handleSmartFill(employee, e as any);
                                 }}
-                                className="text-purple-600 font-medium"
+                                className="text-purple-600 font-bold"
                               >
-                                <Sparkles className="w-4 h-4 mr-2" />
-                                Completar com IA
+                                <Sparkles className="w-3.5 h-3.5 mr-2" /> IA Completa
                               </DropdownMenuItem>
                             )}
                             <DropdownMenuSeparator />
@@ -984,237 +1143,15 @@ export default function EmployeesPage() {
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Mobile Cards */}
-          <div className="lg:hidden divide-y divide-gray-100">
-            {loading ? (
-              Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="p-4 space-y-3 animate-pulse">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-gray-100 rounded-full" />
-                    <div className="space-y-2 flex-1">
-                      <div className="w-1/2 h-4 bg-gray-100 rounded" />
-                      <div className="w-1/3 h-3 bg-gray-100 rounded" />
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
-            ) : employees.length === 0 ? (
-              <div className="p-8 text-center text-gray-400">
-                Nenhum colaborador encontrado
-              </div>
-            ) : viewMode === 'department' ? (
-              groupedDepartments.map(dept => {
-                const isCollapsed = collapsedDepts.has(dept.name);
-                const deptEmployees = dept.employees;
-                const deptName = dept.name;
-                return (
-                  <Fragment key={deptName}>
-                    <div
-                      className="bg-orange-50/30 px-4 py-2 flex items-center justify-between border-y border-gray-100 first:border-t-0 cursor-pointer active:bg-orange-100/50"
-                      onClick={() => toggleDept(deptName)}
-                    >
-                      <div className="flex items-center gap-2">
-                        {isCollapsed ? <ChevronRight className="w-3 h-3 text-[var(--color-primary)]" /> : <ChevronDown className="w-3 h-3 text-[var(--color-primary)]" />}
-                        <Building2 className="w-3.5 h-3.5 text-[var(--color-primary)]" />
-                        <span className="text-[10px] font-bold text-[var(--color-primary)] uppercase tracking-wider">
-                          {deptName}
-                        </span>
-                        <span className="text-[10px] bg-orange-100 text-[var(--color-primary)] px-1.5 py-0.5 rounded-full font-bold">
-                          {deptEmployees.length}
-                        </span>
-                      </div>
-                    </div>
-                    {!isCollapsed && (
-                      <div className="p-3 bg-gray-50/10 grid grid-cols-2 gap-2">
-                        {deptEmployees.length === 0 ? (
-                          <div className="col-span-2 py-4 text-center text-[8px] text-gray-400 font-medium uppercase tracking-widest italic opacity-60">
-                            Nenhum colaborador encontrado neste setor
-                          </div>
-                        ) : (
-                          deptEmployees
-                            .sort((a, b) => {
-                              const getRank = (e: any) => {
-                                const t = (e.position?.title || e.position?.name || '').toLowerCase();
-                                if (t.includes('diretor')) return 1;
-                                if (t.includes('gerente')) return 2;
-                                if (t.includes('coordenador')) return 3;
-                                if (t.includes('supervisor')) return 4;
-                                if (t.includes('líder') || t.includes('lider')) return 5;
-                                return 6;
-                              };
-                              const rankA = getRank(a);
-                              const rankB = getRank(b);
-                              if (rankA !== rankB) return rankA - rankB;
-                              return (a.fullName || '').localeCompare(b.fullName || '');
-                            })
-                            .map((employee) => (
-                              <div
-                                key={employee.id}
-                                className="bg-white border border-gray-100 rounded-lg p-2 active:bg-gray-50 transition-colors flex flex-col items-center text-center relative group"
-                                onClick={() => router.push(`/employees/${employee.id}`)}
-                              >
-                                {/* Menu de Ações Mobile no Card */}
-                                <div className="absolute top-1 right-1" onClick={(e) => e.stopPropagation()}>
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <button className="p-1 hover:bg-gray-50 rounded-full">
-                                        <MoreHorizontal className="w-3 h-3 text-gray-400" />
-                                      </button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                      <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}`)}>Visualizar</DropdownMenuItem>
-                                      <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}/edit`)}>Editar</DropdownMenuItem>
-                                      {employee.missingFields && employee.missingFields.length > 0 && (
-                                        <DropdownMenuItem
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleSmartFill(employee, e as any);
-                                          }}
-                                          className="text-purple-600 font-bold"
-                                        >
-                                          IA
-                                        </DropdownMenuItem>
-                                      )}
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
-                                </div>
-
-                                <div className="relative mb-1.5">
-                                  <ExpandablePhoto
-                                    src={getPhotoUrl(employee.photoUrl, employee.updatedAt)}
-                                    alt={employee.fullName}
-                                    containerClassName="w-10 h-10 rounded-full border border-gray-100 shadow-sm"
-                                    fallback={
-                                      <div className="w-10 h-10 rounded-full bg-[var(--color-primary)]/5 text-[var(--color-primary)] flex items-center justify-center font-bold text-sm">
-                                        {employee.fullName.charAt(0).toUpperCase()}
-                                      </div>
-                                    }
-                                  />
-                                </div>
-                                <p className="font-bold text-gray-900 text-[10px] line-clamp-1 leading-tight w-full">
-                                  {employee.fullName}
-                                </p>
-                                <p className="text-[8px] text-gray-500 line-clamp-1 w-full mt-0.5 uppercase">
-                                  {employee.position?.title || '-'}
-                                </p>
-                              </div>
-                            ))
-                        )}
-                      </div>
-                    )}
-                  </Fragment>
-                );
-              })
-            ) : (
-              employees.map((employee) => (
-                <div
-                  key={employee.id}
-                  className="p-4 active:bg-gray-50 transition-colors"
-                  onClick={() => router.push(`/employees/${employee.id}`)}
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12">
-                        <ExpandablePhoto
-                          src={getPhotoUrl(employee.photoUrl, employee.updatedAt)}
-                          alt={employee.fullName}
-                          containerClassName="w-12 h-12 rounded-full border-2 border-white shadow-md"
-                          fallback={
-                            <div className="w-full h-full rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] flex items-center justify-center font-bold">
-                              {employee.fullName.charAt(0).toUpperCase()}
-                            </div>
-                          }
-                        />
-                      </div>
-                      <div className="flex flex-col">
-                        <p className="font-bold text-gray-900 leading-tight">
-                          {employee.fullName}
-                          {employee.missingFields && employee.missingFields.length > 0 && (
-                            <button
-                              onClick={(e) => handleSmartFill(employee, e)}
-                              className="inline-flex ml-2 cursor-pointer p-1 rounded-full active:bg-orange-100"
-                            >
-                              <AlertCircle className="w-3 h-3 text-orange-500" />
-                            </button>
-                          )}
-                        </p>
-                        {employee.socialName && (
-                          <p className="text-xs text-gray-500 font-medium">
-                            {employee.socialName}
-                          </p>
-                        )}
-                        <p className="text-[10px] text-gray-400 mt-0.5">
-                          Mat: {employee.registrationNumber}
-                        </p>
-                      </div>
-                    </div>
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${statusColors[employee.status]?.bg || 'bg-gray-100'} ${statusColors[employee.status]?.text || 'text-gray-800'}`}>
-                      {statusColors[employee.status]?.label || employee.status}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-y-2 text-xs">
-                    <div>
-                      <p className="text-gray-400 mb-0.5">Departamento</p>
-                      <p className="font-medium text-gray-700">{employee.department?.name || '-'}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-400 mb-0.5">Cargo</p>
-                      <p className="font-medium text-gray-700">{employee.position?.title || '-'}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-400 mb-0.5">CPF</p>
-                      <p className="font-medium text-gray-700">{formatCpf(employee.cpf)}</p>
-                    </div>
-                    <div className="flex justify-end pt-1" onClick={(e) => e.stopPropagation()}>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className="p-1 px-2 border rounded-md text-gray-500 flex items-center gap-1">
-                            Ações <MoreHorizontal className="w-3 h-3" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}`)}>
-                            <Eye className="w-3.5 h-3.5 mr-2" /> Visualizar
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}/edit`)}>
-                            <Edit className="w-3.5 h-3.5 mr-2" /> Editar
-                          </DropdownMenuItem>
-                          {employee.missingFields && employee.missingFields.length > 0 && (
-                            <DropdownMenuItem
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleSmartFill(employee, e as any);
-                              }}
-                              className="text-purple-600 font-bold"
-                            >
-                              <Sparkles className="w-3.5 h-3.5 mr-2" /> IA Completa
-                            </DropdownMenuItem>
-                          )}
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            className="text-red-600"
-                            onClick={() => handleDelete(employee.id, employee.fullName)}
-                          >
-                            <Trash2 className="w-3.5 h-3.5 mr-2" /> Excluir
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </CardContent >
-      </Card >
+                ))
+              )}
+            </div>
+          </CardContent >
+        </Card >
+      )}
 
 
       {/* Pagination */}

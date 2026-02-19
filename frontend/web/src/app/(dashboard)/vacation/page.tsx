@@ -42,6 +42,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { vacationApi, VacationPeriod, VacationRequest } from '@/lib/api/vacation';
 import { leavesApi } from '@/lib/api/leaves';
 import { cn } from '@/lib/utils';
@@ -59,6 +66,7 @@ export default function VacationPage() {
   const [myRequests, setMyRequests] = useState<any[]>([]);
   const [activeLeaves, setActiveLeaves] = useState<any[]>([]);
   const [expiringPeriods, setExpiringPeriods] = useState<VacationPeriod[]>([]);
+  const [filterType, setFilterType] = useState<string>('ALL');
 
   const roles = user?.roles || [];
   const isAdmin = roles.some(r => r.includes('ADMIN'));
@@ -145,9 +153,13 @@ export default function VacationPage() {
   const getStatusBadge = (status: string) => {
     const config: any = {
       PENDING: { label: 'Pendente', className: 'bg-yellow-100 text-yellow-800', icon: Clock },
+      MANAGER_APPROVED: { label: 'Aprov. Gestor', className: 'bg-blue-100 text-blue-800', icon: CheckCircle2 },
       APPROVED: { label: 'Aprovada', className: 'bg-green-100 text-green-800', icon: CheckCircle2 },
       REJECTED: { label: 'Rejeitada', className: 'bg-red-100 text-red-800', icon: XCircle },
       CANCELLED: { label: 'Cancelada', className: 'bg-gray-100 text-gray-800', icon: XCircle },
+      SCHEDULED: { label: 'Agendada', className: 'bg-purple-100 text-purple-800', icon: CalendarCheck2 },
+      IN_PROGRESS: { label: 'Em Andamento', className: 'bg-indigo-100 text-indigo-800', icon: Plane },
+      COMPLETED: { label: 'Concluída', className: 'bg-slate-100 text-slate-800', icon: CheckCircle2 },
     };
     const item = config[status] || { label: status, className: 'bg-gray-100', icon: Clock };
     const Icon = item.icon;
@@ -166,6 +178,10 @@ export default function VacationPage() {
       MEDICAL: { label: 'Médica', className: 'bg-red-100 text-red-700', icon: Stethoscope },
       MATERNITY: { label: 'Maternidade', className: 'bg-pink-100 text-pink-700', icon: Heart },
       PATERNITY: { label: 'Paternidade', className: 'bg-indigo-100 text-indigo-700', icon: Users },
+      BEREAVEMENT: { label: 'Licença Nojo', className: 'bg-slate-100 text-slate-700', icon: Heart },
+      MARRIAGE: { label: 'Licença Gala', className: 'bg-pink-100 text-pink-700', icon: Heart },
+      MILITARY: { label: 'Serviço Militar', className: 'bg-slate-100 text-slate-700', icon: Briefcase },
+      UNPAID: { label: 'Não Remunerada', className: 'bg-gray-100 text-gray-700', icon: DollarSign },
       OTHER: { label: 'Outros', className: 'bg-slate-100 text-slate-700', icon: FileText },
     };
     const item = config[type] || { label: type, className: 'bg-gray-100', icon: FileText };
@@ -280,7 +296,24 @@ export default function VacationPage() {
                   <CardTitle className="text-xl font-black">Histórico e Gerenciamento</CardTitle>
                   <CardDescription className="font-medium">Visualize e controle todas as solicitações</CardDescription>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-center">
+                  <Select value={filterType} onValueChange={setFilterType}>
+                    <SelectTrigger className="w-[180px] h-9 text-xs font-bold bg-slate-50 border-slate-200 focus:ring-0">
+                      <SelectValue placeholder="Filtrar por tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ALL">Todos os Tipos</SelectItem>
+                      <SelectItem value="VACATION">Férias</SelectItem>
+                      <SelectItem value="MEDICAL">Licença Médica</SelectItem>
+                      <SelectItem value="MATERNITY">Maternidade</SelectItem>
+                      <SelectItem value="PATERNITY">Paternidade</SelectItem>
+                      <SelectItem value="BEREAVEMENT">Luto / Óbito</SelectItem>
+                      <SelectItem value="MARRIAGE">Casamento</SelectItem>
+                      <SelectItem value="MILITARY">Serviço Militar</SelectItem>
+                      <SelectItem value="UNPAID">Não Remunerada</SelectItem>
+                      <SelectItem value="OTHER">Outros</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <Button variant="ghost" size="sm" onClick={loadData} className="rounded-lg h-8 w-8 p-0">
                     <History className="h-4 w-4" />
                   </Button>
@@ -300,7 +333,7 @@ export default function VacationPage() {
 
                 <TabsContent value="mine" className="mt-4">
                   <LeaveTable
-                    requests={myRequests}
+                    requests={myRequests.filter(r => filterType === 'ALL' || r.type === filterType)}
                     handleUpdateStatus={handleUpdateStatus}
                     getStatusBadge={getStatusBadge}
                     getLeaveTypeBadge={getLeaveTypeBadge}
@@ -313,7 +346,7 @@ export default function VacationPage() {
                 {(isRH || isAdmin || isManager) && (
                   <TabsContent value="all" className="mt-4">
                     <LeaveTable
-                      requests={requests}
+                      requests={requests.filter(r => filterType === 'ALL' || r.type === filterType)}
                       handleUpdateStatus={handleUpdateStatus}
                       getStatusBadge={getStatusBadge}
                       getLeaveTypeBadge={getLeaveTypeBadge}

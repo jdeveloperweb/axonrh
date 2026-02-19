@@ -136,12 +136,24 @@ export default function VacationRequestDetailsPage() {
 
     const statusColors = {
         PENDING: 'bg-amber-100 text-amber-700',
+        MANAGER_APPROVED: 'bg-blue-100 text-blue-700',
         APPROVED: 'bg-emerald-100 text-emerald-700',
         REJECTED: 'bg-red-100 text-red-700',
         CANCELLED: 'bg-gray-100 text-gray-700',
         SCHEDULED: 'bg-blue-100 text-blue-700',
         IN_PROGRESS: 'bg-indigo-100 text-indigo-700',
         COMPLETED: 'bg-green-100 text-green-700',
+    };
+
+    const statusLabels: Record<string, string> = {
+        PENDING: 'Pendente',
+        MANAGER_APPROVED: 'Aprov. Gestor',
+        APPROVED: 'Aprovada',
+        REJECTED: 'Rejeitada',
+        CANCELLED: 'Cancelada',
+        SCHEDULED: 'Agendada',
+        IN_PROGRESS: 'Em Andamento',
+        COMPLETED: 'Concluída',
     };
 
     const roles = user?.roles || [];
@@ -171,7 +183,7 @@ export default function VacationRequestDetailsPage() {
                 </div>
                 <div className="ml-auto flex items-center gap-3">
                     <span className={cn("px-3 py-1 rounded-full text-xs font-bold uppercase", statusColors[request.status as keyof typeof statusColors])}>
-                        {request.statusLabel || request.status}
+                        {statusLabels[request.status] || request.statusLabel || request.status}
                     </span>
                 </div>
             </div>

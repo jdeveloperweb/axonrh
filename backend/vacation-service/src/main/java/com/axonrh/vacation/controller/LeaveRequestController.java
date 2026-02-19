@@ -152,8 +152,10 @@ public class LeaveRequestController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteLeave(@PathVariable UUID id) {
-        leaveRequestService.deleteLeave(id);
+    public ResponseEntity<Void> deleteLeave(
+            @RequestHeader(value = "X-User-Roles", required = false) String roles,
+            @PathVariable UUID id) {
+        leaveRequestService.deleteLeave(id, roles);
         return ResponseEntity.ok().build();
     }
 }

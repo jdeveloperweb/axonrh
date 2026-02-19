@@ -51,6 +51,17 @@ const LEAVE_TYPES = [
     { id: 'OTHER', label: 'Outros', icon: AlertCircle },
 ];
 
+const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
+    PENDING: { label: 'Pendente', className: 'bg-amber-100 text-amber-700' },
+    MANAGER_APPROVED: { label: 'Aprov. Gestor', className: 'bg-blue-100 text-blue-700' },
+    APPROVED: { label: 'Aprovada', className: 'bg-emerald-100 text-emerald-700' },
+    REJECTED: { label: 'Rejeitada', className: 'bg-red-100 text-red-700' },
+    CANCELLED: { label: 'Cancelada', className: 'bg-gray-100 text-gray-700' },
+    SCHEDULED: { label: 'Agendada', className: 'bg-purple-100 text-purple-800' },
+    IN_PROGRESS: { label: 'Em Andamento', className: 'bg-indigo-100 text-indigo-800' },
+    COMPLETED: { label: 'Concluída', className: 'bg-slate-100 text-slate-800' },
+};
+
 const formSchema = z.object({
     type: z.string().min(1, 'Selecione o tipo de licença'),
     startDate: z.string().min(1, 'Data de início é obrigatória'),
@@ -313,13 +324,13 @@ function LeaveRequestContent() {
                         </p>
                     </div>
                 </div>
+
                 {isReview && existingRequest && (
                     <Badge className={cn(
                         "h-8 px-4 rounded-full text-xs font-black uppercase tracking-widest",
-                        existingRequest.status === 'PENDING' ? "bg-amber-100 text-amber-700" :
-                            existingRequest.status === 'APPROVED' ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
+                        STATUS_CONFIG[existingRequest.status]?.className || "bg-slate-100 text-slate-700"
                     )}>
-                        {existingRequest.status}
+                        {STATUS_CONFIG[existingRequest.status]?.label || existingRequest.status}
                     </Badge>
                 )}
             </div>

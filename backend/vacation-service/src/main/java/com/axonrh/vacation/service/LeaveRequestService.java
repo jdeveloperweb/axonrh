@@ -149,7 +149,22 @@ public class LeaveRequestService {
     }
 
     @Transactional
-    public void deleteLeave(UUID id) {
+    public void deleteLeave(UUID id, String roles) {
+        LeaveRequest request = getLeaveById(id);
+
+        if (request.getStatus() == VacationRequestStatus.APPROVED) {
+            boolean isAdmin = false;
+            if (roles != null && !roles.isBlank()) {
+                isAdmin = java.util.Arrays.stream(roles.split(","))
+                        .map(String::trim)
+                        .anyMatch(r -> r.equalsIgnoreCase("ADMIN") || r.equalsIgnoreCase("ROLE_ADMIN"));
+            }
+
+            if (!isAdmin) {
+                throw new RuntimeException("Solicitações aprovadas só podem ser excluídas por um Administrador.");
+            }
+        }
+
         leaveRequestRepository.deleteById(id);
     }
 }

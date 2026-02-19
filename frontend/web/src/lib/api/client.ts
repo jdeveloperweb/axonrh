@@ -57,6 +57,9 @@ api.interceptors.request.use(
       if (user?.email) {
         config.headers['X-User-Email'] = user.email;
       }
+      if (user?.roles) {
+        config.headers['X-User-Roles'] = user.roles.join(',');
+      }
     }
 
     return config;
