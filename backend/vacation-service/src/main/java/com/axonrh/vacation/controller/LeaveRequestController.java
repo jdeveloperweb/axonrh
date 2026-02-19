@@ -18,13 +18,46 @@ public class LeaveRequestController {
 
     private final LeaveRequestService leaveRequestService;
 
-    @PostMapping
+    @PostMapping(consumes = {"multipart/form-data"})
     public ResponseEntity<LeaveRequest> createLeave(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
-            @RequestHeader("X-User-ID") UUID userId,
+            @RequestHeader(value = "X-User-ID", required = false) UUID userId,
+            @RequestParam("type") String type,
+            @RequestParam("startDate") String startDate,
+            @RequestParam("endDate") String endDate,
+            @RequestParam("employeeId") UUID employeeId,
+            @RequestParam(value = "reason", required = false) String reason,
+            @RequestParam(value = "cid", required = false) String cid,
+            @RequestParam(value = "certificateText", required = false) String certificateText,
+            @RequestParam(value = "certificate", required = false) org.springframework.web.multipart.MultipartFile certificate) {
+        
+        LeaveRequest request = LeaveRequest.builder()
+                .tenantId(tenantId)
+                .employeeId(employeeId)
+                .type(com.axonrh.vacation.entity.enums.LeaveType.valueOf(type))
+                .startDate(java.time.LocalDate.parse(startDate))
+                .endDate(java.time.LocalDate.parse(endDate))
+                .reason(reason)
+                .cid(cid)
+                .createdBy(userId)
+                .status(VacationRequestStatus.PENDING)
+                .build();
+        
+        // Em um sistema real, salvaríamos o arquivo no S3/Storage e pegaríamos a URL
+        if (certificate != null && !certificate.isEmpty()) {
+            request.setCertificateUrl("uploads/" + certificate.getOriginalFilename());
+            // Se o texto não veio do frontend, o service pode extrair do PDF/Imagem via OCR
+        }
+
+        return ResponseEntity.ok(leaveRequestService.createLeaveRequest(request, certificateText));
+    }
+
+    @PostMapping(consumes = {"application/json"})
+    public ResponseEntity<LeaveRequest> createLeaveJson(
+            @RequestHeader("X-Tenant-ID") UUID tenantId,
+            @RequestHeader(value = "X-User-ID", required = false) UUID userId,
             @RequestBody Map<String, Object> payload) {
         
-        // Mapeamento manual básico para suportar o texto do atestado no mesmo payload
         LeaveRequest request = LeaveRequest.builder()
                 .tenantId(tenantId)
                 .employeeId(UUID.fromString(payload.get("employeeId").toString()))
@@ -55,6 +88,11 @@ public class LeaveRequestController {
         return ResponseEntity.ok(leaveRequestService.getLeavesByEmployee(tenantId, employeeId));
     }
 
+    @GetMapping("/active")
+    public ResponseEntity<List<LeaveRequest>> listActiveLeaves(@RequestHeader("X-Tenant-ID") UUID tenantId) {
+        return ResponseEntity.ok(leaveRequestService.getActiveLeaves(tenantId));
+    }
+
     @PatchMapping("/{id}/status")
     public ResponseEntity<LeaveRequest> updateStatus(
             @PathVariable UUID id,
@@ -62,5 +100,11 @@ public class LeaveRequestController {
         VacationRequestStatus status = VacationRequestStatus.valueOf(payload.get("status"));
         String notes = payload.get("notes");
         return ResponseEntity.ok(leaveRequestService.updateStatus(id, status, notes));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteLeave(@PathVariable UUID id) {
+        leaveRequestService.deleteLeave(id);
+        return ResponseEntity.ok().build();
     }
 }

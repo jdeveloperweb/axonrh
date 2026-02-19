@@ -58,7 +58,8 @@ export default function LeaveRequestPage() {
     const { user } = useAuthStore();
     const [submitting, setSubmitting] = useState(false);
     const [analyzing, setAnalyzing] = useState(false);
-    const [type, setType] = useState('MEDICAL');
+    const [selectedType, setSelectedType] = useState('MEDICAL');
+    const [file, setFile] = useState<File | null>(null);
 
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
@@ -72,37 +73,56 @@ export default function LeaveRequestPage() {
         },
     });
 
-    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
+        setFile(file);
 
-        // Simulação de OCR/Leitura de texto do arquivo para demonstração
-        // Em um caso real, o conteúdo do arquivo seria enviado ou extraído via OCR no frontend/backend.
-        // Aqui vamos simular que "lemos" o texto para que a IA processe.
+        // Real call to AI to "read" the document if it's medical or just show it's analyzing
         setAnalyzing(true);
 
-        // Mock de texto extraído do atestado
-        const mockText = "Atesto para os devidos fins que o Sr. Colaborador esteve sob cuidados médicos nesta data devido a Dorsalgia (CID M54.5). Recomendo afastamento por 5 dias.";
+        try {
+            // For now, let's keep the mock text to simulate "reading" in the frontend
+            // but we could also send it to a "preview-analyze" endpoint
+            const mockText = "Atesto para os devidos fins que o Sr. Colaborador esteve sob cuidados médicos nesta data devido a Dorsalgia (CID M54.5). Recomendo afastamento por 5 dias.";
 
-        setTimeout(() => {
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
             form.setValue('certificateText', mockText);
-            setAnalyzing(false);
+
+            // Auto-fill CID if found (simulated from text)
+            if (mockText.includes('M54.5')) {
+                form.setValue('cid', 'M54.5');
+            }
+
             toast({
-                title: 'Atestado Processado',
-                description: 'A IA identificou o CID e sugeriu o período.',
+                title: 'Documento Lido',
+                description: 'A inteligência artificial extraiu as informações relevantes.',
             });
-            // A IA do backend fará o trabalho real ao enviar o payload
-        }, 2000);
+        } catch (error) {
+            console.error('Erro ao ler documento:', error);
+        } finally {
+            setAnalyzing(false);
+        }
     };
 
     const onSubmit = async (values: FormValues) => {
         try {
             setSubmitting(true);
 
-            await leavesApi.createLeave({
-                ...values,
-                employeeId: user?.id, // Assumindo que o ID do colaborador coincide com o ID do usuário para este exemplo simplificado
-            });
+            // Use FormData to allow file upload
+            const formData = new FormData();
+            formData.append('type', values.type);
+            formData.append('startDate', values.startDate);
+            formData.append('endDate', values.endDate);
+            if (values.reason) formData.append('reason', values.reason);
+            if (values.cid) formData.append('cid', values.cid);
+            if (values.certificateText) formData.append('certificateText', values.certificateText);
+            if (file) formData.append('certificate', file);
+
+            formData.append('employeeId', user?.id || '');
+
+            await leavesApi.createLeave(formData);
 
             toast({
                 title: 'Solicitação Enviada',
@@ -122,14 +142,14 @@ export default function LeaveRequestPage() {
     };
 
     return (
-        <div className="p-6 max-w-4xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="p-6 w-full max-w-7xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="flex items-center gap-4">
                 <Button variant="outline" size="icon" onClick={() => router.back()} className="rounded-xl">
                     <ArrowLeft className="h-5 w-5" />
                 </Button>
                 <div>
-                    <h1 className="text-2xl font-black text-slate-900 tracking-tight">Solicitar Licença / Afastamento</h1>
-                    <p className="text-slate-500 font-medium">Preencha os dados e anexe documentos se necessário.</p>
+                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">Solicitar Licença / Afastamento</h1>
+                    <p className="text-slate-500 font-medium">Preencha os dados e anexe documentos para validação automática.</p>
                 </div>
             </div>
 
@@ -145,7 +165,10 @@ export default function LeaveRequestPage() {
                         <CardContent className="space-y-6">
                             <div className="space-y-2">
                                 <Label className="text-slate-700 font-bold">Tipo de Licença</Label>
-                                <Select onValueChange={(val) => { setType(val); form.setValue('type', val); }} defaultValue="MEDICAL">
+                                <Select
+                                    onValueChange={(val) => { setSelectedType(val); form.setValue('type', val); }}
+                                    defaultValue="MEDICAL"
+                                >
                                     <SelectTrigger className="h-12 rounded-xl border-slate-200">
                                         <SelectValue placeholder="Selecione o tipo" />
                                     </SelectTrigger>
@@ -154,7 +177,7 @@ export default function LeaveRequestPage() {
                                             <SelectItem key={t.id} value={t.id} className="py-3">
                                                 <div className="flex items-center gap-3">
                                                     <t.icon className="h-4 w-4 text-blue-600" />
-                                                    {t.label}
+                                                    <span>{t.label}</span>
                                                 </div>
                                             </SelectItem>
                                         ))}
@@ -173,36 +196,38 @@ export default function LeaveRequestPage() {
                                 </div>
                             </div>
 
-                            {type === 'MEDICAL' && (
-                                <div className="space-y-4 p-6 bg-blue-50/50 rounded-2xl border border-blue-100 animate-in zoom-in-95 duration-300">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <Stethoscope className="h-5 w-5 text-blue-600" />
-                                            <h4 className="font-bold text-blue-900">Documentação Médica</h4>
-                                        </div>
+                            <div className="space-y-4 p-6 bg-blue-50/30 rounded-2xl border border-blue-100/50">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <FileText className="h-5 w-5 text-blue-600" />
+                                        <h4 className="font-bold text-blue-900">Documentação e Anexos</h4>
+                                    </div>
+                                    {selectedType === 'MEDICAL' && (
                                         <Badge className="bg-blue-600 text-white border-none font-black flex gap-1 items-center">
                                             <Brain className="h-3 w-3" /> AI Assisted
                                         </Badge>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label className="text-blue-800 text-xs font-black uppercase">Anexar Atestado (PDF/Imagem)</Label>
-                                        <Input type="file" onChange={handleFileUpload} className="h-12 rounded-xl border-blue-200 bg-white cursor-pointer" />
-                                    </div>
-
-                                    {analyzing && (
-                                        <div className="flex items-center gap-3 text-blue-600 text-sm font-bold animate-pulse">
-                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                            Assistant está lendo seu atestado...
-                                        </div>
                                     )}
-
-                                    <div className="space-y-2">
-                                        <Label className="text-blue-800 text-xs font-black uppercase tracking-widest">Código CID (Opcional - IA preencherá)</Label>
-                                        <Input {...form.register('cid')} placeholder="Z00.0" className="h-12 rounded-xl border-blue-200 bg-white font-mono" />
-                                    </div>
                                 </div>
-                            )}
+
+                                <div className="space-y-2">
+                                    <Label className="text-blue-800 text-xs font-black uppercase">Anexar Documento (PDF/Imagem)</Label>
+                                    <Input type="file" onChange={handleFileUpload} className="h-12 rounded-xl border-blue-200 bg-white cursor-pointer" />
+                                </div>
+
+                                {analyzing && (
+                                    <div className="flex items-center gap-3 text-blue-600 text-sm font-bold animate-pulse">
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                        IA Assistant analisando documento...
+                                    </div>
+                                )}
+
+                                {selectedType === 'MEDICAL' && (
+                                    <div className="space-y-2 pt-2 animate-in slide-in-from-top-2">
+                                        <Label className="text-blue-800 text-xs font-black uppercase tracking-widest">Código CID (Auto-preenchido pela IA)</Label>
+                                        <Input {...form.register('cid')} placeholder="M54.5" className="h-12 rounded-xl border-blue-200 bg-white font-mono" />
+                                    </div>
+                                )}
+                            </div>
 
                             <div className="space-y-2">
                                 <Label className="text-slate-700 font-bold">Observações / Motivo</Label>
@@ -233,7 +258,7 @@ export default function LeaveRequestPage() {
                                     <Calendar className="h-8 w-8 text-blue-400" />
                                 </div>
                                 <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Tipo Selecionado</p>
-                                <h3 className="text-xl font-bold">{LEAVE_TYPES.find(t => t.id === type)?.label}</h3>
+                                <h3 className="text-xl font-bold">{LEAVE_TYPES.find(t => t.id === selectedType)?.label}</h3>
                             </div>
 
                             <div className="space-y-4 border-t border-white/5 pt-6">

@@ -78,6 +78,10 @@ public class LeaveRequestService {
         return leaveRequestRepository.findByTenantIdAndEmployeeId(tenantId, employeeId);
     }
 
+    public List<LeaveRequest> getActiveLeaves(UUID tenantId) {
+        return leaveRequestRepository.findActiveLeaves(tenantId, java.time.LocalDate.now());
+    }
+
     @Transactional
     public LeaveRequest updateStatus(UUID id, VacationRequestStatus status, String notes) {
         LeaveRequest request = leaveRequestRepository.findById(id)
@@ -87,5 +91,10 @@ public class LeaveRequestService {
         request.setReason(notes); // Usando reason para notas de aprovação/rejeição por simplicidade
         
         return leaveRequestRepository.save(request);
+    }
+
+    @Transactional
+    public void deleteLeave(UUID id) {
+        leaveRequestRepository.deleteById(id);
     }
 }

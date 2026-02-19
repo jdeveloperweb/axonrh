@@ -36,8 +36,17 @@ export interface LeaveRequest {
 export const leavesApi = {
     getDashboardStats: () => api.get<LeaveDashboardStats, LeaveDashboardStats>('/leaves/dashboard'),
     getLeaves: () => api.get<LeaveRequest[], LeaveRequest[]>('/leaves'),
-    createLeave: (data: any) => api.post<LeaveRequest, LeaveRequest>('/leaves', data),
+    getActiveLeaves: () => api.get<LeaveRequest[], LeaveRequest[]>('/leaves/active'),
+    createLeave: (data: any) => {
+        if (data instanceof FormData) {
+            return api.post<LeaveRequest, LeaveRequest>('/leaves', data, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+        }
+        return api.post<LeaveRequest, LeaveRequest>('/leaves', data);
+    },
     updateStatus: (id: string, status: string, notes?: string) =>
         api.patch(`/leaves/${id}/status`, { status, notes }),
+    deleteLeave: (id: string) => api.delete(`/leaves/${id}`),
     seedLeaves: (count: number = 10) => api.post(`/mock/leaves/seed?count=${count}`, {}),
 };

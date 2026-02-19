@@ -11,4 +11,7 @@ import java.util.UUID;
 public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, UUID> {
     List<LeaveRequest> findByTenantId(UUID tenantId);
     List<LeaveRequest> findByTenantIdAndEmployeeId(UUID tenantId, UUID employeeId);
+    
+    @org.springframework.data.jpa.repository.Query("SELECT l FROM LeaveRequest l WHERE l.tenantId = :tenantId AND l.status = 'APPROVED' AND :today BETWEEN l.startDate AND l.endDate")
+    List<LeaveRequest> findActiveLeaves(UUID tenantId, java.time.LocalDate today);
 }
