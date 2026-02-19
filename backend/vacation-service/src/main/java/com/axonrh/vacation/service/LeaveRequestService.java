@@ -82,13 +82,33 @@ public class LeaveRequestService {
         return leaveRequestRepository.findActiveLeaves(tenantId, java.time.LocalDate.now());
     }
 
-    @Transactional
-    public LeaveRequest updateStatus(UUID id, VacationRequestStatus status, String notes) {
-        LeaveRequest request = leaveRequestRepository.findById(id)
+    public LeaveRequest getLeaveById(UUID id) {
+        return leaveRequestRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Solicitação de licença não encontrada"));
+    }
+
+    @Transactional
+    public LeaveRequest updateLeave(UUID id, Map<String, Object> payload) {
+        LeaveRequest request = getLeaveById(id);
+        
+        if (payload.containsKey("cid")) request.setCid((String) payload.get("cid"));
+        if (payload.containsKey("startDate")) request.setStartDate(java.time.LocalDate.parse((String) payload.get("startDate")));
+        if (payload.containsKey("endDate")) request.setEndDate(java.time.LocalDate.parse((String) payload.get("endDate")));
+        // Recalcular dias
+        if (request.getStartDate() != null && request.getEndDate() != null) {
+            request.setDaysCount((int) ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate()) + 1);
+        }
+        
+        return leaveRequestRepository.save(request);
+    }
+
+    @Transactional
+    public LeaveRequest updateStatus(UUID id, VacationRequestStatus status, String notes, String cid) {
+        LeaveRequest request = getLeaveById(id);
         
         request.setStatus(status);
-        request.setReason(notes); // Usando reason para notas de aprovação/rejeição por simplicidade
+        if (notes != null) request.setReason(notes);
+        if (cid != null) request.setCid(cid);
         
         return leaveRequestRepository.save(request);
     }

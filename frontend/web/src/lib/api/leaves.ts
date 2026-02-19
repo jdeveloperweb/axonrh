@@ -31,6 +31,8 @@ export interface LeaveRequest {
     cidDescription?: string;
     status: string;
     reason?: string;
+    certificateText?: string;
+    certificateUrl?: string;
 }
 
 export const leavesApi = {
@@ -46,8 +48,10 @@ export const leavesApi = {
         }
         return api.post<LeaveRequest, LeaveRequest>('/leaves', data);
     },
-    updateStatus: (id: string, status: string, notes?: string) =>
-        api.patch(`/leaves/${id}/status`, { status, notes }),
+    getLeaveById: (id: string) => api.get<LeaveRequest, LeaveRequest>(`/leaves/${id}`),
+    updateLeave: (id: string, data: any) => api.patch<LeaveRequest, LeaveRequest>(`/leaves/${id}`, data),
+    updateStatus: (id: string, status: string, notes?: string, cid?: string) =>
+        api.patch(`/leaves/${id}/status`, { status, notes, cid }),
     deleteLeave: (id: string) => api.delete(`/leaves/${id}`),
 
     // CID 10

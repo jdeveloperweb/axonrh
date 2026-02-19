@@ -569,7 +569,13 @@ function LeaveTable({ requests, handleUpdateStatus, getStatusBadge, getLeaveType
                     size="sm"
                     variant="ghost"
                     className="h-8 w-8 p-0 text-slate-400 hover:text-slate-900"
-                    onClick={() => router.push(`/vacation/requests/${request.id}`)}
+                    onClick={() => {
+                      if (request.type === 'VACATION') {
+                        router.push(`/vacation/requests/${request.id}`);
+                      } else {
+                        router.push(`/vacation/leave-request?id=${request.id}`);
+                      }
+                    }}
                   >
                     <ArrowRight className="h-4 w-4" />
                   </Button>

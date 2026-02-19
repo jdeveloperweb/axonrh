@@ -93,13 +93,26 @@ public class LeaveRequestController {
         return ResponseEntity.ok(leaveRequestService.getActiveLeaves(tenantId));
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<LeaveRequest> getLeaveById(@PathVariable UUID id) {
+        return ResponseEntity.ok(leaveRequestService.getLeaveById(id));
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<LeaveRequest> updateLeave(
+            @PathVariable UUID id,
+            @RequestBody Map<String, Object> payload) {
+        return ResponseEntity.ok(leaveRequestService.updateLeave(id, payload));
+    }
+
     @PatchMapping("/{id}/status")
     public ResponseEntity<LeaveRequest> updateStatus(
             @PathVariable UUID id,
             @RequestBody Map<String, String> payload) {
         VacationRequestStatus status = VacationRequestStatus.valueOf(payload.get("status"));
         String notes = payload.get("notes");
-        return ResponseEntity.ok(leaveRequestService.updateStatus(id, status, notes));
+        String cid = payload.get("cid");
+        return ResponseEntity.ok(leaveRequestService.updateStatus(id, status, notes, cid));
     }
 
     @DeleteMapping("/{id}")
