@@ -56,7 +56,9 @@ export default function VacationPage() {
   const [loading, setLoading] = useState(true);
   const [periods, setPeriods] = useState<VacationPeriod[]>([]);
   const [requests, setRequests] = useState<any[]>([]);
+  const [myRequests, setMyRequests] = useState<any[]>([]);
   const [activeLeaves, setActiveLeaves] = useState<any[]>([]);
+  const [expiringPeriods, setExpiringPeriods] = useState<VacationPeriod[]>([]);
 
   const roles = user?.roles || [];
   const isAdmin = roles.some(r => r.includes('ADMIN'));
@@ -73,16 +75,47 @@ export default function VacationPage() {
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      const [periodsData, requestsData, statsData, activeData] = await Promise.all([
+      const [
+        periodsData,
+        vacRequestsData,
+        leavesData,
+        myVacRequests,
+        myLeavesData,
+        statsData,
+        activeData,
+        expiringData
+      ] = await Promise.all([
         vacationApi.getMyPeriods().catch(() => []),
-        leavesApi.getLeaves(), // Using the unified leaves API
+        (isRH || isAdmin || isManager) ? vacationApi.getPendingRequests(0, 100).then(r => r.content).catch(() => []) : Promise.resolve([]),
+        (isRH || isAdmin || isManager) ? leavesApi.getLeaves().catch(() => []) : Promise.resolve([]),
+        vacationApi.getMyRequests().catch(() => []),
+        user?.id ? leavesApi.getMyLeaves(user.id).catch(() => []) : Promise.resolve([]),
         vacationApi.getStatistics().catch(() => ({})),
-        leavesApi.getActiveLeaves().catch(() => [])
+        leavesApi.getActiveLeaves().catch(() => []),
+        (isRH || isAdmin || isManager) ? vacationApi.getExpiringPeriods(90).catch(() => []) : Promise.resolve([])
       ]);
+
       setPeriods(periodsData);
-      setRequests(requestsData);
+
+      // Merge all for management
+      const mergedAll = [
+        ...vacRequestsData.map((r: any) => ({ ...r, type: r.type || 'VACATION' })),
+        ...leavesData
+      ].sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
+
+      setRequests(mergedAll);
+
+      // Merge personal
+      const mergedMine = [
+        ...myVacRequests.map((r: any) => ({ ...r, type: r.type || 'VACATION' })),
+        ...myLeavesData
+      ].sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
+
+      setMyRequests(mergedMine);
+
       setStatistics((prev: any) => ({ ...prev, ...statsData }));
       setActiveLeaves(activeData);
+      setExpiringPeriods(expiringData);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
     } finally {
@@ -94,9 +127,14 @@ export default function VacationPage() {
     loadData();
   }, [loadData]);
 
-  const handleUpdateStatus = async (id: string, status: string) => {
+  const handleUpdateStatus = async (id: string, status: string, type: string) => {
     try {
-      await leavesApi.updateStatus(id, status);
+      if (type === 'VACATION') {
+        if (status === 'APPROVED') await vacationApi.approveRequest(id);
+        else if (status === 'REJECTED') await vacationApi.rejectRequest(id, 'Rejeitado pelo gestor');
+      } else {
+        await leavesApi.updateStatus(id, status);
+      }
       toast({ title: 'Status atualizado', description: `Solicitação ${status.toLowerCase()} com sucesso.` });
       loadData();
     } catch (error) {
@@ -262,7 +300,7 @@ export default function VacationPage() {
 
                 <TabsContent value="mine" className="mt-4">
                   <LeaveTable
-                    requests={requests.filter((r: any) => r.employeeId === user?.id)}
+                    requests={myRequests}
                     handleUpdateStatus={handleUpdateStatus}
                     getStatusBadge={getStatusBadge}
                     getLeaveTypeBadge={getLeaveTypeBadge}
@@ -303,34 +341,40 @@ export default function VacationPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {periods.filter((p: any) => p.status === 'OPEN').map((period: any) => (
-                <div key={period.id} className="space-y-4">
-                  <div className="flex justify-between items-end">
-                    <div>
-                      <p className="text-xs text-blue-300/80 font-bold uppercase tracking-widest mb-1">Aquisitivo Atual</p>
-                      <p className="text-xs font-bold text-white">{formatDate(period.acquisitionStartDate)} — {formatDate(period.acquisitionEndDate)}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-3xl font-black text-blue-400 leading-none">{period.remainingDays}</p>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase">dias</p>
-                    </div>
-                  </div>
-
-                  <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-blue-500 rounded-full transition-all duration-1000"
-                      style={{ width: `${Math.round(((period.usedDays + period.soldDays) / period.totalDays) * 100)}%` }}
-                    />
-                  </div>
-
-                  <div className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl">
-                    <Info className="h-4 w-4 text-blue-400 shrink-0" />
-                    <p className="text-[10px] text-slate-300 leading-tight font-medium">
-                      Concessão até {formatDate(period.concessionEndDate)} para evitar multa CLT.
-                    </p>
-                  </div>
+              {periods.filter((p: any) => ['OPEN', 'PARTIALLY_USED', 'SCHEDULED'].includes(p.status)).length === 0 ? (
+                <div className="py-8 text-center bg-white/5 rounded-2xl">
+                  <p className="text-slate-400 text-xs font-medium">Nenhum saldo disponível no momento.</p>
                 </div>
-              ))}
+              ) : (
+                periods.filter((p: any) => ['OPEN', 'PARTIALLY_USED', 'SCHEDULED'].includes(p.status)).map((period: any) => (
+                  <div key={period.id} className="space-y-4">
+                    <div className="flex justify-between items-end">
+                      <div>
+                        <p className="text-xs text-blue-300 font-black uppercase tracking-widest mb-1">Aquisitivo Atual</p>
+                        <p className="text-xs font-bold text-white/90">{formatDate(period.acquisitionStartDate)} — {formatDate(period.acquisitionEndDate)}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-3xl font-black text-blue-400 leading-none">{period.remainingDays}</p>
+                        <p className="text-[10px] font-bold text-blue-300/60 uppercase">dias restantes</p>
+                      </div>
+                    </div>
+
+                    <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-blue-500 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)] transition-all duration-1000"
+                        style={{ width: `${Math.round(((period.usedDays + period.soldDays) / period.totalDays) * 100)}%` }}
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl border border-white/5">
+                      <Clock className="h-4 w-4 text-amber-400 shrink-0" />
+                      <p className="text-[10px] text-slate-300 leading-tight font-medium">
+                        Concessão até <span className="text-white font-bold">{formatDate(period.concessionEndDate)}</span> para evitar multa CLT.
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
 
               <Button
                 variant="outline"
@@ -356,6 +400,40 @@ export default function VacationPage() {
               </div>
             </div>
           </div>
+
+          {/* Expiring Vacations (RH/Manager only) */}
+          {(isRH || isAdmin || isManager) && expiringPeriods.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="text-sm font-black text-red-500 uppercase tracking-widest px-1 flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4" />
+                Vencendo em breve
+              </h3>
+              <div className="space-y-3">
+                {expiringPeriods.slice(0, 3).map((period) => (
+                  <Card key={period.id} className="border-none shadow-sm bg-white overflow-hidden group">
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-slate-900 truncate">{period.employeeName}</p>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Vence em {period.daysUntilExpiration} dias</p>
+                        </div>
+                        <Badge variant="destructive" className="bg-red-50 text-red-600 border-none text-[10px] font-black uppercase">Crítico</Badge>
+                      </div>
+                      <div className="flex items-center justify-between text-[10px] font-medium text-slate-500">
+                        <span>Saldo: <strong>{period.remainingDays} dias</strong></span>
+                        <span>Até {formatDate(period.concessionEndDate)}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+                {expiringPeriods.length > 3 && (
+                  <Button variant="ghost" className="text-xs text-slate-400 hover:text-red-500 font-bold p-0" onClick={() => router.push('/vacation/expiring')}>
+                    Ver todos os {expiringPeriods.length} períodos em risco <ArrowRight className="ml-1 w-3 h-3" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Quick Actions */}
           <Card className="border-none shadow-sm bg-blue-600 text-white rounded-3xl p-2">
@@ -456,7 +534,7 @@ function LeaveTable({ requests, handleUpdateStatus, getStatusBadge, getLeaveType
                         size="sm"
                         variant="ghost"
                         className="h-8 w-8 p-0 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
-                        onClick={() => handleUpdateStatus(request.id, 'APPROVED')}
+                        onClick={() => handleUpdateStatus(request.id, 'APPROVED', request.type)}
                       >
                         <CheckCircle2 className="h-4 w-4" />
                       </Button>
@@ -464,7 +542,7 @@ function LeaveTable({ requests, handleUpdateStatus, getStatusBadge, getLeaveType
                         size="sm"
                         variant="ghost"
                         className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                        onClick={() => handleUpdateStatus(request.id, 'REJECTED')}
+                        onClick={() => handleUpdateStatus(request.id, 'REJECTED', request.type)}
                       >
                         <XCircle className="h-4 w-4" />
                       </Button>
