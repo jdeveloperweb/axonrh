@@ -51,7 +51,8 @@ public interface DigitalHiringProcessRepository extends JpaRepository<DigitalHir
             "WHERE d.tenantId = :tenantId GROUP BY d.status")
     List<Object[]> countByStatusGrouped(@Param("tenantId") UUID tenantId);
 
-    @Query("SELECT AVG(FUNCTION('EXTRACT', EPOCH FROM (d.completedAt - d.createdAt)) / 86400) " +
-            "FROM DigitalHiringProcess d WHERE d.tenantId = :tenantId AND d.status = 'COMPLETED'")
+    @Query(value = "SELECT AVG(EXTRACT(EPOCH FROM (completed_at - created_at)) / 86400) " +
+            "FROM shared.digital_hiring_processes WHERE tenant_id = :tenantId AND status = 'COMPLETED'",
+            nativeQuery = true)
     Double getAverageCompletionDays(@Param("tenantId") UUID tenantId);
 }
