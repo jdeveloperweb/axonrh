@@ -10,6 +10,15 @@ import {
     DocumentRequirement,
     RequiredDocumentsResponse
 } from './admissions';
+import {
+    digitalHiringApi,
+    DigitalHiringProcess,
+    DigitalHiringStatus,
+    DigitalHiringCreateRequest,
+    DigitalHiringListParams,
+    DigitalHiringListResponse,
+    DigitalHiringStats,
+} from './digital-hiring';
 
 export type {
     AdmissionProcess,
@@ -19,7 +28,13 @@ export type {
     AdmissionListParams,
     AdmissionListResponse,
     DocumentRequirement,
-    RequiredDocumentsResponse
+    RequiredDocumentsResponse,
+    DigitalHiringProcess,
+    DigitalHiringStatus,
+    DigitalHiringCreateRequest,
+    DigitalHiringListParams,
+    DigitalHiringListResponse,
+    DigitalHiringStats,
 };
 
 // Types for Termination Process
@@ -111,6 +126,7 @@ export interface TerminationRequest {
 
 export const processesApi = {
     admissions: admissionsApi,
+    digitalHiring: digitalHiringApi,
     terminations: {
         list: async (): Promise<TerminationProcess[]> => {
             return api.get<unknown, TerminationProcess[]>('/terminations');
@@ -135,3 +151,4 @@ export const processesApi = {
 
 // Aliases for compatibility
 export { admissionsApi };
+export { digitalHiringApi };

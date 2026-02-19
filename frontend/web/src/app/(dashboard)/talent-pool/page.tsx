@@ -47,6 +47,7 @@ import {
 } from '@/lib/api/talent-pool';
 import { positionsApi, Position } from '@/lib/api/positions';
 import { employeesApi, Department } from '@/lib/api/employees';
+import { digitalHiringApi } from '@/lib/api/digital-hiring';
 import { useAuthStore } from '@/stores/auth-store';
 
 type Tab = 'vacancies' | 'candidates' | 'talentPool';
@@ -405,6 +406,26 @@ export default function TalentPoolPage() {
             if (selectedCandidate?.id === candidateId) {
                 const updated = await talentPoolApi.getCandidate(candidateId);
                 setSelectedCandidate(updated);
+            }
+
+            // Auto-trigger: when candidate moves to APPROVED, start digital hiring process
+            if (status === 'APPROVED') {
+                try {
+                    const candidate = candidates.find(c => c.id === candidateId) || selectedCandidate;
+                    if (candidate) {
+                        await digitalHiringApi.triggerFromRecruitment(candidateId, candidate.vacancyId);
+                        toast({
+                            title: 'Contratação Digital Iniciada',
+                            description: `Um e-mail foi enviado para ${candidate.email} com o link do portal de contratação.`,
+                        });
+                    }
+                } catch (triggerError) {
+                    console.error('Erro ao iniciar contratação digital:', triggerError);
+                    toast({
+                        title: 'Atenção',
+                        description: 'Status atualizado, mas a contratação digital não pôde ser iniciada automaticamente. Inicie manualmente em Processos RH.',
+                    });
+                }
             }
         } catch {
             toast({ title: 'Erro', description: 'Falha ao atualizar status', variant: 'destructive' });
