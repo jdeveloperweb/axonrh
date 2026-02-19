@@ -19,7 +19,7 @@ public class CidController {
     @PostMapping("/import")
     public ResponseEntity<Map<String, String>> importCids() {
         // Caminho absoluto conforme fornecido pelo usuário
-        String path = "\\root\\Projetos\\axonrh\\CID10CSV";
+        String path = "/root/Projetos/axonrh/CID10CSV";
         cidService.importFromCsv(path);
         return ResponseEntity.ok(Map.of("message", "Importação iniciada com sucesso."));
     }

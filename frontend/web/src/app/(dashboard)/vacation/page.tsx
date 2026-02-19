@@ -297,18 +297,18 @@ export default function VacationPage() {
           {/* Vacation Periods (CLT specific) */}
           <Card className="border-none shadow-lg bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-3xl overflow-hidden">
             <CardHeader>
-              <CardTitle className="text-lg font-black flex items-center gap-2">
+              <CardTitle className="text-lg font-black flex items-center gap-2 text-white">
                 <Umbrella className="h-5 w-5 text-blue-400" />
                 Seu Saldo de Férias
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {periods.filter(p => p.status === 'OPEN').map(period => (
+              {periods.filter((p: any) => p.status === 'OPEN').map((period: any) => (
                 <div key={period.id} className="space-y-4">
                   <div className="flex justify-between items-end">
                     <div>
-                      <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mb-1">Aquisitivo Atual</p>
-                      <p className="text-xs font-medium text-slate-200">{formatDate(period.acquisitionStartDate)} — {formatDate(period.acquisitionEndDate)}</p>
+                      <p className="text-xs text-blue-300/80 font-bold uppercase tracking-widest mb-1">Aquisitivo Atual</p>
+                      <p className="text-xs font-bold text-white">{formatDate(period.acquisitionStartDate)} — {formatDate(period.acquisitionEndDate)}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-3xl font-black text-blue-400 leading-none">{period.remainingDays}</p>
