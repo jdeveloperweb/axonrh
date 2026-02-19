@@ -111,3 +111,4 @@ management:
 application:
   clients:
     employee-service: ${EMPLOYEE_SERVICE_URL:http://localhost:8083}
+    ai-assistant-service: ${AI_ASSISTANT_SERVICE_URL:http://axonrh-ai-assistant-service:8088}

@@ -472,9 +472,9 @@ function LeaveRequestContent() {
                                 )}
                             </div>
                         </CardHeader>
-                        <CardContent className="p-0 relative aspect-[3/4] flex items-center justify-center overflow-hidden">
+                        <CardContent className="p-0 relative flex flex-col h-[500px] overflow-hidden">
                             {!file && !existingRequest?.certificateUrl ? (
-                                <div className="text-center p-8 space-y-4">
+                                <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-4">
                                     <div className="h-20 w-20 mx-auto bg-slate-200 rounded-full flex items-center justify-center text-slate-300">
                                         <FileText className="h-10 w-10" />
                                     </div>
@@ -488,41 +488,44 @@ function LeaveRequestContent() {
                                 </div>
                             ) : (
                                 <>
-                                    <div className="w-full h-full bg-slate-800 flex flex-col items-center justify-center relative p-2 shadow-inner">
+                                    <div className="flex-1 bg-slate-900 flex items-center justify-center relative p-4 overflow-hidden">
                                         {(previewUrl || existingRequest?.certificateUrl) ? (
                                             <div
-                                                className="w-full h-full flex items-center justify-center bg-white rounded-lg shadow-inner overflow-hidden border border-slate-200 cursor-zoom-in"
+                                                className="relative w-full h-full flex items-center justify-center bg-white rounded shadow-2xl overflow-hidden cursor-zoom-in group/img"
                                                 onClick={() => setIsZoomed(true)}
                                             >
                                                 <img
                                                     src={previewUrl || existingRequest?.certificateUrl}
                                                     alt="Atestado médico"
-                                                    className="max-w-full max-h-full object-contain transition-transform duration-500 group-hover:scale-105"
+                                                    className="max-w-full max-h-full object-contain transition-all duration-500 group-hover/img:scale-[1.02]"
                                                 />
-                                                <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[1px]">
+                                                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
                                                     <Button
                                                         size="sm"
                                                         variant="secondary"
-                                                        className="rounded-full shadow-lg gap-2 bg-white/90 hover:bg-white text-slate-900 font-bold border-none"
+                                                        className="rounded-full shadow-lg gap-2 bg-white text-slate-900 font-bold border-none"
                                                         onClick={(e) => { e.stopPropagation(); setIsZoomed(true); }}
                                                     >
-                                                        <Eye className="h-3 w-3" /> Ampliar Documento
+                                                        <Eye className="h-3 w-3" /> Ampliar
                                                     </Button>
                                                 </div>
                                             </div>
                                         ) : (
-                                            <div className="text-center p-8 space-y-4">
-                                                <div className="h-20 w-20 mx-auto bg-slate-200 rounded-full flex items-center justify-center text-slate-300">
+                                            <div className="text-center p-8 space-y-4 text-white/50">
+                                                <div className="h-20 w-20 mx-auto bg-white/10 rounded-full flex items-center justify-center">
                                                     <FileText className="h-10 w-10" />
                                                 </div>
-                                                <p className="text-sm text-slate-400 font-medium">Arquivos suportados: JPEG, PNG, PDF</p>
+                                                <p className="text-sm font-medium">Formato não suportado para visualização.</p>
                                             </div>
                                         )}
                                     </div>
-                                    <div className="p-3 bg-white border-t border-slate-100 flex items-center justify-between w-full">
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate max-w-[200px] px-2">
-                                            {file ? file.name : (existingRequest?.certificateUrl?.split('/').pop() || 'atestado_medico.pdf')}
-                                        </p>
+                                    <div className="p-3 bg-white border-t border-slate-100 flex items-center justify-between shrink-0">
+                                        <div className="flex items-center gap-2 overflow-hidden px-2">
+                                            <FileText className="h-4 w-4 text-blue-600 shrink-0" />
+                                            <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest truncate">
+                                                {file ? file.name : (existingRequest?.certificateUrl?.split('/').pop() || 'atestado_medico.pdf')}
+                                            </p>
+                                        </div>
                                         <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full text-slate-400 hover:text-blue-600">
                                             <Download className="h-4 w-4" />
                                         </Button>

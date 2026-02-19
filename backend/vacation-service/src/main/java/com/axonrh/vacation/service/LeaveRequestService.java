@@ -115,7 +115,15 @@ public class LeaveRequestService {
     }
 
     public MedicalCertificateAnalysisResponse analyzeCertificate(UUID tenantId, MedicalCertificateAnalysisRequest request) {
-        return aiAssistantClient.analyzeCertificate(tenantId, request);
+        log.info("Iniciando analyzeCertificate para o tenant: {}", tenantId);
+        try {
+            MedicalCertificateAnalysisResponse response = aiAssistantClient.analyzeCertificate(tenantId, request);
+            log.info("Chamada ao aiAssistantClient concluída com sucesso");
+            return response;
+        } catch (Exception e) {
+            log.error("FALHA na chamada ao aiAssistantClient: {}", e.getMessage());
+            throw e;
+        }
     }
 
     @Transactional

@@ -121,15 +121,22 @@ public class LeaveRequestController {
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @RequestParam("certificate") org.springframework.web.multipart.MultipartFile certificate) {
         try {
+            log.info(">>> [Vacation Service] Recebido certificado para análise: {} (Size: {})", 
+                certificate.getOriginalFilename(), certificate.getSize());
+            
             String base64 = Base64.getEncoder().encodeToString(certificate.getBytes());
             com.axonrh.vacation.dto.MedicalCertificateAnalysisRequest request = com.axonrh.vacation.dto.MedicalCertificateAnalysisRequest.builder()
                     .imageBase64(base64)
                     .fileName(certificate.getOriginalFilename())
                     .build();
             
-            return ResponseEntity.ok(leaveRequestService.analyzeCertificate(tenantId, request));
+            log.info(">>> [Vacation Service] Chamando AI Assistant Client...");
+            var response = leaveRequestService.analyzeCertificate(tenantId, request);
+            log.info(">>> [Vacation Service] Resposta da IA recebida com sucesso.");
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Erro ao processar certificado: " + e.getMessage());
+            log.error(">>> [Vacation Service] ERRO ao processar certificado: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body("Erro ao processar certificado: " + e.getMessage());
         }
     }
 
