@@ -22,6 +22,8 @@ import {
     Sparkles,
     Eye,
     RefreshCw,
+    Copy,
+    Edit2,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -113,6 +115,9 @@ export default function ProcessesPage() {
 
     // Modal state for new digital hiring
     const [showNewHiringModal, setShowNewHiringModal] = useState(false);
+    const [showEditEmailModal, setShowEditEmailModal] = useState(false);
+    const [selectedHiring, setSelectedHiring] = useState<DigitalHiringProcess | null>(null);
+    const [newEmail, setNewEmail] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [positions, setPositions] = useState<Position[]>([]);
     const [departments, setDepartments] = useState<Department[]>([]);
@@ -309,6 +314,32 @@ export default function ProcessesPage() {
             fetchDigitalHiringStats();
         } catch {
             toast({ title: 'Erro', description: 'Falha ao cancelar processo', variant: 'destructive' });
+        }
+    };
+
+    const handleCopyLink = (link: string) => {
+        navigator.clipboard.writeText(link);
+        toast({ title: 'Link copiado!', description: 'O link foi copiado para sua área de transferência.' });
+    };
+
+    const handleOpenEditEmail = (dh: DigitalHiringProcess) => {
+        setSelectedHiring(dh);
+        setNewEmail(dh.candidateEmail);
+        setShowEditEmailModal(true);
+    };
+
+    const handleUpdateEmail = async () => {
+        if (!selectedHiring || !newEmail) return;
+        try {
+            setSubmitting(true);
+            await digitalHiringApi.updateEmail(selectedHiring.id, newEmail);
+            toast({ title: 'Sucesso', description: 'E-mail atualizado e convite reenviado!' });
+            setShowEditEmailModal(false);
+            fetchDigitalHirings();
+        } catch {
+            toast({ title: 'Erro', description: 'Falha ao atualizar e-mail', variant: 'destructive' });
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -619,6 +650,12 @@ export default function ProcessesPage() {
                                                                     <DropdownMenuItem onClick={() => handleResendEmail(dh.id)}>
                                                                         <Mail className="w-4 h-4 mr-2" /> Reenviar E-mail
                                                                     </DropdownMenuItem>
+                                                                    <DropdownMenuItem onClick={() => handleOpenEditEmail(dh)}>
+                                                                        <Edit2 className="w-4 h-4 mr-2" /> Editar E-mail
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuItem onClick={() => handleCopyLink(dh.publicLink || dh.accessToken)}>
+                                                                        <Copy className="w-4 h-4 mr-2" /> Copiar Link
+                                                                    </DropdownMenuItem>
                                                                     <DropdownMenuItem onClick={() => handleForceAdvance(dh.id)}>
                                                                         <FastForward className="w-4 h-4 mr-2" /> Forçar Avanço
                                                                     </DropdownMenuItem>
@@ -821,6 +858,44 @@ export default function ProcessesPage() {
                                 </Button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* ==================== MODAL: Editar E-mail ==================== */}
+            {showEditEmailModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+                        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                            <h2 className="text-lg font-bold text-gray-900">Editar E-mail do Candidato</h2>
+                            <button onClick={() => setShowEditEmailModal(false)} className="text-gray-400 hover:text-gray-600">
+                                <XCircle className="w-6 h-6" />
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <p className="text-sm text-gray-500">
+                                Candidato: <strong>{selectedHiring?.candidateName}</strong>
+                            </p>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Novo E-mail</label>
+                                <Input
+                                    type="email"
+                                    value={newEmail}
+                                    onChange={(e) => setNewEmail(e.target.value)}
+                                    placeholder="email@exemplo.com"
+                                />
+                                <p className="text-xs text-amber-600 mt-2 flex items-center gap-1">
+                                    <AlertCircle className="w-3 h-3" />
+                                    Ao salvar, um novo convite será enviado para este e-mail.
+                                </p>
+                            </div>
+                            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                                <Button variant="outline" onClick={() => setShowEditEmailModal(false)}>Cancelar</Button>
+                                <Button onClick={handleUpdateEmail} disabled={submitting || !newEmail}>
+                                    {submitting ? 'Salvando...' : 'Salvar e Reenviar'}
+                                </Button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

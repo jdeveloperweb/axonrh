@@ -297,6 +297,10 @@ export const digitalHiringApi = {
         await api.post(`/digital-hiring/${id}/cancel`, { reason });
     },
 
+    updateEmail: async (id: string, email: string): Promise<void> => {
+        await api.patch(`/digital-hiring/${id}/email`, { email });
+    },
+
     complete: async (id: string): Promise<DigitalHiringProcess> => {
         return api.post<unknown, DigitalHiringProcess>(`/digital-hiring/${id}/complete`);
     },
@@ -376,7 +380,7 @@ export const digitalHiringApi = {
     /** Trigger: called when candidate status moves to APPROVED in talent-pool */
     triggerFromRecruitment: async (candidateId: string, vacancyId?: string): Promise<DigitalHiringProcess> => {
         return api.post<{ candidateId: string; vacancyId?: string }, DigitalHiringProcess>(
-            '/digital-hiring/trigger/recruitment',
+            '/digital-hiring/trigger',
             { candidateId, vacancyId }
         );
     },

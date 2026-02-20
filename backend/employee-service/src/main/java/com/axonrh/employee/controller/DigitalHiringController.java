@@ -155,6 +155,20 @@ public class DigitalHiringController {
         return ResponseEntity.noContent().build();
     }
 
+    @PatchMapping("/{id}/email")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
+    @Operation(summary = "Atualizar e-mail do candidato", description = "Atualiza o e-mail do candidato e reenvia o convite")
+    public ResponseEntity<Void> updateEmail(
+            @PathVariable UUID id,
+            @RequestBody Map<String, String> body) {
+
+        String email = body.get("email");
+        log.info("Atualizando e-mail da contratacao digital: {} para: {}", id, email);
+
+        digitalHiringService.updateEmail(id, email);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/{id}/ai-analysis")
     @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
     @Operation(summary = "Análise IA", description = "Retorna análise de consistência da IA para o processo")

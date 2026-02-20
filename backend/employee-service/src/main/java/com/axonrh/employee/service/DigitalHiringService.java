@@ -42,6 +42,7 @@ public class DigitalHiringService {
     private final TalentCandidateRepository candidateRepository;
     private final EmployeeService employeeService;
     private final StorageService storageService;
+    private final com.axonrh.kafka.producer.DomainEventPublisher eventPublisher;
 
     @Value("${digital-hiring.link.base-url:http://localhost:3000/contratacao}")
     private String linkBaseUrl;
@@ -103,9 +104,10 @@ public class DigitalHiringService {
         }
 
         DigitalHiringProcess saved = hiringRepository.save(process);
-        log.info("Contratacao digital criada: {} - token: {}", saved.getId(), accessToken);
+        log.info("Contratacao digital criada para candiato: {} com ID: {}", request.getCandidateName(), saved.getId());
 
-        // TODO: Enviar email via notification-service (Kafka event)
+        // Envia email de convite
+        sendInvitationEmail(saved);
 
         return mapToResponse(saved);
     }
@@ -226,9 +228,59 @@ public class DigitalHiringService {
         String publicLink = linkBaseUrl + "/" + process.getAccessToken();
         log.info("Reenviando email de contratacao digital: {} para: {}", id, process.getCandidateEmail());
 
-        // TODO: Enviar email via notification-service
+        sendInvitationEmail(process);
 
         return Map.of("message", "Email reenviado com sucesso", "link", publicLink);
+    }
+
+    /**
+     * Atualiza o e-mail do candidato e reenvia o convite.
+     */
+    @Transactional
+    public void updateEmail(UUID id, String newEmail) {
+        UUID tenantId = getTenantId();
+        DigitalHiringProcess process = hiringRepository.findByTenantIdAndId(tenantId, id)
+                .orElseThrow(() -> new ResourceNotFoundException("Contratacao digital nao encontrada"));
+
+        log.info("Atualizando e-mail da contratacao digital: {} de: {} para: {}", id, process.getCandidateEmail(), newEmail);
+        process.setCandidateEmail(newEmail);
+        
+        // Renova link por seguranca ao trocar e-mail
+        process.setAccessToken(UUID.randomUUID().toString().replace("-", ""));
+        process.setLinkExpiresAt(LocalDateTime.now().plusDays(defaultValidityDays));
+        
+        hiringRepository.save(process);
+        
+        // Reenvia o convite com o novo e-mail
+        sendInvitationEmail(process);
+    }
+
+    /**
+     * Envia o e-mail de convite via Kafka.
+     */
+    private void sendInvitationEmail(DigitalHiringProcess process) {
+        try {
+            String publicLink = linkBaseUrl + "/" + process.getAccessToken();
+            Map<String, Object> variables = new HashMap<>();
+            variables.put("candidate_name", process.getCandidateName());
+            variables.put("company_name", "AxonRH"); // Seria ideal buscar o nome do tenant
+            variables.put("hiring_link", publicLink);
+            variables.put("expires_at", process.getLinkExpiresAt().toString());
+
+            com.axonrh.kafka.event.notification.NotificationEvent event = com.axonrh.kafka.event.notification.NotificationEvent.create()
+                    .tenantId(process.getTenantId())
+                    .externalEmails(List.of(process.getCandidateEmail()))
+                    .channels(List.of("EMAIL"))
+                    .templateCode("DIGITAL_HIRING_INVITATION")
+                    .title("Bem-vindo ao processo de admissão - AxonRH")
+                    .variables(variables)
+                    .build();
+
+            eventPublisher.publish(event);
+            log.info("Evento de convite de contratacao digital enviado para: {}", process.getCandidateEmail());
+        } catch (Exception e) {
+            log.error("Erro ao disparar evento de e-mail para contratacao digital: {}", e.getMessage());
+        }
     }
 
     /**
