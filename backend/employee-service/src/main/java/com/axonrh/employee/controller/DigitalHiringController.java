@@ -267,15 +267,15 @@ public class DigitalHiringController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping(value = "/public/{token}/documents", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/public/{token}/documents/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Upload de documento", description = "Candidato envia documento (Etapa 2)")
     public ResponseEntity<Map<String, Object>> uploadDocument(
             @PathVariable String token,
             @RequestParam("file") MultipartFile file,
-            @RequestParam("documentType") String documentType) {
+            @RequestParam("type") String type) {
 
-        log.info("Candidato enviando documento tipo: {}", documentType);
-        Map<String, Object> result = digitalHiringService.uploadDocument(token, file, documentType);
+        log.info("Candidato enviando documento tipo: {}", type);
+        Map<String, Object> result = digitalHiringService.uploadDocument(token, file, type);
         return ResponseEntity.ok(result);
     }
 
@@ -288,7 +288,7 @@ public class DigitalHiringController {
         return ResponseEntity.ok(documents);
     }
 
-    @PostMapping("/public/{token}/validate-documents")
+    @PostMapping("/public/{token}/documents/validate")
     @Operation(summary = "Validar documentos", description = "Solicita validação de todos os documentos enviados")
     public ResponseEntity<Map<String, Object>> validateDocuments(@PathVariable String token) {
 
@@ -341,7 +341,7 @@ public class DigitalHiringController {
         return ResponseEntity.ok(result);
     }
 
-    @PostMapping("/public/{token}/validate-data")
+    @PostMapping("/public/{token}/validate")
     @Operation(summary = "Validação IA dos dados", description = "Solicita validação de consistência dos dados via IA")
     public ResponseEntity<Map<String, Object>> validateData(@PathVariable String token) {
 

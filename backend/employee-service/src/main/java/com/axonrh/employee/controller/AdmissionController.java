@@ -55,6 +55,7 @@ public class AdmissionController {
             @Valid @RequestBody AdmissionProcessRequest request,
             @AuthenticationPrincipal Jwt jwt) {
 
+        setupTenantContext(jwt);
         UUID userId = UUID.fromString(jwt.getSubject());
         log.info("Creating admission process for candidate: {} by user: {}", request.getCandidateEmail(), userId);
 
@@ -99,8 +100,10 @@ public class AdmissionController {
     @PreAuthorize("hasAuthority('EMPLOYEE:READ')")
     @Operation(summary = "Obter processo de admissão", description = "Obtém detalhes de um processo de admissão específico")
     public ResponseEntity<AdmissionProcessResponse> getAdmissionProcess(
-            @PathVariable UUID id) {
+            @PathVariable UUID id,
+            @AuthenticationPrincipal Jwt jwt) {
 
+        setupTenantContext(jwt);
         log.info("Getting admission process: {}", id);
 
         AdmissionProcessResponse process = admissionService.getProcessById(id);
@@ -115,6 +118,7 @@ public class AdmissionController {
             @PathVariable UUID id,
             @AuthenticationPrincipal Jwt jwt) {
 
+        setupTenantContext(jwt);
         UUID userId = UUID.fromString(jwt.getSubject());
         log.info("Resending admission link for process: {} by user: {}", id, userId);
 
@@ -148,9 +152,11 @@ public class AdmissionController {
     @PreAuthorize("hasAuthority('EMPLOYEE:READ')")
     @Operation(summary = "Listar documentos do processo", description = "Lista todos os documentos enviados no processo de admissão")
     public ResponseEntity<List<AdmissionDocument>> listProcessDocuments(
-            @PathVariable UUID id) {
+            @PathVariable UUID id,
+            @AuthenticationPrincipal Jwt jwt) {
 
-        log.info("Listing documents for process: {}", id);
+        setupTenantContext(jwt);
+        log.info("Listing documents for admission process: {}", id);
 
         List<AdmissionDocument> documents = admissionService.getProcessDocuments(id);
 
@@ -217,21 +223,21 @@ public class AdmissionController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping(value = "/public/{token}/documents", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/public/{token}/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Upload de documento", description = "Faz upload de um documento do candidato")
     public ResponseEntity<Map<String, Object>> uploadDocument(
             @PathVariable String token,
             @RequestParam("file") MultipartFile file,
-            @RequestParam("documentType") String documentType,
+            @RequestParam("type") String type,
             @RequestHeader("X-Tenant-ID") String tenantId) {
 
-        log.info("Uploading document type: {} for token", documentType);
+        log.info("Uploading document type: {} for token", type);
 
         // Validate file
-        documentValidationService.validateFile(file, documentType);
+        documentValidationService.validateFile(file, type);
 
         // Process upload and OCR
-        AdmissionDocument document = admissionService.uploadDocument(token, file, documentType, tenantId);
+        AdmissionDocument document = admissionService.uploadDocument(token, file, type, tenantId);
 
         // Process OCR
         Map<String, Object> ocrResult;
@@ -299,7 +305,7 @@ public class AdmissionController {
         return ResponseEntity.ok(contract);
     }
 
-    @PostMapping("/public/{token}/sign-contract")
+    @PostMapping("/public/{token}/sign")
     @Operation(summary = "Assinar contrato", description = "Registra a assinatura eletrônica do contrato")
     public ResponseEntity<AdmissionProcessResponse> signContract(
             @PathVariable String token,
