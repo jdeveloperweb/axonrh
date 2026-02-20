@@ -42,6 +42,9 @@ import {
 } from '@/lib/api/digital-hiring';
 import { employeesApi } from '@/lib/api/employees';
 import { useToast } from '@/hooks/use-toast';
+import { useThemeStore } from '@/stores/theme-store';
+import { cn, getPhotoUrl } from '@/lib/utils';
+import { configApi } from '@/lib/api/config';
 
 // ==================== Steps ====================
 
@@ -65,6 +68,7 @@ export default function DigitalHiringPortalPage() {
     const [submitting, setSubmitting] = useState(false);
     const [loadingCep, setLoadingCep] = useState(false);
     const [currentStep, setCurrentStep] = useState(1);
+    const { tenantTheme, setTenantTheme } = useThemeStore();
 
     // Auth state
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -168,6 +172,32 @@ export default function DigitalHiringPortalPage() {
                 setDocuments(docsMap);
             } catch {
                 // Documents may not be loaded yet
+            }
+
+            // Fetch branding if not already loaded or different tenant
+            if (data.tenantId && (!tenantTheme || tenantTheme.tenantId !== data.tenantId)) {
+                try {
+                    const config = await configApi.getThemeConfig(data.tenantId);
+                    setTenantTheme({
+                        tenantId: config.tenantId,
+                        logoUrl: config.logoUrl,
+                        logoWidth: (config.extraSettings?.logoWidth as number) || 150,
+                        colors: {
+                            primary: config.primaryColor || '#1976D2',
+                            secondary: config.secondaryColor || '#424242',
+                            accent: config.accentColor || '#FF4081',
+                            background: config.backgroundColor || '#FFFFFF',
+                            surface: config.surfaceColor || '#FAFAFA',
+                            textPrimary: config.textPrimaryColor || '#212121',
+                            textSecondary: config.textSecondaryColor || '#757575',
+                        },
+                        baseFontSize: (config.extraSettings?.baseFontSize as number) || 16,
+                        customCss: config.customCss,
+                        faviconUrl: config.faviconUrl
+                    });
+                } catch (e) {
+                    console.error('Error fetching branding:', e);
+                }
             }
         } catch (error: unknown) {
             const err = error as { response?: { status: number }; message?: string };
@@ -445,83 +475,237 @@ export default function DigitalHiringPortalPage() {
         );
     }
 
+    const primaryColor = tenantTheme?.colors?.primary || '#1976D2';
+
     // Auth screen
     if (!isAuthenticated) {
+
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <Card className="max-w-md w-full mx-4">
-                    <CardContent className="p-8">
-                        <div className="text-center mb-6">
-                            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Shield className="w-8 h-8 text-blue-600" />
+            <div className="min-h-screen bg-white flex flex-col md:flex-row overflow-hidden">
+                {/* Left Side: Premium Branding */}
+                <div
+                    className="hidden md:flex md:w-[45%] lg:w-[55%] relative items-center justify-center p-12 text-white overflow-hidden"
+                    style={{
+                        background: `linear-gradient(135deg, ${primaryColor} 0%, #4f46e5 100%)`
+                    }}
+                >
+                    {/* Decorative Elements */}
+                    <div className="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-pulse" />
+                    <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-80 h-80 bg-black/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.05] pointer-events-none" />
+
+                    <div className="relative z-10 max-w-xl">
+                        <div className="mb-12">
+                            {tenantTheme?.logoUrl ? (
+                                <img
+                                    src={getPhotoUrl(tenantTheme.logoUrl, undefined, 'logo') || ''}
+                                    alt="Logo"
+                                    className="h-12 w-auto object-contain brightness-0 invert"
+                                    style={{ maxWidth: `${tenantTheme.logoWidth || 150}px` }}
+                                />
+                            ) : (
+                                <div className="flex items-center gap-3">
+                                    <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/30">
+                                        <Briefcase className="w-7 h-7 text-white" />
+                                    </div>
+                                    <span className="text-3xl font-bold tracking-tight">
+                                        Axon<span className="text-white/70">RH</span>
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-sm font-medium mb-6 border border-white/10">
+                            <Sparkles className="w-4 h-4 text-yellow-300" />
+                            <span>Portal de Admissão Digital</span>
+                        </div>
+
+                        <h2 className="text-4xl lg:text-6xl font-extrabold mb-6 tracking-tight leading-tight">
+                            Boas-vindas ao seu <br />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 to-white">novo começo</span>
+                        </h2>
+
+                        <p className="text-lg lg:text-xl text-blue-50/80 mb-10 leading-relaxed font-medium">
+                            Estamos felizes em ter você conosco. Este é o seu portal para completar sua admissão de forma rápida, segura e totalmente digital.
+                        </p>
+
+                        <div className="grid grid-cols-2 gap-6">
+                            <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/10">
+                                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-3">
+                                    <Shield className="w-5 h-5 text-yellow-300" />
+                                </div>
+                                <h4 className="font-bold text-sm">100% Seguro</h4>
+                                <p className="text-xs text-blue-100/70 mt-1">Seus dados protegidos por criptografia de ponta.</p>
                             </div>
-                            <h2 className="text-xl font-bold text-gray-900">Contratação Digital</h2>
-                            <p className="text-sm text-gray-600 mt-1">
-                                {isFirstAccess ? 'Crie sua senha para acessar o portal' : 'Faça login para continuar'}
+                            <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/10">
+                                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-3">
+                                    <Sparkles className="w-5 h-5 text-yellow-300" />
+                                </div>
+                                <h4 className="font-bold text-sm">IA Integrada</h4>
+                                <p className="text-xs text-blue-100/70 mt-1">Validação inteligente para agilizar seu processo.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right Side: Auth Form */}
+                <div className="flex-1 flex items-center justify-center p-6 sm:p-12 bg-gray-50/50">
+                    <div className="w-full max-w-md space-y-8 animate-in fade-in slide-in-from-right-4 duration-700">
+                        {/* Mobile Logo */}
+                        <div className="md:hidden flex justify-center mb-8">
+                            {tenantTheme?.logoUrl ? (
+                                <img
+                                    src={getPhotoUrl(tenantTheme.logoUrl, undefined, 'logo') || ''}
+                                    alt="Logo"
+                                    className="h-10 w-auto object-contain"
+                                    style={{ maxWidth: `${tenantTheme.logoWidth || 150}px` }}
+                                />
+                            ) : (
+                                <div className="flex items-center gap-2">
+                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-blue-600 shadow-lg">
+                                        <Briefcase className="w-6 h-6 text-white" />
+                                    </div>
+                                    <span className="text-xl font-bold tracking-tight text-gray-900">
+                                        Axon<span className="text-blue-600">RH</span>
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="text-center md:text-left">
+                            <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">
+                                {isFirstAccess ? 'Criar sua conta' : 'Acesse seu portal'}
+                            </h2>
+                            <p className="mt-2 text-gray-500 font-medium">
+                                {isFirstAccess
+                                    ? 'Defina uma senha segura para iniciar sua jornada.'
+                                    : 'Digite seu CPF e senha cadastrada para continuar.'}
                             </p>
                         </div>
 
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">CPF</label>
-                                <Input
-                                    value={authForm.cpf}
-                                    onChange={(e) => setAuthForm(prev => ({ ...prev, cpf: e.target.value }))}
-                                    placeholder="000.000.000-00"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
-                                <Input
-                                    type="password"
-                                    value={authForm.password}
-                                    onChange={(e) => setAuthForm(prev => ({ ...prev, password: e.target.value }))}
-                                    placeholder="Digite sua senha"
-                                />
-                            </div>
-                            {isFirstAccess && (
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Confirmar Senha</label>
-                                    <Input
-                                        type="password"
-                                        value={authForm.confirmPassword}
-                                        onChange={(e) => setAuthForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                                        placeholder="Confirme sua senha"
-                                    />
+                        <div className="bg-white p-8 rounded-[2.5rem] shadow-xl shadow-blue-900/5 border border-gray-100 space-y-6">
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-gray-700 ml-1">CPF</label>
+                                    <div className="relative group">
+                                        <User className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                                        <Input
+                                            value={authForm.cpf}
+                                            onChange={(e) => setAuthForm(prev => ({ ...prev, cpf: e.target.value }))}
+                                            placeholder="000.000.000-00"
+                                            className="pl-12 py-6 bg-gray-50 border-none rounded-2xl focus-visible:ring-2 focus-visible:ring-blue-500/20"
+                                        />
+                                    </div>
                                 </div>
-                            )}
-                            <Button onClick={handleAuth} disabled={submitting} className="w-full">
-                                {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                                {isFirstAccess ? 'Criar Acesso' : 'Entrar'}
+
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-gray-700 ml-1">Senha</label>
+                                    <div className="relative group">
+                                        <Shield className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                                        <Input
+                                            type="password"
+                                            value={authForm.password}
+                                            onChange={(e) => setAuthForm(prev => ({ ...prev, password: e.target.value }))}
+                                            placeholder="••••••••"
+                                            className="pl-12 py-6 bg-gray-50 border-none rounded-2xl focus-visible:ring-2 focus-visible:ring-blue-500/20"
+                                        />
+                                    </div>
+                                </div>
+
+                                {isFirstAccess && (
+                                    <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                                        <label className="text-sm font-bold text-gray-700 ml-1">Confirmar Senha</label>
+                                        <div className="relative group">
+                                            <CheckCircle className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                                            <Input
+                                                type="password"
+                                                value={authForm.confirmPassword}
+                                                onChange={(e) => setAuthForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                                                placeholder="••••••••"
+                                                className="pl-12 py-6 bg-gray-50 border-none rounded-2xl focus-visible:ring-2 focus-visible:ring-blue-500/20"
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <Button
+                                onClick={handleAuth}
+                                disabled={submitting}
+                                className="w-full py-7 rounded-2xl font-bold text-lg shadow-lg shadow-blue-600/20 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
+                                style={{ backgroundColor: primaryColor }}
+                            >
+                                {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <ArrowRight className="w-5 h-5" />}
+                                {isFirstAccess ? 'Criar meu Acesso' : 'Entrar no Portal'}
                             </Button>
+
                             <button
                                 onClick={() => setIsFirstAccess(!isFirstAccess)}
-                                className="text-sm text-blue-600 hover:underline w-full text-center"
+                                className="w-full text-center py-2 text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors"
                             >
-                                {isFirstAccess ? 'Já tenho senha' : 'Primeiro acesso'}
+                                {isFirstAccess ? 'Já possuo uma senha' : 'É seu primeiro acesso?'}
                             </button>
                         </div>
-                    </CardContent>
-                </Card>
+
+                        <div className="text-center">
+                            <p className="text-xs text-gray-400 font-medium">
+                                © {new Date().getFullYear()} {process.tenantId || 'AxonRH'}. Todos os direitos reservados.
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50/50">
             {/* Header */}
-            <header className="bg-white border-b border-gray-200 py-4 shadow-sm">
-                <div className="max-w-5xl mx-auto px-4 flex items-center justify-between">
-                    <div>
-                        <h1 className="text-xl font-bold text-gray-900">Contratação Digital</h1>
-                        <p className="text-sm text-gray-600">
-                            {process.department?.name} &bull; {process.position?.title}
-                        </p>
+            <header className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-100 shadow-sm transition-all duration-300">
+                <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        {tenantTheme?.logoUrl ? (
+                            <img
+                                src={getPhotoUrl(tenantTheme.logoUrl, undefined, 'logo') || ''}
+                                alt="Logo"
+                                className="h-8 w-auto object-contain"
+                                style={{ maxWidth: `120px` }}
+                            />
+                        ) : (
+                            <div className="flex items-center gap-2">
+                                <div
+                                    className="w-8 h-8 rounded-lg flex items-center justify-center shadow-md"
+                                    style={{ background: `linear-gradient(135deg, ${primaryColor}, #4f46e5)` }}
+                                >
+                                    <Briefcase className="w-5 h-5 text-white" />
+                                </div>
+                                <span className="text-lg font-bold tracking-tight text-gray-900">
+                                    Axon<span style={{ color: primaryColor }}>RH</span>
+                                </span>
+                            </div>
+                        )}
+                        <div className="h-4 w-px bg-gray-200 mx-2" />
+                        <div>
+                            <h1 className="text-sm font-bold text-gray-900 leading-tight">Contratação Digital</h1>
+                            <p className="text-[10px] text-gray-500 uppercase tracking-widest font-semibold">
+                                {process.department?.name} &bull; {process.position?.title}
+                            </p>
+                        </div>
                     </div>
-                    <Button variant="outline" size="sm" onClick={() => setShowChat(!showChat)} className="flex items-center gap-2">
-                        <MessageSquare className="w-4 h-4" />
-                        Ajuda IA
-                    </Button>
+                    <div className="flex items-center gap-3">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setShowChat(!showChat)}
+                            className="flex items-center gap-2 rounded-xl border-gray-200 hover:bg-gray-50 transition-all font-semibold text-xs"
+                        >
+                            <MessageSquare className="w-4 h-4 text-blue-600" />
+                            Assistente IA
+                        </Button>
+                        <Badge variant="secondary" className="hidden sm:flex bg-blue-50 text-blue-700 border-blue-100 rounded-lg py-1">
+                            {process.candidateName}
+                        </Badge>
+                    </div>
                 </div>
             </header>
 
@@ -532,10 +716,14 @@ export default function DigitalHiringPortalPage() {
                         {steps.map((step, index) => (
                             <div key={step.id} className="flex items-center flex-1">
                                 <div className="flex flex-col items-center flex-shrink-0">
-                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${step.status === 'completed' ? 'bg-green-500 text-white' : step.status === 'current' ? 'bg-[var(--color-primary,#1976D2)] text-white' : 'bg-gray-200 text-gray-500'}`}>
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 shadow-sm ${step.status === 'completed' ? 'bg-green-500 text-white shadow-green-200' : step.status === 'current' ? 'text-white' : 'bg-gray-100 text-gray-400'}`}
+                                        style={step.status === 'current' ? { backgroundColor: primaryColor, boxShadow: `0 4px 12px ${primaryColor}40` } : {}}>
                                         {step.status === 'completed' ? <Check className="w-5 h-5" /> : step.icon}
                                     </div>
-                                    <span className={`text-xs mt-2 text-center ${step.status === 'current' ? 'text-[var(--color-primary,#1976D2)] font-medium' : 'text-gray-500'}`}>
+                                    <span className={cn(
+                                        "text-[10px] sm:text-xs mt-2 text-center uppercase tracking-wider font-bold transition-colors duration-300",
+                                        step.status === 'current' ? "text-gray-900" : "text-gray-400"
+                                    )} style={step.status === 'current' ? { color: primaryColor } : {}}>
                                         {step.title}
                                     </span>
                                 </div>

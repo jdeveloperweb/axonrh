@@ -164,3 +164,13 @@ application:
   openai:
     api-key: ${OPENAI_API_KEY:}
     model: ${OPENAI_MODEL:gpt-4o}
+# Digital Hiring & Admissions
+digital-hiring:
+  link:
+    base-url: ${DIGITAL_HIRING_BASE_URL:https://axonrh.mjolnix.com.br/contratacao}
+    default-validity-days: 7
+
+admission:
+  link:
+    base-url: ${ADMISSION_BASE_URL:https://axonrh.mjolnix.com.br/admission}
+    default-validity-days: 7
