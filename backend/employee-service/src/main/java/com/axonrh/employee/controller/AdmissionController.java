@@ -69,13 +69,30 @@ public class AdmissionController {
     public ResponseEntity<Page<AdmissionProcessResponse>> listAdmissionProcesses(
             @RequestParam(required = false) AdmissionStatus status,
             @RequestParam(required = false) String search,
-            Pageable pageable) {
+            Pageable pageable,
+            @AuthenticationPrincipal Jwt jwt) {
+        
+        setupTenantContext(jwt);
 
         log.info("Listing admission processes, status: {}, search: {}", status, search);
 
         Page<AdmissionProcessResponse> processes = admissionService.listProcesses(status, search, pageable);
 
         return ResponseEntity.ok(processes);
+    }
+
+    private void setupTenantContext(Jwt jwt) {
+        String tenantId = jwt.getClaimAsString("tenant_id");
+        if (tenantId == null) {
+            tenantId = jwt.getClaimAsString("tenantId");
+        }
+        
+        if (tenantId != null) {
+            log.debug("Configurando TenantContext via JWT: {}", tenantId);
+            com.axonrh.employee.config.TenantContext.setCurrentTenant(tenantId);
+        } else {
+            log.warn("Nao foi possivel encontrar tenant_id ou tenantId no JWT. Claims: {}", jwt.getClaims().keySet());
+        }
     }
 
     @GetMapping("/{id}")

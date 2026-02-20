@@ -45,10 +45,7 @@ public class DigitalHiringController {
             @Valid @RequestBody DigitalHiringRequest request,
             @AuthenticationPrincipal Jwt jwt) {
 
-        String tenantId = jwt.getClaimAsString("tenant_id");
-        if (tenantId != null) {
-            com.axonrh.employee.config.TenantContext.setCurrentTenant(tenantId);
-        }
+        setupTenantContext(jwt);
         
         UUID userId = UUID.fromString(jwt.getSubject());
         log.info("Criando contratacao digital para: {} por usuario: {}", request.getCandidateEmail(), userId);
@@ -64,16 +61,27 @@ public class DigitalHiringController {
             @Valid @RequestBody DigitalHiringTriggerRequest request,
             @AuthenticationPrincipal Jwt jwt) {
 
-        String tenantId = jwt.getClaimAsString("tenant_id");
-        if (tenantId != null) {
-            com.axonrh.employee.config.TenantContext.setCurrentTenant(tenantId);
-        }
+        setupTenantContext(jwt);
 
         UUID userId = UUID.fromString(jwt.getSubject());
         log.info("Disparando contratacao digital via recrutamento - candidato: {}", request.getCandidateId());
 
         DigitalHiringResponse response = digitalHiringService.triggerFromRecruitment(request, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    private void setupTenantContext(Jwt jwt) {
+        String tenantId = jwt.getClaimAsString("tenant_id");
+        if (tenantId == null) {
+            tenantId = jwt.getClaimAsString("tenantId");
+        }
+        
+        if (tenantId != null) {
+            log.debug("Configurando TenantContext via JWT: {}", tenantId);
+            com.axonrh.employee.config.TenantContext.setCurrentTenant(tenantId);
+        } else {
+            log.warn("Nao foi possivel encontrar tenant_id ou tenantId no JWT. Claims: {}", jwt.getClaims().keySet());
+        }
     }
 
     @GetMapping
@@ -85,10 +93,7 @@ public class DigitalHiringController {
             Pageable pageable,
             @AuthenticationPrincipal Jwt jwt) {
 
-        String tenantId = jwt.getClaimAsString("tenant_id");
-        if (tenantId != null) {
-            com.axonrh.employee.config.TenantContext.setCurrentTenant(tenantId);
-        }
+        setupTenantContext(jwt);
 
         log.info("Listando contratacoes digitais, status: {}, search: {}", status, search);
         Page<DigitalHiringResponse> processes = digitalHiringService.list(status, search, pageable);
@@ -98,8 +103,11 @@ public class DigitalHiringController {
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('EMPLOYEE:READ')")
     @Operation(summary = "Obter contratação digital", description = "Obtém detalhes de um processo de contratação digital")
-    public ResponseEntity<DigitalHiringResponse> getById(@PathVariable UUID id) {
+    public ResponseEntity<DigitalHiringResponse> getById(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal Jwt jwt) {
 
+        setupTenantContext(jwt);
         log.info("Buscando contratacao digital: {}", id);
         DigitalHiringResponse response = digitalHiringService.getById(id);
         return ResponseEntity.ok(response);
@@ -110,10 +118,7 @@ public class DigitalHiringController {
     @Operation(summary = "Estatísticas de contratação", description = "Retorna estatísticas dos processos de contratação digital")
     public ResponseEntity<DigitalHiringStatsResponse> getStats(@AuthenticationPrincipal Jwt jwt) {
 
-        String tenantId = jwt.getClaimAsString("tenant_id");
-        if (tenantId != null) {
-            com.axonrh.employee.config.TenantContext.setCurrentTenant(tenantId);
-        }
+        setupTenantContext(jwt);
 
         log.info("Buscando estatisticas de contratacao digital");
         DigitalHiringStatsResponse stats = digitalHiringService.getStats();
