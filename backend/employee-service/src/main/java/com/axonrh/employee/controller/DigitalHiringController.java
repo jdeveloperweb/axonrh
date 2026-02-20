@@ -132,6 +132,7 @@ public class DigitalHiringController {
             @PathVariable UUID id,
             @AuthenticationPrincipal Jwt jwt) {
 
+        setupTenantContext(jwt);
         UUID userId = UUID.fromString(jwt.getSubject());
         log.info("Reenviando email de contratacao digital: {} por usuario: {}", id, userId);
 
@@ -146,6 +147,7 @@ public class DigitalHiringController {
             @PathVariable UUID id,
             @AuthenticationPrincipal Jwt jwt) {
 
+        setupTenantContext(jwt);
         UUID userId = UUID.fromString(jwt.getSubject());
         log.info("Forcando avanco de etapa: {} por usuario: {}", id, userId);
 

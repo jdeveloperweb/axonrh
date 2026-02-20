@@ -83,7 +83,7 @@ spring:
         - id: employee-service
           uri: http://axonrh-employee-service:8083
           predicates:
-            - Path=/api/v1/employees/**, /api/v1/departments/**, /api/v1/positions/**, /api/v1/managers/**, /api/v1/cost-centers/**, /api/v1/talent-pool/**, /api/v1/public/careers/**, /api/v1/terminations/**
+            - Path=/api/v1/employees/**, /api/v1/departments/**, /api/v1/positions/**, /api/v1/managers/**, /api/v1/cost-centers/**, /api/v1/talent-pool/**, /api/v1/public/careers/**, /api/v1/terminations/**, /api/v1/digital-hiring/**, /api/v1/admissions/**
           filters:
             # - StripPrefix=2
             - name: JwtAuthFilter
