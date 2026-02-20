@@ -3,8 +3,7 @@ package com.axonrh.employee.service;
 import com.axonrh.employee.config.TenantContext;
 import com.axonrh.employee.dto.*;
 import com.axonrh.employee.entity.*;
-import com.axonrh.employee.entity.enums.CandidateStatus;
-import com.axonrh.employee.entity.enums.DigitalHiringStatus;
+import com.axonrh.employee.entity.enums.*;
 import com.axonrh.employee.exception.DuplicateResourceException;
 import com.axonrh.employee.exception.InvalidOperationException;
 import com.axonrh.employee.exception.ResourceNotFoundException;
@@ -736,17 +735,50 @@ public class DigitalHiringService {
     private EmployeeRequest buildEmployeeRequest(DigitalHiringProcess process) {
         Map<String, Object> pd = process.getPersonalData() != null ? process.getPersonalData() : Map.of();
 
-        return EmployeeRequest.builder()
+        EmployeeRequest.EmployeeRequestBuilder builder = EmployeeRequest.builder()
                 .cpf(process.getCandidateCpf())
                 .fullName(process.getCandidateName())
                 .email(process.getCandidateEmail())
-                .phone(String.valueOf(pd.getOrDefault("phone", process.getCandidatePhone())))
+                .phone(pd.get("phone") != null ? String.valueOf(pd.get("phone")) : process.getCandidatePhone())
                 .birthDate(pd.get("birthDate") != null ? LocalDate.parse(String.valueOf(pd.get("birthDate"))) : null)
                 .hireDate(process.getExpectedHireDate() != null ? process.getExpectedHireDate() : LocalDate.now())
                 .departmentId(process.getDepartment() != null ? process.getDepartment().getId() : null)
                 .positionId(process.getPosition() != null ? process.getPosition().getId() : null)
-                .baseSalary(process.getBaseSalary())
-                .build();
+                .baseSalary(process.getBaseSalary());
+
+        // Employment Type (Crucial para evitar erro NOT NULL)
+        try {
+            if (process.getEmploymentType() != null) {
+                builder.employmentType(EmploymentType.valueOf(process.getEmploymentType()));
+            } else {
+                builder.employmentType(EmploymentType.CLT);
+            }
+        } catch (Exception e) {
+            builder.employmentType(EmploymentType.CLT);
+        }
+
+        // Dados Pessoais Adicionais
+        try {
+            if (pd.get("gender") != null) {
+                builder.gender(Gender.valueOf(String.valueOf(pd.get("gender"))));
+            }
+            if (pd.get("maritalStatus") != null) {
+                builder.maritalStatus(MaritalStatus.valueOf(String.valueOf(pd.get("maritalStatus"))));
+            }
+        } catch (Exception e) {
+            log.warn("Erro ao mapear enums de dados pessoais: {}", e.getMessage());
+        }
+
+        // Endereço
+        builder.addressZipCode(pd.get("cep") != null ? String.valueOf(pd.get("cep")).replaceAll("[^0-9]", "") : null)
+                .addressStreet(pd.get("logradouro") != null ? String.valueOf(pd.get("logradouro")) : null)
+                .addressNumber(pd.get("numero") != null ? String.valueOf(pd.get("numero")) : null)
+                .addressComplement(pd.get("complemento") != null ? String.valueOf(pd.get("complemento")) : null)
+                .addressNeighborhood(pd.get("bairro") != null ? String.valueOf(pd.get("bairro")) : null)
+                .addressCity(pd.get("cidade") != null ? String.valueOf(pd.get("cidade")) : null)
+                .addressState(pd.get("estado") != null ? String.valueOf(pd.get("estado")) : null);
+
+        return builder.build();
     }
 
     /**
