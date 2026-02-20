@@ -39,7 +39,7 @@ public class DigitalHiringController {
     // ==================== HR/Admin Endpoints ====================
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:WRITE')")
     @Operation(summary = "Criar contratação digital", description = "Cria um novo processo de contratação digital e gera link para o candidato")
     public ResponseEntity<DigitalHiringResponse> create(
             @Valid @RequestBody DigitalHiringRequest request,
@@ -53,7 +53,7 @@ public class DigitalHiringController {
     }
 
     @PostMapping("/trigger")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:WRITE')")
     @Operation(summary = "Disparar contratação via recrutamento", description = "Dispara contratação digital a partir de candidato aprovado no recrutamento")
     public ResponseEntity<DigitalHiringResponse> triggerFromRecruitment(
             @Valid @RequestBody DigitalHiringTriggerRequest request,
@@ -67,7 +67,7 @@ public class DigitalHiringController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:READ')")
     @Operation(summary = "Listar contratações digitais", description = "Lista todos os processos de contratação digital com filtros")
     public ResponseEntity<Page<DigitalHiringResponse>> list(
             @RequestParam(required = false) DigitalHiringStatus status,
@@ -80,7 +80,7 @@ public class DigitalHiringController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:READ')")
     @Operation(summary = "Obter contratação digital", description = "Obtém detalhes de um processo de contratação digital")
     public ResponseEntity<DigitalHiringResponse> getById(@PathVariable UUID id) {
 
@@ -90,7 +90,7 @@ public class DigitalHiringController {
     }
 
     @GetMapping("/stats")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:READ')")
     @Operation(summary = "Estatísticas de contratação", description = "Retorna estatísticas dos processos de contratação digital")
     public ResponseEntity<DigitalHiringStatsResponse> getStats() {
 
@@ -100,7 +100,7 @@ public class DigitalHiringController {
     }
 
     @PostMapping("/{id}/resend-email")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:WRITE')")
     @Operation(summary = "Reenviar email", description = "Reenvia o email de contratação digital para o candidato")
     public ResponseEntity<Map<String, String>> resendEmail(
             @PathVariable UUID id,
@@ -114,7 +114,7 @@ public class DigitalHiringController {
     }
 
     @PostMapping("/{id}/force-advance")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:WRITE')")
     @Operation(summary = "Forçar avanço de etapa", description = "Força o avanço para a próxima etapa do processo")
     public ResponseEntity<DigitalHiringResponse> forceAdvance(
             @PathVariable UUID id,
@@ -128,7 +128,7 @@ public class DigitalHiringController {
     }
 
     @PostMapping("/{id}/request-correction")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:WRITE')")
     @Operation(summary = "Solicitar correção", description = "Solicita correção de dados ou documentos ao candidato")
     public ResponseEntity<Void> requestCorrection(
             @PathVariable UUID id,
@@ -142,7 +142,7 @@ public class DigitalHiringController {
     }
 
     @PostMapping("/{id}/cancel")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:WRITE')")
     @Operation(summary = "Cancelar contratação", description = "Cancela um processo de contratação digital em andamento")
     public ResponseEntity<Void> cancel(
             @PathVariable UUID id,
@@ -156,7 +156,7 @@ public class DigitalHiringController {
     }
 
     @PatchMapping("/{id}/email")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:WRITE')")
     @Operation(summary = "Atualizar e-mail do candidato", description = "Atualiza o e-mail do candidato e reenvia o convite")
     public ResponseEntity<Void> updateEmail(
             @PathVariable UUID id,
@@ -170,7 +170,7 @@ public class DigitalHiringController {
     }
 
     @GetMapping("/{id}/ai-analysis")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:READ')")
     @Operation(summary = "Análise IA", description = "Retorna análise de consistência da IA para o processo")
     public ResponseEntity<Map<String, Object>> getAiAnalysis(@PathVariable UUID id) {
 
@@ -180,7 +180,7 @@ public class DigitalHiringController {
     }
 
     @PostMapping("/{id}/generate-contract")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:WRITE')")
     @Operation(summary = "Gerar contrato", description = "Gera ou regenera o contrato de trabalho via IA")
     public ResponseEntity<Map<String, String>> generateContract(@PathVariable UUID id) {
 

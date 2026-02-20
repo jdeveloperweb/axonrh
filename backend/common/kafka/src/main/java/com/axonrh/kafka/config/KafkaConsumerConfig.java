@@ -44,7 +44,7 @@ public class KafkaConsumerConfig {
     private final ObjectMapper kafkaObjectMapper;
 
     @Bean
-    public ConsumerFactory<String, DomainEvent> consumerFactory() {
+    public ConsumerFactory<String, Object> consumerFactory() {
         Map<String, Object> props = new HashMap<>();
 
         // Conexao
@@ -53,7 +53,8 @@ public class KafkaConsumerConfig {
 
         // Deserializadores (serao passados no construtor)
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
+        props.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName());
 
         // Offset
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
@@ -75,18 +76,18 @@ public class KafkaConsumerConfig {
         );
     }
 
-    private JsonDeserializer<DomainEvent> createJsonDeserializer() {
-        JsonDeserializer<DomainEvent> deserializer = new JsonDeserializer<>(DomainEvent.class, kafkaObjectMapper);
-        deserializer.addTrustedPackages("com.axonrh.kafka.event.*");
+    private ErrorHandlingDeserializer<Object> createJsonDeserializer() {
+        JsonDeserializer<Object> deserializer = new JsonDeserializer<>(Object.class, kafkaObjectMapper);
+        deserializer.addTrustedPackages("com.axonrh.kafka.event.*", "com.axonrh.*");
         deserializer.setUseTypeHeaders(true);
-        return deserializer;
+        return new ErrorHandlingDeserializer<>(deserializer);
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, DomainEvent> kafkaListenerContainerFactory(
-            ConsumerFactory<String, DomainEvent> consumerFactory) {
+    public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory(
+            ConsumerFactory<String, Object> consumerFactory) {
 
-        ConcurrentKafkaListenerContainerFactory<String, DomainEvent> factory =
+        ConcurrentKafkaListenerContainerFactory<String, Object> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
 
         factory.setConsumerFactory(consumerFactory);
@@ -103,10 +104,10 @@ public class KafkaConsumerConfig {
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, DomainEvent> batchKafkaListenerContainerFactory(
-            ConsumerFactory<String, DomainEvent> consumerFactory) {
+    public ConcurrentKafkaListenerContainerFactory<String, Object> batchKafkaListenerContainerFactory(
+            ConsumerFactory<String, Object> consumerFactory) {
 
-        ConcurrentKafkaListenerContainerFactory<String, DomainEvent> factory =
+        ConcurrentKafkaListenerContainerFactory<String, Object> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
 
         factory.setConsumerFactory(consumerFactory);
@@ -122,6 +123,7 @@ public class KafkaConsumerConfig {
     public DefaultErrorHandler errorHandler() {
         // Retry 3 vezes com intervalo de 1 segundo
         FixedBackOff backOff = new FixedBackOff(1000L, 3);
+        // Configurar para ignorar erros de desserializacao ou enviar para DLQ se necessário
         return new DefaultErrorHandler(backOff);
     }
 }

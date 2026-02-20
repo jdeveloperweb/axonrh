@@ -48,7 +48,7 @@ public class AdmissionController {
     // ==================== HR/Admin Endpoints ====================
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:WRITE')")
     @Operation(summary = "Criar processo de admissão", description = "Cria um novo processo de admissão e gera link para o candidato")
     @ApiResponse(responseCode = "201", description = "Processo criado com sucesso")
     public ResponseEntity<AdmissionProcessResponse> createAdmissionProcess(
@@ -64,7 +64,7 @@ public class AdmissionController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:READ')")
     @Operation(summary = "Listar processos de admissão", description = "Lista todos os processos de admissão com filtros")
     public ResponseEntity<Page<AdmissionProcessResponse>> listAdmissionProcesses(
             @RequestParam(required = false) AdmissionStatus status,
@@ -79,7 +79,7 @@ public class AdmissionController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:READ')")
     @Operation(summary = "Obter processo de admissão", description = "Obtém detalhes de um processo de admissão específico")
     public ResponseEntity<AdmissionProcessResponse> getAdmissionProcess(
             @PathVariable UUID id) {
@@ -92,7 +92,7 @@ public class AdmissionController {
     }
 
     @PostMapping("/{id}/resend-link")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:WRITE')")
     @Operation(summary = "Reenviar link de admissão", description = "Reenvia o link de admissão para o e-mail do candidato")
     public ResponseEntity<Map<String, String>> resendAdmissionLink(
             @PathVariable UUID id,
@@ -110,7 +110,7 @@ public class AdmissionController {
     }
 
     @PostMapping("/{id}/cancel")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:WRITE')")
     @Operation(summary = "Cancelar processo de admissão", description = "Cancela um processo de admissão em andamento")
     public ResponseEntity<Void> cancelAdmissionProcess(
             @PathVariable UUID id,
@@ -128,7 +128,7 @@ public class AdmissionController {
     }
 
     @GetMapping("/{id}/documents")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:READ')")
     @Operation(summary = "Listar documentos do processo", description = "Lista todos os documentos enviados no processo de admissão")
     public ResponseEntity<List<AdmissionDocument>> listProcessDocuments(
             @PathVariable UUID id) {
@@ -141,7 +141,7 @@ public class AdmissionController {
     }
 
     @GetMapping("/{id}/contract-preview")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:READ')")
     @Operation(summary = "Visualizar contrato", description = "Visualiza prévia do contrato gerado para o processo")
     public ResponseEntity<String> getContractPreview(
             @PathVariable UUID id,
@@ -158,7 +158,7 @@ public class AdmissionController {
     }
 
     @PostMapping("/{id}/complete")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:WRITE')")
     @Operation(summary = "Completar admissão manualmente", description = "Completa o processo de admissão e cria o funcionário")
     public ResponseEntity<AdmissionProcessResponse> completeAdmission(
             @PathVariable UUID id,
@@ -306,7 +306,7 @@ public class AdmissionController {
     // ==================== Statistics Endpoints ====================
 
     @GetMapping("/statistics")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:READ')")
     @Operation(summary = "Estatísticas de admissão", description = "Retorna estatísticas dos processos de admissão")
     public ResponseEntity<Map<String, Object>> getAdmissionStatistics(
             @RequestParam(required = false) @Parameter(description = "Data inicial (yyyy-MM-dd)") String startDate,
@@ -320,7 +320,7 @@ public class AdmissionController {
     }
 
     @GetMapping("/statistics/by-status")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:READ')")
     @Operation(summary = "Processos por status", description = "Retorna contagem de processos agrupados por status")
     public ResponseEntity<Map<AdmissionStatus, Long>> getProcessesByStatus() {
 
@@ -332,7 +332,7 @@ public class AdmissionController {
     }
 
     @GetMapping("/statistics/average-time")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:READ')")
     @Operation(summary = "Tempo médio de admissão", description = "Retorna tempo médio para completar processo de admissão")
     public ResponseEntity<Map<String, Object>> getAverageAdmissionTime() {
 
