@@ -198,6 +198,8 @@ public class DigitalHiringService {
         UUID tenantId = getTenantId();
         Page<DigitalHiringProcess> page;
 
+        log.info("Listando contratacoes para o tenant: {}, status: {}, search: {}", tenantId, status, search);
+        
         if (status != null && search != null && !search.isBlank()) {
             page = hiringRepository.findByTenantIdAndStatusAndCandidateNameContainingIgnoreCase(
                     tenantId, status, search, pageable);
@@ -210,6 +212,7 @@ public class DigitalHiringService {
             page = hiringRepository.findByTenantIdOrderByCreatedAtDesc(tenantId, pageable);
         }
 
+        log.info("Encontradas {} contratacoes digitais para o tenant {}", page.getTotalElements(), tenantId);
         return page.map(this::mapToResponse);
     }
 

@@ -17,22 +17,24 @@ public class PerformanceEventsListener {
     private final NotificationService notificationService;
 
     @KafkaListener(topics = "performance.domain.events", groupId = "notification-service")
-    public void handlePerformanceEvent(NotificationEvent event) {
+    public void handlePerformanceEvent(java.util.Map<String, Object> event) {
         try {
-            String eventType = event.getEventType();
-            UUID tenantId = event.getTenantId();
-            UUID userId = event.getUserId();
+            String eventType = (String) event.get("eventType");
+            Object tenantIdObj = event.get("tenantId");
+            Object userIdObj = event.get("userId");
 
-            if (tenantId == null || userId == null) {
+            if (tenantIdObj == null || userIdObj == null) {
                 log.warn("Evento de performance recebido sem tenantId ou userId: {}", event);
                 return;
             }
 
-            String title = event.getTitle();
-            String body = event.getBody();
-            String actionUrl = event.getActionUrl();
-            String sourceType = event.getSourceType();
-            UUID sourceId = event.getSourceId();
+            UUID tenantId = UUID.fromString(tenantIdObj.toString());
+            UUID userId = UUID.fromString(userIdObj.toString());
+            String title = (String) event.get("title");
+            String body = (String) event.get("body");
+            String actionUrl = (String) event.get("actionUrl");
+            String sourceType = (String) event.get("sourceType");
+            UUID sourceId = event.get("sourceId") != null ? UUID.fromString(event.get("sourceId").toString()) : null;
 
             log.info("Recebido evento de performance: {} para usuario {}", eventType, userId);
 
@@ -48,7 +50,7 @@ public class PerformanceEventsListener {
                             actionUrl, null,
                             com.axonrh.notification.entity.Notification.Priority.NORMAL,
                             sourceType, sourceId,
-                            true
+                            true, null, null, null, null
                     );
                     break;
                 case "DISC_ASSIGNED":
@@ -62,7 +64,7 @@ public class PerformanceEventsListener {
                             actionUrl, null,
                             com.axonrh.notification.entity.Notification.Priority.HIGH,
                             sourceType, sourceId,
-                            true
+                            true, null, null, null, null
                     );
                     break;
                 case "EVALUATION_CREATED":
@@ -76,7 +78,7 @@ public class PerformanceEventsListener {
                             actionUrl, null,
                             com.axonrh.notification.entity.Notification.Priority.HIGH,
                             sourceType, sourceId,
-                            true
+                            true, null, null, null, null
                     );
                     break;
                 case "EVALUATION_REMINDER":
@@ -90,7 +92,7 @@ public class PerformanceEventsListener {
                             actionUrl, null,
                             com.axonrh.notification.entity.Notification.Priority.HIGH,
                             sourceType, sourceId,
-                            true
+                            true, null, null, null, null
                     );
                     break;
                 case "DISC_REMINDER":
@@ -104,7 +106,7 @@ public class PerformanceEventsListener {
                             actionUrl, null,
                             com.axonrh.notification.entity.Notification.Priority.HIGH,
                             sourceType, sourceId,
-                            true
+                            true, null, null, null, null
                     );
                     break;
                 default:

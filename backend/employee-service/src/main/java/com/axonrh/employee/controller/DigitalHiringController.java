@@ -45,6 +45,11 @@ public class DigitalHiringController {
             @Valid @RequestBody DigitalHiringRequest request,
             @AuthenticationPrincipal Jwt jwt) {
 
+        String tenantId = jwt.getClaimAsString("tenant_id");
+        if (tenantId != null) {
+            com.axonrh.employee.config.TenantContext.setCurrentTenant(tenantId);
+        }
+        
         UUID userId = UUID.fromString(jwt.getSubject());
         log.info("Criando contratacao digital para: {} por usuario: {}", request.getCandidateEmail(), userId);
 
@@ -59,6 +64,11 @@ public class DigitalHiringController {
             @Valid @RequestBody DigitalHiringTriggerRequest request,
             @AuthenticationPrincipal Jwt jwt) {
 
+        String tenantId = jwt.getClaimAsString("tenant_id");
+        if (tenantId != null) {
+            com.axonrh.employee.config.TenantContext.setCurrentTenant(tenantId);
+        }
+
         UUID userId = UUID.fromString(jwt.getSubject());
         log.info("Disparando contratacao digital via recrutamento - candidato: {}", request.getCandidateId());
 
@@ -72,7 +82,13 @@ public class DigitalHiringController {
     public ResponseEntity<Page<DigitalHiringResponse>> list(
             @RequestParam(required = false) DigitalHiringStatus status,
             @RequestParam(required = false) String search,
-            Pageable pageable) {
+            Pageable pageable,
+            @AuthenticationPrincipal Jwt jwt) {
+
+        String tenantId = jwt.getClaimAsString("tenant_id");
+        if (tenantId != null) {
+            com.axonrh.employee.config.TenantContext.setCurrentTenant(tenantId);
+        }
 
         log.info("Listando contratacoes digitais, status: {}, search: {}", status, search);
         Page<DigitalHiringResponse> processes = digitalHiringService.list(status, search, pageable);
@@ -92,7 +108,12 @@ public class DigitalHiringController {
     @GetMapping("/stats")
     @PreAuthorize("hasAuthority('EMPLOYEE:READ')")
     @Operation(summary = "Estatísticas de contratação", description = "Retorna estatísticas dos processos de contratação digital")
-    public ResponseEntity<DigitalHiringStatsResponse> getStats() {
+    public ResponseEntity<DigitalHiringStatsResponse> getStats(@AuthenticationPrincipal Jwt jwt) {
+
+        String tenantId = jwt.getClaimAsString("tenant_id");
+        if (tenantId != null) {
+            com.axonrh.employee.config.TenantContext.setCurrentTenant(tenantId);
+        }
 
         log.info("Buscando estatisticas de contratacao digital");
         DigitalHiringStatsResponse stats = digitalHiringService.getStats();
