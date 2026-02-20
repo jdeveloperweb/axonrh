@@ -377,6 +377,27 @@ export const digitalHiringApi = {
 
     // ========== Integration Triggers ==========
 
+    // ========== Contract Templates ==========
+    listTemplates: async (): Promise<any[]> => {
+        return api.get<any[], any[]>('/contract-templates');
+    },
+
+    getTemplate: async (id: string): Promise<any> => {
+        return api.get<any, any>(`/contract-templates/${id}`);
+    },
+
+    getDefaultTemplate: async (type: string): Promise<any> => {
+        return api.get<any, any>(`/contract-templates/default/${type}`);
+    },
+
+    saveTemplate: async (data: any): Promise<any> => {
+        return api.post<any, any>('/contract-templates', data);
+    },
+
+    deleteTemplate: async (id: string): Promise<void> => {
+        await api.delete(`/contract-templates/${id}`);
+    },
+
     /** Trigger: called when candidate status moves to APPROVED in talent-pool */
     triggerFromRecruitment: async (candidateId: string, vacancyId?: string): Promise<DigitalHiringProcess> => {
         return api.post<{ candidateId: string; vacancyId?: string }, DigitalHiringProcess>(

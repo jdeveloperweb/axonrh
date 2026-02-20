@@ -9,6 +9,7 @@ import {
     WorkScheduleRequest,
     ScheduleDay
 } from '@/lib/api/timesheet';
+import { digitalHiringApi } from '@/lib/api/digital-hiring';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,7 +34,9 @@ import {
     ChevronRight,
     Loader2,
     CheckCircle2,
-    XCircle
+    XCircle,
+    FileText,
+    Copy
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -45,6 +48,7 @@ import {
     DialogFooter
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from '@/components/ui/textarea';
 
 export default function LaborSettingsPage() {
     const { confirm } = useConfirm();
@@ -79,10 +83,22 @@ export default function LaborSettingsPage() {
     const [importingHolidays, setImportingHolidays] = useState(false);
     const [loadingHolidays, setLoadingHolidays] = useState(false);
 
+    // Contratos
+    const [templates, setTemplates] = useState<any[]>([]);
+    const [loadingTemplates, setLoadingTemplates] = useState(false);
+    const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+    const [currentTemplate, setCurrentTemplate] = useState<any>({
+        name: '',
+        contractType: 'CLT',
+        templateContent: '',
+        isDefault: true
+    });
+
 
     useEffect(() => {
         loadData();
         loadHolidays();
+        loadTemplates();
     }, []);
 
 
@@ -138,6 +154,70 @@ export default function LaborSettingsPage() {
             loadHolidays();
         } catch (error) {
             toast.error('Erro ao excluir feriado');
+        }
+    };
+
+    const loadTemplates = async () => {
+        try {
+            setLoadingTemplates(true);
+            const data = await digitalHiringApi.listTemplates();
+            setTemplates(data || []);
+        } catch (error) {
+            console.error('Error loading templates:', error);
+        } finally {
+            setLoadingTemplates(false);
+        }
+    };
+
+    const handleSaveTemplate = async () => {
+        if (!currentTemplate.name || !currentTemplate.templateContent) {
+            toast.error('Preencha o nome e o conteúdo do template');
+            return;
+        }
+        try {
+            setSaving(true);
+            await digitalHiringApi.saveTemplate(currentTemplate);
+            toast.success('Template salvo com sucesso');
+            setIsTemplateModalOpen(false);
+            loadTemplates();
+        } catch (error) {
+            toast.error('Erro ao salvar template');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleCreateTemplate = () => {
+        setCurrentTemplate({
+            name: 'Contrato Padrão CLT',
+            contractType: 'CLT',
+            templateContent: `<h2>CONTRATO INDIVIDUAL DE TRABALHO</h2>
+<p><strong>EMPREGADOR:</strong> {{EMPRESA_NOME}}, inscrito no CNPJ sob o nº {{EMPRESA_CNPJ}}, com sede em {{EMPRESA_ENDERECO}}.</p>
+<p><strong>EMPREGADO(A):</strong> {{NOME}}, portador(a) do CPF nº {{CPF}}.</p>
+<p>As partes celebram este contrato para a função de <strong>{{CARGO}}</strong> com salário de <strong>{{SALARIO}}</strong>.</p>
+<p>Início em: {{DATA_INICIO}}</p>`,
+            isDefault: true
+        });
+        setIsTemplateModalOpen(true);
+    };
+
+    const handleEditTemplate = (template: any) => {
+        setCurrentTemplate(template);
+        setIsTemplateModalOpen(true);
+    };
+
+    const handleDeleteTemplate = async (id: string) => {
+        if (!await confirm({
+            title: 'Excluir Template',
+            description: 'Deseja excluir este template de contrato?',
+            variant: 'destructive'
+        })) return;
+        try {
+            await digitalHiringApi.deleteTemplate(id);
+            toast.success('Template excluído');
+            loadTemplates();
+        } catch (error) {
+            toast.error('Erro ao excluir template');
         }
     };
 
@@ -311,6 +391,9 @@ export default function LaborSettingsPage() {
                     </TabsTrigger>
                     <TabsTrigger value="general" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">
                         <Gavel className="w-4 h-4 mr-2" /> Regras Gerais
+                    </TabsTrigger>
+                    <TabsTrigger value="contracts" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                        <FileText className="w-4 h-4 mr-2" /> Contratos
                     </TabsTrigger>
                 </TabsList>
 
@@ -507,7 +590,127 @@ export default function LaborSettingsPage() {
                         </CardContent>
                     </Card>
                 </TabsContent>
+
+                <TabsContent value="contracts" className="space-y-4">
+                    <div className="flex justify-between items-center mb-4">
+                        <div>
+                            <h3 className="text-lg font-semibold">Templates de Contrato</h3>
+                            <p className="text-sm text-muted-foreground">Configure os modelos de contrato para a contratação digital.</p>
+                        </div>
+                        <Button onClick={handleCreateTemplate} variant="outline" size="sm">
+                            <Plus className="w-4 h-4 mr-2" /> Novo Template
+                        </Button>
+                    </div>
+
+                    {loadingTemplates ? (
+                        <div className="flex justify-center py-8"><Loader2 className="animate-spin" /></div>
+                    ) : templates.length === 0 ? (
+                        <Card className="p-8 text-center border-dashed">
+                            <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-20" />
+                            <p className="text-muted-foreground">Nenhum template customizado encontrado.</p>
+                            <Button onClick={handleCreateTemplate} variant="link">Criar primeiro agora</Button>
+                        </Card>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {templates.map(t => (
+                                <Card key={t.id} className="p-4 hover:shadow-md transition-shadow">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <h4 className="font-bold flex items-center gap-2">
+                                                {t.name}
+                                                {t.isDefault && <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">PADRÃO</span>}
+                                            </h4>
+                                            <p className="text-xs text-muted-foreground mt-1">Tipo: {t.contractType}</p>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleEditTemplate(t)}>
+                                                <Edit2 className="w-4 h-4" />
+                                            </Button>
+                                            <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => handleDeleteTemplate(t.id)}>
+                                                <Trash2 className="w-4 h-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </Card>
+                            ))}
+                        </div>
+                    )}
+
+                    <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl mt-6">
+                        <h4 className="text-sm font-bold text-blue-800 flex items-center gap-2 mb-2">
+                            <Copy className="w-4 h-4" /> Variáveis Disponíveis
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                            {['{{NOME}}', '{{CPF}}', '{{CARGO}}', '{{DEPARTAMENTO}}', '{{SALARIO}}', '{{DATA_INICIO}}', '{{TIPO_CONTRATO}}', '{{EMPRESA_NOME}}', '{{EMPRESA_CNPJ}}', '{{EMPRESA_ENDERECO}}'].map(v => (
+                                <code key={v} className="bg-white border border-blue-200 px-2 py-1 rounded text-[10px] text-blue-700 font-mono">{v}</code>
+                            ))}
+                        </div>
+                        <p className="text-[10px] text-blue-600 mt-3 pt-2 border-t border-blue-200/50">
+                            Use estas variáveis no seu template HTML para que elas sejam preenchidas automaticamente com os dados do candidato e da empresa.
+                        </p>
+                    </div>
+                </TabsContent>
             </Tabs>
+
+            {/* Modal Template Contrato */}
+            <Dialog open={isTemplateModalOpen} onOpenChange={setIsTemplateModalOpen}>
+                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle>Template de Contrato</DialogTitle>
+                        <DialogDescription>Edite o conteúdo em HTML do seu contrato de trabalho.</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label>Nome do Template</Label>
+                                <Input
+                                    value={currentTemplate.name}
+                                    onChange={e => setCurrentTemplate({ ...currentTemplate, name: e.target.value })}
+                                    placeholder="Ex: Contrato de Trabalho CLT"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Tipo de Contrato</Label>
+                                <Select
+                                    value={currentTemplate.contractType}
+                                    onValueChange={v => setCurrentTemplate({ ...currentTemplate, contractType: v })}
+                                >
+                                    <SelectTrigger><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="CLT">CLT</SelectItem>
+                                        <SelectItem value="ESTAGIO">Estágio</SelectItem>
+                                        <SelectItem value="TEMPORARIO">Temporário</SelectItem>
+                                        <SelectItem value="AUTONOMO">Autônomo / PJ</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Conteúdo (HTML)</Label>
+                            <Textarea
+                                className="min-h-[400px] font-mono text-sm p-4 bg-slate-50 border-slate-200 focus:bg-white"
+                                value={currentTemplate.templateContent}
+                                onChange={e => setCurrentTemplate({ ...currentTemplate, templateContent: e.target.value })}
+                                placeholder="Coloque aqui o HTML do seu contrato..."
+                            />
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Switch
+                                checked={currentTemplate.isDefault}
+                                onCheckedChange={v => setCurrentTemplate({ ...currentTemplate, isDefault: v })}
+                            />
+                            <Label>Definir como template padrão para este tipo</Label>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsTemplateModalOpen(false)}>Cancelar</Button>
+                        <Button onClick={handleSaveTemplate} disabled={saving} className="btn-primary">
+                            {saving ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}
+                            Salvar Template
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             {/* Modal de Edição/Criação */}
             <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
