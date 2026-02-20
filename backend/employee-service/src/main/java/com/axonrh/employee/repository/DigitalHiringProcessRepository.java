@@ -39,6 +39,9 @@ public interface DigitalHiringProcessRepository extends JpaRepository<DigitalHir
     boolean existsByTenantIdAndCandidateIdAndStatusNotIn(
             UUID tenantId, UUID candidateId, List<DigitalHiringStatus> excludeStatuses);
 
+    Optional<DigitalHiringProcess> findByTenantIdAndCandidateIdAndStatusNotIn(
+            UUID tenantId, UUID candidateId, List<DigitalHiringStatus> excludeStatuses);
+
     @Query("SELECT d FROM DigitalHiringProcess d LEFT JOIN FETCH d.documents " +
             "WHERE d.accessToken = :token")
     Optional<DigitalHiringProcess> findByAccessTokenWithDocuments(@Param("token") String token);

@@ -120,18 +120,52 @@ public class DigitalHiringService {
         UUID tenantId = getTenantId();
         log.info("Disparando contratacao digital via recrutamento - candidato: {}", request.getCandidateId());
 
-        // Verifica se ja existe processo ativo para este candidato
-        if (hiringRepository.existsByTenantIdAndCandidateIdAndStatusNotIn(
-                tenantId, request.getCandidateId(),
-                List.of(DigitalHiringStatus.COMPLETED, DigitalHiringStatus.CANCELLED))) {
-            throw new DuplicateResourceException("Ja existe contratacao digital ativa para este candidato");
-        }
-
         // Busca dados do candidato no talent pool
         TalentCandidate candidate = candidateRepository.findByTenantIdAndId(tenantId, request.getCandidateId())
                 .orElseThrow(() -> new ResourceNotFoundException("Candidato nao encontrado"));
 
-        // Monta request a partir dos dados do candidato
+        // Verifica se ja existe processo ativo para este candidato
+        Optional<DigitalHiringProcess> existingProcess = hiringRepository.findByTenantIdAndCandidateIdAndStatusNotIn(
+                tenantId, request.getCandidateId(),
+                List.of(DigitalHiringStatus.COMPLETED, DigitalHiringStatus.CANCELLED));
+
+        if (existingProcess.isPresent()) {
+            DigitalHiringProcess process = existingProcess.get();
+            log.info("Ja existe um processo ativo (ID: {}) para o candidato {}. Atualizando dados.", 
+                    process.getId(), candidate.getFullName());
+            
+            // Atualiza dados básicos do processo com informações atuais do recrutamento
+            process.setCandidateName(candidate.getFullName());
+            process.setCandidateEmail(candidate.getEmail());
+            process.setCandidatePhone(candidate.getPhone());
+            process.setVacancyId(request.getVacancyId());
+            
+            if (candidate.getVacancy() != null) {
+                JobVacancy vacancy = candidate.getVacancy();
+                if (vacancy.getPosition() != null) {
+                    process.setPosition(vacancy.getPosition());
+                    if (vacancy.getPosition().getDepartment() != null) {
+                        process.setDepartment(vacancy.getPosition().getDepartment());
+                    }
+                }
+                process.setEmploymentType(vacancy.getEmploymentType() != null ?
+                        vacancy.getEmploymentType().name() : "CLT");
+            }
+            
+            // Re-valida o link se estiver expirado
+            if (!process.isLinkValid()) {
+                process.setLinkExpiresAt(LocalDateTime.now().plusDays(defaultValidityDays));
+            }
+            
+            hiringRepository.save(process);
+            
+            // Reenvia o e-mail de convite (ou envia se não tinha sido enviado)
+            sendInvitationEmail(process);
+            
+            return mapToResponse(process);
+        }
+
+        // Monta request a partir dos dados do candidato para novo processo
         DigitalHiringRequest hiringRequest = DigitalHiringRequest.builder()
                 .candidateName(candidate.getFullName())
                 .candidateEmail(candidate.getEmail())
@@ -145,6 +179,9 @@ public class DigitalHiringService {
             JobVacancy vacancy = candidate.getVacancy();
             if (vacancy.getPosition() != null) {
                 hiringRequest.setPositionId(vacancy.getPosition().getId());
+                if (vacancy.getPosition().getDepartment() != null) {
+                    hiringRequest.setDepartmentId(vacancy.getPosition().getDepartment().getId());
+                }
             }
             hiringRequest.setEmploymentType(vacancy.getEmploymentType() != null ?
                     vacancy.getEmploymentType().name() : "CLT");
