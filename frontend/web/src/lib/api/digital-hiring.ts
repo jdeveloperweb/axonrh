@@ -297,6 +297,10 @@ export const digitalHiringApi = {
         await api.post(`/digital-hiring/${id}/cancel`, { reason });
     },
 
+    delete: async (id: string): Promise<void> => {
+        await api.delete(`/digital-hiring/${id}`);
+    },
+
     updateEmail: async (id: string, email: string): Promise<void> => {
         await api.patch(`/digital-hiring/${id}/email`, { email });
     },

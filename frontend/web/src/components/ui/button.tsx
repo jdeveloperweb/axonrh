@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 // ==================== Types ====================
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'link';
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'icon';
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
@@ -22,6 +22,7 @@ const variants = {
   outline: 'btn-outline',
   ghost: 'btn-ghost',
   danger: 'btn bg-[var(--color-error)] text-white hover:bg-[var(--color-error)]/90',
+  link: 'text-[var(--color-primary)] hover:underline p-0 h-auto justify-start',
 };
 
 const sizes = {

@@ -688,6 +688,34 @@ public class DigitalHiringService {
         return Map.of("contractHtml", contractHtml);
     }
 
+    /**
+     * Excluir processo (apenas se estiver cancelado).
+     */
+    @Transactional
+    public void delete(UUID id) {
+        UUID tenantId = getTenantId();
+        DigitalHiringProcess process = hiringRepository.findByTenantIdAndId(tenantId, id)
+                .orElseThrow(() -> new ResourceNotFoundException("Contratacao digital nao encontrada"));
+
+        if (process.getStatus() != DigitalHiringStatus.CANCELLED) {
+            throw new InvalidOperationException("Apenas processos cancelados podem ser excluidos");
+        }
+
+        // Deleta documentos fisicos do storage
+        process.getDocuments().forEach(doc -> {
+            if (doc.getFilePath() != null) {
+                try {
+                    storageService.deleteFile(doc.getFilePath());
+                } catch (Exception e) {
+                    log.warn("Falha ao excluir arquivo do storage: {}", doc.getFilePath());
+                }
+            }
+        });
+
+        hiringRepository.delete(process);
+        log.info("Contratacao digital excluida: {}", id);
+    }
+
     // ==================== Internal Methods ====================
 
     /**

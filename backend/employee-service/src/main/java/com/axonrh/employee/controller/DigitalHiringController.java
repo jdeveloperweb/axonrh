@@ -183,6 +183,20 @@ public class DigitalHiringController {
         return ResponseEntity.noContent().build();
     }
 
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('EMPLOYEE:WRITE')")
+    @Operation(summary = "Excluir contratação", description = "Exclui permanentemente um processo de contratação digital (deve estar cancelado)")
+    public ResponseEntity<Void> delete(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal Jwt jwt) {
+
+        setupTenantContext(jwt);
+        log.info("Excluindo contratacao digital: {}", id);
+
+        digitalHiringService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @PatchMapping("/{id}/email")
     @PreAuthorize("hasAuthority('EMPLOYEE:WRITE')")
     @Operation(summary = "Atualizar e-mail do candidato", description = "Atualiza o e-mail do candidato e reenvia o convite")

@@ -24,6 +24,7 @@ import {
     RefreshCw,
     Copy,
     Edit2,
+    Trash2,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -314,6 +315,22 @@ export default function ProcessesPage() {
             fetchDigitalHiringStats();
         } catch {
             toast({ title: 'Erro', description: 'Falha ao cancelar processo', variant: 'destructive' });
+        }
+    };
+
+    const handleDeleteDigitalHiring = async (id: string) => {
+        if (!confirm('Tem certeza que deseja excluir permanentemente este processo? Esta ação não pode ser desfeita.')) {
+            return;
+        }
+
+        try {
+            await digitalHiringApi.delete(id);
+            toast({ title: 'Sucesso', description: 'Processo excluído com sucesso.' });
+            fetchDigitalHirings();
+            fetchDigitalHiringStats();
+        } catch (error) {
+            console.error(error);
+            toast({ title: 'Erro', description: 'Falha ao excluir processo. Certifique-se de que ele está cancelado.', variant: 'destructive' });
         }
     };
 
@@ -666,6 +683,11 @@ export default function ProcessesPage() {
                                                                     <DropdownMenuItem className="text-red-600" onClick={() => handleCancelDigitalHiring(dh.id)}>
                                                                         <XCircle className="w-4 h-4 mr-2" /> Cancelar Processo
                                                                     </DropdownMenuItem>
+                                                                    {dh.status === 'CANCELLED' && (
+                                                                        <DropdownMenuItem className="text-red-800" onClick={() => handleDeleteDigitalHiring(dh.id)}>
+                                                                            <Trash2 className="w-4 h-4 mr-2" /> Excluir Processo
+                                                                        </DropdownMenuItem>
+                                                                    )}
                                                                 </DropdownMenuContent>
                                                             </DropdownMenu>
                                                         </td>

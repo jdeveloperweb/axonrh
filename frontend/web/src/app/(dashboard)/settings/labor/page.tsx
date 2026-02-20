@@ -605,10 +605,14 @@ export default function LaborSettingsPage() {
                     {loadingTemplates ? (
                         <div className="flex justify-center py-8"><Loader2 className="animate-spin" /></div>
                     ) : templates.length === 0 ? (
-                        <Card className="p-8 text-center border-dashed">
-                            <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-20" />
-                            <p className="text-muted-foreground">Nenhum template customizado encontrado.</p>
-                            <Button onClick={handleCreateTemplate} variant="link">Criar primeiro agora</Button>
+                        <Card className="p-12 text-center border-dashed bg-slate-50/50">
+                            <div className="flex flex-col items-center justify-center">
+                                <FileText className="w-12 h-12 text-muted-foreground mb-4 opacity-20" />
+                                <p className="text-muted-foreground">Nenhum template customizado encontrado.</p>
+                                <Button onClick={handleCreateTemplate} variant="link" className="mt-2 h-auto text-primary font-bold">
+                                    Criar primeiro agora
+                                </Button>
+                            </div>
                         </Card>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -636,17 +640,20 @@ export default function LaborSettingsPage() {
                         </div>
                     )}
 
-                    <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl mt-6">
-                        <h4 className="text-sm font-bold text-blue-800 flex items-center gap-2 mb-2">
-                            <Copy className="w-4 h-4" /> Variáveis Disponíveis
-                        </h4>
-                        <div className="flex flex-wrap gap-2">
+                    <div className="bg-blue-50 border border-blue-100 p-6 rounded-2xl mt-8 shadow-sm">
+                        <div className="flex items-center justify-between mb-4 pb-2 border-b border-blue-200/50">
+                            <h4 className="text-sm font-bold text-blue-800 flex items-center gap-2">
+                                <Copy className="w-4 h-4" /> Variáveis Disponíveis para o Template
+                            </h4>
+                            <span className="text-[10px] text-blue-500 font-medium">Use as chaves exatas abaixo</span>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
                             {['{{NOME}}', '{{CPF}}', '{{CARGO}}', '{{DEPARTAMENTO}}', '{{SALARIO}}', '{{DATA_INICIO}}', '{{TIPO_CONTRATO}}', '{{EMPRESA_NOME}}', '{{EMPRESA_CNPJ}}', '{{EMPRESA_ENDERECO}}'].map(v => (
-                                <code key={v} className="bg-white border border-blue-200 px-2 py-1 rounded text-[10px] text-blue-700 font-mono">{v}</code>
+                                <code key={v} className="bg-white border border-blue-200 px-2 py-1.5 rounded-lg text-[10px] text-blue-700 font-mono text-center hover:bg-blue-100 transition-colors pointer-events-none">{v}</code>
                             ))}
                         </div>
-                        <p className="text-[10px] text-blue-600 mt-3 pt-2 border-t border-blue-200/50">
-                            Use estas variáveis no seu template HTML para que elas sejam preenchidas automaticamente com os dados do candidato e da empresa.
+                        <p className="text-[10px] text-blue-600 mt-4 leading-relaxed">
+                            <strong>Dica:</strong> Ao criar ou editar um contrato, você pode usar estas variáveis no meio do texto HTML. O sistema substituirá automaticamente pelos dados reais do colaborador no momento da geração do documento.
                         </p>
                     </div>
                 </TabsContent>
@@ -654,13 +661,14 @@ export default function LaborSettingsPage() {
 
             {/* Modal Template Contrato */}
             <Dialog open={isTemplateModalOpen} onOpenChange={setIsTemplateModalOpen}>
-                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
+                <DialogContent className="max-w-5xl max-h-[95vh] overflow-hidden flex flex-col p-0">
+                    <DialogHeader className="p-6 border-b">
                         <DialogTitle>Template de Contrato</DialogTitle>
-                        <DialogDescription>Edite o conteúdo em HTML do seu contrato de trabalho.</DialogDescription>
+                        <DialogDescription>Edite o conteúdo em HTML do seu contrato de trabalho e veja como ficará.</DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-4 py-4">
-                        <div className="grid grid-cols-2 gap-4">
+
+                    <div className="flex-1 overflow-y-auto p-6">
+                        <div className="grid grid-cols-2 gap-4 mb-6">
                             <div className="space-y-2">
                                 <Label>Nome do Template</Label>
                                 <Input
@@ -685,26 +693,73 @@ export default function LaborSettingsPage() {
                                 </Select>
                             </div>
                         </div>
-                        <div className="space-y-2">
-                            <Label>Conteúdo (HTML)</Label>
-                            <Textarea
-                                className="min-h-[400px] font-mono text-sm p-4 bg-slate-50 border-slate-200 focus:bg-white"
-                                value={currentTemplate.templateContent}
-                                onChange={e => setCurrentTemplate({ ...currentTemplate, templateContent: e.target.value })}
-                                placeholder="Coloque aqui o HTML do seu contrato..."
-                            />
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Switch
-                                checked={currentTemplate.isDefault}
-                                onCheckedChange={v => setCurrentTemplate({ ...currentTemplate, isDefault: v })}
-                            />
-                            <Label>Definir como template padrão para este tipo</Label>
-                        </div>
+
+                        <Tabs defaultValue="editor" className="w-full">
+                            <TabsList className="grid w-full grid-cols-2 mb-6 bg-slate-100 p-1">
+                                <TabsTrigger value="editor">Editor HTML</TabsTrigger>
+                                <TabsTrigger value="preview">Visualização (Preview)</TabsTrigger>
+                            </TabsList>
+
+                            <TabsContent value="editor" className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label className="flex justify-between items-center">
+                                        Conteúdo (HTML)
+                                        <span className="text-[10px] text-slate-400 font-normal">Suporta tags HTML como &lt;h2&gt;, &lt;p&gt;, &lt;strong&gt;</span>
+                                    </Label>
+                                    <Textarea
+                                        className="min-h-[500px] font-mono text-sm p-4 bg-slate-50 border-slate-200 focus:bg-white resize-none"
+                                        value={currentTemplate.templateContent}
+                                        onChange={e => setCurrentTemplate({ ...currentTemplate, templateContent: e.target.value })}
+                                        placeholder="Coloque aqui o HTML do seu contrato..."
+                                    />
+                                </div>
+                                <div className="flex items-center gap-2 pt-2">
+                                    <Switch
+                                        checked={currentTemplate.isDefault}
+                                        onCheckedChange={v => setCurrentTemplate({ ...currentTemplate, isDefault: v })}
+                                    />
+                                    <Label>Definir como template padrão para este tipo</Label>
+                                </div>
+                            </TabsContent>
+
+                            <TabsContent value="preview">
+                                <div className="bg-slate-100/50 p-8 rounded-2xl border border-dashed border-slate-300 min-h-[600px] flex flex-col">
+                                    <div className="bg-white shadow-2xl border-2 border-white mx-auto p-16 max-w-[800px] w-full min-h-[1000px] overflow-auto text-slate-900 break-words font-serif leading-relaxed">
+                                        <div
+                                            className="template-preview-content"
+                                            dangerouslySetInnerHTML={{
+                                                __html: currentTemplate.templateContent ?
+                                                    currentTemplate.templateContent
+                                                        .replaceAll('{{NOME}}', '<span class="bg-yellow-100 px-1 rounded font-sans text-xs font-bold">Mariana Barbosa Cardoso</span>')
+                                                        .replaceAll('{{CPF}}', '<span class="bg-yellow-100 px-1 rounded font-sans text-xs font-bold">123.456.789-00</span>')
+                                                        .replaceAll('{{CARGO}}', '<span class="bg-yellow-100 px-1 rounded font-sans text-xs font-bold">Analista de Marketing</span>')
+                                                        .replaceAll('{{DEPARTAMENTO}}', '<span class="bg-yellow-100 px-1 rounded font-sans text-xs font-bold">Marketing Digital</span>')
+                                                        .replaceAll('{{SALARIO}}', '<span class="bg-yellow-100 px-1 rounded font-sans text-xs font-bold">R$ 4.500,00</span>')
+                                                        .replaceAll('{{DATA_INICIO}}', '<span class="bg-yellow-100 px-1 rounded font-sans text-xs font-bold">01/03/2026</span>')
+                                                        .replaceAll('{{TIPO_CONTRATO}}', '<span class="bg-yellow-100 px-1 rounded font-sans text-xs font-bold">CLT</span>')
+                                                        .replaceAll('{{EMPRESA_NOME}}', '<span class="bg-yellow-100 px-1 rounded font-sans text-xs font-bold">Axon Tecnologia LTDA</span>')
+                                                        .replaceAll('{{EMPRESA_CNPJ}}', '<span class="bg-yellow-100 px-1 rounded font-sans text-xs font-bold">00.123.456/0001-99</span>')
+                                                        .replaceAll('{{EMPRESA_ENDERECO}}', '<span class="bg-yellow-100 px-1 rounded font-sans text-xs font-bold">Av. Paulista, 1000 - São Paulo, SP</span>')
+                                                    : '<div class="flex flex-col items-center justify-center py-40 text-slate-300 italic"><p>O conteúdo visualizado aparecerá aqui.</p></div>'
+                                            }}
+                                        />
+                                    </div>
+                                    <div className="mt-6 flex items-center justify-center gap-4 text-[10px] text-slate-500 font-medium">
+                                        <div className="flex items-center gap-1">
+                                            <div className="w-3 h-3 bg-yellow-100 border border-yellow-200 rounded" />
+                                            <span>Variáveis simuladas</span>
+                                        </div>
+                                        <span>•</span>
+                                        <p>Visualização aproximada do documento impresso (A4)</p>
+                                    </div>
+                                </div>
+                            </TabsContent>
+                        </Tabs>
                     </div>
-                    <DialogFooter>
+
+                    <DialogFooter className="p-6 border-t bg-slate-50">
                         <Button variant="outline" onClick={() => setIsTemplateModalOpen(false)}>Cancelar</Button>
-                        <Button onClick={handleSaveTemplate} disabled={saving} className="btn-primary">
+                        <Button onClick={handleSaveTemplate} disabled={saving} className="btn-primary min-w-[150px]">
                             {saving ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}
                             Salvar Template
                         </Button>

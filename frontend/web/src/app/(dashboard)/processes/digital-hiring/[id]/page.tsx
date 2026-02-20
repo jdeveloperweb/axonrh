@@ -115,6 +115,21 @@ export default function DigitalHiringDetailPage() {
         }
     };
 
+    const handleDelete = async () => {
+        if (!confirm('Tem certeza que deseja excluir permanentemente este processo? Esta ação não pode ser desfeita.')) return;
+        try {
+            setActionLoading(true);
+            await digitalHiringApi.delete(id as string);
+            toast.success('Processo excluído com sucesso.');
+            router.push('/processes?tab=digitalHiring');
+        } catch (error) {
+            console.error(error);
+            toast.error('Erro ao excluir processo. Certifique-se de que ele está cancelado.');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
@@ -192,8 +207,16 @@ export default function DigitalHiringDetailPage() {
                                 className={`text-red-600 focus:text-red-600 focus:bg-red-50 ${actionLoading ? 'opacity-50 pointer-events-none' : ''}`}
                                 onClick={() => !actionLoading && handleCancel()}
                             >
-                                <Trash2 className="w-4 h-4 mr-2" /> Cancelar Processo
+                                <XCircle className="w-4 h-4 mr-2" /> Cancelar Processo
                             </DropdownMenuItem>
+                            {process.status === 'CANCELLED' && (
+                                <DropdownMenuItem
+                                    className={`text-red-800 focus:text-red-800 focus:bg-red-50 ${actionLoading ? 'opacity-50 pointer-events-none' : ''}`}
+                                    onClick={() => !actionLoading && handleDelete()}
+                                >
+                                    <Trash2 className="w-4 h-4 mr-2" /> Excluir Processo
+                                </DropdownMenuItem>
+                            )}
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
