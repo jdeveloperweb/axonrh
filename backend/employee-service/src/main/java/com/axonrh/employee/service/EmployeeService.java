@@ -346,12 +346,16 @@ public class EmployeeService {
 
         // Mapeia e salva
         Employee employee = employeeMapper.toEntity(request);
+        log.info("Entity mapped from request - EmploymentType: {}", employee.getEmploymentType());
+        
         employee.setTenantId(tenantId);
         employee.setCpf(cpf);
         employee.setCreatedBy(userId);
 
         // Carrega relacionamentos
         loadRelationships(employee, request);
+        
+        log.info("Saving employee - EmploymentType: {}, TenantId: {}", employee.getEmploymentType(), employee.getTenantId());
 
         Employee saved = employeeRepository.save(employee);
 

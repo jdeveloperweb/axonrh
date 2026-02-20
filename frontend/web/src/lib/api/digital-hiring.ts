@@ -136,8 +136,7 @@ export interface DigitalHiringWorkData {
     ctpsNumero?: string;
     ctpsSerie?: string;
     ctpsUf?: string;
-
-    // Dependents
+    hasDependents?: boolean;
     dependents?: DigitalHiringDependent[];
 
     // Benefits
@@ -160,6 +159,7 @@ export interface DigitalHiringDocument {
     documentType: string;
     fileName: string;
     fileSize?: number;
+    fileUrl?: string;
     status: 'PENDING' | 'UPLOADING' | 'UPLOADED' | 'VALIDATING' | 'VALID' | 'INVALID' | 'ERROR';
     validationMessage?: string;
     ocrData?: Record<string, unknown>;

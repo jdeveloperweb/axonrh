@@ -115,6 +115,7 @@ public class DigitalHiringResponse {
         private String status;
         private String validationMessage;
         private Map<String, Object> ocrData;
+        private String fileUrl;
         private LocalDateTime uploadedAt;
         private LocalDateTime validatedAt;
     }

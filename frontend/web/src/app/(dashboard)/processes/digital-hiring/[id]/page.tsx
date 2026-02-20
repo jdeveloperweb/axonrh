@@ -23,7 +23,10 @@ import {
     Send,
     Sparkles,
     Scale,
-    Trash2
+    Trash2,
+    Database,
+    MapPin,
+    Smartphone
 } from 'lucide-react';
 import { digitalHiringApi, DigitalHiringProcess, digitalHiringStatusLabels, digitalHiringStatusColors } from '@/lib/api/digital-hiring';
 import { Button } from '@/components/ui/button';
@@ -39,6 +42,14 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+} from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function DigitalHiringDetailPage() {
     const { id } = useParams();
@@ -46,6 +57,7 @@ export default function DigitalHiringDetailPage() {
     const [process, setProcess] = useState<DigitalHiringProcess | null>(null);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
+    const [showContract, setShowContract] = useState(false);
 
     const fetchProcess = useCallback(async () => {
         try {
@@ -360,6 +372,109 @@ export default function DigitalHiringDetailPage() {
                             </CardContent>
                         </Card>
                     )}
+
+                    {/* Form Data Section */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-12">
+                        {/* Personal Data */}
+                        <Card className="border-gray-100 bg-white">
+                            <CardHeader className="pb-2 border-b border-gray-50 flex flex-row items-center justify-between">
+                                <CardTitle className="text-sm font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                                    <User className="w-4 h-4" />
+                                    Dados Pessoais
+                                </CardTitle>
+                                {process.personalData && <Badge className="bg-green-100 text-green-700">Preenchido</Badge>}
+                            </CardHeader>
+                            <CardContent className="pt-4 space-y-4">
+                                {process.personalData ? (
+                                    <div className="grid grid-cols-1 gap-4">
+                                        <div className="flex items-start gap-2">
+                                            <div className="p-1.5 bg-gray-50 rounded text-gray-400"><Database className="w-3.5 h-3.5" /></div>
+                                            <div>
+                                                <p className="text-[10px] font-medium text-gray-400">CPF</p>
+                                                <p className="text-sm font-semibold text-gray-900">{process.candidateCpf || 'Não informado'}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-start gap-2">
+                                            <div className="p-1.5 bg-gray-50 rounded text-gray-400"><Calendar className="w-3.5 h-3.5" /></div>
+                                            <div>
+                                                <p className="text-[10px] font-medium text-gray-400">Nascimento</p>
+                                                <p className="text-sm font-semibold text-gray-900">
+                                                    {process.personalData.birthDate ? formatDate(process.personalData.birthDate) : 'Não informado'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-start gap-2">
+                                            <div className="p-1.5 bg-gray-50 rounded text-gray-400"><Smartphone className="w-3.5 h-3.5" /></div>
+                                            <div>
+                                                <p className="text-[10px] font-medium text-gray-400">Telefone</p>
+                                                <p className="text-sm font-semibold text-gray-900">{process.personalData.phone || process.candidatePhone || 'Não informado'}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-start gap-2">
+                                            <div className="p-1.5 bg-gray-50 rounded text-gray-400"><MapPin className="w-3.5 h-3.5" /></div>
+                                            <div>
+                                                <p className="text-[10px] font-medium text-gray-400">Endereço</p>
+                                                <p className="text-sm font-semibold text-gray-900">
+                                                    {process.personalData.logradouro ? `${process.personalData.logradouro}, ${process.personalData.numero}` : 'Não informado'}
+                                                </p>
+                                                <p className="text-xs text-gray-500">
+                                                    {process.personalData.bairro ? `${process.personalData.bairro} - ${process.personalData.cidade}/${process.personalData.estado}` : ''}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="py-8 text-center text-gray-400 bg-gray-50/50 rounded-lg border border-dashed">
+                                        <p className="text-xs font-medium">Aguardando preenchimento</p>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        {/* Work Data */}
+                        <Card className="border-gray-100 bg-white">
+                            <CardHeader className="pb-2 border-b border-gray-50 flex flex-row items-center justify-between">
+                                <CardTitle className="text-sm font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                                    <Scale className="w-4 h-4" />
+                                    Dados Adicionais
+                                </CardTitle>
+                                {process.workData && <Badge className="bg-green-100 text-green-700">Preenchido</Badge>}
+                            </CardHeader>
+                            <CardContent className="pt-4">
+                                {process.workData ? (
+                                    <div className="space-y-4">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <p className="text-[10px] font-medium text-gray-400">PIS/PASEP</p>
+                                                <p className="text-sm font-semibold text-gray-900">{process.workData.pis || 'Não informado'}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-medium text-gray-400">CTPS</p>
+                                                <p className="text-sm font-semibold text-gray-900">{process.workData.ctpsNumero || 'Não informado'}</p>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-medium text-gray-400">Dependentes</p>
+                                            <p className="text-sm font-semibold text-gray-900">{process.workData.hasDependents ? (process.workData.dependents?.length || 'Sim') : 'Não'}</p>
+                                        </div>
+                                        <div className="pt-2 border-t border-gray-50">
+                                            <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest mb-2">Proposta Aceita</p>
+                                            <div className="flex justify-between items-center text-xs">
+                                                <span className="text-gray-500">Salário:</span>
+                                                <span className="font-bold text-gray-900">
+                                                    {process.baseSalary ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(process.baseSalary) : '-'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="py-8 text-center text-gray-400 bg-gray-50/50 rounded-lg border border-dashed">
+                                        <p className="text-xs font-medium">Aguardando preenchimento</p>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </div>
                 </div>
 
                 {/* Right Column: Documents */}
@@ -406,10 +521,22 @@ export default function DigitalHiringDetailPage() {
                                                     <p className="text-[10px] text-gray-400">{doc.uploadedAt ? formatDate(doc.uploadedAt) : ''}</p>
                                                 </div>
                                                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600 bg-blue-50">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8 text-blue-600 bg-blue-50"
+                                                        onClick={() => doc.fileUrl && window.open(doc.fileUrl, '_blank')}
+                                                        disabled={!doc.fileUrl}
+                                                    >
                                                         <Eye className="w-4 h-4" />
                                                     </Button>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-600 bg-gray-100">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8 text-gray-600 bg-gray-100"
+                                                        onClick={() => doc.fileUrl && window.open(doc.fileUrl, '_blank')}
+                                                        disabled={!doc.fileUrl}
+                                                    >
                                                         <Download className="w-4 h-4" />
                                                     </Button>
                                                 </div>
@@ -468,6 +595,55 @@ export default function DigitalHiringDetailPage() {
                     100% { transform: translateX(100%); }
                 }
             `}</style>
+
+            {/* Contract Modal */}
+            <Dialog open={showContract} onOpenChange={setShowContract}>
+                <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0 overflow-hidden bg-white">
+                    <DialogHeader className="p-6 border-b bg-gray-50">
+                        <DialogTitle className="flex items-center gap-2 text-indigo-700">
+                            <ShieldCheck className="w-6 h-6" />
+                            Contrato de Admissão Digital
+                        </DialogTitle>
+                        <DialogDescription>
+                            Visualização do contrato aceito e assinado digitalmente pelo candidato.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <ScrollArea className="flex-1 p-8 bg-white overflow-y-auto">
+                        <div
+                            className="prose prose-indigo max-w-none text-gray-800"
+                            dangerouslySetInnerHTML={{ __html: process.contractHtml || '<p class="text-center text-gray-400 py-12">Contrato ainda não gerado.</p>' }}
+                        />
+
+                        {process.contractSigned && (
+                            <div className="mt-12 p-6 bg-green-50 rounded-xl border border-green-100 flex items-start gap-4">
+                                <div className="p-2 bg-green-100 rounded-full text-green-600">
+                                    <ShieldCheck className="w-6 h-6" />
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-sm font-bold text-green-900 uppercase tracking-tight">Assinatura Eletrônica Válida</p>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-1 text-xs text-green-700">
+                                        <p><strong>Candidato:</strong> {process.candidateName}</p>
+                                        <p><strong>CPF:</strong> {process.candidateCpf}</p>
+                                        <p><strong>Data/Hora:</strong> {formatDate(process.contractSignedAt!)}</p>
+                                        <p><strong>IP:</strong> {process.signatureIp}</p>
+                                    </div>
+                                    <div className="mt-2 text-[10px] text-green-600/60 font-medium">
+                                        Este documento foi assinado eletronicamente via Portal AxonRH de acordo com a MP 2.200-2/2001.
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </ScrollArea>
+
+                    <div className="p-4 border-t bg-gray-50 flex justify-end gap-3">
+                        <Button variant="outline" onClick={() => setShowContract(false)}>Fechar</Button>
+                        <Button className="bg-indigo-600" onClick={() => window.print()}>
+                            <Download className="w-4 h-4 mr-2" /> Imprimir / PDF
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

@@ -42,6 +42,8 @@ public class DigitalHiringService {
     private final EmployeeService employeeService;
     private final StorageService storageService;
     private final com.axonrh.kafka.producer.DomainEventPublisher eventPublisher;
+    private final CompanyProfileRepository companyProfileRepository;
+    private final ContractTemplateRepository contractTemplateRepository;
 
     @Value("${digital-hiring.link.base-url:http://localhost:3000/contratacao}")
     private String linkBaseUrl;
@@ -695,6 +697,7 @@ public class DigitalHiringService {
         try {
             // Construir request de criacao de colaborador
             EmployeeRequest employeeRequest = buildEmployeeRequest(process);
+            log.info("Processo: {} - Criando colaborador com EmploymentType: {}", process.getId(), employeeRequest.getEmploymentType());
             EmployeeResponse employeeResponse = employeeService.create(employeeRequest, process.getCreatedBy());
 
             // Marcar como completo (sem Employee entity direta, usamos o ID)
@@ -823,29 +826,69 @@ public class DigitalHiringService {
         String position = process.getPosition() != null ? process.getPosition().getTitle() : "a definir";
         String department = process.getDepartment() != null ? process.getDepartment().getName() : "a definir";
         String salary = process.getBaseSalary() != null ? "R$ " + process.getBaseSalary().toString() : "a definir";
+        String hireDate = process.getExpectedHireDate() != null ? process.getExpectedHireDate().toString() : "a definir";
+        String employmentType = process.getEmploymentType() != null ? process.getEmploymentType() : "CLT";
 
+        // Buscar dados da empresa
+        CompanyProfile company = companyProfileRepository.findByTenantId(process.getTenantId()).orElse(null);
+        String companyName = company != null ? company.getLegalName() : "[Empresa Contratante]";
+        String companyCnpj = company != null ? company.getCnpj() : "__.___.___/____-__";
+        String companyAddress = company != null ? company.getFullAddress() : "Endereço da Empresa";
+
+        // Tentar buscar template customizado do tenant
+        Optional<ContractTemplate> templateOpt = contractTemplateRepository
+                .findByTenantIdAndContractTypeAndIsDefaultTrue(process.getTenantId(), employmentType);
+
+        if (templateOpt.isPresent()) {
+            String content = templateOpt.get().getTemplateContent();
+            return content
+                    .replace("{{NOME}}", process.getCandidateName())
+                    .replace("{{CPF}}", process.getCandidateCpf() != null ? process.getCandidateCpf() : "")
+                    .replace("{{CARGO}}", position)
+                    .replace("{{DEPARTAMENTO}}", department)
+                    .replace("{{SALARIO}}", salary)
+                    .replace("{{DATA_INICIO}}", hireDate)
+                    .replace("{{TIPO_CONTRATO}}", employmentType)
+                    .replace("{{EMPRESA_NOME}}", companyName)
+                    .replace("{{EMPRESA_CNPJ}}", companyCnpj)
+                    .replace("{{EMPRESA_ENDERECO}}", companyAddress);
+        }
+
+        // Fallback para template padrão mais robusto pautado por lei
         return """
-                <h2>CONTRATO DE TRABALHO</h2>
-                <p><strong>CONTRATANTE:</strong> [Empresa]</p>
-                <p><strong>CONTRATADO(A):</strong> %s, CPF %s</p>
-                <p><strong>CARGO:</strong> %s</p>
-                <p><strong>DEPARTAMENTO:</strong> %s</p>
-                <p><strong>SALARIO:</strong> %s</p>
-                <p><strong>TIPO:</strong> %s</p>
-                <p><strong>DATA INICIO:</strong> %s</p>
-                <hr/>
-                <p>O presente contrato regulamenta a relacao de trabalho entre as partes acima identificadas,
-                nos termos da Consolidacao das Leis do Trabalho (CLT) e demais disposicoes legais aplicaveis.</p>
-                <p>O(A) CONTRATADO(A) exercera as funcoes de %s no departamento de %s,
-                cumprindo jornada de trabalho conforme legislacao vigente.</p>
-                <p>Este contrato entra em vigor na data de inicio acima especificada.</p>
+                <div style="font-family: 'Times New Roman', Times, serif; color: #333; line-height: 1.6;">
+                    <h2 style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px;">CONTRATO INDIVIDUAL DE TRABALHO</h2>
+                    
+                    <p><strong>Pelo presente instrumento particular, as partes abaixo identificadas:</strong></p>
+                    
+                    <p><strong>EMPREGADOR:</strong> %s, inscrito no CNPJ sob o nº %s, com sede em %s, doravante denominado simplesmente <strong>EMPREGADOR</strong>.</p>
+                    
+                    <p><strong>EMPREGADO(A):</strong> %s, portador(a) do CPF nº %s, residente e domiciliado(a) conforme dados cadastrais, doravante denominado simplesmente <strong>EMPREGADO(A)</strong>.</p>
+                    
+                    <p>Resolvem celebrar o presente Contrato Individual de Trabalho, que será regido pela Consolidação das Leis do Trabalho (CLT) e pelas cláusulas seguintes:</p>
+                    
+                    <h4>CLÁUSULA PRIMEIRA - DO CARGO E FUNÇÕES</h4>
+                    <p>O(A) EMPREGADO(A) é contratado para exercer as funções de <strong>%s</strong>, no departamento de <strong>%s</strong>, comprometendo-se a realizar todas as tarefas inerentes ao cargo e as que lhe forem determinadas por seus superiores.</p>
+                    
+                    <h4>CLÁUSULA SEGUNDA - DA VIGÊNCIA E HORÁRIO</h4>
+                    <p>O presente contrato de trabalho terá início em <strong>%s</strong>, sob a modalidade <strong>%s</strong>. O horário de trabalho será estabelecido conforme as necessidades da empresa, respeitando-se os limites legais e constitucionais.</p>
+                    
+                    <h4>CLÁUSULA TERCEIRA - DA REMUNERAÇÃO</h4>
+                    <p>Como contraprestação pelos serviços prestados, o(a) EMPREGADO(A) receberá o salário base de <strong>%s</strong>, que será pago mensalmente, com os descontos previstos em lei.</p>
+                    
+                    <h4>CLÁUSULA QUARTA - DAS OBRIGAÇÕES</h4>
+                    <p>O(A) EMPREGADO(A) compromete-se a observar o regulamento interno da empresa, bem como a legislação trabalhista vigente e as normas de segurança e medicina do trabalho.</p>
+                    
+                    <p style="margin-top: 30px; text-align: center;"><em>Este documento foi assinado eletronicamente e possui validade jurídica.</em></p>
+                </div>
                 """.formatted(
+                companyName, companyCnpj, companyAddress,
                 process.getCandidateName(),
                 process.getCandidateCpf() != null ? process.getCandidateCpf() : "___",
-                position, department, salary,
-                process.getEmploymentType() != null ? process.getEmploymentType() : "CLT",
-                process.getExpectedHireDate() != null ? process.getExpectedHireDate().toString() : "a definir",
-                position, department
+                position, department,
+                hireDate,
+                employmentType,
+                salary
         );
     }
 
@@ -898,7 +941,17 @@ public class DigitalHiringService {
         }
 
         List<DigitalHiringResponse.DocumentInfo> docInfos = process.getDocuments().stream()
-                .map(doc -> DigitalHiringResponse.DocumentInfo.builder()
+                .map(doc -> {
+                    String fileUrl = null;
+                    if (doc.getFilePath() != null) {
+                        try {
+                            fileUrl = storageService.getPresignedUrl(doc.getFilePath());
+                        } catch (Exception e) {
+                            log.warn("Falha ao gerar URL para documento: {}", doc.getFilePath());
+                        }
+                    }
+                    
+                    return DigitalHiringResponse.DocumentInfo.builder()
                         .id(doc.getId())
                         .documentType(doc.getDocumentType())
                         .fileName(doc.getFileName())
@@ -906,9 +959,11 @@ public class DigitalHiringService {
                         .status(doc.getValidationStatus())
                         .validationMessage(doc.getValidationMessage())
                         .ocrData(doc.getOcrData())
+                        .fileUrl(fileUrl)
                         .uploadedAt(doc.getUploadedAt())
                         .validatedAt(doc.getValidatedAt())
-                        .build())
+                        .build();
+                })
                 .toList();
 
         return DigitalHiringResponse.builder()

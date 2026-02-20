@@ -501,7 +501,7 @@ export default function DigitalHiringPortalPage() {
                                 <img
                                     src={getPhotoUrl(tenantTheme.logoUrl, undefined, 'logo') || ''}
                                     alt="Logo"
-                                    className="h-12 w-auto object-contain brightness-0 invert"
+                                    className="h-14 w-auto object-contain brightness-0 invert"
                                     style={{ maxWidth: `${tenantTheme.logoWidth || 150}px` }}
                                 />
                             ) : (
@@ -517,7 +517,7 @@ export default function DigitalHiringPortalPage() {
                         </div>
 
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-sm font-medium mb-6 border border-white/10">
-                            <Sparkles className="w-4 h-4 text-yellow-300" />
+                            <Sparkles className="w-5 h-5 text-yellow-300" />
                             <span>Portal de Admissão Digital</span>
                         </div>
 
@@ -532,15 +532,15 @@ export default function DigitalHiringPortalPage() {
 
                         <div className="grid grid-cols-2 gap-6">
                             <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/10">
-                                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-3">
-                                    <Shield className="w-5 h-5 text-yellow-300" />
+                                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-3">
+                                    <Shield className="w-7 h-7 text-yellow-300" />
                                 </div>
                                 <h4 className="font-bold text-sm">100% Seguro</h4>
                                 <p className="text-xs text-blue-100/70 mt-1">Seus dados protegidos por criptografia de ponta.</p>
                             </div>
                             <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/10">
-                                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-3">
-                                    <Sparkles className="w-5 h-5 text-yellow-300" />
+                                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-3">
+                                    <Sparkles className="w-7 h-7 text-yellow-300" />
                                 </div>
                                 <h4 className="font-bold text-sm">IA Integrada</h4>
                                 <p className="text-xs text-blue-100/70 mt-1">Validação inteligente para agilizar seu processo.</p>
@@ -636,7 +636,7 @@ export default function DigitalHiringPortalPage() {
                                 className="w-full py-7 rounded-2xl font-bold text-lg shadow-lg shadow-blue-600/20 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
                                 style={{ backgroundColor: primaryColor }}
                             >
-                                {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <ArrowRight className="w-5 h-5" />}
+                                {submitting ? <Loader2 className="w-6 h-6 animate-spin" /> : <ArrowRight className="w-6 h-6" />}
                                 {isFirstAccess ? 'Criar meu Acesso' : 'Entrar no Portal'}
                             </Button>
 
