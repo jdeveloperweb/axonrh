@@ -150,7 +150,8 @@ public class EventService {
 
     private UUID getCurrentEmployeeId() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        return employeeRepository.findByEmail(email)
+        UUID tenantId = getTenantId();
+        return employeeRepository.findByTenantIdAndEmail(tenantId, email)
                 .map(Employee::getId)
                 .orElse(null);
     }
