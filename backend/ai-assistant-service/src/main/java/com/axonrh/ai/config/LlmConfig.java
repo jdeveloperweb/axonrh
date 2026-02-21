@@ -1,10 +1,10 @@
 package com.axonrh.ai.config;
 
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.Duration;
@@ -16,12 +16,8 @@ public class LlmConfig {
     @Value("${ai.openai.api-key:}")
     private String openAiApiKey;
 
-
-
     @Value("${ai.anthropic.api-key:}")
     private String anthropicApiKey;
-
-
 
     @jakarta.annotation.PostConstruct
     public void init() {
@@ -50,10 +46,17 @@ public class LlmConfig {
         if (openAiApiKey == null || openAiApiKey.isBlank()) {
              log.error("Tentando criar OpenAI WebClient com chave vazia!");
         }
+        
+        // Increase buffer size to 10MB to handle large embedding responses
+        ExchangeStrategies strategies = ExchangeStrategies.builder()
+                .codecs(codecs -> codecs.defaultCodecs().maxInMemorySize(10 * 1024 * 1024))
+                .build();
+
         return WebClient.builder()
                 .baseUrl("https://api.openai.com/v1")
                 .defaultHeader("Authorization", "Bearer " + openAiApiKey)
                 .defaultHeader("Content-Type", "application/json")
+                .exchangeStrategies(strategies)
                 .build();
     }
 }
