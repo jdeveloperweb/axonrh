@@ -331,9 +331,19 @@ public class LlmService {
     }
 
     public List<List<Float>> generateEmbeddings(List<String> texts) {
+        if (texts == null || texts.isEmpty()) return new ArrayList<>();
+        
+        // Filter out blank lines and ensure no text is too long (OpenAI limit is ~8k tokens)
+        List<String> validTexts = texts.stream()
+                .filter(t -> t != null && !t.trim().isEmpty())
+                .map(t -> t.length() > 30000 ? t.substring(0, 30000) : t)
+                .collect(Collectors.toList());
+
+        if (validTexts.isEmpty()) return new ArrayList<>();
+
         try {
             Map<String, Object> body = Map.of(
-                    "input", texts,
+                    "input", validTexts,
                     "model", "text-embedding-3-small"
             );
 
@@ -347,11 +357,13 @@ public class LlmService {
                     .block();
 
             List<List<Float>> embeddings = new ArrayList<>();
-            if (response.has("data")) {
+            if (response != null && response.has("data")) {
                 for (JsonNode item : response.get("data")) {
                     List<Float> vector = new ArrayList<>();
-                    for (JsonNode val : item.get("embedding")) {
-                        vector.add(val.floatValue());
+                    if (item.has("embedding")) {
+                        for (JsonNode val : item.get("embedding")) {
+                            vector.add(val.floatValue());
+                        }
                     }
                     embeddings.add(vector);
                 }
@@ -360,9 +372,10 @@ public class LlmService {
 
         } catch (Exception e) {
             log.error("Error generating embeddings: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to generate embeddings", e);
+            throw new RuntimeException("Failed to generate embeddings: " + e.getMessage(), e);
         }
     }
+
 
     private Map<String, Object> buildOpenAiBody(ChatRequest request, boolean stream) {
         List<Map<String, Object>> messages = request.getMessages().stream()

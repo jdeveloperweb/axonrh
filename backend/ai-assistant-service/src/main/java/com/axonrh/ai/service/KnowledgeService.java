@@ -18,6 +18,8 @@ import java.security.MessageDigest;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
+import org.apache.tika.Tika;
+import java.io.InputStream;
 
 @Slf4j
 @Service
@@ -178,19 +180,24 @@ public class KnowledgeService {
         return context.toString();
     }
 
+    private final Tika tika = new Tika();
+
     private String extractContent(MultipartFile file) throws Exception {
-        String filename = file.getOriginalFilename() != null ? file.getOriginalFilename().toLowerCase() : "";
+        log.info("Extracting content from file: {} (Type: {})", file.getOriginalFilename(), file.getContentType());
         
-        if (filename.endsWith(".txt") || (file.getContentType() != null && file.getContentType().contains("text"))) {
-            try (BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
-                return reader.lines().collect(Collectors.joining("\n"));
+        try (InputStream stream = file.getInputStream()) {
+            String content = tika.parseToString(stream);
+            if (content == null || content.isBlank()) {
+                log.warn("Extracted content is empty for file: {}", file.getOriginalFilename());
+                return "";
             }
+            log.info("Successfully extracted {} characters from {}", content.length(), file.getOriginalFilename());
+            return content;
+        } catch (Exception e) {
+            log.error("Failed to extract content with Tika from {}: {}", file.getOriginalFilename(), e.getMessage());
+            // Fallback for simple text files if Tika fails
+            return new String(file.getBytes(), StandardCharsets.UTF_8);
         }
-        
-        // In a production environment with PDFs and DOCX, use Apache Tika
-        // For now, we attempt to read bytes as UTF-8
-        return new String(file.getBytes(), StandardCharsets.UTF_8);
     }
 
     private List<String> chunkContent(String content, int chunkSize, int overlap) {
