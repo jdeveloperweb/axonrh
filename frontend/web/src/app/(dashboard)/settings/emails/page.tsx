@@ -412,165 +412,184 @@ export default function EmailSettingsPage() {
             </Tabs>
 
             <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-                <DialogContent className="max-w-[70vw] max-h-[95vh] flex flex-col p-0 overflow-hidden">
-                    <DialogHeader className="p-6 pb-2">
-                        <DialogTitle className="flex items-center gap-2">
-                            <Layout className="w-5 h-5 text-primary" />
+                <DialogContent className="max-w-[85vw] w-[85vw] h-[90vh] flex flex-col p-0 overflow-hidden bg-white">
+                    <DialogHeader className="p-6 pb-2 border-b">
+                        <DialogTitle className="flex items-center gap-2 text-2xl">
+                            <Layout className="w-6 h-6 text-[var(--color-primary)]" />
                             {editingTemplate?.id ? 'Editar Template' : 'Criar Novo Template'}
                         </DialogTitle>
                         <DialogDescription>
-                            Configure a identidade visual e o conteúdo do seu e-mail.
+                            Configure a identidade visual e o conteúdo do seu e-mail. Utilize o editor à esquerda e veja o resultado em tempo real à direita.
                         </DialogDescription>
                     </DialogHeader>
 
-                    <div className="flex-1 overflow-hidden">
-                        <EditorTabs defaultValue="general" className="h-full flex flex-col">
-                            <div className="px-6 border-b">
-                                <EditorTabsList className="bg-transparent h-auto p-0 gap-6">
-                                    <EditorTabsTrigger value="general" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none py-3 px-0">Informações Gerais</EditorTabsTrigger>
-                                    <EditorTabsTrigger value="content" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none py-3 px-0">Conteúdo HTML</EditorTabsTrigger>
+                    <div className="flex-1 overflow-hidden flex flex-col">
+                        <EditorTabs defaultValue="content" className="flex-1 flex flex-col overflow-hidden">
+                            <div className="px-6 bg-slate-50 border-b">
+                                <EditorTabsList className="bg-transparent h-auto p-0 gap-8">
+                                    <EditorTabsTrigger value="general" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-[var(--color-primary)] rounded-none py-4 px-0 font-semibold transition-all">
+                                        Configurações de Envio
+                                    </EditorTabsTrigger>
+                                    <EditorTabsTrigger value="content" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-[var(--color-primary)] rounded-none py-4 px-0 font-semibold transition-all">
+                                        Editor de Conteúdo
+                                    </EditorTabsTrigger>
                                 </EditorTabsList>
                             </div>
 
-                            <ScrollArea className="flex-1 h-[60vh]">
-                                <EditorTabsContent value="general" className="p-6 m-0 space-y-6">
-                                    <div className="grid grid-cols-2 gap-6">
-                                        <div className="space-y-2">
-                                            <Label className="text-xs uppercase tracking-wider text-muted-foreground">Nome do Template</Label>
-                                            <Input
-                                                placeholder="Ex: Convite de Admissão"
-                                                value={editingTemplate?.name || ''}
-                                                onChange={e => setEditingTemplate({ ...editingTemplate, name: e.target.value })}
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label className="text-xs uppercase tracking-wider text-muted-foreground">Código Único (API)</Label>
-                                            <Input
-                                                placeholder="EX: ADMISSION_INVITE"
-                                                value={editingTemplate?.code || ''}
-                                                readOnly={editingTemplate?.isSystem}
-                                                disabled={editingTemplate?.isSystem}
-                                                className={editingTemplate?.isSystem ? "bg-muted font-mono" : "font-mono uppercase"}
-                                                onChange={e => setEditingTemplate({ ...editingTemplate, code: e.target.value.toUpperCase().replace(/\s/g, '_') })}
-                                            />
-                                        </div>
-                                    </div>
+                            <div className="flex-1 overflow-hidden">
+                                <EditorTabsContent value="general" className="h-full p-0 m-0">
+                                    <ScrollArea className="h-full">
+                                        <div className="p-8 max-w-3xl mx-auto space-y-8">
+                                            <div className="grid grid-cols-2 gap-8">
+                                                <div className="space-y-2">
+                                                    <Label className="text-sm font-bold text-slate-700">NOME DO TEMPLATE</Label>
+                                                    <Input
+                                                        placeholder="Ex: Confirmação de Cadastro"
+                                                        value={editingTemplate?.name || ''}
+                                                        onChange={e => setEditingTemplate({ ...editingTemplate, name: e.target.value })}
+                                                        className="h-12 text-lg"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label className="text-sm font-bold text-slate-700">CÓDIGO (API)</Label>
+                                                    <Input
+                                                        placeholder="EX: WELCOME_EMAIL"
+                                                        value={editingTemplate?.code || ''}
+                                                        readOnly={editingTemplate?.isSystem}
+                                                        className={editingTemplate?.isSystem ? "bg-slate-100 font-mono h-12" : "font-mono uppercase h-12"}
+                                                        onChange={e => setEditingTemplate({ ...editingTemplate, code: e.target.value.toUpperCase().replace(/\s/g, '_') })}
+                                                    />
+                                                </div>
+                                            </div>
 
-                                    <div className="space-y-2">
-                                        <Label className="text-xs uppercase tracking-wider text-muted-foreground">Assunto (Subject)</Label>
-                                        <Input
-                                            placeholder="Assunto que aparecerá na caixa de entrada"
-                                            value={editingTemplate?.subject || ''}
-                                            onChange={e => setEditingTemplate({ ...editingTemplate, subject: e.target.value })}
-                                        />
-                                    </div>
+                                            <div className="space-y-2">
+                                                <Label className="text-sm font-bold text-slate-700">ASSUNTO DO E-MAIL</Label>
+                                                <Input
+                                                    placeholder="Este assunto aparecerá na caixa de entrada do usuário"
+                                                    value={editingTemplate?.subject || ''}
+                                                    onChange={e => setEditingTemplate({ ...editingTemplate, subject: e.target.value })}
+                                                    className="h-12"
+                                                />
+                                            </div>
 
-                                    <div className="space-y-2">
-                                        <Label className="text-xs uppercase tracking-wider text-muted-foreground">Descrição Interna</Label>
-                                        <Textarea
-                                            placeholder="Para que serve este e-mail? (Apenas para organização interna)"
-                                            value={editingTemplate?.description || ''}
-                                            onChange={e => setEditingTemplate({ ...editingTemplate, description: e.target.value })}
-                                            className="h-20"
-                                        />
-                                    </div>
+                                            <div className="space-y-2">
+                                                <Label className="text-sm font-bold text-slate-700">DESCRIÇÃO INTERNA</Label>
+                                                <Textarea
+                                                    placeholder="Descreva brevemente a finalidade deste template..."
+                                                    value={editingTemplate?.description || ''}
+                                                    onChange={e => setEditingTemplate({ ...editingTemplate, description: e.target.value })}
+                                                    className="min-h-[120px] text-base"
+                                                />
+                                            </div>
+                                        </div>
+                                    </ScrollArea>
                                 </EditorTabsContent>
 
-                                <EditorTabsContent value="content" className="p-0 m-0 h-full flex flex-col">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 h-full">
-                                        <div className="p-6 border-r bg-muted/10">
-                                            <div className="flex items-center justify-between mb-4">
-                                                <Label className="flex items-center gap-2">
-                                                    <Code className="w-4 h-4 text-primary" />
-                                                    Editor HTML
-                                                </Label>
-                                                <Badge variant="outline" className="text-[10px]">HTML5 / CSS Linha</Badge>
+                                <EditorTabsContent value="content" className="h-full p-0 m-0">
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 h-full">
+                                        {/* LADO ESQUERDO: EDITOR */}
+                                        <div className="flex flex-col border-r bg-slate-50 overflow-hidden">
+                                            <div className="p-4 border-b bg-white flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <Code className="w-4 h-4 text-[var(--color-primary)]" />
+                                                    <span className="text-xs font-bold text-slate-500 uppercase">Editor HTML Avançado</span>
+                                                </div>
+                                                <Badge variant="outline" className="font-mono text-[10px]">UTF-8</Badge>
                                             </div>
-                                            <Textarea
-                                                className="min-h-[400px] h-[50vh] font-mono text-xs leading-relaxed border-indigo-100 focus:border-indigo-300 resize-none bg-white"
-                                                value={editingTemplate?.bodyHtml || ''}
-                                                onChange={e => setEditingTemplate({ ...editingTemplate, bodyHtml: e.target.value })}
-                                            />
-                                            <div className="mt-4 p-4 rounded-lg bg-indigo-50 border border-indigo-100">
-                                                <div className="flex gap-2 items-start text-indigo-700">
-                                                    <AlertCircle className="w-4 h-4 mt-0.5" />
-                                                    <div className="text-xs leading-normal">
-                                                        <p className="font-semibold mb-1">Dica de Variáveis:</p>
-                                                        Use <code>{"{{candidate_name}}"}</code>, <code>{"{{company_name}}"}</code> ou <code>{"{{action_link}}"}</code> para dados dinâmicos.
-                                                    </div>
+                                            <div className="flex-1 relative">
+                                                <textarea
+                                                    className="w-full h-full p-6 font-mono text-sm leading-relaxed resize-none bg-white border-none focus:ring-0 outline-none"
+                                                    value={editingTemplate?.bodyHtml || ''}
+                                                    onChange={e => setEditingTemplate({ ...editingTemplate, bodyHtml: e.target.value })}
+                                                    spellCheck={false}
+                                                />
+                                            </div>
+                                            <div className="p-4 bg-indigo-50/50 border-t">
+                                                <div className="flex gap-3 text-indigo-700 text-xs items-center">
+                                                    <AlertCircle className="w-4 h-4" />
+                                                    <p>Use <strong>{"{{candidate_name}}"}</strong>, <strong>{"{{company_name}}"}</strong> e <strong>{"{{action_link}}"}</strong></p>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="bg-slate-50 flex flex-col">
-                                            <div className="p-4 border-b flex items-center justify-between">
-                                                <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Visualização Rápida</span>
-                                                <Eye className="w-4 h-4 text-slate-400" />
+
+                                        {/* LADO DIREITO: PREVIEW REAL */}
+                                        <div className="flex flex-col bg-slate-200/50 overflow-hidden">
+                                            <div className="p-4 border-b bg-white flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <Eye className="w-4 h-4 text-slate-400" />
+                                                    <span className="text-xs font-bold text-slate-500 uppercase">Visualização em Tempo Real</span>
+                                                </div>
+                                                <span className="text-[10px] text-slate-400">Renderizando via Sandbox</span>
                                             </div>
-                                            <div className="flex-1 p-8 overflow-auto">
-                                                <div className="bg-white shadow-lg rounded-xl overflow-hidden min-h-[500px] border">
-                                                    <div className="p-3 border-b bg-slate-100 text-[10px] text-slate-500 flex gap-2">
-                                                        <div className="w-2.5 h-2.5 rounded-full bg-rose-400" />
-                                                        <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
-                                                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
-                                                        <span className="ml-2">Preview Automático</span>
+                                            <div className="flex-1 p-8 overflow-hidden flex flex-col items-center">
+                                                <div className="w-full max-w-[600px] h-full bg-white shadow-2xl rounded-2xl overflow-hidden border border-slate-300 flex flex-col">
+                                                    <div className="bg-slate-100 p-3 border-b flex gap-2">
+                                                        <div className="w-3 h-3 rounded-full bg-slate-300" />
+                                                        <div className="w-3 h-3 rounded-full bg-slate-300" />
+                                                        <div className="w-3 h-3 rounded-full bg-slate-300" />
                                                     </div>
-                                                    <div
-                                                        className="email-preview-mini"
-                                                        dangerouslySetInnerHTML={{ __html: (editingTemplate?.bodyHtml || '').replace(/\{\{(\w+)\}\}/g, '<span style="background:rgba(79,70,229,0.1); color:#4f46e5; padding:0 2px; border-radius:2px">[$1]</span>') }}
+                                                    <iframe
+                                                        title="Live Preview"
+                                                        srcDoc={editingTemplate?.bodyHtml || ''}
+                                                        className="w-full flex-1 border-none bg-white"
                                                     />
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </EditorTabsContent>
-                            </ScrollArea>
+                            </div>
                         </EditorTabs>
                     </div>
 
-                    <DialogFooter className="p-6 border-t bg-muted/10 gap-2">
-                        <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancelar</Button>
-                        <Button
-                            className="bg-[var(--color-primary)] hover:opacity-90 transition-all rounded-lg gap-2"
-                            onClick={handleSave}
-                        >
-                            <Save className="w-4 h-4" />
-                            {editingTemplate?.id ? 'Salvar Alterações' : 'Criar Template'}
-                        </Button>
+                    <DialogFooter className="p-6 border-t bg-white flex items-center justify-between">
+                        <div className="text-xs text-slate-400">
+                            As alterações não afetarão e-mails já enviados.
+                        </div>
+                        <div className="flex gap-3">
+                            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} className="h-11 px-6">Encerrar</Button>
+                            <Button
+                                className="bg-[var(--color-primary)] hover:opacity-90 h-11 px-8 rounded-lg gap-2 shadow-lg shadow-[var(--color-primary)]/20"
+                                onClick={handleSave}
+                            >
+                                <Save className="w-4 h-4" />
+                                {editingTemplate?.id ? 'Atualizar Template' : 'Criar Template'}
+                            </Button>
+                        </div>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
 
             <Dialog open={isPreviewDialogOpen} onOpenChange={setIsPreviewDialogOpen}>
-                <DialogContent className="max-w-2xl bg-slate-100">
-                    <DialogHeader>
-                        <DialogTitle>Visualização Real</DialogTitle>
-                        <DialogDescription>
-                            Simulação de como o e-mail aparecerá para o destinatário final.
-                        </DialogDescription>
+                <DialogContent className="max-w-3xl h-[85vh] p-0 flex flex-col overflow-hidden">
+                    <DialogHeader className="p-6 border-b">
+                        <DialogTitle className="flex items-center gap-3">
+                            <Eye className="w-6 h-6 text-primary" />
+                            Visualização Final do Destinatário
+                        </DialogTitle>
                     </DialogHeader>
 
-                    <div className="border border-slate-200 rounded-xl overflow-hidden mt-4 shadow-xl bg-white">
-                        <div className="bg-slate-50 p-4 border-b flex flex-col gap-1">
-                            <p className="text-[10px] text-slate-400 uppercase font-bold tracking-tight">Assunto:</p>
-                            <p className="font-semibold text-sm text-slate-800">{previewContent?.subject}</p>
+                    <div className="flex-1 bg-slate-100 p-8 overflow-hidden flex flex-col items-center">
+                        <div className="w-full h-full bg-white shadow-xl rounded-xl border border-slate-200 flex flex-col overflow-hidden max-w-[600px]">
+                            <div className="p-5 border-b bg-slate-50 space-y-1">
+                                <div className="flex gap-2 text-[10px] items-center text-slate-400 font-bold uppercase tracking-widest">
+                                    Assunto:
+                                </div>
+                                <div className="text-sm font-semibold text-slate-800">{previewContent?.subject}</div>
+                            </div>
+                            <iframe
+                                title="Final Preview"
+                                srcDoc={previewContent?.bodyHtml || ''}
+                                className="w-full flex-1 border-none"
+                            />
                         </div>
-                        <div
-                            className="max-h-[500px] overflow-auto email-preview-container"
-                            dangerouslySetInnerHTML={{ __html: previewContent?.bodyHtml || '' }}
-                        />
                     </div>
 
-                    <DialogFooter>
-                        <Button onClick={() => setIsPreviewDialogOpen(false)}>Fechar Preview</Button>
+                    <DialogFooter className="p-4 border-t px-6">
+                        <Button onClick={() => setIsPreviewDialogOpen(false)} className="px-8 h-10">Concluído</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-
-            <style jsx global>{`
-                .email-preview-container iframe { width: 100%; border: none; }
-                .email-preview-mini { font-size: 0.8rem; transform-origin: top left; }
-                .email-preview-mini * { max-width: 100%; }
-            `}</style>
         </div>
     );
 }
