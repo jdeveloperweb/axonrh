@@ -143,7 +143,7 @@ public class KnowledgeService {
                 allResults = chunkStream
                         .map(chunk -> {
                             float similarity = cosineSimilarity(queryEmbedding, chunk.getEmbedding());
-                            if (similarity < 0.60) return null;
+                            if (similarity < 0.45) return null;
                             
                             return SearchResult.builder()
                                     .id(chunk.getId())

@@ -478,8 +478,10 @@ public class ConversationService {
             - Consultar dados de funcionários e folha de pagamento
             - Explicar legislação trabalhista brasileira
 
-            Sempre responda em português brasileiro. Seja preciso com números e datas.
-            Cite a legislação quando relevante (CLT, eSocial).
+            IMPORTANTE - BASE DE CONHECIMENTO:
+            - Quando o usuário perguntar sobre regras da empresa, políticas de RH, manuais técnicos, procedimentos ou qualquer documento interno, você DEVE usar a ferramenta 'buscar_base_conhecimento' PRIMEIRO.
+            - Nunca diga que não sabe uma regra da empresa sem antes tentar buscar na base de conhecimento.
+            - Se encontrar a informação, cite o documento de onde ela veio.
 
             IMPORTANTE - ACESSO A DADOS:
             - Você está sendo acessado por usuários do RH e administradores que têm acesso TOTAL a todos os dados
