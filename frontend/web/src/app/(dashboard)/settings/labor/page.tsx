@@ -91,6 +91,8 @@ export default function LaborSettingsPage() {
         name: '',
         contractType: 'CLT',
         templateContent: '',
+        confidentialityContent: '',
+        policyContent: '',
         isDefault: true
     });
 
@@ -694,20 +696,22 @@ export default function LaborSettingsPage() {
                             </div>
                         </div>
 
-                        <Tabs defaultValue="editor" className="w-full">
-                            <TabsList className="grid w-full grid-cols-2 mb-6 bg-slate-100 p-1">
-                                <TabsTrigger value="editor">Editor HTML</TabsTrigger>
-                                <TabsTrigger value="preview">Visualização (Preview)</TabsTrigger>
+                        <Tabs defaultValue="contract" className="w-full">
+                            <TabsList className="grid w-full grid-cols-4 mb-6 bg-slate-100 p-1">
+                                <TabsTrigger value="contract">Contrato</TabsTrigger>
+                                <TabsTrigger value="confidentiality">Confidencialidade</TabsTrigger>
+                                <TabsTrigger value="policy">Política Interna</TabsTrigger>
+                                <TabsTrigger value="preview">Visualização</TabsTrigger>
                             </TabsList>
 
-                            <TabsContent value="editor" className="space-y-4">
+                            <TabsContent value="contract" className="space-y-4">
                                 <div className="space-y-2">
                                     <Label className="flex justify-between items-center">
-                                        Conteúdo (HTML)
-                                        <span className="text-[10px] text-slate-400 font-normal">Suporta tags HTML como &lt;h2&gt;, &lt;p&gt;, &lt;strong&gt;</span>
+                                        Conteúdo do Contrato (HTML)
+                                        <span className="text-[10px] text-slate-400 font-normal">Corpo principal do contrato</span>
                                     </Label>
                                     <Textarea
-                                        className="min-h-[500px] font-mono text-sm p-4 bg-slate-50 border-slate-200 focus:bg-white resize-none"
+                                        className="min-h-[400px] font-mono text-sm p-4 bg-slate-50 border-slate-200 focus:bg-white resize-none"
                                         value={currentTemplate.templateContent}
                                         onChange={e => setCurrentTemplate({ ...currentTemplate, templateContent: e.target.value })}
                                         placeholder="Coloque aqui o HTML do seu contrato..."
@@ -722,28 +726,102 @@ export default function LaborSettingsPage() {
                                 </div>
                             </TabsContent>
 
-                            <TabsContent value="preview">
-                                <div className="bg-slate-100/50 p-8 rounded-2xl border border-dashed border-slate-300 min-h-[600px] flex flex-col">
-                                    <div className="bg-white shadow-2xl border-2 border-white mx-auto p-16 max-w-[800px] w-full min-h-[1000px] overflow-auto text-slate-900 break-words font-serif leading-relaxed">
-                                        <div
-                                            className="template-preview-content"
-                                            dangerouslySetInnerHTML={{
-                                                __html: currentTemplate.templateContent ?
-                                                    currentTemplate.templateContent
-                                                        .replaceAll('{{NOME}}', '<span class="bg-yellow-100 px-1 rounded font-sans text-xs font-bold">Mariana Barbosa Cardoso</span>')
-                                                        .replaceAll('{{CPF}}', '<span class="bg-yellow-100 px-1 rounded font-sans text-xs font-bold">123.456.789-00</span>')
-                                                        .replaceAll('{{CARGO}}', '<span class="bg-yellow-100 px-1 rounded font-sans text-xs font-bold">Analista de Marketing</span>')
-                                                        .replaceAll('{{DEPARTAMENTO}}', '<span class="bg-yellow-100 px-1 rounded font-sans text-xs font-bold">Marketing Digital</span>')
-                                                        .replaceAll('{{SALARIO}}', '<span class="bg-yellow-100 px-1 rounded font-sans text-xs font-bold">R$ 4.500,00</span>')
-                                                        .replaceAll('{{DATA_INICIO}}', '<span class="bg-yellow-100 px-1 rounded font-sans text-xs font-bold">01/03/2026</span>')
-                                                        .replaceAll('{{TIPO_CONTRATO}}', '<span class="bg-yellow-100 px-1 rounded font-sans text-xs font-bold">CLT</span>')
-                                                        .replaceAll('{{EMPRESA_NOME}}', '<span class="bg-yellow-100 px-1 rounded font-sans text-xs font-bold">Axon Tecnologia LTDA</span>')
-                                                        .replaceAll('{{EMPRESA_CNPJ}}', '<span class="bg-yellow-100 px-1 rounded font-sans text-xs font-bold">00.123.456/0001-99</span>')
-                                                        .replaceAll('{{EMPRESA_ENDERECO}}', '<span class="bg-yellow-100 px-1 rounded font-sans text-xs font-bold">Av. Paulista, 1000 - São Paulo, SP</span>')
-                                                    : '<div class="flex flex-col items-center justify-center py-40 text-slate-300 italic"><p>O conteúdo visualizado aparecerá aqui.</p></div>'
-                                            }}
-                                        />
+                            <TabsContent value="confidentiality" className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label className="flex justify-between items-center">
+                                        Termo de Confidencialidade (HTML)
+                                        <span className="text-[10px] text-slate-400 font-normal">Exibido para aceite do candidato</span>
+                                    </Label>
+                                    <Textarea
+                                        className="min-h-[400px] font-mono text-sm p-4 bg-slate-50 border-slate-200 focus:bg-white resize-none"
+                                        value={currentTemplate.confidentialityContent}
+                                        onChange={e => setCurrentTemplate({ ...currentTemplate, confidentialityContent: e.target.value })}
+                                        placeholder="Conteúdo do termo de confidencialidade..."
+                                    />
+                                </div>
+                            </TabsContent>
+
+                            <TabsContent value="policy" className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label className="flex justify-between items-center">
+                                        Política Interna (HTML)
+                                        <span className="text-[10px] text-slate-400 font-normal">Diretrizes da empresa</span>
+                                    </Label>
+                                    <Textarea
+                                        className="min-h-[400px] font-mono text-sm p-4 bg-slate-50 border-slate-200 focus:bg-white resize-none"
+                                        value={currentTemplate.policyContent}
+                                        onChange={e => setCurrentTemplate({ ...currentTemplate, policyContent: e.target.value })}
+                                        placeholder="Conteúdo da política interna..."
+                                    />
+                                </div>
+                            </TabsContent>
+
+                            <TabsContent value="preview" className="space-y-8">
+                                <div className="bg-slate-100/50 p-8 rounded-2xl border border-dashed border-slate-300 min-h-[600px] flex flex-col gap-8">
+                                    {/* Preview Contrato */}
+                                    <div className="space-y-2">
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Documento 1: Contrato de Trabalho</span>
+                                        <div className="bg-white shadow-xl border-2 border-white p-12 w-full min-h-[400px] overflow-auto text-slate-900 break-words font-serif leading-relaxed">
+                                            <div
+                                                className="template-preview-content"
+                                                dangerouslySetInnerHTML={{
+                                                    __html: currentTemplate.templateContent ?
+                                                        currentTemplate.templateContent
+                                                            .replaceAll('{{NOME}}', '<span class="bg-yellow-100 px-1 rounded font-sans text-xs font-bold">Mariana Barbosa Cardoso</span>')
+                                                            .replaceAll('{{CPF}}', '<span class="bg-yellow-100 px-1 rounded font-sans text-xs font-bold">123.456.789-00</span>')
+                                                            .replaceAll('{{CARGO}}', '<span class="bg-yellow-100 px-1 rounded font-sans text-xs font-bold">Analista de Marketing</span>')
+                                                            .replaceAll('{{DEPARTAMENTO}}', '<span class="bg-yellow-100 px-1 rounded font-sans text-xs font-bold">Marketing Digital</span>')
+                                                            .replaceAll('{{SALARIO}}', '<span class="bg-yellow-100 px-1 rounded font-sans text-xs font-bold">R$ 4.500,00</span>')
+                                                            .replaceAll('{{DATA_INICIO}}', '<span class="bg-yellow-100 px-1 rounded font-sans text-xs font-bold">01/03/2026</span>')
+                                                            .replaceAll('{{TIPO_CONTRATO}}', '<span class="bg-yellow-100 px-1 rounded font-sans text-xs font-bold">CLT</span>')
+                                                            .replaceAll('{{EMPRESA_NOME}}', '<span class="bg-yellow-100 px-1 rounded font-sans text-xs font-bold">Axon Tecnologia LTDA</span>')
+                                                            .replaceAll('{{EMPRESA_CNPJ}}', '<span class="bg-yellow-100 px-1 rounded font-sans text-xs font-bold">00.123.456/0001-99</span>')
+                                                            .replaceAll('{{EMPRESA_ENDERECO}}', '<span class="bg-yellow-100 px-1 rounded font-sans text-xs font-bold">Av. Paulista, 1000 - São Paulo, SP</span>')
+                                                        : '<div class="flex flex-col items-center justify-center py-20 text-slate-300 italic"><p>Sem conteúdo de contrato.</p></div>'
+                                                }}
+                                            />
+                                        </div>
                                     </div>
+
+                                    {/* Preview Confidencialidade */}
+                                    <div className="space-y-2">
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Documento 2: Termo de Confidencialidade</span>
+                                        <div className="bg-white shadow-xl border-2 border-white p-8 w-full min-h-[200px] overflow-auto text-slate-900 break-words font-sans leading-relaxed rounded-lg">
+                                            <div
+                                                className="template-preview-content"
+                                                dangerouslySetInnerHTML={{
+                                                    __html: currentTemplate.confidentialityContent ?
+                                                        currentTemplate.confidentialityContent
+                                                            .replaceAll('{{NOME}}', '<span class="bg-yellow-100 px-1 rounded font-sans text-xs font-bold">Mariana Barbosa Cardoso</span>')
+                                                        : '<div class="flex flex-col items-center justify-center py-10 text-slate-300 italic"><p>Sem termo de confidencialidade personalizado.</p></div>'
+                                                }}
+                                            />
+                                            <div className="mt-6 flex items-center gap-2 text-sm text-slate-500 border-t pt-4">
+                                                <div className="w-4 h-4 border rounded bg-slate-50" />
+                                                <span>Li e aceito o termo de confidencialidade</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Preview Política */}
+                                    <div className="space-y-2">
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">Documento 3: Política Interna</span>
+                                        <div className="bg-white shadow-xl border-2 border-white p-8 w-full min-h-[200px] overflow-auto text-slate-900 break-words font-sans leading-relaxed rounded-lg">
+                                            <div
+                                                className="template-preview-content"
+                                                dangerouslySetInnerHTML={{
+                                                    __html: currentTemplate.policyContent ?
+                                                        currentTemplate.policyContent
+                                                        : '<div class="flex flex-col items-center justify-center py-10 text-slate-300 italic"><p>Sem política interna personalizada.</p></div>'
+                                                }}
+                                            />
+                                            <div className="mt-6 flex items-center gap-2 text-sm text-slate-500 border-t pt-4">
+                                                <div className="w-4 h-4 border rounded bg-slate-50" />
+                                                <span>Li e aceito a política interna da empresa</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <div className="mt-6 flex items-center justify-center gap-4 text-[10px] text-slate-500 font-medium">
                                         <div className="flex items-center gap-1">
                                             <div className="w-3 h-3 bg-yellow-100 border border-yellow-200 rounded" />

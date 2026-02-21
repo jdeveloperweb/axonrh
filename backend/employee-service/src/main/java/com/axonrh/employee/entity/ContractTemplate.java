@@ -42,12 +42,20 @@ public class ContractTemplate {
     @Column(name = "contract_type", nullable = false, length = 30)
     private String contractType;
 
-    /**
-     * Conteudo HTML do template com variaveis.
-     * Variaveis: {{NOME}}, {{CPF}}, {{CARGO}}, {{SALARIO}}, etc.
-     */
     @Column(name = "template_content", columnDefinition = "TEXT", nullable = false)
     private String templateContent;
+
+    /**
+     * Termo de confidencialidade customizado.
+     */
+    @Column(name = "confidentiality_content", columnDefinition = "TEXT")
+    private String confidentialityContent;
+
+    /**
+     * Politica interna customizada.
+     */
+    @Column(name = "policy_content", columnDefinition = "TEXT")
+    private String policyContent;
 
     /**
      * Lista de variaveis disponiveis (CSV).

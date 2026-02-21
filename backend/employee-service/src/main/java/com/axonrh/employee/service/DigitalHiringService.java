@@ -586,7 +586,7 @@ public class DigitalHiringService {
                 "confidentialityHtml", process.getConfidentialityHtml() != null ?
                         process.getConfidentialityHtml() : generateDefaultConfidentiality(process),
                 "policyHtml", process.getPolicyHtml() != null ?
-                        process.getPolicyHtml() : generateDefaultPolicy()
+                        process.getPolicyHtml() : generateDefaultPolicy(process)
         );
     }
 
@@ -921,8 +921,17 @@ public class DigitalHiringService {
     }
 
     private String generateDefaultConfidentiality(DigitalHiringProcess process) {
+        String employmentType = process.getEmploymentType() != null ? process.getEmploymentType() : "CLT";
+        Optional<ContractTemplate> templateOpt = contractTemplateRepository
+                .findByTenantIdAndContractTypeAndIsDefaultTrue(process.getTenantId(), employmentType);
+
+        if (templateOpt.isPresent() && templateOpt.get().getConfidentialityContent() != null && !templateOpt.get().getConfidentialityContent().isBlank()) {
+            return templateOpt.get().getConfidentialityContent()
+                    .replace("{{NOME}}", process.getCandidateName());
+        }
+
         return """
-                <h2>TERMO DE CONFIDENCIALIDADE</h2>
+                <h2 style="font-size: 1.25rem; font-weight: bold; margin-bottom: 1rem;">TERMO DE CONFIDENCIALIDADE</h2>
                 <p>Eu, <strong>%s</strong>, comprometo-me a manter sigilo absoluto sobre todas as informacoes
                 confidenciais e/ou privilegiadas a que tiver acesso no exercicio de minhas funcoes.</p>
                 <p>Este compromisso abrange informacoes tecnicas, comerciais, financeiras e estrategicas
@@ -932,18 +941,26 @@ public class DigitalHiringService {
                 """.formatted(process.getCandidateName());
     }
 
-    private String generateDefaultPolicy() {
+    private String generateDefaultPolicy(DigitalHiringProcess process) {
+        String employmentType = process.getEmploymentType() != null ? process.getEmploymentType() : "CLT";
+        Optional<ContractTemplate> templateOpt = contractTemplateRepository
+                .findByTenantIdAndContractTypeAndIsDefaultTrue(process.getTenantId(), employmentType);
+
+        if (templateOpt.isPresent() && templateOpt.get().getPolicyContent() != null && !templateOpt.get().getPolicyContent().isBlank()) {
+            return templateOpt.get().getPolicyContent();
+        }
+
         return """
-                <h2>POLITICA INTERNA</h2>
+                <h2 style="font-size: 1.25rem; font-weight: bold; margin-bottom: 1rem;">POLITICA INTERNA</h2>
                 <p>Ao aceitar este termo, declaro estar ciente e de acordo com as politicas internas da empresa,
                 incluindo:</p>
-                <ul>
+                <ul style="list-style-type: disc; margin-left: 1.5rem; margin-top: 0.5rem;">
                 <li>Codigo de etica e conduta</li>
                 <li>Politica de seguranca da informacao</li>
                 <li>Politica de uso de recursos de TI</li>
                 <li>Regulamento interno de trabalho</li>
                 </ul>
-                <p>Comprometo-me a cumprir integralmente todas as normas estabelecidas.</p>
+                <p style="margin-top: 1rem;">Comprometo-me a cumprir integralmente todas as normas estabelecidas.</p>
                 """;
     }
 
