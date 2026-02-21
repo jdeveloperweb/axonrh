@@ -200,6 +200,26 @@ public class EmailService {
     }
 
     /**
+     * Busca template por código.
+     */
+    public EmailTemplate getTemplateByCode(UUID tenantId, String code) {
+        return templateRepository.findByTenantIdAndCode(tenantId, code)
+                .or(() -> templateRepository.findSystemTemplate(SYSTEM_TENANT_ID, code))
+                .orElseThrow(() -> new IllegalArgumentException("Template não encontrado: " + code));
+    }
+
+    /**
+     * Gera preview do template com as variáveis.
+     */
+    public Map<String, String> previewTemplate(UUID tenantId, String code, Map<String, String> variables) {
+        EmailTemplate template = getTemplateByCode(tenantId, code);
+        return Map.of(
+            "subject", replaceVariables(template.getSubject(), variables),
+            "bodyHtml", replaceVariables(template.getBodyHtml(), variables)
+        );
+    }
+
+    /**
      * Busca histórico de emails.
      */
     public List<EmailLog> getEmailHistory(UUID tenantId, String recipientEmail) {

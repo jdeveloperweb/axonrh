@@ -12,7 +12,8 @@ import {
     Network,
     Gavel,
     Lock,
-    GraduationCap
+    GraduationCap,
+    Mail
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuthStore } from '@/stores/auth-store';
@@ -72,6 +73,14 @@ const settingsItems = [
         icon: GraduationCap,
         href: '/settings/learning',
         color: 'bg-rose-500',
+        adminOnly: true
+    },
+    {
+        title: 'E-mails e Mensagens',
+        description: 'Configure servidores de e-mail, gerencie templates e comunicações.',
+        icon: Mail,
+        href: '/settings/emails',
+        color: 'bg-cyan-500',
         adminOnly: true
     }
 ];

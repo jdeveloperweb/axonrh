@@ -185,8 +185,14 @@ export const emailApi = {
   listTemplates: () =>
     api.get<EmailTemplate[]>('/notifications/email/templates'),
 
+  getTemplate: (code: string) =>
+    api.get<EmailTemplate>(`/notifications/email/templates/${code}`),
+
   createTemplate: (template: Partial<EmailTemplate>) =>
     api.post<EmailTemplate>('/notifications/email/templates', template),
+
+  previewTemplate: (code: string, variables: Record<string, string>) =>
+    api.post<{ subject: string; bodyHtml: string }>(`/notifications/email/templates/${code}/preview`, variables),
 
   getHistory: (recipientEmail?: string) =>
     api.get<EmailLog[]>(`/notifications/email/history${recipientEmail ? `?recipientEmail=${recipientEmail}` : ''}`),

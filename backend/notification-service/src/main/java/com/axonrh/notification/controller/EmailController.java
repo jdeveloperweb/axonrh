@@ -62,12 +62,29 @@ public class EmailController {
         return ResponseEntity.ok(emailService.listTemplates(tenantId));
     }
 
+    @GetMapping("/templates/{code}")
+    public ResponseEntity<EmailTemplate> getTemplateByCode(
+            @RequestHeader("X-Tenant-ID") UUID tenantId,
+            @PathVariable String code) {
+
+        return ResponseEntity.ok(emailService.getTemplateByCode(tenantId, code));
+    }
+
     @PostMapping("/templates")
     public ResponseEntity<EmailTemplate> createTemplate(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @RequestBody EmailTemplate template) {
 
         return ResponseEntity.ok(emailService.saveTemplate(tenantId, template));
+    }
+
+    @PostMapping("/templates/{code}/preview")
+    public ResponseEntity<Map<String, String>> previewTemplate(
+            @RequestHeader("X-Tenant-ID") UUID tenantId,
+            @PathVariable String code,
+            @RequestBody Map<String, String> variables) {
+
+        return ResponseEntity.ok(emailService.previewTemplate(tenantId, code, variables));
     }
 
     @GetMapping("/history")
