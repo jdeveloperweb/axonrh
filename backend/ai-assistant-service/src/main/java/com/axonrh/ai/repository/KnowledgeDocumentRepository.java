@@ -33,9 +33,9 @@ public interface KnowledgeDocumentRepository extends JpaRepository<KnowledgeDocu
                                              @Param("search") String search,
                                              Pageable pageable);
 
-    @Query("SELECT COUNT(d) FROM KnowledgeDocument d WHERE d.tenantId = :tenantId AND d.isIndexed = true")
+    @Query("SELECT COUNT(d) FROM KnowledgeDocument d WHERE d.tenantId = :tenantId AND d.isIndexed = true AND d.isActive = true")
     long countIndexedDocuments(@Param("tenantId") UUID tenantId);
 
-    @Query("SELECT SUM(d.chunkCount) FROM KnowledgeDocument d WHERE d.tenantId = :tenantId AND d.isIndexed = true")
+    @Query("SELECT SUM(d.chunkCount) FROM KnowledgeDocument d WHERE d.tenantId = :tenantId AND d.isIndexed = true AND d.isActive = true")
     Long sumChunkCount(@Param("tenantId") UUID tenantId);
 }

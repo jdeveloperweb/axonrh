@@ -17,7 +17,9 @@ import {
     Users,
     AlertCircle,
     Copy,
-    ExternalLink
+    ExternalLink,
+    Code,
+    Layout
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -45,6 +47,46 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs as EditorTabs, TabsList as EditorTabsList, TabsTrigger as EditorTabsTrigger, TabsContent as EditorTabsContent } from '@/components/ui/tabs';
+
+const MODERN_TEMPLATE_BOILERPLATE = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background-color: #f8fafc; margin: 0; padding: 0; }
+        .wrapper { padding: 40px 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        .header { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); padding: 40px 20px; text-align: center; color: #ffffff; }
+        .content { padding: 40px 30px; color: #334155; line-height: 1.6; }
+        .footer { padding: 20px; text-align: center; color: #94a3b8; font-size: 12px; border-top: 1px solid #f1f5f9; }
+        .button { display: inline-block; padding: 12px 24px; background-color: #4f46e5; color: #ffffff !important; text-decoration: none; border-radius: 8px; font-weight: 600; margin-top: 20px; }
+        h1 { margin: 0; font-size: 24px; font-weight: 700; color: #ffffff; }
+        p { margin-bottom: 16px; font-size: 16px; }
+        .highlight { color: #4f46e5; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <div class="header">
+                <h1>AxonRH</h1>
+            </div>
+            <div class="content">
+                <p>Olá <strong>{{candidate_name}}</strong>,</p>
+                <p>Temos uma atualização importante sobre o seu processo na <span class="highlight">{{company_name}}</span>.</p>
+                <p>Estamos felizes em tê-lo conosco nesta jornada. Por favor, clique no botão abaixo para prosseguir:</p>
+                <a href="{{action_link}}" class="button">Acessar Portal</a>
+                <p style="margin-top: 30px; font-size: 14px; color: #64748b;">Se o botão não funcionar, copie este link: <br> {{action_link}}</p>
+            </div>
+            <div class="footer">
+                &copy; 2026 AxonRH - Inteligência em Gestão de Pessoas
+            </div>
+        </div>
+    </div>
+</body>
+</html>`;
 
 export default function EmailSettingsPage() {
     const { toast } = useToast();
@@ -70,7 +112,6 @@ export default function EmailSettingsPage() {
             ]);
 
             console.log('Templates carregados:', templatesRes.data);
-
             setTemplates(templatesRes.data || []);
             setLogs(logsRes.data || []);
         } catch (error) {
@@ -91,6 +132,20 @@ export default function EmailSettingsPage() {
         loadData();
     }, [loadData]);
 
+    const handleCreate = () => {
+        setEditingTemplate({
+            name: '',
+            code: '',
+            subject: 'Novo E-mail',
+            bodyHtml: MODERN_TEMPLATE_BOILERPLATE,
+            isActive: true,
+            isSystem: false,
+            description: '',
+            category: 'SYSTEM'
+        });
+        setIsEditDialogOpen(true);
+    };
+
     const handleEdit = (template: EmailTemplate) => {
         setEditingTemplate({ ...template });
         setIsEditDialogOpen(true);
@@ -98,6 +153,14 @@ export default function EmailSettingsPage() {
 
     const handleSave = async () => {
         if (!editingTemplate) return;
+        if (!editingTemplate.name || !editingTemplate.code || !editingTemplate.subject) {
+            toast({
+                title: 'Campos Obrigatórios',
+                description: 'Por favor, preencha Nome, Código e Assunto.',
+                variant: 'destructive',
+            });
+            return;
+        }
 
         try {
             await emailApi.createTemplate(editingTemplate);
@@ -111,7 +174,7 @@ export default function EmailSettingsPage() {
             console.error('Error saving template:', error);
             toast({
                 title: 'Erro',
-                description: 'Erro ao salvar o template.',
+                description: 'Erro ao salvar o template. Verifique se o código já existe.',
                 variant: 'destructive',
             });
         }
@@ -119,12 +182,12 @@ export default function EmailSettingsPage() {
 
     const handlePreview = async (code: string) => {
         try {
-            // Mock variables for preview
             const variables: Record<string, string> = {
                 candidate_name: 'João Silva',
                 employee_name: 'João Silva',
                 company_name: 'AxonRH',
                 hiring_link: 'http://localhost:3000/contratacao/abc123',
+                action_link: 'http://localhost:3000/portal',
                 expires_at: '28/02/2026',
                 start_date: '01/03/2026',
                 end_date: '30/03/2026',
@@ -138,7 +201,7 @@ export default function EmailSettingsPage() {
             console.error('Error generating preview:', error);
             toast({
                 title: 'Erro',
-                description: 'Erro ao gerar o preview do e-mail.',
+                description: 'Erro ao gerar o preview. Salve o template primeiro se for novo.',
                 variant: 'destructive',
             });
         }
@@ -181,7 +244,6 @@ export default function EmailSettingsPage() {
                     </TabsTrigger>
                 </TabsList>
 
-                {/* --- TEMPLATES TAB --- */}
                 <TabsContent value="templates" className="space-y-6">
                     <div className="flex items-center gap-4 bg-[var(--color-surface)] p-2 rounded-xl shadow-sm border border-[var(--color-border)]">
                         <div className="relative flex-1">
@@ -193,47 +255,60 @@ export default function EmailSettingsPage() {
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
-                        <Button className="bg-[var(--color-primary)] hover:opacity-90 transition-all rounded-lg gap-2">
+                        <Button
+                            onClick={handleCreate}
+                            className="bg-[var(--color-primary)] hover:opacity-90 transition-all rounded-lg gap-2"
+                        >
                             <Plus className="w-4 h-4" />
                             Novo Template
                         </Button>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filteredTemplates.map((template) => (
-                            <Card key={template.id} className="group hover:shadow-md transition-all border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden">
-                                <CardHeader className="pb-4">
-                                    <div className="flex items-start justify-between mb-2">
-                                        <Badge variant={template.isSystem ? "secondary" : "outline"} className="rounded-md uppercase text-[10px] tracking-wider">
-                                            {template.isSystem ? "Sistema" : "Personalizado"}
-                                        </Badge>
-                                        <div className="flex gap-1 h-0 group-hover:h-auto opacity-0 group-hover:opacity-100 transition-all">
-                                            <Button variant="ghost" size="icon" className="w-8 h-8 text-[var(--color-text-secondary)]" onClick={() => handleEdit(template)}>
-                                                <Edit className="w-4 h-4" />
-                                            </Button>
-                                            <Button variant="ghost" size="icon" className="w-8 h-8 text-blue-500" onClick={() => handlePreview(template.code)}>
-                                                <Eye className="w-4 h-4" />
-                                            </Button>
+                    {filteredTemplates.length === 0 ? (
+                        <Card className="p-12 text-center border-dashed border-2">
+                            <Mail className="w-12 h-12 mx-auto text-muted-foreground mb-4 opacity-20" />
+                            <h3 className="text-lg font-medium">Nenhum template encontrado</h3>
+                            <p className="text-muted-foreground mb-6">Comece criando um novo template personalizado.</p>
+                            <Button onClick={handleCreate} variant="outline" className="gap-2">
+                                <Plus className="w-4 h-4" /> Criar Primeiro Template
+                            </Button>
+                        </Card>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {filteredTemplates.map((template) => (
+                                <Card key={template.id} className="group hover:shadow-md transition-all border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden">
+                                    <CardHeader className="pb-4">
+                                        <div className="flex items-start justify-between mb-2">
+                                            <Badge variant={template.isSystem ? "secondary" : "outline"} className="rounded-md uppercase text-[10px] tracking-wider">
+                                                {template.isSystem ? "Sistema" : "Personalizado"}
+                                            </Badge>
+                                            <div className="flex gap-1 h-0 group-hover:h-auto opacity-0 group-hover:opacity-100 transition-all">
+                                                <Button variant="ghost" size="icon" className="w-8 h-8 text-[var(--color-text-secondary)]" onClick={() => handleEdit(template)}>
+                                                    <Edit className="w-4 h-4" />
+                                                </Button>
+                                                <Button variant="ghost" size="icon" className="w-8 h-8 text-blue-500" onClick={() => handlePreview(template.code)}>
+                                                    <Eye className="w-4 h-4" />
+                                                </Button>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <CardTitle className="text-lg font-bold">{template.name}</CardTitle>
-                                    <code className="text-[10px] text-blue-600 font-mono bg-blue-50 px-1.5 py-0.5 rounded">{template.code}</code>
-                                </CardHeader>
-                                <CardContent>
-                                    <p className="text-sm text-[var(--color-text-secondary)] min-h-[40px] line-clamp-2 mb-4">
-                                        {template.description || "Sem descrição disponível."}
-                                    </p>
-                                    <div className="flex items-center gap-2 text-xs text-[var(--color-text-tertiary)] pt-4 border-t border-[var(--color-border)]">
-                                        <Users className="w-3.5 h-3.5" />
-                                        <span>Template para {template.category?.toLowerCase() || 'geral'}</span>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
+                                        <CardTitle className="text-lg font-bold truncate pr-16">{template.name}</CardTitle>
+                                        <code className="text-[10px] text-blue-600 font-mono bg-blue-50 px-1.5 py-0.5 rounded">{template.code}</code>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <p className="text-sm text-[var(--color-text-secondary)] min-h-[40px] line-clamp-2 mb-4">
+                                            {template.description || "Sem descrição disponível."}
+                                        </p>
+                                        <div className="flex items-center gap-2 text-xs text-[var(--color-text-tertiary)] pt-4 border-t border-[var(--color-border)]">
+                                            <Users className="w-3.5 h-3.5" />
+                                            <span>Template para {template.category?.toLowerCase() || 'geral'}</span>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                    )}
                 </TabsContent>
 
-                {/* --- HISTORY TAB --- */}
                 <TabsContent value="history">
                     <Card className="border-none shadow-sm bg-[var(--color-surface)]">
                         <Table>
@@ -244,46 +319,47 @@ export default function EmailSettingsPage() {
                                     <TableHead>Template</TableHead>
                                     <TableHead>Data</TableHead>
                                     <TableHead>Status</TableHead>
-                                    <TableHead className="text-right">Ações</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {logs.map((log) => (
-                                    <TableRow key={log.id}>
-                                        <TableCell>
-                                            <div className="flex flex-col">
-                                                <span className="font-medium text-[var(--color-text-primary)]">{log.recipientName || 'N/A'}</span>
-                                                <span className="text-xs text-[var(--color-text-secondary)]">{log.recipientEmail}</span>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="max-w-[200px] truncate">{log.subject}</TableCell>
-                                        <TableCell>
-                                            <Badge variant="outline" className="font-mono text-[10px]">{log.templateCode || 'Custom'}</Badge>
-                                        </TableCell>
-                                        <TableCell className="text-xs">
-                                            {new Date(log.createdAt).toLocaleString('pt-BR')}
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge className={
-                                                log.status === 'SENT' || log.status === 'DELIVERED' ? 'bg-emerald-500' :
-                                                    log.status === 'FAILED' ? 'bg-rose-500' : 'bg-amber-500'
-                                            }>
-                                                {log.status}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <Button variant="ghost" size="icon" className="w-8 h-8">
-                                                <Eye className="w-4 h-4" />
-                                            </Button>
+                                {logs.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
+                                            Nenhum log de envio encontrado.
                                         </TableCell>
                                     </TableRow>
-                                ))}
+                                ) : (
+                                    logs.map((log) => (
+                                        <TableRow key={log.id}>
+                                            <TableCell>
+                                                <div className="flex flex-col">
+                                                    <span className="font-medium text-[var(--color-text-primary)]">{log.recipientName || 'N/A'}</span>
+                                                    <span className="text-xs text-[var(--color-text-secondary)]">{log.recipientEmail}</span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="max-w-[200px] truncate">{log.subject}</TableCell>
+                                            <TableCell>
+                                                <Badge variant="outline" className="font-mono text-[10px]">{log.templateCode || 'Custom'}</Badge>
+                                            </TableCell>
+                                            <TableCell className="text-xs">
+                                                {new Date(log.createdAt).toLocaleString('pt-BR')}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge className={
+                                                    log.status === 'SENT' || log.status === 'DELIVERED' ? 'bg-emerald-500' :
+                                                        log.status === 'FAILED' ? 'bg-rose-500' : 'bg-amber-500'
+                                                }>
+                                                    {log.status}
+                                                </Badge>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
                             </TableBody>
                         </Table>
                     </Card>
                 </TabsContent>
 
-                {/* --- CONFIG TAB --- */}
                 <TabsContent value="config">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <Card className="border-none shadow-sm bg-[var(--color-surface)]">
@@ -327,96 +403,151 @@ export default function EmailSettingsPage() {
                 </TabsContent>
             </Tabs>
 
-            {/* --- EDITOR DIALOG --- */}
             <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-                <DialogContent className="max-w-4xl max-h-[90vh]">
-                    <DialogHeader>
-                        <DialogTitle>Editar Template: {editingTemplate?.name}</DialogTitle>
+                <DialogContent className="max-w-[70vw] max-h-[95vh] flex flex-col p-0 overflow-hidden">
+                    <DialogHeader className="p-6 pb-2">
+                        <DialogTitle className="flex items-center gap-2">
+                            <Layout className="w-5 h-5 text-primary" />
+                            {editingTemplate?.id ? 'Editar Template' : 'Criar Novo Template'}
+                        </DialogTitle>
                         <DialogDescription>
-                            Utilize o código do template para disparar o e-mail via API ou Eventos.
+                            Configure a identidade visual e o conteúdo do seu e-mail.
                         </DialogDescription>
                     </DialogHeader>
 
-                    <ScrollArea className="max-h-[60vh] pr-4">
-                        <div className="space-y-6 pt-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label>Nome amigável</Label>
-                                    <Input
-                                        value={editingTemplate?.name || ''}
-                                        onChange={e => setEditingTemplate({ ...editingTemplate, name: e.target.value })}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Código (identificador)</Label>
-                                    <Input
-                                        value={editingTemplate?.code || ''}
-                                        readOnly={editingTemplate?.isSystem}
-                                        disabled={editingTemplate?.isSystem}
-                                        className={editingTemplate?.isSystem ? "bg-muted" : ""}
-                                    />
-                                </div>
+                    <div className="flex-1 overflow-hidden">
+                        <EditorTabs defaultValue="general" className="h-full flex flex-col">
+                            <div className="px-6 border-b">
+                                <EditorTabsList className="bg-transparent h-auto p-0 gap-6">
+                                    <EditorTabsTrigger value="general" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none py-3 px-0">Informações Gerais</EditorTabsTrigger>
+                                    <EditorTabsTrigger value="content" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none py-3 px-0">Conteúdo HTML</EditorTabsTrigger>
+                                </EditorTabsList>
                             </div>
 
-                            <div className="space-y-2">
-                                <Label>Assunto do E-mail</Label>
-                                <Input
-                                    value={editingTemplate?.subject || ''}
-                                    onChange={e => setEditingTemplate({ ...editingTemplate, subject: e.target.value })}
-                                />
-                            </div>
+                            <ScrollArea className="flex-1 h-[60vh]">
+                                <EditorTabsContent value="general" className="p-6 m-0 space-y-6">
+                                    <div className="grid grid-cols-2 gap-6">
+                                        <div className="space-y-2">
+                                            <Label className="text-xs uppercase tracking-wider text-muted-foreground">Nome do Template</Label>
+                                            <Input
+                                                placeholder="Ex: Convite de Admissão"
+                                                value={editingTemplate?.name || ''}
+                                                onChange={e => setEditingTemplate({ ...editingTemplate, name: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-xs uppercase tracking-wider text-muted-foreground">Código Único (API)</Label>
+                                            <Input
+                                                placeholder="EX: ADMISSION_INVITE"
+                                                value={editingTemplate?.code || ''}
+                                                readOnly={editingTemplate?.isSystem}
+                                                disabled={editingTemplate?.isSystem}
+                                                className={editingTemplate?.isSystem ? "bg-muted font-mono" : "font-mono uppercase"}
+                                                onChange={e => setEditingTemplate({ ...editingTemplate, code: e.target.value.toUpperCase().replace(/\s/g, '_') })}
+                                            />
+                                        </div>
+                                    </div>
 
-                            <div className="space-y-2">
-                                <Label>Corpo HTML</Label>
-                                <Textarea
-                                    className="min-h-[250px] font-mono text-sm border-indigo-100 focus:border-indigo-300"
-                                    value={editingTemplate?.bodyHtml || ''}
-                                    onChange={e => setEditingTemplate({ ...editingTemplate, bodyHtml: e.target.value })}
-                                />
-                                <p className="text-[10px] text-[var(--color-text-tertiary)]">Dica: Utilize {'{{variavel}}'} para placeholders dinâmicos.</p>
-                            </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-xs uppercase tracking-wider text-muted-foreground">Assunto (Subject)</Label>
+                                        <Input
+                                            placeholder="Assunto que aparecerá na caixa de entrada"
+                                            value={editingTemplate?.subject || ''}
+                                            onChange={e => setEditingTemplate({ ...editingTemplate, subject: e.target.value })}
+                                        />
+                                    </div>
 
-                            <div className="space-y-2">
-                                <Label>Descrição (Interna)</Label>
-                                <Input
-                                    placeholder="Para que este template é utilizado?"
-                                    value={editingTemplate?.description || ''}
-                                    onChange={e => setEditingTemplate({ ...editingTemplate, description: e.target.value })}
-                                />
-                            </div>
-                        </div>
-                    </ScrollArea>
+                                    <div className="space-y-2">
+                                        <Label className="text-xs uppercase tracking-wider text-muted-foreground">Descrição Interna</Label>
+                                        <Textarea
+                                            placeholder="Para que serve este e-mail? (Apenas para organização interna)"
+                                            value={editingTemplate?.description || ''}
+                                            onChange={e => setEditingTemplate({ ...editingTemplate, description: e.target.value })}
+                                            className="h-20"
+                                        />
+                                    </div>
+                                </EditorTabsContent>
 
-                    <DialogFooter className="gap-2">
+                                <EditorTabsContent value="content" className="p-0 m-0 h-full flex flex-col">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 h-full">
+                                        <div className="p-6 border-r bg-muted/10">
+                                            <div className="flex items-center justify-between mb-4">
+                                                <Label className="flex items-center gap-2">
+                                                    <Code className="w-4 h-4 text-primary" />
+                                                    Editor HTML
+                                                </Label>
+                                                <Badge variant="outline" className="text-[10px]">HTML5 / CSS Linha</Badge>
+                                            </div>
+                                            <Textarea
+                                                className="min-h-[400px] h-[50vh] font-mono text-xs leading-relaxed border-indigo-100 focus:border-indigo-300 resize-none bg-white"
+                                                value={editingTemplate?.bodyHtml || ''}
+                                                onChange={e => setEditingTemplate({ ...editingTemplate, bodyHtml: e.target.value })}
+                                            />
+                                            <div className="mt-4 p-4 rounded-lg bg-indigo-50 border border-indigo-100">
+                                                <div className="flex gap-2 items-start text-indigo-700">
+                                                    <AlertCircle className="w-4 h-4 mt-0.5" />
+                                                    <div className="text-xs leading-normal">
+                                                        <p className="font-semibold mb-1">Dica de Variáveis:</p>
+                                                        Use <code>{"{{candidate_name}}"}</code>, <code>{"{{company_name}}"}</code> ou <code>{"{{action_link}}"}</code> para dados dinâmicos.
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="bg-slate-50 flex flex-col">
+                                            <div className="p-4 border-b flex items-center justify-between">
+                                                <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Visualização Rápida</span>
+                                                <Eye className="w-4 h-4 text-slate-400" />
+                                            </div>
+                                            <div className="flex-1 p-8 overflow-auto">
+                                                <div className="bg-white shadow-lg rounded-xl overflow-hidden min-h-[500px] border">
+                                                    <div className="p-3 border-b bg-slate-100 text-[10px] text-slate-500 flex gap-2">
+                                                        <div className="w-2.5 h-2.5 rounded-full bg-rose-400" />
+                                                        <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+                                                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+                                                        <span className="ml-2">Preview Automático</span>
+                                                    </div>
+                                                    <div
+                                                        className="email-preview-mini"
+                                                        dangerouslySetInnerHTML={{ __html: (editingTemplate?.bodyHtml || '').replace(/\{\{(\w+)\}\}/g, '<span style="background:rgba(79,70,229,0.1); color:#4f46e5; padding:0 2px; border-radius:2px">[$1]</span>') }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </EditorTabsContent>
+                            </ScrollArea>
+                        </EditorTabs>
+                    </div>
+
+                    <DialogFooter className="p-6 border-t bg-muted/10 gap-2">
                         <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancelar</Button>
                         <Button
                             className="bg-[var(--color-primary)] hover:opacity-90 transition-all rounded-lg gap-2"
                             onClick={handleSave}
                         >
                             <Save className="w-4 h-4" />
-                            Salvar Template
+                            {editingTemplate?.id ? 'Salvar Alterações' : 'Criar Template'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
 
-            {/* --- PREVIEW DIALOG --- */}
             <Dialog open={isPreviewDialogOpen} onOpenChange={setIsPreviewDialogOpen}>
-                <DialogContent className="max-w-2xl">
+                <DialogContent className="max-w-2xl bg-slate-100">
                     <DialogHeader>
-                        <DialogTitle>Visualização do E-mail</DialogTitle>
+                        <DialogTitle>Visualização Real</DialogTitle>
                         <DialogDescription>
-                            Exibição de como o e-mail chegará ao destinatário.
+                            Simulação de como o e-mail aparecerá para o destinatário final.
                         </DialogDescription>
                     </DialogHeader>
 
-                    <div className="border border-[var(--color-border)] rounded-xl overflow-hidden mt-4">
-                        <div className="bg-[var(--color-surface-variant)] p-4 border-b border-[var(--color-border)]">
-                            <p className="text-xs text-[var(--color-text-secondary)] mb-1">Assunto:</p>
-                            <p className="font-bold text-sm">{previewContent?.subject}</p>
+                    <div className="border border-slate-200 rounded-xl overflow-hidden mt-4 shadow-xl bg-white">
+                        <div className="bg-slate-50 p-4 border-b flex flex-col gap-1">
+                            <p className="text-[10px] text-slate-400 uppercase font-bold tracking-tight">Assunto:</p>
+                            <p className="font-semibold text-sm text-slate-800">{previewContent?.subject}</p>
                         </div>
                         <div
-                            className="p-6 bg-white max-h-[400px] overflow-auto email-preview-container"
+                            className="max-h-[500px] overflow-auto email-preview-container"
                             dangerouslySetInnerHTML={{ __html: previewContent?.bodyHtml || '' }}
                         />
                     </div>
@@ -428,10 +559,9 @@ export default function EmailSettingsPage() {
             </Dialog>
 
             <style jsx global>{`
-                .email-preview-container h1 { font-size: 24px; font-weight: bold; margin-bottom: 16px; color: #1e1b4b; }
-                .email-preview-container p { margin-bottom: 12px; line-height: 1.6; color: #374151; }
-                .email-preview-container a { color: #4F46E5; text-decoration: underline; }
-                .email-preview-container strong { font-weight: 600; }
+                .email-preview-container iframe { width: 100%; border: none; }
+                .email-preview-mini { font-size: 0.8rem; transform-origin: top left; }
+                .email-preview-mini * { max-width: 100%; }
             `}</style>
         </div>
     );
