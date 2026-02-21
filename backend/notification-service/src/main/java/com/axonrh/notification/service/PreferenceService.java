@@ -21,6 +21,16 @@ public class PreferenceService {
 
     @Transactional(readOnly = true)
     public NotificationPreferences getPreferences(UUID tenantId, UUID userId) {
+        if (userId == null) {
+            return NotificationPreferences.builder()
+                    .tenantId(tenantId)
+                    .userId(null)
+                    .emailEnabled(true)
+                    .pushEnabled(true)
+                    .inAppEnabled(true)
+                    .categoryPreferences(new HashMap<>())
+                    .build();
+        }
         return preferencesRepository.findByTenantIdAndUserId(tenantId, userId)
                 .orElseGet(() -> createDefaultPreferences(tenantId, userId));
     }

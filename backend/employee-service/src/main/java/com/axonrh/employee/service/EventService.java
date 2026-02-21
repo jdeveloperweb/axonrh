@@ -1,0 +1,157 @@
+package com.axonrh.employee.service;
+
+import com.axonrh.employee.config.TenantContext;
+import com.axonrh.employee.dto.EventDTO;
+import com.axonrh.employee.dto.EventResourceDTO;
+import com.axonrh.employee.entity.Employee;
+import com.axonrh.employee.entity.Event;
+import com.axonrh.employee.entity.EventRegistration;
+import com.axonrh.employee.entity.EventResource;
+import com.axonrh.employee.repository.EmployeeRepository;
+import com.axonrh.employee.repository.EventRegistrationRepository;
+import com.axonrh.employee.repository.EventRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class EventService {
+
+    private final EventRepository eventRepository;
+    private final EventRegistrationRepository registrationRepository;
+    private final EmployeeRepository employeeRepository;
+
+    public List<EventDTO> getAllEvents() {
+        UUID tenantId = getTenantId();
+        UUID employeeId = getCurrentEmployeeId();
+        
+        return eventRepository.findByTenantIdOrderByDateAsc(tenantId).stream()
+                .map(e -> mapToDTO(e, employeeId))
+                .collect(Collectors.toList());
+    }
+
+    public EventDTO getEventById(UUID id) {
+        UUID employeeId = getCurrentEmployeeId();
+        Event event = eventRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+        return mapToDTO(event, employeeId);
+    }
+
+    @Transactional
+    public void saveEvent(EventDTO dto) {
+        UUID tenantId = getTenantId();
+        Event event = Event.builder()
+                .id(dto.getId() != null ? UUID.fromString(dto.getId()) : null)
+                .tenantId(tenantId)
+                .title(dto.getTitle())
+                .description(dto.getDescription())
+                .date(dto.getDate())
+                .location(dto.getLocation())
+                .url(dto.getUrl())
+                .category(dto.getCategory() != null ? dto.getCategory() : "GENERAL")
+                .status(dto.getStatus() != null ? dto.getStatus() : "UPCOMING")
+                .speakerName(dto.getSpeakerName())
+                .speakerRole(dto.getSpeakerRole())
+                .speakerBio(dto.getSpeakerBio())
+                .speakerLinkedin(dto.getSpeakerLinkedin())
+                .speakerAvatarUrl(dto.getSpeakerAvatarUrl())
+                .build();
+
+        if (dto.getResources() != null) {
+            List<EventResource> resources = dto.getResources().stream()
+                    .map(r -> EventResource.builder()
+                            .id(r.getId() != null ? UUID.fromString(r.getId()) : null)
+                            .event(event)
+                            .title(r.getTitle())
+                            .description(r.getDescription())
+                            .url(r.getUrl())
+                            .type(r.getType())
+                            .build())
+                    .collect(Collectors.toList());
+            event.setResources(resources);
+        }
+
+        eventRepository.save(event);
+    }
+
+    @Transactional
+    public void deleteEvent(UUID id) {
+        UUID tenantId = getTenantId();
+        eventRepository.findById(id)
+                .filter(e -> e.getTenantId().equals(tenantId))
+                .ifPresent(eventRepository::delete);
+    }
+
+    @Transactional
+    public void registerToEvent(UUID eventId) {
+        UUID employeeId = getCurrentEmployeeId();
+        if (employeeId == null) throw new RuntimeException("Logged in employee not found");
+
+        if (registrationRepository.existsByEventIdAndEmployeeId(eventId, employeeId)) {
+            return; // Already registered
+        }
+
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+
+        EventRegistration registration = EventRegistration.builder()
+                .event(event)
+                .employeeId(employeeId)
+                .build();
+
+        registrationRepository.save(registration);
+    }
+
+    @Transactional
+    public void unregisterFromEvent(UUID eventId) {
+        UUID employeeId = getCurrentEmployeeId();
+        registrationRepository.findByEventIdAndEmployeeId(eventId, employeeId)
+                .ifPresent(registrationRepository::delete);
+    }
+
+    private EventDTO mapToDTO(Event e, UUID employeeId) {
+        return EventDTO.builder()
+                .id(e.getId().toString())
+                .title(e.getTitle())
+                .description(e.getDescription())
+                .date(e.getDate())
+                .location(e.getLocation())
+                .url(e.getUrl())
+                .category(e.getCategory())
+                .status(e.getStatus())
+                .speakerName(e.getSpeakerName())
+                .speakerRole(e.getSpeakerRole())
+                .speakerBio(e.getSpeakerBio())
+                .speakerLinkedin(e.getSpeakerLinkedin())
+                .speakerAvatarUrl(e.getSpeakerAvatarUrl())
+                .registrationCount(registrationRepository.countByEventId(e.getId()))
+                .isUserRegistered(employeeId != null && registrationRepository.existsByEventIdAndEmployeeId(e.getId(), employeeId))
+                .resources(e.getResources().stream()
+                        .map(r -> EventResourceDTO.builder()
+                                .id(r.getId().toString())
+                                .title(r.getTitle())
+                                .description(r.getDescription())
+                                .url(r.getUrl())
+                                .type(r.getType())
+                                .build())
+                        .collect(Collectors.toList()))
+                .build();
+    }
+
+    private UUID getTenantId() {
+        return UUID.fromString(TenantContext.getCurrentTenant());
+    }
+
+    private UUID getCurrentEmployeeId() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return employeeRepository.findByEmail(email)
+                .map(Employee::getId)
+                .orElse(null);
+    }
+}

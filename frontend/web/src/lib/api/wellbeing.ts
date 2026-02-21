@@ -43,6 +43,7 @@ export interface WellbeingCampaign {
     date: string;
     location: string;
     status: string;
+    isUserRegistered: boolean;
 }
 
 export interface WellbeingStats {

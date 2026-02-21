@@ -16,8 +16,10 @@ import java.util.stream.Collectors;
 import com.axonrh.employee.config.TenantContext;
 import com.axonrh.employee.dto.EapRequestDTO;
 import com.axonrh.employee.dto.WellbeingStats;
-import com.axonrh.employee.repository.EmployeeRepository;
-import com.axonrh.employee.entity.Employee;
+import com.axonrh.employee.repository.EventRepository;
+import com.axonrh.employee.dto.EventDTO;
+import com.axonrh.employee.dto.EventResourceDTO;
+import com.axonrh.employee.entity.Event;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -30,6 +32,7 @@ public class WellbeingService {
 
     private final EmployeeWellbeingRepository repository;
     private final EmployeeRepository employeeRepository;
+    private final EventRepository eventRepository;
     private final AiAssistantClient aiClient;
 
     public void processCheckIn(WellbeingCheckInRequest request) {
@@ -194,44 +197,43 @@ public class WellbeingService {
                 .build();
     }
 
-    private List<com.axonrh.employee.dto.WellbeingResourceDTO> getPreventionGuides() {
-        return List.of(
-            com.axonrh.employee.dto.WellbeingResourceDTO.builder()
-                .id("1")
-                .title("Guia de Saúde Mental para Lideranças")
-                .description("Como identificar sinais de burnout na equipe e agir preventivamente.")
-                .url("/resources/guide-burnout.pdf")
-                .type("GUIDE")
-                .build(),
-            com.axonrh.employee.dto.WellbeingResourceDTO.builder()
-                .id("2")
-                .title("Cartilha de Primeiros Socorros Emocionais")
-                .description("Protocolos básicos de acolhimento em momentos de crise.")
-                .url("/resources/emotional-first-aid.pdf")
-                .type("GUIDE")
-                .build()
-        );
+    private List<EventDTO> getPreventionGuides() {
+        UUID tenantId = getTenantId();
+        // For wellbeing guides, we fetch events with category 'WELLBEING_RESOURCE' or similar
+        // or just fetch all resources? The user said "inclusive o bem estar".
+        // Let's fetch events with category 'WELLBEING'
+        return eventRepository.findByTenantIdAndCategoryOrderByDateAsc(tenantId, "WELLBEING_GUIDE").stream()
+                .map(this::mapToDTOSimplified)
+                .collect(Collectors.toList());
     }
 
-    private List<com.axonrh.employee.dto.WellbeingCampaignDTO> getActiveCampaigns() {
-        return List.of(
-            com.axonrh.employee.dto.WellbeingCampaignDTO.builder()
-                .id("1")
-                .title("Workshop: Mindfulness no Trabalho")
-                .description("Sessão prática de meditação guiada e foco pleno.")
-                .date(LocalDateTime.now().plusDays(2).withHour(10).withMinute(0))
-                .location("Online / Teams")
-                .status("UPCOMING")
-                .build(),
-            com.axonrh.employee.dto.WellbeingCampaignDTO.builder()
-                .id("2")
-                .title("Setembro Amarelo: Falar é a melhor solução")
-                .description("Palestra com psicólogos especialistas sobre prevenção.")
-                .date(LocalDateTime.now().plusMonths(1))
-                .location("Auditório Principal")
-                .status("UPCOMING")
-                .build()
-        );
+    private List<EventDTO> getActiveCampaigns() {
+        UUID tenantId = getTenantId();
+        return eventRepository.findByTenantIdAndCategoryOrderByDateAsc(tenantId, "WELLBEING").stream()
+                .map(this::mapToDTOSimplified)
+                .collect(Collectors.toList());
+    }
+
+    private EventDTO mapToDTOSimplified(Event e) {
+        return EventDTO.builder()
+                .id(e.getId().toString())
+                .title(e.getTitle())
+                .description(e.getDescription())
+                .date(e.getDate())
+                .location(e.getLocation())
+                .category(e.getCategory())
+                .status(e.getStatus())
+                .speakerName(e.getSpeakerName())
+                .speakerRole(e.getSpeakerRole())
+                .resources(e.getResources().stream()
+                        .map(r -> EventResourceDTO.builder()
+                                .id(r.getId().toString())
+                                .title(r.getTitle())
+                                .url(r.getUrl())
+                                .type(r.getType())
+                                .build())
+                        .collect(Collectors.toList()))
+                .build();
     }
 
     public void markAsHandled(UUID id) {

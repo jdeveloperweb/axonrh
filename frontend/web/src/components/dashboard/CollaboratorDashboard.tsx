@@ -19,14 +19,18 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
 import { timesheetApi, TimeRecord } from '@/lib/api/timesheet';
 import { vacationApi, VacationPeriod } from '@/lib/api/vacation';
 import { enrollmentsApi, Enrollment } from '@/lib/api/learning';
+import { wellbeingApi, WellbeingStats } from '@/lib/api/wellbeing';
 import { Progress } from '@/components/ui/progress';
 import { useRouter } from 'next/navigation';
 import { pdisApi, PDI, discApi, DiscAssignment, DiscEvaluation, evaluationsApi, Evaluation } from '@/lib/api/performance';
 import { employeesApi } from '@/lib/api/employees';
+import { eventsApi, Event as AppEvent } from '@/lib/api/events';
 import { AxonIATip } from '@/components/performance/AxonIATip';
 import { useThemeStore } from '@/stores/theme-store';
 
@@ -44,6 +48,8 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
     const [pendingDisc, setPendingDisc] = useState<DiscAssignment[]>([]);
     const [latestDisc, setLatestDisc] = useState<DiscEvaluation | null>(null);
     const [pendingEvaluations, setPendingEvaluations] = useState<Evaluation[]>([]);
+    const [wellbeingStats, setWellbeingStats] = useState<WellbeingStats | null>(null);
+    const [allEvents, setAllEvents] = useState<AppEvent[]>([]);
     const [loading, setLoading] = useState(true);
 
     const roles = user?.roles || [];
@@ -56,19 +62,23 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
                 const employee = await employeesApi.getMe().catch(() => null);
                 const employeeId = employee?.id;
 
-                const [records, periods, allEnrollments, pdis, disc, latestDiscRes, pendingEvals] = await Promise.all([
+                const [records, periods, allEnrollments, pdis, disc, latestDiscRes, pendingEvals, wellbeingData, eventsData] = await Promise.all([
                     timesheetApi.getTodayRecords().catch(() => [] as TimeRecord[]),
                     vacationApi.getMyPeriods().catch(() => [] as VacationPeriod[]),
                     employeeId ? enrollmentsApi.getByEmployee(employeeId).catch(() => [] as Enrollment[]) : Promise.resolve([] as Enrollment[]),
                     employeeId ? pdisApi.getByEmployee(employeeId).catch(() => [] as PDI[]) : Promise.resolve([] as PDI[]),
                     employeeId ? discApi.getPendingForEmployee(employeeId).catch(() => [] as DiscAssignment[]) : Promise.resolve([] as DiscAssignment[]),
                     employeeId ? discApi.getLatest(employeeId).catch(() => null) : Promise.resolve(null),
-                    user?.id ? evaluationsApi.getPending(user.id).catch(() => [] as Evaluation[]) : Promise.resolve([] as Evaluation[])
+                    user?.id ? evaluationsApi.getPending(user.id).catch(() => [] as Evaluation[]) : Promise.resolve([] as Evaluation[]),
+                    wellbeingApi.getStats().catch(() => null),
+                    eventsApi.getAll().catch(() => [] as AppEvent[])
                 ]);
 
                 setTodayRecords(Array.isArray(records) ? records : []);
                 setVacationPeriods(Array.isArray(periods) ? periods : []);
                 setEnrollments(Array.isArray(allEnrollments) ? allEnrollments : []);
+                setWellbeingStats(wellbeingData as WellbeingStats);
+                setAllEvents(Array.isArray(eventsData) ? eventsData : []);
 
                 // Filter PDIs
                 const allPDIs = Array.isArray(pdis) ? pdis : [];
@@ -414,6 +424,61 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
                                             </p>
                                         </div>
                                     </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {allEvents.length > 0 && (
+                        <div className="mt-10 space-y-4">
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                                    <MessageSquare className="w-5 h-5 text-purple-500" />
+                                    Eventos e Palestras
+                                </h2>
+                                <Button variant="ghost" size="sm" className="text-purple-600 font-bold hover:bg-transparent" onClick={() => router.push('/events')}>
+                                    Ver todos
+                                </Button>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {allEvents.filter(e => e.status === 'UPCOMING').slice(0, 4).map((event) => (
+                                    <Card
+                                        key={event.id}
+                                        className={cn(
+                                            "border shadow-sm hover:shadow-md transition-all cursor-pointer group bg-white border-l-4",
+                                            event.isUserRegistered ? "border-l-green-500 border-green-50" : "border-l-purple-500 border-purple-50"
+                                        )}
+                                        onClick={() => router.push('/events')}
+                                    >
+                                        <CardContent className="p-5 flex items-center gap-4">
+                                            <div className={cn(
+                                                "w-14 h-14 rounded-xl flex flex-col items-center justify-center shrink-0",
+                                                event.isUserRegistered ? "bg-green-50 text-green-600" : "bg-purple-50 text-purple-600"
+                                            )}>
+                                                <span className="text-[10px] font-black uppercase">{new Date(event.date).toLocaleDateString('pt-BR', { month: 'short' })}</span>
+                                                <span className="text-xl font-black">{new Date(event.date).getDate()}</span>
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2">
+                                                    <h4 className="font-bold text-gray-900 group-hover:text-purple-600 transition-colors truncate">{event.title}</h4>
+                                                    {event.isUserRegistered && (
+                                                        <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none text-[9px] font-black px-1.5 py-0">INSCRITO</Badge>
+                                                    )}
+                                                </div>
+                                                <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+                                                    <Clock className="w-3 h-3" />
+                                                    {new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {event.location}
+                                                </p>
+                                                {event.isUserRegistered && (
+                                                    <p className="text-[10px] text-green-600 font-bold mt-1 flex items-center gap-1">
+                                                        <CheckCircle className="w-3 h-3" />
+                                                        Lembrete: Inicia às {new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    </p>
+                                                )}
+                                            </div>
+                                            <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-purple-600 group-hover:translate-x-1 transition-all" />
+                                        </CardContent>
+                                    </Card>
                                 ))}
                             </div>
                         </div>

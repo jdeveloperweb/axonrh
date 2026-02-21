@@ -60,8 +60,13 @@ public class NotificationService {
         // 1. Get user preferences
         var prefs = preferenceService.getPreferences(tenantId, userId);
         
-        log.info("Preferencias do usuario {}: inApp={}, push={}, email={}", 
-            userId, prefs.isInAppEnabled(), prefs.isPushEnabled(), prefs.isEmailEnabled());
+        if (userId != null) {
+            log.info("Preferencias do usuario {}: inApp={}, push={}, email={}", 
+                userId, prefs.isInAppEnabled(), prefs.isPushEnabled(), prefs.isEmailEnabled());
+        } else {
+            log.info("Usuario nulo (externo): usando preferencias padrao (inApp={}, push={}, email={})", 
+                prefs.isInAppEnabled(), prefs.isPushEnabled(), prefs.isEmailEnabled());
+        }
         
         // 2. Check category-specific preferences if category is provided
         boolean inAppEnabled = prefs.isInAppEnabled();

@@ -63,13 +63,17 @@ public class EmailService {
         Optional<EmailTemplate> templateOpt = templateRepository.findByTenantIdAndCode(tenantId, finalCode)
                 .or(() -> templateRepository.findSystemTemplate(SYSTEM_TENANT_ID, finalCode));
 
+        EmailTemplate template;
         if (templateOpt.isEmpty()) {
-            log.error("Template de e-mail não encontrado: code={}, tenantId={}. Verifique se a migração V2 foi aplicada.", 
-                    templateCode, tenantId);
-            throw new IllegalArgumentException("Template não encontrado: " + templateCode);
+            log.warn("Template de e-mail não encontrado no banco: code={}. Usando fallback hardcoded.", finalCode);
+            template = getFallbackTemplate(finalCode);
+            if (template == null) {
+                log.error("Template de e-mail não encontrado nem no fallback: code={}, tenantId={}.", finalCode, tenantId);
+                throw new IllegalArgumentException("Template não encontrado: " + finalCode);
+            }
+        } else {
+            template = templateOpt.get();
         }
-
-        EmailTemplate template = templateOpt.get();
 
         String subject = replaceVariables(template.getSubject(), variables);
         String bodyHtml = replaceVariables(template.getBodyHtml(), variables);
@@ -295,5 +299,16 @@ public class EmailService {
         matcher.appendTail(result);
 
         return result.toString();
+    }
+
+    private EmailTemplate getFallbackTemplate(String code) {
+        if ("DIGITAL_HIRING_INVITATION".equals(code)) {
+            EmailTemplate t = new EmailTemplate();
+            t.setCode(code);
+            t.setSubject("Bem-vindo(a) ao time! Finalize sua admissão - {{company_name}}");
+            t.setBodyHtml("<!DOCTYPE html><html><body><h1>AxonRH</h1><h2>Olá {{candidate_name}},</h2><p>Parabéns por fazer parte da <strong>{{company_name}}</strong>!</p><p>Para darmos continuidade à sua contratação, acesse o link: <a href=\"{{hiring_link}}\">Iniciar Minha Admissão</a></p></body></html>");
+            return t;
+        }
+        return null;
     }
 }

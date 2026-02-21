@@ -35,7 +35,13 @@ import {
     DialogHeader,
     DialogTitle,
     DialogDescription,
+    DialogFooter,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Plus, Trash2 } from 'lucide-react';
+import { useToast } from '@/components/ui/toast';
 import {
     Tooltip as UITooltip,
     TooltipContent,
@@ -44,7 +50,8 @@ import {
 } from '@/components/ui/tooltip';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { useAuthStore } from '@/stores/auth-store';
-import { wellbeingApi, WellbeingStats, EapRequest, WellbeingCampaign, PreventionGuide } from '@/lib/api/wellbeing';
+import { wellbeingApi, WellbeingStats, EapRequest } from '@/lib/api/wellbeing';
+import { eventsApi, Event as AppEvent } from '@/lib/api/events';
 import { cn } from '@/lib/utils'; // Assuming this exists based on sidebar import
 
 // ==================== Types ====================
@@ -59,12 +66,35 @@ const translate = (key: string) => TRANSLATIONS[key] || key;
 
 export default function WellbeingPage() {
     const { user } = useAuthStore();
+    const { success, error: toastError } = useToast();
     const [statsData, setStatsData] = useState<WellbeingStats | null>(null);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<'ALL' | 'PENDING' | 'HANDLED'>('ALL');
     const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
     const [isCampaignModalOpen, setIsCampaignModalOpen] = useState(false);
     const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
+
+    // Registration States
+    const [isNewCampaignModalOpen, setIsNewCampaignModalOpen] = useState(false);
+    const [isNewGuideModalOpen, setIsNewGuideModalOpen] = useState(false);
+    const [newCampaign, setNewCampaign] = useState<Partial<AppEvent>>({
+        title: '',
+        description: '',
+        date: new Date().toISOString().split('T')[0],
+        location: '',
+        status: 'UPCOMING',
+        category: 'WELLBEING'
+    });
+    const [newGuide, setNewGuide] = useState<Partial<AppEvent>>({
+        title: '',
+        description: '',
+        url: '',
+        type: 'GUIDE',
+        category: 'WELLBEING_GUIDE',
+        date: new Date().toISOString() // Required by API but can be mock
+    });
+
+    const isManagement = user?.roles?.some(r => ['ADMIN', 'RH', 'GESTOR_RH', 'HEALTH_PROFESSIONAL'].includes(r));
 
     useEffect(() => {
         loadStats();
@@ -88,6 +118,79 @@ export default function WellbeingPage() {
             await loadStats(); // Refresh
         } catch (error) {
             console.error('Error marking request as handled:', error);
+        }
+    };
+
+    const handleSaveCampaign = async () => {
+        try {
+            if (!newCampaign.title || !newCampaign.date) return;
+            await eventsApi.save(newCampaign);
+            success('Campanha salva!', 'A campanha foi criada com sucesso.');
+            setIsNewCampaignModalOpen(false);
+            setNewCampaign({
+                title: '',
+                description: '',
+                date: new Date().toISOString().split('T')[0],
+                location: '',
+                status: 'UPCOMING',
+                category: 'WELLBEING'
+            });
+            await loadStats();
+        } catch (error) {
+            console.error('Error saving campaign:', error);
+        }
+    };
+
+    const handleDeleteCampaign = async (id: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!confirm('Deseja excluir esta campanha?')) return;
+        try {
+            await eventsApi.delete(id);
+            success('Campanha excluída', 'A campanha foi removida.');
+            await loadStats();
+        } catch (error) {
+            console.error('Error deleting campaign:', error);
+        }
+    };
+
+    const handleSaveGuide = async () => {
+        try {
+            if (!newGuide.title || !newGuide.url) return;
+            await eventsApi.save(newGuide);
+            success('Material salvo!', 'O material de prevenção foi registrado.');
+            setIsNewGuideModalOpen(false);
+            setNewGuide({
+                title: '',
+                description: '',
+                url: '',
+                type: 'GUIDE',
+                category: 'WELLBEING_GUIDE',
+                date: new Date().toISOString()
+            });
+            await loadStats();
+        } catch (error) {
+            console.error('Error saving guide:', error);
+        }
+    };
+
+    const handleDeleteGuide = async (id: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!confirm('Deseja excluir este recurso?')) return;
+        try {
+            await eventsApi.delete(id);
+            success('Material excluído', 'O recurso foi removido.');
+            await loadStats();
+        } catch (error) {
+            console.error('Error deleting resource:', error);
+        }
+    };
+
+    const handleRegister = async (id: string) => {
+        try {
+            await eventsApi.register(id);
+            await loadStats();
+        } catch (error) {
+            console.error('Error registering:', error);
         }
     };
 
@@ -212,6 +315,15 @@ export default function WellbeingPage() {
                         <MessageCircle className="w-4 h-4" />
                         Gerar Relatório Completo
                     </button>
+                    {isManagement && (
+                        <button
+                            onClick={() => setIsNewCampaignModalOpen(true)}
+                            className="flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-purple-500 text-purple-600 rounded-xl font-bold shadow-sm hover:bg-purple-50 transition-all active:scale-95"
+                        >
+                            <Plus className="w-4 h-4" />
+                            Novo Evento
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -405,8 +517,8 @@ export default function WellbeingPage() {
                                     <span className="text-[10px] uppercase font-black tracking-[0.2em] opacity-80 mb-1 relative z-10">VITALIDADE</span>
 
                                     <div className={`mt-2 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border shadow-sm transition-colors relative z-10 ${statsData && statsData.averageScore >= 4 ? 'bg-emerald-500/80 border-emerald-400' :
-                                            statsData && statsData.averageScore >= 3 ? 'bg-blue-500/80 border-blue-400' :
-                                                'bg-rose-500/80 border-rose-400'
+                                        statsData && statsData.averageScore >= 3 ? 'bg-blue-500/80 border-blue-400' :
+                                            'bg-rose-500/80 border-rose-400'
                                         }`}>
                                         {statsData && statsData.averageScore >= 4 ? 'Alta' : statsData && statsData.averageScore >= 3 ? 'Média' : 'Baixa'}
                                     </div>
@@ -516,8 +628,8 @@ export default function WellbeingPage() {
                                                     style={{
                                                         width: `${item.value}%`,
                                                         backgroundImage: `linear-gradient(to right, ${item.value < 40 ? '#fb7185, #e11d48' :
-                                                                item.value > 80 ? '#34d399, #059669' :
-                                                                    '#818cf8, #6366f1'
+                                                            item.value > 80 ? '#34d399, #059669' :
+                                                                '#818cf8, #6366f1'
                                                             })`
                                                     }}
                                                 />
@@ -783,6 +895,15 @@ export default function WellbeingPage() {
                             <DialogDescription className="text-purple-100 text-lg opacity-90 mt-2">
                                 Fique por dentro de todas as ações de saúde mental da AxonRH.
                             </DialogDescription>
+                            {isManagement && (
+                                <Button
+                                    className="mt-4 bg-white/20 hover:bg-white/30 text-white border-white/30"
+                                    onClick={() => setIsNewCampaignModalOpen(true)}
+                                >
+                                    <Plus className="w-4 h-4 mr-2" />
+                                    Cadastrar Nova Campanha
+                                </Button>
+                            )}
                         </DialogHeader>
                     </div>
                     <div className="p-6 max-h-[60vh] overflow-y-auto space-y-4 bg-gray-50/30">
@@ -813,9 +934,30 @@ export default function WellbeingPage() {
                                             </span>
                                         </div>
                                     </div>
-                                    <button className="self-center p-3 bg-gray-50 hover:bg-purple-100 text-gray-400 hover:text-purple-600 rounded-xl transition-all">
-                                        <ChevronRight className="w-5 h-5" />
-                                    </button>
+                                    <div className="flex items-center gap-2 self-center">
+                                        <button
+                                            onClick={() => handleRegister(camp.id)}
+                                            className={cn(
+                                                "px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
+                                                camp.isUserRegistered
+                                                    ? "bg-green-100 text-green-600 border border-green-200"
+                                                    : "bg-purple-600 text-white shadow-lg shadow-purple-100 hover:scale-105"
+                                            )}
+                                        >
+                                            {camp.isUserRegistered ? 'Inscrito' : 'Participar'}
+                                        </button>
+                                        {isManagement && (
+                                            <button
+                                                className="p-3 bg-red-50 text-red-500 hover:bg-red-100 rounded-xl transition-all"
+                                                onClick={(e) => handleDeleteCampaign(camp.id, e)}
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        )}
+                                        <button className="p-3 bg-gray-50 hover:bg-purple-100 text-gray-400 hover:text-purple-600 rounded-xl transition-all">
+                                            <ChevronRight className="w-5 h-5" />
+                                        </button>
+                                    </div>
                                 </div>
                             ))
                         ) : (
@@ -843,6 +985,15 @@ export default function WellbeingPage() {
                             <DialogDescription className="text-indigo-100 text-lg opacity-90 mt-2">
                                 Materiais educativos para apoiar gestores e colaboradores.
                             </DialogDescription>
+                            {isManagement && (
+                                <Button
+                                    className="mt-4 bg-white/20 hover:bg-white/30 text-white border-white/30"
+                                    onClick={() => setIsNewGuideModalOpen(true)}
+                                >
+                                    <Plus className="w-4 h-4 mr-2" />
+                                    Cadastrar Novo Material
+                                </Button>
+                            )}
                         </DialogHeader>
                     </div>
                     <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50/30">
@@ -860,9 +1011,19 @@ export default function WellbeingPage() {
                                         <h5 className="font-extrabold text-gray-900 mb-2 group-hover:text-indigo-600 transition-colors uppercase text-xs tracking-wide">{guide.title}</h5>
                                         <p className="text-xs text-gray-500 leading-relaxed mb-4">{guide.description}</p>
                                     </div>
-                                    <div className="flex items-center gap-2 text-[10px] font-black text-indigo-500 uppercase tracking-widest pt-2 border-t border-gray-50">
-                                        Ver Material
-                                        <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                                    <div className="flex items-center justify-between pt-2 border-t border-gray-50 mt-auto">
+                                        <div className="flex items-center gap-2 text-[10px] font-black text-indigo-500 uppercase tracking-widest">
+                                            Ver Material
+                                            <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                                        </div>
+                                        {isManagement && (
+                                            <button
+                                                className="p-1.5 text-red-300 hover:text-red-500 transition-colors"
+                                                onClick={(e) => handleDeleteGuide(guide.id, e)}
+                                            >
+                                                <Trash2 className="w-3 h-3" />
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             ))
@@ -872,6 +1033,96 @@ export default function WellbeingPage() {
                             </div>
                         )}
                     </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* New Campaign Modal */}
+            <Dialog open={isNewCampaignModalOpen} onOpenChange={setIsNewCampaignModalOpen}>
+                <DialogContent className="max-w-md bg-white rounded-3xl p-6">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-bold">Cadastrar Novo Evento</DialogTitle>
+                        <DialogDescription>Preencha os detalhes do workshop ou campanha de saúde.</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-gray-700">Título</label>
+                            <Input
+                                placeholder="Ex: Workshop de Mindfulness"
+                                value={newCampaign.title}
+                                onChange={e => setNewCampaign({ ...newCampaign, title: e.target.value })}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-gray-700">Descrição</label>
+                            <Textarea
+                                placeholder="Descreva o evento..."
+                                value={newCampaign.description}
+                                onChange={e => setNewCampaign({ ...newCampaign, description: e.target.value })}
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-bold text-gray-700">Data e Hora</label>
+                                <Input
+                                    type="datetime-local"
+                                    value={newCampaign.date}
+                                    onChange={e => setNewCampaign({ ...newCampaign, date: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-bold text-gray-700">Localização</label>
+                                <Input
+                                    placeholder="Teams / Auditório"
+                                    value={newCampaign.location}
+                                    onChange={e => setNewCampaign({ ...newCampaign, location: e.target.value })}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => setIsNewCampaignModalOpen(false)}>Cancelar</Button>
+                        <Button className="bg-purple-600 hover:bg-purple-700" onClick={handleSaveCampaign}>Salvar Evento</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* New Guide Modal */}
+            <Dialog open={isNewGuideModalOpen} onOpenChange={setIsNewGuideModalOpen}>
+                <DialogContent className="max-w-md bg-white rounded-3xl p-6">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-bold">Cadastrar Novo Material</DialogTitle>
+                        <DialogDescription>Adicione guias, vídeos ou artigos de prevenção.</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-gray-700">Título</label>
+                            <Input
+                                placeholder="Ex: Cartilha de Boas Práticas"
+                                value={newGuide.title}
+                                onChange={e => setNewGuide({ ...newGuide, title: e.target.value })}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-gray-700">Descrição</label>
+                            <Textarea
+                                placeholder="O que é este material?"
+                                value={newGuide.description}
+                                onChange={e => setNewGuide({ ...newGuide, description: e.target.value })}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-gray-700">URL do Material</label>
+                            <Input
+                                placeholder="https://..."
+                                value={newGuide.url}
+                                onChange={e => setNewGuide({ ...newGuide, url: e.target.value })}
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => setIsNewGuideModalOpen(false)}>Cancelar</Button>
+                        <Button className="bg-indigo-600 hover:bg-indigo-700" onClick={handleSaveGuide}>Salvar Material</Button>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
         </div>

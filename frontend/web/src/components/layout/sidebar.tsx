@@ -25,7 +25,8 @@ import {
   UserPlus,
   HeartPulse,
   Banknote,
-  Puzzle
+  Puzzle,
+  Mic2
 } from 'lucide-react';
 import { cn, getPhotoUrl } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
@@ -70,6 +71,7 @@ const navGroups: NavGroup[] = [
       { label: 'Benefícios', href: '/benefits', icon: HeartPulse, module: 'moduleBenefits' },
       { label: 'Processos RH', href: '/processes', icon: ClipboardCheck, permission: 'EMPLOYEE:READ' },
       { label: 'Saúde Mental', href: '/wellbeing', icon: HeartPulse, permission: 'EMPLOYEE:READ' }, // Visible to HR/Managers
+      { label: 'Eventos e Palestras', href: '/events', icon: Mic2, module: 'moduleEvents' },
       { label: 'Assistente IA', href: '/assistant', icon: MessageSquare, module: 'moduleAiAssistant' },
     ]
   },
