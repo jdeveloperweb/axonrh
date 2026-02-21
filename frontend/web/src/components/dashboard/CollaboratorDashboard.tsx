@@ -15,7 +15,9 @@ import {
     HelpCircle,
     BrainCircuit,
     FileEdit,
-    ClipboardCheck
+    ClipboardCheck,
+    Loader2,
+    Users
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,6 +35,7 @@ import { employeesApi } from '@/lib/api/employees';
 import { eventsApi, Event as AppEvent } from '@/lib/api/events';
 import { AxonIATip } from '@/components/performance/AxonIATip';
 import { useThemeStore } from '@/stores/theme-store';
+import { useToast } from '@/hooks/use-toast';
 
 interface CollaboratorDashboardProps {
     extraHeaderContent?: React.ReactNode;
@@ -49,11 +52,37 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
     const [latestDisc, setLatestDisc] = useState<DiscEvaluation | null>(null);
     const [pendingEvaluations, setPendingEvaluations] = useState<Evaluation[]>([]);
     const [wellbeingStats, setWellbeingStats] = useState<WellbeingStats | null>(null);
+    const { toast } = useToast();
     const [allEvents, setAllEvents] = useState<AppEvent[]>([]);
     const [loading, setLoading] = useState(true);
+    const [registeringId, setRegisteringId] = useState<string | null>(null);
 
     const roles = user?.roles || [];
     const isManagement = roles.includes('ADMIN') || roles.includes('RH') || roles.includes('GESTOR_RH') || roles.includes('ANALISTA_DP');
+
+    const handleRegisterEvent = async (e: React.MouseEvent, eventId: string) => {
+        e.stopPropagation();
+        setRegisteringId(eventId);
+        try {
+            await eventsApi.register(eventId);
+            toast({
+                title: "Inscrição confirmada!",
+                description: "Você foi inscrito no evento com sucesso.",
+            });
+            // Atualizar estado local
+            setAllEvents(prev => prev.map(ev =>
+                ev.id === eventId ? { ...ev, isUserRegistered: true, registrationCount: ev.registrationCount + 1 } : ev
+            ));
+        } catch (error) {
+            toast({
+                title: "Erro na inscrição",
+                description: "Não foi possível realizar sua inscrição. Tente novamente.",
+                variant: "destructive"
+            });
+        } finally {
+            setRegisteringId(null);
+        }
+    };
 
     useEffect(() => {
         async function loadData() {
@@ -445,38 +474,63 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
                                     <Card
                                         key={event.id}
                                         className={cn(
-                                            "border shadow-sm hover:shadow-md transition-all cursor-pointer group bg-white border-l-4",
-                                            event.isUserRegistered ? "border-l-green-500 border-green-50" : "border-l-purple-500 border-purple-50"
+                                            "border shadow-sm hover:shadow-lg transition-all group bg-white border-l-4 overflow-hidden",
+                                            event.isUserRegistered ? "border-l-green-500" : "border-l-primary"
                                         )}
-                                        onClick={() => router.push('/events')}
                                     >
-                                        <CardContent className="p-5 flex items-center gap-4">
-                                            <div className={cn(
-                                                "w-14 h-14 rounded-xl flex flex-col items-center justify-center shrink-0",
-                                                event.isUserRegistered ? "bg-green-50 text-green-600" : "bg-purple-50 text-purple-600"
-                                            )}>
-                                                <span className="text-[10px] font-black uppercase">{new Date(event.date).toLocaleDateString('pt-BR', { month: 'short' })}</span>
-                                                <span className="text-xl font-black">{new Date(event.date).getDate()}</span>
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2">
-                                                    <h4 className="font-bold text-gray-900 group-hover:text-purple-600 transition-colors truncate">{event.title}</h4>
-                                                    {event.isUserRegistered && (
-                                                        <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none text-[9px] font-black px-1.5 py-0">INSCRITO</Badge>
-                                                    )}
+                                        <CardContent className="p-0">
+                                            <div className="p-5 flex items-start gap-4">
+                                                <div className={cn(
+                                                    "w-12 h-14 rounded-xl flex flex-col items-center justify-center shrink-0 border",
+                                                    event.isUserRegistered ? "bg-green-50 text-green-600 border-green-100" : "bg-gray-50 text-gray-500 border-gray-100"
+                                                )}>
+                                                    <span className="text-[9px] font-black uppercase">{new Date(event.date).toLocaleDateString('pt-BR', { month: 'short' })}</span>
+                                                    <span className="text-xl font-black">{new Date(event.date).getDate()}</span>
                                                 </div>
-                                                <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
-                                                    <Clock className="w-3 h-3" />
-                                                    {new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {event.location}
-                                                </p>
-                                                {event.isUserRegistered && (
-                                                    <p className="text-[10px] text-green-600 font-bold mt-1 flex items-center gap-1">
-                                                        <CheckCircle className="w-3 h-3" />
-                                                        Lembrete: Inicia às {new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center justify-between gap-2 mb-1">
+                                                        <h4 className="font-bold text-gray-900 truncate text-sm">{event.title}</h4>
+                                                        {event.isUserRegistered && (
+                                                            <Badge className="bg-green-500 text-white border-none text-[8px] font-black px-1.5 py-0">INSCRITO</Badge>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-[11px] text-gray-400 flex items-center gap-1 font-medium">
+                                                        <Clock className="w-3 h-3 text-primary/60" />
+                                                        {new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {event.location}
                                                     </p>
-                                                )}
+
+                                                    <div className="mt-4 flex items-center justify-between gap-3">
+                                                        <div className="flex items-center gap-1 text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
+                                                            <Users className="w-3 h-3" />
+                                                            {event.registrationCount} Participantes
+                                                        </div>
+
+                                                        {!event.isUserRegistered ? (
+                                                            <Button
+                                                                size="sm"
+                                                                className="h-8 text-[10px] font-black uppercase tracking-widest bg-primary hover:bg-primary/90 rounded-lg px-4"
+                                                                onClick={(e) => handleRegisterEvent(e, event.id)}
+                                                                disabled={registeringId === event.id}
+                                                            >
+                                                                {registeringId === event.id ? (
+                                                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                                                ) : (
+                                                                    "Inscrever-se"
+                                                                )}
+                                                            </Button>
+                                                        ) : (
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                className="h-8 text-[10px] font-black uppercase tracking-widest border-gray-200 text-gray-400 hover:bg-gray-50 rounded-lg px-4"
+                                                                onClick={() => router.push('/events')}
+                                                            >
+                                                                Ver Evento
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-purple-600 group-hover:translate-x-1 transition-all" />
                                         </CardContent>
                                     </Card>
                                 ))}
