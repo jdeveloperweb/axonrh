@@ -1,6 +1,8 @@
 package com.axonrh.ai.controller;
 
+import com.axonrh.ai.entity.KnowledgeChunk;
 import com.axonrh.ai.entity.KnowledgeDocument;
+import com.axonrh.ai.repository.KnowledgeChunkRepository;
 import com.axonrh.ai.repository.KnowledgeDocumentRepository;
 import com.axonrh.ai.service.KnowledgeService;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,7 @@ public class KnowledgeController {
 
     private final KnowledgeService knowledgeService;
     private final KnowledgeDocumentRepository documentRepository;
+    private final KnowledgeChunkRepository chunkRepository;
 
     @PostMapping("/documents")
     public ResponseEntity<KnowledgeDocument> uploadDocument(
@@ -69,13 +72,13 @@ public class KnowledgeController {
     }
 
     @GetMapping("/documents/{id}/chunks")
-    public ResponseEntity<List<com.axonrh.ai.entity.KnowledgeChunk>> getDocumentChunks(
+    public ResponseEntity<List<KnowledgeChunk>> getDocumentChunks(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID id) {
         
         // Safety check if document belongs to tenant
         return documentRepository.findByIdAndTenantId(id, tenantId)
-                .map(doc -> ResponseEntity.ok(chunkRepository.findByDocumentIdOrderByChunkIndexAsc(id)))
+                .<ResponseEntity<List<KnowledgeChunk>>>map(doc -> ResponseEntity.ok(chunkRepository.findByDocumentIdOrderByChunkIndexAsc(id)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
