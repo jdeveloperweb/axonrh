@@ -57,9 +57,16 @@ public class EmailService {
     @Async
     public void sendTemplateEmail(UUID tenantId, String templateCode, String recipientEmail,
                                   String recipientName, Map<String, String> variables) {
-        EmailTemplate template = templateRepository.findByTenantIdAndCode(tenantId, templateCode)
-                .or(() -> templateRepository.findSystemTemplate(SYSTEM_TENANT_ID, templateCode))
-                .orElseThrow(() -> new IllegalArgumentException("Template não encontrado: " + templateCode));
+        Optional<EmailTemplate> templateOpt = templateRepository.findByTenantIdAndCode(tenantId, templateCode)
+                .or(() -> templateRepository.findByTenantIdAndCodeAndIsSystemTrue(SYSTEM_TENANT_ID, templateCode));
+
+        if (templateOpt.isEmpty()) {
+            log.error("Template de e-mail não encontrado: code={}, tenantId={}. Verifique se a migração V2 foi aplicada.", 
+                    templateCode, tenantId);
+            throw new IllegalArgumentException("Template não encontrado: " + templateCode);
+        }
+
+        EmailTemplate template = templateOpt.get();
 
         String subject = replaceVariables(template.getSubject(), variables);
         String bodyHtml = replaceVariables(template.getBodyHtml(), variables);
@@ -245,7 +252,7 @@ public class EmailService {
      */
     public EmailTemplate getTemplateByCode(UUID tenantId, String code) {
         return templateRepository.findByTenantIdAndCode(tenantId, code)
-                .or(() -> templateRepository.findSystemTemplate(SYSTEM_TENANT_ID, code))
+                .or(() -> templateRepository.findByTenantIdAndCodeAndIsSystemTrue(SYSTEM_TENANT_ID, code))
                 .orElseThrow(() -> new IllegalArgumentException("Template não encontrado: " + code));
     }
 

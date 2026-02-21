@@ -17,9 +17,7 @@ public interface EmailTemplateRepository extends JpaRepository<EmailTemplate, UU
 
     Optional<EmailTemplate> findByTenantIdAndCode(UUID tenantId, String code);
 
-    @Query("SELECT t FROM EmailTemplate t WHERE t.tenantId = :systemTenantId AND t.code = :code AND t.isSystem = true")
-    Optional<EmailTemplate> findSystemTemplate(@Param("systemTenantId") UUID systemTenantId,
-                                               @Param("code") String code);
+    Optional<EmailTemplate> findByTenantIdAndCodeAndIsSystemTrue(UUID tenantId, String code);
 
     List<EmailTemplate> findByTenantId(UUID tenantId);
 
