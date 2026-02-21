@@ -48,10 +48,10 @@ export const eventsApi = {
     },
 
     register: async (id: string): Promise<void> => {
-        return await api.post(`/employees/events/${id}/register`);
+        return await api.post(`/employees/events/${id}/register`, {});
     },
 
     unregister: async (id: string): Promise<void> => {
-        return await api.post(`/employees/events/${id}/unregister`);
+        return await api.post(`/employees/events/${id}/unregister`, {});
     }
 };

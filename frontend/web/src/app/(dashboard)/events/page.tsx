@@ -147,8 +147,9 @@ export default function EventsPage() {
             if (isEventDetailsOpen && selectedEvent?.id === id) {
                 setSelectedEvent(prev => prev ? { ...prev, isUserRegistered: true, registrationCount: prev.registrationCount + 1 } : null);
             }
-        } catch (error) {
-            console.error('Error registering:', error);
+        } catch (err: any) {
+            console.error('Error registering:', err);
+            error('Erro na inscrição', err.response?.data?.message || 'Não foi possível realizar a inscrição.');
         }
     };
 

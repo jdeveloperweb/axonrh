@@ -35,7 +35,7 @@ import { employeesApi } from '@/lib/api/employees';
 import { eventsApi, Event as AppEvent } from '@/lib/api/events';
 import { AxonIATip } from '@/components/performance/AxonIATip';
 import { useThemeStore } from '@/stores/theme-store';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/toast';
 
 interface CollaboratorDashboardProps {
     extraHeaderContent?: React.ReactNode;
@@ -52,7 +52,7 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
     const [latestDisc, setLatestDisc] = useState<DiscEvaluation | null>(null);
     const [pendingEvaluations, setPendingEvaluations] = useState<Evaluation[]>([]);
     const [wellbeingStats, setWellbeingStats] = useState<WellbeingStats | null>(null);
-    const { toast } = useToast();
+    const { success, error: toastError } = useToast();
     const [allEvents, setAllEvents] = useState<AppEvent[]>([]);
     const [loading, setLoading] = useState(true);
     const [registeringId, setRegisteringId] = useState<string | null>(null);
@@ -61,24 +61,22 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
     const isManagement = roles.includes('ADMIN') || roles.includes('RH') || roles.includes('GESTOR_RH') || roles.includes('ANALISTA_DP');
 
     const handleRegisterEvent = async (e: React.MouseEvent, eventId: string) => {
+        if (!eventId) return;
         e.stopPropagation();
         setRegisteringId(eventId);
         try {
+            console.log('Iniciando inscrição no evento:', eventId);
             await eventsApi.register(eventId);
-            toast({
-                title: "Inscrição confirmada!",
-                description: "Você foi inscrito no evento com sucesso.",
-            });
-            // Atualizar estado local
+            success("Inscrição confirmada!", "Você foi inscrito no evento com sucesso.");
+
+            // Atualizar estado local imediatamente
             setAllEvents(prev => prev.map(ev =>
-                ev.id === eventId ? { ...ev, isUserRegistered: true, registrationCount: ev.registrationCount + 1 } : ev
+                ev.id === eventId ? { ...ev, isUserRegistered: true, registrationCount: (ev.registrationCount || 0) + 1 } : ev
             ));
-        } catch (error) {
-            toast({
-                title: "Erro na inscrição",
-                description: "Não foi possível realizar sua inscrição. Tente novamente.",
-                variant: "destructive"
-            });
+        } catch (err: any) {
+            console.error('Erro ao se inscrever no evento:', err);
+            const detail = err.response?.data?.message || err.message || "Tente novamente.";
+            toastError("Erro na inscrição", `Não foi possível concluir: ${detail}`);
         } finally {
             setRegisteringId(null);
         }
