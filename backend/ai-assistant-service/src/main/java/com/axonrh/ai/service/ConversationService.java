@@ -460,12 +460,29 @@ public class ConversationService {
                 getDefaultSystemPrompt() :
                 prompts.get(0).getPromptTemplate();
 
+        // Garantir que as instruções de base de conhecimento e ferramentas estejam presentes
+        if (!template.contains("BASE DE CONHECIMENTO")) {
+            template += "\n\n" + getMandatoryInstructions();
+        }
+
         return template
                 .replace("{company_context}", context != null && context.getCompanyName() != null ?
                         context.getCompanyName() : "Empresa")
                 .replace("{user_context}", context != null && context.getUserName() != null ?
                         String.format("%s (%s)", context.getUserName(), context.getUserRole()) : "Usuário")
                 .replace("{current_date}", LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+    }
+
+    private String getMandatoryInstructions() {
+        return """
+            IMPORTANTE - BASE DE CONHECIMENTO:
+            - Quando o usuário perguntar sobre regras da empresa, políticas de RH, manuais técnicos (como o OCR Worker), procedimentos ou qualquer documento interno, você DEVE usar a ferramenta 'buscar_base_conhecimento' PRIMEIRO.
+            - Nunca diga que não sabe uma regra da empresa sem antes tentar buscar na base de conhecimento.
+            - Se encontrar a informação, cite o documento de onde ela veio.
+            
+            IMPORTANTE - BUSCA POR NOME:
+            - Sempre use 'buscar_funcionario_por_nome' antes de consultar detalhes de um funcionário específico mencionado pelo nome.
+            """;
     }
 
     private String getDefaultSystemPrompt() {
