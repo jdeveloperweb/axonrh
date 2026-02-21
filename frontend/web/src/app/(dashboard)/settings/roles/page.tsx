@@ -14,7 +14,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2, Plus, AlertTriangle } from "lucide-react";
+import { Edit, Trash2, Plus, AlertTriangle, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -90,6 +90,14 @@ export default function RolesPage() {
 
     return (
         <div className="space-y-6">
+            <Link
+                href="/settings"
+                className="flex items-center text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors mb-4 group w-fit"
+            >
+                <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+                Voltar para Configurações
+            </Link>
+
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Perfis de Acesso</h1>

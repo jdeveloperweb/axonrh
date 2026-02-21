@@ -9,8 +9,10 @@ import {
     Trash2,
     Edit2,
     CheckCircle2,
-    XCircle
+    XCircle,
+    ArrowLeft
 } from 'lucide-react';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { userApi, UserDTO } from '@/lib/api/users';
 import { useToast } from '@/hooks/use-toast';
@@ -85,9 +87,17 @@ export default function UsersPage() {
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
+            <Link
+                href="/settings"
+                className="flex items-center text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors mb-4 group w-fit"
+            >
+                <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+                Voltar para Configurações
+            </Link>
+
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Usuários do Sistema</h1>
+                    <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">Usuários do Sistema</h1>
                     <p className="text-[var(--color-text-secondary)]">Gerencie os administradores e acessos ao painel de RH</p>
                 </div>
                 <div className="flex gap-2">

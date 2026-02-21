@@ -34,7 +34,8 @@ import {
     List,
     Heading1,
     AlertCircle,
-    Award
+    Award,
+    ArrowLeft
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -466,6 +467,14 @@ export default function LearningManagementPage() {
             {/* Header Area */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 pt-8">
                 <div className="space-y-4">
+                    <Link
+                        href="/settings"
+                        className="flex items-center text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors mb-4 group w-fit"
+                    >
+                        <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+                        Voltar para Configurações
+                    </Link>
+
                     <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-slate-400 text-[9px] font-black uppercase tracking-[0.2em] w-fit shadow-xl">
                         <div className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
                         Management Console

@@ -19,8 +19,10 @@ import {
     Copy,
     ExternalLink,
     Code,
-    Layout
+    Layout,
+    ArrowLeft
 } from 'lucide-react';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { emailApi, EmailTemplate, EmailLog } from '@/lib/api/notification';
@@ -229,6 +231,14 @@ export default function EmailSettingsPage() {
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500 pb-12">
+            <Link
+                href="/settings"
+                className="flex items-center text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors mb-4 group w-fit"
+            >
+                <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+                Voltar para Configurações
+            </Link>
+
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">E-mails e Mensagens</h1>

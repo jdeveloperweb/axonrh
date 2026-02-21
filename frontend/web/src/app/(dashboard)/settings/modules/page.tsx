@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { setupApi, ModuleConfig } from '@/lib/api/setup';
 import { Switch } from '@/components/ui/switch';
+import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useThemeStore } from '@/stores/theme-store';
@@ -246,12 +247,13 @@ export default function ModulesSettingsPage() {
         <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <button
-                        onClick={() => router.push('/settings')}
-                        className="flex items-center text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors mb-2"
+                    <Link
+                        href="/settings"
+                        className="flex items-center text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors mb-4 group w-fit"
                     >
-                        <ArrowLeft className="w-4 h-4 mr-1" /> Voltar para Configurações
-                    </button>
+                        <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+                        Voltar para Configurações
+                    </Link>
                     <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">Recursos e Módulos</h1>
                     <p className="text-[var(--color-text-secondary)] mt-1">
                         Personalize seu AxonRH ativando apenas o que sua empresa precisa.

@@ -31,6 +31,7 @@ import {
     Loader2,
     Users
 } from 'lucide-react';
+import Link from 'next/link';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -159,12 +160,13 @@ export default function OrgSettingsPage() {
             {/* Header */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <button
-                        onClick={() => router.back()}
-                        className="flex items-center text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors mb-2"
+                    <Link
+                        href="/settings"
+                        className="flex items-center text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors mb-4 group w-fit"
                     >
-                        <ArrowLeft className="w-4 h-4 mr-1" /> Voltar para Configurações
-                    </button>
+                        <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+                        Voltar para Configurações
+                    </Link>
                     <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">Estrutura Organizacional</h1>
                     <p className="text-[var(--color-text-secondary)] mt-1">
                         Gerencie departamentos, cargos e a hierarquia da empresa.
