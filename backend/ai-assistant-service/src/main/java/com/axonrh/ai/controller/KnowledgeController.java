@@ -76,10 +76,24 @@ public class KnowledgeController {
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID id) {
         
+        log.info("Fetching chunks for document {} and tenant {}", id, tenantId);
+        
         // Safety check if document belongs to tenant
         return documentRepository.findByIdAndTenantId(id, tenantId)
-                .<ResponseEntity<List<KnowledgeChunk>>>map(doc -> ResponseEntity.ok(chunkRepository.findByDocumentIdOrderByChunkIndexAsc(id)))
-                .orElse(ResponseEntity.notFound().build());
+                .<ResponseEntity<List<KnowledgeChunk>>>map(doc -> {
+                    List<KnowledgeChunk> chunks = chunkRepository.findByDocumentIdOrderByChunkIndexAsc(id);
+                    log.info("Found {} chunks in MongoDB for document {}", chunks.size(), id);
+                    if (chunks.isEmpty()) {
+                        log.warn("No chunks found in MongoDB. Checking by tenantId...");
+                        List<KnowledgeChunk> tenantChunks = chunkRepository.findByTenantId(tenantId);
+                        log.info("Total chunks for tenant {} in MongoDB: {}", tenantId, tenantChunks.size());
+                    }
+                    return ResponseEntity.ok(chunks);
+                })
+                .orElseGet(() -> {
+                    log.error("Document {} not found for tenant {}", id, tenantId);
+                    return ResponseEntity.notFound().build();
+                });
     }
 
 
