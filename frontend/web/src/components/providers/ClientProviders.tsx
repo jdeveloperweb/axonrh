@@ -3,6 +3,7 @@
 import React from 'react';
 import { ConfirmProvider } from './ConfirmProvider';
 import { NotificationProvider } from './NotificationProvider';
+import { ToastProvider } from '../ui/toast';
 import { Toaster } from 'sonner';
 
 interface ClientProvidersProps {
@@ -11,11 +12,13 @@ interface ClientProvidersProps {
 
 export function ClientProviders({ children }: ClientProvidersProps) {
     return (
-        <ConfirmProvider>
-            <NotificationProvider>
-                {children}
-                <Toaster richColors position="top-right" />
-            </NotificationProvider>
-        </ConfirmProvider>
+        <ToastProvider>
+            <ConfirmProvider>
+                <NotificationProvider>
+                    {children}
+                    <Toaster richColors position="top-right" />
+                </NotificationProvider>
+            </ConfirmProvider>
+        </ToastProvider>
     );
 }
