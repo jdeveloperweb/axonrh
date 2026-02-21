@@ -27,6 +27,7 @@ public class EventService {
     private final EventRegistrationRepository registrationRepository;
     private final EmployeeRepository employeeRepository;
 
+    @Transactional(readOnly = true)
     public List<EventDTO> getAllEvents() {
         UUID tenantId = getTenantId();
         UUID employeeId = getCurrentEmployeeId();
@@ -36,6 +37,7 @@ public class EventService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public EventDTO getEventById(UUID id) {
         UUID employeeId = getCurrentEmployeeId();
         Event event = eventRepository.findById(id)

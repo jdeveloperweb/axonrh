@@ -162,7 +162,7 @@ export default function EventsPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
                 <div className="space-y-1">
                     <h1 className="text-4xl font-black tracking-tight text-gray-900 flex items-center gap-3">
-                        <div className="w-12 h-12 bg-purple-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-purple-200">
+                        <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white shadow-lg shadow-primary/20">
                             <Mic2 className="w-6 h-6" />
                         </div>
                         Eventos e Palestras
@@ -175,7 +175,7 @@ export default function EventsPage() {
                 {isManagement && (
                     <Button
                         onClick={() => setIsNewEventModalOpen(true)}
-                        className="bg-purple-600 hover:bg-purple-700 text-white rounded-2xl h-14 px-8 font-bold text-lg shadow-xl shadow-purple-100 transition-all hover:scale-105 active:scale-95"
+                        className="bg-primary hover:bg-primary/90 text-white rounded-2xl h-14 px-8 font-bold text-lg shadow-xl shadow-primary/10 transition-all hover:scale-105 active:scale-95"
                     >
                         <Plus className="w-5 h-5 mr-2" />
                         Criar Novo Evento
@@ -186,10 +186,10 @@ export default function EventsPage() {
             {/* Filters & Search */}
             <div className="flex flex-col md:flex-row items-center gap-4 bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
                 <div className="relative flex-1 group">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-purple-500 transition-colors" />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-primary transition-colors" />
                     <Input
                         placeholder="Buscar por título ou palestrante..."
-                        className="pl-12 h-12 bg-white border-transparent focus:border-purple-200 rounded-xl transition-all shadow-sm"
+                        className="pl-12 h-12 bg-white border-transparent focus:border-primary/20 rounded-xl transition-all shadow-sm"
                         value={search}
                         onChange={e => setSearch(e.target.value)}
                     />
@@ -199,7 +199,7 @@ export default function EventsPage() {
                         onClick={() => setFilter('ALL')}
                         className={cn(
                             "px-4 py-2 rounded-lg text-sm font-bold transition-all",
-                            filter === 'ALL' ? "bg-purple-600 text-white shadow-md shadow-purple-100" : "text-gray-500 hover:bg-gray-50"
+                            filter === 'ALL' ? "bg-primary text-white shadow-md shadow-primary/10" : "text-gray-500 hover:bg-gray-50"
                         )}
                     >
                         Todos
@@ -208,7 +208,7 @@ export default function EventsPage() {
                         onClick={() => setFilter('REGISTERED')}
                         className={cn(
                             "px-4 py-2 rounded-lg text-sm font-bold transition-all",
-                            filter === 'REGISTERED' ? "bg-purple-600 text-white shadow-md shadow-purple-100" : "text-gray-500 hover:bg-gray-50"
+                            filter === 'REGISTERED' ? "bg-primary text-white shadow-md shadow-primary/10" : "text-gray-500 hover:bg-gray-50"
                         )}
                     >
                         Inscritos
@@ -217,7 +217,7 @@ export default function EventsPage() {
                         onClick={() => setFilter('UPCOMING')}
                         className={cn(
                             "px-4 py-2 rounded-lg text-sm font-bold transition-all",
-                            filter === 'UPCOMING' ? "bg-purple-600 text-white shadow-md shadow-purple-100" : "text-gray-500 hover:bg-gray-50"
+                            filter === 'UPCOMING' ? "bg-primary text-white shadow-md shadow-primary/10" : "text-gray-500 hover:bg-gray-50"
                         )}
                     >
                         Próximos
@@ -247,7 +247,7 @@ export default function EventsPage() {
                                     "h-24 w-full bg-gradient-to-r relative overflow-hidden",
                                     event.category === 'WELLBEING' ? "from-emerald-400 to-teal-500" :
                                         event.category === 'TECHNICAL' ? "from-blue-500 to-indigo-600" :
-                                            "from-purple-500 to-indigo-600"
+                                            "from-primary/80 to-primary-700"
                                 )}>
                                     <div className="absolute top-4 right-4 group-hover:scale-110 transition-transform">
                                         {event.isUserRegistered ? (
@@ -260,7 +260,7 @@ export default function EventsPage() {
                                             </Badge>
                                         )}
                                     </div>
-                                    <div className="absolute -bottom-6 left-6 w-16 h-16 bg-white rounded-2xl shadow-lg border-4 border-white flex flex-col items-center justify-center text-purple-600 leading-none">
+                                    <div className="absolute -bottom-6 left-6 w-16 h-16 bg-white rounded-2xl shadow-lg border-4 border-white flex flex-col items-center justify-center text-primary leading-none">
                                         <span className="text-xs font-black uppercase tracking-tighter opacity-70">
                                             {event.date ? format(new Date(event.date), 'MMM', { locale: ptBR }) : '---'}
                                         </span>
@@ -272,7 +272,7 @@ export default function EventsPage() {
 
                                 <div className="p-6 pt-10 space-y-4">
                                     <div className="space-y-1">
-                                        <h3 className="text-lg font-extrabold text-gray-900 group-hover:text-purple-600 transition-colors line-clamp-2">
+                                        <h3 className="text-lg font-extrabold text-gray-900 group-hover:text-primary transition-colors line-clamp-2">
                                             {event.title}
                                         </h3>
                                         <div className="flex items-center gap-4 text-xs font-medium text-gray-400">
@@ -288,8 +288,8 @@ export default function EventsPage() {
                                     </div>
 
                                     {event.speakerName && (
-                                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl group-hover:bg-purple-50 transition-colors">
-                                            <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-xs font-black">
+                                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl group-hover:bg-primary/5 transition-colors">
+                                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-black">
                                                 {event.speakerName.charAt(0)}
                                             </div>
                                             <div className="min-w-0">
@@ -299,11 +299,11 @@ export default function EventsPage() {
                                         </div>
                                     )}
 
-                                    <div className="pt-4 border-t border-gray-50 flex items-center justify-between group-hover:border-purple-100 transition-colors">
+                                    <div className="pt-4 border-t border-gray-50 flex items-center justify-between group-hover:border-primary/10 transition-colors">
                                         <span className="text-xs font-bold text-gray-400">
                                             {event.registrationCount} Inscritos
                                         </span>
-                                        <div className="flex items-center gap-1 text-purple-600 text-xs font-black uppercase tracking-widest translate-x-1 group-hover:translate-x-3 transition-transform">
+                                        <div className="flex items-center gap-1 text-primary text-xs font-black uppercase tracking-widest translate-x-1 group-hover:translate-x-3 transition-transform">
                                             Ver Detalhes
                                             <ChevronRight className="w-4 h-4" />
                                         </div>
@@ -340,9 +340,9 @@ export default function EventsPage() {
             {/* Modals */}
             <Dialog open={isNewEventModalOpen} onOpenChange={setIsNewEventModalOpen}>
                 <DialogContent className="max-w-2xl bg-white rounded-3xl p-0 overflow-hidden border-none shadow-2xl">
-                    <DialogHeader className="bg-purple-600 p-8 text-white">
+                    <DialogHeader className="bg-primary p-8 text-white">
                         <DialogTitle className="text-2xl font-black">Criar Novo Evento</DialogTitle>
-                        <DialogDescription className="text-purple-100 opacity-90">
+                        <DialogDescription className="text-white opacity-80">
                             Preencha as informações para divulgar o evento na plataforma.
                         </DialogDescription>
                     </DialogHeader>
@@ -391,7 +391,7 @@ export default function EventsPage() {
                         </div>
 
                         <div className="pt-6 border-t border-gray-100 space-y-6">
-                            <h4 className="text-sm font-black uppercase tracking-widest text-purple-600">Informações do Palestrante (Opcional)</h4>
+                            <h4 className="text-sm font-black uppercase tracking-widest text-primary">Informações do Palestrante (Opcional)</h4>
 
                             <div className="grid grid-cols-2 gap-6">
                                 <div className="space-y-2">
@@ -436,7 +436,7 @@ export default function EventsPage() {
 
                     <DialogFooter className="bg-gray-50 p-6">
                         <Button variant="ghost" onClick={() => setIsNewEventModalOpen(false)}>Cancelar</Button>
-                        <Button className="bg-purple-600 hover:bg-purple-700 h-12 px-8 rounded-xl font-bold" onClick={handleSaveEvent}>
+                        <Button className="bg-primary hover:bg-primary/90 h-12 px-8 rounded-xl font-bold" onClick={handleSaveEvent}>
                             Salvar e Publicar
                         </Button>
                     </DialogFooter>
@@ -448,7 +448,7 @@ export default function EventsPage() {
                 <DialogContent className="max-w-2xl bg-white rounded-3xl p-0 overflow-hidden border-none shadow-2xl">
                     {selectedEvent && (
                         <>
-                            <div className="bg-purple-600 p-10 text-white relative">
+                            <div className="bg-primary p-10 text-white relative">
                                 <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
                                     <Mic2 className="w-40 h-40" />
                                 </div>
@@ -456,13 +456,13 @@ export default function EventsPage() {
                                     {selectedEvent.category}
                                 </Badge>
                                 <h2 className="text-3xl font-black leading-tight mb-4">{selectedEvent.title}</h2>
-                                <div className="flex flex-wrap items-center gap-6 text-purple-100 font-bold">
+                                <div className="flex flex-wrap items-center gap-6 text-white/90 font-bold">
                                     <div className="flex items-center gap-2">
                                         <Calendar className="w-5 h-5" />
                                         {selectedEvent.date ? format(new Date(selectedEvent.date), "dd 'de' MMMM", { locale: ptBR }) : '---'}
                                     </div>
-                                    <div className="flex items-center gap-2 text-purple-200">
-                                        <Clock className="w-5 h-5 text-purple-300" />
+                                    <div className="flex items-center gap-2 text-white/80">
+                                        <Clock className="w-5 h-5 text-white/70" />
                                         {selectedEvent.date ? format(new Date(selectedEvent.date), 'HH:mm') : '--:--'}
                                     </div>
                                     <div className="flex items-center gap-2">
@@ -480,9 +480,9 @@ export default function EventsPage() {
 
                                 {selectedEvent.speakerName && (
                                     <div className="p-6 bg-gray-50 rounded-3xl border border-gray-100 space-y-4">
-                                        <h4 className="text-xs font-black uppercase tracking-widest text-purple-600">Palestrante Confirmado</h4>
+                                        <h4 className="text-xs font-black uppercase tracking-widest text-primary">Palestrante Confirmado</h4>
                                         <div className="flex items-start gap-4">
-                                            <div className="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center text-purple-600 text-2xl font-black">
+                                            <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary text-2xl font-black">
                                                 {selectedEvent.speakerName.charAt(0)}
                                             </div>
                                             <div className="flex-1 space-y-2">
@@ -515,9 +515,9 @@ export default function EventsPage() {
                                                     key={resource.id || i}
                                                     href={resource.url}
                                                     target="_blank"
-                                                    className="p-4 bg-white border border-gray-100 rounded-2xl hover:border-purple-200 hover:shadow-md transition-all group flex items-center gap-3"
+                                                    className="p-4 bg-white border border-gray-100 rounded-2xl hover:border-primary/20 hover:shadow-md transition-all group flex items-center gap-3"
                                                 >
-                                                    <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 group-hover:text-purple-600 group-hover:bg-purple-50 transition-colors">
+                                                    <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 group-hover:text-primary group-hover:bg-primary/5 transition-colors">
                                                         <FileText className="w-5 h-5" />
                                                     </div>
                                                     <div className="min-w-0">
@@ -546,7 +546,7 @@ export default function EventsPage() {
                                 ) : (
                                     <Button
                                         onClick={() => handleRegister(selectedEvent.id)}
-                                        className="bg-purple-600 hover:bg-purple-700 text-white rounded-xl h-12 px-10 font-black shadow-lg shadow-purple-200 transition-all hover:scale-105 active:scale-95"
+                                        className="bg-primary hover:bg-primary/90 text-white rounded-xl h-12 px-10 font-black shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
                                     >
                                         Quero Participar
                                         <ArrowRight className="w-4 h-4 ml-2" />

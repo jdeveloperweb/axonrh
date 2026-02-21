@@ -98,6 +98,8 @@ export default function LearningManagementPage() {
     });
 
     const [courseCertificateConfig, setCourseCertificateConfig] = useState<CertificateConfig | null>(null);
+    const [employeeSearch, setEmployeeSearch] = useState('');
+    const [enrollmentSearch, setEnrollmentSearch] = useState('');
 
     // Form states
     const [formData, setFormData] = useState<Partial<Course>>({
@@ -159,6 +161,23 @@ export default function LearningManagementPage() {
 
         setLoading(false);
     };
+
+    const loadEmployees = async () => {
+        try {
+            const res = await employeesApi.list({ size: 1000, status: 'ACTIVE' });
+            setEmployees(res.content || []);
+        } catch (error) {
+            console.error('Error loading employees:', error);
+            // toast.error('Erro ao carregar colaboradores');
+        }
+    };
+
+    useEffect(() => {
+        if (activeView === 'ENROLLMENTS') {
+            loadEnrollments();
+            loadEmployees();
+        }
+    }, [activeView]);
 
     useEffect(() => {
         if (selectedCourse?.id && activeView === 'EDITOR') {
@@ -1066,25 +1085,55 @@ export default function LearningManagementPage() {
                                 <div>
                                     <CardTitle className="text-2xl font-black">Indicar Treinamento</CardTitle>
                                     <CardDescription>Atribua cursos para colaboradores específicos com data limite.</CardDescription>
+                                    <div className="mt-4 relative max-w-sm">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                        <Input
+                                            placeholder="Buscar na listagem de matrículas..."
+                                            className="h-10 pl-10 rounded-xl border-slate-100 bg-white/50 text-xs font-bold"
+                                            value={enrollmentSearch}
+                                            onChange={(e) => setEnrollmentSearch(e.target.value)}
+                                        />
+                                    </div>
                                 </div>
                                 <div className="flex flex-wrap gap-4 items-end">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Colaborador</label>
-                                        <Select
-                                            value={assignmentData.employeeId}
-                                            onValueChange={(val) => setAssignmentData({ ...assignmentData, employeeId: val })}
-                                        >
-                                            <SelectTrigger className="h-12 w-64 rounded-xl border-slate-200 bg-white font-bold shadow-sm hover:border-blue-300 transition-colors">
-                                                <SelectValue placeholder="Selecione um colaborador">
-                                                    {employees.find(emp => emp.id === assignmentData.employeeId)?.fullName}
-                                                </SelectValue>
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {employees.map(emp => (
-                                                    <SelectItem key={emp.id} value={emp.id}>{emp.fullName}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                        <div className="relative group/search">
+                                            <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10 opacity-40 group-focus-within/search:opacity-100 transition-opacity">
+                                                <Search className="h-4 w-4" />
+                                            </div>
+                                            <Select
+                                                value={assignmentData.employeeId}
+                                                onValueChange={(val) => setAssignmentData({ ...assignmentData, employeeId: val })}
+                                            >
+                                                <SelectTrigger className="h-12 w-64 pl-10 rounded-xl border-slate-200 bg-white font-bold shadow-sm hover:border-blue-300 transition-colors">
+                                                    <SelectValue placeholder="Selecione um colaborador">
+                                                        {employees.find(emp => emp.id === assignmentData.employeeId)?.fullName}
+                                                    </SelectValue>
+                                                </SelectTrigger>
+                                                <SelectContent className="max-h-80">
+                                                    <div className="p-2 border-b border-slate-50 sticky top-0 bg-white z-20">
+                                                        <Input
+                                                            placeholder="Buscar colaborador..."
+                                                            value={employeeSearch}
+                                                            onChange={(e) => setEmployeeSearch(e.target.value)}
+                                                            onKeyDown={(e) => e.stopPropagation()}
+                                                            className="h-9 rounded-lg border-slate-100 text-xs font-bold"
+                                                        />
+                                                    </div>
+                                                    {employees
+                                                        .filter(emp => emp.fullName.toLowerCase().includes(employeeSearch.toLowerCase()))
+                                                        .map(emp => (
+                                                            <SelectItem key={emp.id} value={emp.id} className="cursor-pointer">
+                                                                <div className="flex flex-col">
+                                                                    <span className="font-bold">{emp.fullName}</span>
+                                                                    <span className="text-[9px] text-slate-400 uppercase tracking-tighter">{emp.position?.title || 'Sem Cargo'}</span>
+                                                                </div>
+                                                            </SelectItem>
+                                                        ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Curso</label>
@@ -1137,80 +1186,90 @@ export default function LearningManagementPage() {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-50">
-                                        {enrollments.length === 0 ? (
+                                        {enrollments.filter(en =>
+                                            en.employeeName?.toLowerCase().includes(enrollmentSearch.toLowerCase()) ||
+                                            en.courseName?.toLowerCase().includes(enrollmentSearch.toLowerCase())
+                                        ).length === 0 ? (
                                             <tr>
                                                 <td colSpan={6} className="px-8 py-20 text-center space-y-4">
                                                     <div className="h-16 w-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto">
                                                         <Plus className="h-8 w-8 text-slate-200" />
                                                     </div>
-                                                    <p className="text-sm font-black text-slate-300 uppercase tracking-widest">Nenhuma matrícula encontrada.</p>
+                                                    <p className="text-sm font-black text-slate-300 uppercase tracking-widest">
+                                                        {enrollments.length === 0 ? "Nenhuma matrícula encontrada." : "Nenhum resultado para a busca."}
+                                                    </p>
                                                 </td>
                                             </tr>
                                         ) : (
-                                            enrollments.map(enrollment => (
-                                                <tr key={enrollment.id} className="hover:bg-slate-50/50 transition-all group">
-                                                    <td className="px-8 py-6">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center font-black text-blue-600 text-xs">
-                                                                {enrollment.employeeName?.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || '??'}
+                                            enrollments
+                                                .filter(en =>
+                                                    en.employeeName?.toLowerCase().includes(enrollmentSearch.toLowerCase()) ||
+                                                    en.courseName?.toLowerCase().includes(enrollmentSearch.toLowerCase())
+                                                )
+                                                .map(enrollment => (
+                                                    <tr key={enrollment.id} className="hover:bg-slate-50/50 transition-all group">
+                                                        <td className="px-8 py-6">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center font-black text-blue-600 text-xs">
+                                                                    {enrollment.employeeName?.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || '??'}
+                                                                </div>
+                                                                <div>
+                                                                    <p className="font-black text-sm text-slate-900">{enrollment.employeeName}</p>
+                                                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">
+                                                                        {employees.find(e => e.id === enrollment.employeeId)?.position?.title || 'Colaborador'}
+                                                                    </p>
+                                                                </div>
                                                             </div>
-                                                            <div>
-                                                                <p className="font-black text-sm text-slate-900">{enrollment.employeeName}</p>
-                                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">
-                                                                    {employees.find(e => e.id === enrollment.employeeId)?.position?.title || 'Colaborador'}
-                                                                </p>
+                                                        </td>
+                                                        <td className="px-8 py-6 font-bold text-sm text-slate-600">{enrollment.courseName}</td>
+                                                        <td className="px-8 py-6 text-sm">
+                                                            <Badge className={cn(
+                                                                "border-none font-black text-[9px] uppercase tracking-widest",
+                                                                enrollment.status === 'COMPLETED' ? "bg-emerald-50 text-emerald-600" :
+                                                                    enrollment.status === 'IN_PROGRESS' ? "bg-blue-50 text-blue-600" :
+                                                                        "bg-slate-50 text-slate-600"
+                                                            )}>
+                                                                {enrollment.status}
+                                                            </Badge>
+                                                        </td>
+                                                        <td className="px-8 py-6">
+                                                            <div className="w-32 space-y-2">
+                                                                <div className="flex justify-between text-[9px] font-black text-slate-400 uppercase">
+                                                                    <span>{enrollment.status === 'COMPLETED' ? 'Concluído' : 'Progresso'}</span>
+                                                                    <span>{Math.round(enrollment.progressPercentage || 0)}%</span>
+                                                                </div>
+                                                                <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                                                                    <div
+                                                                        className={cn(
+                                                                            "h-full transition-all",
+                                                                            enrollment.status === 'COMPLETED' ? "bg-emerald-500" : "bg-blue-500"
+                                                                        )}
+                                                                        style={{ width: `${enrollment.progressPercentage || 0}%` }}
+                                                                    />
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-8 py-6 font-bold text-sm text-slate-600">{enrollment.courseName}</td>
-                                                    <td className="px-8 py-6 text-sm">
-                                                        <Badge className={cn(
-                                                            "border-none font-black text-[9px] uppercase tracking-widest",
-                                                            enrollment.status === 'COMPLETED' ? "bg-emerald-50 text-emerald-600" :
-                                                                enrollment.status === 'IN_PROGRESS' ? "bg-blue-50 text-blue-600" :
-                                                                    "bg-slate-50 text-slate-600"
-                                                        )}>
-                                                            {enrollment.status}
-                                                        </Badge>
-                                                    </td>
-                                                    <td className="px-8 py-6">
-                                                        <div className="w-32 space-y-2">
-                                                            <div className="flex justify-between text-[9px] font-black text-slate-400 uppercase">
-                                                                <span>{enrollment.status === 'COMPLETED' ? 'Concluído' : 'Progresso'}</span>
-                                                                <span>{Math.round(enrollment.progressPercentage || 0)}%</span>
+                                                        </td>
+                                                        <td className="px-8 py-6">
+                                                            <div className={cn(
+                                                                "flex items-center gap-2 font-black text-[10px] uppercase",
+                                                                enrollment.dueDate ? "text-rose-500" : "text-slate-400"
+                                                            )}>
+                                                                <Calendar className="h-3 w-3" />
+                                                                {enrollment.dueDate ? new Date(enrollment.dueDate).toLocaleDateString('pt-BR') : 'SEM PRAZO'}
                                                             </div>
-                                                            <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                                                                <div
-                                                                    className={cn(
-                                                                        "h-full transition-all",
-                                                                        enrollment.status === 'COMPLETED' ? "bg-emerald-500" : "bg-blue-500"
-                                                                    )}
-                                                                    style={{ width: `${enrollment.progressPercentage || 0}%` }}
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-8 py-6">
-                                                        <div className={cn(
-                                                            "flex items-center gap-2 font-black text-[10px] uppercase",
-                                                            enrollment.dueDate ? "text-rose-500" : "text-slate-400"
-                                                        )}>
-                                                            <Calendar className="h-3 w-3" />
-                                                            {enrollment.dueDate ? new Date(enrollment.dueDate).toLocaleDateString('pt-BR') : 'SEM PRAZO'}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-8 py-6 text-right">
-                                                        <Button
-                                                            size="icon"
-                                                            variant="ghost"
-                                                            className="rounded-xl opacity-0 group-hover:opacity-100 transition-all text-rose-500 hover:text-rose-600 hover:bg-rose-50"
-                                                            onClick={() => handleRemoveEnrollment(enrollment.id)}
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
-                                                    </td>
-                                                </tr>
-                                            ))
+                                                        </td>
+                                                        <td className="px-8 py-6 text-right">
+                                                            <Button
+                                                                size="icon"
+                                                                variant="ghost"
+                                                                className="rounded-xl opacity-0 group-hover:opacity-100 transition-all text-rose-500 hover:text-rose-600 hover:bg-rose-50"
+                                                                onClick={() => handleRemoveEnrollment(enrollment.id)}
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </td>
+                                                    </tr>
+                                                ))
                                         )}
                                     </tbody>
                                 </table>
