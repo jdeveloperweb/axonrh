@@ -12,3 +12,56 @@
 [INFO] --- compiler:3.13.0:compile (default-compile) @ ai-assistant-service ---
 [INFO] Recompiling the module because of changed source code.
 [INFO] Compiling 67 source files with javac [debug parameters release 17] to target\classes
+[INFO] /C:/Users/Jaime.Vicente/axonrh/backend/ai-assistant-service/src/main/java/com/axonrh/ai/entity/EmployeeWellbeing.java: C:\Users\Jaime.Vicente\axonrh\backend\ai-assistant-service\src\main\java\com\axonrh\ai\entity\EmployeeWellbeing.java uses or overrides a deprecated API.
+[INFO] /C:/Users/Jaime.Vicente/axonrh/backend/ai-assistant-service/src/main/java/com/axonrh/ai/entity/EmployeeWellbeing.java: Recompile with -Xlint:deprecation for details.
+[INFO] /C:/Users/Jaime.Vicente/axonrh/backend/ai-assistant-service/src/main/java/com/axonrh/ai/service/NluService.java: C:\Users\Jaime.Vicente\axonrh\backend\ai-assistant-service\src\main\java\com\axonrh\ai\service\NluService.java uses unchecked or unsafe operations.
+[INFO] /C:/Users/Jaime.Vicente/axonrh/backend/ai-assistant-service/src/main/java/com/axonrh/ai/service/NluService.java: Recompile with -Xlint:unchecked for details.
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /C:/Users/Jaime.Vicente/axonrh/backend/ai-assistant-service/src/main/java/com/axonrh/ai/controller/KnowledgeController.java:[79,9] cannot find symbol
+  symbol:   variable log
+  location: class com.axonrh.ai.controller.KnowledgeController
+[ERROR] /C:/Users/Jaime.Vicente/axonrh/backend/ai-assistant-service/src/main/java/com/axonrh/ai/controller/KnowledgeController.java:[85,21] cannot find symbol
+  symbol:   variable log
+  location: class com.axonrh.ai.controller.KnowledgeController
+[ERROR] /C:/Users/Jaime.Vicente/axonrh/backend/ai-assistant-service/src/main/java/com/axonrh/ai/controller/KnowledgeController.java:[87,25] cannot find symbol
+  symbol:   variable log
+  location: class com.axonrh.ai.controller.KnowledgeController
+[ERROR] /C:/Users/Jaime.Vicente/axonrh/backend/ai-assistant-service/src/main/java/com/axonrh/ai/controller/KnowledgeController.java:[89,25] cannot find symbol
+  symbol:   variable log
+  location: class com.axonrh.ai.controller.KnowledgeController
+[ERROR] /C:/Users/Jaime.Vicente/axonrh/backend/ai-assistant-service/src/main/java/com/axonrh/ai/controller/KnowledgeController.java:[94,21] cannot find symbol
+  symbol:   variable log
+  location: class com.axonrh.ai.controller.KnowledgeController
+[INFO] 5 errors 
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  20.976 s
+[INFO] Finished at: 2026-02-21T09:05:33-03:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.13.0:compile (default-compile) on project ai-assistant-service: Compilation failure: Compilation failure: 
+[ERROR] /C:/Users/Jaime.Vicente/axonrh/backend/ai-assistant-service/src/main/java/com/axonrh/ai/controller/KnowledgeController.java:[79,9] cannot find symbol
+[ERROR]   symbol:   variable log
+[ERROR]   location: class com.axonrh.ai.controller.KnowledgeController
+[ERROR] /C:/Users/Jaime.Vicente/axonrh/backend/ai-assistant-service/src/main/java/com/axonrh/ai/controller/KnowledgeController.java:[85,21] cannot find symbol
+[ERROR]   symbol:   variable log
+[ERROR]   location: class com.axonrh.ai.controller.KnowledgeController
+[ERROR] /C:/Users/Jaime.Vicente/axonrh/backend/ai-assistant-service/src/main/java/com/axonrh/ai/controller/KnowledgeController.java:[87,25] cannot find symbol
+[ERROR]   symbol:   variable log
+[ERROR]   location: class com.axonrh.ai.controller.KnowledgeController
+[ERROR] /C:/Users/Jaime.Vicente/axonrh/backend/ai-assistant-service/src/main/java/com/axonrh/ai/controller/KnowledgeController.java:[89,25] cannot find symbol
+[ERROR]   symbol:   variable log
+[ERROR]   location: class com.axonrh.ai.controller.KnowledgeController
+[ERROR] /C:/Users/Jaime.Vicente/axonrh/backend/ai-assistant-service/src/main/java/com/axonrh/ai/controller/KnowledgeController.java:[94,21] cannot find symbol
+[ERROR]   symbol:   variable log
+[ERROR]   location: class com.axonrh.ai.controller.KnowledgeController
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

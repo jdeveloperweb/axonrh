@@ -6,6 +6,7 @@ import com.axonrh.ai.repository.KnowledgeChunkRepository;
 import com.axonrh.ai.repository.KnowledgeDocumentRepository;
 import com.axonrh.ai.service.KnowledgeService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/ai/knowledge")
 @RequiredArgsConstructor
