@@ -82,6 +82,14 @@ const settingsItems = [
         href: '/settings/emails',
         color: 'bg-cyan-500',
         adminOnly: true
+    },
+    {
+        title: 'Base de Conhecimento',
+        description: 'Alimente a IA com manuais, políticas e documentos da sua empresa.',
+        icon: Database,
+        href: '/settings/knowledge',
+        color: 'bg-orange-600',
+        adminOnly: true
     }
 ];
 

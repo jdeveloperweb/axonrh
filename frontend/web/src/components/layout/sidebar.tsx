@@ -80,15 +80,6 @@ const navGroups: NavGroup[] = [
     ]
   },
   {
-    title: 'FERRAMENTAS',
-    items: [
-      //  { label: 'Calculadora', href: '/calculator', icon: Calculator },
-      { label: 'Base de Conhecimento', href: '/knowledge', icon: Database },
-    ]
-  },
-
-
-  {
     title: 'ADMINISTRAÇÃO',
     items: [
       { label: 'Organograma', href: '/organogram', icon: Users },
