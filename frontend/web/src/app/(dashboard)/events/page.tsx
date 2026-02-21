@@ -262,10 +262,10 @@ export default function EventsPage() {
                                     </div>
                                     <div className="absolute -bottom-6 left-6 w-16 h-16 bg-white rounded-2xl shadow-lg border-4 border-white flex flex-col items-center justify-center text-purple-600 leading-none">
                                         <span className="text-xs font-black uppercase tracking-tighter opacity-70">
-                                            {format(new Date(event.date), 'MMM', { locale: ptBR })}
+                                            {event.date ? format(new Date(event.date), 'MMM', { locale: ptBR }) : '---'}
                                         </span>
                                         <span className="text-2xl font-black">
-                                            {format(new Date(event.date), 'dd')}
+                                            {event.date ? format(new Date(event.date), 'dd') : '--'}
                                         </span>
                                     </div>
                                 </div>
@@ -278,7 +278,7 @@ export default function EventsPage() {
                                         <div className="flex items-center gap-4 text-xs font-medium text-gray-400">
                                             <span className="flex items-center gap-1">
                                                 <Clock className="w-3 h-3" />
-                                                {format(new Date(event.date), 'HH:mm')}
+                                                {event.date ? format(new Date(event.date), 'HH:mm') : '--:--'}
                                             </span>
                                             <span className="flex items-center gap-1 truncate">
                                                 <MapPin className="w-3 h-3" />
@@ -459,11 +459,11 @@ export default function EventsPage() {
                                 <div className="flex flex-wrap items-center gap-6 text-purple-100 font-bold">
                                     <div className="flex items-center gap-2">
                                         <Calendar className="w-5 h-5" />
-                                        {format(new Date(selectedEvent.date), "dd 'de' MMMM", { locale: ptBR })}
+                                        {selectedEvent.date ? format(new Date(selectedEvent.date), "dd 'de' MMMM", { locale: ptBR }) : '---'}
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <Clock className="w-5 h-5" />
-                                        {format(new Date(selectedEvent.date), 'HH:mm')}
+                                    <div className="flex items-center gap-2 text-purple-200">
+                                        <Clock className="w-5 h-5 text-purple-300" />
+                                        {selectedEvent.date ? format(new Date(selectedEvent.date), 'HH:mm') : '--:--'}
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <MapPin className="w-5 h-5" />

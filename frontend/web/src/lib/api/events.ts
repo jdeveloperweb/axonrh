@@ -32,13 +32,11 @@ export interface Event {
 
 export const eventsApi = {
     getAll: async (): Promise<Event[]> => {
-        const response = await api.get('/employees/events');
-        return response.data;
+        return await api.get('/employees/events');
     },
 
     getById: async (id: string): Promise<Event> => {
-        const response = await api.get(`/employees/events/${id}`);
-        return response.data;
+        return await api.get(`/employees/events/${id}`);
     },
 
     save: async (data: Partial<Event>): Promise<void> => {

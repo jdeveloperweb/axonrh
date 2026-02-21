@@ -89,9 +89,8 @@ export default function WellbeingPage() {
         title: '',
         description: '',
         url: '',
-        type: 'GUIDE',
         category: 'WELLBEING_GUIDE',
-        date: new Date().toISOString() // Required by API but can be mock
+        date: new Date().toISOString()
     });
 
     const isManagement = user?.roles?.some(r => ['ADMIN', 'RH', 'GESTOR_RH', 'HEALTH_PROFESSIONAL'].includes(r));
@@ -163,7 +162,6 @@ export default function WellbeingPage() {
                 title: '',
                 description: '',
                 url: '',
-                type: 'GUIDE',
                 category: 'WELLBEING_GUIDE',
                 date: new Date().toISOString()
             });
@@ -213,7 +211,7 @@ export default function WellbeingPage() {
             icon: <Brain className="w-5 h-5" />,
             description: 'Reflete a proporção de check-ins com sentimentos positivos. Indica o moral e equilíbrio psicológico atual da organização.',
             source: 'Análise de Sentimento das Notas',
-            value: Math.max(30, ((statsData?.sentimentDistribution['POSITIVE'] || 0) / (totalCheckins || 1)) * 100),
+            value: Math.max(30, (((statsData?.sentimentDistribution && statsData.sentimentDistribution['POSITIVE']) || 0) / (totalCheckins || 1)) * 100),
             fullMark: 100
         },
         {
@@ -912,13 +910,13 @@ export default function WellbeingPage() {
                                 <div key={camp.id} className="flex flex-col md:flex-row gap-4 p-5 bg-white rounded-2xl border border-purple-50 hover:shadow-md transition-all group">
                                     <div className="w-full md:w-32 h-32 md:h-24 bg-purple-50 rounded-xl flex flex-col items-center justify-center text-purple-600 border border-purple-100 shrink-0">
                                         <span className="text-[10px] font-black uppercase tracking-tighter opacity-60">
-                                            {new Date(camp.date).toLocaleDateString('pt-BR', { month: 'short' })}
+                                            {camp.date ? new Date(camp.date).toLocaleDateString('pt-BR', { month: 'short' }) : '---'}
                                         </span>
                                         <span className="text-3xl font-black">
-                                            {new Date(camp.date).getDate()}
+                                            {camp.date ? new Date(camp.date).getDate() : '--'}
                                         </span>
                                         <span className="text-[10px] font-bold">
-                                            {new Date(camp.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            {camp.date ? new Date(camp.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
                                         </span>
                                     </div>
                                     <div className="flex-1 flex flex-col justify-center">
