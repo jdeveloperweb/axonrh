@@ -135,43 +135,31 @@ public class KnowledgeService {
 
     public List<SearchResult> search(String query, UUID tenantId, int topK) {
         try {
-            log.debug("Performing knowledge search for tenant {}: {}", tenantId, query);
+            log.debug("Performing memory-efficient knowledge search for tenant {}: {}", tenantId, query);
             List<Float> queryEmbedding = llmService.generateEmbedding(query);
             
-            // For now, we fetch all chunks for the tenant and calculate similarity in application
-            // In a large-scale system, we would use Milvus or MongoDB Atlas Vector Search
-            // Busca os dados leves (sem texto)
-            List<KnowledgeChunk> tenantChunks = chunkRepository.findByTenantIdWithoutContent(tenantId);
-
-            if (tenantChunks.isEmpty()) {
-                log.info("No chunks found for tenant {}", tenantId);
-                return List.of();
+            List<SearchResult> allResults;
+            try (java.util.stream.Stream<KnowledgeChunk> chunkStream = chunkRepository.streamByTenantIdWithoutContent(tenantId)) {
+                allResults = chunkStream
+                        .map(chunk -> {
+                            float similarity = cosineSimilarity(queryEmbedding, chunk.getEmbedding());
+                            if (similarity < 0.60) return null;
+                            
+                            return SearchResult.builder()
+                                    .id(chunk.getId())
+                                    .documentId(chunk.getDocumentId())
+                                    .documentTitle(chunk.getDocumentTitle())
+                                    .chunkIndex(chunk.getChunkIndex())
+                                    .similarity(similarity)
+                                    .build();
+                        })
+                        .filter(Objects::nonNull)
+                        .sorted(Comparator.comparing(SearchResult::getSimilarity).reversed())
+                        .limit(topK)
+                        .collect(Collectors.toList());
             }
 
-            // Calcula similaridade e mantém apenas os TOP K na memória
-            List<SearchResult> allResults = tenantChunks.stream()
-                    .map(chunk -> {
-                        float similarity = cosineSimilarity(queryEmbedding, chunk.getEmbedding());
-                        // Só cria o objeto SearchResult se tiver uma similaridade mínima plausível
-                        if (similarity < 0.60) return null; 
-                        
-                        return SearchResult.builder()
-                                .id(chunk.getId())
-                                .documentId(chunk.getDocumentId())
-                                .documentTitle(chunk.getDocumentTitle())
-                                .chunkIndex(chunk.getChunkIndex())
-                                .similarity(similarity)
-                                .build();
-                    })
-                    .filter(Objects::nonNull)
-                    .sorted(Comparator.comparing(SearchResult::getSimilarity).reversed())
-                    .limit(topK)
-                    .collect(Collectors.toList());
-
-            // Libera a lista grande de chunks da memória o quanto antes
-            tenantChunks = null; 
-
-            // Busca o texto apenas para os vencedores
+            // Busca o texto apenas para os TOP resultados selecionados
             for (SearchResult res : allResults) {
                 chunkRepository.findById(res.getId()).ifPresent(chunk -> {
                     res.setContent(chunk.getContent());

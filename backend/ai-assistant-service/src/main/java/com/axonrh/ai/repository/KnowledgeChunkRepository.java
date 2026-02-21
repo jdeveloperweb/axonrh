@@ -7,12 +7,13 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 @Repository
 public interface KnowledgeChunkRepository extends MongoRepository<KnowledgeChunk, String> {
     
     @Query(value = "{'tenantId': ?0}", fields = "{'content': 0}")
-    List<KnowledgeChunk> findByTenantIdWithoutContent(UUID tenantId);
+    Stream<KnowledgeChunk> streamByTenantIdWithoutContent(UUID tenantId);
 
     List<KnowledgeChunk> findByTenantId(UUID tenantId);
     List<KnowledgeChunk> findByDocumentIdOrderByChunkIndexAsc(UUID documentId);
