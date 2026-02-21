@@ -5,9 +5,13 @@ import com.axonrh.notification.entity.EmailLog.EmailStatus;
 import com.axonrh.notification.entity.EmailTemplate;
 import com.axonrh.notification.repository.EmailLogRepository;
 import com.axonrh.notification.repository.EmailTemplateRepository;
+import jakarta.mail.internet.MimeMessage;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +27,7 @@ import java.util.regex.Pattern;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class EmailService {
 
     private static final Logger log = LoggerFactory.getLogger(EmailService.class);
@@ -38,17 +43,13 @@ public class EmailService {
     @Value("${email.enabled:true}")
     private boolean emailEnabled;
 
+    @Value("${email.provider:smtp}") // Pode ser 'ses' ou 'smtp'
+    private String emailProvider;
+
     private final EmailTemplateRepository templateRepository;
     private final EmailLogRepository logRepository;
     private final SesV2Client sesClient;
-
-    public EmailService(EmailTemplateRepository templateRepository,
-                        EmailLogRepository logRepository,
-                        SesV2Client sesClient) {
-        this.templateRepository = templateRepository;
-        this.logRepository = logRepository;
-        this.sesClient = sesClient;
-    }
+    private final JavaMailSender mailSender;
 
     /**
      * Envia email usando template.
@@ -102,6 +103,7 @@ public class EmailService {
         emailLog.setBodyText(bodyText);
         emailLog.setCcEmails(ccEmails);
         emailLog.setBccEmails(bccEmails);
+        emailLog.setProvider(emailProvider.toUpperCase());
 
         if (template != null) {
             emailLog.setTemplate(template);
@@ -120,44 +122,11 @@ public class EmailService {
             emailLog.setStatus(EmailStatus.SENDING);
             logRepository.save(emailLog);
 
-            // Build destination
-            Destination.Builder destinationBuilder = Destination.builder()
-                    .toAddresses(recipientEmail);
-
-            if (ccEmails != null && ccEmails.length > 0) {
-                destinationBuilder.ccAddresses(ccEmails);
+            if ("ses".equalsIgnoreCase(emailProvider)) {
+                sendViaSes(emailLog, recipientEmail, subject, bodyHtml, bodyText, ccEmails, bccEmails);
+            } else {
+                sendViaSmtp(emailLog, recipientEmail, recipientName, subject, bodyHtml, bodyText, ccEmails, bccEmails);
             }
-            if (bccEmails != null && bccEmails.length > 0) {
-                destinationBuilder.bccAddresses(bccEmails);
-            }
-
-            // Build email content
-            EmailContent.Builder contentBuilder = EmailContent.builder();
-
-            Body.Builder bodyBuilder = Body.builder();
-            bodyBuilder.html(Content.builder().data(bodyHtml).charset("UTF-8").build());
-            if (bodyText != null) {
-                bodyBuilder.text(Content.builder().data(bodyText).charset("UTF-8").build());
-            }
-
-            Message message = Message.builder()
-                    .subject(Content.builder().data(subject).charset("UTF-8").build())
-                    .body(bodyBuilder.build())
-                    .build();
-
-            contentBuilder.simple(message);
-
-            // Send email
-            SendEmailRequest request = SendEmailRequest.builder()
-                    .fromEmailAddress(String.format("%s <%s>", fromName, fromAddress))
-                    .destination(destinationBuilder.build())
-                    .content(contentBuilder.build())
-                    .build();
-
-            SendEmailResponse response = sesClient.sendEmail(request);
-
-            emailLog.markAsSent(response.messageId());
-            log.info("Email sent successfully to {} - MessageId: {}", recipientEmail, response.messageId());
 
         } catch (Exception e) {
             log.error("Failed to send email to {}: {}", recipientEmail, e.getMessage());
@@ -165,6 +134,75 @@ public class EmailService {
         }
 
         logRepository.save(emailLog);
+    }
+
+    private void sendViaSes(EmailLog emailLog, String recipientEmail, String subject,
+                            String bodyHtml, String bodyText, String[] ccEmails, String[] bccEmails) {
+        // Build destination
+        Destination.Builder destinationBuilder = Destination.builder()
+                .toAddresses(recipientEmail);
+
+        if (ccEmails != null && ccEmails.length > 0) {
+            destinationBuilder.ccAddresses(ccEmails);
+        }
+        if (bccEmails != null && bccEmails.length > 0) {
+            destinationBuilder.bccAddresses(bccEmails);
+        }
+
+        // Build email content
+        EmailContent.Builder contentBuilder = EmailContent.builder();
+
+        Body.Builder bodyBuilder = Body.builder();
+        bodyBuilder.html(Content.builder().data(bodyHtml).charset("UTF-8").build());
+        if (bodyText != null) {
+            bodyBuilder.text(Content.builder().data(bodyText).charset("UTF-8").build());
+        }
+
+        Message message = Message.builder()
+                .subject(Content.builder().data(subject).charset("UTF-8").build())
+                .body(bodyBuilder.build())
+                .build();
+
+        contentBuilder.simple(message);
+
+        // Send email
+        SendEmailRequest request = SendEmailRequest.builder()
+                .fromEmailAddress(String.format("%s <%s>", fromName, fromAddress))
+                .destination(destinationBuilder.build())
+                .content(contentBuilder.build())
+                .build();
+
+        SendEmailResponse response = sesClient.sendEmail(request);
+        emailLog.markAsSent(response.messageId());
+        log.info("Email sent successfully via SES to {} - MessageId: {}", recipientEmail, response.messageId());
+    }
+
+    private void sendViaSmtp(EmailLog emailLog, String recipientEmail, String recipientName,
+                             String subject, String bodyHtml, String bodyText, String[] ccEmails, String[] bccEmails) throws Exception {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        helper.setFrom(fromAddress, fromName);
+        helper.setTo(recipientEmail);
+        if (recipientName != null) {
+            // helper.setTo(new InternetAddress(recipientEmail, recipientName));
+        }
+        helper.setSubject(subject);
+        helper.setText(bodyHtml, true);
+        if (bodyText != null) {
+            // helper.setText(bodyText);
+        }
+
+        if (ccEmails != null && ccEmails.length > 0) {
+            helper.setCc(ccEmails);
+        }
+        if (bccEmails != null && bccEmails.length > 0) {
+            helper.setBcc(bccEmails);
+        }
+
+        mailSender.send(message);
+        emailLog.markAsSent("SMTP-" + UUID.randomUUID());
+        log.info("Email sent successfully via SMTP to {}", recipientEmail);
     }
 
     /**
@@ -187,7 +225,10 @@ public class EmailService {
      * Lista templates disponíveis.
      */
     public List<EmailTemplate> listTemplates(UUID tenantId) {
-        return templateRepository.findByTenantIdOrSystem(tenantId, SYSTEM_TENANT_ID);
+        log.info("Buscando templates para tenantId: {} e systemId: {}", tenantId, SYSTEM_TENANT_ID);
+        List<EmailTemplate> templates = templateRepository.findByTenantIdOrSystem(tenantId, SYSTEM_TENANT_ID);
+        log.info("Encontrados {} templates", templates.size());
+        return templates;
     }
 
     /**

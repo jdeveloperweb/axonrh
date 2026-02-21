@@ -42,8 +42,14 @@ public class KnowledgeService {
             // Check for duplicate
             Optional<KnowledgeDocument> existing = documentRepository.findByTenantIdAndContentHash(tenantId, contentHash);
             if (existing.isPresent()) {
-                log.info("Document with same content already exists: {}", existing.get().getId());
-                return existing.get();
+                KnowledgeDocument doc = existing.get();
+                if (!doc.isIndexed()) {
+                    log.info("Document already exists but is not indexed. Re-triggering indexing for: {}", doc.getId());
+                    indexDocumentAsync(doc, content);
+                } else {
+                    log.info("Document already exists and is already indexed: {}", doc.getId());
+                }
+                return doc;
             }
 
             KnowledgeDocument document = KnowledgeDocument.builder()

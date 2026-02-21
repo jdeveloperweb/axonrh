@@ -47,16 +47,22 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
   mail:
-    host: ${MAIL_HOST:}
-    port: ${MAIL_PORT:587}
+    host: ${MAIL_HOST:localhost} # Alterado para localhost por padrão para MailHog
+    port: ${MAIL_PORT:1025}      # Porta SMTP do MailHog
     username: ${MAIL_USERNAME:}
     password: ${MAIL_PASSWORD:}
     properties:
       mail:
         smtp:
-          auth: ${MAIL_SMTP_AUTH:true}
+          auth: ${MAIL_SMTP_AUTH:false} # MailHog não precisa de auth
           starttls:
-            enable: ${MAIL_SMTP_STARTTLS:true}
+            enable: ${MAIL_SMTP_STARTTLS:false}
+
+email:
+  provider: ${EMAIL_PROVIDER:smtp}
+  enabled: ${EMAIL_ENABLED:true}
+  from-address: ${EMAIL_FROM:noreply@axonrh.com}
+  from-name: ${EMAIL_FROM_NAME:AxonRH}
 
 management:
   endpoints:
