@@ -143,6 +143,8 @@ public class WellbeingService {
                     .highRiskCount(0)
                     .totalEapRequests(0)
                     .eapRequests(java.util.Collections.emptyList())
+                    .preventionGuides(java.util.Collections.emptyList())
+                    .activeCampaigns(java.util.Collections.emptyList())
                     .build();
         }
 
@@ -200,20 +202,27 @@ public class WellbeingService {
     }
 
     private List<EventDTO> getPreventionGuides() {
-        UUID tenantId = getTenantId();
-        // For wellbeing guides, we fetch events with category 'WELLBEING_RESOURCE' or similar
-        // or just fetch all resources? The user said "inclusive o bem estar".
-        // Let's fetch events with category 'WELLBEING'
-        return eventRepository.findByTenantIdAndCategoryOrderByDateAsc(tenantId, "WELLBEING_GUIDE").stream()
-                .map(this::mapToDTOSimplified)
-                .collect(Collectors.toList());
+        try {
+            UUID tenantId = getTenantId();
+            return eventRepository.findByTenantIdAndCategoryOrderByDateAsc(tenantId, "WELLBEING_GUIDE").stream()
+                    .map(this::mapToDTOSimplified)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("Error fetching prevention guides", e);
+            return Collections.emptyList();
+        }
     }
 
     private List<EventDTO> getActiveCampaigns() {
-        UUID tenantId = getTenantId();
-        return eventRepository.findByTenantIdAndCategoryOrderByDateAsc(tenantId, "WELLBEING").stream()
-                .map(this::mapToDTOSimplified)
-                .collect(Collectors.toList());
+        try {
+            UUID tenantId = getTenantId();
+            return eventRepository.findByTenantIdAndCategoryOrderByDateAsc(tenantId, "WELLBEING").stream()
+                    .map(this::mapToDTOSimplified)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("Error fetching active campaigns", e);
+            return Collections.emptyList();
+        }
     }
 
     private EventDTO mapToDTOSimplified(Event e) {
