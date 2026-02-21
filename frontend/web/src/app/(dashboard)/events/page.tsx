@@ -16,7 +16,9 @@ import {
     Search,
     Filter,
     FileText,
-    Link as LinkIcon
+    Link as LinkIcon,
+    Edit,
+    Settings
 } from 'lucide-react';
 import { eventsApi, Event as AppEvent, EventResource } from '@/lib/api/events';
 import { useAuthStore } from '@/stores/auth-store';
@@ -91,24 +93,39 @@ export default function EventsPage() {
                 return;
             }
             await eventsApi.save(newEvent);
-            success('Evento salvo!', 'O evento foi publicado com sucesso.');
+            success(newEvent.id ? 'Evento atualizado!' : 'Evento salvo!',
+                newEvent.id ? 'As alterações foram salvas.' : 'O evento foi publicado com sucesso.');
             setIsNewEventModalOpen(false);
-            setNewEvent({
-                title: '',
-                description: '',
-                date: '',
-                location: '',
-                category: 'GENERAL',
-                speakerName: '',
-                speakerRole: '',
-                speakerBio: '',
-                speakerLinkedin: '',
-                resources: []
-            });
+            resetForm();
             loadEvents();
         } catch (error) {
             console.error('Error saving event:', error);
         }
+    };
+
+    const resetForm = () => {
+        setNewEvent({
+            title: '',
+            description: '',
+            date: '',
+            location: '',
+            category: 'GENERAL',
+            speakerName: '',
+            speakerRole: '',
+            speakerBio: '',
+            speakerLinkedin: '',
+            resources: []
+        });
+    };
+
+    const handleEditEvent = (event: AppEvent) => {
+        // Format date for datetime-local input (YYYY-MM-DDThh:mm)
+        const date = event.date ? new Date(event.date).toISOString().slice(0, 16) : '';
+        setNewEvent({
+            ...event,
+            date: date
+        });
+        setIsNewEventModalOpen(true);
     };
 
     const handleDeleteEvent = async (id: string) => {
@@ -174,7 +191,10 @@ export default function EventsPage() {
 
                 {isManagement && (
                     <Button
-                        onClick={() => setIsNewEventModalOpen(true)}
+                        onClick={() => {
+                            resetForm();
+                            setIsNewEventModalOpen(true);
+                        }}
                         className="bg-primary hover:bg-primary/90 text-white rounded-2xl h-14 px-8 font-bold text-lg shadow-xl shadow-primary/10 transition-all hover:scale-105 active:scale-95"
                     >
                         <Plus className="w-5 h-5 mr-2" />
@@ -331,17 +351,28 @@ export default function EventsPage() {
                                 </div>
                             </div>
 
-                            {/* Delete Button (Simplified) */}
+                            {/* Management Actions */}
                             {isManagement && (
-                                <button
-                                    className="absolute top-24 right-4 p-2 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all z-20"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDeleteEvent(event.id);
-                                    }}
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
+                                <div className="absolute top-24 right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all z-20">
+                                    <button
+                                        className="p-2 bg-white rounded-xl shadow-lg text-gray-400 hover:text-primary transition-all scale-90 hover:scale-100"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleEditEvent(event);
+                                        }}
+                                    >
+                                        <Edit className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                        className="p-2 bg-white rounded-xl shadow-lg text-gray-400 hover:text-red-500 transition-all scale-90 hover:scale-100"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDeleteEvent(event.id);
+                                        }}
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                </div>
                             )}
                         </Card>
                     ))
@@ -362,9 +393,11 @@ export default function EventsPage() {
             <Dialog open={isNewEventModalOpen} onOpenChange={setIsNewEventModalOpen}>
                 <DialogContent className="max-w-2xl bg-white rounded-3xl p-0 overflow-hidden border-none shadow-2xl">
                     <DialogHeader className="bg-primary p-8 text-white">
-                        <DialogTitle className="text-2xl font-black">Criar Novo Evento</DialogTitle>
+                        <DialogTitle className="text-2xl font-black">
+                            {newEvent.id ? 'Editar Evento' : 'Criar Novo Evento'}
+                        </DialogTitle>
                         <DialogDescription className="text-white opacity-80">
-                            Preencha as informações para divulgar o evento na plataforma.
+                            {newEvent.id ? 'Atualize as informações do seu evento.' : 'Preencha as informações para divulgar o evento na plataforma.'}
                         </DialogDescription>
                     </DialogHeader>
 
@@ -398,6 +431,19 @@ export default function EventsPage() {
                                     value={newEvent.location}
                                     onChange={e => setNewEvent({ ...newEvent, location: e.target.value })}
                                 />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-black uppercase tracking-widest text-gray-500">Categoria</label>
+                                <select
+                                    className="w-full h-12 rounded-xl border border-gray-200 px-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                    value={newEvent.category}
+                                    onChange={e => setNewEvent({ ...newEvent, category: e.target.value })}
+                                >
+                                    <option value="GENERAL">Geral</option>
+                                    <option value="WELLBEING">Bem-estar</option>
+                                    <option value="TECHNICAL">Técnico</option>
+                                </select>
                             </div>
 
                             <div className="col-span-2 space-y-2">
