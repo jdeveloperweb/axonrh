@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/contract-templates")
+@RequestMapping("/api/v1/contract-templates")
 @RequiredArgsConstructor
 public class ContractTemplateController {
 
