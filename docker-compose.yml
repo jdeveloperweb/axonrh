@@ -366,13 +366,14 @@ services:
       - "8088:8088"
     environment:
       <<: *backend-env
+      JAVA_TOOL_OPTIONS: "-Xms256m -Xmx1024m"
       SPRING_FLYWAY_ENABLED: "true"
       SERVER_PORT: 8088
       OPENAI_API_KEY: ${OPENAI_API_KEY}
     deploy:
       resources:
         limits:
-          memory: 768M
+          memory: 1536M
 
   notification-service:
     <<: *backend-service

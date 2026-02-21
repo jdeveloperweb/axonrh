@@ -139,7 +139,8 @@ public class KnowledgeService {
             
             // For now, we fetch all chunks for the tenant and calculate similarity in application
             // In a large-scale system, we would use Milvus or MongoDB Atlas Vector Search
-            List<KnowledgeChunk> tenantChunks = chunkRepository.findByTenantId(tenantId);
+            // Otimização: Busca apenas IDs e Embeddings primeiro para economizar memória
+            List<KnowledgeChunk> tenantChunks = chunkRepository.findByTenantIdWithoutContent(tenantId);
 
             if (tenantChunks.isEmpty()) {
                 log.info("No chunks found for tenant {}", tenantId);
@@ -147,21 +148,30 @@ public class KnowledgeService {
             }
 
             // Calculate similarities and sort
-            return tenantChunks.stream()
+            List<SearchResult> allResults = tenantChunks.stream()
                     .map(chunk -> {
                         float similarity = cosineSimilarity(queryEmbedding, chunk.getEmbedding());
                         return SearchResult.builder()
+                                .id(chunk.getId()) // Precisamos do ID para buscar o conteúdo depois
                                 .documentId(chunk.getDocumentId())
                                 .documentTitle(chunk.getDocumentTitle())
-                                .content(chunk.getContent())
                                 .chunkIndex(chunk.getChunkIndex())
                                 .similarity(similarity)
                                 .build();
                     })
-                    .filter(r -> r.getSimilarity() > 0.65) // Higher threshold for more relevant results
+                    .filter(r -> r.getSimilarity() > 0.65)
                     .sorted(Comparator.comparing(SearchResult::getSimilarity).reversed())
                     .limit(topK)
                     .collect(Collectors.toList());
+
+            // Agora buscamos o conteúdo APENAS para os TOP resultados para economizar RAM
+            for (SearchResult res : allResults) {
+                chunkRepository.findById(res.getId()).ifPresent(chunk -> {
+                    res.setContent(chunk.getContent());
+                });
+            }
+
+            return allResults;
         } catch (Exception e) {
             log.error("Search failed: {}", e.getMessage(), e);
             return List.of();
@@ -274,6 +284,7 @@ public class KnowledgeService {
     @lombok.NoArgsConstructor
     @lombok.AllArgsConstructor
     public static class SearchResult {
+        private String id;
         private UUID documentId;
         private String documentTitle;
         private String content;
