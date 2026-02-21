@@ -104,6 +104,16 @@ export interface SearchResult {
   similarity: number;
 }
 
+export interface KnowledgeChunk {
+  id: string;
+  documentId: string;
+  documentTitle: string;
+  content: string;
+  chunkIndex: number;
+  embedding: number[];
+  metadata?: Record<string, unknown>;
+}
+
 export interface CalculationResult {
   type: string;
   grossValue: number;
@@ -342,6 +352,9 @@ export const knowledgeApi = {
 
   getStats: () =>
     api.get<KnowledgeStats>('/ai/knowledge/stats'),
+
+  getDocumentChunks: (id: string) =>
+    api.get<KnowledgeChunk[]>(`/ai/knowledge/documents/${id}/chunks`),
 };
 
 // ==================== Calculation API ====================

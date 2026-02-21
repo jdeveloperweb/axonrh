@@ -10,5 +10,6 @@ import java.util.UUID;
 @Repository
 public interface KnowledgeChunkRepository extends MongoRepository<KnowledgeChunk, String> {
     List<KnowledgeChunk> findByTenantId(UUID tenantId);
+    List<KnowledgeChunk> findByDocumentIdOrderByChunkIndexAsc(UUID documentId);
     void deleteByDocumentId(UUID documentId);
 }

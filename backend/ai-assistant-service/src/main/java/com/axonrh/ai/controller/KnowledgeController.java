@@ -68,6 +68,17 @@ public class KnowledgeController {
         return ResponseEntity.ok().build();
     }
 
+    @GetMapping("/documents/{id}/chunks")
+    public ResponseEntity<List<com.axonrh.ai.entity.KnowledgeChunk>> getDocumentChunks(
+            @RequestHeader("X-Tenant-ID") UUID tenantId,
+            @PathVariable UUID id) {
+        
+        // Safety check if document belongs to tenant
+        return documentRepository.findByIdAndTenantId(id, tenantId)
+                .map(doc -> ResponseEntity.ok(chunkRepository.findByDocumentIdOrderByChunkIndexAsc(id)))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
 
     @GetMapping("/search")
     public ResponseEntity<List<KnowledgeService.SearchResult>> search(
