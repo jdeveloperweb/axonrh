@@ -68,13 +68,18 @@ export default function EmailSettingsPage() {
                 emailApi.listTemplates(),
                 emailApi.getHistory()
             ]);
-            setTemplates(templatesRes.data);
-            setLogs(logsRes.data);
+
+            console.log('Templates carregados:', templatesRes.data);
+
+            setTemplates(templatesRes.data || []);
+            setLogs(logsRes.data || []);
         } catch (error) {
             console.error('Error loading email data:', error);
+            const tenantId = typeof window !== 'undefined' ? localStorage.getItem('setup_tenant_id') : 'unknown';
+            console.log('Failing with Tenant ID:', tenantId);
             toast({
-                title: 'Erro',
-                description: 'Não foi possível carregar os dados de e-mail.',
+                title: 'Erro de Carregamento',
+                description: 'Verifique se o serviço de notificações está online.',
                 variant: 'destructive',
             });
         } finally {
@@ -284,32 +289,37 @@ export default function EmailSettingsPage() {
                         <Card className="border-none shadow-sm bg-[var(--color-surface)]">
                             <CardHeader>
                                 <CardTitle className="text-lg">Provedor de E-mail</CardTitle>
-                                <CardDescription>Configurações de envio (AWS SES / SMTP)</CardDescription>
+                                <CardDescription>Configurações de envio (AWS SES / SMTP / MailHog)</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="space-y-2">
-                                    <Label>Serviço Principal</Label>
-                                    <Badge className="bg-orange-500 ml-2">AWS SES (Produção)</Badge>
+                                    <Label>Método de Envio Ativo</Label>
+                                    <div className="flex items-center gap-2">
+                                        <Badge className="bg-cyan-600">SMTP / LOCAL</Badge>
+                                        <span className="text-xs text-[var(--color-text-secondary)]">Ativo via application.yml</span>
+                                    </div>
                                 </div>
                                 <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/10 flex gap-3 mt-4">
                                     <AlertCircle className="w-5 h-5 text-blue-500 flex-shrink-0" />
-                                    <p className="text-xs text-blue-700">As credenciais de envio são configuradas via variáveis de ambiente no servidor para maior segurança.</p>
+                                    <p className="text-xs text-blue-700 leading-relaxed">
+                                        O sistema está configurado para usar o <strong>MailHog</strong> (localhost:1025) para testes locais ou o seu servidor SMTP personalizado (mjolnix.com.br).
+                                    </p>
                                 </div>
                             </CardContent>
                         </Card>
 
                         <Card className="border-none shadow-sm bg-[var(--color-surface)]">
                             <CardHeader>
-                                <CardTitle className="text-lg">Configurações de Remetente</CardTitle>
+                                <CardTitle className="text-lg">Informações do Domínio</CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="from-name">Nome do Remetente</Label>
-                                    <Input id="from-name" defaultValue="AxonRH" readOnly />
+                                    <Input id="from-name" defaultValue="AxonRH" readOnly className="bg-muted/30" />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="from-email">E-mail de Resposta</Label>
-                                    <Input id="from-email" defaultValue="noreply@axonrh.com" readOnly />
+                                    <Label htmlFor="from-email">E-mail do Remetente</Label>
+                                    <Input id="from-email" defaultValue="noreply@mjolnix.com.br" readOnly className="bg-muted/30" />
                                 </div>
                             </CardContent>
                         </Card>
