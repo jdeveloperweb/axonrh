@@ -43,7 +43,7 @@ public class KnowledgeService {
             Optional<KnowledgeDocument> existing = documentRepository.findByTenantIdAndContentHash(tenantId, contentHash);
             if (existing.isPresent()) {
                 KnowledgeDocument doc = existing.get();
-                if (!doc.isIndexed()) {
+                if (!Boolean.TRUE.equals(doc.getIsIndexed())) {
                     log.info("Document already exists but is not indexed. Re-triggering indexing for: {}", doc.getId());
                     indexDocumentAsync(doc, content);
                 } else {
