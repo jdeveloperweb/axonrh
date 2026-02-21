@@ -17,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Instant;
 import java.util.*;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import org.apache.tika.Tika;
 import java.io.InputStream;
@@ -139,7 +140,7 @@ public class KnowledgeService {
             
             // For now, we fetch all chunks for the tenant and calculate similarity in application
             // In a large-scale system, we would use Milvus or MongoDB Atlas Vector Search
-            // Otimização: Busca apenas IDs e Embeddings primeiro para economizar memória
+            // Busca os dados leves (sem texto)
             List<KnowledgeChunk> tenantChunks = chunkRepository.findByTenantIdWithoutContent(tenantId);
 
             if (tenantChunks.isEmpty()) {
@@ -147,24 +148,30 @@ public class KnowledgeService {
                 return List.of();
             }
 
-            // Calculate similarities and sort
+            // Calcula similaridade e mantém apenas os TOP K na memória
             List<SearchResult> allResults = tenantChunks.stream()
                     .map(chunk -> {
                         float similarity = cosineSimilarity(queryEmbedding, chunk.getEmbedding());
+                        // Só cria o objeto SearchResult se tiver uma similaridade mínima plausível
+                        if (similarity < 0.60) return null; 
+                        
                         return SearchResult.builder()
-                                .id(chunk.getId()) // Precisamos do ID para buscar o conteúdo depois
+                                .id(chunk.getId())
                                 .documentId(chunk.getDocumentId())
                                 .documentTitle(chunk.getDocumentTitle())
                                 .chunkIndex(chunk.getChunkIndex())
                                 .similarity(similarity)
                                 .build();
                     })
-                    .filter(r -> r.getSimilarity() > 0.65)
+                    .filter(Objects::nonNull)
                     .sorted(Comparator.comparing(SearchResult::getSimilarity).reversed())
                     .limit(topK)
                     .collect(Collectors.toList());
 
-            // Agora buscamos o conteúdo APENAS para os TOP resultados para economizar RAM
+            // Libera a lista grande de chunks da memória o quanto antes
+            tenantChunks = null; 
+
+            // Busca o texto apenas para os vencedores
             for (SearchResult res : allResults) {
                 chunkRepository.findById(res.getId()).ifPresent(chunk -> {
                     res.setContent(chunk.getContent());
