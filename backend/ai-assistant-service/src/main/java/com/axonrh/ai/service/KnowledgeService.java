@@ -1,6 +1,8 @@
 package com.axonrh.ai.service;
 
+import com.axonrh.ai.entity.KnowledgeChunk;
 import com.axonrh.ai.entity.KnowledgeDocument;
+import com.axonrh.ai.repository.KnowledgeChunkRepository;
 import com.axonrh.ai.repository.KnowledgeDocumentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,13 +25,11 @@ import java.util.stream.Collectors;
 public class KnowledgeService {
 
     private final KnowledgeDocumentRepository documentRepository;
+    private final KnowledgeChunkRepository chunkRepository;
     private final LlmService llmService;
 
     @Value("${ai.embeddings.dimensions:1536}")
     private int embeddingDimensions;
-
-    // In-memory vector store for simplicity (would use Milvus in production)
-    private final Map<UUID, List<DocumentChunk>> vectorStore = new HashMap<>();
 
     public KnowledgeDocument uploadDocument(UUID tenantId, UUID userId, MultipartFile file,
                                              KnowledgeDocument.DocumentType type, String title, String description) {
@@ -46,7 +46,7 @@ public class KnowledgeService {
 
             KnowledgeDocument document = KnowledgeDocument.builder()
                     .tenantId(tenantId)
-                    .title(title != null ? title : file.getOriginalFilename())
+                    .title(title != null && !title.isBlank() ? title : file.getOriginalFilename())
                     .description(description)
                     .documentType(type)
                     .filePath(file.getOriginalFilename())
@@ -73,52 +73,66 @@ public class KnowledgeService {
     @Async("embeddingExecutor")
     public void indexDocumentAsync(KnowledgeDocument document, String content) {
         try {
-            log.info("Starting indexing for document: {}", document.getId());
+            log.info("Starting indexing for document: {} ({})", document.getTitle(), document.getId());
 
-            List<String> chunks = chunkContent(content, 500, 50);
-            List<DocumentChunk> indexedChunks = new ArrayList<>();
+            List<String> textChunks = chunkContent(content, 1000, 100);
+            List<KnowledgeChunk> knowledgeChunks = new ArrayList<>();
 
-            // Generate embeddings in batches
+            // Generate embeddings in batches to stay within limits
             int batchSize = 10;
-            for (int i = 0; i < chunks.size(); i += batchSize) {
-                int end = Math.min(i + batchSize, chunks.size());
-                List<String> batch = chunks.subList(i, end);
+            for (int i = 0; i < textChunks.size(); i += batchSize) {
+                int end = Math.min(i + batchSize, textChunks.size());
+                List<String> batch = textChunks.subList(i, end);
                 List<List<Float>> embeddings = llmService.generateEmbeddings(batch);
 
                 for (int j = 0; j < batch.size(); j++) {
-                    DocumentChunk chunk = DocumentChunk.builder()
-                            .id(UUID.randomUUID())
+                    KnowledgeChunk chunk = KnowledgeChunk.builder()
+                            .tenantId(document.getTenantId())
                             .documentId(document.getId())
                             .documentTitle(document.getTitle())
                             .content(batch.get(j))
                             .chunkIndex(i + j)
                             .embedding(embeddings.get(j))
                             .build();
-                    indexedChunks.add(chunk);
+                    knowledgeChunks.add(chunk);
                 }
             }
 
-            // Store in vector store
-            vectorStore.computeIfAbsent(document.getTenantId(), k -> new ArrayList<>()).addAll(indexedChunks);
+            // Persistence in MongoDB
+            chunkRepository.saveAll(knowledgeChunks);
 
-            // Update document
-            document.setChunkCount(chunks.size());
+            // Update document status
+            document.setChunkCount(textChunks.size());
             document.setIsIndexed(true);
             document.setIndexedAt(Instant.now());
             documentRepository.save(document);
 
-            log.info("Indexed document {} with {} chunks", document.getId(), chunks.size());
+            log.info("Successfully indexed document {} with {} chunks", document.getId(), textChunks.size());
         } catch (Exception e) {
             log.error("Failed to index document {}: {}", document.getId(), e.getMessage(), e);
         }
     }
 
+    public void deleteDocumentChunks(UUID documentId) {
+        try {
+            log.info("Deleting chunks for document: {}", documentId);
+            chunkRepository.deleteByDocumentId(documentId);
+        } catch (Exception e) {
+            log.error("Failed to delete chunks for document {}: {}", documentId, e.getMessage());
+        }
+    }
+
     public List<SearchResult> search(String query, UUID tenantId, int topK) {
         try {
+            log.debug("Performing knowledge search for tenant {}: {}", tenantId, query);
             List<Float> queryEmbedding = llmService.generateEmbedding(query);
-            List<DocumentChunk> tenantChunks = vectorStore.getOrDefault(tenantId, List.of());
+            
+            // For now, we fetch all chunks for the tenant and calculate similarity in application
+            // In a large-scale system, we would use Milvus or MongoDB Atlas Vector Search
+            List<KnowledgeChunk> tenantChunks = chunkRepository.findByTenantId(tenantId);
 
             if (tenantChunks.isEmpty()) {
+                log.info("No chunks found for tenant {}", tenantId);
                 return List.of();
             }
 
@@ -134,7 +148,7 @@ public class KnowledgeService {
                                 .similarity(similarity)
                                 .build();
                     })
-                    .filter(r -> r.getSimilarity() > 0.5) // Threshold
+                    .filter(r -> r.getSimilarity() > 0.65) // Higher threshold for more relevant results
                     .sorted(Comparator.comparing(SearchResult::getSimilarity).reversed())
                     .limit(topK)
                     .collect(Collectors.toList());
@@ -145,59 +159,60 @@ public class KnowledgeService {
     }
 
     public String getContextForQuery(String query, UUID tenantId) {
-        List<SearchResult> results = search(query, tenantId, 3);
+        List<SearchResult> results = search(query, tenantId, 4);
 
         if (results.isEmpty()) {
-            return "";
+            return "Nenhuma informação relevante encontrada na base de conhecimento para esta consulta.";
         }
 
-        return results.stream()
-                .map(r -> String.format("--- De: %s ---\n%s", r.getDocumentTitle(), r.getContent()))
-                .collect(Collectors.joining("\n\n"));
+        StringBuilder context = new StringBuilder();
+        context.append("### CONTEXTO DA BASE DE CONHECIMENTO ###\n");
+        context.append("Use as informações abaixo para responder à pergunta do usuário. Se a informação não estiver aqui, diga que não sabe baseado nos manuais.\n\n");
+        
+        for (SearchResult r : results) {
+            context.append(String.format("--- Documento: %s (Relevância: %.2f) ---\n", 
+                    r.getDocumentTitle(), r.getSimilarity()));
+            context.append(r.getContent()).append("\n\n");
+        }
+        
+        return context.toString();
     }
 
     private String extractContent(MultipartFile file) throws Exception {
-        String contentType = file.getContentType();
-
-        if (contentType != null && contentType.contains("text")) {
+        String filename = file.getOriginalFilename() != null ? file.getOriginalFilename().toLowerCase() : "";
+        
+        if (filename.endsWith(".txt") || (file.getContentType() != null && file.getContentType().contains("text"))) {
             try (BufferedReader reader = new BufferedReader(
                     new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
                 return reader.lines().collect(Collectors.joining("\n"));
             }
         }
-
-        // For PDF and other formats, would use Apache PDFBox or Tika
-        // For now, just read as text
+        
+        // In a production environment with PDFs and DOCX, use Apache Tika
+        // For now, we attempt to read bytes as UTF-8
         return new String(file.getBytes(), StandardCharsets.UTF_8);
     }
 
     private List<String> chunkContent(String content, int chunkSize, int overlap) {
         List<String> chunks = new ArrayList<>();
-        String[] sentences = content.split("(?<=[.!?])\\s+");
+        if (content == null || content.isBlank()) return chunks;
 
+        // Split by double newline (paragraphs) first, then by sentence
+        String[] paragraphs = content.split("\n\n");
         StringBuilder currentChunk = new StringBuilder();
-        int currentSize = 0;
-
-        for (String sentence : sentences) {
-            int sentenceWords = sentence.split("\\s+").length;
-
-            if (currentSize + sentenceWords > chunkSize && currentSize > 0) {
+        
+        for (String p : paragraphs) {
+            if (currentChunk.length() + p.length() > chunkSize && currentChunk.length() > 0) {
                 chunks.add(currentChunk.toString().trim());
-
-                // Keep overlap
-                String[] words = currentChunk.toString().split("\\s+");
-                currentChunk = new StringBuilder();
-                int start = Math.max(0, words.length - overlap);
-                for (int i = start; i < words.length; i++) {
-                    currentChunk.append(words[i]).append(" ");
-                }
-                currentSize = Math.min(overlap, words.length);
+                
+                // Keep some overlap from the end of current chunk
+                int overlapStart = Math.max(0, currentChunk.length() - overlap);
+                String overlapText = currentChunk.substring(overlapStart);
+                currentChunk = new StringBuilder(overlapText);
             }
-
-            currentChunk.append(sentence).append(" ");
-            currentSize += sentenceWords;
+            currentChunk.append(p).append("\n\n");
         }
-
+        
         if (currentChunk.length() > 0) {
             chunks.add(currentChunk.toString().trim());
         }
@@ -222,7 +237,7 @@ public class KnowledgeService {
     }
 
     private float cosineSimilarity(List<Float> a, List<Float> b) {
-        if (a.size() != b.size()) return 0;
+        if (a == null || b == null || a.size() != b.size()) return 0;
 
         float dotProduct = 0;
         float normA = 0;
@@ -243,19 +258,6 @@ public class KnowledgeService {
     @lombok.Builder
     @lombok.NoArgsConstructor
     @lombok.AllArgsConstructor
-    public static class DocumentChunk {
-        private UUID id;
-        private UUID documentId;
-        private String documentTitle;
-        private String content;
-        private int chunkIndex;
-        private List<Float> embedding;
-    }
-
-    @lombok.Data
-    @lombok.Builder
-    @lombok.NoArgsConstructor
-    @lombok.AllArgsConstructor
     public static class SearchResult {
         private UUID documentId;
         private String documentTitle;
@@ -263,4 +265,5 @@ public class KnowledgeService {
         private int chunkIndex;
         private float similarity;
     }
+
 }

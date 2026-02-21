@@ -1,5 +1,6 @@
 package com.axonrh.notification.kafka;
 
+import com.axonrh.kafka.event.notification.NotificationEvent;
 import com.axonrh.notification.entity.Notification;
 import com.axonrh.notification.service.EmailService;
 import com.axonrh.notification.service.NotificationService;
@@ -26,24 +27,22 @@ public class NotificationEventsListener {
     private final EmailService emailService;
 
     @KafkaListener(topics = "notification.events", groupId = "notification-service")
-    public void handleNotificationEvent(Map<String, Object> event) {
+    public void handleNotificationEvent(NotificationEvent event) {
         try {
             log.info("Recebido evento de notificacao: {}", event);
 
-            Object tenantIdObj = event.get("tenantId");
-            if (tenantIdObj == null) {
+            UUID tenantId = event.getTenantId();
+            if (tenantId == null) {
                 log.warn("Evento de notificacao recebido sem tenantId: {}", event);
                 return;
             }
-            UUID tenantId = UUID.fromString(tenantIdObj.toString());
 
-            String templateCode = (String) event.get("templateCode");
-            String title = (String) event.get("title");
-            String body = (String) event.get("body");
+            String templateCode = event.getTemplateCode();
+            String title = event.getTitle();
+            String body = event.getBody();
             
             // Processar variáveis do template
-            @SuppressWarnings("unchecked")
-            Map<String, Object> variablesRaw = (Map<String, Object>) event.get("variables");
+            Map<String, Object> variablesRaw = event.getVariables();
             Map<String, String> variables = null;
             if (variablesRaw != null) {
                 variables = variablesRaw.entrySet().stream()
@@ -55,12 +54,10 @@ public class NotificationEventsListener {
             }
 
             // 1. Processar destinatários internos (User IDs)
-            @SuppressWarnings("unchecked")
-            List<String> recipientIds = (List<String>) event.get("recipientIds");
+            List<UUID> recipientIds = event.getRecipientIds();
             if (recipientIds != null && !recipientIds.isEmpty()) {
-                for (String userIdStr : recipientIds) {
+                for (UUID userId : recipientIds) {
                     try {
-                        UUID userId = UUID.fromString(userIdStr);
                         log.info("Processando notificacao para usuario interno: {}", userId);
                         
                         notificationService.createNotification(
@@ -68,17 +65,17 @@ public class NotificationEventsListener {
                                 userId,
                                 null,
                                 Notification.NotificationType.INFO,
-                                (String) event.get("category"),
+                                event.getCategory(),
                                 title,
                                 body,
-                                (String) event.get("icon"),
-                                (String) event.get("imageUrl"),
+                                null, // icon
+                                null, // imageUrl
                                 null,
-                                (String) event.get("actionUrl"),
+                                event.getActionUrl(),
                                 null,
                                 Notification.Priority.NORMAL,
-                                (String) event.get("sourceType"),
-                                getUUID(event, "sourceId"),
+                                event.getSourceType(),
+                                event.getSourceId(),
                                 true, // sendPush
                                 null, // recipientEmail
                                 null, // recipientName
@@ -86,14 +83,13 @@ public class NotificationEventsListener {
                                 variables
                         );
                     } catch (Exception e) {
-                        log.error("Erro ao enviar notificacao para usuario {}: {}", userIdStr, e.getMessage());
+                        log.error("Erro ao enviar notificacao para usuario {}: {}", userId, e.getMessage());
                     }
                 }
             }
 
             // 2. Processar emails externos (Candidatos, etc)
-            @SuppressWarnings("unchecked")
-            List<String> externalEmails = (List<String>) event.get("externalEmails");
+            List<String> externalEmails = event.getExternalEmails();
             if (externalEmails != null && !externalEmails.isEmpty()) {
                 for (String email : externalEmails) {
                     try {
@@ -108,16 +104,5 @@ public class NotificationEventsListener {
         } catch (Exception e) {
             log.error("Erro crítico ao processar evento de notificacao", e);
         }
-    }
-
-    private UUID getUUID(Map<String, Object> map, String key) {
-        if (map.containsKey(key) && map.get(key) != null) {
-            try {
-                return UUID.fromString(map.get(key).toString());
-            } catch (Exception e) {
-                return null;
-            }
-        }
-        return null;
     }
 }

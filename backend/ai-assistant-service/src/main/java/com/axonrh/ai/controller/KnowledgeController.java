@@ -62,9 +62,12 @@ public class KnowledgeController {
         documentRepository.findByIdAndTenantId(id, tenantId).ifPresent(doc -> {
             doc.setIsActive(false);
             documentRepository.save(doc);
+            // Also remove chunks to free space and keep search clean
+            knowledgeService.deleteDocumentChunks(id);
         });
         return ResponseEntity.ok().build();
     }
+
 
     @GetMapping("/search")
     public ResponseEntity<List<KnowledgeService.SearchResult>> search(

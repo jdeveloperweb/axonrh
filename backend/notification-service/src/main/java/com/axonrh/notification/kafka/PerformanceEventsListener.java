@@ -17,24 +17,22 @@ public class PerformanceEventsListener {
     private final NotificationService notificationService;
 
     @KafkaListener(topics = "performance.domain.events", groupId = "notification-service")
-    public void handlePerformanceEvent(java.util.Map<String, Object> event) {
+    public void handlePerformanceEvent(NotificationEvent event) {
         try {
-            String eventType = (String) event.get("eventType");
-            Object tenantIdObj = event.get("tenantId");
-            Object userIdObj = event.get("userId");
+            String eventType = event.getEventType();
+            UUID tenantId = event.getTenantId();
+            UUID userId = event.getUserId();
 
-            if (tenantIdObj == null || userIdObj == null) {
+            if (tenantId == null || userId == null) {
                 log.warn("Evento de performance recebido sem tenantId ou userId: {}", event);
                 return;
             }
 
-            UUID tenantId = UUID.fromString(tenantIdObj.toString());
-            UUID userId = UUID.fromString(userIdObj.toString());
-            String title = (String) event.get("title");
-            String body = (String) event.get("body");
-            String actionUrl = (String) event.get("actionUrl");
-            String sourceType = (String) event.get("sourceType");
-            UUID sourceId = event.get("sourceId") != null ? UUID.fromString(event.get("sourceId").toString()) : null;
+            String title = event.getTitle();
+            String body = event.getBody();
+            String actionUrl = event.getActionUrl();
+            String sourceType = event.getSourceType();
+            UUID sourceId = event.getSourceId();
 
             log.info("Recebido evento de performance: {} para usuario {}", eventType, userId);
 
