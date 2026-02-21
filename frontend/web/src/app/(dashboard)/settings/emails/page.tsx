@@ -48,8 +48,9 @@ import {
 } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs as EditorTabs, TabsList as EditorTabsList, TabsTrigger as EditorTabsTrigger, TabsContent as EditorTabsContent } from '@/components/ui/tabs';
+import { useThemeStore } from '@/stores/theme-store';
 
-const MODERN_TEMPLATE_BOILERPLATE = `<!DOCTYPE html>
+const getBoilerplate = (primaryColor: string, logoUrl?: string) => `<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
@@ -57,31 +58,34 @@ const MODERN_TEMPLATE_BOILERPLATE = `<!DOCTYPE html>
     <style>
         body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background-color: #f8fafc; margin: 0; padding: 0; }
         .wrapper { padding: 40px 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
-        .header { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); padding: 40px 20px; text-align: center; color: #ffffff; }
-        .content { padding: 40px 30px; color: #334155; line-height: 1.6; }
-        .footer { padding: 20px; text-align: center; color: #94a3b8; font-size: 12px; border-top: 1px solid #f1f5f9; }
-        .button { display: inline-block; padding: 12px 24px; background-color: #4f46e5; color: #ffffff !important; text-decoration: none; border-radius: 8px; font-weight: 600; margin-top: 20px; }
-        h1 { margin: 0; font-size: 24px; font-weight: 700; color: #ffffff; }
-        p { margin-bottom: 16px; font-size: 16px; }
-        .highlight { color: #4f46e5; font-weight: 600; }
+        .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
+        .header { background-color: ${primaryColor}; padding: 40px 20px; text-align: center; color: #ffffff; }
+        .content { padding: 40px 35px; color: #334155; line-height: 1.8; }
+        .footer { padding: 25px; text-align: center; color: #94a3b8; font-size: 12px; border-top: 1px solid #f1f5f9; background: #fafafa; }
+        .button { display: inline-block; padding: 14px 30px; background-color: ${primaryColor}; color: #ffffff !important; text-decoration: none; border-radius: 10px; font-weight: 700; margin-top: 25px; text-transform: uppercase; letter-spacing: 0.5px; }
+        h1 { margin: 0; font-size: 26px; font-weight: 800; color: #ffffff; }
+        p { margin-bottom: 20px; font-size: 16px; }
+        .highlight { color: ${primaryColor}; font-weight: 600; }
+        .logo { max-width: 180px; margin-bottom: 20px; }
     </style>
 </head>
 <body>
     <div class="wrapper">
         <div class="container">
             <div class="header">
-                <h1>AxonRH</h1>
+                ${logoUrl ? `<img src="${logoUrl}" alt="Logo" class="logo">` : `<h1>AxonRH</h1>`}
             </div>
             <div class="content">
                 <p>Olá <strong>{{candidate_name}}</strong>,</p>
-                <p>Temos uma atualização importante sobre o seu processo na <span class="highlight">{{company_name}}</span>.</p>
-                <p>Estamos felizes em tê-lo conosco nesta jornada. Por favor, clique no botão abaixo para prosseguir:</p>
-                <a href="{{action_link}}" class="button">Acessar Portal</a>
-                <p style="margin-top: 30px; font-size: 14px; color: #64748b;">Se o botão não funcionar, copie este link: <br> {{action_link}}</p>
+                <p>Recebemos novidades sobre o seu processo na <span class="highlight">{{company_name}}</span>.</p>
+                <p>Estamos entusiasmados com sua participação. Clique no botão abaixo para acessar os próximos passos:</p>
+                <center>
+                    <a href="{{action_link}}" class="button">Acessar Meu Portal</a>
+                </center>
+                <p style="margin-top: 40px; font-size: 13px; color: #94a3b8; text-align: center;">Se o botão não funcionar, copie este link: <br> <span style="color: ${primaryColor}">${"{{action_link}}"}</span></p>
             </div>
             <div class="footer">
-                &copy; 2026 AxonRH - Inteligência em Gestão de Pessoas
+                &copy; 2026 AxonRH - Powered by Mjolnix
             </div>
         </div>
     </div>
@@ -90,6 +94,10 @@ const MODERN_TEMPLATE_BOILERPLATE = `<!DOCTYPE html>
 
 export default function EmailSettingsPage() {
     const { toast } = useToast();
+    const { tenantTheme } = useThemeStore();
+    const primaryColor = tenantTheme?.colors?.primary || '#4f46e5';
+    const logoUrl = tenantTheme?.logoUrl;
+
     const [templates, setTemplates] = useState<EmailTemplate[]>([]);
     const [logs, setLogs] = useState<EmailLog[]>([]);
     const [loading, setLoading] = useState(true);
@@ -137,7 +145,7 @@ export default function EmailSettingsPage() {
             name: '',
             code: '',
             subject: 'Novo E-mail',
-            bodyHtml: MODERN_TEMPLATE_BOILERPLATE,
+            bodyHtml: getBoilerplate(primaryColor, logoUrl),
             isActive: true,
             isSystem: false,
             description: '',
@@ -265,11 +273,11 @@ export default function EmailSettingsPage() {
                     </div>
 
                     {filteredTemplates.length === 0 ? (
-                        <Card className="p-12 text-center border-dashed border-2">
+                        <Card className="p-12 text-center border-dashed border-2 flex flex-col items-center justify-center">
                             <Mail className="w-12 h-12 mx-auto text-muted-foreground mb-4 opacity-20" />
                             <h3 className="text-lg font-medium">Nenhum template encontrado</h3>
                             <p className="text-muted-foreground mb-6">Comece criando um novo template personalizado.</p>
-                            <Button onClick={handleCreate} variant="outline" className="gap-2">
+                            <Button onClick={handleCreate} variant="outline" className="gap-2 mx-auto">
                                 <Plus className="w-4 h-4" /> Criar Primeiro Template
                             </Button>
                         </Card>
