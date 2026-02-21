@@ -235,105 +235,106 @@ export default function EventsPage() {
                     filteredEvents.map((event) => (
                         <Card
                             key={event.id}
-                            className="group relative overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 rounded-[32px] cursor-pointer bg-white"
+                            className="group relative overflow-hidden border-none shadow-md hover:shadow-2xl transition-all duration-500 rounded-[32px] cursor-pointer bg-white flex flex-col h-full"
                             onClick={() => {
                                 setSelectedEvent(event);
                                 setIsEventDetailsOpen(true);
                             }}
                         >
-                            <CardContent className="p-0">
-                                {/* Top Decoration */}
-                                <div className={cn(
-                                    "h-32 w-full bg-gradient-to-br relative p-6 flex flex-col justify-between overflow-hidden",
-                                    event.category === 'WELLBEING' ? "from-emerald-400 to-teal-600" :
-                                        event.category === 'TECHNICAL' ? "from-indigo-500 to-blue-700" :
-                                            "from-primary/90 to-primary-600"
-                                )}>
-                                    {/* Abstract glassmorphism shapes */}
-                                    <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-1000" />
-                                    <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-black/10 rounded-full blur-xl" />
+                            {/* Card Decorative Header */}
+                            <div className={cn(
+                                "h-4 relative overflow-hidden",
+                                event.category === 'WELLBEING' ? "bg-emerald-500" :
+                                    event.category === 'TECHNICAL' ? "bg-indigo-600" :
+                                        "bg-primary"
+                            )} />
 
-                                    <div className="flex justify-between items-start relative z-10">
-                                        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-2 min-w-[56px] flex flex-col items-center justify-center border border-white/50 group-hover:scale-110 transition-transform">
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-primary/60 leading-none mb-1">
-                                                {event.date ? format(new Date(event.date), 'MMM', { locale: ptBR }) : '---'}
-                                            </span>
-                                            <span className="text-xl font-black text-gray-900 leading-none">
-                                                {event.date ? format(new Date(event.date), 'dd') : '--'}
-                                            </span>
-                                        </div>
-
-                                        <Badge className="bg-white/20 text-white border-white/30 backdrop-blur-md uppercase text-[10px] tracking-[2px] font-black py-1.5 px-3">
-                                            {event.isUserRegistered ? "Inscrito" : event.category}
-                                        </Badge>
+                            <div className="p-8 flex-1 flex flex-col">
+                                {/* Date & Category Row */}
+                                <div className="flex justify-between items-start mb-6">
+                                    <div className="flex flex-col items-center bg-gray-50 rounded-[20px] p-3 min-w-[64px] group-hover:bg-primary/10 transition-colors border border-gray-100">
+                                        <span className="text-[10px] font-black uppercase tracking-[2px] text-primary/60 leading-none mb-1">
+                                            {event.date ? format(new Date(event.date), 'MMM', { locale: ptBR }) : '---'}
+                                        </span>
+                                        <span className="text-2xl font-black text-gray-900 leading-none">
+                                            {event.date ? format(new Date(event.date), 'dd') : '--'}
+                                        </span>
                                     </div>
 
-                                    <div className="relative z-10">
-                                        <div className="flex items-center gap-2 text-white/90 text-[10px] font-bold uppercase tracking-wider">
-                                            <span className="flex items-center gap-1 bg-black/10 backdrop-blur-sm px-2 py-1 rounded-md">
-                                                <Clock className="w-3 h-3" />
+                                    <div className="flex flex-col items-end gap-2">
+                                        <Badge className={cn(
+                                            "uppercase text-[9px] tracking-[2px] font-black py-1.5 px-3 border-none shadow-sm",
+                                            event.category === 'WELLBEING' ? "bg-emerald-50 text-emerald-600" :
+                                                event.category === 'TECHNICAL' ? "bg-indigo-50 text-indigo-600" :
+                                                    "bg-primary/10 text-primary"
+                                        )}>
+                                            {event.category}
+                                        </Badge>
+                                        {event.isUserRegistered && (
+                                            <Badge className="bg-green-500 text-white border-none text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full animate-pulse">
+                                                Inscrito
+                                            </Badge>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Title & Description */}
+                                <div className="space-y-3 mb-8 flex-1">
+                                    <h3 className="text-2xl font-black text-gray-900 group-hover:text-primary transition-colors leading-[1.2] line-clamp-2">
+                                        {event.title}
+                                    </h3>
+                                    <p className="text-sm text-gray-400 font-medium line-clamp-2 leading-relaxed italic">
+                                        {event.description || "Nenhuma descrição informada."}
+                                    </p>
+                                </div>
+
+                                {/* Metadata Grid */}
+                                <div className="grid grid-cols-2 gap-4 mb-8">
+                                    <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-2xl group-hover:bg-gray-100/50 transition-colors border border-transparent group-hover:border-gray-100">
+                                        <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center text-primary shadow-sm">
+                                            <Clock className="w-4 h-4" />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-[8px] font-black text-gray-400 uppercase tracking-tighter">Horário</span>
+                                            <span className="text-xs font-black text-gray-800 tracking-tight">
                                                 {event.date ? format(new Date(event.date), 'HH:mm') : '--:--'}
                                             </span>
-                                            <span className="flex items-center gap-1 bg-black/10 backdrop-blur-sm px-2 py-1 rounded-md truncate max-w-[120px]">
-                                                <MapPin className="w-3 h-3" />
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-2xl group-hover:bg-gray-100/50 transition-colors border border-transparent group-hover:border-gray-100">
+                                        <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center text-primary shadow-sm">
+                                            <MapPin className="w-4 h-4" />
+                                        </div>
+                                        <div className="flex flex-col min-w-0">
+                                            <span className="text-[8px] font-black text-gray-400 uppercase tracking-tighter">Local</span>
+                                            <span className="text-xs font-black text-gray-800 tracking-tight truncate">
                                                 {event.location}
                                             </span>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="p-6 space-y-5">
-                                    <div className="space-y-2">
-                                        <h3 className="text-xl font-black text-gray-900 group-hover:text-primary transition-colors leading-tight line-clamp-2">
-                                            {event.title}
-                                        </h3>
-                                        <p className="text-xs text-gray-400 font-medium line-clamp-2 leading-relaxed">
-                                            {event.description}
-                                        </p>
+                                {/* Bottom Info */}
+                                <div className="pt-6 border-t border-dashed border-gray-200 flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-primary animate-ping opacity-50" />
+                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1">
+                                            {event.registrationCount}{" "}
+                                            <span>Participantes</span>
+                                        </span>
                                     </div>
 
-                                    {event.speakerName && (
-                                        <div className="flex items-center gap-3 p-3 bg-gray-50/50 rounded-2xl border border-transparent group-hover:border-primary/10 group-hover:bg-primary/5 transition-all">
-                                            <div className="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center text-sm font-black shadow-lg shadow-primary/20">
-                                                {event.speakerName.charAt(0)}
-                                            </div>
-                                            <div className="min-w-0">
-                                                <p className="text-sm font-black text-gray-900 truncate">{event.speakerName}</p>
-                                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter truncate">{event.speakerRole}</p>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    <div className="pt-4 border-t border-gray-100 flex items-center justify-between transition-colors">
-                                        <div className="flex items-center gap-2">
-                                            <div className="flex -space-x-2">
-                                                {[...Array(Math.min(3, event.registrationCount))].map((_, i) => (
-                                                    <div key={i} className="w-7 h-7 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center text-[10px] font-black text-gray-400">
-                                                        <User className="w-3 h-3" />
-                                                    </div>
-                                                ))}
-                                                {event.registrationCount > 3 && (
-                                                    <div className="w-7 h-7 rounded-full border-2 border-white bg-primary text-white flex items-center justify-center text-[8px] font-black">
-                                                        +{event.registrationCount - 3}
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">
-                                                {event.registrationCount} {event.registrationCount === 1 ? 'Participante' : 'Participantes'}
-                                            </span>
-                                        </div>
-
-                                        <div className="flex items-center gap-1 text-primary text-[10px] font-black uppercase tracking-[2px] transition-all group-hover:gap-2">
-                                            <span>Ver</span>
-                                            <ArrowRight className="w-4 h-4" />
-                                        </div>
+                                    <div className="flex items-center gap-1 bg-primary text-white p-2 rounded-xl group-hover:px-4 transition-all duration-300">
+                                        <span className="text-[10px] font-black uppercase tracking-widest hidden group-hover:inline opacity-0 group-hover:opacity-100">Ver</span>
+                                        <ArrowRight className="w-4 h-4" />
                                     </div>
                                 </div>
-                            </CardContent>
+                            </div>
 
+                            {/* Delete Button (Simplified) */}
                             {isManagement && (
                                 <button
-                                    className="absolute bottom-4 left-4 p-2 text-red-200 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all z-20"
+                                    className="absolute top-24 right-4 p-2 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all z-20"
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         handleDeleteEvent(event.id);
