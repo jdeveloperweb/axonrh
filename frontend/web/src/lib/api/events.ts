@@ -30,6 +30,13 @@ export interface Event {
     isUserRegistered: boolean;
 }
 
+export interface EventSubscriber {
+    id: string;
+    name: string;
+    email: string;
+    photoUrl?: string;
+}
+
 export const eventsApi = {
     getAll: async (): Promise<Event[]> => {
         return await api.get('/employees/events');
@@ -53,5 +60,17 @@ export const eventsApi = {
 
     unregister: async (id: string): Promise<void> => {
         return await api.post(`/employees/events/${id}/unregister`, {});
+    },
+
+    getSubscribers: async (id: string): Promise<EventSubscriber[]> => {
+        return await api.get(`/employees/events/${id}/subscribers`);
+    },
+
+    addSubscribers: async (id: string, employeeIds: string[]): Promise<void> => {
+        return await api.post(`/employees/events/${id}/subscribers`, employeeIds);
+    },
+
+    removeSubscriber: async (eventId: string, employeeId: string): Promise<void> => {
+        return await api.delete(`/employees/events/${eventId}/subscribers/${employeeId}`);
     }
 };

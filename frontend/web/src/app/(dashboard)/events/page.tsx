@@ -18,9 +18,13 @@ import {
     FileText,
     Link as LinkIcon,
     Edit,
-    Settings
+    Settings,
+    Users,
+    UserPlus,
+    X as CloseIcon
 } from 'lucide-react';
-import { eventsApi, Event as AppEvent, EventResource } from '@/lib/api/events';
+import { eventsApi, Event as AppEvent, EventResource, EventSubscriber } from '@/lib/api/events';
+import { employeesApi, Employee } from '@/lib/api/employees';
 import { useAuthStore } from '@/stores/auth-store';
 import {
     Dialog,
@@ -52,6 +56,16 @@ export default function EventsPage() {
     const [isNewEventModalOpen, setIsNewEventModalOpen] = useState(false);
     const [selectedEvent, setSelectedEvent] = useState<AppEvent | null>(null);
     const [isEventDetailsOpen, setIsEventDetailsOpen] = useState(false);
+    const [isSubscribersModalOpen, setIsSubscribersModalOpen] = useState(false);
+    const [subscribers, setSubscribers] = useState<EventSubscriber[]>([]);
+    const [subscribersLoading, setSubscribersLoading] = useState(false);
+    const [allEmployees, setAllEmployees] = useState<Employee[]>([]);
+    const [isLoadingEmployees, setIsLoadingEmployees] = useState(false);
+    const [isAddSubscriberOpen, setIsAddSubscriberOpen] = useState(false);
+    const [selectedEmployeesToAdd, setSelectedEmployeesToAdd] = useState<string[]>([]);
+    const [employeeSearchText, setEmployeeSearchText] = useState('');
+    const [departmentFilter, setDepartmentFilter] = useState('ALL');
+    const [departments, setDepartments] = useState<{ id: string, name: string }[]>([]);
 
     // Form State
     const [newEvent, setNewEvent] = useState<Partial<AppEvent>>({
@@ -162,6 +176,87 @@ export default function EventsPage() {
             }
         } catch (error) {
             console.error('Error unregistering:', error);
+        }
+    };
+
+    const loadSubscribers = async (eventId: string) => {
+        try {
+            setSubscribersLoading(true);
+            const data = await eventsApi.getSubscribers(eventId);
+            setSubscribers(data);
+        } catch (error) {
+            console.error('Error loading subscribers:', error);
+        } finally {
+            setSubscribersLoading(false);
+        }
+    };
+
+    const loadEmployees = async () => {
+        try {
+            setIsLoadingEmployees(true);
+            const res = await employeesApi.list({ size: 1000, status: 'ACTIVE' });
+            setAllEmployees(res.content || []);
+
+            // Unique departments
+            const depts = Array.from(new Set(res.content.map(e => JSON.stringify(e.department)).filter(Boolean)))
+                .map(d => JSON.parse(d as string));
+            setDepartments(depts);
+        } catch (error) {
+            console.error('Error loading employees:', error);
+        } finally {
+            setIsLoadingEmployees(false);
+        }
+    };
+
+    const handleOpenSubscribers = (event: AppEvent) => {
+        setSelectedEvent(event);
+        setIsSubscribersModalOpen(true);
+        loadSubscribers(event.id);
+        loadEmployees();
+    };
+
+    const handleRemoveSubscriber = async (employeeId: string) => {
+        if (!selectedEvent) return;
+        if (!confirm('Deseja remover este inscrito?')) return;
+        try {
+            await eventsApi.removeSubscriber(selectedEvent.id, employeeId);
+            success('Inscrito removido', 'O colaborador foi desvinculado do evento.');
+            loadSubscribers(selectedEvent.id);
+            loadEvents();
+        } catch (error) {
+            console.error('Error removing subscriber:', error);
+        }
+    };
+
+    const handleAddSubscribers = async () => {
+        if (!selectedEvent || selectedEmployeesToAdd.length === 0) return;
+        try {
+            await eventsApi.addSubscribers(selectedEvent.id, selectedEmployeesToAdd);
+            success('Inscritos adicionados!', `${selectedEmployeesToAdd.length} pessoas foram inscritas no evento.`);
+            setIsAddSubscriberOpen(false);
+            setSelectedEmployeesToAdd([]);
+            loadSubscribers(selectedEvent.id);
+            loadEvents();
+        } catch (error) {
+            console.error('Error adding subscribers:', error);
+        }
+    };
+
+    const handleAddByDepartment = async (deptId: string) => {
+        if (!selectedEvent) return;
+        const deptEmployees = allEmployees.filter(e => e.department?.id === deptId);
+        if (deptEmployees.length === 0) return;
+
+        if (!confirm(`Deseja inscrever todos os ${deptEmployees.length} colaboradores deste departamento?`)) return;
+
+        try {
+            const ids = deptEmployees.map(e => e.id);
+            await eventsApi.addSubscribers(selectedEvent.id, ids);
+            success('Inscritos adicionados!', 'O grupo foi inscrito com sucesso.');
+            loadSubscribers(selectedEvent.id);
+            loadEvents();
+        } catch (error) {
+            console.error('Error adding group:', error);
         }
     };
 
@@ -361,8 +456,19 @@ export default function EventsPage() {
                                             e.stopPropagation();
                                             handleEditEvent(event);
                                         }}
+                                        title="Editar Evento"
                                     >
                                         <Edit className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                        className="p-2 bg-white rounded-xl shadow-lg text-gray-400 hover:text-blue-500 transition-all scale-90 hover:scale-100"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleOpenSubscribers(event);
+                                        }}
+                                        title="Gerenciar Inscritos"
+                                    >
+                                        <Users className="w-4 h-4" />
                                     </button>
                                     <button
                                         className="p-2 bg-white rounded-xl shadow-lg text-gray-400 hover:text-red-500 transition-all scale-90 hover:scale-100"
@@ -370,6 +476,7 @@ export default function EventsPage() {
                                             e.stopPropagation();
                                             handleDeleteEvent(event.id);
                                         }}
+                                        title="Excluir Evento"
                                     >
                                         <Trash2 className="w-4 h-4" />
                                     </button>
@@ -625,6 +732,205 @@ export default function EventsPage() {
                     )}
                 </DialogContent>
             </Dialog>
-        </div>
+
+            {/* Subscribers Management Modal */}
+            <Dialog open={isSubscribersModalOpen} onOpenChange={setIsSubscribersModalOpen}>
+                <DialogContent className="max-w-4xl bg-white rounded-3xl p-0 overflow-hidden border-none shadow-2xl flex flex-col max-h-[90vh]">
+                    <DialogHeader className="bg-slate-900 p-8 text-white shrink-0">
+                        <div className="flex justify-between items-start">
+                            <div className="space-y-1">
+                                <DialogTitle className="text-2xl font-black flex items-center gap-3">
+                                    <Users className="w-6 h-6 text-primary" />
+                                    Gerenciar Inscritos
+                                </DialogTitle>
+                                <DialogDescription className="text-slate-400 font-medium">
+                                    {selectedEvent?.title}
+                                </DialogDescription>
+                            </div>
+                            <Button
+                                onClick={() => setIsAddSubscriberOpen(true)}
+                                className="bg-primary hover:bg-primary/90 text-white rounded-xl h-10 px-6 font-bold"
+                            >
+                                <UserPlus className="w-4 h-4 mr-2" />
+                                Incluir Pessoas
+                            </Button>
+                        </div>
+                    </DialogHeader>
+
+                    <div className="flex-1 overflow-y-auto p-8">
+                        {subscribersLoading ? (
+                            <div className="flex flex-col items-center justify-center py-20 gap-4">
+                                <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+                                <span className="text-sm font-black text-gray-400 uppercase tracking-widest">Carregando lista...</span>
+                            </div>
+                        ) : subscribers.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {subscribers.map((sub) => (
+                                    <div key={sub.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 group hover:border-primary/20 transition-all">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary text-xl font-black overflow-hidden bg-white border border-gray-100 shadow-sm">
+                                                {sub.photoUrl ? (
+                                                    <img src={sub.photoUrl} alt={sub.name} className="w-full h-full object-cover" />
+                                                ) : sub.name.charAt(0)}
+                                            </div>
+                                            <div className="flex flex-col min-w-0">
+                                                <span className="font-bold text-gray-900 truncate">{sub.name}</span>
+                                                <span className="text-xs text-gray-500 truncate">{sub.email}</span>
+                                            </div>
+                                        </div>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => handleRemoveSubscriber(sub.id)}
+                                            className="h-10 w-10 text-gray-400 hover:text-red-500 rounded-xl"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </Button>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="py-20 text-center space-y-4">
+                                <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto text-gray-300">
+                                    <Users className="w-10 h-10" />
+                                </div>
+                                <div>
+                                    <p className="text-xl font-bold text-gray-400">Nenhum inscrito ainda</p>
+                                    <p className="text-gray-400">Comece adicionando pessoas manualmente ou aguarde as inscrições.</p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <DialogFooter className="bg-gray-50 p-6 border-t border-gray-100">
+                        <div className="flex items-center gap-2 text-xs font-black text-gray-400 uppercase tracking-widest">
+                            <div className="w-2 h-2 rounded-full bg-primary" />
+                            {subscribers.length} Colaboradores Inscritos
+                        </div>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Add Subscribers Modal */}
+            <Dialog open={isAddSubscriberOpen} onOpenChange={setIsAddSubscriberOpen}>
+                <DialogContent className="max-w-2xl bg-white rounded-3xl p-0 overflow-hidden border-none shadow-2xl flex flex-col max-h-[85vh]">
+                    <DialogHeader className="bg-primary p-8 text-white shrink-0">
+                        <DialogTitle className="text-2xl font-black">Incluir Colaboradores</DialogTitle>
+                        <DialogDescription className="text-white/80">Busque pessoas individualmente ou selecione um departamento inteiro.</DialogDescription>
+                    </DialogHeader>
+
+                    <div className="p-8 space-y-6 flex-1 overflow-y-auto">
+                        <div className="flex flex-wrap gap-4">
+                            <div className="flex-1 min-w-[300px] relative">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                <Input
+                                    placeholder="Buscar por nome..."
+                                    className="pl-12 h-12 rounded-xl"
+                                    value={employeeSearchText}
+                                    onChange={e => setEmployeeSearchText(e.target.value)}
+                                />
+                            </div>
+                            <select
+                                className="h-12 rounded-xl border border-gray-200 px-4 text-sm font-bold min-w-[200px]"
+                                value={departmentFilter}
+                                onChange={e => setDepartmentFilter(e.target.value)}
+                            >
+                                <option value="ALL">Todos os Departamentos</option>
+                                {departments.map(d => (
+                                    <option key={d.id} value={d.id}>{d.name}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Department Group Actions */}
+                        {departmentFilter !== 'ALL' && (
+                            <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10 flex items-center justify-between">
+                                <div className="space-y-1">
+                                    <p className="text-sm font-black text-primary uppercase tracking-widest">Ação em Grupo</p>
+                                    <p className="text-xs text-gray-500 font-medium">Inscrever todos os colaboradores deste departamento.</p>
+                                </div>
+                                <Button
+                                    onClick={() => handleAddByDepartment(departmentFilter)}
+                                    className="bg-primary text-white hover:bg-primary/90 font-bold rounded-xl"
+                                >
+                                    Inscrever Todos
+                                </Button>
+                            </div>
+                        )}
+
+                        <div className="space-y-2">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Resultados</p>
+                            <div className="grid gap-2">
+                                {isLoadingEmployees ? (
+                                    Array(5).fill(0).map((_, i) => (
+                                        <div key={i} className="h-14 bg-gray-50 rounded-xl animate-pulse" />
+                                    ))
+                                ) : allEmployees
+                                    .filter(e => {
+                                        const matchesSearch = e.fullName.toLowerCase().includes(employeeSearchText.toLowerCase());
+                                        const matchesDept = departmentFilter === 'ALL' || e.department?.id === departmentFilter;
+                                        return matchesSearch && matchesDept;
+                                    })
+                                    .slice(0, 15)
+                                    .map(emp => {
+                                        const isSelected = selectedEmployeesToAdd.includes(emp.id);
+                                        const isAlreadySubscribed = subscribers.some(s => s.id === emp.id);
+
+                                        return (
+                                            <div
+                                                key={emp.id}
+                                                onClick={() => {
+                                                    if (isAlreadySubscribed) return;
+                                                    setSelectedEmployeesToAdd(prev =>
+                                                        isSelected ? prev.filter(id => id !== emp.id) : [...prev, emp.id]
+                                                    );
+                                                }}
+                                                className={cn(
+                                                    "flex items-center justify-between p-3 rounded-2xl border transition-all cursor-pointer",
+                                                    isSelected ? "bg-primary/5 border-primary" : "bg-white border-gray-100 hover:border-gray-300",
+                                                    isAlreadySubscribed && "opacity-50 cursor-not-allowed bg-gray-50"
+                                                )}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center font-bold text-gray-500">
+                                                        {emp.photoUrl ? <img src={emp.photoUrl} className="w-full h-full object-cover rounded-xl" /> : emp.fullName.charAt(0)}
+                                                    </div>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-sm font-bold text-gray-900">{emp.fullName}</span>
+                                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">{emp.department?.name || 'Sem depto'}</span>
+                                                    </div>
+                                                </div>
+                                                {isAlreadySubscribed ? (
+                                                    <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Já Inscrito</span>
+                                                ) : isSelected ? (
+                                                    <CheckCircle2 className="w-5 h-5 text-primary" />
+                                                ) : (
+                                                    <div className="w-5 h-5 rounded-full border-2 border-gray-200" />
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                            </div>
+                        </div>
+                    </div>
+
+                    <DialogFooter className="bg-gray-50 p-6 border-t border-gray-100 flex justify-between items-center">
+                        <div className="text-xs font-black text-gray-400 uppercase tracking-widest">
+                            {selectedEmployeesToAdd.length} Selecionados
+                        </div>
+                        <div className="flex gap-3">
+                            <Button variant="ghost" onClick={() => setIsAddSubscriberOpen(false)}>Cancelar</Button>
+                            <Button
+                                disabled={selectedEmployeesToAdd.length === 0}
+                                onClick={handleAddSubscribers}
+                                className="bg-primary hover:bg-primary/90 text-white font-bold rounded-xl px-8"
+                            >
+                                Confirmar Inscrição
+                            </Button>
+                        </div>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </div >
     );
 }

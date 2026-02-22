@@ -11,6 +11,7 @@ import java.util.UUID;
 @Repository
 public interface EventRegistrationRepository extends JpaRepository<EventRegistration, UUID> {
     List<EventRegistration> findByEmployeeId(UUID employeeId);
+    List<EventRegistration> findByEventId(UUID eventId);
     Optional<EventRegistration> findByEventIdAndEmployeeId(UUID eventId, UUID employeeId);
     boolean existsByEventIdAndEmployeeId(UUID eventId, UUID employeeId);
     long countByEventId(UUID eventId);

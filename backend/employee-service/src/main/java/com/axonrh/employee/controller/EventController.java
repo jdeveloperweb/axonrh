@@ -60,4 +60,21 @@ public class EventController {
         eventService.unregisterFromEvent(id, userId, email);
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/{id}/subscribers")
+    public ResponseEntity<List<com.axonrh.employee.dto.EmployeeResponse.EmployeeSummary>> getSubscribers(@PathVariable UUID id) {
+        return ResponseEntity.ok(eventService.getEventSubscribers(id));
+    }
+
+    @PostMapping("/{id}/subscribers")
+    public ResponseEntity<Void> addSubscribers(@PathVariable UUID id, @RequestBody List<UUID> employeeIds) {
+        eventService.addSubscribers(id, employeeIds);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/{id}/subscribers/{employeeId}")
+    public ResponseEntity<Void> removeSubscriber(@PathVariable UUID id, @PathVariable UUID employeeId) {
+        eventService.removeSubscriber(id, employeeId);
+        return ResponseEntity.ok().build();
+    }
 }

@@ -30,5 +30,6 @@ public class EventDTO {
     
     private List<EventResourceDTO> resources;
     private long registrationCount;
+    @com.fasterxml.jackson.annotation.JsonProperty("isUserRegistered")
     private boolean isUserRegistered;
 }

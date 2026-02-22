@@ -1,6 +1,7 @@
 package com.axonrh.employee.service;
 
 import com.axonrh.employee.config.TenantContext;
+import com.axonrh.employee.dto.EmployeeResponse;
 import com.axonrh.employee.dto.EventDTO;
 import com.axonrh.employee.dto.EventResourceDTO;
 import com.axonrh.employee.entity.Employee;
@@ -120,6 +121,43 @@ public class EventService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public List<EmployeeResponse.EmployeeSummary> getEventSubscribers(UUID eventId) {
+        return registrationRepository.findByEventId(eventId).stream()
+                .map(reg -> employeeRepository.findById(reg.getEmployeeId()))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .map(e -> EmployeeResponse.EmployeeSummary.builder()
+                        .id(e.getId())
+                        .name(e.getFullName())
+                        .email(e.getEmail())
+                        .photoUrl(e.getPhotoUrl())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void addSubscribers(UUID eventId, List<UUID> employeeIds) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+
+        for (UUID employeeId : employeeIds) {
+            if (!registrationRepository.existsByEventIdAndEmployeeId(eventId, employeeId)) {
+                EventRegistration registration = EventRegistration.builder()
+                        .event(event)
+                        .employeeId(employeeId)
+                        .build();
+                registrationRepository.save(registration);
+            }
+        }
+    }
+
+    @Transactional
+    public void removeSubscriber(UUID eventId, UUID employeeId) {
+        registrationRepository.findByEventIdAndEmployeeId(eventId, employeeId)
+                .ifPresent(registrationRepository::delete);
+    }
+
     private EventDTO mapToDTO(Event e, UUID employeeId) {
         return EventDTO.builder()
                 .id(e.getId().toString())
@@ -154,18 +192,12 @@ public class EventService {
     }
 
     private UUID findEmployeeId(UUID userId, String email) {
-        if (userId == null && (email == null || email.isBlank())) {
-            return null;
-        }
-
         UUID tenantId = getTenantId();
         
         // 1. Tenta pelo UserID (forma mais garantida do Gateway)
         if (userId != null) {
             Optional<Employee> employee = employeeRepository.findByTenantIdAndUserId(tenantId, userId);
-            if (employee.isPresent()) {
-                return employee.get().getId();
-            }
+            if (employee.isPresent()) return employee.get().getId();
         }
 
         // 2. Tenta pelo E-mail (Auto-heal para usuários sincronizados mas não vinculados)
@@ -173,12 +205,28 @@ public class EventService {
             Optional<Employee> employee = employeeRepository.findByTenantIdAndEmail(tenantId, email);
             if (employee.isPresent()) {
                 Employee e = employee.get();
-                // Se o UserID estava faltando no cadastro, vincula agora (Auto-heal)
                 if (e.getUserId() == null && userId != null) {
                     e.setUserId(userId);
                     employeeRepository.save(e);
                 }
                 return e.getId();
+            }
+        }
+
+        // 3. Fallback: Tenta pelo SecurityContextHolder (Contexto do Spring Security)
+        String authName = SecurityContextHolder.getContext().getAuthentication() != null ? 
+                         SecurityContextHolder.getContext().getAuthentication().getName() : null;
+        
+        if (authName != null && !authName.equals("anonymousUser") && !authName.equals("debug-user")) {
+            // Tenta como UUID (UserID)
+            try {
+                UUID authUserId = UUID.fromString(authName);
+                Optional<Employee> employee = employeeRepository.findByTenantIdAndUserId(tenantId, authUserId);
+                if (employee.isPresent()) return employee.get().getId();
+            } catch (IllegalArgumentException ex) {
+                // Tenta como Email
+                Optional<Employee> employee = employeeRepository.findByTenantIdAndEmail(tenantId, authName);
+                if (employee.isPresent()) return employee.get().getId();
             }
         }
 
