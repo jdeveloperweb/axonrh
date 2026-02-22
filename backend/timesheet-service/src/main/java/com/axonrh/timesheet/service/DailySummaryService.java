@@ -136,6 +136,48 @@ public class DailySummaryService {
         return saved;
     }
 
+    /**
+     * Processa uma licença aprovada e abona os dias no espelho de ponto.
+     */
+    @Transactional
+    public void handleApprovedLeave(UUID tenantId, UUID employeeId, LocalDate startDate, LocalDate endDate, String leaveType) {
+        log.info("Processando licença aprovada ({}) para colaborador {}: {} ate {}", leaveType, employeeId, startDate, endDate);
+        
+        startDate.datesUntil(endDate.plusDays(1)).forEach(date -> {
+            DailySummary summary = dailySummaryRepository
+                    .findByTenantIdAndEmployeeIdAndSummaryDate(tenantId, employeeId, date)
+                    .orElseGet(() -> DailySummary.builder()
+                            .tenantId(tenantId)
+                            .employeeId(employeeId)
+                            .summaryDate(date)
+                            .build());
+
+            // Se for licença médica (MEDICAL), abona o dia
+            if ("MEDICAL".equals(leaveType)) {
+                summary.setIsAbsent(true);
+                summary.setAbsenceType("SICK_LEAVE");
+                summary.setNotes("Abonado via Atestado Médico");
+                
+                // Abona o déficit (excuse)
+                // Primeiro precisamos saber quanto era esperado
+                com.axonrh.timesheet.dto.EmployeeDTO dto = getEmployeeDto(employeeId);
+                EmployeeSchedule schedule = resolveScheduleFallback(tenantId, employeeId, dto);
+                int expected = getExpectedMinutes(date, schedule);
+                
+                summary.setExpectedWorkMinutes(expected);
+                summary.setDeficitMinutes(0); // Abonado
+                summary.setOvertimeMinutes(0); // Não gera extra se estiver de licença
+                
+                dailySummaryRepository.save(summary);
+                
+                // Sincronizar com banco de horas para zerar o débito desse dia
+                overtimeBankService.syncDailyBalance(tenantId, employeeId, date, 0);
+                
+                log.debug("Dia {} abonado para colaborador {}", date, employeeId);
+            }
+        });
+    }
+
     private void syncWithOvertimeBank(UUID tenantId, UUID employeeId, LocalDate date, DailySummary summary) {
         try {
             // TODO: Verificar se a escala do colaborador permite banco de horas

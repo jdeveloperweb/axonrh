@@ -60,6 +60,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
     networks:
       - axonrh-network
     deploy:
@@ -84,6 +85,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
     networks:
       - axonrh-network
 
@@ -101,6 +103,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
     networks:
       - axonrh-network
     deploy:
@@ -125,6 +128,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
     networks:
       - axonrh-network
     deploy:
@@ -149,6 +153,7 @@ services:
       resources:
         limits:
           memory: 768M
+    restart: unless-stopped
 
   # Kafka for messaging
   kafka:
@@ -177,7 +182,8 @@ services:
     deploy:
       resources:
         limits:
-          memory: 768M
+          memory: 1024M
+    restart: unless-stopped
 
   # MailHog for email testing
   mailhog:
