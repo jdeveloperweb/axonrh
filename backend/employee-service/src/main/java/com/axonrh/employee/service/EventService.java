@@ -28,9 +28,9 @@ public class EventService {
     private final EmployeeRepository employeeRepository;
 
     @Transactional(readOnly = true)
-    public List<EventDTO> getAllEvents() {
+    public List<EventDTO> getAllEvents(UUID userId, String email) {
         UUID tenantId = getTenantId();
-        UUID employeeId = getCurrentEmployeeId();
+        UUID employeeId = findEmployeeId(userId, email);
         
         return eventRepository.findByTenantIdOrderByDateAsc(tenantId).stream()
                 .map(e -> mapToDTO(e, employeeId))
@@ -38,8 +38,8 @@ public class EventService {
     }
 
     @Transactional(readOnly = true)
-    public EventDTO getEventById(UUID id) {
-        UUID employeeId = getCurrentEmployeeId();
+    public EventDTO getEventById(UUID id, UUID userId, String email) {
+        UUID employeeId = findEmployeeId(userId, email);
         Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Event not found"));
         return mapToDTO(event, employeeId);
@@ -91,8 +91,8 @@ public class EventService {
     }
 
     @Transactional
-    public void registerToEvent(UUID eventId) {
-        UUID employeeId = getCurrentEmployeeId();
+    public void registerToEvent(UUID eventId, UUID userId, String email) {
+        UUID employeeId = findEmployeeId(userId, email);
         if (employeeId == null) throw new RuntimeException("Logged in employee not found");
 
         if (registrationRepository.existsByEventIdAndEmployeeId(eventId, employeeId)) {
@@ -111,10 +111,12 @@ public class EventService {
     }
 
     @Transactional
-    public void unregisterFromEvent(UUID eventId) {
-        UUID employeeId = getCurrentEmployeeId();
-        registrationRepository.findByEventIdAndEmployeeId(eventId, employeeId)
-                .ifPresent(registrationRepository::delete);
+    public void unregisterFromEvent(UUID eventId, UUID userId, String email) {
+        UUID employeeId = findEmployeeId(userId, email);
+        if (employeeId != null) {
+            registrationRepository.findByEventIdAndEmployeeId(eventId, employeeId)
+                    .ifPresent(registrationRepository::delete);
+        }
     }
 
     private EventDTO mapToDTO(Event e, UUID employeeId) {
@@ -150,24 +152,35 @@ public class EventService {
         return UUID.fromString(TenantContext.getCurrentTenant());
     }
 
-    private UUID getCurrentEmployeeId() {
-        String name = SecurityContextHolder.getContext().getAuthentication().getName();
+    private UUID findEmployeeId(UUID userId, String email) {
+        if (userId == null && (email == null || email.isBlank())) {
+            return null;
+        }
+
         UUID tenantId = getTenantId();
         
-        // 1. Tenta buscar por UserID (UUID)
-        try {
-            UUID userId = UUID.fromString(name);
-            java.util.Optional<Employee> employee = employeeRepository.findByTenantIdAndUserId(tenantId, userId);
+        // 1. Tenta pelo UserID (forma mais garantida do Gateway)
+        if (userId != null) {
+            Optional<Employee> employee = employeeRepository.findByTenantIdAndUserId(tenantId, userId);
             if (employee.isPresent()) {
                 return employee.get().getId();
             }
-        } catch (IllegalArgumentException e) {
-            // Não é um UUID, prossegue para busca por email
         }
 
-        // 2. Tenta buscar por Email
-        return employeeRepository.findByTenantIdAndEmail(tenantId, name)
-                .map(Employee::getId)
-                .orElse(null);
+        // 2. Tenta pelo E-mail (Auto-heal para usuários sincronizados mas não vinculados)
+        if (email != null && !email.isBlank()) {
+            Optional<Employee> employee = employeeRepository.findByTenantIdAndEmail(tenantId, email);
+            if (employee.isPresent()) {
+                Employee e = employee.get();
+                // Se o UserID estava faltando no cadastro, vincula agora (Auto-heal)
+                if (e.getUserId() == null && userId != null) {
+                    e.setUserId(userId);
+                    employeeRepository.save(e);
+                }
+                return e.getId();
+            }
+        }
+
+        return null;
     }
 }

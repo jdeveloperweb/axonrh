@@ -17,13 +17,18 @@ public class EventController {
     private final EventService eventService;
 
     @GetMapping
-    public ResponseEntity<List<EventDTO>> getAllEvents() {
-        return ResponseEntity.ok(eventService.getAllEvents());
+    public ResponseEntity<List<EventDTO>> getAllEvents(
+            @RequestHeader(value = "X-User-Id", required = false) UUID userId,
+            @RequestHeader(value = "X-User-Email", required = false) String email) {
+        return ResponseEntity.ok(eventService.getAllEvents(userId, email));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<EventDTO> getEventById(@PathVariable UUID id) {
-        return ResponseEntity.ok(eventService.getEventById(id));
+    public ResponseEntity<EventDTO> getEventById(
+            @PathVariable UUID id,
+            @RequestHeader(value = "X-User-Id", required = false) UUID userId,
+            @RequestHeader(value = "X-User-Email", required = false) String email) {
+        return ResponseEntity.ok(eventService.getEventById(id, userId, email));
     }
 
     @PostMapping
@@ -39,14 +44,20 @@ public class EventController {
     }
 
     @PostMapping("/{id}/register")
-    public ResponseEntity<Void> register(@PathVariable UUID id) {
-        eventService.registerToEvent(id);
+    public ResponseEntity<Void> register(
+            @PathVariable UUID id,
+            @RequestHeader(value = "X-User-Id", required = false) UUID userId,
+            @RequestHeader(value = "X-User-Email", required = false) String email) {
+        eventService.registerToEvent(id, userId, email);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/{id}/unregister")
-    public ResponseEntity<Void> unregister(@PathVariable UUID id) {
-        eventService.unregisterFromEvent(id);
+    public ResponseEntity<Void> unregister(
+            @PathVariable UUID id,
+            @RequestHeader(value = "X-User-Id", required = false) UUID userId,
+            @RequestHeader(value = "X-User-Email", required = false) String email) {
+        eventService.unregisterFromEvent(id, userId, email);
         return ResponseEntity.ok().build();
     }
 }
