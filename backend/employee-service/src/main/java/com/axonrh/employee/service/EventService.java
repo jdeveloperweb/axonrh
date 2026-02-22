@@ -151,9 +151,22 @@ public class EventService {
     }
 
     private UUID getCurrentEmployeeId() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        String name = SecurityContextHolder.getContext().getAuthentication().getName();
         UUID tenantId = getTenantId();
-        return employeeRepository.findByTenantIdAndEmail(tenantId, email)
+        
+        // 1. Tenta buscar por UserID (UUID)
+        try {
+            UUID userId = UUID.fromString(name);
+            java.util.Optional<Employee> employee = employeeRepository.findByTenantIdAndUserId(tenantId, userId);
+            if (employee.isPresent()) {
+                return employee.get().getId();
+            }
+        } catch (IllegalArgumentException e) {
+            // Não é um UUID, prossegue para busca por email
+        }
+
+        // 2. Tenta buscar por Email
+        return employeeRepository.findByTenantIdAndEmail(tenantId, name)
                 .map(Employee::getId)
                 .orElse(null);
     }
