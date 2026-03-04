@@ -229,9 +229,11 @@ menu() {
     echo -e "  4) Redeploy frontend only"
     echo -e "  5) Start infrastructure only"
     echo -e "  6) Ver logs dos serviços"
-    echo -e "  7) Exit"
+    echo -e "  7) Parar todos os containers"
+    echo -e "  8) Parar e limpar tudo (containers e redes)"
+    echo -e "  9) Exit"
 
-    read -r -p "Enter your choice [1-7]: " choice
+    read -r -p "Enter your choice [1-9]: " choice
 
     case "$choice" in
         1)
@@ -265,6 +267,20 @@ menu() {
             logs_menu
             ;;
         7)
+            check_docker
+            echo -e "\n${YELLOW}Parando todos os containers...${NC}"
+            cd "$PROJECT_ROOT"
+            docker compose --profile backend --profile frontend stop
+            echo -e "${GREEN}✓ Todos os containers foram parados.${NC}"
+            ;;
+        8)
+            check_docker
+            echo -e "\n${YELLOW}Parando e limpando tudo (containers e redes)...${NC}"
+            cd "$PROJECT_ROOT"
+            docker compose --profile backend --profile frontend down
+            echo -e "${GREEN}✓ Ambiente limpo com sucesso.${NC}"
+            ;;
+        9)
             echo -e "${YELLOW}Exiting.${NC}"
             exit 0
             ;;
