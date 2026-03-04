@@ -218,6 +218,7 @@ select_backend_service() {
     done
 }
 
+menu() {
     local PROFILES="--profile backend --profile frontend"
 
     echo -e "\n${BLUE}========================================${NC}"
