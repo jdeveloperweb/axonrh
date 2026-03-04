@@ -218,7 +218,8 @@ select_backend_service() {
     done
 }
 
-menu() {
+    local PROFILES="--profile backend --profile frontend"
+
     echo -e "\n${BLUE}========================================${NC}"
     echo -e "${BLUE}   Redeploy menu - AxonRH               ${NC}"
     echo -e "${BLUE}========================================${NC}"
@@ -229,8 +230,8 @@ menu() {
     echo -e "  4) Redeploy frontend only"
     echo -e "  5) Start infrastructure only"
     echo -e "  6) Ver logs dos serviços"
-    echo -e "  7) Parar todos os containers"
-    echo -e "  8) Parar e limpar tudo (containers e redes)"
+    echo -e "  7) Parar todos os containers (AxonRH apenas)"
+    echo -e "  8) Parar e limpar tudo (AxonRH apenas)"
     echo -e "  9) Exit"
 
     read -r -p "Enter your choice [1-9]: " choice
@@ -240,10 +241,10 @@ menu() {
             check_docker
             git_pull
             echo -e "\n${YELLOW}Stopping all app services...${NC}"
-            docker compose --profile backend --profile frontend stop
+            docker compose $PROFILES stop
             echo -e "\n${YELLOW}Starting all services with Docker Compose (forcing recreate)...${NC}"
             cd "$PROJECT_ROOT"
-            docker compose --profile backend --profile frontend up -d --build --force-recreate
+            docker compose $PROFILES up -d --build --force-recreate
             ;;
         2)
             check_docker
@@ -268,16 +269,16 @@ menu() {
             ;;
         7)
             check_docker
-            echo -e "\n${YELLOW}Parando todos os containers...${NC}"
+            echo -e "\n${YELLOW}Parando containers do AxonRH...${NC}"
             cd "$PROJECT_ROOT"
-            docker compose --profile backend --profile frontend stop
-            echo -e "${GREEN}✓ Todos os containers foram parados.${NC}"
+            docker compose $PROFILES stop
+            echo -e "${GREEN}✓ Containers do projeto parados.${NC}"
             ;;
         8)
             check_docker
-            echo -e "\n${YELLOW}Parando e limpando tudo (containers e redes)...${NC}"
+            echo -e "\n${YELLOW}Limpando ambiente do AxonRH (containers e redes)...${NC}"
             cd "$PROJECT_ROOT"
-            docker compose --profile backend --profile frontend down
+            docker compose $PROFILES down
             echo -e "${GREEN}✓ Ambiente limpo com sucesso.${NC}"
             ;;
         9)
