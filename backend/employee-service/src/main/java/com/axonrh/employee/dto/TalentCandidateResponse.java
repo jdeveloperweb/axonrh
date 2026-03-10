@@ -114,6 +114,12 @@ public class TalentCandidateResponse {
     @Schema(description = "Candidato ativo")
     private Boolean isActive;
 
+    @Schema(description = "Consentimento LGPD")
+    private Boolean lgpdConsent;
+
+    @Schema(description = "Data do consentimento LGPD")
+    private LocalDateTime lgpdConsentDate;
+
     @Schema(description = "Data de criação")
     private LocalDateTime createdAt;
 

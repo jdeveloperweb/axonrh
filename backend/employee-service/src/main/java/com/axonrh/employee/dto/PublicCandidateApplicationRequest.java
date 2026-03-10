@@ -48,4 +48,7 @@ public class PublicCandidateApplicationRequest {
     @Size(max = 500, message = "O portfólio deve ter no máximo 500 caracteres")
     @Schema(description = "URL do portfólio")
     private String portfolioUrl;
+
+    @Schema(description = "Consentimento LGPD")
+    private Boolean lgpdConsent;
 }

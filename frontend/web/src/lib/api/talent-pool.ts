@@ -94,6 +94,8 @@ export interface TalentCandidate {
     appliedAt?: string;
     lastStatusChange?: string;
     isActive: boolean;
+    lgpdConsent?: boolean;
+    lgpdConsentDate?: string;
     createdAt?: string;
     updatedAt?: string;
 }
@@ -109,6 +111,7 @@ export interface CreateCandidateData {
     portfolioUrl?: string;
     source?: CandidateSource;
     referralName?: string;
+    lgpdConsent?: boolean;
 }
 
 export interface CandidateStatusUpdate {
@@ -146,6 +149,7 @@ export interface PublicApplicationData {
     state?: string;
     linkedinUrl?: string;
     portfolioUrl?: string;
+    lgpdConsent: boolean;
 }
 
 export interface TalentPoolStats {

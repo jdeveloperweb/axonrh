@@ -50,6 +50,7 @@ export default function VacancyDetailPage() {
         state: '',
         linkedinUrl: 'https://linkedin.com/in/',
         portfolioUrl: '',
+        lgpdConsent: false,
     });
 
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -125,6 +126,10 @@ export default function VacancyDetailPage() {
 
         if (!resumeFile) {
             errors.resume = 'Currículo original em PDF é obrigatório';
+        }
+
+        if (!formData.lgpdConsent) {
+            errors.lgpdConsent = 'Você deve concordar com o armazenamento dos dados';
         }
 
         setFormErrors(errors);
@@ -574,6 +579,31 @@ export default function VacancyDetailPage() {
                                     </div>
                                     {formErrors.resume && (
                                         <p className="mt-1.5 text-xs text-red-600 font-bold ml-1">{formErrors.resume}</p>
+                                    )}
+                                </div>
+
+                                <div className="space-y-4 py-2">
+                                    <div className="flex items-start gap-3 group cursor-pointer" onClick={() => setFormData({ ...formData, lgpdConsent: !formData.lgpdConsent })}>
+                                        <div className={cn(
+                                            "mt-1 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all",
+                                            formData.lgpdConsent
+                                                ? "bg-[var(--color-primary)] border-[var(--color-primary)]"
+                                                : "bg-white border-gray-200 group-hover:border-[var(--color-primary)]/50"
+                                        )}>
+                                            {formData.lgpdConsent && <CheckCircle className="w-3.5 h-3.5 text-white" />}
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-xs font-bold text-gray-700 leading-snug">
+                                                Concordo em armazenar meus dados para participação em processos seletivos desta empresa.
+                                            </p>
+                                            <p className="text-[10px] text-gray-400 font-medium mt-1 leading-relaxed">
+                                                Seus dados serão mantidos em nosso banco de talentos por um período de 12 a 24 meses.
+                                                Caso deseje que suas informações sejam removidas, entre em contato através do e-mail <strong className="text-gray-600">privacidade@mjolnix.com.br</strong> para solicitar a exclusão definitiva.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    {formErrors.lgpdConsent && (
+                                        <p className="mt-1 text-xs text-red-600 font-bold ml-8">{formErrors.lgpdConsent}</p>
                                     )}
                                 </div>
 

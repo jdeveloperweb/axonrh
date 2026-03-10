@@ -36,6 +36,8 @@ public class TalentCandidateMapper {
                 .status(CandidateStatus.NEW)
                 .appliedAt(LocalDateTime.now())
                 .isActive(true)
+                .lgpdConsent(request.getLgpdConsent())
+                .lgpdConsentDate(request.getLgpdConsent() != null && request.getLgpdConsent() ? LocalDateTime.now() : null)
                 .build();
     }
 
@@ -57,6 +59,8 @@ public class TalentCandidateMapper {
                 .status(CandidateStatus.NEW)
                 .appliedAt(LocalDateTime.now())
                 .isActive(true)
+                .lgpdConsent(request.getLgpdConsent())
+                .lgpdConsentDate(request.getLgpdConsent() != null && request.getLgpdConsent() ? LocalDateTime.now() : null)
                 .build();
     }
 
@@ -76,6 +80,12 @@ public class TalentCandidateMapper {
             candidate.setSource(request.getSource());
         }
         candidate.setReferralName(request.getReferralName());
+        if (request.getLgpdConsent() != null) {
+            candidate.setLgpdConsent(request.getLgpdConsent());
+            if (request.getLgpdConsent()) {
+                candidate.setLgpdConsentDate(LocalDateTime.now());
+            }
+        }
     }
 
     /**
@@ -117,6 +127,8 @@ public class TalentCandidateMapper {
                 .appliedAt(candidate.getAppliedAt())
                 .lastStatusChange(candidate.getLastStatusChange())
                 .isActive(candidate.getIsActive())
+                .lgpdConsent(candidate.getLgpdConsent())
+                .lgpdConsentDate(candidate.getLgpdConsentDate())
                 .createdAt(candidate.getCreatedAt())
                 .updatedAt(candidate.getUpdatedAt())
                 .build();

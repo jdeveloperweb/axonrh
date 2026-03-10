@@ -57,4 +57,7 @@ public class TalentCandidateRequest {
     @Size(max = 200, message = "O nome da indicação deve ter no máximo 200 caracteres")
     @Schema(description = "Nome de quem indicou (se for indicação)")
     private String referralName;
+
+    @Schema(description = "Consentimento LGPD")
+    private Boolean lgpdConsent;
 }

@@ -49,6 +49,7 @@ import { positionsApi, Position } from '@/lib/api/positions';
 import { employeesApi, Department } from '@/lib/api/employees';
 import { digitalHiringApi } from '@/lib/api/digital-hiring';
 import { useAuthStore } from '@/stores/auth-store';
+import { cn } from '@/lib/utils';
 
 type Tab = 'vacancies' | 'candidates' | 'talentPool';
 
@@ -112,6 +113,7 @@ export default function TalentPoolPage() {
         linkedinUrl: '',
         portfolioUrl: '',
         source: 'OTHER',
+        lgpdConsent: false,
     });
     const [resumeFile, setResumeFile] = useState<File | null>(null);
     const [selectedVacancyId, setSelectedVacancyId] = useState<string>('');
@@ -1898,6 +1900,25 @@ export default function TalentPoolPage() {
                                         onChange={(e) => setCandidateForm({ ...candidateForm, linkedinUrl: e.target.value })}
                                         className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
                                     />
+                                </div>
+                            </div>
+
+                            <div className="flex items-start gap-3 p-4 bg-blue-50/50 rounded-xl border border-blue-100/50 group cursor-pointer" onClick={() => setCandidateForm({ ...candidateForm, lgpdConsent: !candidateForm.lgpdConsent })}>
+                                <div className={cn(
+                                    "mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center transition-all",
+                                    candidateForm.lgpdConsent
+                                        ? "bg-[var(--color-primary)] border-[var(--color-primary)]"
+                                        : "bg-white border-gray-300"
+                                )}>
+                                    {candidateForm.lgpdConsent && <CheckCircle className="w-3.5 h-3.5 text-white" />}
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-sm font-bold text-gray-700 leading-snug">
+                                        Candidato concorda com o armazenamento dos dados (LGPD)
+                                    </p>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Confirme que o candidato deu consentimento para armazenar o currículo no banco de talentos (12-24 meses) e está ciente de que pode solicitar a remoção via privacidade@mjolnix.com.br.
+                                    </p>
                                 </div>
                             </div>
 

@@ -26,7 +26,8 @@ import {
   HeartPulse,
   Banknote,
   Puzzle,
-  Mic2
+  Mic2,
+  ShieldCheck
 } from 'lucide-react';
 import { cn, getPhotoUrl } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
@@ -96,6 +97,7 @@ const navGroups: NavGroup[] = [
     items: [
 
       { label: 'Integração da Dinâmica', href: '/integrations', icon: Puzzle, module: 'moduleIntegration' },
+      { label: 'Privacidade', href: '/privacy', icon: ShieldCheck },
       { label: 'Sistema', href: '/settings', icon: Settings, permission: 'CONFIG:READ' },
     ]
   }

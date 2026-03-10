@@ -139,6 +139,12 @@ public class TalentCandidate {
     @Builder.Default
     private Boolean isActive = true;
 
+    @Column(name = "lgpd_consent")
+    private Boolean lgpdConsent;
+
+    @Column(name = "lgpd_consent_date")
+    private LocalDateTime lgpdConsentDate;
+
     @OneToMany(mappedBy = "candidate", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
     private List<TalentCandidateHistory> statusHistory = new ArrayList<>();
