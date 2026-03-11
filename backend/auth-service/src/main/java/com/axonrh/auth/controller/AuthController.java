@@ -1,5 +1,6 @@
 package com.axonrh.auth.controller;
 
+import com.axonrh.auth.dto.ChangePasswordRequest;
 import com.axonrh.auth.dto.LoginRequest;
 import com.axonrh.auth.dto.LoginResponse;
 import com.axonrh.auth.dto.RefreshTokenRequest;
@@ -64,6 +65,15 @@ public class AuthController {
     public ResponseEntity<LoginResponse.UserInfo> getCurrentUser(
             @RequestHeader("X-User-Id") String userId) {
         return ResponseEntity.ok(authService.getUserInfo(userId));
+    }
+
+    @PostMapping("/password/change")
+    @Operation(summary = "Alterar senha", description = "Permite que o usuario altere sua propria senha")
+    public ResponseEntity<Void> changePassword(
+            @RequestHeader("X-User-Id") String userId,
+            @Valid @RequestBody ChangePasswordRequest request) {
+        authService.changePassword(userId, request.getCurrentPassword(), request.getNewPassword());
+        return ResponseEntity.noContent().build();
     }
 
     private String getClientIp(HttpServletRequest request) {

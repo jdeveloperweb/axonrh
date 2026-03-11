@@ -186,6 +186,25 @@ public class AuthService {
         return buildUserInfo(user, employeeId);
     }
 
+    /**
+     * Altera a senha do usuario.
+     */
+    @Transactional
+    public void changePassword(String userId, String currentPassword, String newPassword) {
+        User user = userRepository.findById(UUID.fromString(userId))
+                .orElseThrow(() -> new AuthenticationException("Usuario nao encontrado"));
+
+        if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
+            throw new AuthenticationException("Senha atual incorreta");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.setPasswordChangedAt(LocalDateTime.now());
+        userRepository.save(user);
+        
+        log.info("Password changed for user: {}", userId);
+    }
+
     // === Metodos auxiliares ===
 
     private String createRefreshToken(User user, String ipAddress, String userAgent) {

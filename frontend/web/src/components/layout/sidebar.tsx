@@ -27,7 +27,8 @@ import {
   Banknote,
   Puzzle,
   Mic2,
-  ShieldCheck
+  ShieldCheck,
+  Lock
 } from 'lucide-react';
 import { cn, getPhotoUrl } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
@@ -98,6 +99,7 @@ const navGroups: NavGroup[] = [
 
       { label: 'Integração da Dinâmica', href: '/integrations', icon: Puzzle, module: 'moduleIntegration' },
       { label: 'Privacidade', href: '/privacy', icon: ShieldCheck },
+      { label: 'Segurança', href: '/settings/security', icon: Lock },
       { label: 'Sistema', href: '/settings', icon: Settings, permission: 'CONFIG:READ' },
     ]
   }
