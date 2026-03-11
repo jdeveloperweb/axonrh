@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { ShieldCheck, Mail, Loader2, AlertCircle, RefreshCw, CheckCircle2 } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Shield, Mail, Loader2, AlertCircle, RefreshCw, CheckCircle2, Lock, Smartphone } from "lucide-react";
 import { authApi, type LoginResponse } from "@/lib/api/auth";
 import { useAuthStore } from "@/stores/auth-store";
 
@@ -16,24 +16,60 @@ export default function MfaSetupRequiredModal({
   maskedEmail,
   onSuccess,
 }: MfaSetupRequiredModalProps) {
-  const [code, setCode] = useState("");
+  const [digits, setDigits] = useState(["", "", "", "", "", ""]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resentSuccess, setResentSuccess] = useState(false);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  useEffect(() => {
+    inputRefs.current[0]?.focus();
+  }, []);
+
+  const code = digits.join("");
+
+  const handleDigitChange = (index: number, value: string) => {
+    const clean = value.replace(/\D/g, "").slice(-1);
+    const next = [...digits];
+    next[index] = clean;
+    setDigits(next);
+    setError(null);
+    if (clean && index < 5) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace" && !digits[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+    if (e.key === "ArrowLeft" && index > 0) inputRefs.current[index - 1]?.focus();
+    if (e.key === "ArrowRight" && index < 5) inputRefs.current[index + 1]?.focus();
+  };
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (!pasted) return;
+    const next = [...digits];
+    pasted.split("").forEach((ch, i) => { next[i] = ch; });
+    setDigits(next);
+    setError(null);
+    const focusIndex = Math.min(pasted.length, 5);
+    inputRefs.current[focusIndex]?.focus();
+  };
 
   const handleComplete = async (e: React.FormEvent) => {
     e.preventDefault();
     if (code.length !== 6) {
-      setError("Digite o código de 6 dígitos do seu aplicativo autenticador.");
+      setError("Digite todos os 6 dígitos do código.");
       return;
     }
     setIsSubmitting(true);
     setError(null);
     try {
       const response = await authApi.completeMandatoryMfaSetup(setupToken, code);
-
-      // Persiste sessão na store
       useAuthStore.setState({
         user: response.user,
         accessToken: response.accessToken,
@@ -45,12 +81,11 @@ export default function MfaSetupRequiredModal({
       if (response.user?.tenantId) {
         localStorage.setItem("tenantId", response.user.tenantId);
       }
-
       onSuccess(response);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Código inválido. Tente novamente."
-      );
+      setError(err instanceof Error ? err.message : "Código inválido. Verifique e tente novamente.");
+      setDigits(["", "", "", "", "", ""]);
+      inputRefs.current[0]?.focus();
     } finally {
       setIsSubmitting(false);
     }
@@ -63,138 +98,178 @@ export default function MfaSetupRequiredModal({
     try {
       await authApi.resendMfaSetupEmail(setupToken);
       setResentSuccess(true);
-      setTimeout(() => setResentSuccess(false), 5000);
+      setTimeout(() => setResentSuccess(false), 6000);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Não foi possível reenviar o email. Tente fazer login novamente."
-      );
+      setError(err instanceof Error ? err.message : "Não foi possível reenviar. Tente fazer login novamente.");
     } finally {
       setIsResending(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white text-center">
-          <div className="flex justify-center mb-3">
-            <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center">
-              <ShieldCheck className="w-7 h-7 text-white" />
-            </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md px-4">
+      <style>{`
+        @keyframes mfa-slide-up {
+          from { opacity: 0; transform: translateY(24px) scale(0.97); }
+          to   { opacity: 1; transform: translateY(0)    scale(1); }
+        }
+        @keyframes mfa-dot-pulse {
+          0%, 100% { opacity: 0.3; transform: scale(0.8); }
+          50%       { opacity: 1;   transform: scale(1.2); }
+        }
+        .mfa-card {
+          animation: mfa-slide-up 0.35s cubic-bezier(0.22,1,0.36,1) both;
+        }
+        .otp-input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 20%, transparent); }
+        .otp-input.filled { border-color: var(--color-primary); background: color-mix(in srgb, var(--color-primary) 6%, white); color: var(--color-primary); }
+        .btn-primary { background: var(--color-primary); }
+        .btn-primary:hover:not(:disabled) { filter: brightness(0.9); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+        .step-badge { background: color-mix(in srgb, var(--color-primary) 12%, transparent); color: var(--color-primary); }
+        .shield-ring { border: 2px solid color-mix(in srgb, var(--color-primary) 25%, transparent); }
+        .shield-bg { background: color-mix(in srgb, var(--color-primary) 10%, transparent); }
+        .shield-icon { color: var(--color-primary); }
+        .email-badge { background: color-mix(in srgb, var(--color-primary) 8%, transparent); border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent); }
+        .email-icon { color: var(--color-primary); }
+        .link-btn { color: var(--color-secondary); }
+        .link-btn:hover { color: var(--color-primary); }
+        .pulse-dot { animation: mfa-dot-pulse 1.4s ease-in-out infinite; }
+        .pulse-dot:nth-child(2) { animation-delay: 0.2s; }
+        .pulse-dot:nth-child(3) { animation-delay: 0.4s; }
+      `}</style>
+
+      <div className="mfa-card w-full max-w-[420px] bg-white rounded-2xl shadow-2xl overflow-hidden">
+
+        {/* ── Top accent bar ── */}
+        <div className="h-1 w-full btn-primary" />
+
+        {/* ── Header ── */}
+        <div className="flex flex-col items-center pt-8 pb-6 px-8 text-center">
+          <div className="shield-ring shield-bg w-16 h-16 rounded-2xl flex items-center justify-center mb-4">
+            <Shield className="shield-icon w-8 h-8" strokeWidth={1.75} />
           </div>
-          <h2 className="text-xl font-bold">Autenticação em duas etapas obrigatória</h2>
-          <p className="text-blue-100 text-sm mt-1">
-            Por conter dados pessoais, este sistema exige MFA ativo.
+          <h2 className="text-[1.35rem] font-bold text-slate-900 leading-tight tracking-tight">
+            Verificação em duas etapas
+          </h2>
+          <p className="text-sm text-slate-500 mt-1.5 leading-relaxed max-w-[280px]">
+            Configure o MFA para acessar dados pessoais com segurança.
           </p>
         </div>
 
-        {/* Body */}
-        <div className="p-6">
-          {/* Email enviado */}
-          <div className="flex items-start gap-3 p-4 rounded-xl bg-blue-50 border border-blue-100 mb-5">
-            <Mail className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+        <div className="px-8 pb-8 space-y-5">
+
+          {/* ── Email notice ── */}
+          <div className="email-badge rounded-xl px-4 py-3.5 flex items-start gap-3">
+            <Mail className="email-icon w-4.5 h-4.5 flex-shrink-0 mt-0.5" style={{ width: 18, height: 18 }} />
             <div>
-              <p className="text-sm font-medium text-blue-900">Email enviado!</p>
-              <p className="text-sm text-blue-700 mt-0.5">
-                Enviamos um email para{" "}
-                <span className="font-semibold">{maskedEmail}</span> com o QR Code
-                e as instruções de configuração.
+              <p className="text-[13px] font-semibold text-slate-800">Email de configuração enviado</p>
+              <p className="text-[12.5px] text-slate-500 mt-0.5 leading-relaxed">
+                Verifique <span className="font-semibold text-slate-700">{maskedEmail}</span> — enviamos o QR Code e as instruções.
               </p>
             </div>
           </div>
 
-          {/* Instruções resumidas */}
-          <ol className="space-y-2 mb-5 text-sm text-slate-600">
-            <li className="flex items-start gap-2">
-              <span className="flex-shrink-0 w-5 h-5 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center mt-0.5">1</span>
-              Abra o email e escaneie o QR Code com um app autenticador
-              <span className="text-slate-400 text-xs">(Google Authenticator, Authy…)</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="flex-shrink-0 w-5 h-5 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center mt-0.5">2</span>
-              O app gerará um código de 6 dígitos
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="flex-shrink-0 w-5 h-5 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center mt-0.5">3</span>
-              Digite o código abaixo para confirmar a configuração
-            </li>
-          </ol>
+          {/* ── Steps ── */}
+          <div className="space-y-2.5">
+            {[
+              { icon: <Smartphone size={14} />, text: "Abra o app autenticador e escaneie o QR Code do email" },
+              { icon: <Lock size={14} />,       text: "O app vai gerar um código de 6 dígitos" },
+              { icon: <Shield size={14} />,     text: "Digite o código abaixo para ativar o acesso" },
+            ].map(({ icon, text }, i) => (
+              <div key={i} className="flex items-start gap-3">
+                <span className="step-badge flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold mt-0.5">
+                  {i + 1}
+                </span>
+                <p className="text-[13px] text-slate-600 leading-snug pt-0.5">{text}</p>
+              </div>
+            ))}
+          </div>
 
-          {/* Erro */}
-          {error && (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-rose-50 border border-rose-200 mb-4">
-              <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
-              <span className="text-sm text-rose-700">{error}</span>
-            </div>
-          )}
+          <div className="border-t border-slate-100" />
 
-          {/* Sucesso reenvio */}
-          {resentSuccess && (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-green-50 border border-green-200 mb-4">
-              <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
-              <span className="text-sm text-green-700">Email reenviado com sucesso!</span>
-            </div>
-          )}
-
-          {/* Formulário */}
+          {/* ── OTP Inputs ── */}
           <form onSubmit={handleComplete} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+              <label className="block text-[13px] font-semibold text-slate-700 mb-3">
                 Código do autenticador
               </label>
-              <input
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                maxLength={6}
-                value={code}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/\D/g, "").slice(0, 6);
-                  setCode(val);
-                  setError(null);
-                }}
-                placeholder="000000"
-                autoFocus
-                className="w-full text-center text-3xl font-mono tracking-[0.5em] py-3 px-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-300 focus:border-blue-400 outline-none bg-slate-50 text-slate-900 placeholder:text-slate-300"
-                disabled={isSubmitting}
-              />
+              <div className="flex gap-2 justify-between" onPaste={handlePaste}>
+                {digits.map((d, i) => (
+                  <input
+                    key={i}
+                    ref={el => { inputRefs.current[i] = el; }}
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={1}
+                    value={d}
+                    onChange={e => handleDigitChange(i, e.target.value)}
+                    onKeyDown={e => handleKeyDown(i, e)}
+                    disabled={isSubmitting}
+                    className={`otp-input w-full aspect-square max-w-[52px] text-center text-xl font-bold border-2 border-slate-200 rounded-xl outline-none bg-slate-50 transition-all duration-150 text-slate-900 ${d ? "filled" : ""}`}
+                    autoComplete="one-time-code"
+                  />
+                ))}
+              </div>
             </div>
 
+            {/* Error */}
+            {error && (
+              <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-rose-50 border border-rose-100">
+                <AlertCircle className="w-4 h-4 text-rose-500 flex-shrink-0" />
+                <span className="text-[13px] text-rose-700 font-medium">{error}</span>
+              </div>
+            )}
+
+            {/* Resent success */}
+            {resentSuccess && (
+              <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-emerald-50 border border-emerald-100">
+                <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                <span className="text-[13px] text-emerald-700 font-medium">Email reenviado com sucesso!</span>
+              </div>
+            )}
+
+            {/* Submit */}
             <button
               type="submit"
               disabled={isSubmitting || code.length !== 6}
-              className="w-full py-3 rounded-xl font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+              className="btn-primary w-full py-3 rounded-xl font-semibold text-white text-sm transition-all duration-150 flex items-center justify-center gap-2"
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span className="flex gap-1">
+                    <span className="pulse-dot w-1.5 h-1.5 bg-white/70 rounded-full inline-block" />
+                    <span className="pulse-dot w-1.5 h-1.5 bg-white/70 rounded-full inline-block" />
+                    <span className="pulse-dot w-1.5 h-1.5 bg-white/70 rounded-full inline-block" />
+                  </span>
                   Verificando...
                 </>
               ) : (
                 <>
-                  <ShieldCheck className="w-4 h-4" />
+                  <Shield className="w-4 h-4" />
                   Confirmar e entrar
                 </>
               )}
             </button>
           </form>
 
-          {/* Reenviar email */}
-          <div className="mt-4 text-center">
+          {/* Resend */}
+          <div className="text-center">
             <button
+              type="button"
               onClick={handleResend}
               disabled={isResending}
-              className="text-sm text-slate-500 hover:text-blue-600 flex items-center gap-1.5 mx-auto transition-colors disabled:opacity-50"
+              className="link-btn text-[12.5px] font-medium flex items-center gap-1.5 mx-auto transition-colors duration-150 disabled:opacity-50"
             >
               {isResending ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : (
                 <RefreshCw className="w-3.5 h-3.5" />
               )}
-              Não recebeu o email? Reenviar
+              {isResending ? "Reenviando..." : "Não recebeu o email? Reenviar"}
             </button>
           </div>
+
         </div>
       </div>
     </div>

@@ -103,110 +103,121 @@ public class MfaEmailService {
 
     private String buildEmailHtml(String userName, String qrCodeBase64,
                                    String secret, BrandingInfo branding) {
+        // Header: white background, logo only (or company name text)
         String logoHtml = branding.logoUrl != null
                 ? "<img src=\"" + branding.logoUrl + "\" alt=\"" + escapeHtml(branding.companyName)
-                  + "\" style=\"max-height:52px;max-width:220px;border:0;display:block;margin:0 auto;\" border=\"0\">"
-                : "<span style=\"font-size:26px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;\">"
+                  + "\" style=\"max-height:48px;max-width:200px;border:0;display:block;margin:0 auto;\" border=\"0\">"
+                : "<span style=\"font-size:22px;font-weight:700;color:#0f172a;letter-spacing:-0.5px;\">"
                   + escapeHtml(branding.companyName) + "</span>";
 
         String formattedSecret = formatSecret(secret);
+
+        // Accent color for badges/borders
+        String accent = branding.primaryColor != null ? branding.primaryColor : "#1E40AF";
 
         return "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
             + "<html xmlns=\"http://www.w3.org/1999/xhtml\" lang=\"pt-BR\">"
             + "<head>"
             + "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />"
             + "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"/>"
-            + "<title>Configure seu MFA</title>"
+            + "<title>Configure seu MFA — " + escapeHtml(branding.companyName) + "</title>"
             + "</head>"
-            + "<body style=\"margin:0;padding:0;background-color:#f0f4f8;\">"
+            + "<body style=\"margin:0;padding:0;background-color:#f1f5f9;\">"
 
-            // Wrapper externo
-            + "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"background-color:#f0f4f8;\">"
-            + "<tr><td align=\"center\" style=\"padding:32px 16px;\">"
+            // ── OUTER WRAPPER ──
+            + "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"background-color:#f1f5f9;\">"
+            + "<tr><td align=\"center\" style=\"padding:40px 16px;\">"
 
-            // Card principal
-            + "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"580\" style=\"background-color:#ffffff;border-radius:12px;overflow:hidden;\">"
+            // ── CARD ──
+            + "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"560\""
+            + " style=\"background-color:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e2e8f0;\">"
 
-            // ── HEADER ──
-            + "<tr><td align=\"center\" bgcolor=\"" + branding.primaryColor + "\" style=\"background-color:" + branding.primaryColor + ";padding:28px 40px;\">"
+            // ── HEADER: white background, logo only, thin accent bottom border ──
+            + "<tr><td align=\"center\" bgcolor=\"#ffffff\""
+            + " style=\"background-color:#ffffff;padding:32px 40px 24px 40px;border-bottom:3px solid " + accent + ";\">"
             + logoHtml
             + "</td></tr>"
 
-            // ── BANNER DE SEGURANÇA ──
-            + "<tr><td bgcolor=\"#fffbeb\" style=\"background-color:#fffbeb;border-bottom:1px solid #fcd34d;padding:12px 40px;text-align:center;\">"
-            + "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"><tr>"
-            + "<td align=\"center\" style=\"font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#92400e;\">"
-            + "&#128274;&nbsp;<strong>Acesso a dados pessoais requer MFA ativo.</strong>&nbsp;Não compartilhe este email com ninguém."
-            + "</td></tr></table>"
+            // ── GREETING ──
+            + "<tr><td style=\"padding:36px 40px 0 40px;\">"
+            + "<p style=\"margin:0 0 8px;font-family:Georgia,serif;font-size:26px;font-weight:bold;color:#0f172a;line-height:1.25;\">Olá, " + escapeHtml(firstName(userName)) + " 👋</p>"
+            + "<p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#64748b;line-height:1.7;\">"
+            + "Por processar dados pessoais conforme a <strong style=\"color:#374151;\">LGPD</strong>, o acesso ao "
+            + "<strong style=\"color:#374151;\">" + escapeHtml(branding.companyName) + "</strong> agora exige autenticação em duas etapas (MFA)."
+            + "</p>"
             + "</td></tr>"
 
-            // ── SAUDAÇÃO ──
-            + "<tr><td style=\"padding:36px 40px 0 40px;\">"
+            // ── DIVIDER ──
+            + "<tr><td style=\"padding:28px 40px 0 40px;\">"
             + "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">"
-            + "<tr><td style=\"font-family:Arial,Helvetica,sans-serif;font-size:24px;font-weight:bold;color:#0f172a;padding-bottom:10px;\">Olá, " + escapeHtml(firstName(userName)) + " &#128075;</td></tr>"
-            + "<tr><td style=\"font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#475569;line-height:1.7;padding-bottom:28px;\">"
-            + "Por tratar dados pessoais conforme a <strong>LGPD</strong>, o acesso ao <strong>" + escapeHtml(branding.companyName) + "</strong> exige a autenticação em duas etapas (<strong>MFA</strong>)."
-            + "</td></tr>"
+            + "<tr><td style=\"border-top:1px solid #e2e8f0;font-size:0;line-height:0;\">&nbsp;</td></tr>"
             + "</table>"
             + "</td></tr>"
 
-            // ── PASSOS (tabela, sem flexbox) ──
-            + "<tr><td style=\"padding:0 40px 28px 40px;\">"
-            + "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"background-color:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;\">"
-            + "<tr><td style=\"padding:20px 20px 8px 20px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;color:#0f172a;\">Como configurar em 3 passos simples:</td></tr>"
-            + step("1", branding.primaryColor, "Baixe um aplicativo autenticador",
-                    "Recomendamos <strong>Google Authenticator</strong>, <strong>Microsoft Authenticator</strong> ou <strong>Authy</strong>.")
-            + step("2", branding.primaryColor, "Escaneie o QR Code abaixo",
-                    "Abra o app e toque em <em>\"Adicionar conta\"</em> &rarr; <em>\"Escanear QR Code\"</em>.")
-            + step("3", branding.primaryColor, "Insira o código de 6 dígitos",
-                    "O app gerará um código. Digite-o na tela de login para concluir o acesso.")
+            // ── STEPS ──
+            + "<tr><td style=\"padding:24px 40px 0 40px;\">"
+            + "<p style=\"margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:bold;color:#94a3b8;letter-spacing:1px;\">COMO CONFIGURAR</p>"
+            + "</td></tr>"
+            + "<tr><td style=\"padding:0 40px 0 40px;\">"
+            + "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">"
+            + stepClean("1", accent, "Baixe um aplicativo autenticador",
+                    "Google Authenticator, Microsoft Authenticator ou Authy.")
+            + stepClean("2", accent, "Escaneie o QR Code abaixo",
+                    "Abra o app &rarr; toque em &ldquo;Adicionar conta&rdquo; &rarr; &ldquo;Escanear QR Code&rdquo;.")
+            + stepClean("3", accent, "Digite o código de 6 dígitos",
+                    "O app gerará um novo código a cada 30 segundos. Digite-o na tela de login.")
             + "</table>"
             + "</td></tr>"
 
             // ── QR CODE ──
-            + "<tr><td align=\"center\" style=\"padding:0 40px 28px 40px;\">"
-            + "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\"><tr><td align=\"center\">"
-            + "<p style=\"margin:0 0 14px;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:bold;color:#374151;\">Escaneie com seu aplicativo autenticador:</p>"
-            + "<table border=\"0\" cellpadding=\"16\" cellspacing=\"0\" style=\"background-color:#ffffff;border:2px solid " + branding.primaryColor + ";border-radius:10px;\">"
-            + "<tr><td align=\"center\"><img src=\"data:image/png;base64," + qrCodeBase64 + "\" alt=\"QR Code MFA\" width=\"200\" height=\"200\" style=\"display:block;border:0;\" /></td></tr>"
+            + "<tr><td align=\"center\" style=\"padding:32px 40px 0 40px;\">"
+            + "<p style=\"margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:bold;color:#94a3b8;letter-spacing:1px;\">SEU QR CODE</p>"
+            + "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\">"
+            + "<tr><td align=\"center\" style=\"background-color:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;\">"
+            + "<img src=\"data:image/png;base64," + qrCodeBase64 + "\" alt=\"QR Code MFA\" width=\"200\" height=\"200\" style=\"display:block;border:0;\" />"
+            + "</td></tr>"
             + "</table>"
-            + "</td></tr></table>"
             + "</td></tr>"
 
-            // ── CHAVE MANUAL ──
-            + "<tr><td style=\"padding:0 40px 28px 40px;\">"
-            + "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"background-color:#f0fdf4;border-radius:10px;border:1px solid #86efac;\">"
-            + "<tr><td align=\"center\" style=\"padding:18px 24px;\">"
-            + "<p style=\"margin:0 0 6px;font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:bold;color:#166534;letter-spacing:1px;\">&#128273;&nbsp;CHAVE PARA INSERÇÃO MANUAL</p>"
-            + "<p style=\"margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#166534;\">Se não conseguir escanear o QR Code, insira esta chave diretamente no app:</p>"
-            + "<p style=\"margin:0;font-family:'Courier New',Courier,monospace;font-size:20px;font-weight:bold;color:#15803d;letter-spacing:4px;\">" + escapeHtml(formattedSecret) + "</p>"
+            // ── MANUAL KEY ──
+            + "<tr><td style=\"padding:28px 40px 0 40px;\">"
+            + "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\""
+            + " style=\"background-color:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;\">"
+            + "<tr><td style=\"padding:20px 24px;\">"
+            + "<p style=\"margin:0 0 6px;font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:bold;color:#94a3b8;letter-spacing:1px;\">🔑&nbsp;CHAVE MANUAL (se não conseguir escanear)</p>"
+            + "<p style=\"margin:0;font-family:'Courier New',Courier,monospace;font-size:18px;font-weight:bold;color:#1e293b;letter-spacing:5px;\">"
+            + escapeHtml(formattedSecret) + "</p>"
             + "</td></tr>"
             + "</table>"
             + "</td></tr>"
 
             // ── APPS ──
-            + "<tr><td align=\"center\" style=\"padding:0 40px 28px 40px;\">"
-            + "<p style=\"margin:0 0 12px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#64748b;\">Ainda não tem um aplicativo autenticador?</p>"
-            + "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\"><tr>"
-            + "<td style=\"padding:0 4px;\"><a href=\"https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2\" style=\"display:inline-block;background-color:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;padding:9px 16px;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#374151;text-decoration:none;\">Google Authenticator</a></td>"
-            + "<td style=\"padding:0 4px;\"><a href=\"https://www.microsoft.com/pt-br/security/mobile-authenticator-app\" style=\"display:inline-block;background-color:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;padding:9px 16px;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#374151;text-decoration:none;\">Microsoft Authenticator</a></td>"
-            + "<td style=\"padding:0 4px;\"><a href=\"https://authy.com/download/\" style=\"display:inline-block;background-color:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;padding:9px 16px;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#374151;text-decoration:none;\">Authy</a></td>"
+            + "<tr><td align=\"center\" style=\"padding:28px 40px 0 40px;\">"
+            + "<p style=\"margin:0 0 14px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#94a3b8;\">Ainda não tem um app autenticador?</p>"
+            + "<table border=\"0\" cellpadding=\"0\" cellspacing=\"4\"><tr>"
+            + "<td><a href=\"https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2\""
+            + " style=\"display:inline-block;background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#374151;text-decoration:none;\">Google Auth</a></td>"
+            + "<td><a href=\"https://www.microsoft.com/pt-br/security/mobile-authenticator-app\""
+            + " style=\"display:inline-block;background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#374151;text-decoration:none;\">Microsoft Auth</a></td>"
+            + "<td><a href=\"https://authy.com/download/\""
+            + " style=\"display:inline-block;background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#374151;text-decoration:none;\">Authy</a></td>"
             + "</tr></table>"
             + "</td></tr>"
 
-            // ── AVISO FINAL ──
-            + "<tr><td style=\"padding:0 40px 36px 40px;\">"
-            + "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"border-left:4px solid #ef4444;background-color:#fef2f2;border-radius:0 8px 8px 0;\">"
-            + "<tr><td style=\"padding:14px 18px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#991b1b;line-height:1.6;\">"
-            + "<strong>&#9888; Atenção:</strong> Nunca compartilhe o QR Code ou a chave acima. Em caso de dúvidas, entre em contato com o administrador do sistema."
+            // ── SECURITY NOTICE ──
+            + "<tr><td style=\"padding:28px 40px 36px 40px;\">"
+            + "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\""
+            + " style=\"background-color:#fff7ed;border-radius:10px;border:1px solid #fed7aa;\">"
+            + "<tr><td style=\"padding:14px 18px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#9a3412;line-height:1.6;\">"
+            + "<strong>⚠️ Importante:</strong> Nunca compartilhe este QR Code ou a chave manual. Em caso de dúvidas, contate o administrador."
             + "</td></tr>"
             + "</table>"
             + "</td></tr>"
 
             // ── FOOTER ──
-            + "<tr><td bgcolor=\"#f8fafc\" style=\"background-color:#f8fafc;border-top:1px solid #e2e8f0;padding:20px 40px;text-align:center;border-radius:0 0 12px 12px;\">"
-            + "<p style=\"margin:0 0 4px;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#94a3b8;\">Este email foi enviado automaticamente por " + escapeHtml(branding.companyName) + ".</p>"
-            + "<p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#cbd5e1;\">Powered by AxonRH &bull; Sistema de Gest&atilde;o de RH</p>"
+            + "<tr><td bgcolor=\"#f8fafc\" style=\"background-color:#f8fafc;border-top:1px solid #e2e8f0;padding:20px 40px;text-align:center;\">"
+            + "<p style=\"margin:0 0 4px;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#94a3b8;\">Email enviado automaticamente por " + escapeHtml(branding.companyName) + ".</p>"
+            + "<p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#cbd5e1;\">Powered by AxonRH</p>"
             + "</td></tr>"
 
             + "</table>"
@@ -215,16 +226,23 @@ public class MfaEmailService {
     }
 
     private String step(String number, String color, String title, String description) {
-        return "<tr><td style=\"padding:8px 20px 8px 20px;\">"
+        return stepClean(number, color, title, description);
+    }
+
+    private String stepClean(String number, String color, String title, String description) {
+        return "<tr><td style=\"padding:0 0 16px 0;\">"
             + "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">"
             + "<tr>"
             + "<td width=\"36\" valign=\"top\" style=\"padding-right:14px;\">"
             + "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\"><tr>"
-            + "<td align=\"center\" width=\"28\" height=\"28\" style=\"background-color:" + color + ";border-radius:50%;width:28px;height:28px;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:bold;color:#ffffff;text-align:center;line-height:28px;\">" + number + "</td>"
+            + "<td align=\"center\" width=\"30\" height=\"30\""
+            + " style=\"background-color:" + color + ";border-radius:50%;width:30px;height:30px;"
+            + "font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:bold;"
+            + "color:#ffffff;text-align:center;line-height:30px;\">" + number + "</td>"
             + "</tr></table>"
             + "</td>"
-            + "<td valign=\"top\">"
-            + "<p style=\"margin:0 0 3px;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:bold;color:#1e293b;\">" + title + "</p>"
+            + "<td valign=\"top\" style=\"padding-top:4px;\">"
+            + "<p style=\"margin:0 0 2px;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:bold;color:#1e293b;\">" + title + "</p>"
             + "<p style=\"margin:0;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#64748b;line-height:1.6;\">" + description + "</p>"
             + "</td>"
             + "</tr></table>"
