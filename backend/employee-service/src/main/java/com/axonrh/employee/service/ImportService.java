@@ -287,10 +287,10 @@ public class ImportService {
     }
 
     private BankAccountType parseBankAccountType(String val) {
-        if (val == null) return BankAccountType.CHECKING;
+        if (val == null) return BankAccountType.CORRENTE;
         String v = val.toUpperCase();
-        if (v.contains("POUPANCA")) return BankAccountType.SAVINGS;
-        return BankAccountType.CHECKING;
+        if (v.contains("POUPANCA")) return BankAccountType.POUPANCA;
+        return BankAccountType.CORRENTE;
     }
 
     private Department findOrCreateDepartment(String name, UUID tenantId) {
