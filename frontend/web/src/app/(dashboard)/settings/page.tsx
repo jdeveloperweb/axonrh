@@ -28,6 +28,14 @@ const settingsItems = [
         adminOnly: true
     },
     {
+        title: 'Segurança da Conta',
+        description: 'Gerencie sua senha e autenticação de dois fatores (MFA).',
+        icon: ShieldCheck,
+        href: '/settings/security',
+        color: 'bg-emerald-600',
+        adminOnly: false
+    },
+    {
         title: 'Estrutura Organizacional',
         description: 'Configure departamentos, cargos e hierarquias do sistema.',
         icon: Network,
@@ -98,25 +106,7 @@ export default function SettingsHubPage() {
     const { user } = useAuthStore();
     const isAdmin = user?.roles?.includes('ADMIN');
 
-    if (!isAdmin) {
-        return (
-            <div className="flex flex-col items-center justify-center p-12 text-center animate-in fade-in duration-500">
-                <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-6">
-                    <Lock className="w-8 h-8" />
-                </div>
-                <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Acesso Restrito</h1>
-                <p className="text-[var(--color-text-secondary)] mt-2 max-w-md">
-                    Você não tem permissão para acessar as configurações do sistema. Esta área é exclusiva para administradores.
-                </p>
-                <button
-                    className="mt-8 btn-primary"
-                    onClick={() => router.push('/dashboard')}
-                >
-                    Voltar para o Dashboard
-                </button>
-            </div>
-        );
-    }
+    const filteredItems = settingsItems.filter(item => !item.adminOnly || isAdmin);
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -126,7 +116,7 @@ export default function SettingsHubPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {settingsItems.map((item) => {
+                {filteredItems.map((item) => {
                     const Icon = item.icon;
                     return (
                         <Card

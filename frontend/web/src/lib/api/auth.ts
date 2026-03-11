@@ -11,6 +11,7 @@ export interface User {
   roles: string[];
   permissions: string[];
   employeeId?: string;
+  twoFactorEnabled: boolean;
 }
 
 export interface LoginRequest {
@@ -71,21 +72,21 @@ export const authApi = {
    * Inicia setup de 2FA.
    */
   setup2FA: async (): Promise<{ secret: string; qrCodeUrl: string }> => {
-    return apiClient.post<unknown, { secret: string; qrCodeUrl: string }>('/auth/2fa/setup');
+    return apiClient.get<{ secret: string; qrCodeUrl: string }, { secret: string; qrCodeUrl: string }>('/auth/mfa/setup');
   },
 
   /**
    * Confirma ativacao de 2FA.
    */
-  confirm2FA: async (code: string): Promise<{ backupCodes: string[] }> => {
-    return apiClient.post<unknown, { backupCodes: string[] }>('/auth/2fa/confirm', { code });
+  confirm2FA: async (secret: string, code: string): Promise<void> => {
+    await apiClient.post('/auth/mfa/enable', { secret, code });
   },
 
   /**
    * Desativa 2FA.
    */
-  disable2FA: async (password: string): Promise<void> => {
-    await apiClient.post('/auth/2fa/disable', { password });
+  disable2FA: async (code: string): Promise<void> => {
+    await apiClient.post('/auth/mfa/disable', { code });
   },
 
   /**
