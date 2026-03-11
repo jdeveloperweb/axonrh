@@ -273,14 +273,14 @@ export default function DataLoadPage() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm text-[var(--color-text-secondary)]">
                     <ul className="list-disc list-inside space-y-2">
-                        <li>Certifique-se de que os CPFs estão corretos e sem caracteres especiais.</li>
-                        <li>Os campos de data devem seguir o padrão <strong>dia/mês/ano</strong>.</li>
-                        <li>Nomes de Departamentos e Cargos serão criados caso não existam.</li>
+                        <li><strong>Identificação:</strong> O sistema usa o CPF como chave única, a matrícula não é mais necessária.</li>
+                        <li><strong>Novos Campos:</strong> Agora você pode importar dados pessoais, documentos, endereço e dados bancários.</li>
+                        <li><strong>Datas:</strong> Devem seguir o padrão <strong>dia/mês/ano</strong> (ex: 15/05/1988).</li>
                     </ul>
                     <ul className="list-disc list-inside space-y-2">
-                        <li>Para a folha, o CPF deve coincidir exatamente com o cadastro.</li>
-                        <li>Mês de referência deve ser um número entre 1 e 12.</li>
-                        <li>Valores decimais devem usar ponto ou vírgula conforme o exemplo.</li>
+                        <li><strong>Campos com *:</strong> São campos obrigatórios para o cadastro básico.</li>
+                        <li><strong>Estrutura:</strong> Departamentos e Cargos novos serão criados automaticamente.</li>
+                        <li><strong>Valores:</strong> Decimais (salário) podem usar ponto ou vírgula.</li>
                     </ul>
                 </div>
             </div>
