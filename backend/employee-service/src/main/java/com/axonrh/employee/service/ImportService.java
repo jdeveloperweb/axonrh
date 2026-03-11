@@ -188,31 +188,37 @@ public class ImportService {
 
     private Gender parseGender(String val) {
         if (val == null) return Gender.OTHER;
+        String upperVal = val.toUpperCase().trim();
+        if (upperVal.equals("MASCULINO") || upperVal.equals("M")) return Gender.MALE;
+        if (upperVal.equals("FEMININO") || upperVal.equals("F")) return Gender.FEMALE;
+        
         try {
-            return Gender.valueOf(val.toUpperCase());
+            return Gender.valueOf(upperVal);
         } catch (Exception e) {
-            if (val.equalsIgnoreCase("M") || val.toUpperCase().contains("MASC")) return Gender.MALE;
-            if (val.equalsIgnoreCase("F") || val.toUpperCase().contains("FEM")) return Gender.FEMALE;
             return Gender.OTHER;
         }
     }
 
     private Department findOrCreateDepartment(String name, UUID tenantId) {
         if (name == null || name.isBlank()) return null;
-        return departmentRepository.findByTenantIdAndNameIgnoreCase(tenantId, name.trim())
+        String trimmedName = name.trim();
+        return departmentRepository.findByTenantIdAndNameIgnoreCase(tenantId, trimmedName)
                 .orElseGet(() -> departmentRepository.save(Department.builder()
                         .tenantId(tenantId)
-                        .name(name.trim())
+                        .name(trimmedName)
+                        .code(trimmedName.toUpperCase().replaceAll("[^A-Z0-9]", "_"))
                         .isActive(true)
                         .build()));
     }
 
     private Position findOrCreatePosition(String name, UUID tenantId) {
         if (name == null || name.isBlank()) return null;
-        return positionRepository.findByTenantIdAndTitleIgnoreCase(tenantId, name.trim())
+        String trimmedName = name.trim();
+        return positionRepository.findByTenantIdAndTitleIgnoreCase(tenantId, trimmedName)
                 .orElseGet(() -> positionRepository.save(Position.builder()
                         .tenantId(tenantId)
-                        .title(name.trim())
+                        .title(trimmedName)
+                        .code(trimmedName.toUpperCase().replaceAll("[^A-Z0-9]", "_"))
                         .isActive(true)
                         .build()));
     }

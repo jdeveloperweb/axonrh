@@ -9,8 +9,10 @@ import {
     FileSpreadsheet,
     CheckCircle2,
     AlertCircle,
-    Loader2
+    Loader2,
+    ArrowLeft
 } from 'lucide-react';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -95,7 +97,15 @@ export default function DataLoadPage() {
     };
 
     return (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-6xl mx-auto">
+            <Link
+                href="/settings"
+                className="flex items-center text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors mb-4 group w-fit"
+            >
+                <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+                Voltar para Configurações
+            </Link>
+
             <div>
                 <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">Carga de Dados</h1>
                 <p className="text-[var(--color-text-secondary)] mt-2">

@@ -116,6 +116,12 @@
             <version>5.2.5</version>
         </dependency>
 
+        <!-- Forçando versão compatível do commons-compress para o POI 5.x -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+        </dependency>
+
         <!-- MapStruct -->
         <dependency>
             <groupId>org.mapstruct</groupId>

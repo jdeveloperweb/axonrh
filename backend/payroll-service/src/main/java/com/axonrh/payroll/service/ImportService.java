@@ -112,7 +112,7 @@ public class ImportService {
                             .employeeId(employee != null ? employee.getId() : UUID.randomUUID()) // Fallback se não achar
                             .employeeName(employee != null ? employee.getFullName() : "Importado (" + cpf + ")")
                             .employeeCpf(cpf)
-                            .registrationNumber(employee != null ? employee.getRegistration() : null)
+                            .registrationNumber(employee != null ? employee.getRegistrationNumber() : null)
                             .referenceMonth(month)
                             .referenceYear(year)
                             .status(PayrollStatus.PROCESSED)
