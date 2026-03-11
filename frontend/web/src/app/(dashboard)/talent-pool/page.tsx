@@ -26,6 +26,7 @@ import {
     Award,
     Upload,
     Sparkles,
+    Accessibility,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -850,8 +851,8 @@ export default function TalentPoolPage() {
                                                     {getVacancyStatusLabel(vacancy.status)}
                                                 </span>
                                                 {vacancy.isExclusivePcd && (
-                                                    <span className="px-2 py-1 text-xs font-bold rounded-full bg-green-100 text-green-700 flex items-center gap-1">
-                                                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                                                    <span className="px-2 py-1 text-xs font-bold rounded-full bg-blue-600 text-white flex items-center gap-1 shadow-sm">
+                                                        <Accessibility className="w-3.5 h-3.5" />
                                                         PCD
                                                     </span>
                                                 )}
@@ -1034,8 +1035,8 @@ export default function TalentPoolPage() {
                                                         <div className="flex items-center gap-2">
                                                             <p className="font-medium text-[var(--color-text)]">{candidate.fullName}</p>
                                                             {candidate.isPcd && (
-                                                                <span className="p-0.5 rounded-full bg-green-100 text-green-600" title={`PCD: ${candidate.pcdType || 'Não informado'}`}>
-                                                                    <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M11 2c0-1.103.897-2 2-2s2 .897 2 2-.897 2-2 2-2-.897-2-2zm2 4.143c.96.262 1.767 1.01 2 1.857h-4c.233-.847 1.04-1.595 2-1.857zm5 6.857h-3v-3c0-.552-.448-1-1-1h-2c-.552 0-1 .448-1 1v3h-3c-.552 0-1 .448-1 1s.448 1 1 1h3v3c0 .552.448 1 1 1h2c.552 0 1-.448 1-1v-3h3c.552 0 1-.448 1-1s-.448-1-1-1zm-4-10c0-1.657-1.343-3-3-3s-3 1.343-3 3 1.343 3 3 3 3-1.343 3-3zm2 4.143c-.456-1.554-1.884-2.143-3-2.143s-2.544.589-3 2.143l-4.223 14.857h3l.857-3h6.732l.857 3h3l-4.223-14.857z" /></svg>
+                                                                <span className="p-1 rounded-full bg-blue-100 text-blue-600" title={`PCD: ${candidate.pcdType || 'Não informado'}`}>
+                                                                    <Accessibility className="w-4 h-4" />
                                                                 </span>
                                                             )}
                                                         </div>
@@ -1148,8 +1149,8 @@ export default function TalentPoolPage() {
                                                                     {candidate.fullName}
                                                                 </h4>
                                                                 {candidate.isPcd && (
-                                                                    <span className="p-0.5 rounded-full bg-green-100 text-green-600" title={`PCD: ${candidate.pcdType || 'Não informado'}`}>
-                                                                        <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24"><path d="M11 2c0-1.103.897-2 2-2s2 .897 2 2-.897 2-2 2-2-.897-2-2zm2 4.143c.96.262 1.767 1.01 2 1.857h-4c.233-.847 1.04-1.595 2-1.857zm5 6.857h-3v-3c0-.552-.448-1-1-1h-2c-.552 0-1 .448-1 1v3h-3c-.552 0-1 .448-1 1s.448 1 1 1h3v3c0 .552.448 1 1 1h2c.552 0 1-.448 1-1v-3h3c.552 0 1-.448 1-1s-.448-1-1-1zm-4-10c0-1.657-1.343-3-3-3s-3 1.343-3 3 1.343 3 3 3 3-1.343 3-3zm2 4.143c-.456-1.554-1.884-2.143-3-2.143s-2.544.589-3 2.143l-4.223 14.857h3l.857-3h6.732l.857 3h3l-4.223-14.857z" /></svg>
+                                                                    <span className="p-1 rounded-full bg-blue-100 text-blue-600" title={`PCD: ${candidate.pcdType || 'Não informado'}`}>
+                                                                        <Accessibility className="w-3.5 h-3.5" />
                                                                     </span>
                                                                 )}
                                                             </div>

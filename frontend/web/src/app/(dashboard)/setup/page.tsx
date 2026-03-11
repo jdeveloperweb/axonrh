@@ -19,16 +19,15 @@ function SetupContent() {
       const data = await setupApi.getSummary();
       setSummary(data);
 
-      // If setup is completed, redirect to dashboard
-      const status = data.status as unknown;
+      // Se o setup ja foi finalizado (status COMPLETED ou ACTIVATED), redireciona pro dashboard
       const isSetupCompleted =
-        (typeof status === 'string' && status === 'COMPLETED') ||
-        (typeof status === 'number' && status === 2) ||
+        data.status === 'COMPLETED' ||
+        data.status === 'ACTIVATED' ||
         data.progressPercentage === 100;
 
       if (isSetupCompleted) {
         localStorage.removeItem('setup_tenant_id');
-        router.push('/dashboard');
+        router.replace('/dashboard');
       }
 
     } catch (error) {

@@ -22,6 +22,7 @@ import {
     Linkedin,
     Sparkles,
     ShieldCheck,
+    Accessibility,
 } from 'lucide-react';
 import { talentPoolApi, PublicVacancy, PublicApplicationData, getEmploymentTypeLabel, getWorkRegimeLabel } from '@/lib/api/talent-pool';
 import { useThemeStore } from '@/stores/theme-store';
@@ -346,8 +347,8 @@ export default function VacancyDetailPage() {
                                             {vacancy.title}
                                         </h1>
                                         {vacancy.isExclusivePcd && (
-                                            <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-green-100 text-green-700 border border-green-200 flex items-center gap-1.5 shadow-sm">
-                                                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                                            <span className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-blue-600 text-white border border-blue-500 flex items-center gap-2 shadow-lg shadow-blue-500/20 animate-in fade-in zoom-in duration-500">
+                                                <Accessibility className="w-4 h-4" />
                                                 Vaga Exclusiva PCD
                                             </span>
                                         )}
@@ -660,7 +661,7 @@ export default function VacancyDetailPage() {
                                     <div className="flex items-center justify-between mb-4">
                                         <div className="flex items-center gap-3">
                                             <div className="p-2 bg-blue-100 rounded-xl text-blue-600">
-                                                <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M11 2c0-1.103.897-2 2-2s2 .897 2 2-.897 2-2 2-2-.897-2-2zm2 4.143c.96.262 1.767 1.01 2 1.857h-4c.233-.847 1.04-1.595 2-1.857zm5 6.857h-3v-3c0-.552-.448-1-1-1h-2c-.552 0-1 .448-1 1v3h-3c-.552 0-1 .448-1 1s.448 1 1 1h3v3c0 .552.448 1 1 1h2c.552 0 1-.448 1-1v-3h3c.552 0 1-.448 1-1s-.448-1-1-1zm-4-10c0-1.657-1.343-3-3-3s-3 1.343-3 3 1.343 3 3 3 3-1.343 3-3zm2 4.143c-.456-1.554-1.884-2.143-3-2.143s-2.544.589-3 2.143l-4.223 14.857h3l.857-3h6.732l.857 3h3l-4.223-14.857z" /></svg>
+                                                <Accessibility className="w-5 h-5" />
                                             </div>
                                             <div>
                                                 <h4 className="font-bold text-gray-900 leading-none">Sou Pessoa com Deficiência</h4>

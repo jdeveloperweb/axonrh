@@ -23,6 +23,7 @@ import {
     X,
     Upload,
     Loader2,
+    Accessibility,
 } from 'lucide-react';
 import { talentPoolApi, PublicVacancy, getEmploymentTypeLabel, getWorkRegimeLabel, PublicApplicationData } from '@/lib/api/talent-pool';
 import { useThemeStore } from '@/stores/theme-store';
@@ -311,8 +312,8 @@ export default function CareersPage() {
                                                         {vacancy.title}
                                                     </h3>
                                                     {vacancy.isExclusivePcd && (
-                                                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-green-100 text-green-700 border border-green-200 flex items-center gap-1 shadow-sm">
-                                                            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                                                        <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-600 text-white border border-blue-500 flex items-center gap-1.5 shadow-md">
+                                                            <Accessibility className="w-3.5 h-3.5" />
                                                             Exclusiva PCD
                                                         </span>
                                                     )}
