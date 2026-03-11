@@ -33,4 +33,6 @@ public interface DepartmentRepository extends JpaRepository<Department, UUID> {
     long countByTenantIdAndParentId(UUID tenantId, UUID parentId);
     
     List<Department> findByTenantIdAndManagerId(UUID tenantId, UUID managerId);
+
+    Optional<Department> findByTenantIdAndNameIgnoreCase(UUID tenantId, String name);
 }

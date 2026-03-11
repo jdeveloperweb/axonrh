@@ -414,57 +414,66 @@ export default function WellbeingPage() {
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                <Card className="border-none shadow-2xl bg-white overflow-hidden flex flex-col h-[650px] border border-gray-100 group/card">
-                    <div className="p-6 flex items-center justify-between border-b border-gray-100 bg-white relative z-50">
-                        <div>
-                            <CardTitle className="text-xl font-black flex items-center gap-2 text-gray-900">
-                                <Sparkles className="w-6 h-6 text-primary animate-pulse" />
-                                Ecossistema de Vitalidade
-                            </CardTitle>
-                            <p className="text-xs text-gray-500 font-medium">Pulso em tempo real da saúde biopsicossocial</p>
+                <Card className="border-none overflow-hidden flex flex-col h-[650px] group/card relative" style={{background: 'linear-gradient(145deg, #060e1c, #0a1628 40%, #060d1b)', boxShadow: '0 30px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(59,130,246,0.08), inset 0 1px 0 rgba(255,255,255,0.04)'}}>
+                    {/* Background texture */}
+                    <div className="absolute inset-0 pointer-events-none" style={{backgroundImage: 'radial-gradient(ellipse 70% 55% at 25% 60%, rgba(59,130,246,0.08) 0%, transparent 65%), radial-gradient(ellipse 40% 40% at 75% 20%, rgba(139,92,246,0.05) 0%, transparent 60%), linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px)', backgroundSize: 'auto, auto, 52px 52px, 52px 52px'}} />
+                    {/* Top edge highlight */}
+                    <div className="absolute top-0 left-0 right-0 h-px pointer-events-none" style={{background: 'linear-gradient(90deg, transparent, rgba(59,130,246,0.5), rgba(139,92,246,0.2), transparent)'}} />
+                    {/* Header */}
+                    <div className="p-6 flex items-center justify-between relative z-10" style={{borderBottom: '1px solid rgba(255,255,255,0.06)'}}>
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.22)'}}>
+                                <Sparkles className="w-5 h-5" style={{color: '#60a5fa'}} />
+                            </div>
+                            <div>
+                                <CardTitle className="text-lg font-black tracking-tight" style={{color: '#e2e8f0'}}>Ecossistema de Vitalidade</CardTitle>
+                                <p className="text-[10px] font-semibold tracking-[0.15em] uppercase mt-0.5" style={{color: 'rgba(96,165,250,0.5)'}}>Pulso em tempo real da saúde biopsicossocial</p>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-1.5 px-3 py-1 bg-primary/10 rounded-full border border-primary/20">
-                            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
-                            <span className="text-[10px] font-bold text-primary-700 uppercase tracking-wider">Análise IA Ativa</span>
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full" style={{background: 'rgba(59,130,246,0.07)', border: '1px solid rgba(59,130,246,0.18)'}}>
+                            <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{background: '#60a5fa', boxShadow: '0 0 6px #3b82f6'}} />
+                            <span className="text-[9px] font-black tracking-[0.15em] uppercase" style={{color: 'rgba(96,165,250,0.85)'}}>Análise IA Ativa</span>
                         </div>
                     </div>
-                    <CardContent className="flex-1 p-0 flex flex-col lg:flex-row items-center justify-between relative overflow-hidden bg-[radial-gradient(circle_at_50%_50%,#f8fafc_0%,#ffffff_100%)]">
-
-                        {/* Radar Spider Chart */}
-                        <div className="relative flex-1 w-full h-[450px] flex items-center justify-center">
-                            <svg viewBox="0 0 580 430" className="w-full h-full" aria-label="Ecossistema de Vitalidade">
+                    {/* Content */}
+                    <CardContent className="flex-1 p-0 flex flex-col lg:flex-row overflow-hidden relative z-10">
+                        {/* Radar SVG */}
+                        <div className="relative flex-1 flex items-center justify-center">
+                            <svg viewBox="0 0 520 440" className="w-full h-full" aria-label="Ecossistema de Vitalidade">
                                 <defs>
                                     <linearGradient id="radarAreaFill" x1="0%" y1="0%" x2="100%" y2="100%">
-                                        <stop offset="0%" stopColor="#1976D2" stopOpacity="0.28" />
-                                        <stop offset="100%" stopColor="#1976D2" stopOpacity="0.06" />
+                                        <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.32" />
+                                        <stop offset="100%" stopColor="#6366f1" stopOpacity="0.08" />
                                     </linearGradient>
-                                    <linearGradient id="nucleusGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                        <stop offset="0%" stopColor="#1976D2" />
-                                        <stop offset="100%" stopColor="#1565C0" />
-                                    </linearGradient>
-                                    <filter id="nucleusShadow" x="-30%" y="-30%" width="160%" height="160%">
-                                        <feDropShadow dx="0" dy="4" stdDeviation="8" floodColor="#1976D2" floodOpacity="0.3" />
+                                    <filter id="dotGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
+                                        <feGaussianBlur stdDeviation="3" result="blur" />
+                                        <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                                    </filter>
+                                    <filter id="polygonGlowFilter" x="-20%" y="-20%" width="140%" height="140%">
+                                        <feGaussianBlur stdDeviation="3.5" result="blur" />
+                                        <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
                                     </filter>
                                 </defs>
 
-                                {/* Background glow */}
-                                <circle cx="290" cy="215" r="65" fill="#1976D2" fillOpacity="0.05" />
+                                {/* Ambient glow */}
+                                <circle cx="260" cy="220" r="100" fill="rgba(59,130,246,0.04)" />
+                                <circle cx="260" cy="220" r="65" fill="rgba(59,130,246,0.04)" />
 
-                                {/* Grid polygons at 25%, 50%, 75%, 100% */}
+                                {/* Grid polygons */}
                                 {[0.25, 0.50, 0.75, 1.0].map((level, li) => {
                                     const pts = Array.from({ length: 5 }, (_, i) => {
                                         const a = (i * 2 * Math.PI / 5) - Math.PI / 2;
                                         const r = level * 130;
-                                        return `${290 + r * Math.cos(a)},${215 + r * Math.sin(a)}`;
+                                        return `${260 + r * Math.cos(a)},${220 + r * Math.sin(a)}`;
                                     }).join(' ');
                                     return (
                                         <polygon
                                             key={li}
                                             points={pts}
-                                            fill={li < 3 ? `rgba(25,118,210,${0.03 * (li + 1)})` : 'none'}
-                                            stroke={li === 3 ? '#cbd5e1' : '#e8edf2'}
+                                            fill={li === 3 ? 'rgba(255,255,255,0.012)' : 'none'}
+                                            stroke={li === 3 ? 'rgba(255,255,255,0.14)' : li === 2 ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.04)'}
                                             strokeWidth={li === 3 ? 1.5 : 1}
-                                            strokeDasharray={li === 0 ? '3,6' : 'none'}
+                                            strokeDasharray={li === 0 ? '2,6' : undefined}
                                         />
                                     );
                                 })}
@@ -473,171 +482,208 @@ export default function WellbeingPage() {
                                 {radarData.map((_, i) => {
                                     const a = (i * 2 * Math.PI / 5) - Math.PI / 2;
                                     return (
-                                        <line
-                                            key={i}
-                                            x1="290" y1="215"
-                                            x2={290 + 130 * Math.cos(a)}
-                                            y2={215 + 130 * Math.sin(a)}
-                                            stroke="#e8edf2"
-                                            strokeWidth="1.5"
+                                        <line key={i} x1="260" y1="220"
+                                            x2={260 + 130 * Math.cos(a)}
+                                            y2={220 + 130 * Math.sin(a)}
+                                            stroke="rgba(255,255,255,0.05)" strokeWidth="1"
                                         />
                                     );
                                 })}
 
-                                {/* Scale labels on vertical axis */}
-                                <text x="295" y={215 - 65 + 4} fontSize="7.5" fill="#b0bec5" fontWeight="600">50%</text>
-                                <text x="295" y={215 - 130 + 4} fontSize="7.5" fill="#b0bec5" fontWeight="600">100%</text>
+                                {/* Scale labels */}
+                                <text x="264" y={220 - 65 + 4} fontSize="7" fill="rgba(255,255,255,0.18)" fontWeight="500">50%</text>
+                                <text x="264" y={220 - 32 + 4} fontSize="7" fill="rgba(255,255,255,0.12)" fontWeight="500">25%</text>
 
                                 {/* Data polygon */}
                                 <polygon
                                     points={radarData.map((item, i) => {
                                         const a = (i * 2 * Math.PI / 5) - Math.PI / 2;
                                         const r = (item.value / 100) * 130;
-                                        return `${290 + r * Math.cos(a)},${215 + r * Math.sin(a)}`;
+                                        return `${260 + r * Math.cos(a)},${220 + r * Math.sin(a)}`;
                                     }).join(' ')}
                                     fill="url(#radarAreaFill)"
-                                    stroke="#1976D2"
-                                    strokeWidth="2.5"
+                                    stroke="rgba(96,165,250,0.75)"
+                                    strokeWidth="2"
                                     strokeLinejoin="round"
+                                    filter="url(#polygonGlowFilter)"
                                 />
 
-                                {/* Data points with hover tooltips */}
+                                {/* Data dots */}
                                 {radarData.map((item, i) => {
                                     const a = (i * 2 * Math.PI / 5) - Math.PI / 2;
                                     const r = (item.value / 100) * 130;
-                                    const px = 290 + r * Math.cos(a);
-                                    const py = 215 + r * Math.sin(a);
+                                    const px = 260 + r * Math.cos(a);
+                                    const py = 220 + r * Math.sin(a);
                                     const isHov = hoveredIdx === i;
-                                    const dotColor = item.value < 40 ? '#e11d48' : item.value > 75 ? '#059669' : '#1976D2';
+                                    const dotColor = item.value < 40 ? '#ff3a6e' : item.value < 60 ? '#fbbf24' : '#22d3ee';
                                     return (
-                                        <g
-                                            key={i}
+                                        <g key={i}
                                             onMouseEnter={() => setHoveredIdx(i)}
                                             onMouseLeave={() => setHoveredIdx(null)}
                                             style={{ cursor: 'pointer' }}
                                         >
-                                            {isHov && <circle cx={px} cy={py} r="15" fill={dotColor} fillOpacity="0.18" />}
-                                            <circle cx={px} cy={py} r={isHov ? 7.5 : 5.5} fill={dotColor} stroke="white" strokeWidth="2.5" />
+                                            <circle cx={px} cy={py} r={isHov ? 18 : 11} fill={dotColor} fillOpacity={isHov ? 0.18 : 0.1} />
+                                            <circle cx={px} cy={py} r={isHov ? 7 : 5} fill={dotColor} stroke="rgba(6,14,28,0.9)" strokeWidth="2" filter="url(#dotGlowFilter)" />
                                             {isHov && (
                                                 <g>
-                                                    <rect x={px - 25} y={py - 38} width="50" height="22" rx="5" fill={dotColor} />
-                                                    <text x={px} y={py - 23} textAnchor="middle" fontSize="11" fontWeight="800" fill="white">
-                                                        {Math.round(item.value)}%
-                                                    </text>
-                                                    <polygon points={`${px - 5},${py - 16} ${px + 5},${py - 16} ${px},${py - 9}`} fill={dotColor} />
+                                                    <rect x={px - 28} y={py - 44} width="56" height="22" rx="5" fill={dotColor} fillOpacity="0.95" />
+                                                    <text x={px} y={py - 29} textAnchor="middle" fontSize="12" fontWeight="800" fill="white">{Math.round(item.value)}%</text>
+                                                    <polygon points={`${px-5},${py-22} ${px+5},${py-22} ${px},${py-13}`} fill={dotColor} fillOpacity="0.95" />
                                                 </g>
                                             )}
                                         </g>
                                     );
                                 })}
 
-                                {/* Center nucleus */}
-                                <circle cx="290" cy="215" r="50" fill="white" stroke="#e2e8f0" strokeWidth="2" />
-                                <circle cx="290" cy="215" r="46" fill="url(#nucleusGrad)" filter="url(#nucleusShadow)" />
-                                <ellipse cx="280" cy="200" rx="13" ry="7" fill="white" fillOpacity="0.18" transform="rotate(-30,280,200)" />
-                                <text x="286" y="212" textAnchor="end" fontSize="22" fontWeight="900" fill="white" letterSpacing="-0.5">
+                                {/* Pulse rings */}
+                                <circle cx="260" cy="220" r="55" fill="none" stroke="rgba(96,165,250,0.08)" strokeWidth="1">
+                                    <animate attributeName="r" values="52;78;52" dur="4s" repeatCount="indefinite" />
+                                    <animate attributeName="opacity" values="0.6;0;0.6" dur="4s" repeatCount="indefinite" />
+                                </circle>
+                                <circle cx="260" cy="220" r="55" fill="none" stroke="rgba(96,165,250,0.05)" strokeWidth="1">
+                                    <animate attributeName="r" values="52;78;52" dur="4s" begin="2s" repeatCount="indefinite" />
+                                    <animate attributeName="opacity" values="0.5;0;0.5" dur="4s" begin="2s" repeatCount="indefinite" />
+                                </circle>
+
+                                {/* Center bg */}
+                                <circle cx="260" cy="220" r="55" fill="#060e1c" stroke="rgba(255,255,255,0.07)" strokeWidth="1" />
+                                {/* Score ring track */}
+                                <circle cx="260" cy="220" r="48" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="7" />
+                                {/* Score ring fill */}
+                                {(() => {
+                                    const circumference = 2 * Math.PI * 48;
+                                    const score = statsData?.averageScore || 0;
+                                    const progress = Math.min(score / 5, 1);
+                                    const dashFill = progress * circumference;
+                                    const dashEmpty = circumference - dashFill;
+                                    const ringColor = score >= 4 ? '#10b981' : score >= 3 ? '#3b82f6' : '#ff3a6e';
+                                    return (
+                                        <circle
+                                            cx="260" cy="220" r="48"
+                                            fill="none"
+                                            stroke={ringColor}
+                                            strokeWidth="7"
+                                            strokeDasharray={`${dashFill} ${dashEmpty}`}
+                                            strokeLinecap="round"
+                                            transform="rotate(-90, 260, 220)"
+                                            style={{filter: `drop-shadow(0 0 8px ${ringColor})`}}
+                                        />
+                                    );
+                                })()}
+
+                                {/* Inner circle */}
+                                <circle cx="260" cy="220" r="39" fill="#060e1c" />
+                                {/* Score value */}
+                                <text x="256" y="217" textAnchor="end" fontSize="22" fontWeight="900" fill="white" letterSpacing="-0.5">
                                     {statsData?.averageScore ? statsData.averageScore.toFixed(1) : '3.5'}
                                 </text>
-                                <text x="287" y="207" textAnchor="start" fontSize="9" fontWeight="700" fill="white" fillOpacity="0.65">/5</text>
-                                <text x="290" y="223" textAnchor="middle" fontSize="7.5" fontWeight="800" fill="white" fillOpacity="0.8" letterSpacing="2">VITALIDADE</text>
-                                <rect x="268" y="228" width="44" height="14" rx="7"
-                                    fill={statsData && statsData.averageScore >= 4 ? '#10b981' : statsData && statsData.averageScore >= 3 ? '#3b82f6' : '#f43f5e'}
-                                    fillOpacity="0.9"
-                                />
-                                <text x="290" y="238.5" textAnchor="middle" fontSize="7.5" fontWeight="900" fill="white" letterSpacing="1">
-                                    {statsData && statsData.averageScore >= 4 ? 'ALTA' : statsData && statsData.averageScore >= 3 ? 'MÉDIA' : 'BAIXA'}
-                                </text>
+                                <text x="258" y="212" textAnchor="start" fontSize="9" fontWeight="700" fill="rgba(255,255,255,0.35)">/5</text>
+                                <text x="260" y="227" textAnchor="middle" fontSize="7" fontWeight="800" fill="rgba(255,255,255,0.3)" letterSpacing="2">VITALIDADE</text>
 
-                                {/* === Axis Labels === */}
-                                {/* i=0: Saúde Mental — TOP */}
-                                <text textAnchor="middle" fill="#374151" fontWeight="800" fontSize="9" letterSpacing="0.8">
-                                    <tspan x="290" y="44">SAÚDE</tspan>
-                                    <tspan x="290" dy="13">MENTAL</tspan>
-                                </text>
-                                <rect x="272" y="63" width="36" height="13" rx="6" fill={radarData[0].value > 75 ? '#d1fae5' : radarData[0].value < 40 ? '#fee2e2' : '#dbeafe'} />
-                                <text x="290" y="73.5" textAnchor="middle" fontSize="8" fontWeight="700" fill={radarData[0].value > 75 ? '#059669' : radarData[0].value < 40 ? '#e11d48' : '#1976D2'}>{Math.round(radarData[0].value)}%</text>
+                                {/* Status badge */}
+                                {(() => {
+                                    const score = statsData?.averageScore || 0;
+                                    const label = score >= 4 ? 'ALTA' : score >= 3 ? 'MÉDIA' : 'BAIXA';
+                                    const badgeColor = score >= 4 ? '#10b981' : score >= 3 ? '#3b82f6' : '#ff3a6e';
+                                    return (
+                                        <>
+                                            <rect x="238" y="231" width="44" height="12" rx="6" fill={badgeColor} fillOpacity="0.15" />
+                                            <text x="260" y="240.5" textAnchor="middle" fontSize="7" fontWeight="900" fill={badgeColor} letterSpacing="1.5">{label}</text>
+                                        </>
+                                    );
+                                })()}
 
-                                {/* i=1: Equilíbrio de Carga — TOP RIGHT */}
-                                <text textAnchor="start" fill="#374151" fontWeight="800" fontSize="9" letterSpacing="0.8">
-                                    <tspan x="452" y="155">EQUILÍBRIO</tspan>
-                                    <tspan x="452" dy="13">DE CARGA</tspan>
+                                {/* Axis Labels */}
+                                {/* i=0: TOP — Saúde Mental */}
+                                <text textAnchor="middle" fill="rgba(226,232,240,0.5)" fontWeight="700" fontSize="9" letterSpacing="0.8">
+                                    <tspan x="260" y="46">SAÚDE</tspan>
+                                    <tspan x="260" dy="12">MENTAL</tspan>
                                 </text>
-                                <rect x="452" y="174" width="36" height="13" rx="6" fill={radarData[1].value > 75 ? '#d1fae5' : radarData[1].value < 40 ? '#fee2e2' : '#dbeafe'} />
-                                <text x="470" y="184.5" textAnchor="middle" fontSize="8" fontWeight="700" fill={radarData[1].value > 75 ? '#059669' : radarData[1].value < 40 ? '#e11d48' : '#1976D2'}>{Math.round(radarData[1].value)}%</text>
+                                {(() => { const v = Math.round(radarData[0].value); const c = v < 40 ? '#ff3a6e' : v < 60 ? '#fbbf24' : '#22d3ee'; return (<><rect x="244" y="64" width="32" height="12" rx="6" fill={c} fillOpacity="0.15" /><text x="260" y="73.5" textAnchor="middle" fontSize="8" fontWeight="700" fill={c}>{v}%</text></>); })()}
 
-                                {/* i=2: Segurança Psicológica — BOTTOM RIGHT */}
-                                <text textAnchor="middle" fill="#374151" fontWeight="800" fontSize="9" letterSpacing="0.8">
-                                    <tspan x="390" y="354">SEGURANÇA</tspan>
-                                    <tspan x="390" dy="13">PSICOLÓGICA</tspan>
+                                {/* i=1: UPPER RIGHT — Equilíbrio de Carga */}
+                                <text textAnchor="start" fill="rgba(226,232,240,0.5)" fontWeight="700" fontSize="9" letterSpacing="0.8">
+                                    <tspan x="402" y="154">EQUILÍBRIO</tspan>
+                                    <tspan x="402" dy="12">DE CARGA</tspan>
                                 </text>
-                                <rect x="372" y="373" width="36" height="13" rx="6" fill={radarData[2].value > 75 ? '#d1fae5' : radarData[2].value < 40 ? '#fee2e2' : '#dbeafe'} />
-                                <text x="390" y="383.5" textAnchor="middle" fontSize="8" fontWeight="700" fill={radarData[2].value > 75 ? '#059669' : radarData[2].value < 40 ? '#e11d48' : '#1976D2'}>{Math.round(radarData[2].value)}%</text>
+                                {(() => { const v = Math.round(radarData[1].value); const c = v < 40 ? '#ff3a6e' : v < 60 ? '#fbbf24' : '#22d3ee'; return (<><rect x="402" y="172" width="32" height="12" rx="6" fill={c} fillOpacity="0.15" /><text x="418" y="181.5" textAnchor="middle" fontSize="8" fontWeight="700" fill={c}>{v}%</text></>); })()}
 
-                                {/* i=3: Clima Organizacional — BOTTOM LEFT */}
-                                <text textAnchor="middle" fill="#374151" fontWeight="800" fontSize="9" letterSpacing="0.8">
-                                    <tspan x="190" y="354">CLIMA</tspan>
-                                    <tspan x="190" dy="13">ORGANIZACIONAL</tspan>
+                                {/* i=2: LOWER RIGHT — Segurança Psicológica */}
+                                <text textAnchor="middle" fill="rgba(226,232,240,0.5)" fontWeight="700" fontSize="9" letterSpacing="0.8">
+                                    <tspan x="352" y="370">SEGURANÇA</tspan>
+                                    <tspan x="352" dy="12">PSICOLÓGICA</tspan>
                                 </text>
-                                <rect x="172" y="373" width="36" height="13" rx="6" fill={radarData[3].value > 75 ? '#d1fae5' : radarData[3].value < 40 ? '#fee2e2' : '#dbeafe'} />
-                                <text x="190" y="383.5" textAnchor="middle" fontSize="8" fontWeight="700" fill={radarData[3].value > 75 ? '#059669' : radarData[3].value < 40 ? '#e11d48' : '#1976D2'}>{Math.round(radarData[3].value)}%</text>
+                                {(() => { const v = Math.round(radarData[2].value); const c = v < 40 ? '#ff3a6e' : v < 60 ? '#fbbf24' : '#22d3ee'; return (<><rect x="336" y="388" width="32" height="12" rx="6" fill={c} fillOpacity="0.15" /><text x="352" y="397.5" textAnchor="middle" fontSize="8" fontWeight="700" fill={c}>{v}%</text></>); })()}
 
-                                {/* i=4: Engajamento e Vitalidade — TOP LEFT */}
-                                <text textAnchor="end" fill="#374151" fontWeight="800" fontSize="9" letterSpacing="0.8">
-                                    <tspan x="128" y="155">ENGAJAMENTO</tspan>
-                                    <tspan x="128" dy="13">E VITALIDADE</tspan>
+                                {/* i=3: LOWER LEFT — Clima Organizacional */}
+                                <text textAnchor="middle" fill="rgba(226,232,240,0.5)" fontWeight="700" fontSize="9" letterSpacing="0.8">
+                                    <tspan x="168" y="370">CLIMA</tspan>
+                                    <tspan x="168" dy="12">ORGANIZACIONAL</tspan>
                                 </text>
-                                <rect x="92" y="174" width="36" height="13" rx="6" fill={radarData[4].value > 75 ? '#d1fae5' : radarData[4].value < 40 ? '#fee2e2' : '#dbeafe'} />
-                                <text x="110" y="184.5" textAnchor="middle" fontSize="8" fontWeight="700" fill={radarData[4].value > 75 ? '#059669' : radarData[4].value < 40 ? '#e11d48' : '#1976D2'}>{Math.round(radarData[4].value)}%</text>
+                                {(() => { const v = Math.round(radarData[3].value); const c = v < 40 ? '#ff3a6e' : v < 60 ? '#fbbf24' : '#22d3ee'; return (<><rect x="152" y="388" width="32" height="12" rx="6" fill={c} fillOpacity="0.15" /><text x="168" y="397.5" textAnchor="middle" fontSize="8" fontWeight="700" fill={c}>{v}%</text></>); })()}
+
+                                {/* i=4: UPPER LEFT — Engajamento e Vitalidade */}
+                                <text textAnchor="end" fill="rgba(226,232,240,0.5)" fontWeight="700" fontSize="9" letterSpacing="0.8">
+                                    <tspan x="118" y="154">ENGAJAMENTO</tspan>
+                                    <tspan x="118" dy="12">E VITALIDADE</tspan>
+                                </text>
+                                {(() => { const v = Math.round(radarData[4].value); const c = v < 40 ? '#ff3a6e' : v < 60 ? '#fbbf24' : '#22d3ee'; return (<><rect x="80" y="172" width="32" height="12" rx="6" fill={c} fillOpacity="0.15" /><text x="96" y="181.5" textAnchor="middle" fontSize="8" fontWeight="700" fill={c}>{v}%</text></>); })()}
                             </svg>
                         </div>
 
-                        {/* Sidebar Legend/Info */}
-                        <div className="w-full lg:w-64 h-full p-6 bg-gray-50/50 border-l border-gray-100 flex flex-col justify-center gap-6 relative z-50">
-                            <div className="p-4 bg-white rounded-2xl border border-primary/20 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
-                                <div className="absolute top-0 right-0 w-16 h-16 bg-primary/5 rounded-bl-full -mr-4 -mt-4 opacity-50 group-hover:scale-110 transition-transform" />
-                                <p className="text-[10px] text-primary font-black uppercase tracking-[0.2em] mb-2 flex items-center gap-1.5">
-                                    <Brain className="w-4 h-4" />
+                        {/* Right Panel */}
+                        <div className="w-full lg:w-[260px] flex flex-col justify-center gap-4 p-5" style={{borderLeft: '1px solid rgba(255,255,255,0.05)'}}>
+                            {/* AI Insights */}
+                            <div className="rounded-2xl p-4 relative overflow-hidden" style={{background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.12)'}}>
+                                <div className="absolute top-0 left-0 right-0 h-px" style={{background: 'linear-gradient(90deg, transparent, rgba(96,165,250,0.4), transparent)'}} />
+                                <p className="text-[9px] font-black tracking-[0.2em] uppercase mb-2 flex items-center gap-1.5" style={{color: 'rgba(96,165,250,0.75)'}}>
+                                    <Brain className="w-3 h-3" />
                                     IA Insights
                                 </p>
-                                <p className="text-[12px] text-gray-700 leading-relaxed font-semibold">
+                                <p className="text-[12px] leading-relaxed" style={{color: 'rgba(203,213,225,0.7)', fontWeight: 500}}>
                                     {statsData && statsData.averageScore >= 3
                                         ? "Ecossistema resiliente detectado. Foco em manutenção preventiva."
                                         : "Vulnerabilidade sistêmica. Recomendado intervenção focada em segurança psicológica."}
                                 </p>
                             </div>
 
-                            <div className="space-y-3">
+                            {/* Metrics */}
+                            <div className="space-y-2">
                                 {radarData.map((item, idx) => {
-                                    const status = getStatusInfo(item.value);
                                     const isHovered = hoveredIdx === idx;
+                                    const dotColor = item.value < 40 ? '#ff3a6e' : item.value < 60 ? '#fbbf24' : '#22d3ee';
+                                    const barGrad = item.value < 40
+                                        ? 'linear-gradient(90deg, #ff3a6e, #ff6b35)'
+                                        : item.value < 60
+                                        ? 'linear-gradient(90deg, #f59e0b, #fbbf24)'
+                                        : 'linear-gradient(90deg, #0ea5e9, #22d3ee)';
                                     return (
                                         <div
                                             key={idx}
-                                            className={`p-3 rounded-xl border transition-all duration-300 cursor-default ${isHovered ? 'bg-white border-primary/30 shadow-md scale-105' : 'bg-white/50 border-transparent hover:bg-white/80'
-                                                }`}
+                                            className="rounded-xl p-3 cursor-default transition-all duration-200"
+                                            style={{
+                                                background: isHovered ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.025)',
+                                                border: `1px solid ${isHovered ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.05)'}`,
+                                                transform: isHovered ? 'scale(1.02)' : 'scale(1)',
+                                            }}
                                             onMouseEnter={() => setHoveredIdx(idx)}
                                             onMouseLeave={() => setHoveredIdx(null)}
                                         >
-                                            <div className="flex items-center justify-between mb-2">
-                                                <div className="flex items-center gap-2.5">
-                                                    <div className={`p-1.5 rounded-lg ${status.bg} ${status.color}`}>
+                                            <div className="flex items-center justify-between mb-1.5">
+                                                <div className="flex items-center gap-2">
+                                                    <div style={{color: dotColor}}>
                                                         {React.cloneElement(item.icon as React.ReactElement<any>, { className: 'w-3.5 h-3.5' })}
                                                     </div>
-                                                    <span className="text-[11px] font-bold text-gray-700 uppercase tracking-tight">{item.subject}</span>
+                                                    <span className="text-[10px] font-bold uppercase tracking-tight" style={{color: 'rgba(203,213,225,0.45)'}}>
+                                                        {item.subject}
+                                                    </span>
                                                 </div>
-                                                <span className="text-xs font-black text-gray-900">{Math.round(item.value)}%</span>
+                                                <span className="text-xs font-black" style={{color: dotColor}}>
+                                                    {Math.round(item.value)}%
+                                                </span>
                                             </div>
-                                            <div className="w-full bg-gray-200/50 h-2 rounded-full overflow-hidden p-[1px]">
-                                                <div
-                                                    className="h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(0,0,0,0.1)]"
-                                                    style={{
-                                                        width: `${item.value}%`,
-                                                        backgroundImage: `linear-gradient(to right, ${item.value < 40 ? '#fb7185, #e11d48' :
-                                                            item.value > 80 ? '#34d399, #059669' :
-                                                                '#818cf8, #6366f1'
-                                                            })`
-                                                    }}
-                                                />
+                                            <div className="w-full rounded-full overflow-hidden" style={{height: '3px', background: 'rgba(255,255,255,0.06)'}}>
+                                                <div className="h-full rounded-full" style={{width: `${item.value}%`, backgroundImage: barGrad}} />
                                             </div>
                                         </div>
                                     );

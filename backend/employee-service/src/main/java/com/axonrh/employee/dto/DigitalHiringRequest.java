@@ -49,4 +49,7 @@ public class DigitalHiringRequest {
     private Integer linkValidityDays;
 
     private String notes;
+
+    private java.util.Map<String, Object> personalData;
 }
+

@@ -70,11 +70,13 @@ export default function DigitalHiringPortalPage() {
     const [loadingCep, setLoadingCep] = useState(false);
     const [currentStep, setCurrentStep] = useState(1);
     const { tenantTheme, setTenantTheme } = useThemeStore();
+    const primaryColor = tenantTheme?.colors?.primary || '#1976D2';
 
     // Auth state
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isVerified, setIsVerified] = useState(false);
     const [isFirstAccess, setIsFirstAccess] = useState(true);
-    const [authForm, setAuthForm] = useState({ cpf: '', password: '', confirmPassword: '' });
+    const [authForm, setAuthForm] = useState({ email: '', cpf: '', password: '', confirmPassword: '' });
 
     // Personal data form
     const [personalData, setPersonalData] = useState<DigitalHiringPersonalData>({
@@ -223,6 +225,36 @@ export default function DigitalHiringPortalPage() {
     useEffect(() => {
         fetchProcess();
     }, [fetchProcess]);
+
+    const handleVerifyEmail = async () => {
+        if (!authForm.email) {
+            toast({ title: 'Atenção', description: 'Informe o e-mail onde recebeu o convite', variant: 'destructive' });
+            return;
+        }
+        try {
+            setSubmitting(true);
+            const data = await digitalHiringApi.public.access(token, authForm.email);
+            setProcess(data);
+
+            if (data.candidateCpf) setPersonalData(prev => ({ ...prev, cpf: data.candidateCpf || '' }));
+            if (data.candidateName) setPersonalData(prev => ({ ...prev, fullName: data.candidateName }));
+            if (data.candidateEmail) setPersonalData(prev => ({ ...prev, email: data.candidateEmail }));
+            if (data.candidatePhone) setPersonalData(prev => ({ ...prev, phone: data.candidatePhone || '' }));
+            if (data.personalData) setPersonalData(prev => ({ ...prev, ...data.personalData }));
+
+            setIsFirstAccess(!data.hasPassword);
+            setIsVerified(true);
+            toast({ title: 'Acesso validado!', description: 'Confirme sua identidade para continuar.' });
+        } catch (error: any) {
+            toast({
+                title: 'Verificação falhou',
+                description: error.response?.data?.message || 'E-mail incorreto para este link.',
+                variant: 'destructive'
+            });
+        } finally {
+            setSubmitting(false);
+        }
+    };
 
     // Auth handlers
     const handleAuth = async () => {
@@ -436,18 +468,16 @@ export default function DigitalHiringPortalPage() {
     };
 
     // Build steps
-    const steps: Step[] = [
+    const steps: Step[] = process ? [
         { id: 1, title: 'Dados Pessoais', icon: <User className="w-5 h-5" />, status: currentStep === 1 ? 'current' : currentStep > 1 ? 'completed' : 'pending' },
         { id: 2, title: 'Documentos', icon: <FileText className="w-5 h-5" />, status: currentStep === 2 ? 'current' : currentStep > 2 ? 'completed' : 'pending' },
         { id: 3, title: 'Dados Trabalhistas', icon: <Briefcase className="w-5 h-5" />, status: currentStep === 3 ? 'current' : currentStep > 3 ? 'completed' : 'pending' },
         { id: 4, title: 'Assinatura', icon: <PenTool className="w-5 h-5" />, status: currentStep === 4 ? 'current' : currentStep > 4 ? 'completed' : 'pending' },
         { id: 5, title: 'Conclusão', icon: <CheckCircle className="w-5 h-5" />, status: currentStep === 5 ? 'current' : 'pending' },
-    ];
+    ] : [];
 
     // UF options
     const ufOptions = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'];
-
-    // ==================== RENDER ====================
 
     if (loading) {
         return (
@@ -475,8 +505,6 @@ export default function DigitalHiringPortalPage() {
             </div>
         );
     }
-
-    const primaryColor = tenantTheme?.colors?.primary || '#1976D2';
 
     // Auth screen
     if (!isAuthenticated) {
@@ -574,83 +602,123 @@ export default function DigitalHiringPortalPage() {
                         </div>
 
                         <div className="text-center md:text-left">
-                            <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">
-                                {isFirstAccess ? 'Criar sua conta' : 'Acesse seu portal'}
-                            </h2>
-                            <p className="mt-2 text-gray-500 font-medium">
-                                {isFirstAccess
-                                    ? 'Defina uma senha segura para iniciar sua jornada.'
-                                    : 'Digite seu CPF e senha cadastrada para continuar.'}
-                            </p>
+                            {!isVerified ? (
+                                <>
+                                    <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">Valide seu Convite</h2>
+                                    <p className="mt-2 text-gray-500 font-medium">Confirme o e-mail onde recebeu o link para iniciar.</p>
+                                </>
+                            ) : (
+                                <>
+                                    <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">
+                                        {isFirstAccess ? 'Criar sua conta' : 'Acesse seu portal'}
+                                    </h2>
+                                    <p className="mt-2 text-gray-500 font-medium">
+                                        {isFirstAccess
+                                            ? 'Defina uma senha segura para iniciar sua jornada.'
+                                            : 'Digite seu CPF e senha cadastrada para continuar.'}
+                                    </p>
+                                </>
+                            )}
                         </div>
 
                         <div className="bg-white p-8 rounded-[2.5rem] shadow-xl shadow-blue-900/5 border border-gray-100 space-y-6">
-                            <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-gray-700 ml-1">CPF</label>
-                                    <div className="relative group">
-                                        <User className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
-                                        <Input
-                                            value={authForm.cpf}
-                                            onChange={(e) => setAuthForm(prev => ({ ...prev, cpf: e.target.value }))}
-                                            placeholder="000.000.000-00"
-                                            className="pl-12 py-6 bg-gray-50 border-none rounded-2xl focus-visible:ring-2 focus-visible:ring-blue-500/20"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-gray-700 ml-1">Senha</label>
-                                    <div className="relative group">
-                                        <Shield className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
-                                        <Input
-                                            type="password"
-                                            value={authForm.password}
-                                            onChange={(e) => setAuthForm(prev => ({ ...prev, password: e.target.value }))}
-                                            placeholder="••••••••"
-                                            className="pl-12 py-6 bg-gray-50 border-none rounded-2xl focus-visible:ring-2 focus-visible:ring-blue-500/20"
-                                        />
-                                    </div>
-                                </div>
-
-                                {isFirstAccess && (
-                                    <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                                        <label className="text-sm font-bold text-gray-700 ml-1">Confirmar Senha</label>
+                            {!isVerified ? (
+                                <div className="space-y-4">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-gray-700 ml-1">Seu E-mail</label>
                                         <div className="relative group">
-                                            <CheckCircle className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                                            <MessageSquare className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
                                             <Input
-                                                type="password"
-                                                value={authForm.confirmPassword}
-                                                onChange={(e) => setAuthForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                                                placeholder="••••••••"
+                                                value={authForm.email}
+                                                onChange={(e) => setAuthForm(prev => ({ ...prev, email: e.target.value }))}
+                                                placeholder="seu.email@exemplo.com"
                                                 className="pl-12 py-6 bg-gray-50 border-none rounded-2xl focus-visible:ring-2 focus-visible:ring-blue-500/20"
                                             />
                                         </div>
                                     </div>
-                                )}
-                            </div>
+                                    <Button
+                                        onClick={handleVerifyEmail}
+                                        disabled={submitting}
+                                        className="w-full py-7 rounded-2xl font-bold text-lg shadow-lg shadow-blue-600/20 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
+                                        style={{ backgroundColor: primaryColor }}
+                                    >
+                                        {submitting ? <Loader2 className="w-6 h-6 animate-spin" /> : <ChevronRight className="w-6 h-6" />}
+                                        Validar Link
+                                    </Button>
+                                    <p className="text-[10px] text-gray-400 text-center font-medium">
+                                        Apenas o e-mail convidado tem permissão de acesso a este processo.
+                                    </p>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="space-y-4">
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-bold text-gray-700 ml-1">CPF</label>
+                                            <div className="relative group">
+                                                <User className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                                                <Input
+                                                    value={authForm.cpf}
+                                                    onChange={(e) => setAuthForm(prev => ({ ...prev, cpf: e.target.value }))}
+                                                    placeholder="000.000.000-00"
+                                                    className="pl-12 py-6 bg-gray-50 border-none rounded-2xl focus-visible:ring-2 focus-visible:ring-blue-500/20"
+                                                />
+                                            </div>
+                                        </div>
 
-                            <Button
-                                onClick={handleAuth}
-                                disabled={submitting}
-                                className="w-full py-7 rounded-2xl font-bold text-lg shadow-lg shadow-blue-600/20 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
-                                style={{ backgroundColor: primaryColor }}
-                            >
-                                {submitting ? <Loader2 className="w-6 h-6 animate-spin" /> : <ArrowRight className="w-6 h-6" />}
-                                {isFirstAccess ? 'Criar meu Acesso' : 'Entrar no Portal'}
-                            </Button>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-bold text-gray-700 ml-1">Senha</label>
+                                            <div className="relative group">
+                                                <Shield className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                                                <Input
+                                                    type="password"
+                                                    value={authForm.password}
+                                                    onChange={(e) => setAuthForm(prev => ({ ...prev, password: e.target.value }))}
+                                                    placeholder="••••••••"
+                                                    className="pl-12 py-6 bg-gray-50 border-none rounded-2xl focus-visible:ring-2 focus-visible:ring-blue-500/20"
+                                                />
+                                            </div>
+                                        </div>
 
-                            <button
-                                onClick={() => setIsFirstAccess(!isFirstAccess)}
-                                className="w-full text-center py-2 text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors"
-                            >
-                                {isFirstAccess ? 'Já possuo uma senha' : 'É seu primeiro acesso?'}
-                            </button>
+                                        {isFirstAccess && (
+                                            <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                                                <label className="text-sm font-bold text-gray-700 ml-1">Confirmar Senha</label>
+                                                <div className="relative group">
+                                                    <CheckCircle className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                                                    <Input
+                                                        type="password"
+                                                        value={authForm.confirmPassword}
+                                                        onChange={(e) => setAuthForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                                                        placeholder="••••••••"
+                                                        className="pl-12 py-6 bg-gray-50 border-none rounded-2xl focus-visible:ring-2 focus-visible:ring-blue-500/20"
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <Button
+                                        onClick={handleAuth}
+                                        disabled={submitting}
+                                        className="w-full py-7 rounded-2xl font-bold text-lg shadow-lg shadow-blue-600/20 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
+                                        style={{ backgroundColor: primaryColor }}
+                                    >
+                                        {submitting ? <Loader2 className="w-6 h-6 animate-spin" /> : <ArrowRight className="w-6 h-6" />}
+                                        {isFirstAccess ? 'Criar meu Acesso' : 'Entrar no Portal'}
+                                    </Button>
+
+                                    <button
+                                        onClick={() => setIsFirstAccess(!isFirstAccess)}
+                                        className="w-full text-center py-2 text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors"
+                                    >
+                                        {isFirstAccess ? 'Já possuo uma senha' : 'É seu primeiro acesso?'}
+                                    </button>
+                                </>
+                            )}
                         </div>
 
                         <div className="text-center">
                             <p className="text-xs text-gray-400 font-medium">
-                                © {new Date().getFullYear()} {process.tenantId || 'AxonRH'}. Todos os direitos reservados.
+                                © {new Date().getFullYear()} {process?.tenantId || 'AxonRH'}. Todos os direitos reservados.
                             </p>
                         </div>
                     </div>

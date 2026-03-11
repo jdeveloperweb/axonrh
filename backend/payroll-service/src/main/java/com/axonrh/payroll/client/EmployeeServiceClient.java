@@ -18,4 +18,7 @@ public interface EmployeeServiceClient {
     @GetMapping("/api/v1/employees/active")
     List<EmployeeDTO> getActiveEmployees(
             @RequestParam(value = "departmentId", required = false) UUID departmentId);
+
+    @GetMapping("/api/v1/employees/registration/{registrationNumber}")
+    EmployeeDTO getEmployeeByRegistration(@PathVariable("registrationNumber") String registrationNumber);
 }

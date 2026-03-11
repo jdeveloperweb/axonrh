@@ -301,6 +301,16 @@ public class EmployeeService {
         return employeeMapper.toResponse(employee);
     }
 
+    @Transactional(readOnly = true)
+    public EmployeeResponse findByRegistrationNumber(String registrationNumber) {
+        UUID tenantId = getTenantId();
+
+        Employee employee = employeeRepository.findByTenantIdAndRegistrationNumber(tenantId, registrationNumber)
+                .orElseThrow(() -> new ResourceNotFoundException("Colaborador nao encontrado com matrícula: " + registrationNumber));
+
+        return employeeMapper.toResponse(employee);
+    }
+
     /**
      * Verifica se um CPF ja esta cadastrado.
      */

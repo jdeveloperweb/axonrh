@@ -90,6 +90,14 @@ const settingsItems = [
         href: '/settings/knowledge',
         color: 'bg-orange-600',
         adminOnly: true
+    },
+    {
+        title: 'Carga de Dados',
+        description: 'Importe colaboradores e dados da folha de pagamento via planilha.',
+        icon: Database,
+        href: '/settings/data-load',
+        color: 'bg-blue-600',
+        adminOnly: true
     }
 ];
 

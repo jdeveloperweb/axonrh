@@ -235,10 +235,12 @@ public class DigitalHiringController {
 
     @GetMapping("/public/{token}")
     @Operation(summary = "Acessar processo por token", description = "Permite ao candidato acessar seu processo de contratação via token")
-    public ResponseEntity<DigitalHiringResponse> accessByToken(@PathVariable String token) {
+    public ResponseEntity<DigitalHiringResponse> accessByToken(
+            @PathVariable String token,
+            @RequestParam(required = false) String email) {
 
-        log.info("Candidato acessando contratacao digital por token");
-        DigitalHiringResponse response = digitalHiringService.accessByToken(token);
+        log.info("Candidato acessando contratacao digital por token - email informado: {}", email);
+        DigitalHiringResponse response = digitalHiringService.accessByToken(token, email);
         return ResponseEntity.ok(response);
     }
 

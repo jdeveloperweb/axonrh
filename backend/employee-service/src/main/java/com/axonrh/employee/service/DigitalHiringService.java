@@ -89,6 +89,7 @@ public class DigitalHiringService {
                 .status(DigitalHiringStatus.ADMISSION_PENDING)
                 .currentStep(1)
                 .notes(request.getNotes())
+                .personalData(request.getPersonalData())
                 .createdBy(userId)
                 .build();
 
@@ -170,9 +171,10 @@ public class DigitalHiringService {
         DigitalHiringRequest hiringRequest = DigitalHiringRequest.builder()
                 .candidateName(candidate.getFullName())
                 .candidateEmail(candidate.getEmail())
-                .candidatePhone(candidate.getPhone())
+                .candidatePhone(candidate.getPhone() != null ? candidate.getPhone() : candidate.getMobile())
                 .candidateId(candidate.getId())
                 .vacancyId(request.getVacancyId())
+                .personalData(convertCandidateToPersonalData(candidate))
                 .build();
 
         // Se candidato tem vaga associada, pega departamento/cargo da vaga
@@ -382,12 +384,27 @@ public class DigitalHiringService {
      * Acesso publico via token.
      */
     @Transactional
-    public DigitalHiringResponse accessByToken(String token) {
+    public DigitalHiringResponse accessByToken(String token, String email) {
         DigitalHiringProcess process = hiringRepository.findByAccessTokenWithDocuments(token)
                 .orElseThrow(() -> new ResourceNotFoundException("Processo nao encontrado"));
 
         if (!process.isLinkValid()) {
             throw new InvalidOperationException("Link expirado");
+        }
+
+        // Se o e-mail não foi informado, retorna apenas dados básicos para branding e validação inicial
+        if (email == null || email.isBlank()) {
+            return DigitalHiringResponse.builder()
+                    .id(process.getId())
+                    .tenantId(process.getTenantId())
+                    .status(process.getStatus())
+                    .linkValid(true)
+                    .build();
+        }
+
+        // Se informou o e-mail, deve bater exatamente com o e-mail do processo
+        if (!process.getCandidateEmail().equalsIgnoreCase(email.trim())) {
+            throw new InvalidOperationException("O e-mail informado não corresponde ao link de acesso. Por favor, utilize o e-mail onde recebeu o convite.");
         }
 
         if (process.getLinkAccessedAt() == null) {
@@ -1020,6 +1037,7 @@ public class DigitalHiringService {
                 .publicLink(publicLink)
                 .linkExpiresAt(process.getLinkExpiresAt())
                 .linkValid(process.isLinkValid())
+                .hasPassword(process.getPasswordHash() != null)
                 .candidateName(process.getCandidateName())
                 .candidateEmail(process.getCandidateEmail())
                 .candidateCpf(process.getCandidateCpf())
@@ -1056,5 +1074,30 @@ public class DigitalHiringService {
                 .cancelReason(process.getCancelReason())
                 .notes(process.getNotes())
                 .build();
+    }
+    /**
+     * Converte dados do candidato para o mapa de personalData.
+     */
+    private Map<String, Object> convertCandidateToPersonalData(TalentCandidate candidate) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("fullName", candidate.getFullName());
+        data.put("email", candidate.getEmail());
+        data.put("phone", candidate.getPhone() != null ? candidate.getPhone() : candidate.getMobile());
+        data.put("isPcd", candidate.getIsPcd());
+        data.put("pcdType", candidate.getPcdType());
+
+        if (candidate.getCity() != null) data.put("cidade", candidate.getCity());
+        if (candidate.getState() != null) data.put("estado", candidate.getState());
+
+        // Adiciona dados extraídos pela IA se disponíveis
+        if (candidate.getResumeParsedData() != null) {
+            candidate.getResumeParsedData().forEach((k, v) -> {
+                if (v != null && !data.containsKey(k)) {
+                    data.put(k, v);
+                }
+            });
+        }
+        
+        return data;
     }
 }

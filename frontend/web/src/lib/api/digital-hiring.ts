@@ -39,6 +39,7 @@ export interface DigitalHiringProcess {
     publicLink: string;
     linkExpiresAt: string;
     linkValid: boolean;
+    hasPassword?: boolean;
 
     // Candidate info
     candidateName: string;
@@ -321,8 +322,9 @@ export const digitalHiringApi = {
     // ========== Public Methods (Candidate Portal) ==========
 
     public: {
-        access: async (token: string): Promise<DigitalHiringProcess> => {
-            return api.get<DigitalHiringProcess, DigitalHiringProcess>(`/digital-hiring/public/${token}`);
+        access: async (token: string, email?: string): Promise<DigitalHiringProcess> => {
+            const url = email ? `/digital-hiring/public/${token}?email=${encodeURIComponent(email)}` : `/digital-hiring/public/${token}`;
+            return api.get<DigitalHiringProcess, DigitalHiringProcess>(url);
         },
 
         createPassword: async (token: string, data: { cpf: string; password: string }): Promise<{ sessionToken: string }> => {

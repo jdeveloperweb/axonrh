@@ -155,6 +155,17 @@ public class EmployeeController {
         return ResponseEntity.ok(employee);
     }
 
+    @GetMapping("/registration/{registrationNumber}")
+    @PreAuthorize("hasAuthority('EMPLOYEE:READ')")
+    @Operation(summary = "Busca colaborador por matrícula")
+    public ResponseEntity<EmployeeResponse> findByRegistrationNumber(
+            @Parameter(description = "Matrícula do colaborador") @PathVariable String registrationNumber) {
+
+        log.info("Buscando colaborador pela matrícula: {}", registrationNumber);
+        EmployeeResponse employee = employeeService.findByRegistrationNumber(registrationNumber);
+        return ResponseEntity.ok(employee);
+    }
+
     @GetMapping("/validate-cpf/{cpf}")
     @Operation(summary = "Valida se CPF ja esta cadastrado")
     public ResponseEntity<java.util.Map<String, Object>> validateCpf(

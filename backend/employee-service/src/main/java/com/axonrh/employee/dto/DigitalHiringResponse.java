@@ -29,6 +29,7 @@ public class DigitalHiringResponse {
     private String publicLink;
     private LocalDateTime linkExpiresAt;
     private Boolean linkValid;
+    private Boolean hasPassword;
 
     // Candidato
     private String candidateName;
