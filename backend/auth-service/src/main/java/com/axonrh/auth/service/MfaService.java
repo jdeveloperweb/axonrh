@@ -115,10 +115,10 @@ public class MfaService {
         String setupToken;
 
         if (hasValidPending) {
-            // Reutiliza o segredo/token existente — não invalida o QR já escaneado
+            // Reutiliza o segredo/token existente — não invalida o QR já escaneado e não reenvia email
             secret = user.getTwoFactorPendingSecret();
             setupToken = user.getTwoFactorSetupToken();
-            log.info("Reusing existing MFA pending setup for user: {}", user.getId());
+            log.info("Reusing existing MFA pending setup for user: {} (no email resent)", user.getId());
         } else {
             // Gera novo segredo e token apenas se não há pendente válido
             secret = secretGenerator.generate();
@@ -130,17 +130,17 @@ public class MfaService {
             userRepository.save(user);
 
             log.info("New MFA mandatory setup initiated for user: {}", user.getId());
+
+            // Envia email apenas no primeiro setup (ou após expiração do token anterior)
+            String qrCodeBase64 = generateQrCodeBase64(user.getEmail(), secret);
+            mfaEmailService.sendMfaSetupEmail(
+                    user.getEmail(),
+                    user.getName(),
+                    qrCodeBase64,
+                    secret,
+                    user.getTenantId() != null ? user.getTenantId().toString() : null
+            );
         }
-
-        String qrCodeBase64 = generateQrCodeBase64(user.getEmail(), secret);
-
-        mfaEmailService.sendMfaSetupEmail(
-                user.getEmail(),
-                user.getName(),
-                qrCodeBase64,
-                secret,
-                user.getTenantId() != null ? user.getTenantId().toString() : null
-        );
 
         return setupToken;
     }

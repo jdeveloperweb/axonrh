@@ -31,6 +31,9 @@ public class TenantConfig {
 
     // ==================== Identidade Visual ====================
 
+    @Column(name = "company_name", length = 200)
+    private String companyName;
+
     @Column(name = "logo_url", length = 500)
     private String logoUrl;
 

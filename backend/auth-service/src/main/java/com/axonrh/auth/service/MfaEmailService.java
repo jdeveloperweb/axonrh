@@ -83,7 +83,7 @@ public class MfaEmailService {
             );
             if (config == null) return defaults;
 
-            String companyName = config.containsKey("companyName")
+            String companyName = config.containsKey("companyName") && config.get("companyName") != null
                     ? (String) config.get("companyName")
                     : "AxonRH";
             String logoUrl = (String) config.get("logoUrl");

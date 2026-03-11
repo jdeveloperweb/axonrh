@@ -242,6 +242,7 @@ public class ThemeService {
     }
 
     private void applyUpdates(TenantConfig config, ThemeConfigRequest request) {
+        if (request.getCompanyName() != null) config.setCompanyName(request.getCompanyName());
         if (request.getPrimaryColor() != null) config.setPrimaryColor(request.getPrimaryColor());
         if (request.getSecondaryColor() != null) config.setSecondaryColor(request.getSecondaryColor());
         if (request.getAccentColor() != null) config.setAccentColor(request.getAccentColor());
@@ -389,6 +390,7 @@ public class ThemeService {
         return ThemeConfigResponse.builder()
                 .id(config.getId())
                 .tenantId(config.getTenantId())
+                .companyName(config.getCompanyName())
                 .logoUrl(config.getLogoUrl())
                 .logoDarkUrl(config.getLogoDarkUrl())
                 .faviconUrl(config.getFaviconUrl())

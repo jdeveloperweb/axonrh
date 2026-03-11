@@ -25,6 +25,7 @@ public class ThemeConfigResponse implements Serializable {
 
     // ==================== Identidade Visual ====================
 
+    private String companyName;
     private String logoUrl;
     private String logoDarkUrl;
     private String faviconUrl;

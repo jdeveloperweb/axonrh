@@ -15,6 +15,11 @@ import java.util.Map;
 @Builder
 public class ThemeConfigRequest {
     
+    // ==================== Identidade da Empresa ====================
+
+    @Size(max = 200, message = "Nome da empresa deve ter no maximo 200 caracteres")
+    private String companyName;
+
     // ==================== Logos e Imagens ====================
     private String logoUrl;
     private String logoDarkUrl;
