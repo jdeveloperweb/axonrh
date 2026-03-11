@@ -191,8 +191,8 @@ public class ImportService {
         try {
             return Gender.valueOf(val.toUpperCase());
         } catch (Exception e) {
-            if (val.equalsIgnoreCase("M") || val.toUpperCase().contains("MASC")) return Gender.MASCULINO;
-            if (val.equalsIgnoreCase("F") || val.toUpperCase().contains("FEM")) return Gender.FEMININO;
+            if (val.equalsIgnoreCase("M") || val.toUpperCase().contains("MASC")) return Gender.MALE;
+            if (val.equalsIgnoreCase("F") || val.toUpperCase().contains("FEM")) return Gender.FEMALE;
             return Gender.OTHER;
         }
     }
@@ -203,7 +203,7 @@ public class ImportService {
                 .orElseGet(() -> departmentRepository.save(Department.builder()
                         .tenantId(tenantId)
                         .name(name.trim())
-                        .active(true)
+                        .isActive(true)
                         .build()));
     }
 
