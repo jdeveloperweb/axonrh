@@ -52,10 +52,28 @@ export default function LoginClient() {
   const [showPassword, setShowPassword] = useState(false);
   const [show2FA, setShow2FA] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [mfaSetupState, setMfaSetupState] = useState<{
+
+  // Persiste no sessionStorage para sobreviver a refreshes da página
+  const [mfaSetupState, setMfaSetupStateRaw] = useState<{
     setupToken: string;
     maskedEmail: string;
-  } | null>(null);
+  } | null>(() => {
+    try {
+      const saved = sessionStorage.getItem("mfa_setup_pending");
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const setMfaSetupState = (state: { setupToken: string; maskedEmail: string } | null) => {
+    setMfaSetupStateRaw(state);
+    if (state) {
+      sessionStorage.setItem("mfa_setup_pending", JSON.stringify(state));
+    } else {
+      sessionStorage.removeItem("mfa_setup_pending");
+    }
+  };
   const [loginConfig, setLoginConfig] = useState<{
     logoUrl?: string;
     backgroundUrl?: string;
@@ -188,6 +206,7 @@ export default function LoginClient() {
   };
 
   const handleMfaSetupSuccess = async (response: LoginResponse) => {
+    setMfaSetupState(null); // limpa sessionStorage
     if (response.user?.tenantId) {
       const { useThemeStore } = await import("@/stores/theme-store");
       await useThemeStore.getState().fetchBranding();

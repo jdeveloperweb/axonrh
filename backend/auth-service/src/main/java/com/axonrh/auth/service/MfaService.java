@@ -100,20 +100,37 @@ public class MfaService {
     }
 
     /**
-     * Inicia o fluxo de configuração OBRIGATÓRIA do MFA:
-     * - Gera segredo TOTP e salva como pendente no usuário
-     * - Gera QR code e envia email com branding do tenant
-     * - Retorna um token temporário (persistido no DB) para o frontend usar
+     * Inicia o fluxo de configuração OBRIGATÓRIA do MFA.
+     * Se já existe um setup pendente e ainda válido, reutiliza o mesmo segredo/token
+     * (apenas reenvia o email) para não invalidar o QR que o usuário já escaneou.
      */
     @Transactional
     public String initiateMandatorySetup(User user) {
-        String secret = secretGenerator.generate();
-        String setupToken = UUID.randomUUID().toString().replace("-", "");
+        boolean hasValidPending = user.getTwoFactorPendingSecret() != null
+                && user.getTwoFactorSetupToken() != null
+                && user.getTwoFactorSetupTokenExpiresAt() != null
+                && LocalDateTime.now().isBefore(user.getTwoFactorSetupTokenExpiresAt());
 
-        user.setTwoFactorPendingSecret(secret);
-        user.setTwoFactorSetupToken(setupToken);
-        user.setTwoFactorSetupTokenExpiresAt(LocalDateTime.now().plusMinutes(setupTokenTtlMinutes));
-        userRepository.save(user);
+        String secret;
+        String setupToken;
+
+        if (hasValidPending) {
+            // Reutiliza o segredo/token existente — não invalida o QR já escaneado
+            secret = user.getTwoFactorPendingSecret();
+            setupToken = user.getTwoFactorSetupToken();
+            log.info("Reusing existing MFA pending setup for user: {}", user.getId());
+        } else {
+            // Gera novo segredo e token apenas se não há pendente válido
+            secret = secretGenerator.generate();
+            setupToken = UUID.randomUUID().toString().replace("-", "");
+
+            user.setTwoFactorPendingSecret(secret);
+            user.setTwoFactorSetupToken(setupToken);
+            user.setTwoFactorSetupTokenExpiresAt(LocalDateTime.now().plusMinutes(setupTokenTtlMinutes));
+            userRepository.save(user);
+
+            log.info("New MFA mandatory setup initiated for user: {}", user.getId());
+        }
 
         String qrCodeBase64 = generateQrCodeBase64(user.getEmail(), secret);
 
@@ -125,7 +142,6 @@ public class MfaService {
                 user.getTenantId() != null ? user.getTenantId().toString() : null
         );
 
-        log.info("Mandatory MFA setup initiated for user: {}", user.getId());
         return setupToken;
     }
 
