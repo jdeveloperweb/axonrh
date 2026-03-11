@@ -6,5 +6,6 @@ public enum PayrollStatus {
     RECALCULATED,
     APPROVED,
     CLOSED,
-    CANCELLED
+    CANCELLED,
+    PROCESSED
 }
