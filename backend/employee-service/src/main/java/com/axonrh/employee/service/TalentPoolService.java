@@ -54,7 +54,31 @@ public class TalentPoolService {
     private final JobVacancyMapper vacancyMapper;
     private final TalentCandidateMapper candidateMapper;
     private final ResumeAnalysisClient resumeAnalysisClient;
+    private final RegistrationService registrationService;
     private final DigitalHiringService digitalHiringService;
+    private final com.axonrh.kafka.producer.DomainEventPublisher eventPublisher;
+
+    private void sendWelcomeEmail(TalentCandidate candidate) {
+        try {
+            Map<String, Object> variables = new HashMap<>();
+            variables.put("candidate_name", candidate.getFullName());
+            variables.put("company_name", "AxonRH"); // Ideal buscar do tenant se possível
+
+            com.axonrh.kafka.event.notification.NotificationEvent event = com.axonrh.kafka.event.notification.NotificationEvent.create()
+                    .tenantId(candidate.getTenantId())
+                    .externalEmails(List.of(candidate.getEmail()))
+                    .channels(List.of("EMAIL"))
+                    .templateCode("CANDIDATE_WELCOME")
+                    .title("Boas-vindas ao Banco de Talentos - AxonRH")
+                    .variables(variables)
+                    .build();
+
+            eventPublisher.publish(event);
+            log.info("E-mail de boas-vindas enviado para candidato: {}", candidate.getEmail());
+        } catch (Exception e) {
+            log.error("Erro ao enviar e-mail de boas-vindas: {}", e.getMessage());
+        }
+    }
 
     private static final String UPLOAD_DIR = "uploads/resumes";
 
@@ -403,6 +427,9 @@ public class TalentPoolService {
         candidate = candidateRepository.save(candidate);
         log.info("Nova candidatura: {} para vaga {}", candidate.getId(), publicCode);
 
+        // Envia e-mail de boas-vindas
+        sendWelcomeEmail(candidate);
+
         return candidateMapper.toResponse(candidate);
     }
 
@@ -431,6 +458,9 @@ public class TalentPoolService {
 
         candidate = candidateRepository.save(candidate);
         log.info("Candidato adicionado: {} para vaga {}", candidate.getId(), vacancyId);
+
+        // Envia e-mail de boas-vindas
+        sendWelcomeEmail(candidate);
 
         return candidateMapper.toResponse(candidate);
     }

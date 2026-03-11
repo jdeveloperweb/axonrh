@@ -54,7 +54,11 @@ public class MfaEmailService {
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
             helper.setFrom(fromEmail, fromName);
-            helper.setTo(toEmail);
+            if (userName != null && !userName.isBlank()) {
+                helper.setTo(new jakarta.mail.internet.InternetAddress(toEmail, userName));
+            } else {
+                helper.setTo(toEmail);
+            }
             helper.setSubject("Configure sua autenticação em duas etapas (MFA) — " + branding.companyName);
             helper.setText(html, true);
 

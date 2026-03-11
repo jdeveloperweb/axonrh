@@ -197,14 +197,18 @@ public class EmailService {
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
         helper.setFrom(fromAddress, fromName);
-        helper.setTo(recipientEmail);
-        if (recipientName != null) {
-            // helper.setTo(new InternetAddress(recipientEmail, recipientName));
+        if (recipientName != null && !recipientName.isBlank()) {
+            helper.setTo(new jakarta.mail.internet.InternetAddress(recipientEmail, recipientName));
+        } else {
+            helper.setTo(recipientEmail);
         }
+        
         helper.setSubject(subject);
-        helper.setText(bodyHtml, true);
-        if (bodyText != null) {
-            // helper.setText(bodyText);
+        
+        if (bodyText != null && !bodyText.isBlank()) {
+            helper.setText(bodyText, bodyHtml);
+        } else {
+            helper.setText(bodyHtml, true);
         }
 
         if (ccEmails != null && ccEmails.length > 0) {

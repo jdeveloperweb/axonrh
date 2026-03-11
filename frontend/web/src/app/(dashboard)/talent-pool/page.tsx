@@ -306,6 +306,7 @@ export default function TalentPoolPage() {
             maxCandidates: vacancyForm.maxCandidates,
             deadline: vacancyForm.deadline || undefined,
             aiAnalysisEnabled: vacancyForm.aiAnalysisEnabled,
+            isExclusivePcd: vacancyForm.isExclusivePcd,
         };
 
         try {
