@@ -197,7 +197,7 @@ export default function DataLoadPage() {
                     <CardContent className="space-y-6">
                         <div className="p-4 rounded-lg bg-[var(--color-surface-variant)]/30 border border-dashed border-[var(--color-border)]">
                             <p className="text-sm text-[var(--color-text-secondary)] mb-4">
-                                1. Baixe o modelo oficial informando matrícula e valores.<br />
+                                1. Baixe o modelo oficial informando CPF e valores.<br />
                                 2. O sistema vinculará automaticamente ao colaborador.
                             </p>
                             <Button
@@ -268,7 +268,7 @@ export default function DataLoadPage() {
                         <li>Nomes de Departamentos e Cargos serão criados caso não existam.</li>
                     </ul>
                     <ul className="list-disc list-inside space-y-2">
-                        <li>Para a folha, a matrícula deve coincidir exatamente com o cadastro.</li>
+                        <li>Para a folha, o CPF deve coincidir exatamente com o cadastro.</li>
                         <li>Mês de referência deve ser um número entre 1 e 12.</li>
                         <li>Valores decimais devem usar ponto ou vírgula conforme o exemplo.</li>
                     </ul>
