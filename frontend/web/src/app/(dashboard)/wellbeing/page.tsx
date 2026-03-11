@@ -430,159 +430,165 @@ export default function WellbeingPage() {
                     </div>
                     <CardContent className="flex-1 p-0 flex flex-col lg:flex-row items-center justify-between relative overflow-hidden bg-[radial-gradient(circle_at_50%_50%,#f8fafc_0%,#ffffff_100%)]">
 
-                        {/* Interactive Ecosytem Visual */}
+                        {/* Radar Spider Chart */}
                         <div className="relative flex-1 w-full h-[450px] flex items-center justify-center">
-
-                            {/* Animated Background Layers */}
-                            <div className="absolute inset-0 pointer-events-none">
-                                {/* Large Rotating Ring */}
-                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[420px] h-[420px] border border-primary/20 rounded-full border-dashed animate-[spin_80s_linear_infinite]" />
-                                {/* Medium Pulsing Glow */}
-                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-primary/5 rounded-full blur-3xl animate-pulse" />
-                                {/* Floating Particles */}
-                                {[...Array(12)].map((_, i) => (
-                                    <div
-                                        key={i}
-                                        className="absolute w-1 h-1 bg-primary/40 rounded-full opacity-40 animate-float"
-                                        style={{
-                                            left: `${Math.random() * 80 + 10}%`,
-                                            top: `${Math.random() * 80 + 10}%`,
-                                            animationDelay: `${Math.random() * 5}s`,
-                                            animationDuration: `${Math.random() * 10 + 10}s`
-                                        }}
-                                    />
-                                ))}
-                            </div>
-
-                            {/* SVG Connections Layer */}
-                            <svg className="absolute inset-0 w-full h-full pointer-events-none z-10 overflow-visible">
+                            <svg viewBox="0 0 580 430" className="w-full h-full" aria-label="Ecossistema de Vitalidade">
                                 <defs>
-                                    <filter id="lineGlow" x="-20%" y="-20%" width="140%" height="140%">
-                                        <feGaussianBlur stdDeviation="4" result="blur" />
-                                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                                    </filter>
-                                    <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                                        <stop offset="0%" stopColor="#a855f7" stopOpacity="0.1" />
-                                        <stop offset="100%" stopColor="#a855f7" stopOpacity="0.8" />
+                                    <linearGradient id="radarAreaFill" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stopColor="#1976D2" stopOpacity="0.28" />
+                                        <stop offset="100%" stopColor="#1976D2" stopOpacity="0.06" />
                                     </linearGradient>
+                                    <linearGradient id="nucleusGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stopColor="#1976D2" />
+                                        <stop offset="100%" stopColor="#1565C0" />
+                                    </linearGradient>
+                                    <filter id="nucleusShadow" x="-30%" y="-30%" width="160%" height="160%">
+                                        <feDropShadow dx="0" dy="4" stdDeviation="8" floodColor="#1976D2" floodOpacity="0.3" />
+                                    </filter>
                                 </defs>
-                                {radarData.map((_, idx) => {
-                                    const angle = (idx * 360 / 5) - 90;
-                                    const radius = 150;
-                                    const x = Math.cos(angle * Math.PI / 180) * radius;
-                                    const y = Math.sin(angle * Math.PI / 180) * radius;
-                                    const isHovered = hoveredIdx === idx;
 
+                                {/* Background glow */}
+                                <circle cx="290" cy="215" r="65" fill="#1976D2" fillOpacity="0.05" />
+
+                                {/* Grid polygons at 25%, 50%, 75%, 100% */}
+                                {[0.25, 0.50, 0.75, 1.0].map((level, li) => {
+                                    const pts = Array.from({ length: 5 }, (_, i) => {
+                                        const a = (i * 2 * Math.PI / 5) - Math.PI / 2;
+                                        const r = level * 130;
+                                        return `${290 + r * Math.cos(a)},${215 + r * Math.sin(a)}`;
+                                    }).join(' ');
                                     return (
-                                        <g key={idx}>
-                                            <line
-                                                x1="50%"
-                                                y1="50%"
-                                                x2={`calc(50% + ${x}px)`}
-                                                y2={`calc(50% + ${y}px)`}
-                                                stroke="var(--color-primary)"
-                                                strokeOpacity={isHovered ? 1 : 0.15}
-                                                strokeWidth={isHovered ? 3 : 1.5}
-                                                strokeDasharray={isHovered ? "none" : "8,8"}
-                                                filter={isHovered ? "url(#lineGlow)" : "none"}
-                                                className="transition-all duration-500"
-                                            />
-                                            {isHovered && (
-                                                <circle
-                                                    cx={`calc(50% + ${x}px)`}
-                                                    cy={`calc(50% + ${y}px)`}
-                                                    r="4"
-                                                    fill="#a855f7"
-                                                    className="animate-ping"
-                                                />
+                                        <polygon
+                                            key={li}
+                                            points={pts}
+                                            fill={li < 3 ? `rgba(25,118,210,${0.03 * (li + 1)})` : 'none'}
+                                            stroke={li === 3 ? '#cbd5e1' : '#e8edf2'}
+                                            strokeWidth={li === 3 ? 1.5 : 1}
+                                            strokeDasharray={li === 0 ? '3,6' : 'none'}
+                                        />
+                                    );
+                                })}
+
+                                {/* Axis lines */}
+                                {radarData.map((_, i) => {
+                                    const a = (i * 2 * Math.PI / 5) - Math.PI / 2;
+                                    return (
+                                        <line
+                                            key={i}
+                                            x1="290" y1="215"
+                                            x2={290 + 130 * Math.cos(a)}
+                                            y2={215 + 130 * Math.sin(a)}
+                                            stroke="#e8edf2"
+                                            strokeWidth="1.5"
+                                        />
+                                    );
+                                })}
+
+                                {/* Scale labels on vertical axis */}
+                                <text x="295" y={215 - 65 + 4} fontSize="7.5" fill="#b0bec5" fontWeight="600">50%</text>
+                                <text x="295" y={215 - 130 + 4} fontSize="7.5" fill="#b0bec5" fontWeight="600">100%</text>
+
+                                {/* Data polygon */}
+                                <polygon
+                                    points={radarData.map((item, i) => {
+                                        const a = (i * 2 * Math.PI / 5) - Math.PI / 2;
+                                        const r = (item.value / 100) * 130;
+                                        return `${290 + r * Math.cos(a)},${215 + r * Math.sin(a)}`;
+                                    }).join(' ')}
+                                    fill="url(#radarAreaFill)"
+                                    stroke="#1976D2"
+                                    strokeWidth="2.5"
+                                    strokeLinejoin="round"
+                                />
+
+                                {/* Data points with hover tooltips */}
+                                {radarData.map((item, i) => {
+                                    const a = (i * 2 * Math.PI / 5) - Math.PI / 2;
+                                    const r = (item.value / 100) * 130;
+                                    const px = 290 + r * Math.cos(a);
+                                    const py = 215 + r * Math.sin(a);
+                                    const isHov = hoveredIdx === i;
+                                    const dotColor = item.value < 40 ? '#e11d48' : item.value > 75 ? '#059669' : '#1976D2';
+                                    return (
+                                        <g
+                                            key={i}
+                                            onMouseEnter={() => setHoveredIdx(i)}
+                                            onMouseLeave={() => setHoveredIdx(null)}
+                                            style={{ cursor: 'pointer' }}
+                                        >
+                                            {isHov && <circle cx={px} cy={py} r="15" fill={dotColor} fillOpacity="0.18" />}
+                                            <circle cx={px} cy={py} r={isHov ? 7.5 : 5.5} fill={dotColor} stroke="white" strokeWidth="2.5" />
+                                            {isHov && (
+                                                <g>
+                                                    <rect x={px - 25} y={py - 38} width="50" height="22" rx="5" fill={dotColor} />
+                                                    <text x={px} y={py - 23} textAnchor="middle" fontSize="11" fontWeight="800" fill="white">
+                                                        {Math.round(item.value)}%
+                                                    </text>
+                                                    <polygon points={`${px - 5},${py - 16} ${px + 5},${py - 16} ${px},${py - 9}`} fill={dotColor} />
+                                                </g>
                                             )}
                                         </g>
                                     );
                                 })}
+
+                                {/* Center nucleus */}
+                                <circle cx="290" cy="215" r="50" fill="white" stroke="#e2e8f0" strokeWidth="2" />
+                                <circle cx="290" cy="215" r="46" fill="url(#nucleusGrad)" filter="url(#nucleusShadow)" />
+                                <ellipse cx="280" cy="200" rx="13" ry="7" fill="white" fillOpacity="0.18" transform="rotate(-30,280,200)" />
+                                <text x="286" y="212" textAnchor="end" fontSize="22" fontWeight="900" fill="white" letterSpacing="-0.5">
+                                    {statsData?.averageScore ? statsData.averageScore.toFixed(1) : '3.5'}
+                                </text>
+                                <text x="287" y="207" textAnchor="start" fontSize="9" fontWeight="700" fill="white" fillOpacity="0.65">/5</text>
+                                <text x="290" y="223" textAnchor="middle" fontSize="7.5" fontWeight="800" fill="white" fillOpacity="0.8" letterSpacing="2">VITALIDADE</text>
+                                <rect x="268" y="228" width="44" height="14" rx="7"
+                                    fill={statsData && statsData.averageScore >= 4 ? '#10b981' : statsData && statsData.averageScore >= 3 ? '#3b82f6' : '#f43f5e'}
+                                    fillOpacity="0.9"
+                                />
+                                <text x="290" y="238.5" textAnchor="middle" fontSize="7.5" fontWeight="900" fill="white" letterSpacing="1">
+                                    {statsData && statsData.averageScore >= 4 ? 'ALTA' : statsData && statsData.averageScore >= 3 ? 'MÉDIA' : 'BAIXA'}
+                                </text>
+
+                                {/* === Axis Labels === */}
+                                {/* i=0: Saúde Mental — TOP */}
+                                <text textAnchor="middle" fill="#374151" fontWeight="800" fontSize="9" letterSpacing="0.8">
+                                    <tspan x="290" y="44">SAÚDE</tspan>
+                                    <tspan x="290" dy="13">MENTAL</tspan>
+                                </text>
+                                <rect x="272" y="63" width="36" height="13" rx="6" fill={radarData[0].value > 75 ? '#d1fae5' : radarData[0].value < 40 ? '#fee2e2' : '#dbeafe'} />
+                                <text x="290" y="73.5" textAnchor="middle" fontSize="8" fontWeight="700" fill={radarData[0].value > 75 ? '#059669' : radarData[0].value < 40 ? '#e11d48' : '#1976D2'}>{Math.round(radarData[0].value)}%</text>
+
+                                {/* i=1: Equilíbrio de Carga — TOP RIGHT */}
+                                <text textAnchor="start" fill="#374151" fontWeight="800" fontSize="9" letterSpacing="0.8">
+                                    <tspan x="452" y="155">EQUILÍBRIO</tspan>
+                                    <tspan x="452" dy="13">DE CARGA</tspan>
+                                </text>
+                                <rect x="452" y="174" width="36" height="13" rx="6" fill={radarData[1].value > 75 ? '#d1fae5' : radarData[1].value < 40 ? '#fee2e2' : '#dbeafe'} />
+                                <text x="470" y="184.5" textAnchor="middle" fontSize="8" fontWeight="700" fill={radarData[1].value > 75 ? '#059669' : radarData[1].value < 40 ? '#e11d48' : '#1976D2'}>{Math.round(radarData[1].value)}%</text>
+
+                                {/* i=2: Segurança Psicológica — BOTTOM RIGHT */}
+                                <text textAnchor="middle" fill="#374151" fontWeight="800" fontSize="9" letterSpacing="0.8">
+                                    <tspan x="390" y="354">SEGURANÇA</tspan>
+                                    <tspan x="390" dy="13">PSICOLÓGICA</tspan>
+                                </text>
+                                <rect x="372" y="373" width="36" height="13" rx="6" fill={radarData[2].value > 75 ? '#d1fae5' : radarData[2].value < 40 ? '#fee2e2' : '#dbeafe'} />
+                                <text x="390" y="383.5" textAnchor="middle" fontSize="8" fontWeight="700" fill={radarData[2].value > 75 ? '#059669' : radarData[2].value < 40 ? '#e11d48' : '#1976D2'}>{Math.round(radarData[2].value)}%</text>
+
+                                {/* i=3: Clima Organizacional — BOTTOM LEFT */}
+                                <text textAnchor="middle" fill="#374151" fontWeight="800" fontSize="9" letterSpacing="0.8">
+                                    <tspan x="190" y="354">CLIMA</tspan>
+                                    <tspan x="190" dy="13">ORGANIZACIONAL</tspan>
+                                </text>
+                                <rect x="172" y="373" width="36" height="13" rx="6" fill={radarData[3].value > 75 ? '#d1fae5' : radarData[3].value < 40 ? '#fee2e2' : '#dbeafe'} />
+                                <text x="190" y="383.5" textAnchor="middle" fontSize="8" fontWeight="700" fill={radarData[3].value > 75 ? '#059669' : radarData[3].value < 40 ? '#e11d48' : '#1976D2'}>{Math.round(radarData[3].value)}%</text>
+
+                                {/* i=4: Engajamento e Vitalidade — TOP LEFT */}
+                                <text textAnchor="end" fill="#374151" fontWeight="800" fontSize="9" letterSpacing="0.8">
+                                    <tspan x="128" y="155">ENGAJAMENTO</tspan>
+                                    <tspan x="128" dy="13">E VITALIDADE</tspan>
+                                </text>
+                                <rect x="92" y="174" width="36" height="13" rx="6" fill={radarData[4].value > 75 ? '#d1fae5' : radarData[4].value < 40 ? '#fee2e2' : '#dbeafe'} />
+                                <text x="110" y="184.5" textAnchor="middle" fontSize="8" fontWeight="700" fill={radarData[4].value > 75 ? '#059669' : radarData[4].value < 40 ? '#e11d48' : '#1976D2'}>{Math.round(radarData[4].value)}%</text>
                             </svg>
-
-                            {/* Center Nucleus */}
-                            <div className="relative z-30 group/center transition-transform duration-500 hover:scale-110">
-                                <div className="absolute inset-0 bg-primary rounded-full blur-2xl opacity-20 animate-pulse group-hover/center:opacity-40" />
-                                <div className="w-36 h-36 rounded-full bg-gradient-to-br from-primary via-primary-700 to-primary-900 shadow-xl shadow-primary/40 flex flex-col items-center justify-center text-white relative border-4 border-white/30 backdrop-blur-sm overflow-hidden">
-                                    {/* Glass Shine Effect */}
-                                    <div className="absolute top-0 left-0 w-full h-1/2 bg-white/10 -skew-y-12" />
-
-                                    <Sparkles className="w-8 h-8 mb-1 text-yellow-300 drop-shadow-[0_0_8px_rgba(253,224,71,0.8)]" />
-                                    <div className="flex items-baseline gap-0.5 relative z-10">
-                                        <span className="text-4xl font-black tracking-tight">{statsData?.averageScore ? statsData.averageScore.toFixed(1) : '3.5'}</span>
-                                        <span className="text-xs opacity-80 font-bold">/5</span>
-                                    </div>
-                                    <span className="text-[10px] uppercase font-black tracking-[0.2em] opacity-80 mb-1 relative z-10">VITALIDADE</span>
-
-                                    <div className={`mt-2 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border shadow-sm transition-colors relative z-10 ${statsData && statsData.averageScore >= 4 ? 'bg-emerald-500/80 border-emerald-400' :
-                                        statsData && statsData.averageScore >= 3 ? 'bg-blue-500/80 border-blue-400' :
-                                            'bg-rose-500/80 border-rose-400'
-                                        }`}>
-                                        {statsData && statsData.averageScore >= 4 ? 'Alta' : statsData && statsData.averageScore >= 3 ? 'Média' : 'Baixa'}
-                                    </div>
-
-                                    {/* Scanline Effect */}
-                                    <div className="absolute inset-0 w-full h-1 bg-white/20 animate-scan pointer-events-none" />
-                                </div>
-
-                                {/* Orbiting Rings Details */}
-                                <div className="absolute inset-[-20px] border border-primary/20 rounded-full animate-[spin_20s_linear_infinite]" />
-                                <div className="absolute inset-[-40px] border border-primary/10 rounded-full animate-[spin_35s_linear_infinite_reverse]" />
-                            </div>
-
-                            {/* Satellite Orbs */}
-                            {radarData.map((item, idx) => {
-                                const angle = (idx * 360 / 5) - 90;
-                                const radius = 165; // Slightly wider radius
-                                const x = Math.cos(angle * Math.PI / 180) * radius;
-                                const y = Math.sin(angle * Math.PI / 180) * radius;
-
-                                const orbSize = 65 + (item.value / 100) * 15;
-                                const isHovered = hoveredIdx === idx;
-
-                                const colorClass = item.value < 40
-                                    ? 'from-rose-400 to-rose-600 shadow-rose-200/50'
-                                    : item.value > 75
-                                        ? 'from-emerald-400 to-teal-600 shadow-emerald-200/50'
-                                        : 'from-blue-400 to-indigo-600 shadow-indigo-200/50';
-
-                                return (
-                                    <div
-                                        key={idx}
-                                        className={`absolute z-40 transition-all duration-500 ${isHovered ? 'scale-110' : 'scale-100'}`}
-                                        style={{
-                                            left: `calc(50% + ${x}px)`,
-                                            top: `calc(50% + ${y}px)`,
-                                            transform: 'translate(-50%, -50%)',
-                                        }}
-                                        onMouseEnter={() => setHoveredIdx(idx)}
-                                        onMouseLeave={() => setHoveredIdx(null)}
-                                    >
-                                        <div className="flex flex-col items-center group/orb">
-                                            <div
-                                                className={`rounded-2xl bg-gradient-to-br ${colorClass} shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] flex flex-col items-center justify-center p-3 relative border-2 border-white/50 backdrop-blur-sm group-hover/orb:shadow-2xl transition-all duration-300`}
-                                                style={{ width: `${orbSize}px`, height: `${orbSize}px` }}
-                                            >
-                                                <div className="text-white opacity-90 mb-1 group-hover/orb:scale-110 transition-transform">
-                                                    {React.cloneElement(item.icon as React.ReactElement<any>, { className: 'w-5 h-5' })}
-                                                </div>
-                                                <span className="text-white font-black text-sm leading-none">{Math.round(item.value)}%</span>
-
-                                                {/* Orbital Path Highlight */}
-                                                {isHovered && (
-                                                    <div className="absolute inset-0 rounded-2xl border-2 border-white animate-pulse" />
-                                                )}
-                                            </div>
-
-                                            {/* Label with Glassmorphism */}
-                                            <div className={`mt-3 px-3 py-1.5 glass rounded-xl shadow-lg border-white/50 transition-all duration-300 ${isHovered ? 'bg-white translate-y-[-5px]' : 'bg-white/80'}`}>
-                                                <span className="text-[10px] font-black text-gray-800 whitespace-nowrap uppercase tracking-wide">{item.subject}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                );
-                            })}
                         </div>
 
                         {/* Sidebar Legend/Info */}
