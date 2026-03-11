@@ -7,6 +7,7 @@ import dev.samstevens.totp.qr.QrDataFactory;
 import dev.samstevens.totp.qr.ZxingPngQrGenerator;
 import dev.samstevens.totp.secret.DefaultSecretGenerator;
 import dev.samstevens.totp.secret.SecretGenerator;
+import dev.samstevens.totp.code.HashingAlgorithm;
 import dev.samstevens.totp.time.SystemTimeProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -81,12 +82,7 @@ public class SecurityConfig {
      */
     @Bean
     public CodeVerifier totpCodeVerifier() {
-        return new DefaultCodeVerifier(
-                new DefaultCodeVerifier.Builder()
-                        .codeGenerator(new DefaultCodeGenerator())
-                        .timeProvider(new SystemTimeProvider())
-                        .build()
-        );
+        return new DefaultCodeVerifier(new DefaultCodeGenerator(), new SystemTimeProvider());
     }
 
     @Bean
@@ -96,6 +92,6 @@ public class SecurityConfig {
 
     @Bean
     public QrDataFactory qrDataFactory() {
-        return new QrDataFactory();
+        return new QrDataFactory(HashingAlgorithm.SHA1, 6, 30);
     }
 }
