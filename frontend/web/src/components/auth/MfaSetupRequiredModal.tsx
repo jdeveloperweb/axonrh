@@ -167,8 +167,20 @@ export default function MfaSetupRequiredModal({
         {/* Accent bar */}
         <div className="accent-bar h-[3px] w-full" />
 
+        {/* Close button */}
+        <div className="flex justify-end px-5 pt-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            aria-label="Fechar"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
         {/* Header */}
-        <div className="flex flex-col items-center pt-7 pb-5 px-8 text-center">
+        <div className="flex flex-col items-center pt-2 pb-5 px-8 text-center">
           <div
             className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
             style={{ background: primaryRgba }}

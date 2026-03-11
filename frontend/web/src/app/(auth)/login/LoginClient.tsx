@@ -229,6 +229,7 @@ export default function LoginClient() {
         setupToken={mfaSetupState.setupToken}
         maskedEmail={mfaSetupState.maskedEmail}
         onSuccess={handleMfaSetupSuccess}
+        onClose={() => setMfaSetupState(null)}
       />
     )}
     <div className="min-h-screen relative flex items-center justify-center px-4 sm:px-6 py-8 sm:py-16 text-slate-900">
