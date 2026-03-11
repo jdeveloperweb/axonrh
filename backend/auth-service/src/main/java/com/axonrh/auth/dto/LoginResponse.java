@@ -24,6 +24,11 @@ public class LoginResponse {
     private UserInfo user;
     private boolean mfaRequired;
 
+    // Fluxo de configuração obrigatória de MFA
+    private boolean mfaSetupRequired;
+    private String mfaSetupToken;
+    private String maskedEmail;
+
     @Data
     @Builder
     @NoArgsConstructor

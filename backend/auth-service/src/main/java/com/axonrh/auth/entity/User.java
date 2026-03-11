@@ -58,6 +58,9 @@ public class User {
     @Column(name = "two_factor_secret", length = 100)
     private String twoFactorSecret;
 
+    @Column(name = "two_factor_pending_secret", length = 100)
+    private String twoFactorPendingSecret;
+
     // Controle de bloqueio
     @Column(name = "failed_login_attempts")
     @Builder.Default

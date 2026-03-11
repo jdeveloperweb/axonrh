@@ -38,6 +38,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final CodeVerifier totpCodeVerifier;
+    private final MfaService mfaService;
 
     @Value("${security.login.max-attempts}")
     private int maxLoginAttempts;
@@ -90,24 +91,33 @@ public class AuthService {
             throw new AuthenticationException("Credenciais invalidas");
         }
 
-        // Verifica 2FA se ativado
-        if (user.isTwoFactorEnabled()) {
-            if (request.getTotpCode() == null || request.getTotpCode().isBlank()) {
-                log.info("MFA required for user: {}", user.getEmail());
-                return LoginResponse.builder()
-                        .mfaRequired(true)
-                        .user(LoginResponse.UserInfo.builder()
-                                .email(user.getEmail())
-                                .twoFactorEnabled(true)
-                                .build())
-                        .build();
-            }
+        // MFA obrigatório: usuário sem MFA configurado deve ser direcionado para configuração
+        if (!user.isTwoFactorEnabled()) {
+            log.info("MFA setup required for user: {} (mandatory policy)", user.getEmail());
+            String setupToken = mfaService.initiateMandatorySetup(user);
+            return LoginResponse.builder()
+                    .mfaSetupRequired(true)
+                    .mfaSetupToken(setupToken)
+                    .maskedEmail(maskEmail(user.getEmail()))
+                    .build();
+        }
 
-            if (!totpCodeVerifier.isValidCode(user.getTwoFactorSecret(), request.getTotpCode())) {
-                recordLoginAttempt(request.getEmail(), user.getTenantId(), user.getId(), false,
-                        LoginAttempt.REASON_2FA_INVALID, ipAddress, userAgent);
-                throw new AuthenticationException("Codigo 2FA invalido");
-            }
+        // Verifica 2FA se ativado
+        if (request.getTotpCode() == null || request.getTotpCode().isBlank()) {
+            log.info("MFA code required for user: {}", user.getEmail());
+            return LoginResponse.builder()
+                    .mfaRequired(true)
+                    .user(LoginResponse.UserInfo.builder()
+                            .email(user.getEmail())
+                            .twoFactorEnabled(true)
+                            .build())
+                    .build();
+        }
+
+        if (!totpCodeVerifier.isValidCode(user.getTwoFactorSecret(), request.getTotpCode())) {
+            recordLoginAttempt(request.getEmail(), user.getTenantId(), user.getId(), false,
+                    LoginAttempt.REASON_2FA_INVALID, ipAddress, userAgent);
+            throw new AuthenticationException("Codigo 2FA invalido");
         }
 
         // Login bem-sucedido
@@ -248,6 +258,40 @@ public class AuthService {
                 .build();
 
         loginAttemptRepository.save(attempt);
+    }
+
+    /**
+     * Conclui o fluxo de configuração obrigatória de MFA e retorna a sessão completa.
+     */
+    @Transactional
+    public LoginResponse completeMandatoryMfaSetup(String setupToken, String totpCode,
+                                                    String ipAddress, String userAgent) {
+        User user = mfaService.completeMandatorySetup(setupToken, totpCode);
+
+        user.resetFailedAttempts();
+        user.setLastLoginAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        UUID employeeId = userRepository.findEmployeeIdByUserId(user.getId()).orElse(null);
+        String accessToken = jwtService.generateAccessToken(user, "", employeeId);
+        String refreshToken = createRefreshToken(user, ipAddress, userAgent);
+
+        recordLoginAttempt(user.getEmail(), user.getTenantId(), user.getId(), true,
+                null, ipAddress, userAgent);
+
+        log.info("Mandatory MFA setup completed and session created for user: {}", user.getId());
+        return buildLoginResponse(user, employeeId, accessToken, refreshToken);
+    }
+
+    private String maskEmail(String email) {
+        if (email == null || !email.contains("@")) return email;
+        String[] parts = email.split("@");
+        String local = parts[0];
+        String domain = parts[1];
+        if (local.length() <= 2) {
+            return local.charAt(0) + "***@" + domain;
+        }
+        return local.charAt(0) + "***" + local.charAt(local.length() - 1) + "@" + domain;
     }
 
     private LoginResponse buildLoginResponse(User user, UUID employeeId, String accessToken, String refreshToken) {

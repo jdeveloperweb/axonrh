@@ -35,7 +35,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           const response = await authApi.login(credentials);
 
-          if (response.mfaRequired) {
+          if (response.mfaRequired || response.mfaSetupRequired) {
             set({ isLoading: false });
             return response;
           }

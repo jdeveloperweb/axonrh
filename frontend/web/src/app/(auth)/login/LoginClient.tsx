@@ -22,6 +22,8 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useThemeStore } from "@/stores/theme-store";
 import { configApi } from "@/lib/api/config";
 import { cn, getPhotoUrl } from "@/lib/utils";
+import MfaSetupRequiredModal from "@/components/auth/MfaSetupRequiredModal";
+import type { LoginResponse } from "@/lib/api/auth";
 
 // ==================== Schema de Validacao ====================
 
@@ -50,6 +52,10 @@ export default function LoginClient() {
   const [showPassword, setShowPassword] = useState(false);
   const [show2FA, setShow2FA] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [mfaSetupState, setMfaSetupState] = useState<{
+    setupToken: string;
+    maskedEmail: string;
+  } | null>(null);
   const [loginConfig, setLoginConfig] = useState<{
     logoUrl?: string;
     backgroundUrl?: string;
@@ -154,6 +160,14 @@ export default function LoginClient() {
         totpCode: data.totpCode || undefined,
       });
 
+      if (response.mfaSetupRequired && response.mfaSetupToken && response.maskedEmail) {
+        setMfaSetupState({
+          setupToken: response.mfaSetupToken,
+          maskedEmail: response.maskedEmail,
+        });
+        return;
+      }
+
       if (response.mfaRequired) {
         setShow2FA(true);
         setTimeout(() => setFocus("totpCode"), 100);
@@ -173,10 +187,31 @@ export default function LoginClient() {
     }
   };
 
+  const handleMfaSetupSuccess = async (response: LoginResponse) => {
+    if (response.user?.tenantId) {
+      const { useThemeStore } = await import("@/stores/theme-store");
+      await useThemeStore.getState().fetchBranding();
+    }
+    const setupTenantId = localStorage.getItem("setup_tenant_id");
+    if (setupTenantId) {
+      router.replace(`/setup?tenantId=${setupTenantId}`);
+    } else {
+      router.replace("/dashboard");
+    }
+  };
+
   const inputBaseClasses =
     "input bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-sky-200 focus:border-sky-400";
 
   return (
+    <>
+    {mfaSetupState && (
+      <MfaSetupRequiredModal
+        setupToken={mfaSetupState.setupToken}
+        maskedEmail={mfaSetupState.maskedEmail}
+        onSuccess={handleMfaSetupSuccess}
+      />
+    )}
     <div className="min-h-screen relative flex items-center justify-center px-4 sm:px-6 py-8 sm:py-16 text-slate-900">
       <div
         className="absolute inset-0 bg-gradient-to-br from-[#f2f7ff] via-[#eaf6ff] to-[#e9f8f5]"
@@ -431,5 +466,6 @@ export default function LoginClient() {
         </div>
       </div>
     </div>
+    </>
   );
 }

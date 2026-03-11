@@ -27,6 +27,9 @@ export interface LoginResponse {
   expiresIn: number;
   user: User;
   mfaRequired?: boolean;
+  mfaSetupRequired?: boolean;
+  mfaSetupToken?: string;
+  maskedEmail?: string;
 }
 
 export interface RefreshResponse {
@@ -109,5 +112,22 @@ export const authApi = {
    */
   changePassword: async (currentPassword: string, newPassword: string): Promise<void> => {
     await apiClient.post('/auth/password/change', { currentPassword, newPassword });
+  },
+
+  /**
+   * Conclui a configuração obrigatória de MFA e retorna sessão completa.
+   */
+  completeMandatoryMfaSetup: async (setupToken: string, code: string): Promise<LoginResponse> => {
+    return apiClient.post<LoginResponse, LoginResponse>('/auth/mfa/complete-mandatory-setup', {
+      setupToken,
+      code,
+    });
+  },
+
+  /**
+   * Reenvia o email de configuração MFA.
+   */
+  resendMfaSetupEmail: async (setupToken: string): Promise<void> => {
+    await apiClient.post('/auth/mfa/resend-setup-email', { setupToken });
   },
 };

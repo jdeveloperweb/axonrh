@@ -11,6 +11,7 @@ import dev.samstevens.totp.code.HashingAlgorithm;
 import dev.samstevens.totp.time.SystemTimeProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -20,6 +21,7 @@ import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.client.RestTemplate;
 import com.axonrh.auth.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 
@@ -29,6 +31,7 @@ import lombok.RequiredArgsConstructor;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@EnableAsync
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -47,6 +50,8 @@ public class SecurityConfig {
                                 "/api/v1/auth/refresh",
                                 "/api/v1/auth/forgot-password",
                                 "/api/v1/auth/reset-password",
+                                "/api/v1/auth/mfa/complete-mandatory-setup",
+                                "/api/v1/auth/mfa/resend-setup-email",
                                 "/actuator/health",
                                 "/actuator/info",
                                 "/actuator/prometheus",
@@ -93,5 +98,15 @@ public class SecurityConfig {
     @Bean
     public QrDataFactory qrDataFactory() {
         return new QrDataFactory(HashingAlgorithm.SHA1, 6, 30);
+    }
+
+    @Bean
+    public ZxingPngQrGenerator qrGenerator() {
+        return new ZxingPngQrGenerator();
+    }
+
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
     }
 }

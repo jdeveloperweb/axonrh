@@ -37,9 +37,35 @@ spring:
     default-schema: shared
     create-schemas: true
 
+  # Email / SMTP
+  mail:
+    host: ${MAIL_HOST:smtp.hostinger.com}
+    port: ${MAIL_PORT:465}
+    username: ${MAIL_USERNAME:noreply@mjolnix.com.br}
+    password: ${MAIL_PASSWORD:P3dr0l3m02#@1}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          ssl:
+            enable: true
+          connectiontimeout: 10000
+          timeout: 10000
+          writetimeout: 10000
+
 axonrh:
   flyway:
     repair-on-startup: ${AXONRH_FLYWAY_REPAIR_ON_STARTUP:true}
+
+  mail:
+    from: ${MAIL_USERNAME:noreply@mjolnix.com.br}
+    from-name: ${MAIL_FROM_NAME:AxonRH}
+
+  services:
+    config-service-url: ${CONFIG_SERVICE_URL:http://localhost:8082}
+
+  mfa:
+    setup-token-ttl-minutes: 30
 
   # Redis
   data:
