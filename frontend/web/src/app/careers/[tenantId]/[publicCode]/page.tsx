@@ -144,14 +144,48 @@ export default function VacancyDetailPage() {
         if (!validateForm()) return;
 
         setSubmitting(true);
+        setFormErrors({});
 
         try {
             await talentPoolApi.applyToVacancy(publicCode, formData, resumeFile || undefined);
             setSubmitted(true);
         } catch (err: unknown) {
-            const error = err as { response?: { data?: { message?: string } } };
-            const message = error.response?.data?.message || 'Erro ao enviar candidatura';
-            setFormErrors({ submit: message });
+            const error = err as {
+                response?: {
+                    status?: number,
+                    data?: {
+                        message?: string,
+                        error?: string,
+                        [key: string]: any
+                    }
+                }
+            };
+
+            const status = error.response?.status;
+            const data = error.response?.data;
+            const message = data?.message || 'Ocorreu um erro inesperado ao enviar sua candidatura.';
+
+            if (status === 409 || message.toLowerCase().includes('email')) {
+                setFormErrors({
+                    email: 'Este e-mail já está cadastrado para esta vaga.',
+                    submit: 'Já identificamos sua candidatura com este e-mail. Não é necessário enviar novamente.'
+                });
+            } else if (status === 400 && typeof data === 'object' && !data.message) {
+                // Erros de validação do Spring (MethodArgumentNotValidException)
+                const validationErrors: Record<string, string> = {};
+                Object.keys(data).forEach(key => {
+                    validationErrors[key] = String(data[key]);
+                });
+                setFormErrors(validationErrors);
+            } else {
+                setFormErrors({ submit: message });
+            }
+
+            // Scroll to top of form or the error message
+            const formElement = document.querySelector('form');
+            if (formElement) {
+                formElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
         } finally {
             setSubmitting(false);
         }
@@ -409,9 +443,14 @@ export default function VacancyDetailPage() {
                             <p className="text-gray-500 text-sm mb-8 font-medium">Complete as informações abaixo para se candidatar</p>
 
                             {formErrors.submit && (
-                                <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl text-red-700 text-sm flex items-center gap-3">
-                                    <X className="w-5 h-5 flex-shrink-0" />
-                                    {formErrors.submit}
+                                <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl text-red-700 text-sm flex items-start gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <div className="w-5 h-5 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                        <X className="w-3 h-3 text-red-600" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="font-bold mb-1">Ops! Algo deu errado</p>
+                                        <p className="leading-relaxed opacity-90 font-medium">{formErrors.submit}</p>
+                                    </div>
                                 </div>
                             )}
 
@@ -426,7 +465,7 @@ export default function VacancyDetailPage() {
                                             type="text"
                                             value={formData.fullName}
                                             onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                                            className={`w-full pl-12 pr-4 py-3.5 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all text-gray-900 font-medium placeholder:text-gray-300 ${formErrors.fullName ? 'ring-2 ring-red-100' : ''
+                                            className={`w-full pl-12 pr-4 py-3.5 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all text-gray-900 font-medium placeholder:text-gray-300 ${formErrors.fullName ? 'ring-2 ring-red-500/50 bg-red-50/10' : ''
                                                 }`}
                                             placeholder="Seu nome completo"
                                         />
@@ -446,7 +485,7 @@ export default function VacancyDetailPage() {
                                             type="email"
                                             value={formData.email}
                                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                            className={`w-full pl-12 pr-4 py-3.5 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all text-gray-900 font-medium placeholder:text-gray-300 ${formErrors.email ? 'ring-2 ring-red-100' : ''
+                                            className={`w-full pl-12 pr-4 py-3.5 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all text-gray-900 font-medium placeholder:text-gray-300 ${formErrors.email ? 'ring-2 ring-red-500/50 bg-red-50/10' : ''
                                                 }`}
                                             placeholder="seu@email.com"
                                         />
@@ -540,7 +579,7 @@ export default function VacancyDetailPage() {
                                             type="url"
                                             value={formData.linkedinUrl}
                                             onChange={(e) => setFormData({ ...formData, linkedinUrl: e.target.value })}
-                                            className={`w-full pl-12 pr-4 py-3.5 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all text-gray-900 font-medium placeholder:text-gray-300 ${formErrors.linkedinUrl ? 'ring-2 ring-red-100' : ''
+                                            className={`w-full pl-12 pr-4 py-3.5 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all text-gray-900 font-medium placeholder:text-gray-300 ${formErrors.linkedinUrl ? 'ring-2 ring-red-500/50 bg-red-50/10' : ''
                                                 }`}
                                             placeholder="linkedin.com/in/seu-perfil"
                                         />

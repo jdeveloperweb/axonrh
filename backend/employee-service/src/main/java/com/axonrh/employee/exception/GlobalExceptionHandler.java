@@ -27,6 +27,24 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
+    @ExceptionHandler(DuplicateResourceException.class)
+    public ResponseEntity<Object> handleDuplicateResource(DuplicateResourceException ex) {
+        log.warn("Recurso duplicado: {}", ex.getMessage());
+        Map<String, String> error = new HashMap<>();
+        error.put("error", "Conflict");
+        error.put("message", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    @ExceptionHandler(InvalidOperationException.class)
+    public ResponseEntity<Object> handleInvalidOperation(InvalidOperationException ex) {
+        log.warn("Operação inválida: {}", ex.getMessage());
+        Map<String, String> error = new HashMap<>();
+        error.put("error", "Bad Request");
+        error.put("message", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Object> handleAccessDenied(AccessDeniedException ex) {

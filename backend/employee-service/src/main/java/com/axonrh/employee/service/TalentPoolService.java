@@ -54,7 +54,6 @@ public class TalentPoolService {
     private final JobVacancyMapper vacancyMapper;
     private final TalentCandidateMapper candidateMapper;
     private final ResumeAnalysisClient resumeAnalysisClient;
-    private final RegistrationService registrationService;
     private final DigitalHiringService digitalHiringService;
     private final com.axonrh.kafka.producer.DomainEventPublisher eventPublisher;
 
