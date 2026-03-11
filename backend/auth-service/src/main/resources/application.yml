@@ -62,7 +62,7 @@ axonrh:
     from-name: ${MAIL_FROM_NAME:AxonRH}
 
   services:
-    config-service-url: ${CONFIG_SERVICE_URL:http://localhost:8082}
+    config-service-url: ${CONFIG_SERVICE_URL:http://axonrh-config-service:8888}
 
   mfa:
     setup-token-ttl-minutes: 30
