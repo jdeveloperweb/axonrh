@@ -61,6 +61,12 @@ public class User {
     @Column(name = "two_factor_pending_secret", length = 100)
     private String twoFactorPendingSecret;
 
+    @Column(name = "two_factor_setup_token", length = 64)
+    private String twoFactorSetupToken;
+
+    @Column(name = "two_factor_setup_token_expires_at")
+    private LocalDateTime twoFactorSetupTokenExpiresAt;
+
     // Controle de bloqueio
     @Column(name = "failed_login_attempts")
     @Builder.Default
