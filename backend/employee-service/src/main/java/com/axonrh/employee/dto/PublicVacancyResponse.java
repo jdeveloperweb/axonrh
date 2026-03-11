@@ -75,4 +75,7 @@ public class PublicVacancyResponse {
 
     @Schema(description = "Logo da empresa")
     private String companyLogo;
+
+    @Schema(description = "Vaga exclusiva para PCD")
+    private Boolean isExclusivePcd;
 }

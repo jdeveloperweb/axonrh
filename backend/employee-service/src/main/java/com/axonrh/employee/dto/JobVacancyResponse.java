@@ -99,6 +99,9 @@ public class JobVacancyResponse {
     @Schema(description = "Análise por IA está habilitada")
     private Boolean aiAnalysisEnabled;
 
+    @Schema(description = "Vaga exclusiva para PCD")
+    private Boolean isExclusivePcd;
+
     @Schema(description = "Data de criação")
     private LocalDateTime createdAt;
 

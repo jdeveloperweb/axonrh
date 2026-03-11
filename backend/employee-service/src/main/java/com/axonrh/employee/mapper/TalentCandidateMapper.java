@@ -38,6 +38,8 @@ public class TalentCandidateMapper {
                 .isActive(true)
                 .lgpdConsent(request.getLgpdConsent())
                 .lgpdConsentDate(request.getLgpdConsent() != null && request.getLgpdConsent() ? LocalDateTime.now() : null)
+                .isPcd(request.getIsPcd() != null ? request.getIsPcd() : false)
+                .pcdType(request.getPcdType())
                 .build();
     }
 
@@ -61,6 +63,8 @@ public class TalentCandidateMapper {
                 .isActive(true)
                 .lgpdConsent(request.getLgpdConsent())
                 .lgpdConsentDate(request.getLgpdConsent() != null && request.getLgpdConsent() ? LocalDateTime.now() : null)
+                .isPcd(request.getIsPcd() != null ? request.getIsPcd() : false)
+                .pcdType(request.getPcdType())
                 .build();
     }
 
@@ -86,6 +90,10 @@ public class TalentCandidateMapper {
                 candidate.setLgpdConsentDate(LocalDateTime.now());
             }
         }
+        if (request.getIsPcd() != null) {
+            candidate.setIsPcd(request.getIsPcd());
+        }
+        candidate.setPcdType(request.getPcdType());
     }
 
     /**
@@ -129,6 +137,8 @@ public class TalentCandidateMapper {
                 .isActive(candidate.getIsActive())
                 .lgpdConsent(candidate.getLgpdConsent())
                 .lgpdConsentDate(candidate.getLgpdConsentDate())
+                .isPcd(candidate.getIsPcd())
+                .pcdType(candidate.getPcdType())
                 .createdAt(candidate.getCreatedAt())
                 .updatedAt(candidate.getUpdatedAt())
                 .build();

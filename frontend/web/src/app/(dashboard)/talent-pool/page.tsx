@@ -101,6 +101,7 @@ export default function TalentPoolPage() {
         maxCandidates: 0,
         deadline: '',
         aiAnalysisEnabled: true,
+        isExclusivePcd: false,
     });
 
     const [candidateForm, setCandidateForm] = useState<CreateCandidateData>({
@@ -114,6 +115,8 @@ export default function TalentPoolPage() {
         portfolioUrl: '',
         source: 'OTHER',
         lgpdConsent: false,
+        isPcd: false,
+        pcdType: '',
     });
     const [resumeFile, setResumeFile] = useState<File | null>(null);
     const [selectedVacancyId, setSelectedVacancyId] = useState<string>('');
@@ -218,6 +221,7 @@ export default function TalentPoolPage() {
                 maxCandidates: vacancy.maxCandidates || 0,
                 deadline: vacancy.deadline || '',
                 aiAnalysisEnabled: vacancy.aiAnalysisEnabled ?? true,
+                isExclusivePcd: vacancy.isExclusivePcd || false,
             });
         } else {
             setEditingVacancy(null);
@@ -237,6 +241,8 @@ export default function TalentPoolPage() {
                 hideSalary: false,
                 maxCandidates: 0,
                 deadline: '',
+                aiAnalysisEnabled: true,
+                isExclusivePcd: false,
             });
         }
         setShowVacancyModal(true);
@@ -842,6 +848,12 @@ export default function TalentPoolPage() {
                                                 <span className={`px-2 py-1 text-xs font-medium rounded-full ${getVacancyStatusColor(vacancy.status)}`}>
                                                     {getVacancyStatusLabel(vacancy.status)}
                                                 </span>
+                                                {vacancy.isExclusivePcd && (
+                                                    <span className="px-2 py-1 text-xs font-bold rounded-full bg-green-100 text-green-700 flex items-center gap-1">
+                                                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                                                        PCD
+                                                    </span>
+                                                )}
                                             </div>
                                             <div className="flex flex-wrap items-center gap-4 text-sm text-[var(--color-text-secondary)] mb-3">
                                                 <span className="flex items-center gap-1">
@@ -1018,7 +1030,14 @@ export default function TalentPoolPage() {
                                             <tr key={candidate.id} className="hover:bg-gray-50 transition-colors">
                                                 <td className="px-6 py-4">
                                                     <div>
-                                                        <p className="font-medium text-[var(--color-text)]">{candidate.fullName}</p>
+                                                        <div className="flex items-center gap-2">
+                                                            <p className="font-medium text-[var(--color-text)]">{candidate.fullName}</p>
+                                                            {candidate.isPcd && (
+                                                                <span className="p-0.5 rounded-full bg-green-100 text-green-600" title={`PCD: ${candidate.pcdType || 'Não informado'}`}>
+                                                                    <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M11 2c0-1.103.897-2 2-2s2 .897 2 2-.897 2-2 2-2-.897-2-2zm2 4.143c.96.262 1.767 1.01 2 1.857h-4c.233-.847 1.04-1.595 2-1.857zm5 6.857h-3v-3c0-.552-.448-1-1-1h-2c-.552 0-1 .448-1 1v3h-3c-.552 0-1 .448-1 1s.448 1 1 1h3v3c0 .552.448 1 1 1h2c.552 0 1-.448 1-1v-3h3c.552 0 1-.448 1-1s-.448-1-1-1zm-4-10c0-1.657-1.343-3-3-3s-3 1.343-3 3 1.343 3 3 3 3-1.343 3-3zm2 4.143c-.456-1.554-1.884-2.143-3-2.143s-2.544.589-3 2.143l-4.223 14.857h3l.857-3h6.732l.857 3h3l-4.223-14.857z" /></svg>
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                         <p className="text-sm text-[var(--color-text-secondary)]">{candidate.email}</p>
                                                     </div>
                                                 </td>
@@ -1123,9 +1142,16 @@ export default function TalentPoolPage() {
                                                             {candidate.fullName.charAt(0).toUpperCase()}
                                                         </div>
                                                         <div>
-                                                            <h4 className="font-bold text-[var(--color-text)] group-hover:text-[var(--color-primary)] transition-colors">
-                                                                {candidate.fullName}
-                                                            </h4>
+                                                            <div className="flex items-center gap-1.5">
+                                                                <h4 className="font-bold text-[var(--color-text)] group-hover:text-[var(--color-primary)] transition-colors">
+                                                                    {candidate.fullName}
+                                                                </h4>
+                                                                {candidate.isPcd && (
+                                                                    <span className="p-0.5 rounded-full bg-green-100 text-green-600" title={`PCD: ${candidate.pcdType || 'Não informado'}`}>
+                                                                        <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24"><path d="M11 2c0-1.103.897-2 2-2s2 .897 2 2-.897 2-2 2-2-.897-2-2zm2 4.143c.96.262 1.767 1.01 2 1.857h-4c.233-.847 1.04-1.595 2-1.857zm5 6.857h-3v-3c0-.552-.448-1-1-1h-2c-.552 0-1 .448-1 1v3h-3c-.552 0-1 .448-1 1s.448 1 1 1h3v3c0 .552.448 1 1 1h2c.552 0 1-.448 1-1v-3h3c.552 0 1-.448 1-1s-.448-1-1-1zm-4-10c0-1.657-1.343-3-3-3s-3 1.343-3 3 1.343 3 3 3 3-1.343 3-3zm2 4.143c-.456-1.554-1.884-2.143-3-2.143s-2.544.589-3 2.143l-4.223 14.857h3l.857-3h6.732l.857 3h3l-4.223-14.857z" /></svg>
+                                                                    </span>
+                                                                )}
+                                                            </div>
                                                             <p className="text-xs text-[var(--color-text-secondary)] truncate w-40">
                                                                 {candidate.email}
                                                             </p>
@@ -1341,7 +1367,7 @@ export default function TalentPoolPage() {
                                         className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
                                     />
                                 </div>
-                                <div className="flex items-end">
+                                <div className="flex flex-col gap-4">
                                     <label className="flex items-center gap-2">
                                         <input
                                             type="checkbox"
@@ -1350,6 +1376,18 @@ export default function TalentPoolPage() {
                                             className="w-4 h-4 rounded border-gray-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
                                         />
                                         <span className="text-sm text-[var(--color-text)]">Ocultar salário na vaga pública</span>
+                                    </label>
+                                    <label className="flex items-center gap-2">
+                                        <input
+                                            type="checkbox"
+                                            checked={vacancyForm.isExclusivePcd}
+                                            onChange={(e) => setVacancyForm({ ...vacancyForm, isExclusivePcd: e.target.checked })}
+                                            className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                                        />
+                                        <span className="text-sm font-medium text-green-700 flex items-center gap-1.5">
+                                            <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M11 2c0-1.103.897-2 2-2s2 .897 2 2-.897 2-2 2-2-.897-2-2zm2 4.143c.96.262 1.767 1.01 2 1.857h-4c.233-.847 1.04-1.595 2-1.857zm5 6.857h-3v-3c0-.552-.448-1-1-1h-2c-.552 0-1 .448-1 1v3h-3c-.552 0-1 .448-1 1s.448 1 1 1h3v3c0 .552.448 1 1 1h2c.552 0 1-.448 1-1v-3h3c.552 0 1-.448 1-1s-.448-1-1-1zm-4-10c0-1.657-1.343-3-3-3s-3 1.343-3 3 1.343 3 3 3 3-1.343 3-3zm2 4.143c-.456-1.554-1.884-2.143-3-2.143s-2.544.589-3 2.143l-4.223 14.857h3l.857-3h6.732l.857 3h3l-4.223-14.857z" /></svg>
+                                            Vaga exclusiva para PCD
+                                        </span>
                                     </label>
                                 </div>
                             </div>
@@ -1477,6 +1515,12 @@ export default function TalentPoolPage() {
                                         <span className="text-sm text-[var(--color-text-secondary)] flex items-center gap-1">
                                             <Briefcase className="w-3 h-3" /> {selectedCandidate.vacancyTitle}
                                         </span>
+                                        {selectedCandidate.isPcd && (
+                                            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-600 text-white flex items-center gap-1.5 shadow-sm">
+                                                <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24"><path d="M11 2c0-1.103.897-2 2-2s2 .897 2 2-.897 2-2 2-2-.897-2-2zm2 4.143c.96.262 1.767 1.01 2 1.857h-4c.233-.847 1.04-1.595 2-1.857zm5 6.857h-3v-3c0-.552-.448-1-1-1h-2c-.552 0-1 .448-1 1v3h-3c-.552 0-1 .448-1 1s.448 1 1 1h3v3c0 .552.448 1 1 1h2c.552 0 1-.448 1-1v-3h3c.552 0 1-.448 1-1s-.448-1-1-1zm-4-10c0-1.657-1.343-3-3-3s-3 1.343-3 3 1.343 3 3 3 3-1.343 3-3zm2 4.143c-.456-1.554-1.884-2.143-3-2.143s-2.544.589-3 2.143l-4.223 14.857h3l.857-3h6.732l.857 3h3l-4.223-14.857z" /></svg>
+                                                PCD: {selectedCandidate.pcdType || 'Sim'}
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                             </div>

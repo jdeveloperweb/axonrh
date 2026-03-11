@@ -135,6 +135,13 @@ public class TalentCandidate {
     @Column(name = "last_status_change")
     private LocalDateTime lastStatusChange;
 
+    @Column(name = "is_pcd")
+    @Builder.Default
+    private Boolean isPcd = false;
+
+    @Column(name = "pcd_type", length = 200)
+    private String pcdType;
+
     @Column(name = "is_active")
     @Builder.Default
     private Boolean isActive = true;

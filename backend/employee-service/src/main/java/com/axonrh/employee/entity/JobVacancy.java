@@ -109,6 +109,10 @@ public class JobVacancy {
     @Builder.Default
     private Boolean aiAnalysisEnabled = true;
 
+    @Column(name = "is_exclusive_pcd")
+    @Builder.Default
+    private Boolean isExclusivePcd = false;
+
     @Column(name = "is_active")
     @Builder.Default
     private Boolean isActive = true;

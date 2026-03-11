@@ -73,4 +73,7 @@ public class JobVacancyRequest {
 
     @Schema(description = "Habilitar análise por IA", example = "true")
     private Boolean aiAnalysisEnabled;
+
+    @Schema(description = "Vaga exclusiva para PCD")
+    private Boolean isExclusivePcd;
 }

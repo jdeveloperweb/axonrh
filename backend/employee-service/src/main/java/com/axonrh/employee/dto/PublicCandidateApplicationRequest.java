@@ -51,4 +51,10 @@ public class PublicCandidateApplicationRequest {
 
     @Schema(description = "Consentimento LGPD")
     private Boolean lgpdConsent;
+
+    @Schema(description = "Informa se o candidato é PCD")
+    private Boolean isPcd;
+
+    @Schema(description = "Tipo de deficiência")
+    private String pcdType;
 }

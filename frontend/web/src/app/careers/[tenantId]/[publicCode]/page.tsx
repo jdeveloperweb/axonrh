@@ -51,6 +51,8 @@ export default function VacancyDetailPage() {
         linkedinUrl: 'https://linkedin.com/in/',
         portfolioUrl: '',
         lgpdConsent: false,
+        isPcd: false,
+        pcdType: '',
     });
 
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -305,9 +307,17 @@ export default function VacancyDetailPage() {
                                             </span>
                                         )}
                                     </div>
-                                    <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4 tracking-tight leading-tight">
-                                        {vacancy.title}
-                                    </h1>
+                                    <div className="flex items-center gap-4 mb-4">
+                                        <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight leading-tight">
+                                            {vacancy.title}
+                                        </h1>
+                                        {vacancy.isExclusivePcd && (
+                                            <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-green-100 text-green-700 border border-green-200 flex items-center gap-1.5 shadow-sm">
+                                                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                                                Vaga Exclusiva PCD
+                                            </span>
+                                        )}
+                                    </div>
                                     <div className="flex flex-wrap items-center gap-y-3 gap-x-6 text-sm text-gray-500 font-medium">
                                         {vacancy.departmentName && (
                                             <span className="flex items-center gap-2 leading-none bg-gray-50 px-3 py-1.5 rounded-lg">
@@ -604,6 +614,48 @@ export default function VacancyDetailPage() {
                                     </div>
                                     {formErrors.lgpdConsent && (
                                         <p className="mt-1 text-xs text-red-600 font-bold ml-8">{formErrors.lgpdConsent}</p>
+                                    )}
+                                </div>
+
+                                <div className="p-6 bg-blue-50/50 rounded-[2rem] border border-blue-100/50">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-blue-100 rounded-xl text-blue-600">
+                                                <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M11 2c0-1.103.897-2 2-2s2 .897 2 2-.897 2-2 2-2-.897-2-2zm2 4.143c.96.262 1.767 1.01 2 1.857h-4c.233-.847 1.04-1.595 2-1.857zm5 6.857h-3v-3c0-.552-.448-1-1-1h-2c-.552 0-1 .448-1 1v3h-3c-.552 0-1 .448-1 1s.448 1 1 1h3v3c0 .552.448 1 1 1h2c.552 0 1-.448 1-1v-3h3c.552 0 1-.448 1-1s-.448-1-1-1zm-4-10c0-1.657-1.343-3-3-3s-3 1.343-3 3 1.343 3 3 3 3-1.343 3-3zm2 4.143c-.456-1.554-1.884-2.143-3-2.143s-2.544.589-3 2.143l-4.223 14.857h3l.857-3h6.732l.857 3h3l-4.223-14.857z" /></svg>
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-gray-900 leading-none">Sou Pessoa com Deficiência</h4>
+                                                <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-wider">Ações afirmativas e inclusão</p>
+                                            </div>
+                                        </div>
+                                        <label className="relative inline-flex items-center cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                className="sr-only peer"
+                                                checked={formData.isPcd}
+                                                onChange={e => setFormData({ ...formData, isPcd: e.target.checked })}
+                                            />
+                                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                        </label>
+                                    </div>
+
+                                    {formData.isPcd && (
+                                        <div className="animate-in slide-in-from-top-2 duration-300 mt-4">
+                                            <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2 ml-1">Tipo de Deficiência</label>
+                                            <select
+                                                className="w-full px-5 py-4 bg-white rounded-2xl border-none focus:ring-2 focus:ring-blue-500/20 shadow-sm transition-all text-gray-700 font-medium"
+                                                value={formData.pcdType}
+                                                onChange={e => setFormData({ ...formData, pcdType: e.target.value })}
+                                            >
+                                                <option value="">Selecione o tipo...</option>
+                                                <option value="FISICA">Física</option>
+                                                <option value="AUDITIVA">Auditiva</option>
+                                                <option value="VISUAL">Visual</option>
+                                                <option value="INTELECTUAL">Intelectual</option>
+                                                <option value="MULTIPLA">Múltipla</option>
+                                                <option value="OUTRA">Outra</option>
+                                            </select>
+                                        </div>
                                     )}
                                 </div>
 

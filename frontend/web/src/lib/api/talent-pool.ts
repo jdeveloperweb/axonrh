@@ -38,6 +38,7 @@ export interface JobVacancy {
     candidateCount?: number;
     isActive: boolean;
     aiAnalysisEnabled?: boolean;
+    isExclusivePcd?: boolean;
     createdAt?: string;
     updatedAt?: string;
 }
@@ -59,6 +60,7 @@ export interface CreateVacancyData {
     maxCandidates?: number;
     deadline?: string;
     aiAnalysisEnabled?: boolean;
+    isExclusivePcd?: boolean;
 }
 
 export interface TalentCandidate {
@@ -96,6 +98,8 @@ export interface TalentCandidate {
     isActive: boolean;
     lgpdConsent?: boolean;
     lgpdConsentDate?: string;
+    isPcd?: boolean;
+    pcdType?: string;
     createdAt?: string;
     updatedAt?: string;
 }
@@ -112,6 +116,8 @@ export interface CreateCandidateData {
     source?: CandidateSource;
     referralName?: string;
     lgpdConsent?: boolean;
+    isPcd?: boolean;
+    pcdType?: string;
 }
 
 export interface CandidateStatusUpdate {
@@ -139,6 +145,7 @@ export interface PublicVacancy {
     publishedAt?: string;
     companyName?: string;
     companyLogo?: string;
+    isExclusivePcd?: boolean;
 }
 
 export interface PublicApplicationData {
@@ -150,6 +157,8 @@ export interface PublicApplicationData {
     linkedinUrl?: string;
     portfolioUrl?: string;
     lgpdConsent: boolean;
+    isPcd?: boolean;
+    pcdType?: string;
 }
 
 export interface TalentPoolStats {

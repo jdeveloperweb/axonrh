@@ -37,6 +37,7 @@ public class JobVacancyMapper {
                 .deadline(request.getDeadline())
                 .status(VacancyStatus.DRAFT)
                 .aiAnalysisEnabled(request.getAiAnalysisEnabled() != null ? request.getAiAnalysisEnabled() : true)
+                .isExclusivePcd(request.getIsExclusivePcd() != null ? request.getIsExclusivePcd() : false)
                 .isActive(true)
                 .build();
     }
@@ -67,6 +68,9 @@ public class JobVacancyMapper {
         }
         if (request.getAiAnalysisEnabled() != null) {
             vacancy.setAiAnalysisEnabled(request.getAiAnalysisEnabled());
+        }
+        if (request.getIsExclusivePcd() != null) {
+            vacancy.setIsExclusivePcd(request.getIsExclusivePcd());
         }
         vacancy.setDeadline(request.getDeadline());
     }
@@ -103,6 +107,7 @@ public class JobVacancyMapper {
                 .candidateCount(0)
                 .isActive(vacancy.getIsActive())
                 .aiAnalysisEnabled(vacancy.getAiAnalysisEnabled())
+                .isExclusivePcd(vacancy.getIsExclusivePcd())
                 .createdAt(vacancy.getCreatedAt())
                 .updatedAt(vacancy.getUpdatedAt())
                 .build();
@@ -129,7 +134,8 @@ public class JobVacancyMapper {
                 .deadline(vacancy.getDeadline())
                 .publishedAt(vacancy.getPublishedAt())
                 .companyName(companyName)
-                .companyLogo(companyLogo);
+                .companyLogo(companyLogo)
+                .isExclusivePcd(vacancy.getIsExclusivePcd());
 
         // Só inclui salário se não estiver oculto
         if (vacancy.getHideSalary() == null || !vacancy.getHideSalary()) {
