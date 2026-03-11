@@ -166,6 +166,19 @@ public class AuthService {
         log.info("Logout: {} refresh tokens revoked for user {}", revokedCount, userId);
     }
 
+    /**
+     * Retorna as informacoes do usuario pelo ID.
+     */
+    @Transactional(readOnly = true)
+    public LoginResponse.UserInfo getUserInfo(String userId) {
+        User user = userRepository.findById(UUID.fromString(userId))
+                .orElseThrow(() -> new AuthenticationException("Usuario nao encontrado"));
+        
+        UUID employeeId = userRepository.findEmployeeIdByUserId(user.getId()).orElse(null);
+        
+        return buildUserInfo(user, employeeId);
+    }
+
     // === Metodos auxiliares ===
 
     private String createRefreshToken(User user, String ipAddress, String userAgent) {
@@ -212,6 +225,16 @@ public class AuthService {
     }
 
     private LoginResponse buildLoginResponse(User user, UUID employeeId, String accessToken, String refreshToken) {
+        return LoginResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .tokenType("Bearer")
+                .expiresIn(jwtService.getAccessTokenExpirationSeconds())
+                .user(buildUserInfo(user, employeeId))
+                .build();
+    }
+
+    private LoginResponse.UserInfo buildUserInfo(User user, UUID employeeId) {
         List<String> roles = user.getRoles().stream()
                 .map(role -> role.getName())
                 .toList();
@@ -222,22 +245,16 @@ public class AuthService {
                 .distinct()
                 .toList();
 
-        return LoginResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .tokenType("Bearer")
-                .expiresIn(jwtService.getAccessTokenExpirationSeconds())
-                .user(LoginResponse.UserInfo.builder()
-                        .id(user.getId())
-                        .name(user.getName())
-                        .email(user.getEmail())
-                        .avatarUrl(user.getAvatarUrl())
-                        .tenantId(user.getTenantId())
-                        .roles(roles)
-                        .permissions(permissions)
-                        .twoFactorEnabled(user.isTwoFactorEnabled())
-                        .employeeId(employeeId)
-                        .build())
+        return LoginResponse.UserInfo.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .avatarUrl(user.getAvatarUrl())
+                .tenantId(user.getTenantId())
+                .roles(roles)
+                .permissions(permissions)
+                .twoFactorEnabled(user.isTwoFactorEnabled())
+                .employeeId(employeeId)
                 .build();
     }
 }

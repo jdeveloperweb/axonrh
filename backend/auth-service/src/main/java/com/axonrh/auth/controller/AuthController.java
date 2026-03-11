@@ -61,17 +61,9 @@ public class AuthController {
 
     @GetMapping("/me")
     @Operation(summary = "Obter usuario atual", description = "Retorna informacoes do usuario autenticado")
-    public ResponseEntity<String> getCurrentUser(
-            @RequestHeader("X-User-Id") String userId,
-            @RequestHeader("X-User-Email") String email,
-            @RequestHeader("X-Tenant-Id") String tenantId) {
-
-        // Este endpoint e util para verificar se o token e valido
-        // e obter os dados do usuario injetados pelo Gateway
-        return ResponseEntity.ok(String.format(
-                "{\"userId\": \"%s\", \"email\": \"%s\", \"tenantId\": \"%s\"}",
-                userId, email, tenantId
-        ));
+    public ResponseEntity<LoginResponse.UserInfo> getCurrentUser(
+            @RequestHeader("X-User-Id") String userId) {
+        return ResponseEntity.ok(authService.getUserInfo(userId));
     }
 
     private String getClientIp(HttpServletRequest request) {

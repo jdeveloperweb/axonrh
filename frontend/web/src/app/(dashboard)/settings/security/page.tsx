@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ShieldCheck, ShieldAlert, ArrowLeft, Loader2, CheckCircle2, QrCode, Lock } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, ArrowLeft, Loader2, CheckCircle2, QrCode, Lock, Smartphone } from 'lucide-react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useAuthStore } from '@/stores/auth-store';
@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { QRCodeSVG } from 'qrcode.react';
 
 export default function SecuritySettingsPage() {
-    const { user, logout } = useAuthStore();
+    const { user, setUser, logout } = useAuthStore();
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
     const [mfaSetup, setMfaSetup] = useState<{ secret: string; qrCodeUrl: string } | null>(null);
@@ -39,13 +39,11 @@ export default function SecuritySettingsPage() {
 
         try {
             setLoading(true);
-            await authApi.confirm2FA(mfaSetup.secret, verifyCode);
-            toast({
-                title: 'Sucesso',
-                description: 'MFA ativado com sucesso! Você precisará usá-lo no próximo login.',
-            });
-            // logout(); // Opcional: forçar login novamente
-            window.location.reload(); // Para atualizar o estado do user
+            const updatedUser = await authApi.me();
+            setUser(updatedUser);
+            setIsPendingVerification(false);
+            setMfaSetup(null);
+            setVerifyCode('');
         } catch (error) {
             toast({
                 title: 'Erro',
@@ -62,12 +60,9 @@ export default function SecuritySettingsPage() {
 
         try {
             setLoading(true);
-            await authApi.disable2FA(verifyCode);
-            toast({
-                title: 'Sucesso',
-                description: 'MFA desativado com sucesso.',
-            });
-            window.location.reload();
+            const updatedUser = await authApi.me();
+            setUser(updatedUser);
+            setVerifyCode('');
         } catch (error) {
             toast({
                 title: 'Erro',
@@ -171,34 +166,65 @@ export default function SecuritySettingsPage() {
                     )}
 
                     {user?.twoFactorEnabled && (
-                        <div className="space-y-6">
-                            <div className="flex items-center gap-4 p-4 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-100">
-                                <CheckCircle2 className="w-5 h-5" />
-                                <span className="text-sm font-medium">MFA está ATIVADO na sua conta.</span>
+                        <div className="space-y-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="p-6 bg-emerald-50/50 rounded-2xl border border-emerald-100 flex items-start gap-4">
+                                    <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+                                        <Smartphone className="w-5 h-5" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <h4 className="font-bold text-[var(--color-text-primary)]">Aplicativo Autenticador</h4>
+                                        <p className="text-sm text-[var(--color-text-secondary)]">Google Authenticator, Authy, etc.</p>
+                                        <div className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800 mt-2">
+                                            Em uso
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="p-6 bg-slate-50 border border-slate-100 rounded-2xl flex items-start gap-4 opacity-60">
+                                    <div className="w-10 h-10 rounded-xl bg-slate-200 flex items-center justify-center text-slate-500 shrink-0">
+                                        <CheckCircle2 className="w-5 h-5" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <h4 className="font-bold text-[var(--color-text-primary)]">Verificação de Dispositivo</h4>
+                                        <p className="text-sm text-[var(--color-text-secondary)]">Sessões atuais verificadas</p>
+                                        <div className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-200 text-slate-600 mt-2">
+                                            Automático
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div className="space-y-4">
-                                <h4 className="font-bold text-sm text-red-600 flex items-center gap-2">
-                                    <ShieldAlert className="w-4 h-4" />
-                                    Zona de Perigo
-                                </h4>
+                            <div className="p-6 bg-slate-50/50 rounded-2xl border border-[var(--color-border)] space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <h4 className="font-bold text-sm text-[var(--color-text-primary)] flex items-center gap-2">
+                                        <ShieldAlert className="w-4 h-4 text-slate-400" />
+                                        Opções de Segurança
+                                    </h4>
+                                </div>
+
                                 <p className="text-xs text-[var(--color-text-secondary)]">
-                                    Ao desativar o MFA, sua conta ficará menos protegida. Você precisará de um código atual para realizar esta ação.
+                                    Para desativar a autenticação de dois fatores, insira um código válido gerado pelo seu aplicativo.
                                 </p>
-                                <div className="flex flex-col sm:flex-row gap-2">
-                                    <input
-                                        type="text"
-                                        placeholder="Código de 6 dígitos"
-                                        className="input max-w-[200px]"
-                                        value={verifyCode}
-                                        onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                                        maxLength={6}
-                                    />
+
+                                <div className="flex flex-col sm:flex-row gap-3">
+                                    <div className="relative max-w-[200px]">
+                                        <input
+                                            type="text"
+                                            placeholder="Código"
+                                            className="input pr-10"
+                                            value={verifyCode}
+                                            onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                            maxLength={6}
+                                        />
+                                        <Lock className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-300" />
+                                    </div>
                                     <button
                                         onClick={handleDisableMfa}
                                         disabled={loading || verifyCode.length !== 6}
-                                        className="btn-outline text-red-600 hover:bg-red-50 border-red-200"
+                                        className="btn-outline border-red-200 text-red-600 hover:bg-red-50 px-6"
                                     >
+                                        {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                                         Desativar MFA
                                     </button>
                                 </div>

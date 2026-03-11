@@ -118,12 +118,22 @@ export default function SettingsHubPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredItems.map((item) => {
                     const Icon = item.icon;
+                    const isMfaActive = item.title === 'Segurança da Conta' && user?.twoFactorEnabled;
+
                     return (
                         <Card
                             key={item.href}
-                            className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-none bg-[var(--color-surface)]"
+                            className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-none bg-[var(--color-surface)] relative overflow-hidden"
                             onClick={() => router.push(item.href)}
                         >
+                            {isMfaActive && (
+                                <div className="absolute top-0 right-0 p-2">
+                                    <div className="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-bl-lg flex items-center gap-1 shadow-sm">
+                                        <ShieldCheck className="w-3 h-3" />
+                                        MFA ATIVO
+                                    </div>
+                                </div>
+                            )}
                             <CardContent className="p-6">
                                 <div className="flex flex-col h-full">
                                     <div className={`w-12 h-12 ${item.color} rounded-2xl flex items-center justify-center text-white mb-4 shadow-lg group-hover:scale-110 transition-transform`}>
@@ -132,7 +142,7 @@ export default function SettingsHubPage() {
                                     <h3 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">{item.title}</h3>
                                     <p className="text-[var(--color-text-secondary)] text-sm flex-1">{item.description}</p>
                                     <div className="mt-6 flex items-center text-[var(--color-primary)] font-semibold text-sm">
-                                        Configurar <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                                        {isMfaActive ? 'Gerenciar' : 'Configurar'} <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                                     </div>
                                 </div>
                             </CardContent>
