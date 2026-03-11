@@ -47,9 +47,9 @@ export default function DataLoadPage() {
             // Note: In our architecture, we might need to route through the gateway or specific service URL
             // Assuming typical API structure
 
-            const response = await api.get(endpoint, { responseType: 'blob' });
+            const blob = await api.get(endpoint, { responseType: 'blob' });
 
-            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const url = window.URL.createObjectURL(blob as any);
             const link = document.createElement('a');
             link.href = url;
             link.setAttribute('download', `template_${type === 'employees' ? 'colaboradores' : 'folha'}.xlsx`);
@@ -75,18 +75,18 @@ export default function DataLoadPage() {
 
         try {
             const endpoint = type === 'employees' ? '/import/employees' : '/import/payroll';
-            const response = await api.post(endpoint, formData, {
+            const data = await api.post(endpoint, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
-            });
+            }) as ImportResult;
 
-            setResults(prev => ({ ...prev, [type]: response.data }));
+            setResults(prev => ({ ...prev, [type]: data }));
 
-            if (response.data.errorCount === 0) {
-                toast.success(`${response.data.successCount} registros importados com sucesso!`);
-            } else if (response.data.successCount > 0) {
-                toast.success(`${response.data.successCount} importados, mas houve ${response.data.errorCount} erros.`);
+            if (data.errorCount === 0) {
+                toast.success(`${data.successCount} registros importados com sucesso!`);
+            } else if (data.successCount > 0) {
+                toast.success(`${data.successCount} importados, mas houve ${data.errorCount} erros.`);
             } else {
-                toast.error(`Falha na importação. ${response.data.errorCount} erros encontrados.`);
+                toast.error(`Falha na importação. ${data.errorCount} erros encontrados.`);
             }
         } catch (error) {
             console.error('Error uploading file:', error);
