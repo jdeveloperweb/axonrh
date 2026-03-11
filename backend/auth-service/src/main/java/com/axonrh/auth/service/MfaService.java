@@ -2,6 +2,7 @@ package com.axonrh.auth.service;
 
 import com.axonrh.auth.dto.MfaSetupResponse;
 import com.axonrh.auth.entity.User;
+import com.axonrh.auth.exception.AuthenticationException;
 import com.axonrh.auth.repository.UserRepository;
 import dev.samstevens.totp.code.CodeVerifier;
 import dev.samstevens.totp.exceptions.QrGenerationException;
@@ -39,7 +40,7 @@ public class MfaService {
      */
     public MfaSetupResponse setupMfa(UUID userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new AuthenticationException("Usuário não encontrado"));
 
         String secret = secretGenerator.generate();
 
@@ -63,11 +64,11 @@ public class MfaService {
     @Transactional
     public void enableMfa(UUID userId, String secret, String code) {
         if (!codeVerifier.isValidCode(secret, code)) {
-            throw new RuntimeException("Código inválido");
+            throw new AuthenticationException("Código inválido");
         }
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new AuthenticationException("Usuário não encontrado"));
 
         user.setTwoFactorSecret(secret);
         user.setTwoFactorEnabled(true);
@@ -82,14 +83,14 @@ public class MfaService {
     @Transactional
     public void disableMfa(UUID userId, String code) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new AuthenticationException("Usuário não encontrado"));
 
         if (!user.isTwoFactorEnabled()) {
-            throw new RuntimeException("MFA não está ativado");
+            throw new AuthenticationException("MFA não está ativado");
         }
 
         if (!codeVerifier.isValidCode(user.getTwoFactorSecret(), code)) {
-            throw new RuntimeException("Código inválido");
+            throw new AuthenticationException("Código inválido");
         }
 
         user.setTwoFactorEnabled(false);
@@ -154,23 +155,23 @@ public class MfaService {
     @Transactional
     public User completeMandatorySetup(String setupToken, String code) {
         User user = userRepository.findByTwoFactorSetupToken(setupToken)
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new AuthenticationException(
                         "Token de configuração inválido. Faça login novamente."));
 
         if (user.getTwoFactorSetupTokenExpiresAt() == null
                 || LocalDateTime.now().isAfter(user.getTwoFactorSetupTokenExpiresAt())) {
             clearSetupToken(user);
-            throw new RuntimeException(
+            throw new AuthenticationException(
                     "Token de configuração expirado. Faça login novamente.");
         }
 
         if (user.getTwoFactorPendingSecret() == null) {
-            throw new RuntimeException(
+            throw new AuthenticationException(
                     "Nenhuma configuração de MFA pendente. Faça login novamente.");
         }
 
         if (!codeVerifier.isValidCode(user.getTwoFactorPendingSecret(), code)) {
-            throw new RuntimeException(
+            throw new AuthenticationException(
                     "Código inválido. Verifique o código no seu aplicativo autenticador.");
         }
 
@@ -190,18 +191,18 @@ public class MfaService {
     @Transactional
     public void resendSetupEmail(String setupToken) {
         User user = userRepository.findByTwoFactorSetupToken(setupToken)
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new AuthenticationException(
                         "Token de configuração inválido. Faça login novamente."));
 
         if (user.getTwoFactorSetupTokenExpiresAt() == null
                 || LocalDateTime.now().isAfter(user.getTwoFactorSetupTokenExpiresAt())) {
             clearSetupToken(user);
-            throw new RuntimeException(
+            throw new AuthenticationException(
                     "Token expirado. Faça login novamente para receber um novo email.");
         }
 
         if (user.getTwoFactorPendingSecret() == null) {
-            throw new RuntimeException("Nenhuma configuração pendente encontrada.");
+            throw new AuthenticationException("Nenhuma configuração pendente encontrada.");
         }
 
         String qrCodeBase64 = generateQrCodeBase64(user.getEmail(), user.getTwoFactorPendingSecret());

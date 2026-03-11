@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Shield, Mail, Loader2, AlertCircle, RefreshCw, CheckCircle2 } from "lucide-react";
+import { Shield, Mail, Loader2, AlertCircle, RefreshCw, CheckCircle2, X } from "lucide-react";
 import { authApi, type LoginResponse } from "@/lib/api/auth";
 import { useAuthStore } from "@/stores/auth-store";
 
@@ -9,12 +9,14 @@ interface MfaSetupRequiredModalProps {
   setupToken: string;
   maskedEmail: string;
   onSuccess: (response: LoginResponse) => void;
+  onClose: () => void;
 }
 
 export default function MfaSetupRequiredModal({
   setupToken,
   maskedEmail,
   onSuccess,
+  onClose,
 }: MfaSetupRequiredModalProps) {
   const [digits, setDigits] = useState(["", "", "", "", "", ""]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -102,7 +104,7 @@ export default function MfaSetupRequiredModal({
   const primaryRgba = "rgba(0,0,0,0.06)"; // generic soft tint — avoids color-mix()
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 backdrop-blur-sm px-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 backdrop-blur-sm px-4" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <style>{`
         @keyframes mfaUp {
           from { opacity: 0; transform: translateY(20px) scale(0.98); }
