@@ -139,12 +139,26 @@ export default function LoginClient() {
     setIsLoading(true);
     clearError();
 
+    // Se o campo 2FA já está aparecendo e o usuário não digitou nada, avisar
+    if (show2FA && (!data.totpCode || data.totpCode.length < 6)) {
+      setIsLoading(false);
+      // Podemos usar o setAuthError (ou similar) da store se quisermos mostrar no mesmo lugar
+      useAuthStore.setState({ error: "Digite o código de 6 dígitos do seu autenticador" });
+      return;
+    }
+
     try {
-      await login({
+      const response = await login({
         email: data.email,
         password: data.password,
         totpCode: data.totpCode || undefined,
       });
+
+      if (response.mfaRequired) {
+        setShow2FA(true);
+        setTimeout(() => setFocus("totpCode"), 100);
+        return;
+      }
 
       const setupTenantId = localStorage.getItem('setup_tenant_id');
       if (setupTenantId) {
@@ -153,14 +167,7 @@ export default function LoginClient() {
         router.replace("/dashboard");
       }
     } catch (error) {
-
-      const message = error instanceof Error ? error.message : "";
-
-      // Verifica se precisa de 2FA
-      if (message.includes("2FA")) {
-        setShow2FA(true);
-        setFocus("totpCode");
-      }
+      // Erros de credenciais ou código inválido caem aqui
     } finally {
       setIsLoading(false);
     }

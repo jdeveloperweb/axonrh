@@ -26,6 +26,7 @@ export interface LoginResponse {
   tokenType: string;
   expiresIn: number;
   user: User;
+  mfaRequired?: boolean;
 }
 
 export interface RefreshResponse {

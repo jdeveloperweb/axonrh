@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { authApi, type LoginRequest, type User } from '@/lib/api/auth';
+import { authApi, type LoginRequest, type User, type LoginResponse } from '@/lib/api/auth';
 
 interface AuthState {
   user: User | null;
@@ -11,7 +11,7 @@ interface AuthState {
   error: string | null;
 
   // Actions
-  login: (credentials: LoginRequest) => Promise<void>;
+  login: (credentials: LoginRequest) => Promise<LoginResponse>;
   logout: () => Promise<void>;
   refreshAccessToken: () => Promise<boolean>;
   clearError: () => void;
@@ -35,6 +35,11 @@ export const useAuthStore = create<AuthState>()(
         try {
           const response = await authApi.login(credentials);
 
+          if (response.mfaRequired) {
+            set({ isLoading: false });
+            return response;
+          }
+
           set({
             user: response.user,
             accessToken: response.accessToken,
@@ -51,6 +56,8 @@ export const useAuthStore = create<AuthState>()(
           // Carrega o branding do tenant após login
           const { useThemeStore } = await import('./theme-store');
           await useThemeStore.getState().fetchBranding();
+
+          return response;
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Erro ao fazer login';
           set({

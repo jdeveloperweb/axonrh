@@ -22,6 +22,7 @@ public class LoginResponse {
     private String tokenType;
     private long expiresIn; // segundos
     private UserInfo user;
+    private boolean mfaRequired;
 
     @Data
     @Builder

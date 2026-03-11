@@ -93,7 +93,14 @@ public class AuthService {
         // Verifica 2FA se ativado
         if (user.isTwoFactorEnabled()) {
             if (request.getTotpCode() == null || request.getTotpCode().isBlank()) {
-                throw new AuthenticationException("Codigo 2FA obrigatorio", "2FA_REQUIRED");
+                log.info("MFA required for user: {}", user.getEmail());
+                return LoginResponse.builder()
+                        .mfaRequired(true)
+                        .user(LoginResponse.UserInfo.builder()
+                                .email(user.getEmail())
+                                .twoFactorEnabled(true)
+                                .build())
+                        .build();
             }
 
             if (!totpCodeVerifier.isValidCode(user.getTwoFactorSecret(), request.getTotpCode())) {
