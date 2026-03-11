@@ -13,6 +13,15 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+} from '@/components/ui/dialog';
+import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { api } from '@/lib/api/client';
 
@@ -25,11 +34,13 @@ interface ImportResult {
 export default function DataLoadPage() {
     const [loading, setLoading] = useState<string | null>(null);
     const [results, setResults] = useState<Record<string, ImportResult>>({});
+    const [showModal, setShowModal] = useState(false);
+    const [currentImportType, setCurrentImportType] = useState<'employees' | 'payroll' | null>(null);
 
     const downloadTemplate = async (type: 'employees' | 'payroll') => {
         try {
             const service = type === 'employees' ? 'employees' : 'payroll';
-            const endpoint = type === 'employees' ? '/api/v1/import/template/employees' : '/api/v1/import/template/payroll';
+            const endpoint = type === 'employees' ? '/import/template/employees' : '/import/template/payroll';
 
             // Note: In our architecture, we might need to route through the gateway or specific service URL
             // Assuming typical API structure
@@ -55,11 +66,13 @@ export default function DataLoadPage() {
         if (!file) return;
 
         setLoading(type);
+        setCurrentImportType(type);
+        setShowModal(true);
         const formData = new FormData();
         formData.append('file', file);
 
         try {
-            const endpoint = type === 'employees' ? '/api/v1/import/employees' : '/api/v1/import/payroll';
+            const endpoint = type === 'employees' ? '/import/employees' : '/import/payroll';
             const response = await api.post(endpoint, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
@@ -261,6 +274,75 @@ export default function DataLoadPage() {
                     </ul>
                 </div>
             </div>
+
+            {/* Modal de Acompanhamento e Resultado */}
+            <Dialog open={showModal} onOpenChange={(open) => !loading && setShowModal(open)}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            {loading ? (
+                                <><Loader2 className="w-5 h-5 animate-spin text-primary" /> Processando Importação</>
+                            ) : (
+                                <><CheckCircle2 className="w-5 h-5 text-emerald-500" /> Importação Concluída</>
+                            )}
+                        </DialogTitle>
+                        <DialogDescription>
+                            {loading
+                                ? "Estamos processando sua planilha. Isso pode levar alguns segundos dependendo do volume de dados."
+                                : `O processamento do arquivo de ${currentImportType === 'employees' ? 'colaboradores' : 'folha'} foi finalizado.`}
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="py-6">
+                        {loading ? (
+                            <div className="space-y-4">
+                                <Progress value={66} className="h-2" />
+                                <p className="text-center text-xs text-muted-foreground animate-pulse">
+                                    Extraindo informações e validando registros...
+                                </p>
+                            </div>
+                        ) : currentImportType && results[currentImportType] ? (
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/20 text-center">
+                                        <div className="text-2xl font-bold text-emerald-600">{results[currentImportType].successCount}</div>
+                                        <div className="text-[10px] uppercase tracking-wider font-semibold text-emerald-600/70">Sucesso</div>
+                                    </div>
+                                    <div className={`p-3 rounded-lg ${results[currentImportType].errorCount > 0 ? 'bg-red-50 dark:bg-red-900/10 border-red-100' : 'bg-gray-50 dark:bg-gray-900/10 border-gray-100'} border text-center`}>
+                                        <div className={`text-2xl font-bold ${results[currentImportType].errorCount > 0 ? 'text-red-600' : 'text-gray-400'}`}>{results[currentImportType].errorCount}</div>
+                                        <div className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Erros</div>
+                                    </div>
+                                </div>
+
+                                {results[currentImportType].errors.length > 0 && (
+                                    <div className="space-y-2">
+                                        <h5 className="text-sm font-semibold flex items-center gap-1">
+                                            <AlertCircle className="w-4 h-4 text-red-500" /> Detalhes dos Erros
+                                        </h5>
+                                        <div className="max-h-40 overflow-y-auto rounded-md border border-gray-100 p-2 bg-gray-50/50">
+                                            <ul className="text-xs space-y-1">
+                                                {results[currentImportType].errors.map((err, i) => (
+                                                    <li key={i} className="text-red-600/80">• {err}</li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ) : null}
+                    </div>
+
+                    <DialogFooter>
+                        <Button
+                            disabled={loading !== null}
+                            onClick={() => setShowModal(false)}
+                            className="w-full"
+                        >
+                            {loading ? "Aguarde..." : "Fechar"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

@@ -21,4 +21,7 @@ public interface EmployeeServiceClient {
 
     @GetMapping("/api/v1/employees/registration/{registrationNumber}")
     EmployeeDTO getEmployeeByRegistration(@PathVariable("registrationNumber") String registrationNumber);
+
+    @GetMapping("/api/v1/employees/cpf/{cpf}")
+    EmployeeDTO getEmployeeByCpf(@PathVariable("cpf") String cpf);
 }

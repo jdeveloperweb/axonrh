@@ -535,63 +535,6 @@ export default function WellbeingPage() {
                                     );
                                 })}
 
-                                {/* Pulse rings */}
-                                <circle cx="260" cy="220" r="55" fill="none" stroke="rgba(96,165,250,0.08)" strokeWidth="1">
-                                    <animate attributeName="r" values="52;78;52" dur="4s" repeatCount="indefinite" />
-                                    <animate attributeName="opacity" values="0.6;0;0.6" dur="4s" repeatCount="indefinite" />
-                                </circle>
-                                <circle cx="260" cy="220" r="55" fill="none" stroke="rgba(96,165,250,0.05)" strokeWidth="1">
-                                    <animate attributeName="r" values="52;78;52" dur="4s" begin="2s" repeatCount="indefinite" />
-                                    <animate attributeName="opacity" values="0.5;0;0.5" dur="4s" begin="2s" repeatCount="indefinite" />
-                                </circle>
-
-                                {/* Center bg */}
-                                <circle cx="260" cy="220" r="55" fill="#060e1c" stroke="rgba(255,255,255,0.07)" strokeWidth="1" />
-                                {/* Score ring track */}
-                                <circle cx="260" cy="220" r="48" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="7" />
-                                {/* Score ring fill */}
-                                {(() => {
-                                    const circumference = 2 * Math.PI * 48;
-                                    const score = statsData?.averageScore || 0;
-                                    const progress = Math.min(score / 5, 1);
-                                    const dashFill = progress * circumference;
-                                    const dashEmpty = circumference - dashFill;
-                                    const ringColor = score >= 4 ? '#10b981' : score >= 3 ? '#3b82f6' : '#ff3a6e';
-                                    return (
-                                        <circle
-                                            cx="260" cy="220" r="48"
-                                            fill="none"
-                                            stroke={ringColor}
-                                            strokeWidth="7"
-                                            strokeDasharray={`${dashFill} ${dashEmpty}`}
-                                            strokeLinecap="round"
-                                            transform="rotate(-90, 260, 220)"
-                                            style={{filter: `drop-shadow(0 0 8px ${ringColor})`}}
-                                        />
-                                    );
-                                })()}
-
-                                {/* Inner circle */}
-                                <circle cx="260" cy="220" r="39" fill="#060e1c" />
-                                {/* Score value */}
-                                <text x="256" y="217" textAnchor="end" fontSize="22" fontWeight="900" fill="white" letterSpacing="-0.5">
-                                    {statsData?.averageScore ? statsData.averageScore.toFixed(1) : '3.5'}
-                                </text>
-                                <text x="258" y="212" textAnchor="start" fontSize="9" fontWeight="700" fill="rgba(255,255,255,0.35)">/5</text>
-                                <text x="260" y="227" textAnchor="middle" fontSize="7" fontWeight="800" fill="rgba(255,255,255,0.3)" letterSpacing="2">VITALIDADE</text>
-
-                                {/* Status badge */}
-                                {(() => {
-                                    const score = statsData?.averageScore || 0;
-                                    const label = score >= 4 ? 'ALTA' : score >= 3 ? 'MÉDIA' : 'BAIXA';
-                                    const badgeColor = score >= 4 ? '#10b981' : score >= 3 ? '#3b82f6' : '#ff3a6e';
-                                    return (
-                                        <>
-                                            <rect x="238" y="231" width="44" height="12" rx="6" fill={badgeColor} fillOpacity="0.15" />
-                                            <text x="260" y="240.5" textAnchor="middle" fontSize="7" fontWeight="900" fill={badgeColor} letterSpacing="1.5">{label}</text>
-                                        </>
-                                    );
-                                })()}
 
                                 {/* Axis Labels */}
                                 {/* i=0: TOP — Saúde Mental */}

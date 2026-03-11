@@ -32,7 +32,7 @@ public class ImportService {
 
             Row headerRow = sheet.createRow(0);
             String[] columns = {
-                "Matrícula", "Mês Referência (1-12)", "Ano Referência", 
+                "CPF", "Mês Referência (1-12)", "Ano Referência", 
                 "Salário Base", "Total Proventos", "Total Descontos", "Salário Líquido"
             };
 
@@ -52,7 +52,7 @@ public class ImportService {
 
             // Exemplo
             Row exampleRow = sheet.createRow(1);
-            exampleRow.createCell(0).setCellValue("12345");
+            exampleRow.createCell(0).setCellValue("12345678901");
             exampleRow.createCell(1).setCellValue(3);
             exampleRow.createCell(2).setCellValue(2024);
             exampleRow.createCell(3).setCellValue(5000.00);
@@ -81,8 +81,11 @@ public class ImportService {
             while (rows.hasNext()) {
                 Row row = rows.next();
                 try {
-                    String registration = getCellValueAsString(row.getCell(0));
-                    if (registration == null || registration.isBlank()) continue;
+                    String cpf = getCellValueAsString(row.getCell(0));
+                    if (cpf == null || cpf.isBlank()) continue;
+                    
+                    // Normalizar CPF (remover pontos e traço se vierem)
+                    cpf = cpf.replaceAll("[^0-9]", "");
 
                     Integer month = getCellValueAsInteger(row.getCell(1));
                     Integer year = getCellValueAsInteger(row.getCell(2));
@@ -96,19 +99,20 @@ public class ImportService {
                     BigDecimal deductions = getCellValueAsBigDecimal(row.getCell(5));
                     BigDecimal net = getCellValueAsBigDecimal(row.getCell(6));
 
-                    // Buscar colaborador para obter ID e nome real
+                    // Buscar colaborador por CPF
                     EmployeeDTO employee = null;
                     try {
-                        employee = employeeClient.getEmployeeByRegistration(registration);
+                        employee = employeeClient.getEmployeeByCpf(cpf);
                     } catch (Exception e) {
-                        log.warn("Colaborador com matrícula {} não encontrado no employee-service", registration);
+                        log.warn("Colaborador com CPF {} não encontrado no employee-service", cpf);
                     }
 
                     Payroll payroll = Payroll.builder()
                             .tenantId(tenantId)
                             .employeeId(employee != null ? employee.getId() : UUID.randomUUID()) // Fallback se não achar
-                            .employeeName(employee != null ? employee.getFullName() : "Importado (" + registration + ")")
-                            .registrationNumber(registration)
+                            .employeeName(employee != null ? employee.getFullName() : "Importado (" + cpf + ")")
+                            .employeeCpf(cpf)
+                            .registrationNumber(employee != null ? employee.getRegistration() : null)
                             .referenceMonth(month)
                             .referenceYear(year)
                             .status(PayrollStatus.PROCESSED)
