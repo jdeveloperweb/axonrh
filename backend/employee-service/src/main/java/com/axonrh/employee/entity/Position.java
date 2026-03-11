@@ -32,7 +32,7 @@ public class Position {
     @Column(name = "tenant_id", nullable = false)
     private UUID tenantId;
 
-    @Column(name = "code", nullable = false, length = 20)
+    @Column(name = "code", nullable = false, length = 100)
     private String code;
 
     @Column(name = "title", nullable = false, length = 100)
@@ -53,7 +53,7 @@ public class Position {
     @Column(name = "salary_range_max", precision = 15, scale = 2)
     private BigDecimal salaryRangeMax;
 
-    @Column(name = "level", length = 20)
+    @Column(name = "level", length = 100)
     private String level;
 
     @ManyToOne(fetch = FetchType.LAZY)

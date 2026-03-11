@@ -39,7 +39,7 @@ public class Employee {
 
     // ==================== Dados Pessoais ====================
 
-    @Column(name = "registration_number", length = 20)
+    @Column(name = "registration_number", length = 50)
     private String registrationNumber;
 
     @Column(name = "cpf", nullable = false, length = 11)
@@ -91,7 +91,7 @@ public class Employee {
     @Column(name = "rg_number", length = 20)
     private String rgNumber;
 
-    @Column(name = "rg_issuer", length = 20)
+    @Column(name = "rg_issuer", length = 100)
     private String rgIssuer;
 
     @Column(name = "rg_state", length = 2)
@@ -100,7 +100,7 @@ public class Employee {
     @Column(name = "rg_issue_date")
     private LocalDate rgIssueDate;
 
-    @Column(name = "pis_pasep", length = 15)
+    @Column(name = "pis_pasep", length = 20)
     private String pisPasep;
 
     @Column(name = "ctps_number", length = 20)
@@ -115,7 +115,7 @@ public class Employee {
     @Column(name = "ctps_issue_date")
     private LocalDate ctpsIssueDate;
 
-    @Column(name = "voter_title", length = 20)
+    @Column(name = "voter_title", length = 50)
     private String voterTitle;
 
     @Column(name = "voter_zone", length = 10)

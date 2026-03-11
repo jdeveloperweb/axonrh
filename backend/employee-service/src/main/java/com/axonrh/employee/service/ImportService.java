@@ -113,7 +113,6 @@ public class ImportService {
         }
     }
 
-    @Transactional
     public Map<String, Object> importEmployees(MultipartFile file, UUID tenantId) throws IOException {
         int successCount = 0;
         int errorCount = 0;
@@ -187,11 +186,16 @@ public class ImportService {
                         throw new IllegalArgumentException("E-mail corporativo é obrigatório");
                     }
 
-                    employeeRepository.save(employee);
+                    employeeRepository.saveAndFlush(employee);
                     successCount++;
                 } catch (Exception e) {
                     errorCount++;
-                    errors.add("Erro na linha " + (row.getRowNum() + 1) + ": " + e.getMessage());
+                    String errorMessage = e.getMessage();
+                    if (e.getCause() != null && e.getCause().getMessage() != null) {
+                        errorMessage += " (" + e.getCause().getMessage() + ")";
+                    }
+                    errors.add("Erro na linha " + (row.getRowNum() + 1) + ": " + errorMessage);
+                    log.error("Erro importando colaborador na linha {}: {}", row.getRowNum() + 1, errorMessage, e);
                 }
             }
         }
@@ -296,11 +300,15 @@ public class ImportService {
     private Department findOrCreateDepartment(String name, UUID tenantId) {
         if (name == null || name.isBlank()) return null;
         String trimmedName = name.trim();
+        String code = trimmedName.toUpperCase().replaceAll("[^A-Z0-9]", "_");
+        if (code.length() > 100) code = code.substring(0, 100);
+        
+        final String finalCode = code;
         return departmentRepository.findByTenantIdAndNameIgnoreCase(tenantId, trimmedName)
                 .orElseGet(() -> departmentRepository.save(Department.builder()
                         .tenantId(tenantId)
                         .name(trimmedName)
-                        .code(trimmedName.toUpperCase().replaceAll("[^A-Z0-9]", "_"))
+                        .code(finalCode)
                         .isActive(true)
                         .build()));
     }
@@ -308,11 +316,15 @@ public class ImportService {
     private Position findOrCreatePosition(String name, UUID tenantId) {
         if (name == null || name.isBlank()) return null;
         String trimmedName = name.trim();
+        String code = trimmedName.toUpperCase().replaceAll("[^A-Z0-9]", "_");
+        if (code.length() > 100) code = code.substring(0, 100);
+
+        final String finalCode = code;
         return positionRepository.findByTenantIdAndTitleIgnoreCase(tenantId, trimmedName)
                 .orElseGet(() -> positionRepository.save(Position.builder()
                         .tenantId(tenantId)
                         .title(trimmedName)
-                        .code(trimmedName.toUpperCase().replaceAll("[^A-Z0-9]", "_"))
+                        .code(finalCode)
                         .isActive(true)
                         .build()));
     }

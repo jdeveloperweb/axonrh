@@ -33,7 +33,7 @@ public class Department {
     @Column(name = "tenant_id", nullable = false)
     private UUID tenantId;
 
-    @Column(name = "code", nullable = false, length = 20)
+    @Column(name = "code", nullable = false, length = 100)
     private String code;
 
     @Column(name = "name", nullable = false, length = 100)
