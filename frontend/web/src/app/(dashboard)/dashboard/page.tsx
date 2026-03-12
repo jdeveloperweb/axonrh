@@ -18,7 +18,12 @@ import {
   Smile,
   Meh,
   Frown,
-  Activity
+  Activity,
+  UserPlus,
+  Database,
+  Banknote,
+  Settings,
+  ArrowRight
 } from 'lucide-react';
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
@@ -78,9 +83,12 @@ const TRANSLATIONS: Record<string, string> = {
 
 const translate = (key: string) => TRANSLATIONS[key] || key;
 
+import { useRouter } from 'next/navigation';
+
 // ==================== Component ====================
 
 export default function DashboardPage() {
+  const router = useRouter();
   const { user } = useAuthStore();
   const [statsData, setStatsData] = useState<DashboardStats | null>(null);
   const [learningStats, setLearningStats] = useState<LearningStats | null>(null);
@@ -809,7 +817,7 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            {useThemeStore.getState().tenantTheme?.modules?.moduleAiAnalytics !== false && (
+            {(useThemeStore.getState().tenantTheme?.modules as any)?.moduleAiAnalytics !== false && (
               <Card className="border-none shadow-sm h-[328px] bg-white">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base font-bold flex items-center gap-2">
@@ -926,7 +934,7 @@ export default function DashboardPage() {
                                 <span className="text-sm font-black text-slate-700">{req.score}.0</span>
                               </div>
                             </div>
-                            {useThemeStore.getState().tenantTheme?.modules?.moduleAiAnalytics !== false && (
+                            {((useThemeStore.getState().tenantTheme?.modules) as any)?.moduleAiAnalytics !== false && (
                               <div className="px-4 py-3 bg-slate-50 rounded-2xl border border-slate-100/50">
                                 <p className="text-[9px] text-gray-400 uppercase font-black tracking-widest mb-1.5">Risco</p>
                                 <div className="flex items-center gap-2">
@@ -1054,9 +1062,43 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* Hub de Ações Rápidas - Premium Design */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-2">
+          {[
+            { label: 'Novo Colaborador', icon: UserPlus, href: '/employees?new=true', color: 'from-blue-500 to-indigo-600', shadow: 'shadow-blue-200' },
+            { label: 'Importar Dados', icon: Database, href: '/settings/data-load', color: 'from-emerald-500 to-teal-600', shadow: 'shadow-emerald-200' },
+            { label: 'Gerar Folha', icon: Banknote, href: '/payroll', color: 'from-amber-500 to-orange-600', shadow: 'shadow-amber-200' },
+            { label: 'Configurações', icon: Settings, href: '/settings', color: 'from-slate-600 to-slate-800', shadow: 'shadow-slate-300' },
+          ].map((action) => {
+            const Icon = action.icon;
+            return (
+              <button
+                key={action.label}
+                onClick={() => router.push(action.href)}
+                className={cn(
+                  "group relative p-4 rounded-3xl bg-gradient-to-br transition-all duration-300 hover:scale-[1.03] active:scale-95 text-left border border-white/20 shadow-lg",
+                  action.color,
+                  action.shadow
+                )}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="p-2 bg-white/20 backdrop-blur-md rounded-xl text-white">
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-white/50 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                </div>
+                <span className="text-white font-bold text-sm sm:text-base leading-tight block">
+                  {action.label}
+                </span>
+                <div className="absolute -bottom-2 -right-2 w-16 h-16 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
+              </button>
+            );
+          })}
+        </div>
+
         {/* Seletor em Posição de Destaque */}
         <div className="flex flex-col items-end gap-2">
-          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider pr-2">Modo de Visualização</span>
+          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest pr-2">Modo de Visualização</span>
           <ViewToggle />
         </div>
       </div>

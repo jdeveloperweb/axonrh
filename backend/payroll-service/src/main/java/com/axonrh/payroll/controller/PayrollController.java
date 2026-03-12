@@ -29,6 +29,7 @@ public class PayrollController {
     private final PayrollPdfService payrollPdfService;
 
     @PostMapping("/process")
+    @PreAuthorize("hasAuthority('PAYROLL:CREATE')")
     @Operation(summary = "Processar folha individual",
                description = "Calcula a folha de pagamento de um colaborador para a competencia informada")
     public ResponseEntity<PayrollResponse> processPayroll(@Valid @RequestBody PayrollRequest request) {
@@ -39,6 +40,7 @@ public class PayrollController {
     }
 
     @PostMapping("/process/batch")
+    @PreAuthorize("hasAuthority('PAYROLL:CREATE')")
     @Operation(summary = "Processar folha em lote",
                description = "Calcula a folha de pagamento para todos os colaboradores ativos ou uma lista especifica")
     public ResponseEntity<PayrollRunResponse> processBatch(@Valid @RequestBody PayrollBatchRequest request) {
@@ -49,6 +51,7 @@ public class PayrollController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('PAYROLL:READ')")
     @Operation(summary = "Buscar folha por ID",
                description = "Retorna os detalhes completos de uma folha de pagamento")
     public ResponseEntity<PayrollResponse> findById(@PathVariable UUID id) {
@@ -57,6 +60,7 @@ public class PayrollController {
     }
 
     @GetMapping("/{id}/payslip")
+    @PreAuthorize("hasAuthority('PAYROLL:READ')")
     @Operation(summary = "Gerar demonstrativo (holerite)",
                description = "Retorna o holerite completo em JSON para exibicao ou impressao")
     public ResponseEntity<PayslipResponse> generatePayslip(@PathVariable UUID id) {
@@ -66,6 +70,7 @@ public class PayrollController {
     }
 
     @GetMapping("/{id}/export/pdf")
+    @PreAuthorize("hasAuthority('PAYROLL:EXPORT')")
     @Operation(summary = "Exportar holerite em PDF",
                description = "Gera o arquivo PDF do holerite para download")
     public ResponseEntity<byte[]> exportPayslipPdf(@PathVariable UUID id) {
@@ -80,6 +85,7 @@ public class PayrollController {
     }
 
     @GetMapping("/competency")
+    @PreAuthorize("hasAuthority('PAYROLL:READ')")
     @Operation(summary = "Listar folhas por competencia",
                description = "Lista todas as folhas de uma competencia especifica com paginacao")
     public ResponseEntity<Page<PayrollResponse>> findByCompetency(
@@ -91,6 +97,7 @@ public class PayrollController {
     }
 
     @GetMapping("/employees/{employeeId}/history")
+    @PreAuthorize("hasAuthority('PAYROLL:READ')")
     @Operation(summary = "Historico de folhas do colaborador",
                description = "Retorna todas as folhas de pagamento de um colaborador ordenadas por data")
     public ResponseEntity<List<PayrollResponse>> findByEmployee(@PathVariable UUID employeeId) {
@@ -99,6 +106,7 @@ public class PayrollController {
     }
 
     @PostMapping("/close")
+    @PreAuthorize("hasAuthority('PAYROLL:APPROVE')")
     @Operation(summary = "Fechar competencia",
                description = "Fecha uma competencia impedindo qualquer alteracao nas folhas")
     public ResponseEntity<PayrollRunResponse> closeCompetency(
@@ -111,6 +119,7 @@ public class PayrollController {
     }
 
     @GetMapping("/runs")
+    @PreAuthorize("hasAuthority('PAYROLL:READ')")
     @Operation(summary = "Listar processamentos",
                description = "Lista todos os processamentos de folha (PayrollRuns) com paginacao")
     public ResponseEntity<Page<PayrollRunResponse>> findAllRuns(

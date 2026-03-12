@@ -29,6 +29,7 @@ public class VacationRequestController {
     // --- Employee Endpoints ---
 
     @PostMapping
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('VACATION:CREATE')")
     public ResponseEntity<VacationRequestResponse> create(
             @RequestBody VacationRequestCreateDTO dto,
             @AuthenticationPrincipal Jwt jwt) {
@@ -47,6 +48,7 @@ public class VacationRequestController {
     }
 
     @PutMapping("/{id}/cancel")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('VACATION:DELETE')")
     public ResponseEntity<VacationRequestResponse> cancel(
             @PathVariable UUID id,
             @AuthenticationPrincipal Jwt jwt) {
@@ -58,6 +60,7 @@ public class VacationRequestController {
     // --- Manager / Approver Endpoints ---
 
     @GetMapping("/pending")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('VACATION:READ')")
     public ResponseEntity<Page<VacationRequestResponse>> getPendingRequests(
             Pageable pageable,
             @AuthenticationPrincipal Jwt jwt) {
@@ -86,6 +89,7 @@ public class VacationRequestController {
     }
 
     @PutMapping("/{id}/approve")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('VACATION:APPROVE')")
     public ResponseEntity<VacationRequestResponse> approve(
             @PathVariable UUID id,
             @RequestBody VacationReviewDTO review,
@@ -101,6 +105,7 @@ public class VacationRequestController {
     }
 
     @PutMapping("/{id}/reject")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('VACATION:APPROVE')")
     public ResponseEntity<VacationRequestResponse> reject(
             @PathVariable UUID id,
             @RequestBody VacationReviewDTO review,

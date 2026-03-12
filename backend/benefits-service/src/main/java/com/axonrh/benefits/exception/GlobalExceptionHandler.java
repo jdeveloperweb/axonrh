@@ -40,8 +40,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Object> handleAccessDenied(AccessDeniedException ex) {
         log.error("Acesso negado: {}", ex.getMessage());
         Map<String, String> error = new HashMap<>();
-        error.put("error", "Access Denied");
-        error.put("message", ex.getMessage());
+        error.put("code", "FORBIDDEN");
+        error.put("message", "Você não tem permissão para realizar esta ação.");
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 

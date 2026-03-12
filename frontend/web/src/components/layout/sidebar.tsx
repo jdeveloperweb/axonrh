@@ -34,6 +34,7 @@ import { cn, getPhotoUrl } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
 import { useThemeStore } from '@/stores/theme-store';
 import { useLayoutStore } from '@/stores/layout-store';
+import { usePermissions } from '@/hooks/use-permissions';
 import { StatusIndicator } from '@/components/StatusIndicator';
 
 // ==================== Types ====================
@@ -60,44 +61,37 @@ const navGroups: NavGroup[] = [
     items: [
       { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
       { label: 'Colaboradores', href: '/employees', icon: Users, permission: 'EMPLOYEE:READ', module: 'moduleEmployees' },
-      // { label: 'Organograma', href: '/org-chart', icon: Network }, // Future
-      // { label: 'Departamentos', href: '/departments', icon: Building2 }, // Future
-      // { label: 'Cargos', href: '/positions', icon: Briefcase }, // Future
-      // { label: 'Vagas', href: '/vacancies', icon: Target }, // Future
-      { label: 'Ponto', href: '/timesheet/record', icon: Clock, module: 'moduleTimesheet' },
-      { label: 'Licenças', href: '/vacation', icon: Calendar, module: 'moduleVacation' },
-      { label: 'Desempenho', href: '/performance', icon: BarChart3, module: 'modulePerformance' },
-      { label: 'Folha de Pagamento', href: '/payroll', icon: Banknote, module: 'modulePayroll' },
-      { label: 'Treinamentos', href: '/learning', icon: BookOpen, module: 'moduleLearning' },
-      { label: 'Recrutamento e Seleção', href: '/talent-pool', icon: UserPlus, permission: 'EMPLOYEE:READ', module: 'moduleRecruitment' },
-      { label: 'Benefícios', href: '/benefits', icon: HeartPulse, module: 'moduleBenefits' },
-      { label: 'Processos RH', href: '/processes', icon: ClipboardCheck, permission: 'EMPLOYEE:READ' },
-      { label: 'Saúde Mental', href: '/wellbeing', icon: HeartPulse, permission: 'EMPLOYEE:READ' }, // Visible to HR/Managers
-      { label: 'Eventos e Palestras', href: '/events', icon: Mic2, module: 'moduleEvents' },
+      { label: 'Ponto', href: '/timesheet/record', icon: Clock, permission: 'TIMESHEET:READ', module: 'moduleTimesheet' },
+      { label: 'Licenças', href: '/vacation', icon: Calendar, permission: 'VACATION:READ', module: 'moduleVacation' },
+      { label: 'Desempenho', href: '/performance', icon: BarChart3, permission: 'PERFORMANCE:READ', module: 'modulePerformance' },
+      { label: 'Folha de Pagamento', href: '/payroll', icon: Banknote, permission: 'PAYROLL:READ', module: 'modulePayroll' },
+      { label: 'Treinamentos', href: '/learning', icon: BookOpen, permission: 'LEARNING:READ', module: 'moduleLearning' },
+      { label: 'Recrutamento e Seleção', href: '/talent-pool', icon: UserPlus, permission: 'HIRING:READ', module: 'moduleRecruitment' },
+      { label: 'Benefícios', href: '/benefits', icon: HeartPulse, permission: 'BENEFIT:READ', module: 'moduleBenefits' },
+      { label: 'Processos RH', href: '/processes', icon: ClipboardCheck, permission: 'ADMISSION:READ' },
+      { label: 'Saúde Mental', href: '/wellbeing', icon: HeartPulse, permission: 'WELLBEING:READ' },
+      { label: 'Eventos e Palestras', href: '/events', icon: Mic2, permission: 'EVENT:READ', module: 'moduleEvents' },
       { label: 'Assistente IA', href: '/assistant', icon: MessageSquare, module: 'moduleAiAssistant' },
     ]
   },
   {
     title: 'GERAL',
-    items: [
-      // { label: 'Inventário', href: '/inventory', icon: Package }, // Future
-    ]
+    items: []
   },
   {
     title: 'ADMINISTRAÇÃO',
     items: [
-      { label: 'Organograma', href: '/organogram', icon: Users },
-      { label: 'Departamentos', href: '/departments', icon: Building2 },
-      { label: 'Cargos', href: '/positions', icon: Briefcase },
-      { label: 'Gestores', href: '/managers', icon: UserCog },
+      { label: 'Organograma', href: '/organogram', icon: Users, permission: 'ORG:READ' },
+      { label: 'Departamentos', href: '/departments', icon: Building2, permission: 'ORG:READ' },
+      { label: 'Cargos', href: '/positions', icon: Briefcase, permission: 'ORG:READ' },
+      { label: 'Gestores', href: '/managers', icon: UserCog, permission: 'USER:READ' },
     ]
   },
 
   {
     title: 'CONFIGURAÇÕES',
     items: [
-
-      { label: 'Integração da Dinâmica', href: '/integrations', icon: Puzzle, module: 'moduleIntegration' },
+      { label: 'Integração da Dinâmica', href: '/integrations', icon: Puzzle, permission: 'INTEGRATION:READ', module: 'moduleIntegration' },
       { label: 'Privacidade', href: '/privacy', icon: ShieldCheck },
       { label: 'Segurança', href: '/settings/security', icon: Lock },
       { label: 'Sistema', href: '/settings', icon: Settings, permission: 'CONFIG:READ' },
@@ -112,11 +106,7 @@ export function Sidebar() {
   const { isSidebarCollapsed, toggleSidebar, isMobileMenuOpen, toggleMobileMenu } = useLayoutStore();
   const { user, logout } = useAuthStore();
   const { tenantTheme } = useThemeStore();
-
-  const hasPermission = (permission?: string) => {
-    if (!permission) return true;
-    return user?.permissions?.includes(permission) ?? false;
-  };
+  const { hasPermission } = usePermissions();
 
   return (
     <>
@@ -130,7 +120,7 @@ export function Sidebar() {
 
       <aside
         className={cn(
-          'sidebar flex flex-col',
+          'sidebar flex flex-col glass border-r border-white/20',
           isSidebarCollapsed && 'sidebar-collapsed',
           isMobileMenuOpen && 'sidebar-mobile-open'
         )}
@@ -201,15 +191,7 @@ export function Sidebar() {
                 }
 
                 // 2. Check Permission
-                if (!hasPermission(item.permission)) return false;
-
-                // 3. Admin/RH Specific Access Filters
-                if (hasAdminAccess) return true;
-
-                // Colaboradores puros, Líderes e Gestores não vêem estas telas específicas de gestão
-                if (item.label === 'Colaboradores' || item.label === 'Processos RH' || item.label === 'Folha de Pagamento') {
-                  return false;
-                }
+                if (item.permission && !hasPermission(item.permission as any)) return false;
 
                 return true;
               });
@@ -277,15 +259,15 @@ export function Sidebar() {
         </nav>
 
         {/* User Section */}
-        <div className="border-t border-[var(--color-border)] p-4">
+        <div className="border-t border-[var(--color-border)] p-4 bg-gradient-to-t from-white/5 to-transparent">
           {!isSidebarCollapsed && user && (
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-[var(--color-primary)] flex items-center justify-center text-[var(--color-text-on-primary)] font-medium">
+            <div className="flex items-center gap-3 mb-4 p-2 rounded-2xl bg-white/50 backdrop-blur-sm border border-white/40 shadow-sm">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-dark)] flex items-center justify-center text-white font-bold shadow-md shadow-[var(--color-primary)]/20">
                 {user.name.charAt(0).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-medium truncate">{user.name}</p>
-                <p className="text-sm text-[var(--color-text-secondary)] truncate">
+                <p className="font-bold text-sm truncate text-slate-800">{user.name}</p>
+                <p className="text-[10px] font-black text-[var(--color-text-secondary)] truncate uppercase tracking-tight">
                   {(() => {
                     const roleLabels: Record<string, string> = {
                       'ADMIN': 'Administrador',

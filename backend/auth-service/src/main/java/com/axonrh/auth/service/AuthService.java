@@ -39,6 +39,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final CodeVerifier totpCodeVerifier;
     private final MfaService mfaService;
+    private final AuditService auditService;
 
     @Value("${security.login.max-attempts}")
     private int maxLoginAttempts;
@@ -134,6 +135,20 @@ public class AuthService {
         recordLoginAttempt(request.getEmail(), user.getTenantId(), user.getId(), true,
                 null, ipAddress, userAgent);
 
+        auditService.log(com.axonrh.auth.entity.AuditLog.builder()
+                .tenantId(user.getTenantId())
+                .userId(user.getId())
+                .userName(user.getName())
+                .userEmail(user.getEmail())
+                .action("LOGIN")
+                .resource("AUTH")
+                .resourceId(user.getId().toString())
+                .ipAddress(ipAddress)
+                .userAgent(userAgent)
+                .status("SUCCESS")
+                .details("Usuário logado com sucesso")
+                .build());
+
         log.info("Login successful for user: {}", user.getId());
 
         return buildLoginResponse(user, employeeId, accessToken, refreshToken);
@@ -211,6 +226,18 @@ public class AuthService {
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         user.setPasswordChangedAt(LocalDateTime.now());
         userRepository.save(user);
+
+        auditService.log(com.axonrh.auth.entity.AuditLog.builder()
+                .tenantId(user.getTenantId())
+                .userId(user.getId())
+                .userName(user.getName())
+                .userEmail(user.getEmail())
+                .action("UPDATE_PASSWORD")
+                .resource("USER")
+                .resourceId(user.getId().toString())
+                .status("SUCCESS")
+                .details("Senha alterada pelo próprio usuário")
+                .build());
         
         log.info("Password changed for user: {}", userId);
     }

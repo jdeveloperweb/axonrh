@@ -52,6 +52,7 @@ public class SecurityConfig {
                                 "/api/v1/auth/reset-password",
                                 "/api/v1/auth/mfa/complete-mandatory-setup",
                                 "/api/v1/auth/mfa/resend-setup-email",
+                                "/api/v1/audit/log",
                                 "/actuator/health",
                                 "/actuator/info",
                                 "/actuator/prometheus",

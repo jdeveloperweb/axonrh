@@ -10,6 +10,26 @@ import { useLayoutStore } from '@/stores/layout-store';
 import { cn } from '@/lib/utils';
 import FloatingAssistant from '@/components/ai/FloatingAssistant';
 import { useThemeStore } from '@/stores/theme-store';
+import AccessDenied from '@/components/auth/access-denied';
+import { usePermissions, type Permission } from '@/hooks/use-permissions';
+
+const ROUTE_PERMISSIONS: Record<string, Permission> = {
+  '/employees': 'EMPLOYEE:READ',
+  '/payroll': 'PAYROLL:READ',
+  '/vacation': 'VACATION:READ',
+  '/timesheet': 'TIMESHEET:READ',
+  '/performance': 'PERFORMANCE:READ',
+  '/learning': 'LEARNING:READ',
+  '/talent-pool': 'HIRING:READ',
+  '/benefits': 'BENEFIT:READ',
+  '/settings/audit': 'AUDIT:READ',
+  '/settings/roles': 'ROLE:READ',
+  '/settings/users': 'USER:READ',
+  '/settings/company': 'CONFIG:READ',
+  '/settings/org': 'ORG:READ',
+  '/wellbeing': 'WELLBEING:READ',
+  '/events': 'EVENT:READ',
+};
 
 export default function DashboardLayout({
   children,
@@ -20,7 +40,15 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const { isAuthenticated, isLoading } = useAuthStore();
   const { isSidebarCollapsed } = useLayoutStore();
+  const { hasPermission } = usePermissions();
   const isSetupRoute = pathname?.startsWith('/setup');
+
+  // Lógica de proteção de rotas (Acesso Negado)
+  const requiredPermission = Object.entries(ROUTE_PERMISSIONS).find(([route]) =>
+    pathname === route || pathname.startsWith(`${route}/`)
+  )?.[1];
+
+  const canAccess = !requiredPermission || hasPermission(requiredPermission);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated && !isSetupRoute) {
@@ -63,7 +91,7 @@ export default function DashboardLayout({
       <Sidebar />
       <Header />
       <main className="main-content animate-fade-in">
-        {children}
+        {canAccess ? children : <AccessDenied />}
       </main>
       {useThemeStore.getState().tenantTheme?.modules?.moduleAiAssistant !== false && (
         <FloatingAssistant />

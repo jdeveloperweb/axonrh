@@ -50,7 +50,7 @@ export function Header() {
   };
 
   return (
-    <header className="header">
+    <header className="header glass border-b border-white/20">
       {/* Mobile Menu Toggle */}
       {/* Mobile Menu Toggle */}
       <button

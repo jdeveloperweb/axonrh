@@ -29,6 +29,7 @@ public class EmployeeBenefitController {
     private final EmployeeBenefitService employeeBenefitService;
 
     @PostMapping
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('BENEFIT:CREATE')")
     @Operation(summary = "Atribuir beneficio a colaborador")
     public ResponseEntity<EmployeeBenefitResponse> assign(
             @Valid @RequestBody EmployeeBenefitRequest request) {
@@ -40,6 +41,7 @@ public class EmployeeBenefitController {
     }
 
     @PutMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('BENEFIT:UPDATE')")
     @Operation(summary = "Atualizar beneficio do colaborador")
     public ResponseEntity<EmployeeBenefitResponse> update(
             @Parameter(description = "ID do beneficio do colaborador") @PathVariable UUID id,
@@ -49,6 +51,7 @@ public class EmployeeBenefitController {
     }
 
     @GetMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('BENEFIT:READ')")
     @Operation(summary = "Buscar beneficio do colaborador por ID")
     public ResponseEntity<EmployeeBenefitResponse> findById(
             @Parameter(description = "ID do beneficio do colaborador") @PathVariable UUID id) {
@@ -56,6 +59,7 @@ public class EmployeeBenefitController {
     }
 
     @GetMapping
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('BENEFIT:READ')")
     @Operation(summary = "Listar todos os beneficios (paginado)")
     public ResponseEntity<Page<EmployeeBenefitResponse>> findAll(
             @PageableDefault(size = 20) Pageable pageable) {
@@ -63,6 +67,7 @@ public class EmployeeBenefitController {
     }
 
     @GetMapping("/employee/{employeeId}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('BENEFIT:READ')")
     @Operation(summary = "Listar beneficios de um colaborador")
     public ResponseEntity<List<EmployeeBenefitResponse>> findByEmployee(
             @Parameter(description = "ID do colaborador") @PathVariable UUID employeeId) {
@@ -77,6 +82,7 @@ public class EmployeeBenefitController {
     }
 
     @PatchMapping("/{id}/activate")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('BENEFIT:UPDATE')")
     @Operation(summary = "Ativar beneficio do colaborador")
     public ResponseEntity<EmployeeBenefitResponse> activate(
             @Parameter(description = "ID do beneficio do colaborador") @PathVariable UUID id) {
@@ -85,6 +91,7 @@ public class EmployeeBenefitController {
     }
 
     @PatchMapping("/{id}/deactivate")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('BENEFIT:UPDATE')")
     @Operation(summary = "Desativar beneficio do colaborador")
     public ResponseEntity<EmployeeBenefitResponse> deactivate(
             @Parameter(description = "ID do beneficio do colaborador") @PathVariable UUID id) {
@@ -93,6 +100,7 @@ public class EmployeeBenefitController {
     }
 
     @PatchMapping("/{id}/cancel")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('BENEFIT:DELETE')")
     @Operation(summary = "Cancelar beneficio do colaborador")
     public ResponseEntity<EmployeeBenefitResponse> cancel(
             @Parameter(description = "ID do beneficio do colaborador") @PathVariable UUID id) {

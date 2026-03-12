@@ -48,11 +48,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Object> handleAccessDenied(AccessDeniedException ex) {
-        System.err.println(">>> [DEBUG-CRITICAL-SYS] ACCESS DENIED (System.err): " + ex.getMessage());
-        log.error(">>> [DEBUG-CRITICAL] ACCESS DENIED: {}", ex.getMessage());
+        log.warn("Acesso negado: {}", ex.getMessage());
         Map<String, String> error = new HashMap<>();
-        error.put("error", "Access Denied");
-        error.put("message", ex.getMessage());
+        error.put("error", "Acesso Negado");
+        error.put("message", "Você não tem permissão para realizar esta ação. Entre em contato com o administrador se considerar isso um erro.");
+        error.put("code", "FORBIDDEN");
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 

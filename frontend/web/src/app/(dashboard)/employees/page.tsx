@@ -48,7 +48,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import {
   Dialog,
-  DialogContent,
   DialogContent
 } from '@/components/ui/dialog';
 import { ExpandablePhoto } from '@/components/ui/expandable-photo';
@@ -57,6 +56,7 @@ import { useToast } from '@/hooks/use-toast';
 import { formatDate, formatCpf, getPhotoUrl, formatCurrency } from '@/lib/utils';
 import { TerminationModal } from '@/components/employees/TerminationModal';
 import { ExtractDataModal } from '@/components/employees/ExtractDataModal';
+import { PermissionGate } from '@/components/auth/permission-gate';
 
 // ... imports
 
@@ -342,7 +342,7 @@ export default function EmployeesPage() {
         title: 'Sucesso',
         description: 'Colaborador excluído com sucesso',
       });
-      fetchEmployees();
+      fetchData();
     } catch (error) {
       console.error(error);
       toast({
@@ -393,13 +393,15 @@ export default function EmployeesPage() {
             Gerencie todos os colaboradores da empresa
           </p>
         </div>
-        <button
-          onClick={() => router.push('/employees/new')}
-          className="flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 transition-opacity"
-        >
-          <Plus className="w-4 h-4" />
-          Novo Colaborador
-        </button>
+        <PermissionGate permission="EMPLOYEE:CREATE">
+          <button
+            onClick={() => router.push('/employees/new')}
+            className="flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 transition-opacity"
+          >
+            <Plus className="w-4 h-4" />
+            Novo Colaborador
+          </button>
+        </PermissionGate>
       </div>
 
       {/* Stats Cards */}
@@ -714,8 +716,8 @@ export default function EmployeesPage() {
                 >
                   <div className="flex items-center gap-4">
                     <div className={`p-2.5 rounded-xl transition-colors ${isCollapsed
-                        ? 'bg-gray-100 text-gray-500'
-                        : 'bg-[var(--color-primary)] text-white shadow-lg shadow-orange-200'
+                      ? 'bg-gray-100 text-gray-500'
+                      : 'bg-[var(--color-primary)] text-white shadow-lg shadow-orange-200'
                       }`}>
                       <Building2 className="w-5 h-5" />
                     </div>
@@ -739,8 +741,8 @@ export default function EmployeesPage() {
                   </div>
 
                   <div className={`p-2 rounded-full transition-all duration-300 transform ${isCollapsed
-                      ? 'text-gray-400 hover:bg-gray-100 rotate-0'
-                      : 'text-[var(--color-primary)] bg-[var(--color-primary)]/10 rotate-180'
+                    ? 'text-gray-400 hover:bg-gray-100 rotate-0'
+                    : 'text-[var(--color-primary)] bg-[var(--color-primary)]/10 rotate-180'
                     }`}>
                     <ChevronDown className="w-5 h-5" />
                   </div>
@@ -795,9 +797,11 @@ export default function EmployeesPage() {
                                     <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}`)}>
                                       <Eye className="w-3.5 h-3.5 mr-2" /> Visualizar
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}/edit`)}>
-                                      <Edit className="w-3.5 h-3.5 mr-2" /> Editar
-                                    </DropdownMenuItem>
+                                    <PermissionGate permission="EMPLOYEE:UPDATE">
+                                      <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}/edit`)}>
+                                        <Edit className="w-3.5 h-3.5 mr-2" /> Editar
+                                      </DropdownMenuItem>
+                                    </PermissionGate>
                                     {employee.missingFields && employee.missingFields.length > 0 && (
                                       <DropdownMenuItem
                                         onClick={(e) => {
@@ -809,10 +813,12 @@ export default function EmployeesPage() {
                                         <Sparkles className="w-3.5 h-3.5 mr-2" /> Completar com IA
                                       </DropdownMenuItem>
                                     )}
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem className="text-red-600" onClick={() => handleDelete(employee.id, employee.fullName)}>
-                                      <Trash2 className="w-3.5 h-3.5 mr-2" /> Excluir
-                                    </DropdownMenuItem>
+                                    <PermissionGate permission="EMPLOYEE:DELETE">
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem className="text-red-600" onClick={() => handleDelete(employee.id, employee.fullName)}>
+                                        <Trash2 className="w-3.5 h-3.5 mr-2" /> Excluir
+                                      </DropdownMenuItem>
+                                    </PermissionGate>
                                   </DropdownMenuContent>
                                 </DropdownMenu>
                               </div>
@@ -832,7 +838,7 @@ export default function EmployeesPage() {
                                     }
                                   />
                                   <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${employee.status === 'ACTIVE' ? 'bg-green-500' :
-                                      employee.status === 'ON_LEAVE' ? 'bg-yellow-500' : 'bg-gray-300'
+                                    employee.status === 'ON_LEAVE' ? 'bg-yellow-500' : 'bg-gray-300'
                                     }`} />
                                 </div>
 

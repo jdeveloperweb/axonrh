@@ -148,7 +148,12 @@ export default function SettingsHubPage() {
                         <h4 className="font-bold">Segurança e Auditoria</h4>
                     </div>
                     <p className="text-sm text-[var(--color-text-secondary)] mb-4">Logs de acesso, política de senhas e autenticação mútua (2FA).</p>
-                    <button className="text-xs font-bold uppercase tracking-wider text-[var(--color-primary)] hover:underline">Ver Logs →</button>
+                    <button
+                        className="text-xs font-bold uppercase tracking-wider text-[var(--color-primary)] hover:underline"
+                        onClick={() => router.push('/settings/audit')}
+                    >
+                        Ver Logs →
+                    </button>
                 </div>
 
                 <div className="p-6 rounded-[var(--radius-lg)] bg-[var(--color-surface-variant)]/50 border border-[var(--color-border)]">

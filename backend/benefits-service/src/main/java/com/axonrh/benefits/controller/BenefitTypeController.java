@@ -30,6 +30,7 @@ public class BenefitTypeController {
     private final BenefitTypeService benefitTypeService;
 
     @PostMapping
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('BENEFIT:CREATE')")
     @Operation(summary = "Criar tipo de beneficio")
     public ResponseEntity<BenefitTypeResponse> create(
             @Valid @RequestBody BenefitTypeRequest request) {
@@ -40,6 +41,7 @@ public class BenefitTypeController {
     }
 
     @PutMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('BENEFIT:UPDATE')")
     @Operation(summary = "Atualizar tipo de beneficio")
     public ResponseEntity<BenefitTypeResponse> update(
             @Parameter(description = "ID do tipo de beneficio") @PathVariable UUID id,
@@ -49,6 +51,7 @@ public class BenefitTypeController {
     }
 
     @GetMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('BENEFIT:READ')")
     @Operation(summary = "Buscar tipo de beneficio por ID")
     public ResponseEntity<BenefitTypeResponse> findById(
             @Parameter(description = "ID do tipo de beneficio") @PathVariable UUID id) {
@@ -56,6 +59,7 @@ public class BenefitTypeController {
     }
 
     @GetMapping
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('BENEFIT:READ')")
     @Operation(summary = "Listar tipos de beneficio (paginado)")
     public ResponseEntity<Page<BenefitTypeResponse>> findAll(
             @PageableDefault(size = 20) Pageable pageable) {
@@ -76,6 +80,7 @@ public class BenefitTypeController {
     }
 
     @PatchMapping("/{id}/activate")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('BENEFIT:UPDATE')")
     @Operation(summary = "Ativar tipo de beneficio")
     public ResponseEntity<BenefitTypeResponse> activate(
             @Parameter(description = "ID do tipo de beneficio") @PathVariable UUID id) {
@@ -84,6 +89,7 @@ public class BenefitTypeController {
     }
 
     @PatchMapping("/{id}/deactivate")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('BENEFIT:UPDATE')")
     @Operation(summary = "Desativar tipo de beneficio")
     public ResponseEntity<BenefitTypeResponse> deactivate(
             @Parameter(description = "ID do tipo de beneficio") @PathVariable UUID id) {

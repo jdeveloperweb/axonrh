@@ -196,7 +196,7 @@ public class EmployeeController {
     }
 
     @PostMapping
-    // @PreAuthorize("hasAuthority('EMPLOYEE:CREATE')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:CREATE')")
     @Operation(summary = "Cria novo colaborador")
     public ResponseEntity<EmployeeResponse> create(
             @Valid @RequestBody EmployeeRequest request,
@@ -220,7 +220,7 @@ public class EmployeeController {
     }
 
     @PutMapping("/{id}")
-    // @PreAuthorize("hasAuthority('EMPLOYEE:UPDATE')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:UPDATE')")
     @Operation(summary = "Atualiza colaborador")
     public ResponseEntity<EmployeeResponse> update(
             @PathVariable UUID id,
@@ -280,7 +280,7 @@ public class EmployeeController {
     }
 
     @PostMapping("/{id}/photo")
-    // @PreAuthorize("hasAuthority('EMPLOYEE:UPDATE')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:UPDATE')")
     @Operation(summary = "Atualiza foto do colaborador")
     public ResponseEntity<EmployeeResponse> updatePhoto(
             @PathVariable UUID id,
@@ -293,7 +293,7 @@ public class EmployeeController {
     }
 
     @GetMapping("/{id}/dependents")
-    //@PreAuthorize("hasAuthority('EMPLOYEE:READ')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:READ')")
     @Operation(summary = "Lista dependentes do colaborador")
     public ResponseEntity<java.util.List<EmployeeResponse.DependentSummary>> getDependents(@PathVariable UUID id) {
         log.info("Buscando dependentes do colaborador: {}", id);
@@ -301,7 +301,7 @@ public class EmployeeController {
     }
 
     @PostMapping("/{id}/dependents")
-    //@PreAuthorize("hasAuthority('EMPLOYEE:UPDATE')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:UPDATE')")
     @Operation(summary = "Adiciona um dependente ao colaborador")
     public ResponseEntity<EmployeeResponse.DependentSummary> addDependent(
             @PathVariable UUID id,
@@ -313,7 +313,7 @@ public class EmployeeController {
     }
 
     @PutMapping("/{id}/dependents/{dependentId}")
-    //@PreAuthorize("hasAuthority('EMPLOYEE:UPDATE')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:UPDATE')")
     @Operation(summary = "Atualiza um dependente do colaborador")
     public ResponseEntity<EmployeeResponse.DependentSummary> updateDependent(
             @PathVariable UUID id,
@@ -326,7 +326,7 @@ public class EmployeeController {
     }
 
     @DeleteMapping("/{id}/dependents/{dependentId}")
-    //@PreAuthorize("hasAuthority('EMPLOYEE:UPDATE')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:UPDATE')")
     @Operation(summary = "Remove um dependente do colaborador")
     public ResponseEntity<Void> removeDependent(
             @PathVariable UUID id,
@@ -338,7 +338,7 @@ public class EmployeeController {
     }
 
     @PostMapping("/{id}/dependents/bulk")
-    //@PreAuthorize("hasAuthority('EMPLOYEE:UPDATE')")
+    @PreAuthorize("hasAuthority('EMPLOYEE:UPDATE')")
     @Operation(summary = "Salva lista de dependentes do colaborador (substitui existentes)")
     public ResponseEntity<java.util.List<EmployeeResponse.DependentSummary>> saveDependentsBulk(
             @PathVariable UUID id,
