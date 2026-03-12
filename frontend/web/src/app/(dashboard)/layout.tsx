@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
+import { BottomNav } from '@/components/layout/BottomNav';
 import { useLayoutStore } from '@/stores/layout-store';
 import { cn } from '@/lib/utils';
 import FloatingAssistant from '@/components/ai/FloatingAssistant';
@@ -67,6 +68,7 @@ export default function DashboardLayout({
       {useThemeStore.getState().tenantTheme?.modules?.moduleAiAssistant !== false && (
         <FloatingAssistant />
       )}
+      <BottomNav />
     </div>
   );
 }

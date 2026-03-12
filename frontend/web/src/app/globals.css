@@ -495,4 +495,29 @@
   .animate-scan {
     animation: scan 2s linear infinite;
   }
+
+  /* PWA & Mobile native-like utilities */
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .no-tap-highlight {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  @media (max-width: 1024px) {
+    .main-content {
+      padding-bottom: calc(4rem + env(safe-area-inset-bottom)) !important;
+      /* 4rem = h-16 (BottomNav) */
+    }
+
+    .header {
+      padding-top: env(safe-area-inset-top);
+      height: calc(var(--header-height) + env(safe-area-inset-top));
+    }
+  }
 }

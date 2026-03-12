@@ -119,6 +119,15 @@ export const metadata: Metadata = {
   title: 'AxonRH - Gestão de RH e DP',
   description: 'Sistema Integrado de Gestão de RH e Departamento Pessoal com IA Conversacional',
   keywords: ['RH', 'Departamento Pessoal', 'Gestão de Pessoas', 'IA', 'HRIS'],
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'AxonRH',
+  },
+  formatDetection: {
+    telephone: false,
+  },
   icons: {
     icon: [
       { url: '/favicon.svg', type: 'image/svg+xml' },
@@ -128,7 +137,14 @@ export const metadata: Metadata = {
   },
 };
 
-
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
+  themeColor: '#0066FF',
+};
 
 export default function RootLayout({
   children,
@@ -136,8 +152,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
-      <body className={`${plusJakarta.variable} ${outfit.variable} ${inter.variable} ${roboto.variable} ${openSans.variable} ${montserrat.variable} ${ubuntu.variable} ${lato.variable} ${poppins.variable} ${raleway.variable} ${playfair.variable} ${nunito.variable} ${merriweather.variable} ${ptSans.variable} ${lora.variable} ${oxygen.variable} ${sourceSans.variable} font-sans`}>
+    <html lang="pt-BR" className="antialiased">
+      <body className={`${plusJakarta.variable} ${outfit.variable} ${inter.variable} ${roboto.variable} ${openSans.variable} ${montserrat.variable} ${ubuntu.variable} ${lato.variable} ${poppins.variable} ${raleway.variable} ${playfair.variable} ${nunito.variable} ${merriweather.variable} ${ptSans.variable} ${lora.variable} ${oxygen.variable} ${sourceSans.variable} font-sans min-h-screen overscroll-none`}>
         <ClientProviders>
           {children}
         </ClientProviders>
