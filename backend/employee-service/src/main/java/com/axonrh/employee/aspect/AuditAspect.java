@@ -47,7 +47,8 @@ public class AuditAspect {
             UUID userId = UUID.fromString(jwt.getSubject());
             String userName = jwt.getClaimAsString("name");
             String userEmail = jwt.getClaimAsString("email");
-            UUID tenantId = TenantContext.getCurrentTenant();
+            String tenantIdStr = TenantContext.getCurrentTenant();
+            UUID tenantId = (tenantIdStr != null && !tenantIdStr.isEmpty()) ? UUID.fromString(tenantIdStr) : null;
 
             HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
             String method = request.getMethod();

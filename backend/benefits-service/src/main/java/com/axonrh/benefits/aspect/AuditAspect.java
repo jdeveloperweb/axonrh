@@ -44,7 +44,8 @@ public class AuditAspect {
             String userName = request.getHeader("X-User-Name");
             String userEmail = request.getHeader("X-User-Email");
             
-            UUID tenantId = TenantContext.getTenantId();
+            String tenantIdStr = TenantContext.getCurrentTenant();
+            UUID tenantId = (tenantIdStr != null && !tenantIdStr.isEmpty()) ? UUID.fromString(tenantIdStr) : null;
             
             AuditClient.AuditRequest auditRequest = AuditClient.AuditRequest.builder()
                     .tenantId(tenantId)

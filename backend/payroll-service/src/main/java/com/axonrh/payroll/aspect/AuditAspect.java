@@ -49,7 +49,8 @@ public class AuditAspect {
             String userEmail = jwt.getClaimAsString("email");
             
             // Tenta pegar o tenant do header ou do context
-            UUID tenantId = TenantContext.getCurrentTenant();
+            String tenantIdStr = TenantContext.getCurrentTenant();
+            UUID tenantId = (tenantIdStr != null && !tenantIdStr.isEmpty()) ? UUID.fromString(tenantIdStr) : null;
 
             HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
             String method = request.getMethod();
