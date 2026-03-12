@@ -25,6 +25,7 @@ public class CertificateConfigController {
     }
 
     @GetMapping
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:READ')")
     public ResponseEntity<CertificateConfig> getConfig(
             @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader,
             @RequestParam(required = false) UUID courseId) {
@@ -36,6 +37,7 @@ public class CertificateConfigController {
     }
 
     @PostMapping
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:UPDATE')")
     public ResponseEntity<CertificateConfig> saveConfig(
             @RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader,
             @RequestBody CertificateConfig config) {

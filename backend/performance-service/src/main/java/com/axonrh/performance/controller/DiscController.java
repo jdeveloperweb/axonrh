@@ -30,12 +30,14 @@ public class DiscController {
     // ==================== Questions ====================
 
     @GetMapping("/questions")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:READ')")
     public ResponseEntity<List<DiscQuestionDTO>> getQuestions(
             @RequestHeader("X-Tenant-ID") UUID tenantId) {
         return ResponseEntity.ok(discService.getQuestions(tenantId));
     }
 
     @GetMapping("/questionnaire/{questionnaireId}/questions")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:READ')")
     public ResponseEntity<List<DiscQuestionDTO>> getQuestionsByQuestionnaire(
             @PathVariable UUID questionnaireId) {
         return ResponseEntity.ok(discService.getQuestionsByQuestionnaireId(questionnaireId));
@@ -44,6 +46,7 @@ public class DiscController {
     // ==================== Evaluations ====================
 
     @GetMapping("/employee/{employeeId}/latest")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:READ')")
     public ResponseEntity<DiscEvaluationDTO> getLatestEvaluation(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID employeeId) {
@@ -55,6 +58,7 @@ public class DiscController {
     }
 
     @GetMapping("/employee/{employeeId}/history")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:READ')")
     public ResponseEntity<List<DiscEvaluationDTO>> getEmployeeHistory(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID employeeId) {
@@ -62,6 +66,7 @@ public class DiscController {
     }
 
     @GetMapping("/employee/{employeeId}/pending")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:READ')")
     public ResponseEntity<List<DiscAssignmentDTO>> getPendingForEmployee(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID employeeId) {
@@ -69,6 +74,7 @@ public class DiscController {
     }
 
     @GetMapping("/{evaluationId}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:READ')")
     public ResponseEntity<DiscEvaluationDTO> getEvaluation(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID evaluationId) {
@@ -76,6 +82,7 @@ public class DiscController {
     }
 
     @GetMapping
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:READ')")
     public ResponseEntity<Page<DiscEvaluationDTO>> listEvaluations(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @RequestParam(required = false) DiscAssessmentStatus status,
@@ -87,6 +94,7 @@ public class DiscController {
     }
 
     @PostMapping
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:UPDATE')")
     public ResponseEntity<DiscEvaluationDTO> submitEvaluation(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @RequestBody SubmitEvaluationRequest request) {
@@ -100,6 +108,7 @@ public class DiscController {
     }
 
     @PostMapping("/{evaluationId}/start")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:UPDATE')")
     public ResponseEntity<DiscEvaluationDTO> startEvaluation(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID evaluationId) {
@@ -107,6 +116,7 @@ public class DiscController {
     }
 
     @DeleteMapping("/{evaluationId}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:DELETE')")
     public ResponseEntity<Void> deleteEvaluation(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID evaluationId) {
@@ -115,6 +125,7 @@ public class DiscController {
     }
 
     @DeleteMapping("/cancelled")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:DELETE')")
     public ResponseEntity<Void> deleteCancelled(
             @RequestHeader("X-Tenant-ID") UUID tenantId) {
         discService.deleteCancelled(tenantId);
@@ -124,6 +135,7 @@ public class DiscController {
     // ==================== Assignments ====================
 
     @PostMapping("/assign")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:CREATE')")
     public ResponseEntity<DiscAssignmentDTO> assignEvaluation(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @RequestBody AssignEvaluationRequest request) {
@@ -139,6 +151,7 @@ public class DiscController {
     }
 
     @PostMapping("/assign/bulk")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:CREATE')")
     public ResponseEntity<List<DiscAssignmentDTO>> assignBulk(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @RequestBody BulkAssignRequest request) {
@@ -154,6 +167,7 @@ public class DiscController {
     }
 
     @DeleteMapping("/assignment/{assignmentId}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:DELETE')")
     public ResponseEntity<Void> deleteAssignment(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID assignmentId) {
@@ -162,6 +176,7 @@ public class DiscController {
     }
 
     @PostMapping("/assignment/{assignmentId}/cancel")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:UPDATE')")
     public ResponseEntity<Void> cancelAssignment(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID assignmentId) {
@@ -170,6 +185,7 @@ public class DiscController {
     }
 
     @GetMapping("/assignments")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:READ')")
     public ResponseEntity<Page<DiscAssignmentDTO>> listAssignments(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @RequestParam(required = false) Boolean pendingOnly,
@@ -183,6 +199,7 @@ public class DiscController {
     // ==================== Statistics ====================
 
     @GetMapping("/statistics")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:READ')")
     public ResponseEntity<DiscStatisticsDTO> getStatistics(
             @RequestHeader("X-Tenant-ID") UUID tenantId) {
         return ResponseEntity.ok(discService.getStatistics(tenantId));
@@ -191,6 +208,7 @@ public class DiscController {
     // ==================== Helper endpoints ====================
 
     @GetMapping("/employee/{employeeId}/has-completed")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:READ')")
     public ResponseEntity<Boolean> hasCompletedEvaluation(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID employeeId) {
@@ -198,6 +216,7 @@ public class DiscController {
     }
 
     @GetMapping("/employee/{employeeId}/has-pending")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:READ')")
     public ResponseEntity<Boolean> hasPendingEvaluation(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID employeeId) {

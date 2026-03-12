@@ -33,31 +33,37 @@ public class LearningPathController {
     }
 
     @PostMapping
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:CREATE')")
     public ResponseEntity<LearningPath> create(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, @RequestBody LearningPath path) {
         return ResponseEntity.ok(pathService.create(getTenantId(tenantIdHeader), path));
     }
 
     @GetMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:READ')")
     public ResponseEntity<LearningPath> get(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, @PathVariable UUID id) {
         return ResponseEntity.ok(pathService.get(getTenantId(tenantIdHeader), id));
     }
 
     @GetMapping
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:READ')")
     public ResponseEntity<Page<LearningPath>> list(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, Pageable pageable) {
         return ResponseEntity.ok(pathService.list(getTenantId(tenantIdHeader), pageable));
     }
 
     @GetMapping("/published")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:READ')")
     public ResponseEntity<List<LearningPath>> listPublished(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
         return ResponseEntity.ok(pathService.listPublished(getTenantId(tenantIdHeader)));
     }
 
     @PostMapping("/{id}/publish")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:UPDATE')")
     public ResponseEntity<LearningPath> publish(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, @PathVariable UUID id) {
         return ResponseEntity.ok(pathService.publish(getTenantId(tenantIdHeader), id));
     }
 
     @PostMapping("/{id}/enroll")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:UPDATE')")
     public ResponseEntity<PathEnrollment> enroll(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, @PathVariable UUID id, @RequestBody Map<String, Object> body) {
         UUID employeeId = UUID.fromString((String) body.get("employeeId"));
         String employeeName = (String) body.get("employeeName");
@@ -65,6 +71,7 @@ public class LearningPathController {
     }
 
     @GetMapping("/enrollments/employee/{employeeId}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:READ')")
     public ResponseEntity<List<PathEnrollment>> getEnrollments(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, @PathVariable UUID employeeId) {
         return ResponseEntity.ok(enrollmentService.getPathEnrollmentsByEmployee(getTenantId(tenantIdHeader), employeeId));
     }

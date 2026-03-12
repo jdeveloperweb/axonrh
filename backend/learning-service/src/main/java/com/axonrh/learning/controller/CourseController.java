@@ -40,95 +40,113 @@ public class CourseController {
     }
 
     @PostMapping
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:CREATE')")
     public ResponseEntity<Course> create(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, @RequestBody Course course) {
         return ResponseEntity.ok(courseService.create(getTenantId(tenantIdHeader), course));
     }
 
     @GetMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:READ')")
     public ResponseEntity<Course> get(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, @PathVariable UUID id) {
         return ResponseEntity.ok(courseService.get(getTenantId(tenantIdHeader), id));
     }
 
     @PutMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:UPDATE')")
     public ResponseEntity<Course> update(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, @PathVariable UUID id, @RequestBody Course course) {
         return ResponseEntity.ok(courseService.update(getTenantId(tenantIdHeader), id, course));
     }
 
     @DeleteMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:DELETE')")
     public ResponseEntity<Void> delete(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, @PathVariable UUID id) {
         courseService.delete(getTenantId(tenantIdHeader), id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:READ')")
     public ResponseEntity<Page<Course>> list(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, Pageable pageable) {
         return ResponseEntity.ok(courseService.list(getTenantId(tenantIdHeader), pageable));
     }
 
     @GetMapping("/published")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:READ')")
     public ResponseEntity<List<Course>> listPublished(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
         return ResponseEntity.ok(courseService.listPublished(getTenantId(tenantIdHeader)));
     }
 
     @GetMapping("/category/{categoryId}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:READ')")
     public ResponseEntity<List<Course>> listByCategory(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, @PathVariable UUID categoryId) {
         return ResponseEntity.ok(courseService.listByCategory(getTenantId(tenantIdHeader), categoryId));
     }
 
     @GetMapping("/mandatory")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:READ')")
     public ResponseEntity<List<Course>> listMandatory(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
         return ResponseEntity.ok(courseService.listMandatory(getTenantId(tenantIdHeader)));
     }
 
     @GetMapping("/search")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:READ')")
     public ResponseEntity<Page<Course>> search(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, @RequestParam String q, Pageable pageable) {
         return ResponseEntity.ok(courseService.search(getTenantId(tenantIdHeader), q, pageable));
     }
 
     @PostMapping("/{id}/publish")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:UPDATE')")
     public ResponseEntity<Course> publish(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, @PathVariable UUID id) {
         return ResponseEntity.ok(courseService.publish(getTenantId(tenantIdHeader), id));
     }
 
     @PostMapping("/{id}/archive")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:UPDATE')")
     public ResponseEntity<Course> archive(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, @PathVariable UUID id) {
         return ResponseEntity.ok(courseService.archive(getTenantId(tenantIdHeader), id));
     }
 
     @GetMapping("/{id}/statistics")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:READ')")
     public ResponseEntity<CourseService.CourseStatistics> getStatistics(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, @PathVariable UUID id) {
         return ResponseEntity.ok(courseService.getStatistics(getTenantId(tenantIdHeader), id));
     }
 
     // Modules
     @PostMapping("/{id}/modules")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:UPDATE')")
     public ResponseEntity<Course> addModule(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, @PathVariable UUID id, @RequestBody CourseModule module) {
         return ResponseEntity.ok(courseService.addModule(getTenantId(tenantIdHeader), id, module));
     }
 
     @PutMapping("/{id}/modules/{moduleId}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:UPDATE')")
     public ResponseEntity<Course> updateModule(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, @PathVariable UUID id, @PathVariable UUID moduleId, @RequestBody CourseModule module) {
         return ResponseEntity.ok(courseService.updateModule(getTenantId(tenantIdHeader), id, moduleId, module));
     }
 
     @DeleteMapping("/{id}/modules/{moduleId}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:UPDATE')")
     public ResponseEntity<Course> removeModule(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, @PathVariable UUID id, @PathVariable UUID moduleId) {
         return ResponseEntity.ok(courseService.removeModule(getTenantId(tenantIdHeader), id, moduleId));
     }
 
     // Lessons
     @PostMapping("/{id}/modules/{moduleId}/lessons")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:UPDATE')")
     public ResponseEntity<Course> addLesson(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, @PathVariable UUID id, @PathVariable UUID moduleId, @RequestBody Lesson lesson) {
         return ResponseEntity.ok(courseService.addLesson(getTenantId(tenantIdHeader), id, moduleId, lesson));
     }
 
     @DeleteMapping("/{id}/modules/{moduleId}/lessons/{lessonId}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:UPDATE')")
     public ResponseEntity<Course> removeLesson(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, @PathVariable UUID id, @PathVariable UUID moduleId, @PathVariable UUID lessonId) {
         return ResponseEntity.ok(courseService.removeLesson(getTenantId(tenantIdHeader), id, moduleId, lessonId));
     }
 
     // Thumbnails
     @PostMapping("/{id}/thumbnail")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:UPDATE')")
     public ResponseEntity<Course> uploadThumbnail(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, @PathVariable UUID id, @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
         String thumbnailUrl = storageService.storeCourseThumbnail(file, id);
         Course updates = new Course();
@@ -137,6 +155,7 @@ public class CourseController {
     }
 
     @GetMapping("/thumbnails/{filename:.+}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:READ')")
     public ResponseEntity<org.springframework.core.io.Resource> getThumbnail(@PathVariable String filename) {
         try {
             java.nio.file.Path filePath = java.nio.file.Paths.get("uploads/learning-thumbnails").resolve(filename).normalize();

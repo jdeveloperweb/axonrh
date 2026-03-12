@@ -27,21 +27,25 @@ public class CertificateController {
     }
 
     @GetMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:READ')")
     public ResponseEntity<Certificate> get(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, @PathVariable UUID id) {
         return ResponseEntity.ok(certificateService.get(getTenantId(tenantIdHeader), id));
     }
 
     @GetMapping("/employee/{employeeId}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:READ')")
     public ResponseEntity<List<Certificate>> listByEmployee(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, @PathVariable UUID employeeId) {
         return ResponseEntity.ok(certificateService.listByEmployee(getTenantId(tenantIdHeader), employeeId));
     }
 
     @GetMapping("/verify/{code}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:READ')")
     public ResponseEntity<Certificate> verify(@PathVariable String code) {
         return ResponseEntity.ok(certificateService.verify(code));
     }
 
     @GetMapping("/{id}/download")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:READ')")
     public ResponseEntity<Map<String, String>> download(@PathVariable UUID id) {
         // In a real implementation this would generate a PDF and return the URL or stream the file
         // For now returning a mock URL

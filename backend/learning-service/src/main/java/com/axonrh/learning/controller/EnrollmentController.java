@@ -31,6 +31,7 @@ public class EnrollmentController {
     }
 
     @PostMapping
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:UPDATE')")
     public ResponseEntity<Enrollment> enroll(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, @RequestBody Map<String, Object> body) {
         UUID courseId = UUID.fromString((String) body.get("courseId"));
         UUID employeeId = UUID.fromString((String) body.get("employeeId"));
@@ -42,41 +43,49 @@ public class EnrollmentController {
     }
 
     @GetMapping
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:READ')")
     public ResponseEntity<Page<Enrollment>> listAll(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, Pageable pageable) {
         return ResponseEntity.ok(enrollmentService.listAll(getTenantId(tenantIdHeader), pageable));
     }
 
     @GetMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:READ')")
     public ResponseEntity<Enrollment> get(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, @PathVariable UUID id) {
         return ResponseEntity.ok(enrollmentService.get(getTenantId(tenantIdHeader), id));
     }
 
     @GetMapping("/employee/{employeeId}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:READ')")
     public ResponseEntity<List<Enrollment>> getByEmployee(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, @PathVariable UUID employeeId) {
         return ResponseEntity.ok(enrollmentService.getByEmployee(getTenantId(tenantIdHeader), employeeId));
     }
 
     @GetMapping("/employee/{employeeId}/active")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:READ')")
     public ResponseEntity<List<Enrollment>> getActiveByEmployee(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, @PathVariable UUID employeeId) {
         return ResponseEntity.ok(enrollmentService.getActiveByEmployee(getTenantId(tenantIdHeader), employeeId));
     }
 
     @GetMapping("/course/{courseId}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:READ')")
     public ResponseEntity<Page<Enrollment>> getByCourse(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, @PathVariable UUID courseId, Pageable pageable) {
         return ResponseEntity.ok(enrollmentService.getByCourse(getTenantId(tenantIdHeader), courseId, pageable));
     }
     
     @GetMapping("/overdue")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:READ')")
     public ResponseEntity<List<Enrollment>> getOverdue(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader) {
         return ResponseEntity.ok(enrollmentService.getOverdue(getTenantId(tenantIdHeader)));
     }
 
     @PostMapping("/{id}/start")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:READ')")
     public ResponseEntity<Enrollment> start(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, @PathVariable UUID id) {
         return ResponseEntity.ok(enrollmentService.startCourse(getTenantId(tenantIdHeader), id));
     }
 
     @PostMapping("/{id}/lessons/{lessonId}/progress")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:READ')")
     public ResponseEntity<Enrollment> updateProgress(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader,
                                                      @PathVariable UUID id,
                                                      @PathVariable UUID lessonId,
@@ -89,28 +98,33 @@ public class EnrollmentController {
     }
 
     @PostMapping("/{id}/complete")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:READ')")
     public ResponseEntity<Enrollment> complete(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, @PathVariable UUID id, @RequestBody Map<String, Object> body) {
         BigDecimal score = body.get("score") != null ? new BigDecimal(body.get("score").toString()) : BigDecimal.ZERO;
         return ResponseEntity.ok(enrollmentService.completeCourse(getTenantId(tenantIdHeader), id, score));
     }
 
     @PostMapping("/{id}/cancel")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:UPDATE')")
     public ResponseEntity<Enrollment> cancel(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, @PathVariable UUID id, @RequestBody Map<String, String> body) {
         return ResponseEntity.ok(enrollmentService.cancel(getTenantId(tenantIdHeader), id, body.get("reason")));
     }
     
     @PostMapping("/{id}/approve")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:UPDATE')")
     public ResponseEntity<Enrollment> approve(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, @PathVariable UUID id, @RequestParam UUID approverId) {
         return ResponseEntity.ok(enrollmentService.approve(getTenantId(tenantIdHeader), id, approverId));
     }
 
     @DeleteMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:DELETE')")
     public ResponseEntity<Void> delete(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, @PathVariable UUID id) {
         enrollmentService.delete(getTenantId(tenantIdHeader), id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/employee/{employeeId}/statistics")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:READ')")
     public ResponseEntity<EnrollmentService.EnrollmentStatistics> getEmployeeStatistics(@RequestHeader(value = "X-Tenant-ID", required = false) String tenantIdHeader, @PathVariable UUID employeeId) {
         return ResponseEntity.ok(enrollmentService.getEmployeeStatistics(getTenantId(tenantIdHeader), employeeId));
     }

@@ -26,6 +26,7 @@ public class LearningDashboardController {
     private final EnrollmentRepository enrollmentRepository;
 
     @GetMapping("/stats")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('LEARNING:READ')")
     public ResponseEntity<LearningDashboardDTO> getDashboardStats(
             @RequestHeader("X-Tenant-ID") UUID tenantId) {
         

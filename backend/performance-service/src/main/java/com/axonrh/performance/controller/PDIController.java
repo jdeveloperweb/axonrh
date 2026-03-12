@@ -26,6 +26,7 @@ public class PDIController {
     // ==================== CRUD ====================
 
     @PostMapping
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:CREATE')")
     public ResponseEntity<PDI> createPDI(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @RequestBody PDI pdi) {
@@ -34,6 +35,7 @@ public class PDIController {
     }
 
     @GetMapping("/{pdiId}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:READ')")
     public ResponseEntity<PDI> getPDI(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @RequestHeader(value = "X-User-ID", required = false) UUID viewerUserId,
@@ -46,6 +48,7 @@ public class PDIController {
     }
 
     @PutMapping("/{pdiId}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:UPDATE')")
     public ResponseEntity<PDI> updatePDI(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID pdiId,
@@ -54,6 +57,7 @@ public class PDIController {
     }
 
     @DeleteMapping("/{pdiId}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:DELETE')")
     public ResponseEntity<Void> deletePDI(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID pdiId) {
@@ -64,6 +68,7 @@ public class PDIController {
     // ==================== Listing ====================
 
     @GetMapping
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:READ')")
     public ResponseEntity<Page<PDI>> getAllPDIs(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             Pageable pageable) {
@@ -71,6 +76,7 @@ public class PDIController {
     }
 
     @GetMapping("/employee/{employeeId}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:READ')")
     public ResponseEntity<List<PDI>> getEmployeePDIs(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID employeeId) {
@@ -78,6 +84,7 @@ public class PDIController {
     }
 
     @GetMapping("/employee/{employeeId}/active")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:READ')")
     public ResponseEntity<List<PDI>> getActivePDIs(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID employeeId) {
@@ -85,6 +92,7 @@ public class PDIController {
     }
 
     @GetMapping("/team/{managerId}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:READ')")
     public ResponseEntity<List<PDI>> getTeamPDIs(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID managerId) {
@@ -92,6 +100,7 @@ public class PDIController {
     }
 
     @GetMapping("/pending-approval/{managerId}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:READ')")
     public ResponseEntity<List<PDI>> getPendingApprovalPDIs(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID managerId) {
@@ -99,6 +108,7 @@ public class PDIController {
     }
 
     @GetMapping("/overdue")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:READ')")
     public ResponseEntity<List<PDI>> getOverduePDIs(
             @RequestHeader("X-Tenant-ID") UUID tenantId) {
         return ResponseEntity.ok(pdiService.getOverduePDIs(tenantId));
@@ -107,6 +117,7 @@ public class PDIController {
     // ==================== Workflow ====================
 
     @PostMapping("/{pdiId}/submit")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:UPDATE')")
     public ResponseEntity<PDI> submitForApproval(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID pdiId) {
@@ -114,6 +125,7 @@ public class PDIController {
     }
 
     @PostMapping("/{pdiId}/approve")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:UPDATE')")
     public ResponseEntity<PDI> approvePDI(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID pdiId,
@@ -122,6 +134,7 @@ public class PDIController {
     }
 
     @PostMapping("/{pdiId}/activate")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:UPDATE')")
     public ResponseEntity<PDI> activatePDI(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID pdiId) {
@@ -129,6 +142,7 @@ public class PDIController {
     }
 
     @PostMapping("/{pdiId}/complete")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:UPDATE')")
     public ResponseEntity<PDI> completePDI(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID pdiId) {
@@ -136,6 +150,7 @@ public class PDIController {
     }
 
     @PostMapping("/{pdiId}/cancel")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:UPDATE')")
     public ResponseEntity<PDI> cancelPDI(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID pdiId) {
@@ -145,6 +160,7 @@ public class PDIController {
     // ==================== Actions ====================
 
     @PostMapping("/{pdiId}/actions")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:UPDATE')")
     public ResponseEntity<PDI> addAction(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID pdiId,
@@ -153,6 +169,7 @@ public class PDIController {
     }
 
     @DeleteMapping("/{pdiId}/actions/{actionId}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:UPDATE')")
     public ResponseEntity<PDI> removeAction(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID pdiId,
@@ -161,6 +178,7 @@ public class PDIController {
     }
 
     @PostMapping("/{pdiId}/actions/{actionId}/start")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:UPDATE')")
     public ResponseEntity<PDI> startAction(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID pdiId,
@@ -169,6 +187,7 @@ public class PDIController {
     }
 
     @PostMapping("/{pdiId}/actions/{actionId}/complete")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:UPDATE')")
     public ResponseEntity<PDI> completeAction(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID pdiId,
@@ -179,6 +198,7 @@ public class PDIController {
     }
 
     @PostMapping("/{pdiId}/actions/{actionId}/progress")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:UPDATE')")
     public ResponseEntity<PDI> updateActionProgress(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID pdiId,
@@ -192,6 +212,7 @@ public class PDIController {
     // ==================== From Evaluation ====================
 
     @PostMapping("/from-evaluation")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:CREATE')")
     public ResponseEntity<PDI> createFromEvaluation(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @RequestBody CreateFromEvaluationRequest request) {
@@ -206,6 +227,7 @@ public class PDIController {
     // ==================== Statistics ====================
 
     @GetMapping("/manager/{managerId}/statistics")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:READ')")
     public ResponseEntity<PDIStatistics> getManagerStatistics(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID managerId) {
