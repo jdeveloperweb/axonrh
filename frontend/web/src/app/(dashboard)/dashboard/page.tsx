@@ -983,56 +983,34 @@ export default function DashboardPage() {
   }
 
   const ViewToggle = () => (
-    <div className="relative p-1.5 bg-gradient-to-b from-white to-slate-50 border border-slate-200/80 rounded-2xl flex items-center shadow-lg shadow-slate-200/50 w-fit backdrop-blur-xl">
+    <div className="relative p-1 bg-white border border-slate-200 rounded-xl flex items-center shadow-sm w-fit">
       {/* Animated Sliding Background */}
       <div
-        className={`absolute top-1.5 bottom-1.5 rounded-xl shadow-md transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) z-0 ${viewMode === 'manager'
-          ? 'left-1.5 w-[calc(50%-6px)] bg-gradient-to-br from-indigo-500 via-indigo-600 to-violet-600 shadow-indigo-300/40 translate-x-0'
-          : 'left-1.5 w-[calc(50%-6px)] bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-600 shadow-blue-300/40 translate-x-[104%]'
+        className={`absolute top-1 bottom-1 rounded-lg transition-all duration-300 ease-in-out z-0 ${viewMode === 'manager'
+          ? 'left-1 w-[calc(50%-4px)] bg-[var(--color-primary)] translate-x-0'
+          : 'left-1 w-[calc(50%-4px)] bg-[var(--color-primary)] translate-x-[100%]'
           }`}
       />
 
       <button
         onClick={() => setViewMode('manager')}
-        className={`relative z-10 flex items-center justify-center gap-2.5 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 min-w-[150px] group ${viewMode === 'manager'
+        className={`relative z-10 flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all duration-300 min-w-[140px] ${viewMode === 'manager'
           ? 'text-white'
-          : 'text-slate-500 hover:text-slate-800'
+          : 'text-slate-500 hover:text-slate-700'
           }`}
       >
-        <div className={`relative p-1.5 rounded-lg transition-all duration-300 ${viewMode === 'manager'
-          ? 'bg-white/20 backdrop-blur-sm'
-          : 'bg-slate-100 group-hover:bg-slate-200'
-          }`}>
-          <ShieldCheck className="w-4 h-4" />
-          {viewMode === 'manager' && (
-            <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-yellow-400 border border-indigo-500"></span>
-            </span>
-          )}
-        </div>
+        <ShieldCheck className="w-4 h-4" />
         <span className="tracking-tight">Visão Gestor</span>
       </button>
 
       <button
         onClick={() => setViewMode('collaborator')}
-        className={`relative z-10 flex items-center justify-center gap-2.5 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 min-w-[150px] group ${viewMode === 'collaborator'
+        className={`relative z-10 flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all duration-300 min-w-[140px] ${viewMode === 'collaborator'
           ? 'text-white'
-          : 'text-slate-500 hover:text-slate-800'
+          : 'text-slate-500 hover:text-slate-700'
           }`}
       >
-        <div className={`relative p-1.5 rounded-lg transition-all duration-300 ${viewMode === 'collaborator'
-          ? 'bg-white/20 backdrop-blur-sm'
-          : 'bg-slate-100 group-hover:bg-slate-200'
-          }`}>
-          <LineChart className="w-4 h-4" />
-          {viewMode === 'collaborator' && (
-            <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-400 border border-blue-500"></span>
-            </span>
-          )}
-        </div>
+        <LineChart className="w-4 h-4" />
         <span className="tracking-tight">Minha Visão</span>
       </button>
     </div>
@@ -1048,7 +1026,7 @@ export default function DashboardPage() {
       <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6 pb-6 border-b border-slate-100">
         <div className="space-y-2">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-2xl shadow-lg shadow-indigo-200">
+            <div className="p-3 bg-[var(--color-primary)] rounded-2xl shadow-sm">
               <BarChart3 className="w-8 h-8 text-white" />
             </div>
             <div>
@@ -1060,40 +1038,6 @@ export default function DashboardPage() {
               </p>
             </div>
           </div>
-        </div>
-
-        {/* Hub de Ações Rápidas - Premium Design */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-2">
-          {[
-            { label: 'Novo Colaborador', icon: UserPlus, href: '/employees?new=true', color: 'from-blue-500 to-indigo-600', shadow: 'shadow-blue-200' },
-            { label: 'Importar Dados', icon: Database, href: '/settings/data-load', color: 'from-emerald-500 to-teal-600', shadow: 'shadow-emerald-200' },
-            { label: 'Gerar Folha', icon: Banknote, href: '/payroll', color: 'from-amber-500 to-orange-600', shadow: 'shadow-amber-200' },
-            { label: 'Configurações', icon: Settings, href: '/settings', color: 'from-slate-600 to-slate-800', shadow: 'shadow-slate-300' },
-          ].map((action) => {
-            const Icon = action.icon;
-            return (
-              <button
-                key={action.label}
-                onClick={() => router.push(action.href)}
-                className={cn(
-                  "group relative p-4 rounded-3xl bg-gradient-to-br transition-all duration-300 hover:scale-[1.03] active:scale-95 text-left border border-white/20 shadow-lg",
-                  action.color,
-                  action.shadow
-                )}
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="p-2 bg-white/20 backdrop-blur-md rounded-xl text-white">
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <ArrowRight className="w-4 h-4 text-white/50 group-hover:text-white group-hover:translate-x-1 transition-all" />
-                </div>
-                <span className="text-white font-bold text-sm sm:text-base leading-tight block">
-                  {action.label}
-                </span>
-                <div className="absolute -bottom-2 -right-2 w-16 h-16 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
-              </button>
-            );
-          })}
         </div>
 
         {/* Seletor em Posição de Destaque */}
