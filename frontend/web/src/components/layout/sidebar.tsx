@@ -59,7 +59,7 @@ const navGroups: NavGroup[] = [
   {
     title: 'PESSOAS',
     items: [
-      { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+      { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, permission: 'DASHBOARD:READ' },
       { label: 'Colaboradores', href: '/employees', icon: Users, permission: 'EMPLOYEE:READ', module: 'moduleEmployees' },
       { label: 'Ponto', href: '/timesheet/record', icon: Clock, permission: 'TIMESHEET:READ', module: 'moduleTimesheet' },
       { label: 'Licenças', href: '/vacation', icon: Calendar, permission: 'VACATION:READ', module: 'moduleVacation' },
@@ -194,7 +194,7 @@ export function Sidebar() {
               });
 
               // Para colaboradores comuns, garantir que eles vejam "Meus Holerites" se o módulo estiver ativo
-              if (!hasManagementAccess && group.title === 'PESSOAS') {
+              if (!hasManagementAccess && group.title === 'PESSOAS' && hasPermission('PAYROLL:READ')) {
                 groupFilteredItems.push({
                   label: 'Meus Holerites',
                   href: '/payroll/my-payslips',

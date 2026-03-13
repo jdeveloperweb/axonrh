@@ -17,7 +17,8 @@ export type Permission =
     | 'ROLE:READ' | 'ROLE:CREATE' | 'ROLE:UPDATE' | 'ROLE:DELETE'
     | 'CONFIG:READ' | 'CONFIG:UPDATE'
     | 'INTEGRATION:READ' | 'INTEGRATION:UPDATE'
-    | 'AI_ASSISTANT:READ';
+    | 'AI_ASSISTANT:READ'
+    | 'DASHBOARD:READ';
 
 export function usePermissions() {
     const { user } = useAuthStore();

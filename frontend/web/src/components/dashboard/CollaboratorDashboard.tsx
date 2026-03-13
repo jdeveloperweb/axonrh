@@ -61,6 +61,14 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
     const { hasManagementAccess, hasPermission } = usePermissions();
     const isManagement = hasManagementAccess;
     const canUseAI = hasPermission('AI_ASSISTANT:READ');
+    
+    // Permission checks for each module
+    const canReadTimesheet = hasPermission('TIMESHEET:READ');
+    const canReadVacation = hasPermission('VACATION:READ');
+    const canReadPerformance = hasPermission('PERFORMANCE:READ');
+    const canReadLearning = hasPermission('LEARNING:READ');
+    const canReadEvents = hasPermission('EVENT:READ');
+    const canReadWellbeing = hasPermission('WELLBEING:READ');
 
     const handleRegisterEvent = async (e: React.MouseEvent, eventId: string) => {
         if (!eventId) return;
@@ -183,7 +191,7 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
                             </Button>
                         )}
 
-                        {useThemeStore.getState().tenantTheme?.modules?.moduleTimesheet !== false && (
+                        {useThemeStore.getState().tenantTheme?.modules?.moduleTimesheet !== false && canReadTimesheet && (
                             <Button
                                 variant="outline"
                                 className="border-gray-200 hover:bg-white text-gray-700 transition-all text-xs sm:text-sm"
@@ -195,7 +203,7 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
                             </Button>
                         )}
 
-                        {useThemeStore.getState().tenantTheme?.modules?.moduleTimesheet !== false && (
+                        {useThemeStore.getState().tenantTheme?.modules?.moduleTimesheet !== false && canReadTimesheet && (
                             <Button
                                 className="bg-[var(--color-primary)] hover:bg-[var(--color-primary)]/90 shadow-sm shadow-[var(--color-primary)]/20 text-white text-xs sm:text-sm col-span-2 md:col-span-1"
                                 onClick={() => router.push('/timesheet/record')}
@@ -213,7 +221,7 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
             {/* Main Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {/* Ponto Status */}
-                {useThemeStore.getState().tenantTheme?.modules?.moduleTimesheet !== false && (
+                {useThemeStore.getState().tenantTheme?.modules?.moduleTimesheet !== false && canReadTimesheet && (
                     <Card className="border-none shadow-sm bg-gradient-to-br from-[#EEF2FF] to-[#E0E7FF] overflow-hidden relative group">
                         <div className="absolute top-[-10px] right-[-10px] p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                             <Clock className="w-24 h-24" />
@@ -242,7 +250,7 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
                 )}
 
                 {/* Férias Status */}
-                {useThemeStore.getState().tenantTheme?.modules?.moduleVacation !== false && (
+                {useThemeStore.getState().tenantTheme?.modules?.moduleVacation !== false && canReadVacation && (
                     <Card className="border-none shadow-sm bg-gradient-to-br from-[#FFFBEB] to-[#FEF3C7] overflow-hidden relative group">
                         <div className="absolute top-[-10px] right-[-10px] p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                             <Calendar className="w-24 h-24" />
@@ -266,7 +274,7 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
                 )}
 
                 {/* Performance Status */}
-                {useThemeStore.getState().tenantTheme?.modules?.modulePerformance !== false && (
+                {useThemeStore.getState().tenantTheme?.modules?.modulePerformance !== false && canReadPerformance && (
                     <Card className="border-none shadow-sm bg-gradient-to-br from-[#F5F3FF] to-[#EDE9FE] overflow-hidden relative group">
                         <div className="absolute top-[-10px] right-[-10px] p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                             <ClipboardCheck className="w-24 h-24" />
@@ -290,7 +298,7 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
                 )}
 
                 {/* Treinamentos Status */}
-                {useThemeStore.getState().tenantTheme?.modules?.moduleLearning !== false && (
+                {useThemeStore.getState().tenantTheme?.modules?.moduleLearning !== false && canReadLearning && (
                     <Card className="border-none shadow-sm bg-gradient-to-br from-[#ECFDF5] to-[#D1FAE5] overflow-hidden relative group">
                         <div className="absolute top-[-10px] right-[-10px] p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                             <BookOpen className="w-24 h-24" />
@@ -318,7 +326,7 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Próximas Atividades / Cursos */}
                 <div className="lg:col-span-2 space-y-6">
-                    {useThemeStore.getState().tenantTheme?.modules?.moduleLearning !== false && (
+                    {useThemeStore.getState().tenantTheme?.modules?.moduleLearning !== false && canReadLearning && (
                         <>
                             <div className="flex items-center justify-between">
                                 <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
@@ -383,7 +391,7 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
                         </>
                     )}
 
-                    {useThemeStore.getState().tenantTheme?.modules?.modulePerformance !== false && (pendingDisc.length > 0 || activePDIs.length > 0 || pendingEvaluations.length > 0) && (
+                    {useThemeStore.getState().tenantTheme?.modules?.modulePerformance !== false && canReadPerformance && (pendingDisc.length > 0 || activePDIs.length > 0 || pendingEvaluations.length > 0) && (
                         <div className="mt-10 space-y-4">
                             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                                 <AlertCircle className="w-5 h-5 text-blue-500" />
@@ -458,7 +466,7 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
                         </div>
                     )}
 
-                    {allEvents.length > 0 && (
+                    {allEvents.length > 0 && canReadEvents && (
                         <div className="mt-10 space-y-4">
                             <div className="flex items-center justify-between">
                                 <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
@@ -541,7 +549,7 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
 
                 {/* Sidebar info */}
                 <div className="space-y-6">
-                    {useThemeStore.getState().tenantTheme?.modules?.moduleTimesheet !== false && (
+                    {useThemeStore.getState().tenantTheme?.modules?.moduleTimesheet !== false && canReadTimesheet && (
                         <Card className="border-none shadow-sm bg-white overflow-hidden">
                             <CardHeader className="bg-gray-50/50 border-b border-gray-50 pb-4">
                                 <CardTitle className="text-lg flex items-center gap-2">

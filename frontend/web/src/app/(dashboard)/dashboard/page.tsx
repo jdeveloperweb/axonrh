@@ -23,7 +23,8 @@ import {
   Database,
   Banknote,
   Settings,
-  ArrowRight
+  ArrowRight,
+  ShieldAlert
 } from 'lucide-react';
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
@@ -91,18 +92,26 @@ import { useRouter } from 'next/navigation';
 export default function DashboardPage() {
   const router = useRouter();
   const { user } = useAuthStore();
-  const { hasManagementAccess } = usePermissions();
+  const { hasManagementAccess, hasPermission } = usePermissions();
   const [statsData, setStatsData] = useState<DashboardStats | null>(null);
   const [learningStats, setLearningStats] = useState<LearningStats | null>(null);
   const [wellbeingStats, setWellbeingStats] = useState<WellbeingStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('geral');
-  const [viewMode, setViewMode] = useState<'manager' | 'collaborator'>('manager');
+  const [viewMode, setViewMode] = useState<'manager' | 'collaborator'>(hasManagementAccess ? 'manager' : 'collaborator');
+
+  const canReadDashboard = hasPermission('DASHBOARD:READ');
+
+  useEffect(() => {
+    if (!hasManagementAccess) {
+      setViewMode('collaborator');
+    }
+  }, [hasManagementAccess]);
 
   const isManagement = hasManagementAccess;
 
   useEffect(() => {
-    if (!isManagement) return;
+    if (!isManagement || !canReadDashboard) return;
 
     async function loadStats() {
       try {
@@ -1017,8 +1026,22 @@ export default function DashboardPage() {
     </div>
   );
 
+  if (!canReadDashboard) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6 animate-in fade-in duration-500">
+        <div className="p-4 bg-red-50 rounded-full mb-6 text-red-500">
+          <ShieldAlert className="w-12 h-12" />
+        </div>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Acesso Negado</h1>
+        <p className="text-gray-500 max-w-md mx-auto">
+          Você não tem permissão para visualizar o dashboard. Por favor, entre em contato com o administrador do sistema ou com o RH.
+        </p>
+      </div>
+    );
+  }
+
   if (viewMode === 'collaborator') {
-    return <CollaboratorDashboard extraHeaderContent={<div className="scale-90 origin-right"><ViewToggle /></div>} />;
+    return <CollaboratorDashboard extraHeaderContent={isManagement && <div className="scale-90 origin-right"><ViewToggle /></div>} />;
   }
 
   return (
