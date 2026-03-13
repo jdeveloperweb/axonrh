@@ -988,6 +988,20 @@ export default function DashboardPage() {
     return <div className="flex h-96 items-center justify-center text-gray-400">Carregando painel de gestão...</div>;
   }
 
+  if (!canReadDashboard) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6 animate-in fade-in duration-500">
+        <div className="p-4 bg-red-50 rounded-full mb-6 text-red-500">
+          <ShieldAlert className="w-12 h-12" />
+        </div>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Acesso Negado</h1>
+        <p className="text-gray-500 max-w-md mx-auto">
+          Você não tem permissão para visualizar o dashboard. Por favor, entre em contato com o administrador do sistema ou com o RH.
+        </p>
+      </div>
+    );
+  }
+
   if (!isManagement) {
     return <CollaboratorDashboard />;
   }
@@ -1026,19 +1040,6 @@ export default function DashboardPage() {
     </div>
   );
 
-  if (!canReadDashboard) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6 animate-in fade-in duration-500">
-        <div className="p-4 bg-red-50 rounded-full mb-6 text-red-500">
-          <ShieldAlert className="w-12 h-12" />
-        </div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Acesso Negado</h1>
-        <p className="text-gray-500 max-w-md mx-auto">
-          Você não tem permissão para visualizar o dashboard. Por favor, entre em contato com o administrador do sistema ou com o RH.
-        </p>
-      </div>
-    );
-  }
 
   if (viewMode === 'collaborator') {
     return <CollaboratorDashboard extraHeaderContent={isManagement && <div className="scale-90 origin-right"><ViewToggle /></div>} />;

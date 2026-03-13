@@ -63,12 +63,13 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
     const canUseAI = hasPermission('AI_ASSISTANT:READ');
     
     // Permission checks for each module
-    const canReadTimesheet = hasPermission('TIMESHEET:READ');
-    const canReadVacation = hasPermission('VACATION:READ');
-    const canReadPerformance = hasPermission('PERFORMANCE:READ');
-    const canReadLearning = hasPermission('LEARNING:READ');
-    const canReadEvents = hasPermission('EVENT:READ');
-    const canReadWellbeing = hasPermission('WELLBEING:READ');
+    const canReadDashboard = hasPermission('DASHBOARD:READ');
+    const canReadTimesheet = hasPermission('TIMESHEET:READ') || canReadDashboard;
+    const canReadVacation = hasPermission('VACATION:READ') || canReadDashboard;
+    const canReadPerformance = hasPermission('PERFORMANCE:READ') || canReadDashboard;
+    const canReadLearning = hasPermission('LEARNING:READ') || canReadDashboard;
+    const canReadEvents = hasPermission('EVENT:READ') || canReadDashboard;
+    const canReadWellbeing = hasPermission('WELLBEING:READ') || canReadDashboard;
 
     const handleRegisterEvent = async (e: React.MouseEvent, eventId: string) => {
         if (!eventId) return;
