@@ -71,7 +71,7 @@ const navGroups: NavGroup[] = [
       { label: 'Processos RH', href: '/processes', icon: ClipboardCheck, permission: 'ADMISSION:READ' },
       { label: 'Saúde Mental', href: '/wellbeing', icon: HeartPulse, permission: 'WELLBEING:READ' },
       { label: 'Eventos e Palestras', href: '/events', icon: Mic2, permission: 'EVENT:READ', module: 'moduleEvents' },
-      { label: 'Assistente IA', href: '/assistant', icon: MessageSquare, module: 'moduleAiAssistant' },
+      { label: 'Assistente IA', href: '/assistant', icon: MessageSquare, permission: 'AI_ASSISTANT:READ', module: 'moduleAiAssistant' },
     ]
   },
   {
@@ -174,13 +174,10 @@ export function Sidebar() {
         <nav className="flex-1 py-4 px-2 overflow-y-auto">
           <div className="space-y-6">
             {navGroups.map((group, groupIndex) => {
-              const roles = user?.roles || [];
-              const isAdmin = roles.includes('ADMIN');
-              const isRH = roles.includes('RH') || roles.includes('GESTOR_RH') || roles.includes('ANALISTA_DP');
-              const hasAdminAccess = isAdmin || isRH;
+              const { hasManagementAccess } = usePermissions();
 
               // Só quem tem acesso admin (ADMIN ou RH) vê o grupo de administração
-              if (group.title === 'ADMINISTRAÇÃO' && !hasAdminAccess) return null;
+              if (group.title === 'ADMINISTRAÇÃO' && !hasManagementAccess) return null;
 
               const groupFilteredItems = group.items.filter((item) => {
                 // 1. Check Module Activation
@@ -197,7 +194,7 @@ export function Sidebar() {
               });
 
               // Para colaboradores comuns, garantir que eles vejam "Meus Holerites" se o módulo estiver ativo
-              if (!hasAdminAccess && group.title === 'PESSOAS') {
+              if (!hasManagementAccess && group.title === 'PESSOAS') {
                 groupFilteredItems.push({
                   label: 'Meus Holerites',
                   href: '/payroll/my-payslips',

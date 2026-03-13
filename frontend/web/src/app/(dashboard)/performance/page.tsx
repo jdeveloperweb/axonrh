@@ -29,25 +29,23 @@ import {
 import { PerformanceAnalytics } from '@/components/performance/PerformanceAnalytics';
 import { EmployeePerformanceView } from '@/components/performance/EmployeePerformanceView';
 import { ManagerTeamView } from '@/components/performance/ManagerTeamView';
+import { usePermissions } from '@/hooks/use-permissions';
 
 export default function PerformancePage() {
   const { user } = useAuthStore();
-
-  const roles = user?.roles || [];
-  const isAdmin = roles.includes('ADMIN');
-  const isRH = roles.includes('RH') || roles.includes('GESTOR_RH') || roles.includes('ANALISTA_DP');
-  const isManager = roles.includes('MANAGER') || roles.includes('GESTOR') || roles.includes('LIDER');
-  const hasAdminAccess = isAdmin || isRH;
-
+  const { hasManagementAccess, isAdmin } = usePermissions();
   const [viewMode, setViewMode] = useState<'employee' | 'manager'>('employee');
 
   useEffect(() => {
-    if (hasAdminAccess || isManager) {
+    if (hasManagementAccess) {
       setViewMode('manager');
     }
-  }, [hasAdminAccess, isManager]);
+  }, [hasManagementAccess]);
 
-  const canViewManagement = hasAdminAccess || isManager;
+  const canViewManagement = hasManagementAccess;
+  const hasAdminAccess = hasManagementAccess;
+  const isRH = hasManagementAccess;
+  const isManager = hasManagementAccess;
 
   return (
     <div className="space-y-8 pb-16">
@@ -114,7 +112,7 @@ export default function PerformancePage() {
         <div className="space-y-12 animate-in fade-in slide-in-from-bottom-10 duration-700">
 
           {/* Indicadores Globais (RH/ADMIN) */}
-          {hasAdminAccess && (
+          {isAdmin && (
             <section className="animate-in fade-in slide-in-from-top-4 duration-500">
               <PerformanceAnalytics />
             </section>
@@ -128,7 +126,7 @@ export default function PerformancePage() {
           )}
 
           {/* PAINEL DE CONTROLE DE FERRAMENTAS (RH/ADMIN) */}
-          {hasAdminAccess && (
+          {isAdmin && (
             <section className={`space-y-8 ${isManager ? 'pt-16 border-t-2 border-slate-100/50' : 'pt-4'}`}>
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="space-y-1">

@@ -41,6 +41,7 @@ import { wellbeingApi, WellbeingStats } from '@/lib/api/wellbeing';
 import { CollaboratorDashboard } from '@/components/dashboard/CollaboratorDashboard';
 import { AvailabilityDashboard } from '@/components/dashboard/AvailabilityDashboard';
 import { useThemeStore } from '@/stores/theme-store';
+import { usePermissions } from '@/hooks/use-permissions';
 import { cn } from '@/lib/utils';
 
 // ==================== Types ====================
@@ -90,6 +91,7 @@ import { useRouter } from 'next/navigation';
 export default function DashboardPage() {
   const router = useRouter();
   const { user } = useAuthStore();
+  const { hasManagementAccess } = usePermissions();
   const [statsData, setStatsData] = useState<DashboardStats | null>(null);
   const [learningStats, setLearningStats] = useState<LearningStats | null>(null);
   const [wellbeingStats, setWellbeingStats] = useState<WellbeingStats | null>(null);
@@ -97,8 +99,7 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('geral');
   const [viewMode, setViewMode] = useState<'manager' | 'collaborator'>('manager');
 
-  const roles = user?.roles || [];
-  const isManagement = roles.includes('ADMIN') || roles.includes('RH') || roles.includes('GESTOR_RH') || roles.includes('ANALISTA_DP');
+  const isManagement = hasManagementAccess;
 
   useEffect(() => {
     if (!isManagement) return;

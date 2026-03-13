@@ -56,6 +56,7 @@ import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
+import { usePermissions } from '@/hooks/use-permissions';
 
 export default function VacationPage() {
   const router = useRouter();
@@ -104,10 +105,10 @@ export default function VacationPage() {
     localStorage.setItem('vacation_filter_sector', filterSector);
   }, [filterType, filterStatus, filterDay, filterMonthStart, filterMonthEnd, filterSector]);
 
-  const roles = user?.roles || [];
-  const isAdmin = roles.some(r => r.includes('ADMIN'));
-  const isRH = roles.some(r => r.includes('RH') || r.includes('GESTOR_RH') || r.includes('ANALISTA_DP'));
-  const isManager = roles.some(r => r.includes('GESTOR') || r.includes('LIDER') || r.includes('MANAGER'));
+  const { hasManagementAccess, isAdmin: isUserAdmin } = usePermissions();
+  const isAdmin = isUserAdmin;
+  const isRH = hasManagementAccess;
+  const isManager = hasManagementAccess;
 
   const [statistics, setStatistics] = useState({
     pendingRequests: 0,

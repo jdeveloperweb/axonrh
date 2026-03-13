@@ -36,6 +36,7 @@ import { eventsApi, Event as AppEvent } from '@/lib/api/events';
 import { AxonIATip } from '@/components/performance/AxonIATip';
 import { useThemeStore } from '@/stores/theme-store';
 import { useToast } from '@/components/ui/toast';
+import { usePermissions } from '@/hooks/use-permissions';
 
 interface CollaboratorDashboardProps {
     extraHeaderContent?: React.ReactNode;
@@ -57,8 +58,9 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
     const [loading, setLoading] = useState(true);
     const [registeringId, setRegisteringId] = useState<string | null>(null);
 
-    const roles = user?.roles || [];
-    const isManagement = roles.includes('ADMIN') || roles.includes('RH') || roles.includes('GESTOR_RH') || roles.includes('ANALISTA_DP');
+    const { hasManagementAccess, hasPermission } = usePermissions();
+    const isManagement = hasManagementAccess;
+    const canUseAI = hasPermission('AI_ASSISTANT:READ');
 
     const handleRegisterEvent = async (e: React.MouseEvent, eventId: string) => {
         if (!eventId) return;
@@ -169,7 +171,7 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
                 <div className="flex flex-col md:flex-row items-center gap-3">
                     {extraHeaderContent}
                     <div className="grid grid-cols-2 md:grid-cols-3 items-center gap-3 w-full md:w-auto">
-                        {useThemeStore.getState().tenantTheme?.modules?.moduleAiAssistant !== false && (
+                        {useThemeStore.getState().tenantTheme?.modules?.moduleAiAssistant !== false && canUseAI && (
                             <Button
                                 variant="outline"
                                 className="border-gray-200 hover:bg-white hover:text-[var(--color-primary)] hover:border-[var(--color-primary)] transition-all text-xs sm:text-sm"
@@ -579,7 +581,7 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
                         </Card>
                     )}
 
-                    {useThemeStore.getState().tenantTheme?.modules?.moduleAiAssistant !== false && (
+                    {useThemeStore.getState().tenantTheme?.modules?.moduleAiAssistant !== false && canUseAI && (
                         <>
                             <AxonIATip latestDisc={latestDisc} />
 

@@ -16,7 +16,8 @@ export type Permission =
     | 'USER:READ' | 'USER:CREATE' | 'USER:UPDATE' | 'USER:DELETE'
     | 'ROLE:READ' | 'ROLE:CREATE' | 'ROLE:UPDATE' | 'ROLE:DELETE'
     | 'CONFIG:READ' | 'CONFIG:UPDATE'
-    | 'INTEGRATION:READ' | 'INTEGRATION:UPDATE';
+    | 'INTEGRATION:READ' | 'INTEGRATION:UPDATE'
+    | 'AI_ASSISTANT:READ';
 
 export function usePermissions() {
     const { user } = useAuthStore();
@@ -46,9 +47,16 @@ export function usePermissions() {
         return permissions.every(p => userPermissions.includes(p));
     }, [user]);
 
+    const roles = user?.roles || [];
+    const isAdmin = roles.includes('ADMIN');
+    const isRH = roles.includes('RH') || roles.includes('GESTOR_RH') || roles.includes('ANALISTA_DP');
+    const isManager = roles.includes('MANAGER') || roles.includes('GESTOR') || roles.includes('LIDER');
+    const hasManagementAccess = isAdmin || ((isRH || isManager) && (user?.permissions || []).length > 0);
+
     return {
         permissions: user?.permissions || [],
-        isAdmin: user?.roles?.includes('ADMIN') || false,
+        isAdmin,
+        hasManagementAccess,
         hasPermission,
         hasAllPermissions
     };
