@@ -68,7 +68,7 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
     const canReadVacation = hasPermission('VACATION:READ') || canReadDashboard;
     const canReadPerformance = hasPermission('PERFORMANCE:READ') || canReadDashboard;
     const canReadLearning = hasPermission('LEARNING:READ') || canReadDashboard;
-    const canReadEvents = hasPermission('EVENT:READ') || canReadDashboard;
+    const canReadEvents = hasPermission('EVENT:READ');
     const canReadWellbeing = hasPermission('WELLBEING:READ') || canReadDashboard;
 
     const handleRegisterEvent = async (e: React.MouseEvent, eventId: string) => {
