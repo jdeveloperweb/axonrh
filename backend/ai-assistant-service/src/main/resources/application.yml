@@ -22,8 +22,10 @@ spring:
 
   flyway:
     out-of-order: true
-    validate-on-migrate: true
+    validate-on-migrate: false
     baseline-on-migrate: true
+    baseline-version: 5
+    table: ai_assistant_service_schema_history
 
   # MongoDB for AI conversations
   data:

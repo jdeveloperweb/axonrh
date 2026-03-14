@@ -100,7 +100,7 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('geral');
   const [viewMode, setViewMode] = useState<'manager' | 'collaborator'>(hasManagementAccess ? 'manager' : 'collaborator');
 
-  const canReadDashboard = hasPermission('DASHBOARD:READ');
+  const canReadDashboard = hasPermission(['DASHBOARD:READ', 'DASHBOARD:MANAGEMENT_READ']);
 
   useEffect(() => {
     if (!hasManagementAccess) {

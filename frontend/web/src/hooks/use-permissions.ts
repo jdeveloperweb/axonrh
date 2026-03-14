@@ -18,7 +18,8 @@ export type Permission =
     | 'CONFIG:READ' | 'CONFIG:UPDATE'
     | 'INTEGRATION:READ' | 'INTEGRATION:UPDATE'
     | 'AI_ASSISTANT:READ'
-    | 'DASHBOARD:READ';
+    | 'DASHBOARD:READ'
+    | 'DASHBOARD:MANAGEMENT_READ';
 
 export function usePermissions() {
     const { user } = useAuthStore();
@@ -52,7 +53,8 @@ export function usePermissions() {
     const isAdmin = roles.includes('ADMIN');
     const isRH = roles.includes('RH') || roles.includes('GESTOR_RH') || roles.includes('ANALISTA_DP');
     const isManager = roles.includes('MANAGER') || roles.includes('GESTOR') || roles.includes('LIDER');
-    const hasManagementAccess = isAdmin || ((isRH || isManager) && (user?.permissions || []).length > 0);
+    const isManagement = hasPermission('DASHBOARD:MANAGEMENT_READ');
+    const hasManagementAccess = isAdmin || isManagement;
 
     return {
         permissions: user?.permissions || [],
