@@ -3,18 +3,10 @@
 
 import { useEffect, useState } from "react";
 import { Role, rolesApi } from "@/lib/api/roles";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2, Plus, AlertTriangle, ArrowLeft } from "lucide-react";
+import { Edit2, Trash2, Plus, AlertTriangle, ArrowLeft, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -89,7 +81,7 @@ export default function RolesPage() {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-in fade-in duration-500">
             <Link
                 href="/settings"
                 className="flex items-center text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors mb-4 group w-fit"
@@ -98,10 +90,10 @@ export default function RolesPage() {
                 Voltar para Configurações
             </Link>
 
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Perfis de Acesso</h1>
-                    <p className="text-muted-foreground">
+                    <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">Perfis de Acesso</h1>
+                    <p className="text-[var(--color-text-secondary)]">
                         Gerencie os perfis de acesso e suas permissões no sistema.
                     </p>
                 </div>
@@ -123,99 +115,124 @@ export default function RolesPage() {
             )}
 
             <Card>
-                <CardHeader>
-                    <CardTitle>Perfis Cadastrados</CardTitle>
-                    <CardDescription>
-                        Lista de todos os perfis disponíveis e seus níveis de acesso.
-                    </CardDescription>
+                <CardHeader className="pb-3 border-b border-[var(--color-border)]">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="font-semibold text-[var(--color-text-primary)]">Perfis Cadastrados</p>
+                            <p className="text-sm text-[var(--color-text-secondary)]">
+                                Lista de todos os perfis disponíveis e seus níveis de acesso.
+                            </p>
+                        </div>
+                        {!loading && roles.length > 0 && (
+                            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[var(--color-surface-variant)] text-[var(--color-text-secondary)]">
+                                {roles.length} {roles.length === 1 ? "perfil" : "perfis"}
+                            </span>
+                        )}
+                    </div>
                 </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Nome</TableHead>
-                                <TableHead>Descrição</TableHead>
-                                <TableHead>Tipo</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead className="text-right">Ações</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {loading ? (
-                                <TableRow>
-                                    <TableCell colSpan={5} className="text-center py-8">
-                                        Carregando...
-                                    </TableCell>
-                                </TableRow>
-                            ) : roles.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={5} className="text-center py-8">
-                                        {backendError
-                                            ? "Funcionalidade indisponível até a atualização do backend."
-                                            : "Nenhum perfil encontrado."}
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                roles.map((role) => (
-                                    <TableRow key={role.id}>
-                                        <TableCell className="font-medium">{role.name}</TableCell>
-                                        <TableCell>{role.description || "-"}</TableCell>
-                                        <TableCell>
-                                            {role.systemRole ? (
-                                                <Badge variant="warning">Sistema</Badge>
-                                            ) : (
-                                                <Badge variant="outline">Personalizado</Badge>
-                                            )}
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge variant={role.active ? "default" : "destructive"}>
-                                                {role.active ? "Ativo" : "Inativo"}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() => router.push(`/settings/roles/${role.id}`)}
-                                                >
-                                                    <Edit className="h-4 w-4" />
-                                                </Button>
-
-                                                {!role.systemRole && (
-                                                    <AlertDialog>
-                                                        <AlertDialogTrigger asChild>
-                                                            <Button variant="ghost" size="icon">
-                                                                <Trash2 className="h-4 w-4 text-destructive" />
-                                                            </Button>
-                                                        </AlertDialogTrigger>
-                                                        <AlertDialogContent>
-                                                            <AlertDialogHeader>
-                                                                <AlertDialogTitle>Excluir Perfil</AlertDialogTitle>
-                                                                <AlertDialogDescription>
-                                                                    Tem certeza que deseja excluir o perfil <strong>{role.name}</strong>?
-                                                                    Esta ação não pode ser desfeita.
-                                                                </AlertDialogDescription>
-                                                            </AlertDialogHeader>
-                                                            <AlertDialogFooter>
-                                                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                                                <AlertDialogAction
-                                                                    onClick={() => handleDelete(role.id)}
-                                                                    className="bg-destructive hover:bg-destructive/90"
-                                                                >
-                                                                    Excluir
-                                                                </AlertDialogAction>
-                                                            </AlertDialogFooter>
-                                                        </AlertDialogContent>
-                                                    </AlertDialog>
+                <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left">
+                            <thead className="bg-[var(--color-surface-variant)] text-[var(--color-text-secondary)] text-sm font-medium uppercase tracking-wider">
+                                <tr>
+                                    <th className="px-6 py-4">Nome</th>
+                                    <th className="px-6 py-4">Descrição</th>
+                                    <th className="px-6 py-4">Tipo</th>
+                                    <th className="px-6 py-4">Status</th>
+                                    <th className="px-6 py-4 text-right">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-[var(--color-border)]">
+                                {loading ? (
+                                    Array.from({ length: 4 }).map((_, i) => (
+                                        <tr key={i} className="animate-pulse">
+                                            <td className="px-6 py-4" colSpan={5}>
+                                                <div className="h-10 bg-[var(--color-surface-variant)] rounded"></div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : roles.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={5} className="px-6 py-12 text-center text-[var(--color-text-secondary)]">
+                                            {backendError
+                                                ? "Funcionalidade indisponível até a atualização do backend."
+                                                : "Nenhum perfil encontrado."}
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    roles.map((role) => (
+                                        <tr key={role.id} className="hover:bg-[var(--color-surface-variant)]/30 transition-colors">
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-9 h-9 rounded-lg bg-[var(--color-primary)]/10 flex items-center justify-center flex-shrink-0">
+                                                        <ShieldCheck className="w-4 h-4 text-[var(--color-primary)]" />
+                                                    </div>
+                                                    <span className="font-medium text-[var(--color-text-primary)]">{role.name}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 text-[var(--color-text-secondary)] text-sm max-w-xs truncate">
+                                                {role.description || <span className="text-[var(--color-text-secondary)]/50">—</span>}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                {role.systemRole ? (
+                                                    <Badge variant="warning">Sistema</Badge>
+                                                ) : (
+                                                    <Badge variant="outline">Personalizado</Badge>
                                                 )}
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <Badge variant={role.active ? "default" : "destructive"}>
+                                                    {role.active ? "Ativo" : "Inativo"}
+                                                </Badge>
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <div className="flex items-center justify-end gap-1">
+                                                    <button
+                                                        className="p-2 hover:bg-[var(--color-surface-variant)] rounded-full transition-colors text-[var(--color-text-secondary)]"
+                                                        title="Editar"
+                                                        onClick={() => router.push(`/settings/roles/${role.id}`)}
+                                                    >
+                                                        <Edit2 className="w-4 h-4" />
+                                                    </button>
+
+                                                    {!role.systemRole && (
+                                                        <AlertDialog>
+                                                            <AlertDialogTrigger asChild>
+                                                                <button
+                                                                    className="p-2 hover:bg-red-50 rounded-full transition-colors text-red-500"
+                                                                    title="Excluir"
+                                                                >
+                                                                    <Trash2 className="w-4 h-4" />
+                                                                </button>
+                                                            </AlertDialogTrigger>
+                                                            <AlertDialogContent>
+                                                                <AlertDialogHeader>
+                                                                    <AlertDialogTitle>Excluir Perfil</AlertDialogTitle>
+                                                                    <AlertDialogDescription>
+                                                                        Tem certeza que deseja excluir o perfil <strong>{role.name}</strong>?
+                                                                        Esta ação não pode ser desfeita.
+                                                                    </AlertDialogDescription>
+                                                                </AlertDialogHeader>
+                                                                <AlertDialogFooter>
+                                                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                                                    <AlertDialogAction
+                                                                        onClick={() => handleDelete(role.id)}
+                                                                        className="bg-destructive hover:bg-destructive/90"
+                                                                    >
+                                                                        Excluir
+                                                                    </AlertDialogAction>
+                                                                </AlertDialogFooter>
+                                                            </AlertDialogContent>
+                                                        </AlertDialog>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </CardContent>
             </Card>
         </div>

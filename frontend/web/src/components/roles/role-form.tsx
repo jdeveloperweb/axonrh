@@ -112,149 +112,140 @@ export function RoleForm({ initialData, permissionsGrouped }: RoleFormProps) {
 
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                <div className="grid gap-6 md:grid-cols-2">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Informações Básicas</CardTitle>
-                            <CardDescription>
-                                Defina o nome e descrição do perfil.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <FormField
-                                control={form.control}
-                                name="name"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Nome do Perfil</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="Ex: Gestor de Projetos" {...field} disabled={initialData?.systemRole} />
-                                        </FormControl>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Informações Básicas</CardTitle>
+                        <CardDescription>
+                            Defina o nome e descrição do perfil.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="grid gap-6 md:grid-cols-2">
+                        <FormField
+                            control={form.control}
+                            name="name"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Nome do Perfil</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="Ex: Gestor de Projetos" {...field} disabled={initialData?.systemRole} />
+                                    </FormControl>
+                                    <FormDescription>
+                                        {initialData?.systemRole && "Este é um perfil de sistema e o nome não pode ser alterado."}
+                                    </FormDescription>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            control={form.control}
+                            name="active"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 self-start">
+                                    <div className="space-y-0.5">
+                                        <FormLabel className="text-base">Ativo</FormLabel>
                                         <FormDescription>
-                                            {initialData?.systemRole && "Este é um perfil de sistema e o nome não pode ser alterado."}
+                                            Perfis desativados não podem ser atribuídos a novos usuários.
                                         </FormDescription>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
+                                    </div>
+                                    <FormControl>
+                                        <Switch
+                                            checked={field.value}
+                                            onCheckedChange={field.onChange}
+                                        />
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
 
-                            <FormField
-                                control={form.control}
-                                name="description"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Descrição</FormLabel>
-                                        <FormControl>
-                                            <Textarea
-                                                placeholder="Descreva as responsabilidades deste perfil..."
-                                                className="resize-none"
-                                                {...field}
+                        <FormField
+                            control={form.control}
+                            name="description"
+                            render={({ field }) => (
+                                <FormItem className="md:col-span-2">
+                                    <FormLabel>Descrição</FormLabel>
+                                    <FormControl>
+                                        <Textarea
+                                            placeholder="Descreva as responsabilidades deste perfil..."
+                                            className="resize-none"
+                                            rows={3}
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Permissões de Acesso</CardTitle>
+                        <CardDescription>
+                            Selecione as permissões que este perfil terá acesso.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                            {modules.map((module) => (
+                                <div key={module} className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-variant)]/30 overflow-hidden">
+                                    <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-variant)]/50">
+                                        <span className="text-sm font-semibold text-[var(--color-text-primary)] capitalize">
+                                            {module === 'null' ? 'Geral' : module}
+                                        </span>
+                                        <Checkbox
+                                            checked={isModuleSelected(permissionsGrouped[module])}
+                                            onCheckedChange={(checked) =>
+                                                toggleModule(permissionsGrouped[module], checked as boolean)
+                                            }
+                                        />
+                                    </div>
+                                    <div className="p-4 grid gap-3">
+                                        {permissionsGrouped[module].map((permission) => (
+                                            <FormField
+                                                key={permission.id}
+                                                control={form.control}
+                                                name="permissionIds"
+                                                render={({ field }) => (
+                                                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                                        <FormControl>
+                                                            <Checkbox
+                                                                checked={field.value?.includes(permission.id)}
+                                                                onCheckedChange={(checked) => {
+                                                                    return checked
+                                                                        ? field.onChange([...field.value, permission.id])
+                                                                        : field.onChange(
+                                                                            field.value?.filter(
+                                                                                (value) => value !== permission.id
+                                                                            )
+                                                                        )
+                                                                }}
+                                                            />
+                                                        </FormControl>
+                                                        <div className="space-y-0.5 leading-none">
+                                                            <FormLabel className="text-sm font-medium cursor-pointer">
+                                                                {permission.displayName || permission.code}
+                                                            </FormLabel>
+                                                            {permission.description && (
+                                                                <p className="text-xs text-muted-foreground leading-snug">
+                                                                    {permission.description}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    </FormItem>
+                                                )}
                                             />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
 
-                            <FormField
-                                control={form.control}
-                                name="active"
-                                render={({ field }) => (
-                                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                                        <div className="space-y-0.5">
-                                            <FormLabel className="text-base">Ativo</FormLabel>
-                                            <FormDescription>
-                                                Perfis desativados não podem ser atribuídos a novos usuários.
-                                            </FormDescription>
-                                        </div>
-                                        <FormControl>
-                                            <Switch
-                                                checked={field.value}
-                                                onCheckedChange={field.onChange}
-                                            />
-                                        </FormControl>
-                                    </FormItem>
-                                )}
-                            />
-                        </CardContent>
-                    </Card>
-
-                    <Card className="md:col-span-2">
-                        <CardHeader>
-                            <CardTitle>Permissões de Acesso</CardTitle>
-                            <CardDescription>
-                                Selecione as permissões que este perfil terá acesso.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                                {modules.map((module) => (
-                                    <Card key={module} className="border-muted bg-muted/20">
-                                        <CardHeader className="pb-3">
-                                            <div className="flex items-center justify-between">
-                                                <CardTitle className="text-base capitalize">
-                                                    {module === 'null' ? 'Geral' : module}
-                                                </CardTitle>
-                                                <Checkbox
-                                                    checked={isModuleSelected(permissionsGrouped[module])}
-                                                    onCheckedChange={(checked) =>
-                                                        toggleModule(permissionsGrouped[module], checked as boolean)
-                                                    }
-                                                />
-                                            </div>
-                                        </CardHeader>
-                                        <CardContent className="grid gap-2">
-                                            <Separator className="mb-2" />
-                                            {permissionsGrouped[module].map((permission) => (
-                                                <FormField
-                                                    key={permission.id}
-                                                    control={form.control}
-                                                    name="permissionIds"
-                                                    render={({ field }) => {
-                                                        return (
-                                                            <FormItem
-                                                                key={permission.id}
-                                                                className="flex flex-row items-start space-x-3 space-y-0"
-                                                            >
-                                                                <FormControl>
-                                                                    <Checkbox
-                                                                        checked={field.value?.includes(permission.id)}
-                                                                        onCheckedChange={(checked) => {
-                                                                            return checked
-                                                                                ? field.onChange([...field.value, permission.id])
-                                                                                : field.onChange(
-                                                                                    field.value?.filter(
-                                                                                        (value) => value !== permission.id
-                                                                                    )
-                                                                                )
-                                                                        }}
-                                                                    />
-                                                                </FormControl>
-                                                                <div className="space-y-1 leading-none">
-                                                                    <FormLabel className="text-sm font-normal cursor-pointer">
-                                                                        {permission.displayName || permission.code}
-                                                                    </FormLabel>
-                                                                    {permission.description && (
-                                                                        <p className="text-xs text-muted-foreground">
-                                                                            {permission.description}
-                                                                        </p>
-                                                                    )}
-                                                                </div>
-                                                            </FormItem>
-                                                        )
-                                                    }}
-                                                />
-                                            ))}
-                                        </CardContent>
-                                    </Card>
-                                ))}
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                <div className="flex justify-end gap-4">
+                <div className="sticky bottom-0 bg-[var(--color-surface)] border-t border-[var(--color-border)] -mx-6 px-6 py-4 flex justify-end gap-3">
                     <Button
                         type="button"
                         variant="outline"

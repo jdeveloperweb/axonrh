@@ -60,17 +60,20 @@ export default function EditRolePage() {
     }
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" onClick={() => router.back()}>
-                    <ArrowLeft className="h-4 w-4" />
-                </Button>
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Editar Perfil</h1>
-                    <p className="text-muted-foreground">
-                        Gerencie as permissões do perfil <strong>{role.name}</strong>.
-                    </p>
-                </div>
+        <div className="space-y-6 animate-in fade-in duration-500">
+            <button
+                onClick={() => router.back()}
+                className="flex items-center text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors group w-fit"
+            >
+                <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+                Voltar
+            </button>
+
+            <div>
+                <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">Editar Perfil</h1>
+                <p className="text-[var(--color-text-secondary)]">
+                    Gerencie as permissões do perfil <strong>{role.name}</strong>.
+                </p>
             </div>
 
             <RoleForm initialData={role} permissionsGrouped={permissionsGrouped} />
