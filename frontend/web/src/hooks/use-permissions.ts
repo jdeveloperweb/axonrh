@@ -19,7 +19,8 @@ export type Permission =
     | 'INTEGRATION:READ' | 'INTEGRATION:UPDATE'
     | 'AI_ASSISTANT:READ'
     | 'DASHBOARD:READ'
-    | 'DASHBOARD:MANAGEMENT_READ';
+    | 'DASHBOARD:MANAGEMENT_READ'
+    | 'SETTINGS:PRIVACY_WRITE';
 
 export function usePermissions() {
     const { user } = useAuthStore();

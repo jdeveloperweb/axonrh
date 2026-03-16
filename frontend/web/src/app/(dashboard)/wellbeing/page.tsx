@@ -639,14 +639,14 @@ export default function WellbeingPage() {
 
                 {/* Sentiment Distribution and Resources */}
                 <div className="space-y-8 flex flex-col h-[600px]">
-                    <Card className="border-none shadow-lg bg-white overflow-hidden border border-gray-100 flex-1">
-                        <div className="p-6 border-b border-gray-100 bg-gray-50/30">
-                            <CardTitle className="text-lg font-bold flex items-center gap-2">
-                                <Activity className="w-5 h-5 text-blue-500" />
-                                Distribuição de Sentimentos
-                            </CardTitle>
+                    <Card className="border-none overflow-hidden flex-1 relative" style={{background: 'linear-gradient(145deg, #060e1c, #0a1628 40%, #060d1b)', boxShadow: '0 30px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(59,130,246,0.08), inset 0 1px 0 rgba(255,255,255,0.04)'}}>
+                        <div className="absolute inset-0 pointer-events-none" style={{backgroundImage: 'radial-gradient(ellipse 70% 55% at 25% 60%, rgba(59,130,246,0.06) 0%, transparent 65%), radial-gradient(ellipse 40% 40% at 75% 20%, rgba(139,92,246,0.04) 0%, transparent 60%)'}} />
+                        <div className="absolute top-0 left-0 right-0 h-px pointer-events-none" style={{background: 'linear-gradient(90deg, transparent, rgba(59,130,246,0.5), rgba(139,92,246,0.2), transparent)'}} />
+                        <div className="p-6 flex items-center gap-2 relative z-10" style={{borderBottom: '1px solid rgba(255,255,255,0.06)'}}>
+                            <Activity className="w-5 h-5" style={{color: '#60a5fa'}} />
+                            <CardTitle className="text-lg font-bold" style={{color: '#e2e8f0'}}>Distribuição de Sentimentos</CardTitle>
                         </div>
-                        <CardContent className="p-6">
+                        <CardContent className="p-6 relative z-10">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center h-full pt-4">
                                 <div className="h-[230px]">
                                     <ResponsiveContainer width="100%" height="100%">
@@ -665,32 +665,32 @@ export default function WellbeingPage() {
                                                 ))}
                                             </Pie>
                                             <Tooltip
-                                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                                                contentStyle={{ borderRadius: '12px', border: '1px solid rgba(59,130,246,0.2)', background: '#0a1628', color: '#e2e8f0', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}
                                             />
                                         </PieChart>
                                     </ResponsiveContainer>
                                 </div>
                                 <div className="space-y-4">
-                                    <div className="p-3 rounded-xl bg-green-50 border border-green-100 flex items-center justify-between">
+                                    <div className="p-3 rounded-xl flex items-center justify-between" style={{background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.18)'}}>
                                         <div className="flex items-center gap-3">
-                                            <div className="w-3 h-3 rounded-full bg-green-500" />
-                                            <span className="text-sm font-semibold text-green-700">Positivo</span>
+                                            <div className="w-3 h-3 rounded-full" style={{background: '#10b981'}} />
+                                            <span className="text-sm font-semibold" style={{color: '#10b981'}}>Positivo</span>
                                         </div>
-                                        <span className="text-sm font-black text-green-700">{statsData?.sentimentDistribution['POSITIVE'] || 0}</span>
+                                        <span className="text-sm font-black" style={{color: '#10b981'}}>{statsData?.sentimentDistribution['POSITIVE'] || 0}</span>
                                     </div>
-                                    <div className="p-3 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-between">
+                                    <div className="p-3 rounded-xl flex items-center justify-between" style={{background: 'rgba(148,163,184,0.06)', border: '1px solid rgba(148,163,184,0.12)'}}>
                                         <div className="flex items-center gap-3">
-                                            <div className="w-3 h-3 rounded-full bg-gray-400" />
-                                            <span className="text-sm font-semibold text-gray-600">Neutro</span>
+                                            <div className="w-3 h-3 rounded-full" style={{background: '#94a3b8'}} />
+                                            <span className="text-sm font-semibold" style={{color: '#94a3b8'}}>Neutro</span>
                                         </div>
-                                        <span className="text-sm font-black text-gray-600">{statsData?.sentimentDistribution['NEUTRAL'] || 0}</span>
+                                        <span className="text-sm font-black" style={{color: '#94a3b8'}}>{statsData?.sentimentDistribution['NEUTRAL'] || 0}</span>
                                     </div>
-                                    <div className="p-3 rounded-xl bg-red-50 border border-red-100 flex items-center justify-between">
+                                    <div className="p-3 rounded-xl flex items-center justify-between" style={{background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.18)'}}>
                                         <div className="flex items-center gap-3">
-                                            <div className="w-3 h-3 rounded-full bg-red-500" />
-                                            <span className="text-sm font-semibold text-red-700">Alerta IA</span>
+                                            <div className="w-3 h-3 rounded-full" style={{background: '#ef4444'}} />
+                                            <span className="text-sm font-semibold" style={{color: '#ef4444'}}>Alerta IA</span>
                                         </div>
-                                        <span className="text-sm font-black text-red-700">{statsData?.sentimentDistribution['NEGATIVE'] || 0}</span>
+                                        <span className="text-sm font-black" style={{color: '#ef4444'}}>{statsData?.sentimentDistribution['NEGATIVE'] || 0}</span>
                                     </div>
                                 </div>
                             </div>
@@ -715,17 +715,19 @@ export default function WellbeingPage() {
                             </CardContent>
                         </Card>
                         <Card
-                            className="border-none shadow-lg bg-white border border-primary/20 group cursor-pointer hover:scale-[1.02] transition-transform overflow-hidden relative"
+                            className="border-none group cursor-pointer hover:scale-[1.02] transition-transform overflow-hidden relative"
+                            style={{background: 'linear-gradient(145deg, #060e1c, #0a1628 40%, #060d1b)', boxShadow: '0 20px 50px rgba(0,0,0,0.5), 0 0 0 1px rgba(59,130,246,0.08), inset 0 1px 0 rgba(255,255,255,0.04)'}}
                             onClick={() => setIsCampaignModalOpen(true)}
                         >
+                            <div className="absolute top-0 left-0 right-0 h-px pointer-events-none" style={{background: 'linear-gradient(90deg, transparent, rgba(59,130,246,0.4), transparent)'}} />
                             <div className="absolute top-0 right-0 p-4">
-                                <Lightbulb className="w-12 h-12 text-yellow-500/10 group-hover:text-yellow-500/20 transition-colors" />
+                                <Lightbulb className="w-12 h-12 opacity-[0.07] group-hover:opacity-[0.15] transition-opacity" style={{color: '#fbbf24'}} />
                             </div>
                             <CardContent className="p-6 flex flex-col justify-between h-full relative z-10">
-                                <Smile className="w-8 h-8 text-primary" />
+                                <Smile className="w-8 h-8" style={{color: '#60a5fa'}} />
                                 <div>
-                                    <h4 className="text-lg font-bold text-gray-900">{statsData?.activeCampaigns?.[0]?.title || 'Campanhas'}</h4>
-                                    <p className="text-gray-500 text-sm mt-1">
+                                    <h4 className="text-lg font-bold" style={{color: '#e2e8f0'}}>{statsData?.activeCampaigns?.[0]?.title || 'Campanhas'}</h4>
+                                    <p className="text-sm mt-1" style={{color: 'rgba(148,163,184,0.7)'}}>
                                         {statsData?.activeCampaigns?.[0]?.description ? (
                                             <>Próximo: "{statsData.activeCampaigns[0].description}"</>
                                         ) : (
@@ -733,7 +735,7 @@ export default function WellbeingPage() {
                                         )}
                                     </p>
                                 </div>
-                                <div className="flex items-center gap-2 text-sm font-bold text-primary mt-4">
+                                <div className="flex items-center gap-2 text-sm font-bold mt-4" style={{color: '#60a5fa'}}>
                                     Ver Agenda
                                     <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                                 </div>
