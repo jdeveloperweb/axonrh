@@ -40,21 +40,43 @@ export default function CourseDetails() {
     const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
     const [loading, setLoading] = useState(true);
     const [enrolling, setEnrolling] = useState(false);
+    const [prerequisiteCourse, setPrerequisiteCourse] = useState<Course | null>(null);
+    const [isPrerequisiteMet, setIsPrerequisiteMet] = useState(true);
 
     useEffect(() => {
         const fetchData = async () => {
             if (!id || !user?.id) return;
             try {
-                setLoading(true);
                 const courseRes = await coursesApi.get(id as string);
-                setCourse(courseRes as any);
+                const fetchedCourse = courseRes as any;
+                setCourse(fetchedCourse);
 
                 const enrollmentsRes = await enrollmentsApi.getByEmployee(user.id);
-                const myEnrollment = ((enrollmentsRes as any) || []).find((e: any) => {
+                const allEnrollments = (enrollmentsRes as any) || [];
+                const myEnrollment = allEnrollments.find((e: any) => {
                     const cId = e.course?.id || e.courseId || e.idCourse;
                     return cId === id;
                 });
                 setEnrollment(myEnrollment || null);
+
+                if (fetchedCourse.prerequisiteCourseId) {
+                    try {
+                        const preReqRes = await coursesApi.get(fetchedCourse.prerequisiteCourseId);
+                        setPrerequisiteCourse(preReqRes as any);
+                        
+                        const preReqEnrollment = allEnrollments.find((e: any) => {
+                            const cId = e.course?.id || e.courseId || e.idCourse;
+                            return cId === fetchedCourse.prerequisiteCourseId;
+                        });
+                        
+                        setIsPrerequisiteMet(preReqEnrollment?.status === 'COMPLETED');
+                    } catch (e) {
+                        console.error('Erro ao buscar pré-requisito', e);
+                        setIsPrerequisiteMet(false);
+                    }
+                } else {
+                    setIsPrerequisiteMet(true);
+                }
             } catch (error) {
                 console.error('Erro ao buscar curso:', error);
                 toast.error('Erro ao carregar detalhes do curso');
@@ -324,10 +346,21 @@ export default function CourseDetails() {
                                         <p className="text-[10px] font-black text-primary uppercase tracking-widest">Treinamento Corporativo</p>
                                         <h3 className="text-xl font-black text-slate-900 tracking-tight">Disponível para sua trilha</h3>
                                     </div>
-                                    <Button className="w-full py-6 text-lg font-bold rounded-xl" onClick={handleEnroll} disabled={enrolling}>
-                                        {enrolling ? 'Processando...' : 'Inscrever-se Agora'}
-                                    </Button>
-                                    <p className="text-[10px] text-center text-muted-foreground uppercase font-black tracking-widest">Acesso vitalício</p>
+                                    {!isPrerequisiteMet ? (
+                                        <div className="bg-rose-50 border border-rose-200 p-4 rounded-xl text-center space-y-2 mt-4">
+                                            <Lock className="h-6 w-6 text-rose-500 mx-auto" />
+                                            <p className="font-bold text-rose-700 text-sm">Treinamento Bloqueado</p>
+                                            <p className="text-xs text-rose-600">Este treinamento possui uma dependência. Você precisa concluir primeiro o treinamento:</p>
+                                            <p className="text-sm font-black text-rose-800">{prerequisiteCourse?.title || 'Dependência'}</p>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <Button className="w-full py-6 text-lg font-bold rounded-xl" onClick={handleEnroll} disabled={enrolling}>
+                                                {enrolling ? 'Processando...' : 'Inscrever-se Agora'}
+                                            </Button>
+                                            <p className="text-[10px] text-center text-muted-foreground uppercase font-black tracking-widest">Acesso vitalício</p>
+                                        </>
+                                    )}
                                 </div>
                             ) : (
                                 <div className="space-y-6">
@@ -339,31 +372,42 @@ export default function CourseDetails() {
                                         <Progress value={enrollment.progressPercentage} className="h-2 bg-muted transition-all" />
                                     </div>
 
-                                    {(enrollment.progressPercentage === 100 && enrollment.status !== 'COMPLETED') || (enrollment.status === 'COMPLETED' && !enrollment.certificateId) ? (
-                                        <Button className="w-full py-6 text-lg font-bold rounded-xl shadow-lg bg-green-600 hover:bg-green-700 shadow-green-900/10" onClick={handleComplete} disabled={enrolling}>
-                                            {enrolling ? 'Processando...' : 'Finalizar e Emitir Certificado'}
-                                            <Award className="ml-2 h-5 w-5" />
-                                        </Button>
+                                    {!isPrerequisiteMet && enrollment.status !== 'COMPLETED' ? (
+                                        <div className="bg-rose-50 border border-rose-200 p-4 rounded-xl text-center space-y-2 mt-4">
+                                            <Lock className="h-6 w-6 text-rose-500 mx-auto" />
+                                            <p className="font-bold text-rose-700 text-sm">Treinamento Bloqueado</p>
+                                            <p className="text-xs text-rose-600">Atenção! Você só poderá iniciar ou continuar após concluir o treinamento:</p>
+                                            <p className="text-sm font-black text-rose-800">{prerequisiteCourse?.title || 'Dependência'}</p>
+                                        </div>
                                     ) : (
                                         <>
-                                            {enrollment.status !== 'COMPLETED' && (
-                                                <Button className="w-full py-6 text-lg font-bold rounded-xl shadow-lg shadow-primary/20" onClick={handleStart}>
-                                                    {enrollment.progressPercentage > 0 ? 'Continuar Curso' : 'Iniciar Treinamento'}
-                                                    <Play className="ml-2 h-4 w-4 fill-current" />
+                                            {(enrollment.progressPercentage === 100 && enrollment.status !== 'COMPLETED') || (enrollment.status === 'COMPLETED' && !enrollment.certificateId) ? (
+                                                <Button className="w-full py-6 text-lg font-bold rounded-xl shadow-lg bg-green-600 hover:bg-green-700 shadow-green-900/10" onClick={handleComplete} disabled={enrolling}>
+                                                    {enrolling ? 'Processando...' : 'Finalizar e Emitir Certificado'}
+                                                    <Award className="ml-2 h-5 w-5" />
+                                                </Button>
+                                            ) : (
+                                                <>
+                                                    {enrollment.status !== 'COMPLETED' && (
+                                                        <Button className="w-full py-6 text-lg font-bold rounded-xl shadow-lg shadow-primary/20" onClick={handleStart}>
+                                                            {enrollment.progressPercentage > 0 ? 'Continuar Curso' : 'Iniciar Treinamento'}
+                                                            <Play className="ml-2 h-4 w-4 fill-current" />
+                                                        </Button>
+                                                    )}
+                                                </>
+                                            )}
+
+                                            {enrollment.status === 'COMPLETED' && enrollment.certificateId && (
+                                                <Button
+                                                    variant="outline"
+                                                    className="w-full border-primary text-primary hover:bg-primary/5 font-bold py-6 rounded-xl"
+                                                    onClick={() => router.push(`/learning/certificates/${enrollment.certificateId}`)}
+                                                >
+                                                    Ver Certificado
+                                                    <Award className="ml-2 h-5 w-5" />
                                                 </Button>
                                             )}
                                         </>
-                                    )}
-
-                                    {enrollment.status === 'COMPLETED' && enrollment.certificateId && (
-                                        <Button
-                                            variant="outline"
-                                            className="w-full border-primary text-primary hover:bg-primary/5 font-bold py-6 rounded-xl"
-                                            onClick={() => router.push(`/learning/certificates/${enrollment.certificateId}`)}
-                                        >
-                                            Ver Certificado
-                                            <Award className="ml-2 h-5 w-5" />
-                                        </Button>
                                     )}
 
                                     {!course.isMandatory && enrollment.status !== 'COMPLETED' && (

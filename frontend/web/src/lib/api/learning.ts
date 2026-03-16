@@ -53,6 +53,7 @@ export interface Course {
   objectives?: string;
   targetAudience?: string;
   prerequisites?: string;
+  prerequisiteCourseId?: string;
   thumbnailUrl?: string;
   durationMinutes?: number;
   courseType: CourseType;

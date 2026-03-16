@@ -72,6 +72,8 @@ public class CourseService {
             course.setPassingScore(updates.getPassingScore());
         }
 
+        course.setPrerequisiteCourseId(updates.getPrerequisiteCourseId());
+
         return courseRepository.save(course);
     }
 

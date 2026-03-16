@@ -48,6 +48,9 @@ public class Course {
     @Column(columnDefinition = "TEXT")
     private String prerequisites;
 
+    @Column(name = "prerequisite_course_id")
+    private UUID prerequisiteCourseId;
+
     @Column(name = "thumbnail_url")
     private String thumbnailUrl;
 
@@ -250,6 +253,14 @@ public class Course {
 
     public void setPrerequisites(String prerequisites) {
         this.prerequisites = prerequisites;
+    }
+
+    public UUID getPrerequisiteCourseId() {
+        return prerequisiteCourseId;
+    }
+
+    public void setPrerequisiteCourseId(UUID prerequisiteCourseId) {
+        this.prerequisiteCourseId = prerequisiteCourseId;
     }
 
     public String getThumbnailUrl() {

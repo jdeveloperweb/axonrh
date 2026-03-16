@@ -633,6 +633,24 @@ export default function LearningManagementPage() {
                                             ))}
                                         </div>
                                     </div>
+                                    <div className="space-y-4">
+                                        <label className="text-xs font-black uppercase text-slate-400 tracking-widest">Dependência (Pré-requisito)</label>
+                                        <div className="relative">
+                                            <select
+                                                className="w-full h-14 rounded-xl border border-slate-200 bg-white px-4 font-bold text-slate-700 appearance-none outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all cursor-pointer shadow-sm"
+                                                value={formData.prerequisiteCourseId || ''}
+                                                onChange={e => setFormData({ ...formData, prerequisiteCourseId: e.target.value || undefined })}
+                                            >
+                                                <option value="">Sem dependência</option>
+                                                {courses.filter(c => c.id !== formData.id).map(c => (
+                                                    <option key={c.id} value={c.id}>{c.title}</option>
+                                                ))}
+                                            </select>
+                                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                                <ChevronRight className="h-5 w-5 rotate-90" />
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div className="space-y-4">

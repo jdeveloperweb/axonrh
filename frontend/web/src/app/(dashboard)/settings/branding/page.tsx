@@ -6,6 +6,7 @@ import {
     Upload,
     Save,
     Undo,
+    RotateCcw,
     Type,
     Layout,
     Check,
@@ -40,7 +41,6 @@ export default function BrandingPage() {
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const fetchBranding = useThemeStore(state => state.fetchBranding);
     const setTenantTheme = useThemeStore(state => state.setTenantTheme);
 
     const loadBranding = useCallback(async () => {
@@ -74,6 +74,27 @@ export default function BrandingPage() {
         loadBranding();
     }, [loadBranding]);
 
+
+    const handleResetToDefault = () => {
+        setConfig({
+            primaryColor: '#1976D2',
+            secondaryColor: '#424242',
+            accentColor: '#FF4081',
+            backgroundColor: '#FFFFFF',
+            surfaceColor: '#FAFAFA',
+            textPrimaryColor: '#212121',
+            textSecondaryColor: '#757575',
+            extraSettings: {
+                logoWidth: 150,
+                fontFamily: 'Plus Jakarta Sans',
+                baseFontSize: 16,
+                buttonPrimary: '#1976D2',
+                buttonPrimaryText: '#FFFFFF',
+                buttonSecondary: '#424242',
+                buttonSecondaryText: '#FFFFFF',
+            }
+        });
+    };
 
     const handleSave = async () => {
         try {
@@ -239,6 +260,10 @@ export default function BrandingPage() {
                     <p className="text-[var(--color-text-secondary)]">Personalize a aparência do sistema para sua empresa</p>
                 </div>
                 <div className="flex gap-3">
+                    <button className="px-4 py-2 rounded-xl border border-[var(--color-border)] hover:bg-[var(--color-surface-variant)] transition-colors flex items-center gap-2 text-sm font-medium text-[var(--color-text-secondary)]" onClick={handleResetToDefault}>
+                        <RotateCcw className="w-4 h-4" />
+                        Restaurar Padrão
+                    </button>
                     <button className="px-4 py-2 rounded-xl border border-[var(--color-border)] hover:bg-[var(--color-surface-variant)] transition-colors flex items-center gap-2 text-sm font-medium" onClick={loadBranding}>
                         <Undo className="w-4 h-4" />
                         Descartar
