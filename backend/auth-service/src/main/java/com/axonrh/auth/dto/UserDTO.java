@@ -21,4 +21,5 @@ public class UserDTO {
     private String avatarUrl;
     private UUID tenantId;
     private List<String> roles;
+    private boolean twoFactorEnabled;
 }

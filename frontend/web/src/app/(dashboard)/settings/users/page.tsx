@@ -10,7 +10,9 @@ import {
     Edit2,
     CheckCircle2,
     XCircle,
-    ArrowLeft
+    ArrowLeft,
+    RefreshCw,
+    Lock
 } from 'lucide-react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -76,6 +78,26 @@ export default function UsersPage() {
             } catch (error) {
                 console.error('Error deleting user:', error);
                 toast({ title: 'Erro', description: 'Erro ao excluir usuário', variant: 'destructive' });
+            }
+        }
+    };
+
+    const handleMfaReset = async (user: UserDTO) => {
+        if (!user.id) return;
+
+        if (await confirm({
+            title: 'Resetar MFA',
+            description: `Tem certeza que deseja resetar o MFA de ${user.name}? O usuário receberá um novo e-mail para configurar sua semente no próximo login.`,
+            variant: 'default',
+            confirmLabel: 'Resetar'
+        })) {
+            try {
+                await userApi.mfaReset(user.id);
+                toast({ title: 'Sucesso', description: 'MFA resetado com sucesso' });
+                loadUsers();
+            } catch (error) {
+                console.error('Error resetting MFA:', error);
+                toast({ title: 'Erro', description: 'Erro ao resetar MFA', variant: 'destructive' });
             }
         }
     };
@@ -196,6 +218,12 @@ export default function UsersPage() {
                                                     {user.status === 'ACTIVE' ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
                                                     {user.status === 'ACTIVE' ? 'Ativo' : 'Inativo'}
                                                 </span>
+                                                {user.twoFactorEnabled && (
+                                                    <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 text-[10px] font-bold">
+                                                        <Lock className="w-2.5 h-2.5" />
+                                                        MFA
+                                                    </span>
+                                                )}
                                             </td>
                                             <td className="px-6 py-4 text-right">
                                                 <div className="flex justify-end gap-2">
@@ -206,6 +234,15 @@ export default function UsersPage() {
                                                     >
                                                         <Edit2 className="w-4 h-4" />
                                                     </button>
+                                                    {user.twoFactorEnabled && (
+                                                        <button
+                                                            className="p-2 hover:bg-orange-50 rounded-full transition-colors text-orange-500"
+                                                            title="Resetar MFA"
+                                                            onClick={() => handleMfaReset(user)}
+                                                        >
+                                                            <RefreshCw className="w-4 h-4" />
+                                                        </button>
+                                                    )}
                                                     <button
                                                         className="p-2 hover:bg-red-50 rounded-full transition-colors text-red-500"
                                                         title="Excluir"

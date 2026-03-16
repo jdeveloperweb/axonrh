@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,12 +22,21 @@ import java.util.stream.Collectors;
 public class UserController {
 
     private final UserService userService;
+    private final com.axonrh.auth.service.MfaService mfaService;
 
     @GetMapping
     @Operation(summary = "Listar usuários", description = "Lista todos os usuários do tenant atual")
     public ResponseEntity<List<UserDTO>> listUsers(@RequestHeader("X-Tenant-Id") String tenantId) {
         List<User> users = userService.listUsersByTenant(UUID.fromString(tenantId));
         return ResponseEntity.ok(users.stream().map(this::toDTO).collect(Collectors.toList()));
+    }
+
+    @PostMapping("/{id}/mfa-reset")
+    @PreAuthorize("hasAuthority('USER:MFA_RESET')")
+    @Operation(summary = "Resetar MFA", description = "Reseta as configurações de MFA de um usuário (Ação Administrativa)")
+    public ResponseEntity<Void> resetMfa(@PathVariable UUID id) {
+        mfaService.resetMfa(id);
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping
@@ -86,6 +96,7 @@ public class UserController {
                 .avatarUrl(user.getAvatarUrl())
                 .tenantId(user.getTenantId())
                 .roles(user.getRoles().stream().map(r -> r.getName()).collect(Collectors.toList()))
+                .twoFactorEnabled(user.isTwoFactorEnabled())
                 .build();
     }
 }

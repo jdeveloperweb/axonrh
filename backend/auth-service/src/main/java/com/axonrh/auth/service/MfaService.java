@@ -244,4 +244,23 @@ public class MfaService {
         user.setTwoFactorSetupTokenExpiresAt(null);
         userRepository.save(user);
     }
+
+    /**
+     * Reseta o MFA de um usuário (Ação Administrativa).
+     */
+    @Transactional
+    public void resetMfa(UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AuthenticationException("Usuário não encontrado"));
+
+        user.setTwoFactorEnabled(false);
+        user.setTwoFactorSecret(null);
+        user.setTwoFactorPendingSecret(null);
+        user.setTwoFactorSetupToken(null);
+        user.setTwoFactorSetupTokenExpiresAt(null);
+        
+        userRepository.save(user);
+        
+        log.info("MFA reset by administrator for user: {}", userId);
+    }
 }
