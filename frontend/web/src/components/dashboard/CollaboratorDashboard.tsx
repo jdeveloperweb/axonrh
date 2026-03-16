@@ -479,70 +479,93 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
                                 </Button>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {allEvents.filter(e => e.status === 'UPCOMING').slice(0, 4).map((event) => (
-                                    <Card
-                                        key={event.id}
-                                        className={cn(
-                                            "border shadow-sm hover:shadow-lg transition-all group bg-white border-l-4 overflow-hidden",
-                                            event.isUserRegistered ? "border-l-green-500" : "border-l-primary"
-                                        )}
-                                    >
-                                        <CardContent className="p-0">
-                                            <div className="p-5 flex items-start gap-4">
-                                                <div className={cn(
-                                                    "w-12 h-14 rounded-xl flex flex-col items-center justify-center shrink-0 border",
-                                                    event.isUserRegistered ? "bg-green-50 text-green-600 border-green-100" : "bg-gray-50 text-gray-500 border-gray-100"
-                                                )}>
-                                                    <span className="text-[9px] font-black uppercase">{new Date(event.date).toLocaleDateString('pt-BR', { month: 'short' })}</span>
-                                                    <span className="text-xl font-black">{new Date(event.date).getDate()}</span>
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center justify-between gap-2 mb-1">
-                                                        <h4 className="font-bold text-gray-900 truncate text-sm">{event.title}</h4>
-                                                        {event.isUserRegistered && (
-                                                            <Badge className="bg-green-500 text-white border-none text-[8px] font-black px-1.5 py-0">INSCRITO</Badge>
-                                                        )}
-                                                    </div>
-                                                    <p className="text-[11px] text-gray-400 flex items-center gap-1 font-medium">
-                                                        <Clock className="w-3 h-3 text-primary/60" />
-                                                        {new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {event.location}
-                                                    </p>
+                                {allEvents
+                                    .filter(e => {
+                                        const eventDate = new Date(e.date);
+                                        const today = new Date();
+                                        today.setHours(0, 0, 0, 0);
+                                        const eventDay = new Date(eventDate);
+                                        eventDay.setHours(0, 0, 0, 0);
+                                        return eventDay >= today;
+                                    })
+                                    .slice(0, 4)
+                                    .map((event) => {
+                                        const eventDate = new Date(event.date);
+                                        const isToday = eventDate.toDateString() === new Date().toDateString();
 
-                                                    <div className="mt-4 flex items-center justify-between gap-3">
-                                                        <div className="flex items-center gap-1 text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
-                                                            <Users className="w-3 h-3" />
-                                                            {event.registrationCount} Participantes
+                                        return (
+                                            <Card
+                                                key={event.id}
+                                                className={cn(
+                                                    "border shadow-sm hover:shadow-lg transition-all group bg-white border-l-4 overflow-hidden relative",
+                                                    isToday ? "border-l-orange-500 ring-1 ring-orange-100" : (event.isUserRegistered ? "border-l-green-500" : "border-l-primary")
+                                                )}
+                                            >
+                                                {isToday && (
+                                                    <div className="absolute top-0 right-0">
+                                                        <Badge className="bg-orange-500 text-white border-none text-[8px] font-black px-2 py-0.5 rounded-bl-lg rounded-tr-none">HOJE</Badge>
+                                                    </div>
+                                                )}
+                                                <CardContent className="p-0">
+                                                    <div className="p-5 flex items-start gap-4">
+                                                        <div className={cn(
+                                                            "w-12 h-14 rounded-xl flex flex-col items-center justify-center shrink-0 border",
+                                                            isToday ? "bg-orange-50 text-orange-600 border-orange-100" : (event.isUserRegistered ? "bg-green-50 text-green-600 border-green-100" : "bg-gray-50 text-gray-500 border-gray-100")
+                                                        )}>
+                                                            <span className="text-[9px] font-black uppercase">{eventDate.toLocaleDateString('pt-BR', { month: 'short' })}</span>
+                                                            <span className="text-xl font-black">{eventDate.getDate()}</span>
                                                         </div>
-
-                                                        {!event.isUserRegistered ? (
-                                                            <Button
-                                                                size="sm"
-                                                                className="h-8 text-[10px] font-black uppercase tracking-widest bg-primary hover:bg-primary/90 rounded-lg px-4"
-                                                                onClick={(e) => handleRegisterEvent(e, event.id)}
-                                                                disabled={registeringId === event.id}
-                                                            >
-                                                                {registeringId === event.id ? (
-                                                                    <Loader2 className="w-3 h-3 animate-spin" />
-                                                                ) : (
-                                                                    "Inscrever-se"
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex items-center justify-between gap-2 mb-1">
+                                                                <h4 className="font-bold text-gray-900 truncate text-sm">{event.title}</h4>
+                                                                {event.isUserRegistered && (
+                                                                    <Badge className="bg-green-500 text-white border-none text-[8px] font-black px-1.5 py-0">INSCRITO</Badge>
                                                                 )}
-                                                            </Button>
-                                                        ) : (
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                className="h-8 text-[10px] font-black uppercase tracking-widest border-gray-200 text-gray-400 hover:bg-gray-50 rounded-lg px-4"
-                                                                onClick={() => router.push('/events')}
-                                                            >
-                                                                Ver Evento
-                                                            </Button>
-                                                        )}
+                                                            </div>
+                                                            <p className="text-[11px] text-gray-400 flex items-center gap-1 font-medium">
+                                                                <Clock className="w-3 h-3 text-primary/60" />
+                                                                {eventDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {event.location}
+                                                            </p>
+
+                                                            <div className="mt-4 flex items-center justify-between gap-3">
+                                                                <div className="flex items-center gap-1 text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
+                                                                    <Users className="w-3 h-3" />
+                                                                    {event.registrationCount} Participantes
+                                                                </div>
+
+                                                                {!event.isUserRegistered ? (
+                                                                    <Button
+                                                                        size="sm"
+                                                                        className={cn(
+                                                                            "h-8 text-[10px] font-black uppercase tracking-widest rounded-lg px-4",
+                                                                            isToday ? "bg-orange-500 hover:bg-orange-600 shadow-sm shadow-orange-200" : "bg-primary hover:bg-primary/90"
+                                                                        )}
+                                                                        onClick={(e) => handleRegisterEvent(e, event.id)}
+                                                                        disabled={registeringId === event.id}
+                                                                    >
+                                                                        {registeringId === event.id ? (
+                                                                            <Loader2 className="w-3 h-3 animate-spin" />
+                                                                        ) : (
+                                                                            "Inscrever-se"
+                                                                        )}
+                                                                    </Button>
+                                                                ) : (
+                                                                    <Button
+                                                                        variant="outline"
+                                                                        size="sm"
+                                                                        className="h-8 text-[10px] font-black uppercase tracking-widest border-gray-200 text-gray-400 hover:bg-gray-50 rounded-lg px-4"
+                                                                        onClick={() => router.push('/events')}
+                                                                    >
+                                                                        Ver Evento
+                                                                    </Button>
+                                                                )}
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                ))}
+                                                </CardContent>
+                                            </Card>
+                                        );
+                                    })}
                             </div>
                         </div>
                     )}

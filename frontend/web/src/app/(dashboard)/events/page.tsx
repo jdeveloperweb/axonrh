@@ -49,7 +49,7 @@ export default function EventsPage() {
     const { success, error } = useToast();
     const [events, setEvents] = useState<AppEvent[]>([]);
     const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState<'ALL' | 'REGISTERED' | 'UPCOMING'>('ALL');
+    const [filter, setFilter] = useState<'ALL' | 'REGISTERED' | 'UPCOMING' | 'PAST'>('ALL');
     const [search, setSearch] = useState('');
 
     // Modals
@@ -261,11 +261,30 @@ export default function EventsPage() {
     };
 
     const filteredEvents = events.filter(e => {
+        const eventDate = new Date(e.date);
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const eventDay = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
+
+        const isPast = eventDay < today;
+
         const matchesSearch = e.title.toLowerCase().includes(search.toLowerCase()) ||
             e.speakerName?.toLowerCase().includes(search.toLowerCase());
-        const matchesFilter = filter === 'ALL' ||
-            (filter === 'REGISTERED' && e.isUserRegistered) ||
-            (filter === 'UPCOMING' && e.status === 'UPCOMING');
+
+        // Colaboradores não veem eventos passados no grid geral
+        if (!isManagement && isPast) return false;
+
+        let matchesFilter = false;
+        if (filter === 'ALL') {
+            matchesFilter = !isPast; // Por padrão mostra apenas os ativos
+        } else if (filter === 'REGISTERED') {
+            matchesFilter = e.isUserRegistered;
+        } else if (filter === 'UPCOMING') {
+            matchesFilter = !isPast;
+        } else if (filter === 'PAST') {
+            matchesFilter = isPast;
+        }
+
         return matchesSearch && matchesFilter;
     });
 
@@ -310,7 +329,7 @@ export default function EventsPage() {
                         onChange={e => setSearch(e.target.value)}
                     />
                 </div>
-                <div className="flex items-center gap-2 p-1 bg-white rounded-xl shadow-sm border border-gray-100">
+                <div className="flex flex-wrap items-center gap-2 p-1 bg-white rounded-xl shadow-sm border border-gray-100">
                     <button
                         onClick={() => setFilter('ALL')}
                         className={cn(
@@ -338,6 +357,17 @@ export default function EventsPage() {
                     >
                         Próximos
                     </button>
+                    {isManagement && (
+                        <button
+                            onClick={() => setFilter('PAST')}
+                            className={cn(
+                                "px-4 py-2 rounded-lg text-sm font-bold transition-all",
+                                filter === 'PAST' ? "bg-gray-600 text-white shadow-md shadow-gray-100" : "text-gray-500 hover:bg-gray-50"
+                            )}
+                        >
+                            Passados
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -348,142 +378,155 @@ export default function EventsPage() {
                         <div key={i} className="h-64 bg-gray-100 rounded-3xl animate-pulse" />
                     ))
                 ) : filteredEvents.length > 0 ? (
-                    filteredEvents.map((event) => (
-                        <Card
-                            key={event.id}
-                            className="group relative overflow-hidden border-none shadow-md hover:shadow-2xl transition-all duration-500 rounded-[32px] cursor-pointer bg-white flex flex-col h-full"
-                            onClick={() => {
-                                setSelectedEvent(event);
-                                setIsEventDetailsOpen(true);
-                            }}
-                        >
-                            {/* Card Decorative Header */}
-                            <div className={cn(
-                                "h-4 relative overflow-hidden",
-                                event.category === 'WELLBEING' ? "bg-emerald-500" :
-                                    event.category === 'TECHNICAL' ? "bg-indigo-600" :
-                                        "bg-primary"
-                            )} />
+                    filteredEvents.map((event) => {
+                        const eventDate = new Date(event.date);
+                        const isToday = eventDate.toDateString() === new Date().toDateString();
 
-                            <div className="p-8 flex-1 flex flex-col">
-                                {/* Date & Category Row */}
-                                <div className="flex justify-between items-start mb-6">
-                                    <div className="flex flex-col items-center bg-gray-50 rounded-[20px] p-3 min-w-[64px] group-hover:bg-primary/10 transition-colors border border-gray-100">
-                                        <span className="text-[10px] font-black uppercase tracking-[2px] text-primary/60 leading-none mb-1">
-                                            {event.date ? format(new Date(event.date), 'MMM', { locale: ptBR }) : '---'}
-                                        </span>
-                                        <span className="text-2xl font-black text-gray-900 leading-none">
-                                            {event.date ? format(new Date(event.date), 'dd') : '--'}
-                                        </span>
+                        return (
+                            <Card
+                                key={event.id}
+                                className={cn(
+                                    "group relative overflow-hidden border-none shadow-md hover:shadow-2xl transition-all duration-500 rounded-[32px] cursor-pointer bg-white flex flex-col h-full",
+                                    isToday && "ring-2 ring-orange-500 ring-offset-2"
+                                )}
+                                onClick={() => {
+                                    setSelectedEvent(event);
+                                    setIsEventDetailsOpen(true);
+                                }}
+                            >
+                                {isToday && (
+                                    <div className="absolute top-0 right-0 z-10 transition-transform group-hover:scale-110 origin-top-right">
+                                        <Badge className="bg-orange-500 text-white border-none text-[10px] font-black px-4 py-1.5 rounded-bl-3xl shadow-lg ring-1 ring-white/20 uppercase tracking-widest">HOJE</Badge>
                                     </div>
+                                )}
+                                {/* Card Decorative Header */}
+                                <div className={cn(
+                                    "h-4 relative overflow-hidden",
+                                    event.category === 'WELLBEING' ? "bg-emerald-500" :
+                                        event.category === 'TECHNICAL' ? "bg-indigo-600" :
+                                            "bg-primary"
+                                )} />
 
-                                    <div className="flex flex-col items-end gap-2">
-                                        <Badge className={cn(
-                                            "uppercase text-[9px] tracking-[2px] font-black py-1.5 px-3 border-none shadow-sm",
-                                            event.category === 'WELLBEING' ? "bg-emerald-50 text-emerald-600" :
-                                                event.category === 'TECHNICAL' ? "bg-indigo-50 text-indigo-600" :
-                                                    "bg-primary/10 text-primary"
-                                        )}>
-                                            {event.category}
-                                        </Badge>
-                                        {event.isUserRegistered && (
-                                            <Badge className="bg-green-500 text-white border-none text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full animate-pulse">
-                                                Inscrito
+                                <div className="p-8 flex-1 flex flex-col">
+                                    {/* Date & Category Row */}
+                                    <div className="flex justify-between items-start mb-6">
+                                        <div className="flex flex-col items-center bg-gray-50 rounded-[20px] p-3 min-w-[64px] group-hover:bg-primary/10 transition-colors border border-gray-100">
+                                            <span className="text-[10px] font-black uppercase tracking-[2px] text-primary/60 leading-none mb-1">
+                                                {event.date ? format(new Date(event.date), 'MMM', { locale: ptBR }) : '---'}
+                                            </span>
+                                            <span className="text-2xl font-black text-gray-900 leading-none">
+                                                {event.date ? format(new Date(event.date), 'dd') : '--'}
+                                            </span>
+                                        </div>
+
+                                        <div className="flex flex-col items-end gap-2">
+                                            <Badge className={cn(
+                                                "uppercase text-[9px] tracking-[2px] font-black py-1.5 px-3 border-none shadow-sm",
+                                                event.category === 'WELLBEING' ? "bg-emerald-50 text-emerald-600" :
+                                                    event.category === 'TECHNICAL' ? "bg-indigo-50 text-indigo-600" :
+                                                        "bg-primary/10 text-primary"
+                                            )}>
+                                                {event.category}
                                             </Badge>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Title & Description */}
-                                <div className="space-y-3 mb-8 flex-1">
-                                    <h3 className="text-2xl font-black text-gray-900 group-hover:text-primary transition-colors leading-[1.2] line-clamp-2">
-                                        {event.title}
-                                    </h3>
-                                    <p className="text-sm text-gray-400 font-medium line-clamp-2 leading-relaxed italic">
-                                        {event.description || "Nenhuma descrição informada."}
-                                    </p>
-                                </div>
-
-                                {/* Metadata Grid */}
-                                <div className="grid grid-cols-2 gap-4 mb-8">
-                                    <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-2xl group-hover:bg-gray-100/50 transition-colors border border-transparent group-hover:border-gray-100">
-                                        <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center text-primary shadow-sm">
-                                            <Clock className="w-4 h-4" />
+                                            {event.isUserRegistered && (
+                                                <Badge className="bg-green-500 text-white border-none text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full animate-pulse">
+                                                    Inscrito
+                                                </Badge>
+                                            )}
                                         </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-[8px] font-black text-gray-400 uppercase tracking-tighter">Horário</span>
-                                            <span className="text-xs font-black text-gray-800 tracking-tight">
-                                                {event.date ? format(new Date(event.date), 'HH:mm') : '--:--'}
+                                    </div>
+
+                                    {/* Title & Description */}
+                                    <div className="space-y-3 mb-8 flex-1">
+                                        <h3 className="text-2xl font-black text-gray-900 group-hover:text-primary transition-colors leading-[1.2] line-clamp-2">
+                                            {event.title}
+                                        </h3>
+                                        <p className="text-sm text-gray-400 font-medium line-clamp-2 leading-relaxed italic">
+                                            {event.description || "Nenhuma descrição informada."}
+                                        </p>
+                                    </div>
+
+                                    {/* Metadata Grid */}
+                                    <div className="grid grid-cols-2 gap-4 mb-8">
+                                        <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-2xl group-hover:bg-gray-100/50 transition-colors border border-transparent group-hover:border-gray-100">
+                                            <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center text-primary shadow-sm">
+                                                <Clock className="w-4 h-4" />
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <span className="text-[8px] font-black text-gray-400 uppercase tracking-tighter">Horário</span>
+                                                <span className="text-xs font-black text-gray-800 tracking-tight">
+                                                    {event.date ? format(new Date(event.date), 'HH:mm') : '--:--'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-2xl group-hover:bg-gray-100/50 transition-colors border border-transparent group-hover:border-gray-100">
+                                            <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center text-primary shadow-sm">
+                                                <MapPin className="w-4 h-4" />
+                                            </div>
+                                            <div className="flex flex-col min-w-0">
+                                                <span className="text-[8px] font-black text-gray-400 uppercase tracking-tighter">Local</span>
+                                                <span className="text-xs font-black text-gray-800 tracking-tight truncate">
+                                                    {event.location}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Bottom Info */}
+                                    <div className="pt-6 border-t border-dashed border-gray-200 flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-2 h-2 rounded-full bg-primary animate-ping opacity-50" />
+                                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1">
+                                                {event.registrationCount}{" "}
+                                                <span>Participantes</span>
                                             </span>
                                         </div>
-                                    </div>
-                                    <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-2xl group-hover:bg-gray-100/50 transition-colors border border-transparent group-hover:border-gray-100">
-                                        <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center text-primary shadow-sm">
-                                            <MapPin className="w-4 h-4" />
-                                        </div>
-                                        <div className="flex flex-col min-w-0">
-                                            <span className="text-[8px] font-black text-gray-400 uppercase tracking-tighter">Local</span>
-                                            <span className="text-xs font-black text-gray-800 tracking-tight truncate">
-                                                {event.location}
-                                            </span>
+
+                                        <div className="flex items-center gap-1 bg-primary text-white p-2 rounded-xl group-hover:px-4 transition-all duration-300">
+                                            <span className="text-[10px] font-black uppercase tracking-widest hidden group-hover:inline opacity-0 group-hover:opacity-100">Ver</span>
+                                            <ArrowRight className="w-4 h-4" />
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Bottom Info */}
-                                <div className="pt-6 border-t border-dashed border-gray-200 flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-2 h-2 rounded-full bg-primary animate-ping opacity-50" />
-                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1">
-                                            {event.registrationCount}{" "}
-                                            <span>Participantes</span>
-                                        </span>
+                                {/* Management Actions */}
+                                {isManagement && (
+                                    <div className="absolute top-24 right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all z-20">
+                                        <button
+                                            className="p-2 bg-white rounded-xl shadow-lg text-gray-400 hover:text-primary transition-all scale-90 hover:scale-100"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleEditEvent(event);
+                                            }}
+                                            title="Editar Evento"
+                                        >
+                                            <Edit className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            className="p-2 bg-white rounded-xl shadow-lg text-gray-400 hover:text-blue-500 transition-all scale-90 hover:scale-100"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleOpenSubscribers(event);
+                                            }}
+                                            title="Gerenciar Inscritos"
+                                        >
+                                            <Users className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            className="p-2 bg-white rounded-xl shadow-lg text-gray-400 hover:text-red-500 transition-all scale-90 hover:scale-100"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDeleteEvent(event.id);
+                                            }}
+                                            title="Excluir Evento"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
                                     </div>
-
-                                    <div className="flex items-center gap-1 bg-primary text-white p-2 rounded-xl group-hover:px-4 transition-all duration-300">
-                                        <span className="text-[10px] font-black uppercase tracking-widest hidden group-hover:inline opacity-0 group-hover:opacity-100">Ver</span>
-                                        <ArrowRight className="w-4 h-4" />
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Management Actions */}
-                            {isManagement && (
-                                <div className="absolute top-24 right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all z-20">
-                                    <button
-                                        className="p-2 bg-white rounded-xl shadow-lg text-gray-400 hover:text-primary transition-all scale-90 hover:scale-100"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleEditEvent(event);
-                                        }}
-                                        title="Editar Evento"
-                                    >
-                                        <Edit className="w-4 h-4" />
-                                    </button>
-                                    <button
-                                        className="p-2 bg-white rounded-xl shadow-lg text-gray-400 hover:text-blue-500 transition-all scale-90 hover:scale-100"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleOpenSubscribers(event);
-                                        }}
-                                        title="Gerenciar Inscritos"
-                                    >
-                                        <Users className="w-4 h-4" />
-                                    </button>
-                                    <button
-                                        className="p-2 bg-white rounded-xl shadow-lg text-gray-400 hover:text-red-500 transition-all scale-90 hover:scale-100"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleDeleteEvent(event.id);
-                                        }}
-                                        title="Excluir Evento"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            )}
-                        </Card>
-                    ))
+                                )}
+                            </Card>
+                        );
+                    })
                 ) : (
                     <div className="col-span-full py-20 text-center space-y-4">
                         <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto text-gray-300">
@@ -931,6 +974,6 @@ export default function EventsPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-        </div >
+        </div>
     );
 }
