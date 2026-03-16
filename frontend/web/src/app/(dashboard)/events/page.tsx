@@ -49,7 +49,7 @@ export default function EventsPage() {
     const { success, error } = useToast();
     const [events, setEvents] = useState<AppEvent[]>([]);
     const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState<'ALL' | 'REGISTERED' | 'UPCOMING' | 'PAST'>('ALL');
+    const [filter, setFilter] = useState<'UPCOMING' | 'REGISTERED' | 'PAST'>('UPCOMING');
     const [search, setSearch] = useState('');
 
     // Modals
@@ -275,12 +275,10 @@ export default function EventsPage() {
         if (!isManagement && isPast) return false;
 
         let matchesFilter = false;
-        if (filter === 'ALL') {
-            matchesFilter = !isPast; // Por padrão mostra apenas os ativos
+        if (filter === 'UPCOMING') {
+            matchesFilter = !isPast;
         } else if (filter === 'REGISTERED') {
             matchesFilter = e.isUserRegistered;
-        } else if (filter === 'UPCOMING') {
-            matchesFilter = !isPast;
         } else if (filter === 'PAST') {
             matchesFilter = isPast;
         }
@@ -331,13 +329,13 @@ export default function EventsPage() {
                 </div>
                 <div className="flex flex-wrap items-center gap-2 p-1 bg-white rounded-xl shadow-sm border border-gray-100">
                     <button
-                        onClick={() => setFilter('ALL')}
+                        onClick={() => setFilter('UPCOMING')}
                         className={cn(
                             "px-4 py-2 rounded-lg text-sm font-bold transition-all",
-                            filter === 'ALL' ? "bg-primary text-white shadow-md shadow-primary/10" : "text-gray-500 hover:bg-gray-50"
+                            filter === 'UPCOMING' ? "bg-primary text-white shadow-md shadow-primary/10" : "text-gray-500 hover:bg-gray-50"
                         )}
                     >
-                        Todos
+                        Próximos
                     </button>
                     <button
                         onClick={() => setFilter('REGISTERED')}
@@ -348,15 +346,7 @@ export default function EventsPage() {
                     >
                         Inscritos
                     </button>
-                    <button
-                        onClick={() => setFilter('UPCOMING')}
-                        className={cn(
-                            "px-4 py-2 rounded-lg text-sm font-bold transition-all",
-                            filter === 'UPCOMING' ? "bg-primary text-white shadow-md shadow-primary/10" : "text-gray-500 hover:bg-gray-50"
-                        )}
-                    >
-                        Próximos
-                    </button>
+
                     {isManagement && (
                         <button
                             onClick={() => setFilter('PAST')}
