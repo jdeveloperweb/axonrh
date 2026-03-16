@@ -280,7 +280,7 @@ export function BenefitTypeDialog({
                                         <SelectContent>
                                             <SelectItem value="STANDARD">Padrão (Sem regras especiais)</SelectItem>
                                             <SelectItem value="TRANSPORT_VOUCHER">Vale Transporte (Lei 7.418/85)</SelectItem>
-                                            <SelectItem value="HEALTH_PLAN">Plano de Saúde (ANS)</SelectItem>
+                                            <SelectItem value="HEALTH_PLAN">Plano de Saúde / Odontológico (ANS)</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>

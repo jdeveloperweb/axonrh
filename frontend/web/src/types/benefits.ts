@@ -71,6 +71,7 @@ export interface EmployeeBenefit {
     endDate?: string;
     status: EmployeeBenefitStatus;
     notes?: string;
+    dependents?: { dependentId: string; dependentName: string }[];
     createdAt?: string;
     updatedAt?: string;
 }
@@ -84,6 +85,7 @@ export interface EmployeeBenefitRequest {
     startDate: string;
     endDate?: string;
     notes?: string;
+    dependentIds?: string[];
 }
 
 export interface BenefitHistory {

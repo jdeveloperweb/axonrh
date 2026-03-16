@@ -229,6 +229,12 @@ export default function BenefitManagementPage() {
                                             <Badge variant="outline" className={b.benefitCategory === 'EARNING' ? 'text-green-600' : 'text-orange-600'}>
                                                 {b.benefitTypeName}
                                             </Badge>
+                                            {b.dependents && b.dependents.length > 0 && (
+                                                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                                    <UserPlus className="w-3 h-3" />
+                                                    {b.dependents.length}
+                                                </span>
+                                            )}
                                         </div>
                                     </TableCell>
                                     <TableCell>

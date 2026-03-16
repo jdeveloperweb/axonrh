@@ -13,9 +13,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { EmployeeBenefit, EmployeeBenefitRequest, BenefitType } from '@/types/benefits';
 import { benefitsApi } from '@/lib/api/benefits';
-import { employeesApi, Employee } from '@/lib/api/employees';
+import { employeesApi, Employee, EmployeeDependent } from '@/lib/api/employees';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
@@ -39,6 +40,7 @@ export function EmployeeBenefitDialog({
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
     const [employees, setEmployees] = useState<Employee[]>([]);
+    const [dependents, setDependents] = useState<EmployeeDependent[]>([]);
     const [formData, setFormData] = useState<EmployeeBenefitRequest>({
         employeeId: '',
         employeeName: '',
@@ -47,7 +49,8 @@ export function EmployeeBenefitDialog({
         percentage: 0,
         startDate: format(new Date(), 'yyyy-MM-dd'),
         endDate: '',
-        notes: ''
+        notes: '',
+        dependentIds: []
     });
 
     const selectedType = benefitTypes.find(t => t.id === formData.benefitTypeId);
@@ -62,7 +65,8 @@ export function EmployeeBenefitDialog({
                 percentage: selectedBenefit.percentage || 0,
                 startDate: selectedBenefit.startDate,
                 endDate: selectedBenefit.endDate || '',
-                notes: selectedBenefit.notes || ''
+                notes: selectedBenefit.notes || '',
+                dependentIds: selectedBenefit.dependents?.map(d => d.dependentId) || []
             });
         } else if (employeeInfo) {
             setFormData((prev: EmployeeBenefitRequest) => ({
@@ -74,7 +78,8 @@ export function EmployeeBenefitDialog({
                 percentage: 0,
                 startDate: format(new Date(), 'yyyy-MM-dd'),
                 endDate: '',
-                notes: ''
+                notes: '',
+                dependentIds: []
             }));
         } else {
             setFormData((prev: EmployeeBenefitRequest) => ({
@@ -86,7 +91,8 @@ export function EmployeeBenefitDialog({
                 percentage: 0,
                 startDate: format(new Date(), 'yyyy-MM-dd'),
                 endDate: '',
-                notes: ''
+                notes: '',
+                dependentIds: []
             }));
         }
     }, [selectedBenefit, employeeInfo, isOpen]);
@@ -105,6 +111,26 @@ export function EmployeeBenefitDialog({
             fetchEmployees();
         }
     }, [isOpen, selectedBenefit, employeeInfo]);
+
+    useEffect(() => {
+        const fetchDependents = async () => {
+            if (formData.employeeId) {
+                try {
+                    const deps = await employeesApi.getDependents(formData.employeeId);
+                    setDependents(deps || []);
+                } catch (error) {
+                    console.error('Error fetching dependents:', error);
+                    setDependents([]);
+                }
+            } else {
+                setDependents([]);
+            }
+        };
+
+        if (isOpen) {
+            fetchDependents();
+        }
+    }, [formData.employeeId, isOpen]);
 
     const handleTypeChange = (typeId: string) => {
         const type = benefitTypes.find(t => t.id === typeId);
@@ -247,6 +273,32 @@ export function EmployeeBenefitDialog({
                             />
                         </div>
                     </div>
+
+                    {selectedType?.rules?.ruleType === 'HEALTH_PLAN' && dependents.length > 0 && (
+                        <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
+                            <Label>Dependentes Inclusos no Benefício</Label>
+                            <div className="grid grid-cols-1 gap-2 border border-gray-100 p-3 rounded-lg bg-slate-50">
+                                {dependents.map(dep => (
+                                    <div key={dep.id} className="flex items-center space-x-2">
+                                        <Checkbox
+                                            id={`dep-${dep.id}`}
+                                            checked={formData.dependentIds?.includes(dep.id) || false}
+                                            onCheckedChange={(checked) => {
+                                                const newDependentIds = checked
+                                                    ? [...(formData.dependentIds || []), dep.id]
+                                                    : (formData.dependentIds || []).filter(id => id !== dep.id);
+                                                setFormData({ ...formData, dependentIds: newDependentIds });
+                                            }}
+                                        />
+                                        <Label htmlFor={`dep-${dep.id}`} className="text-sm font-normal cursor-pointer leading-none flex items-center gap-2">
+                                            {dep.name}
+                                            <span className="text-xs text-muted-foreground">({dep.relationship})</span>
+                                        </Label>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     <div className="space-y-2">
                         <Label htmlFor="notes">Observações</Label>

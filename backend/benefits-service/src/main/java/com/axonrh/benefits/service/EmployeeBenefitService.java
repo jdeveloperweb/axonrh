@@ -160,6 +160,31 @@ public class EmployeeBenefitService {
         entity.setNotes(request.getNotes());
         entity.setEmployeeName(request.getEmployeeName());
 
+        if (request.getDependentIds() != null) {
+            entity.getDependents().clear();
+            if (!request.getDependentIds().isEmpty()) {
+                try {
+                    com.axonrh.benefits.dto.EmployeeDetailsDto employeeDetails = employeeClient.getEmployeeDetails(request.getEmployeeId());
+                    if (employeeDetails != null && employeeDetails.getDependents() != null) {
+                        java.util.Map<UUID, String> dependentNames = employeeDetails.getDependents().stream()
+                                .collect(Collectors.toMap(com.axonrh.benefits.dto.DependentDto::getId, com.axonrh.benefits.dto.DependentDto::getName));
+
+                        for (UUID depId : request.getDependentIds()) {
+                            String depName = dependentNames.getOrDefault(depId, "Unknown");
+                            com.axonrh.benefits.entity.EmployeeBenefitDependent dependentEntity = com.axonrh.benefits.entity.EmployeeBenefitDependent.builder()
+                                    .employeeBenefit(entity)
+                                    .dependentId(depId)
+                                    .dependentName(depName)
+                                    .build();
+                             entity.getDependents().add(dependentEntity);
+                        }
+                    }
+                } catch (Exception e) {
+                    log.error("Erro ao buscar dependentes do colaborador na atualizacao", e);
+                }
+            }
+        }
+
         EmployeeBenefit saved = employeeBenefitRepository.save(entity);
 
         recordHistory(saved, "UPDATED", oldValue, saved.getFixedValue(),
