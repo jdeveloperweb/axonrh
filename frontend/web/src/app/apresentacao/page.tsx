@@ -601,8 +601,15 @@ export default function ApresentacaoPage() {
             >
               O Futuro do<br />
               <span
-                className="axon-gradient-text axon-display"
-                style={{ background: 'linear-gradient(90deg, #3B82F6, #818CF8, #C084FC, #3B82F6)' }}
+                className="axon-display"
+                style={{
+                  background: 'linear-gradient(90deg, #3B82F6, #818CF8, #C084FC, #3B82F6)',
+                  backgroundSize: '250% 250%',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  animation: 'axon-gradient 5s ease infinite',
+                }}
               >
                 RH já chegou
               </span>
@@ -992,7 +999,14 @@ export default function ApresentacaoPage() {
 
               <h2 className="axon-display" style={{ fontSize: 'clamp(44px, 7vw, 84px)', fontWeight: 900, color: 'white', letterSpacing: '-0.04em', lineHeight: 0.92, marginBottom: 28 }}>
                 Transforme seu RH<br />
-                <span className="axon-gradient-text axon-display" style={{ background: 'linear-gradient(90deg, #3B82F6, #818CF8, #C084FC, #3B82F6)' }}>
+                <span className="axon-display" style={{
+                  background: 'linear-gradient(90deg, #3B82F6, #818CF8, #C084FC, #3B82F6)',
+                  backgroundSize: '250% 250%',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  animation: 'axon-gradient 5s ease infinite',
+                }}>
                   agora mesmo
                 </span>
               </h2>
