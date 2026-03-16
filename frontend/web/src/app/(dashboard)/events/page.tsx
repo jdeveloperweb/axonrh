@@ -82,7 +82,10 @@ export default function EventsPage() {
     });
 
     const roles = user?.roles || [];
+    const permissions = user?.permissions || [];
     const isManagement = roles.includes('ADMIN') || roles.includes('RH') || roles.includes('GESTOR_RH');
+    const canViewArchive = permissions.includes('EVENT:ARCHIVE_READ') || isManagement;
+    const canCreateEvent = permissions.includes('EVENT:CREATE') || isManagement;
 
     const loadEvents = async () => {
         try {
@@ -271,8 +274,8 @@ export default function EventsPage() {
         const matchesSearch = e.title.toLowerCase().includes(search.toLowerCase()) ||
             e.speakerName?.toLowerCase().includes(search.toLowerCase());
 
-        // Colaboradores não veem eventos passados no grid geral
-        if (!isManagement && isPast) return false;
+        // Colaboradores sem permissão não veem eventos passados no grid geral
+        if (!canViewArchive && isPast) return false;
 
         let matchesFilter = false;
         if (filter === 'UPCOMING') {
@@ -302,7 +305,7 @@ export default function EventsPage() {
                     </p>
                 </div>
 
-                {isManagement && (
+                {canCreateEvent && (
                     <Button
                         onClick={() => {
                             resetForm();
@@ -347,7 +350,7 @@ export default function EventsPage() {
                         Inscritos
                     </button>
 
-                    {isManagement && (
+                    {canViewArchive && (
                         <button
                             onClick={() => setFilter('PAST')}
                             className={cn(
@@ -480,7 +483,7 @@ export default function EventsPage() {
                                 </div>
 
                                 {/* Management Actions */}
-                                {isManagement && (
+                                {(canCreateEvent || isManagement) && (
                                     <div className="absolute top-24 right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all z-20">
                                         <button
                                             className="p-2 bg-white rounded-xl shadow-lg text-gray-400 hover:text-primary transition-all scale-90 hover:scale-100"
