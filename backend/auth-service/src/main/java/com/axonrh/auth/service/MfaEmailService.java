@@ -1,7 +1,7 @@
 package com.axonrh.auth.service;
 
-import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.util.ByteArrayDataSource;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,6 +11,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Base64;
 import java.util.Map;
 
 /**
@@ -48,7 +49,7 @@ public class MfaEmailService {
                                    String secret, String tenantId) {
         try {
             BrandingInfo branding = fetchBranding(tenantId);
-            String html = buildEmailHtml(userName, qrCodeBase64, secret, branding);
+            String html = buildEmailHtml(userName, secret, branding);
 
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -61,6 +62,12 @@ public class MfaEmailService {
             }
             helper.setSubject("Configure sua autenticação em duas etapas (MFA) — " + branding.companyName);
             helper.setText(html, true);
+
+            // Adiciona o QR Code como anexo inline (CID) para garantir exibição em clientes como Gmail/Outlook
+            if (qrCodeBase64 != null && !qrCodeBase64.isBlank()) {
+                byte[] qrCodeBytes = Base64.getDecoder().decode(qrCodeBase64);
+                helper.addInline("qrcode", new ByteArrayDataSource(qrCodeBytes, "image/png"));
+            }
 
             mailSender.send(message);
             log.info("Email de configuração MFA enviado para: {}", toEmail);
@@ -105,7 +112,7 @@ public class MfaEmailService {
         }
     }
 
-    private String buildEmailHtml(String userName, String qrCodeBase64,
+    private String buildEmailHtml(String userName,
                                    String secret, BrandingInfo branding) {
         // Header: white background, logo only (or company name text)
         String logoHtml = branding.logoUrl != null
@@ -178,7 +185,7 @@ public class MfaEmailService {
             + "<p style=\"margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:bold;color:#94a3b8;letter-spacing:1px;\">SEU QR CODE</p>"
             + "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\">"
             + "<tr><td align=\"center\" style=\"background-color:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;\">"
-            + "<img src=\"data:image/png;base64," + qrCodeBase64 + "\" alt=\"QR Code MFA\" width=\"200\" height=\"200\" style=\"display:block;border:0;\" />"
+            + "<img src=\"cid:qrcode\" alt=\"QR Code MFA\" width=\"200\" height=\"200\" style=\"display:block;border:0;\" />"
             + "</td></tr>"
             + "</table>"
             + "</td></tr>"
