@@ -17,6 +17,8 @@ import {
   ShieldCheck,
   Bot,
   Zap,
+  ArrowLeft,
+  KeyRound,
 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import { useThemeStore } from "@/stores/theme-store";
@@ -89,6 +91,7 @@ export default function LoginClient() {
     handleSubmit,
     formState: { errors },
     setFocus,
+    resetField,
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -205,6 +208,12 @@ export default function LoginClient() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleCancelMfa = () => {
+    setShow2FA(false);
+    resetField("totpCode");
+    clearError();
   };
 
   const handleMfaSetupSuccess = async (response: LoginResponse) => {
@@ -324,12 +333,28 @@ export default function LoginClient() {
             <div className="relative">
               <div className="relative rounded-3xl border border-white/40 glass shadow-2xl shadow-slate-200/50 p-6 sm:p-10">
                 <div className="mb-6 text-left">
-                  <h2 className="font-heading text-xl sm:text-2xl font-semibold text-slate-900">
-                    Faça login
-                  </h2>
-                  <p className="text-xs sm:text-sm text-slate-500">
-                    Use seu e-mail corporativo para entrar
-                  </p>
+                  {show2FA ? (
+                    <>
+                      <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-[var(--color-primary)]/10 mb-4">
+                        <KeyRound className="w-7 h-7 text-[var(--color-primary)]" />
+                      </div>
+                      <h2 className="font-heading text-xl sm:text-2xl font-semibold text-slate-900">
+                        Verificação em dois fatores
+                      </h2>
+                      <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                        Abra seu aplicativo autenticador e insira o código de 6 dígitos gerado para sua conta.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <h2 className="font-heading text-xl sm:text-2xl font-semibold text-slate-900">
+                        Faça login
+                      </h2>
+                      <p className="text-xs sm:text-sm text-slate-500">
+                        Use seu e-mail corporativo para entrar
+                      </p>
+                    </>
+                  )}
                 </div>
 
 
@@ -352,108 +377,121 @@ export default function LoginClient() {
                 )}
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                  {/* Email */}
-                  <div>
-                    <label
-                      htmlFor="email"
-                      className="text-sm font-medium text-slate-700"
-                    >
-                      Email
-                    </label>
-                    <div className="relative mt-2">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                      <input
-                        {...register("email")}
-                        type="email"
-                        id="email"
-                        placeholder="seu@email.com"
-                        className={cn(
-                          `${inputBaseClasses} pl-10`,
-                          errors.email && "input-error"
+                  {/* Email + Senha — ocultos na etapa do MFA */}
+                  {!show2FA && (
+                    <>
+                      {/* Email */}
+                      <div>
+                        <label
+                          htmlFor="email"
+                          className="text-sm font-medium text-slate-700"
+                        >
+                          Email
+                        </label>
+                        <div className="relative mt-2">
+                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                          <input
+                            {...register("email")}
+                            type="email"
+                            id="email"
+                            placeholder="seu@email.com"
+                            className={cn(
+                              `${inputBaseClasses} pl-10`,
+                              errors.email && "input-error"
+                            )}
+                            disabled={isLoading}
+                          />
+                        </div>
+                        {errors.email && (
+                          <span className="text-sm text-rose-600 mt-1">
+                            {errors.email.message}
+                          </span>
                         )}
-                        disabled={isLoading}
-                      />
-                    </div>
-                    {errors.email && (
-                      <span className="text-sm text-rose-600 mt-1">
-                        {errors.email.message}
-                      </span>
-                    )}
-                  </div>
+                      </div>
 
-                  {/* Senha */}
-                  <div>
-                    <label
-                      htmlFor="password"
-                      className="text-sm font-medium text-slate-700"
-                    >
-                      Senha
-                    </label>
-                    <div className="relative mt-2">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                      <input
-                        {...register("password")}
-                        type={showPassword ? "text" : "password"}
-                        id="password"
-                        placeholder="********"
-                        className={cn(
-                          `${inputBaseClasses} pl-10 pr-10`,
-                          errors.password && "input-error"
+                      {/* Senha */}
+                      <div>
+                        <label
+                          htmlFor="password"
+                          className="text-sm font-medium text-slate-700"
+                        >
+                          Senha
+                        </label>
+                        <div className="relative mt-2">
+                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                          <input
+                            {...register("password")}
+                            type={showPassword ? "text" : "password"}
+                            id="password"
+                            placeholder="********"
+                            className={cn(
+                              `${inputBaseClasses} pl-10 pr-10`,
+                              errors.password && "input-error"
+                            )}
+                            disabled={isLoading}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
+                          >
+                            {showPassword ? (
+                              <EyeOff className="w-5 h-5" />
+                            ) : (
+                              <Eye className="w-5 h-5" />
+                            )}
+                          </button>
+                        </div>
+                        {errors.password && (
+                          <span className="text-sm text-rose-600 mt-1">
+                            {errors.password.message}
+                          </span>
                         )}
-                        disabled={isLoading}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
-                      >
-                        {showPassword ? (
-                          <EyeOff className="w-5 h-5" />
-                        ) : (
-                          <Eye className="w-5 h-5" />
-                        )}
-                      </button>
-                    </div>
-                    {errors.password && (
-                      <span className="text-sm text-rose-600 mt-1">
-                        {errors.password.message}
-                      </span>
-                    )}
-                  </div>
+                      </div>
 
-                  {/* Codigo 2FA */}
-                  {show2FA && (
-                    <div className="animate-fade-in">
-                      <label
-                        htmlFor="totpCode"
-                        className="text-sm font-medium text-slate-700"
-                      >
-                        Codigo de Verificacao (2FA)
-                      </label>
-                      <input
-                        {...register("totpCode")}
-                        type="text"
-                        id="totpCode"
-                        placeholder="000000"
-                        maxLength={6}
-                        className={`${inputBaseClasses} mt-2 text-center text-2xl tracking-widest`}
-                        disabled={isLoading}
-                      />
-                      <p className="text-sm text-slate-500 mt-1">
-                        Digite o codigo do seu aplicativo autenticador
-                      </p>
-                    </div>
+                      {/* Link Esqueceu Senha */}
+                      <div className="flex justify-end">
+                        <a
+                          href="/forgot-password"
+                          className="text-sm text-sky-600 hover:text-sky-700 underline underline-offset-4"
+                        >
+                          Esqueceu sua senha?
+                        </a>
+                      </div>
+                    </>
                   )}
 
-                  {/* Link Esqueceu Senha */}
-                  <div className="flex justify-end">
-                    <a
-                      href="/forgot-password"
-                      className="text-sm text-sky-600 hover:text-sky-700 underline underline-offset-4"
-                    >
-                      Esqueceu sua senha?
-                    </a>
-                  </div>
+                  {/* Etapa do codigo 2FA */}
+                  {show2FA && (
+                    <div className="animate-fade-in space-y-4">
+                      <div>
+                        <label
+                          htmlFor="totpCode"
+                          className="text-sm font-medium text-slate-700"
+                        >
+                          Código de verificação
+                        </label>
+                        <input
+                          {...register("totpCode")}
+                          type="text"
+                          id="totpCode"
+                          placeholder="000000"
+                          maxLength={6}
+                          autoComplete="one-time-code"
+                          className={`${inputBaseClasses} mt-2 text-center text-2xl tracking-[0.5em] font-mono`}
+                          disabled={isLoading}
+                          autoFocus
+                        />
+                      </div>
+
+                      <div className="rounded-xl bg-slate-50 border border-slate-100 p-3 flex gap-3 items-start">
+                        <ShieldCheck className="w-5 h-5 text-[var(--color-primary)] flex-shrink-0 mt-0.5" />
+                        <p className="text-xs text-slate-500 leading-relaxed">
+                          O código é gerado pelo seu aplicativo autenticador (Google Authenticator, Authy, etc.) e se renova a cada 30 segundos.
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Botao Submit */}
                   <button
@@ -465,12 +503,25 @@ export default function LoginClient() {
                     {isLoading ? (
                       <>
                         <Loader2 className="w-5 h-5 animate-spin" />
-                        <span>Entrando...</span>
+                        <span>{show2FA ? "Verificando..." : "Entrando..."}</span>
                       </>
                     ) : (
-                      "Entrar"
+                      show2FA ? "Verificar código" : "Entrar"
                     )}
                   </button>
+
+                  {/* Cancelar MFA */}
+                  {show2FA && (
+                    <button
+                      type="button"
+                      onClick={handleCancelMfa}
+                      disabled={isLoading}
+                      className="w-full py-2.5 rounded-[var(--radius-md)] text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                      Cancelar e voltar ao login
+                    </button>
+                  )}
                 </form>
               </div>
             </div>
