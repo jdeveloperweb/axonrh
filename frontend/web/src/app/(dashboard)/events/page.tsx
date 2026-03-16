@@ -387,11 +387,6 @@ export default function EventsPage() {
                                     setIsEventDetailsOpen(true);
                                 }}
                             >
-                                {isToday && (
-                                    <div className="absolute top-0 right-0 z-10 transition-transform group-hover:scale-110 origin-top-right">
-                                        <Badge className="bg-orange-500 text-white border-none text-[10px] font-black px-4 py-1.5 rounded-bl-3xl shadow-lg ring-1 ring-white/20 uppercase tracking-widest">HOJE</Badge>
-                                    </div>
-                                )}
                                 {/* Card Decorative Header */}
                                 <div className={cn(
                                     "h-4 relative overflow-hidden",
@@ -421,6 +416,11 @@ export default function EventsPage() {
                                             )}>
                                                 {event.category}
                                             </Badge>
+                                            {isToday && (
+                                                <Badge className="bg-orange-500 text-white border-none text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full">
+                                                    Hoje
+                                                </Badge>
+                                            )}
                                             {event.isUserRegistered && (
                                                 <Badge className="bg-green-500 text-white border-none text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full animate-pulse">
                                                     Inscrito

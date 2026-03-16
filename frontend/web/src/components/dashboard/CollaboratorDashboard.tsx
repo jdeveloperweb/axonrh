@@ -501,11 +501,6 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
                                                     isToday ? "border-l-orange-500 ring-1 ring-orange-100" : (event.isUserRegistered ? "border-l-green-500" : "border-l-primary")
                                                 )}
                                             >
-                                                {isToday && (
-                                                    <div className="absolute top-0 right-0">
-                                                        <Badge className="bg-orange-500 text-white border-none text-[8px] font-black px-2 py-0.5 rounded-bl-lg rounded-tr-none">HOJE</Badge>
-                                                    </div>
-                                                )}
                                                 <CardContent className="p-0">
                                                     <div className="p-5 flex items-start gap-4">
                                                         <div className={cn(
@@ -518,9 +513,14 @@ export function CollaboratorDashboard({ extraHeaderContent }: CollaboratorDashbo
                                                         <div className="flex-1 min-w-0">
                                                             <div className="flex items-center justify-between gap-2 mb-1">
                                                                 <h4 className="font-bold text-gray-900 truncate text-sm">{event.title}</h4>
-                                                                {event.isUserRegistered && (
-                                                                    <Badge className="bg-green-500 text-white border-none text-[8px] font-black px-1.5 py-0">INSCRITO</Badge>
-                                                                )}
+                                                                <div className="flex items-center gap-1 shrink-0">
+                                                                    {isToday && (
+                                                                        <Badge className="bg-orange-500 text-white border-none text-[8px] font-black px-1.5 py-0">HOJE</Badge>
+                                                                    )}
+                                                                    {event.isUserRegistered && (
+                                                                        <Badge className="bg-green-500 text-white border-none text-[8px] font-black px-1.5 py-0">INSCRITO</Badge>
+                                                                    )}
+                                                                </div>
                                                             </div>
                                                             <p className="text-[11px] text-gray-400 flex items-center gap-1 font-medium">
                                                                 <Clock className="w-3 h-3 text-primary/60" />
