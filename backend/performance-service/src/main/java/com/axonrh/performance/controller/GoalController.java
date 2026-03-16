@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -27,7 +28,7 @@ public class GoalController {
     // ==================== CRUD ====================
 
     @PostMapping
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:CREATE')")
+    @PreAuthorize("hasAuthority('PERFORMANCE:GOALS_WRITE')")
     public ResponseEntity<Goal> createGoal(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @RequestBody Goal goal) {
@@ -36,7 +37,7 @@ public class GoalController {
     }
 
     @GetMapping("/{goalId}")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:READ')")
+    @PreAuthorize("hasAuthority('PERFORMANCE:GOALS_READ')")
     public ResponseEntity<Goal> getGoal(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID goalId) {
@@ -44,7 +45,7 @@ public class GoalController {
     }
 
     @PutMapping("/{goalId}")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:UPDATE')")
+    @PreAuthorize("hasAuthority('PERFORMANCE:GOALS_WRITE')")
     public ResponseEntity<Goal> updateGoal(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID goalId,
@@ -53,7 +54,7 @@ public class GoalController {
     }
 
     @DeleteMapping("/{goalId}")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:DELETE')")
+    @PreAuthorize("hasAuthority('PERFORMANCE:GOALS_WRITE')")
     public ResponseEntity<Void> deleteGoal(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID goalId) {
@@ -64,7 +65,7 @@ public class GoalController {
     // ==================== Listing ====================
 
     @GetMapping("/employee/{employeeId}")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:READ')")
+    @PreAuthorize("hasAuthority('PERFORMANCE:GOALS_READ')")
     public ResponseEntity<List<Goal>> getEmployeeGoals(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID employeeId) {
@@ -72,7 +73,7 @@ public class GoalController {
     }
 
     @GetMapping("/department/{departmentId}")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:READ')")
+    @PreAuthorize("hasAuthority('PERFORMANCE:GOALS_READ')")
     public ResponseEntity<List<Goal>> getDepartmentGoals(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID departmentId) {
@@ -80,7 +81,7 @@ public class GoalController {
     }
 
     @GetMapping("/cycle/{cycleId}")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:READ')")
+    @PreAuthorize("hasAuthority('PERFORMANCE:GOALS_READ')")
     public ResponseEntity<Page<Goal>> getCycleGoals(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID cycleId,
@@ -89,7 +90,7 @@ public class GoalController {
     }
 
     @GetMapping("/employee/{employeeId}/status/{status}")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:READ')")
+    @PreAuthorize("hasAuthority('PERFORMANCE:GOALS_READ')")
     public ResponseEntity<List<Goal>> getGoalsByStatus(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID employeeId,
@@ -98,14 +99,14 @@ public class GoalController {
     }
 
     @GetMapping("/overdue")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:READ')")
+    @PreAuthorize("hasAuthority('PERFORMANCE:GOALS_READ')")
     public ResponseEntity<List<Goal>> getOverdueGoals(
             @RequestHeader("X-Tenant-ID") UUID tenantId) {
         return ResponseEntity.ok(goalService.getOverdueGoals(tenantId));
     }
 
     @GetMapping("/at-risk")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:READ')")
+    @PreAuthorize("hasAuthority('PERFORMANCE:GOALS_READ')")
     public ResponseEntity<List<Goal>> getAtRiskGoals(
             @RequestHeader("X-Tenant-ID") UUID tenantId) {
         return ResponseEntity.ok(goalService.getAtRiskGoals(tenantId));
@@ -114,7 +115,7 @@ public class GoalController {
     // ==================== OKRs ====================
 
     @GetMapping("/{goalId}/key-results")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:READ')")
+    @PreAuthorize("hasAuthority('PERFORMANCE:GOALS_READ')")
     public ResponseEntity<List<Goal>> getKeyResults(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID goalId) {
@@ -122,7 +123,7 @@ public class GoalController {
     }
 
     @PostMapping("/{goalId}/key-results")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:CREATE')")
+    @PreAuthorize("hasAuthority('PERFORMANCE:GOALS_WRITE')")
     public ResponseEntity<Goal> createKeyResult(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID goalId,
@@ -132,7 +133,7 @@ public class GoalController {
     }
 
     @GetMapping("/company-okrs/{cycleId}")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:READ')")
+    @PreAuthorize("hasAuthority('PERFORMANCE:GOALS_READ')")
     public ResponseEntity<List<Goal>> getCompanyOKRs(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID cycleId) {
@@ -142,7 +143,7 @@ public class GoalController {
     // ==================== Progress ====================
 
     @PostMapping("/{goalId}/progress")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:UPDATE')")
+    @PreAuthorize("hasAuthority('PERFORMANCE:GOALS_WRITE')")
     public ResponseEntity<Goal> updateProgress(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID goalId,
@@ -152,7 +153,7 @@ public class GoalController {
     }
 
     @PostMapping("/{goalId}/complete")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:UPDATE')")
+    @PreAuthorize("hasAuthority('PERFORMANCE:GOALS_WRITE')")
     public ResponseEntity<Goal> completeGoal(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID goalId) {
@@ -160,7 +161,7 @@ public class GoalController {
     }
 
     @PostMapping("/{goalId}/cancel")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:UPDATE')")
+    @PreAuthorize("hasAuthority('PERFORMANCE:GOALS_WRITE')")
     public ResponseEntity<Goal> cancelGoal(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID goalId) {
@@ -168,7 +169,7 @@ public class GoalController {
     }
 
     @PostMapping("/{goalId}/at-risk")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:UPDATE')")
+    @PreAuthorize("hasAuthority('PERFORMANCE:GOALS_WRITE')")
     public ResponseEntity<Goal> markAtRisk(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID goalId) {
@@ -178,7 +179,7 @@ public class GoalController {
     // ==================== Statistics ====================
 
     @GetMapping("/employee/{employeeId}/statistics")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:READ')")
+    @PreAuthorize("hasAuthority('PERFORMANCE:GOALS_READ')")
     public ResponseEntity<GoalStatistics> getEmployeeStatistics(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID employeeId) {

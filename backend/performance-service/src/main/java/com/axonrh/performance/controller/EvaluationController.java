@@ -10,10 +10,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -29,7 +32,7 @@ public class EvaluationController {
     // ==================== Cycles ====================
 
     @PostMapping("/cycles")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:CREATE')")
+    @PreAuthorize("hasAuthority('PERFORMANCE:CREATE')")
     public ResponseEntity<EvaluationCycle> createCycle(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @RequestBody EvaluationCycle cycle) {
@@ -38,14 +41,14 @@ public class EvaluationController {
     }
 
     @GetMapping("/cycles")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:READ')")
+    @PreAuthorize("hasAuthority('PERFORMANCE:READ')")
     public ResponseEntity<List<EvaluationCycle>> listCycles(
             @RequestHeader("X-Tenant-ID") UUID tenantId) {
         return ResponseEntity.ok(evaluationService.listCycles(tenantId));
     }
 
     @GetMapping("/cycles/{cycleId}")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:READ')")
+    @PreAuthorize("hasAuthority('PERFORMANCE:READ')")
     public ResponseEntity<EvaluationCycle> getCycle(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID cycleId) {
@@ -53,7 +56,7 @@ public class EvaluationController {
     }
 
     @PutMapping("/cycles/{cycleId}")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:UPDATE')")
+    @PreAuthorize("hasAuthority('PERFORMANCE:UPDATE')")
     public ResponseEntity<EvaluationCycle> updateCycle(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID cycleId,
@@ -62,7 +65,7 @@ public class EvaluationController {
     }
 
     @DeleteMapping("/cycles/{cycleId}")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:DELETE')")
+    @PreAuthorize("hasAuthority('PERFORMANCE:DELETE')")
     public ResponseEntity<Void> deleteCycle(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID cycleId) {
@@ -71,14 +74,14 @@ public class EvaluationController {
     }
 
     @GetMapping("/cycles/active")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:READ')")
+    @PreAuthorize("hasAuthority('PERFORMANCE:READ')")
     public ResponseEntity<List<EvaluationCycle>> getActiveCycles(
             @RequestHeader("X-Tenant-ID") UUID tenantId) {
         return ResponseEntity.ok(evaluationService.getActiveCycles(tenantId));
     }
 
     @PostMapping("/cycles/{cycleId}/activate")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:UPDATE')")
+    @PreAuthorize("hasAuthority('PERFORMANCE:UPDATE')")
     public ResponseEntity<EvaluationCycle> activateCycle(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID cycleId) {
@@ -86,7 +89,7 @@ public class EvaluationController {
     }
 
     @PostMapping("/cycles/{cycleId}/complete")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:UPDATE')")
+    @PreAuthorize("hasAuthority('PERFORMANCE:UPDATE')")
     public ResponseEntity<EvaluationCycle> completeCycle(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID cycleId) {
@@ -94,7 +97,7 @@ public class EvaluationController {
     }
 
     @GetMapping("/cycles/{cycleId}/statistics")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:READ')")
+    @PreAuthorize("hasAuthority('PERFORMANCE:READ')")
     public ResponseEntity<EvaluationStatistics> getCycleStatistics(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID cycleId) {
@@ -104,7 +107,7 @@ public class EvaluationController {
     // ==================== Evaluations ====================
 
     @PostMapping("/evaluations")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:CREATE')")
+    @PreAuthorize("hasAuthority('PERFORMANCE:CREATE')")
     public ResponseEntity<Evaluation> createEvaluation(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @RequestBody Evaluation evaluation) {
@@ -113,7 +116,7 @@ public class EvaluationController {
     }
 
     @GetMapping("/evaluations/{evaluationId}")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:READ')")
+    @PreAuthorize("hasAuthority('PERFORMANCE:READ')")
     public ResponseEntity<Evaluation> getEvaluation(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID evaluationId) {
@@ -121,7 +124,7 @@ public class EvaluationController {
     }
 
     @GetMapping("/evaluations/pending")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:READ')")
+    @PreAuthorize("hasAuthority('PERFORMANCE:READ')")
     public ResponseEntity<List<Evaluation>> getMyPendingEvaluations(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @RequestParam(required = false) UUID evaluatorId,
@@ -134,7 +137,7 @@ public class EvaluationController {
     }
 
     @GetMapping("/evaluations/employee/{employeeId}")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:READ')")
+    @PreAuthorize("hasAuthority('PERFORMANCE:READ')")
     public ResponseEntity<List<Evaluation>> getEmployeeEvaluations(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID employeeId) {
@@ -142,6 +145,7 @@ public class EvaluationController {
     }
 
     @GetMapping("/cycles/{cycleId}/evaluations")
+    @PreAuthorize("hasAuthority('PERFORMANCE:READ')")
     public ResponseEntity<Page<Evaluation>> getCycleEvaluations(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID cycleId,
@@ -150,7 +154,7 @@ public class EvaluationController {
     }
 
     @PostMapping("/evaluations/{evaluationId}/start")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:UPDATE')")
+    @PreAuthorize("hasAuthority('PERFORMANCE:UPDATE')")
     public ResponseEntity<Evaluation> startEvaluation(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID evaluationId) {
@@ -158,7 +162,7 @@ public class EvaluationController {
     }
 
     @PutMapping("/evaluations/{evaluationId}/answers")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:UPDATE')")
+    @PreAuthorize("hasAuthority('PERFORMANCE:UPDATE')")
     public ResponseEntity<Evaluation> saveAnswers(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID evaluationId,
@@ -167,7 +171,7 @@ public class EvaluationController {
     }
 
     @PostMapping("/evaluations/{evaluationId}/submit")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:UPDATE')")
+    @PreAuthorize("hasAuthority('PERFORMANCE:UPDATE')")
     public ResponseEntity<Evaluation> submitEvaluation(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID evaluationId,
@@ -178,7 +182,7 @@ public class EvaluationController {
     }
 
     @PostMapping("/evaluations/{evaluationId}/calibrate")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:UPDATE')")
+    @PreAuthorize("hasAuthority('PERFORMANCE:CALIBRATE')")
     public ResponseEntity<Evaluation> calibrateEvaluation(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID evaluationId,
@@ -188,7 +192,7 @@ public class EvaluationController {
     }
 
     @PostMapping("/evaluations/{evaluationId}/complete")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:UPDATE')")
+    @PreAuthorize("hasAuthority('PERFORMANCE:UPDATE')")
     public ResponseEntity<Evaluation> completeEvaluation(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID evaluationId) {
@@ -196,7 +200,7 @@ public class EvaluationController {
     }
 
     @PostMapping("/evaluations/{evaluationId}/acknowledge")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:UPDATE')")
+    @PreAuthorize("hasAuthority('PERFORMANCE:UPDATE')")
     public ResponseEntity<Evaluation> acknowledgeEvaluation(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID evaluationId,
@@ -206,6 +210,7 @@ public class EvaluationController {
     }
 
     @GetMapping("/evaluations/overdue")
+    @PreAuthorize("hasAuthority('PERFORMANCE:READ')")
     public ResponseEntity<List<Evaluation>> getOverdueEvaluations(
             @RequestHeader("X-Tenant-ID") UUID tenantId) {
         return ResponseEntity.ok(evaluationService.getOverdueEvaluations(tenantId));
@@ -214,7 +219,7 @@ public class EvaluationController {
     // ==================== 9Box ====================
 
     @GetMapping("/cycles/{cycleId}/ninebox")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('PERFORMANCE:READ')")
+    @PreAuthorize("hasAuthority('PERFORMANCE:MATRIX_READ')")
     public ResponseEntity<NineBoxMatrix> getNineBoxMatrix(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID cycleId) {
