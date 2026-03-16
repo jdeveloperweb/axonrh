@@ -414,25 +414,21 @@ export default function WellbeingPage() {
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                <Card className="border-none overflow-hidden flex flex-col h-[650px] group/card relative" style={{background: 'linear-gradient(145deg, #060e1c, #0a1628 40%, #060d1b)', boxShadow: '0 30px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(59,130,246,0.08), inset 0 1px 0 rgba(255,255,255,0.04)'}}>
-                    {/* Background texture */}
-                    <div className="absolute inset-0 pointer-events-none" style={{backgroundImage: 'radial-gradient(ellipse 70% 55% at 25% 60%, rgba(59,130,246,0.08) 0%, transparent 65%), radial-gradient(ellipse 40% 40% at 75% 20%, rgba(139,92,246,0.05) 0%, transparent 60%), linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px)', backgroundSize: 'auto, auto, 52px 52px, 52px 52px'}} />
-                    {/* Top edge highlight */}
-                    <div className="absolute top-0 left-0 right-0 h-px pointer-events-none" style={{background: 'linear-gradient(90deg, transparent, rgba(59,130,246,0.5), rgba(139,92,246,0.2), transparent)'}} />
+                <Card className="border-none shadow-lg bg-white overflow-hidden flex flex-col h-[650px] group/card relative border border-gray-100">
                     {/* Header */}
-                    <div className="p-6 flex items-center justify-between relative z-10" style={{borderBottom: '1px solid rgba(255,255,255,0.06)'}}>
+                    <div className="p-6 flex items-center justify-between relative z-10 border-b border-gray-100">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.22)'}}>
-                                <Sparkles className="w-5 h-5" style={{color: '#60a5fa'}} />
+                            <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center flex-shrink-0">
+                                <Sparkles className="w-5 h-5 text-blue-500" />
                             </div>
                             <div>
-                                <CardTitle className="text-lg font-black tracking-tight" style={{color: '#e2e8f0'}}>Ecossistema de Vitalidade</CardTitle>
-                                <p className="text-[10px] font-semibold tracking-[0.15em] uppercase mt-0.5" style={{color: 'rgba(96,165,250,0.5)'}}>Pulso em tempo real da saúde biopsicossocial</p>
+                                <CardTitle className="text-lg font-black tracking-tight text-gray-900">Ecossistema de Vitalidade</CardTitle>
+                                <p className="text-[10px] font-semibold tracking-[0.15em] uppercase mt-0.5 text-gray-400">Pulso em tempo real da saúde biopsicossocial</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full" style={{background: 'rgba(59,130,246,0.07)', border: '1px solid rgba(59,130,246,0.18)'}}>
-                            <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{background: '#60a5fa', boxShadow: '0 0 6px #3b82f6'}} />
-                            <span className="text-[9px] font-black tracking-[0.15em] uppercase" style={{color: 'rgba(96,165,250,0.85)'}}>Análise IA Ativa</span>
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-100">
+                            <div className="w-1.5 h-1.5 rounded-full animate-pulse bg-blue-500" />
+                            <span className="text-[9px] font-black tracking-[0.15em] uppercase text-blue-600">Análise IA Ativa</span>
                         </div>
                     </div>
                     {/* Content */}
@@ -455,10 +451,6 @@ export default function WellbeingPage() {
                                     </filter>
                                 </defs>
 
-                                {/* Ambient glow */}
-                                <circle cx="260" cy="220" r="100" fill="rgba(59,130,246,0.04)" />
-                                <circle cx="260" cy="220" r="65" fill="rgba(59,130,246,0.04)" />
-
                                 {/* Grid polygons */}
                                 {[0.25, 0.50, 0.75, 1.0].map((level, li) => {
                                     const pts = Array.from({ length: 5 }, (_, i) => {
@@ -470,8 +462,8 @@ export default function WellbeingPage() {
                                         <polygon
                                             key={li}
                                             points={pts}
-                                            fill={li === 3 ? 'rgba(255,255,255,0.012)' : 'none'}
-                                            stroke={li === 3 ? 'rgba(255,255,255,0.14)' : li === 2 ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.04)'}
+                                            fill={li === 3 ? 'rgba(0,0,0,0.02)' : 'none'}
+                                            stroke={li === 3 ? 'rgba(0,0,0,0.15)' : li === 2 ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.04)'}
                                             strokeWidth={li === 3 ? 1.5 : 1}
                                             strokeDasharray={li === 0 ? '2,6' : undefined}
                                         />
@@ -485,14 +477,14 @@ export default function WellbeingPage() {
                                         <line key={i} x1="260" y1="220"
                                             x2={260 + 130 * Math.cos(a)}
                                             y2={220 + 130 * Math.sin(a)}
-                                            stroke="rgba(255,255,255,0.05)" strokeWidth="1"
+                                            stroke="rgba(0,0,0,0.07)" strokeWidth="1"
                                         />
                                     );
                                 })}
 
                                 {/* Scale labels */}
-                                <text x="264" y={220 - 65 + 4} fontSize="7" fill="rgba(255,255,255,0.18)" fontWeight="500">50%</text>
-                                <text x="264" y={220 - 32 + 4} fontSize="7" fill="rgba(255,255,255,0.12)" fontWeight="500">25%</text>
+                                <text x="264" y={220 - 65 + 4} fontSize="7" fill="rgba(0,0,0,0.3)" fontWeight="500">50%</text>
+                                <text x="264" y={220 - 32 + 4} fontSize="7" fill="rgba(0,0,0,0.2)" fontWeight="500">25%</text>
 
                                 {/* Data polygon */}
                                 <polygon
@@ -523,7 +515,7 @@ export default function WellbeingPage() {
                                             style={{ cursor: 'pointer' }}
                                         >
                                             <circle cx={px} cy={py} r={isHov ? 18 : 11} fill={dotColor} fillOpacity={isHov ? 0.18 : 0.1} />
-                                            <circle cx={px} cy={py} r={isHov ? 7 : 5} fill={dotColor} stroke="rgba(6,14,28,0.9)" strokeWidth="2" filter="url(#dotGlowFilter)" />
+                                            <circle cx={px} cy={py} r={isHov ? 7 : 5} fill={dotColor} stroke="rgba(255,255,255,0.9)" strokeWidth="2" filter="url(#dotGlowFilter)" />
                                             {isHov && (
                                                 <g>
                                                     <rect x={px - 28} y={py - 44} width="56" height="22" rx="5" fill={dotColor} fillOpacity="0.95" />
@@ -538,35 +530,35 @@ export default function WellbeingPage() {
 
                                 {/* Axis Labels */}
                                 {/* i=0: TOP — Saúde Mental */}
-                                <text textAnchor="middle" fill="rgba(226,232,240,0.5)" fontWeight="700" fontSize="9" letterSpacing="0.8">
+                                <text textAnchor="middle" fill="rgba(30,41,59,0.5)" fontWeight="700" fontSize="9" letterSpacing="0.8">
                                     <tspan x="260" y="46">SAÚDE</tspan>
                                     <tspan x="260" dy="12">MENTAL</tspan>
                                 </text>
                                 {(() => { const v = Math.round(radarData[0].value); const c = v < 40 ? '#ff3a6e' : v < 60 ? '#fbbf24' : '#22d3ee'; return (<><rect x="244" y="64" width="32" height="12" rx="6" fill={c} fillOpacity="0.15" /><text x="260" y="73.5" textAnchor="middle" fontSize="8" fontWeight="700" fill={c}>{v}%</text></>); })()}
 
                                 {/* i=1: UPPER RIGHT — Equilíbrio de Carga */}
-                                <text textAnchor="start" fill="rgba(226,232,240,0.5)" fontWeight="700" fontSize="9" letterSpacing="0.8">
+                                <text textAnchor="start" fill="rgba(30,41,59,0.5)" fontWeight="700" fontSize="9" letterSpacing="0.8">
                                     <tspan x="402" y="154">EQUILÍBRIO</tspan>
                                     <tspan x="402" dy="12">DE CARGA</tspan>
                                 </text>
                                 {(() => { const v = Math.round(radarData[1].value); const c = v < 40 ? '#ff3a6e' : v < 60 ? '#fbbf24' : '#22d3ee'; return (<><rect x="402" y="172" width="32" height="12" rx="6" fill={c} fillOpacity="0.15" /><text x="418" y="181.5" textAnchor="middle" fontSize="8" fontWeight="700" fill={c}>{v}%</text></>); })()}
 
                                 {/* i=2: LOWER RIGHT — Segurança Psicológica */}
-                                <text textAnchor="middle" fill="rgba(226,232,240,0.5)" fontWeight="700" fontSize="9" letterSpacing="0.8">
+                                <text textAnchor="middle" fill="rgba(30,41,59,0.5)" fontWeight="700" fontSize="9" letterSpacing="0.8">
                                     <tspan x="352" y="370">SEGURANÇA</tspan>
                                     <tspan x="352" dy="12">PSICOLÓGICA</tspan>
                                 </text>
                                 {(() => { const v = Math.round(radarData[2].value); const c = v < 40 ? '#ff3a6e' : v < 60 ? '#fbbf24' : '#22d3ee'; return (<><rect x="336" y="388" width="32" height="12" rx="6" fill={c} fillOpacity="0.15" /><text x="352" y="397.5" textAnchor="middle" fontSize="8" fontWeight="700" fill={c}>{v}%</text></>); })()}
 
                                 {/* i=3: LOWER LEFT — Clima Organizacional */}
-                                <text textAnchor="middle" fill="rgba(226,232,240,0.5)" fontWeight="700" fontSize="9" letterSpacing="0.8">
+                                <text textAnchor="middle" fill="rgba(30,41,59,0.5)" fontWeight="700" fontSize="9" letterSpacing="0.8">
                                     <tspan x="168" y="370">CLIMA</tspan>
                                     <tspan x="168" dy="12">ORGANIZACIONAL</tspan>
                                 </text>
                                 {(() => { const v = Math.round(radarData[3].value); const c = v < 40 ? '#ff3a6e' : v < 60 ? '#fbbf24' : '#22d3ee'; return (<><rect x="152" y="388" width="32" height="12" rx="6" fill={c} fillOpacity="0.15" /><text x="168" y="397.5" textAnchor="middle" fontSize="8" fontWeight="700" fill={c}>{v}%</text></>); })()}
 
                                 {/* i=4: UPPER LEFT — Engajamento e Vitalidade */}
-                                <text textAnchor="end" fill="rgba(226,232,240,0.5)" fontWeight="700" fontSize="9" letterSpacing="0.8">
+                                <text textAnchor="end" fill="rgba(30,41,59,0.5)" fontWeight="700" fontSize="9" letterSpacing="0.8">
                                     <tspan x="118" y="154">ENGAJAMENTO</tspan>
                                     <tspan x="118" dy="12">E VITALIDADE</tspan>
                                 </text>
@@ -575,15 +567,14 @@ export default function WellbeingPage() {
                         </div>
 
                         {/* Right Panel */}
-                        <div className="w-full lg:w-[260px] flex flex-col justify-center gap-4 p-5" style={{borderLeft: '1px solid rgba(255,255,255,0.05)'}}>
+                        <div className="w-full lg:w-[260px] flex flex-col justify-center gap-4 p-5 border-l border-gray-100">
                             {/* AI Insights */}
-                            <div className="rounded-2xl p-4 relative overflow-hidden" style={{background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.12)'}}>
-                                <div className="absolute top-0 left-0 right-0 h-px" style={{background: 'linear-gradient(90deg, transparent, rgba(96,165,250,0.4), transparent)'}} />
-                                <p className="text-[9px] font-black tracking-[0.2em] uppercase mb-2 flex items-center gap-1.5" style={{color: 'rgba(96,165,250,0.75)'}}>
+                            <div className="rounded-2xl p-4 bg-blue-50 border border-blue-100">
+                                <p className="text-[9px] font-black tracking-[0.2em] uppercase mb-2 flex items-center gap-1.5 text-blue-500">
                                     <Brain className="w-3 h-3" />
                                     IA Insights
                                 </p>
-                                <p className="text-[12px] leading-relaxed" style={{color: 'rgba(203,213,225,0.7)', fontWeight: 500}}>
+                                <p className="text-[12px] leading-relaxed text-gray-600 font-medium">
                                     {statsData && statsData.averageScore >= 3
                                         ? "Ecossistema resiliente detectado. Foco em manutenção preventiva."
                                         : "Vulnerabilidade sistêmica. Recomendado intervenção focada em segurança psicológica."}
@@ -594,19 +585,19 @@ export default function WellbeingPage() {
                             <div className="space-y-2">
                                 {radarData.map((item, idx) => {
                                     const isHovered = hoveredIdx === idx;
-                                    const dotColor = item.value < 40 ? '#ff3a6e' : item.value < 60 ? '#fbbf24' : '#22d3ee';
+                                    const dotColor = item.value < 40 ? '#ef4444' : item.value < 60 ? '#f59e0b' : '#0ea5e9';
                                     const barGrad = item.value < 40
-                                        ? 'linear-gradient(90deg, #ff3a6e, #ff6b35)'
+                                        ? 'linear-gradient(90deg, #ef4444, #f97316)'
                                         : item.value < 60
                                         ? 'linear-gradient(90deg, #f59e0b, #fbbf24)'
-                                        : 'linear-gradient(90deg, #0ea5e9, #22d3ee)';
+                                        : 'linear-gradient(90deg, #0ea5e9, #38bdf8)';
                                     return (
                                         <div
                                             key={idx}
                                             className="rounded-xl p-3 cursor-default transition-all duration-200"
                                             style={{
-                                                background: isHovered ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.025)',
-                                                border: `1px solid ${isHovered ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.05)'}`,
+                                                background: isHovered ? 'rgba(0,0,0,0.04)' : 'rgba(0,0,0,0.02)',
+                                                border: `1px solid ${isHovered ? 'rgba(0,0,0,0.12)' : 'rgba(0,0,0,0.06)'}`,
                                                 transform: isHovered ? 'scale(1.02)' : 'scale(1)',
                                             }}
                                             onMouseEnter={() => setHoveredIdx(idx)}
@@ -617,7 +608,7 @@ export default function WellbeingPage() {
                                                     <div style={{color: dotColor}}>
                                                         {React.cloneElement(item.icon as React.ReactElement<any>, { className: 'w-3.5 h-3.5' })}
                                                     </div>
-                                                    <span className="text-[10px] font-bold uppercase tracking-tight" style={{color: 'rgba(203,213,225,0.45)'}}>
+                                                    <span className="text-[10px] font-bold uppercase tracking-tight" style={{color: 'rgba(30,41,59,0.45)'}}>
                                                         {item.subject}
                                                     </span>
                                                 </div>
@@ -625,7 +616,7 @@ export default function WellbeingPage() {
                                                     {Math.round(item.value)}%
                                                 </span>
                                             </div>
-                                            <div className="w-full rounded-full overflow-hidden" style={{height: '3px', background: 'rgba(255,255,255,0.06)'}}>
+                                            <div className="w-full rounded-full overflow-hidden" style={{height: '3px', background: 'rgba(0,0,0,0.08)'}}>
                                                 <div className="h-full rounded-full" style={{width: `${item.value}%`, backgroundImage: barGrad}} />
                                             </div>
                                         </div>
@@ -639,14 +630,14 @@ export default function WellbeingPage() {
 
                 {/* Sentiment Distribution and Resources */}
                 <div className="space-y-8 flex flex-col h-[600px]">
-                    <Card className="border-none overflow-hidden flex-1 relative" style={{background: 'linear-gradient(145deg, #060e1c, #0a1628 40%, #060d1b)', boxShadow: '0 30px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(59,130,246,0.08), inset 0 1px 0 rgba(255,255,255,0.04)'}}>
-                        <div className="absolute inset-0 pointer-events-none" style={{backgroundImage: 'radial-gradient(ellipse 70% 55% at 25% 60%, rgba(59,130,246,0.06) 0%, transparent 65%), radial-gradient(ellipse 40% 40% at 75% 20%, rgba(139,92,246,0.04) 0%, transparent 60%)'}} />
-                        <div className="absolute top-0 left-0 right-0 h-px pointer-events-none" style={{background: 'linear-gradient(90deg, transparent, rgba(59,130,246,0.5), rgba(139,92,246,0.2), transparent)'}} />
-                        <div className="p-6 flex items-center gap-2 relative z-10" style={{borderBottom: '1px solid rgba(255,255,255,0.06)'}}>
-                            <Activity className="w-5 h-5" style={{color: '#60a5fa'}} />
-                            <CardTitle className="text-lg font-bold" style={{color: '#e2e8f0'}}>Distribuição de Sentimentos</CardTitle>
+                    <Card className="border-none shadow-lg bg-white overflow-hidden border border-gray-100 flex-1">
+                        <div className="p-6 border-b border-gray-100 bg-gray-50/30">
+                            <CardTitle className="text-lg font-bold flex items-center gap-2">
+                                <Activity className="w-5 h-5 text-blue-500" />
+                                Distribuição de Sentimentos
+                            </CardTitle>
                         </div>
-                        <CardContent className="p-6 relative z-10">
+                        <CardContent className="p-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center h-full pt-4">
                                 <div className="h-[230px]">
                                     <ResponsiveContainer width="100%" height="100%">
@@ -665,32 +656,32 @@ export default function WellbeingPage() {
                                                 ))}
                                             </Pie>
                                             <Tooltip
-                                                contentStyle={{ borderRadius: '12px', border: '1px solid rgba(59,130,246,0.2)', background: '#0a1628', color: '#e2e8f0', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}
+                                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                                             />
                                         </PieChart>
                                     </ResponsiveContainer>
                                 </div>
                                 <div className="space-y-4">
-                                    <div className="p-3 rounded-xl flex items-center justify-between" style={{background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.18)'}}>
+                                    <div className="p-3 rounded-xl bg-green-50 border border-green-100 flex items-center justify-between">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-3 h-3 rounded-full" style={{background: '#10b981'}} />
-                                            <span className="text-sm font-semibold" style={{color: '#10b981'}}>Positivo</span>
+                                            <div className="w-3 h-3 rounded-full bg-green-500" />
+                                            <span className="text-sm font-semibold text-green-700">Positivo</span>
                                         </div>
-                                        <span className="text-sm font-black" style={{color: '#10b981'}}>{statsData?.sentimentDistribution['POSITIVE'] || 0}</span>
+                                        <span className="text-sm font-black text-green-700">{statsData?.sentimentDistribution['POSITIVE'] || 0}</span>
                                     </div>
-                                    <div className="p-3 rounded-xl flex items-center justify-between" style={{background: 'rgba(148,163,184,0.06)', border: '1px solid rgba(148,163,184,0.12)'}}>
+                                    <div className="p-3 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-between">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-3 h-3 rounded-full" style={{background: '#94a3b8'}} />
-                                            <span className="text-sm font-semibold" style={{color: '#94a3b8'}}>Neutro</span>
+                                            <div className="w-3 h-3 rounded-full bg-gray-400" />
+                                            <span className="text-sm font-semibold text-gray-600">Neutro</span>
                                         </div>
-                                        <span className="text-sm font-black" style={{color: '#94a3b8'}}>{statsData?.sentimentDistribution['NEUTRAL'] || 0}</span>
+                                        <span className="text-sm font-black text-gray-600">{statsData?.sentimentDistribution['NEUTRAL'] || 0}</span>
                                     </div>
-                                    <div className="p-3 rounded-xl flex items-center justify-between" style={{background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.18)'}}>
+                                    <div className="p-3 rounded-xl bg-red-50 border border-red-100 flex items-center justify-between">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-3 h-3 rounded-full" style={{background: '#ef4444'}} />
-                                            <span className="text-sm font-semibold" style={{color: '#ef4444'}}>Alerta IA</span>
+                                            <div className="w-3 h-3 rounded-full bg-red-500" />
+                                            <span className="text-sm font-semibold text-red-700">Alerta IA</span>
                                         </div>
-                                        <span className="text-sm font-black" style={{color: '#ef4444'}}>{statsData?.sentimentDistribution['NEGATIVE'] || 0}</span>
+                                        <span className="text-sm font-black text-red-700">{statsData?.sentimentDistribution['NEGATIVE'] || 0}</span>
                                     </div>
                                 </div>
                             </div>
@@ -715,19 +706,17 @@ export default function WellbeingPage() {
                             </CardContent>
                         </Card>
                         <Card
-                            className="border-none group cursor-pointer hover:scale-[1.02] transition-transform overflow-hidden relative"
-                            style={{background: 'linear-gradient(145deg, #060e1c, #0a1628 40%, #060d1b)', boxShadow: '0 20px 50px rgba(0,0,0,0.5), 0 0 0 1px rgba(59,130,246,0.08), inset 0 1px 0 rgba(255,255,255,0.04)'}}
+                            className="border-none shadow-lg bg-white border border-primary/20 group cursor-pointer hover:scale-[1.02] transition-transform overflow-hidden relative"
                             onClick={() => setIsCampaignModalOpen(true)}
                         >
-                            <div className="absolute top-0 left-0 right-0 h-px pointer-events-none" style={{background: 'linear-gradient(90deg, transparent, rgba(59,130,246,0.4), transparent)'}} />
                             <div className="absolute top-0 right-0 p-4">
-                                <Lightbulb className="w-12 h-12 opacity-[0.07] group-hover:opacity-[0.15] transition-opacity" style={{color: '#fbbf24'}} />
+                                <Lightbulb className="w-12 h-12 text-yellow-500/10 group-hover:text-yellow-500/20 transition-colors" />
                             </div>
                             <CardContent className="p-6 flex flex-col justify-between h-full relative z-10">
-                                <Smile className="w-8 h-8" style={{color: '#60a5fa'}} />
+                                <Smile className="w-8 h-8 text-primary" />
                                 <div>
-                                    <h4 className="text-lg font-bold" style={{color: '#e2e8f0'}}>{statsData?.activeCampaigns?.[0]?.title || 'Campanhas'}</h4>
-                                    <p className="text-sm mt-1" style={{color: 'rgba(148,163,184,0.7)'}}>
+                                    <h4 className="text-lg font-bold text-gray-900">{statsData?.activeCampaigns?.[0]?.title || 'Campanhas'}</h4>
+                                    <p className="text-gray-500 text-sm mt-1">
                                         {statsData?.activeCampaigns?.[0]?.description ? (
                                             <>Próximo: "{statsData.activeCampaigns[0].description}"</>
                                         ) : (
@@ -735,7 +724,7 @@ export default function WellbeingPage() {
                                         )}
                                     </p>
                                 </div>
-                                <div className="flex items-center gap-2 text-sm font-bold mt-4" style={{color: '#60a5fa'}}>
+                                <div className="flex items-center gap-2 text-sm font-bold text-primary mt-4">
                                     Ver Agenda
                                     <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                                 </div>
