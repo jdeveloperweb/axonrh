@@ -257,12 +257,12 @@ export default function LoginClient() {
         <div className="absolute inset-0 opacity-40 bg-[radial-gradient(circle_at_top,_rgba(94,165,255,0.25),_transparent_55%)]" />
         <div className="absolute inset-0 opacity-40 bg-[radial-gradient(circle_at_20%_80%,_rgba(88,214,194,0.25),_transparent_55%)]" />
         <div className="absolute inset-0 opacity-30 bg-[linear-gradient(rgba(15,23,42,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.05)_1px,transparent_1px)] bg-[size:40px_40px]" />
-        <div className="absolute -top-32 right-0 h-72 w-72 rounded-full bg-sky-200/60 blur-[120px]" />
-        <div className="absolute bottom-0 left-0 h-72 w-72 rounded-full bg-emerald-200/60 blur-[120px]" />
+        <div className="animate-login-orb-drift absolute -top-32 right-0 h-72 w-72 rounded-full bg-sky-200/60 blur-[120px]" />
+        <div className="animate-login-orb-drift-alt absolute bottom-0 left-0 h-72 w-72 rounded-full bg-emerald-200/60 blur-[120px]" />
 
         <div className="relative z-10 w-full max-w-6xl grid gap-8 lg:gap-12 lg:grid-cols-[1.15fr,0.85fr] items-center">
           <div className="flex flex-col gap-4 sm:gap-6 text-center lg:text-left">
-            <div className="flex items-center justify-center lg:justify-start gap-3">
+            <div className="animate-login-logo-enter flex items-center justify-center lg:justify-start gap-3">
               {loginConfig.logoUrl ? (
                 <img
                   src={getPhotoUrl(loginConfig.logoUrl, new Date().getTime().toString(), 'logo') || ''}
@@ -273,15 +273,21 @@ export default function LoginClient() {
               ) : (
                 <h1 className="font-heading text-3xl sm:text-5xl font-extrabold tracking-tight">
                   <span className="text-[var(--color-text-primary)]">Axon</span>
-                  <span className="text-[var(--color-primary)]">RH</span>
+                  <span className="animate-login-rh-reveal inline-block text-[var(--color-primary)]">RH</span>
                 </h1>
               )}
             </div>
 
-            <h2 className="font-heading text-2xl sm:text-4xl font-semibold text-[var(--color-text-primary)] leading-tight">
+            <h2
+              className="animate-login-fade-up font-heading text-2xl sm:text-4xl font-semibold text-[var(--color-text-primary)] leading-tight"
+              style={{ animationDelay: "0.25s" }}
+            >
               Boas-vindas ao seu acesso inteligente do ecossistema de RH
             </h2>
-            <p className="text-sm sm:text-lg text-[var(--color-text-secondary)] max-w-xl mx-auto lg:mx-0">
+            <p
+              className="animate-login-fade-up text-sm sm:text-lg text-[var(--color-text-secondary)] max-w-xl mx-auto lg:mx-0"
+              style={{ animationDelay: "0.4s" }}
+            >
               {loginConfig.welcomeMessage ||
                 "Faça login para continuar com segurança, personalização e visão completa do seu time."}
             </p>
@@ -308,10 +314,11 @@ export default function LoginClient() {
                   title: "Personalização total",
                   description: "Visual e permissões alinhados ao seu time.",
                 },
-              ].map((item) => (
+              ].map((item, index) => (
                 <div
                   key={item.title}
-                  className="rounded-2xl border border-white/80 bg-white/80 p-4 backdrop-blur shadow-sm"
+                  className="animate-login-fade-up rounded-2xl border border-white/80 bg-white/80 p-4 backdrop-blur shadow-sm"
+                  style={{ animationDelay: `${0.55 + index * 0.1}s` }}
                 >
                   <div className="flex items-center gap-3">
                     <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-primary)]/10 text-[var(--color-primary)]">
@@ -330,7 +337,7 @@ export default function LoginClient() {
           </div>
 
           <div className="w-full max-w-md mx-auto lg:max-w-none">
-            <div className="relative">
+            <div className="animate-login-card-enter relative" style={{ animationDelay: "0.1s" }}>
               <div className="relative rounded-3xl border border-white/40 glass shadow-2xl shadow-slate-200/50 p-6 sm:p-10">
                 <div className="mb-6 text-left">
                   {show2FA ? (
@@ -527,7 +534,7 @@ export default function LoginClient() {
             </div>
 
             {/* Footer */}
-            <div className="mt-6 text-center text-sm text-slate-500">
+            <div className="animate-login-fade-up mt-6 text-center text-sm text-slate-500" style={{ animationDelay: "0.8s" }}>
               {loginConfig.footerText || (
                 <>
                   {loginConfig.showPoweredBy !== false && (
