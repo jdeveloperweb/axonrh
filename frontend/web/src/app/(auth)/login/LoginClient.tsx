@@ -19,6 +19,8 @@ import {
   Zap,
   ArrowLeft,
   KeyRound,
+  Layers,
+  ArrowRight
 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import { useThemeStore } from "@/stores/theme-store";
@@ -55,7 +57,6 @@ export default function LoginClient() {
   const [show2FA, setShow2FA] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Persiste no sessionStorage para sobreviver a refreshes da página
   const [mfaSetupState, setMfaSetupStateRaw] = useState<{
     setupToken: string;
     maskedEmail: string;
@@ -101,9 +102,7 @@ export default function LoginClient() {
     },
   });
 
-  // Carrega configuracoes do tenant
   useEffect(() => {
-    // Tenta pegar o tenantId de várias fontes
     const tenantId = process.env.NEXT_PUBLIC_DEFAULT_TENANT_ID ||
       localStorage.getItem('tenantId') ||
       localStorage.getItem('setup_tenant_id');
@@ -120,7 +119,6 @@ export default function LoginClient() {
             showPoweredBy: config.showPoweredBy,
           });
 
-          // Aplica tema do tenant globalmente
           setTenantTheme({
             tenantId: config.tenantId,
             logoUrl: config.logoUrl,
@@ -139,16 +137,11 @@ export default function LoginClient() {
             faviconUrl: config.faviconUrl
           });
         })
-        .catch(() => {
-          // Usa configuracoes padrao
-        });
+        .catch(() => {});
     }
   }, [setTenantTheme]);
 
-  // Redireciona se ja autenticado (apenas no carregamento inicial ou se ja estava logado)
   useEffect(() => {
-    // Se acabamos de fazer login pelo onSubmit, ele mesmo trata o redirect.
-    // O useEffect aqui atende quem ja chega na /login estando autenticado.
     if (isAuthenticated) {
       const setupTenantId = localStorage.getItem('setup_tenant_id');
       if (setupTenantId) {
@@ -159,7 +152,6 @@ export default function LoginClient() {
     }
   }, [isAuthenticated, router]);
 
-  // Limpa erro ao montar
   useEffect(() => {
     clearError();
   }, [clearError]);
@@ -168,10 +160,8 @@ export default function LoginClient() {
     setIsLoading(true);
     clearError();
 
-    // Se o campo 2FA já está aparecendo e o usuário não digitou nada, avisar
     if (show2FA && (!data.totpCode || data.totpCode.length < 6)) {
       setIsLoading(false);
-      // Podemos usar o setAuthError (ou similar) da store se quisermos mostrar no mesmo lugar
       useAuthStore.setState({ error: "Digite o código de 6 dígitos do seu autenticador" });
       return;
     }
@@ -204,7 +194,6 @@ export default function LoginClient() {
         router.replace("/dashboard");
       }
     } catch (error) {
-      // Erros de credenciais ou código inválido caem aqui
     } finally {
       setIsLoading(false);
     }
@@ -217,7 +206,7 @@ export default function LoginClient() {
   };
 
   const handleMfaSetupSuccess = async (response: LoginResponse) => {
-    setMfaSetupState(null); // limpa sessionStorage
+    setMfaSetupState(null);
     if (response.user?.tenantId) {
       const { useThemeStore } = await import("@/stores/theme-store");
       await useThemeStore.getState().fetchBranding();
@@ -230,11 +219,98 @@ export default function LoginClient() {
     }
   };
 
-  const inputBaseClasses =
-    "input bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-sky-200 focus:border-sky-400";
+  const inputBaseClasses = "w-full px-4 py-3 bg-white/50 border border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-xl focus:ring-4 focus:ring-sky-100 focus:border-sky-400 transition-all outline-none backdrop-blur-sm font-medium";
 
   return (
     <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Manrope:wght@400;500;600;700&display=swap');
+        
+        :root {
+          --color-primary: ${useThemeStore.getState().tenantTheme?.colors?.primary || '#2563EB'};
+        }
+
+        .axr-sora { font-family: 'Sora', sans-serif; }
+        .axr-manrope { font-family: 'Manrope', sans-serif; }
+
+        @keyframes axr-mesh-flow {
+          0% { transform: scale(1) translate(0, 0); }
+          33% { transform: scale(1.1) translate(20px, -20px); }
+          66% { transform: scale(0.9) translate(-20px, 20px); }
+          100% { transform: scale(1) translate(0, 0); }
+        }
+
+        .axr-bg-mesh {
+          position: absolute;
+          inset: 0;
+          background: #F8FAFF;
+          overflow: hidden;
+          z-index: 0;
+        }
+
+        .axr-bg-mesh::after {
+          content: "";
+          position: absolute;
+          inset: -50%;
+          background: 
+            radial-gradient(circle at 20% 30%, rgba(37, 99, 235, 0.15) 0%, transparent 40%),
+            radial-gradient(circle at 80% 20%, rgba(79, 70, 229, 0.15) 0%, transparent 40%),
+            radial-gradient(circle at 50% 80%, rgba(5, 150, 105, 0.1) 0%, transparent 40%),
+            radial-gradient(circle at 10% 90%, rgba(217, 119, 6, 0.1) 0%, transparent 40%);
+          filter: blur(80px);
+          animation: axr-mesh-flow 25s ease-in-out infinite;
+        }
+
+        @keyframes axr-reveal {
+          from { opacity: 0; transform: translateY(20px); filter: blur(8px); }
+          to { opacity: 1; transform: translateY(0); filter: blur(0); }
+        }
+
+        .axr-reveal {
+          animation: axr-reveal 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        .axr-glass {
+          background: rgba(255, 255, 255, 0.7);
+          backdrop-filter: blur(24px) saturate(180%);
+          -webkit-backdrop-filter: blur(24px) saturate(180%);
+          border: 1px solid rgba(255, 255, 255, 0.4);
+          box-shadow: 0 32px 128px -16px rgba(15, 23, 42, 0.12);
+        }
+
+        .axr-lift { transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .axr-lift:hover { transform: translateY(-4px); box-shadow: 0 40px 160px -12px rgba(15, 23, 42, 0.18); }
+
+        .axr-btn-shine {
+          position: relative;
+          overflow: hidden;
+          transition: all 0.3s ease;
+        }
+        .axr-btn-shine::after {
+          content: "";
+          position: absolute;
+          top: -50%; left: -50%;
+          width: 200%; height: 200%;
+          background: linear-gradient(45deg, transparent, rgba(255,255,255,0.2), transparent);
+          transform: rotate(45deg);
+          transition: 0.5s;
+        }
+        .axr-btn-shine:hover::after { left: 100%; }
+
+        @keyframes axr-float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+        }
+        .axr-float { animation: axr-float 6s ease-in-out infinite; }
+
+        .axr-stagger > * { opacity: 0; }
+        .axr-stagger > *:nth-child(1) { animation: axr-reveal 0.8s 0.1s forwards; }
+        .axr-stagger > *:nth-child(2) { animation: axr-reveal 0.8s 0.2s forwards; }
+        .axr-stagger > *:nth-child(3) { animation: axr-reveal 0.8s 0.3s forwards; }
+        .axr-stagger > *:nth-child(4) { animation: axr-reveal 0.8s 0.4s forwards; }
+        .axr-stagger > *:nth-child(5) { animation: axr-reveal 0.8s 0.5s forwards; }
+      `}</style>
+
       {mfaSetupState && (
         <MfaSetupRequiredModal
           setupToken={mfaSetupState.setupToken}
@@ -243,305 +319,214 @@ export default function LoginClient() {
           onClose={() => setMfaSetupState(null)}
         />
       )}
-      <div className="min-h-screen relative flex items-center justify-center px-4 sm:px-6 py-8 sm:py-16 text-slate-900">
-        <div
-          className="absolute inset-0 bg-gradient-to-br from-[#f2f7ff] via-[#eaf6ff] to-[#e9f8f5]"
-          style={{
-            backgroundImage: loginConfig.backgroundUrl
-              ? `linear-gradient(120deg, rgba(248, 251, 255, 0.92), rgba(236, 246, 255, 0.9)), url(${loginConfig.backgroundUrl})`
-              : undefined,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
-        />
-        <div className="absolute inset-0 opacity-40 bg-[radial-gradient(circle_at_top,_rgba(94,165,255,0.25),_transparent_55%)]" />
-        <div className="absolute inset-0 opacity-40 bg-[radial-gradient(circle_at_20%_80%,_rgba(88,214,194,0.25),_transparent_55%)]" />
-        <div className="absolute inset-0 opacity-30 bg-[linear-gradient(rgba(15,23,42,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.05)_1px,transparent_1px)] bg-[size:40px_40px]" />
-        <div className="animate-login-orb-drift absolute -top-32 right-0 h-72 w-72 rounded-full bg-sky-200/60 blur-[120px]" />
-        <div className="animate-login-orb-drift-alt absolute bottom-0 left-0 h-72 w-72 rounded-full bg-emerald-200/60 blur-[120px]" />
 
-        <div className="relative z-10 w-full max-w-6xl grid gap-8 lg:gap-12 lg:grid-cols-[1.15fr,0.85fr] items-center">
-          <div className="flex flex-col gap-4 sm:gap-6 text-center lg:text-left">
-            <div className="animate-login-logo-enter flex items-center justify-center lg:justify-start gap-3">
+      <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden axr-manrope">
+        {/* New Animated Background */}
+        <div className="axr-bg-mesh" />
+        <div className="absolute inset-0 opacity-20 pointer-events-none" 
+             style={{ backgroundImage: 'radial-gradient(#2563EB 0.5px, transparent 0.5px)', backgroundSize: '32px 32px' }} />
+
+        <div className="relative z-10 w-full max-w-[1240px] grid lg:grid-cols-[1.1fr,0.9fr] gap-12 lg:gap-24 items-center">
+          
+          {/* Left Column: Branding & Features */}
+          <div className="axr-stagger flex flex-col gap-8 text-center lg:text-left">
+            <div className="flex items-center justify-center lg:justify-start gap-4">
               {loginConfig.logoUrl ? (
                 <img
                   src={getPhotoUrl(loginConfig.logoUrl, new Date().getTime().toString(), 'logo') || ''}
                   alt="Logo"
-                  className="h-10 sm:h-12 w-auto object-contain"
+                  className="h-12 w-auto object-contain axr-float"
                   style={{ maxWidth: `${useThemeStore.getState().tenantTheme?.logoWidth || 180}px` }}
                 />
               ) : (
-                <h1 className="font-heading text-3xl sm:text-5xl font-extrabold tracking-tight">
-                  <span className="text-[var(--color-text-primary)]">Axon</span>
-                  <span className="animate-login-rh-reveal inline-block text-[var(--color-primary)]">RH</span>
+                <h1 className="axr-sora text-4xl sm:text-6xl font-black tracking-tight flex items-center gap-2">
+                  <span className="text-slate-900">Axon</span>
+                  <span className="text-[var(--color-primary)]">RH</span>
                 </h1>
               )}
             </div>
 
-            <h2
-              className="animate-login-fade-up font-heading text-2xl sm:text-4xl font-semibold text-[var(--color-text-primary)] leading-tight"
-              style={{ animationDelay: "0.25s" }}
-            >
-              Boas-vindas ao seu acesso inteligente do ecossistema de RH
+            <h2 className="axr-sora text-3xl sm:text-5xl font-extrabold text-slate-900 leading-[1.1] tracking-tight">
+              A revolução inteligente do seu <span className="text-[var(--color-primary)]">Capital Humano.</span>
             </h2>
-            <p
-              className="animate-login-fade-up text-sm sm:text-lg text-[var(--color-text-secondary)] max-w-xl mx-auto lg:mx-0"
-              style={{ animationDelay: "0.4s" }}
-            >
-              {loginConfig.welcomeMessage ||
-                "Faça login para continuar com segurança, personalização e visão completa do seu time."}
+            
+            <p className="text-lg sm:text-xl text-slate-500 max-w-xl font-medium mx-auto lg:mx-0">
+              {loginConfig.welcomeMessage || "Toda a gestão de pessoas, processamento de folha e inteligência artificial em um único ecossistema premium."}
             </p>
 
-            <div className="hidden sm:grid gap-4 sm:grid-cols-2 lg:grid-cols-2 text-left">
+            <div className="hidden sm:grid grid-cols-2 gap-4 mt-4">
               {[
-                {
-                  icon: Bot,
-                  title: "Assistente inteligente",
-                  description: "Insights rápidos para decisões de RH com contexto.",
-                },
-                {
-                  icon: ShieldCheck,
-                  title: "Segurança e LGPD",
-                  description: "Camadas de proteção e rastreabilidade contínua.",
-                },
-                {
-                  icon: Zap,
-                  title: "Fluxos integrados",
-                  description: "Conecte admissão, DP e people analytics.",
-                },
-                {
-                  icon: Sparkles,
-                  title: "Personalização total",
-                  description: "Visual e permissões alinhados ao seu time.",
-                },
-              ].map((item, index) => (
-                <div
-                  key={item.title}
-                  className="animate-login-fade-up rounded-2xl border border-white/80 bg-white/80 p-4 backdrop-blur shadow-sm"
-                  style={{ animationDelay: `${0.55 + index * 0.1}s` }}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-primary)]/10 text-[var(--color-primary)]">
-                      <item.icon className="h-5 w-5" />
-                    </span>
-                    <div>
-                      <p className="text-sm font-semibold text-[var(--color-text-primary)]">
-                        {item.title}
-                      </p>
-                      <p className="text-xs text-[var(--color-text-secondary)]">{item.description}</p>
+                { icon: ShieldCheck, title: "LGPD Compliance", desc: "Sua segurança em nível bancário.", color: '#059669' },
+                { icon: Bot, title: "IA Generativa", desc: "Decisões baseadas em dados reais.", color: '#2563EB' },
+                { icon: Zap, title: "Processamento Realtime", desc: "Sincronização imediata de dados.", color: '#D97706' },
+                { icon: Layers, title: "Arquitetura Modular", desc: "Flexível à sua cultura interna.", color: '#7C3AED' },
+              ].map((item, idx) => (
+                <div key={idx} className="axr-lift axr-glass p-5 rounded-2xl text-left">
+                  <div className="flex items-center gap-4 mb-2">
+                    <div className="p-2.5 rounded-xl flex items-center justify-center" style={{ background: `${item.color}10`, color: item.color }}>
+                      <item.icon className="w-5 h-5" />
                     </div>
+                    <span className="axr-sora text-sm font-bold text-slate-900">{item.title}</span>
                   </div>
+                  <p className="text-xs text-slate-500 font-medium leading-relaxed">{item.desc}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="w-full max-w-md mx-auto lg:max-w-none">
-            <div className="animate-login-card-enter relative" style={{ animationDelay: "0.1s" }}>
-              <div className="relative rounded-3xl border border-white/40 glass shadow-2xl shadow-slate-200/50 p-6 sm:p-10">
-                <div className="mb-6 text-left">
-                  {show2FA ? (
-                    <>
-                      <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-[var(--color-primary)]/10 mb-4">
-                        <KeyRound className="w-7 h-7 text-[var(--color-primary)]" />
-                      </div>
-                      <h2 className="font-heading text-xl sm:text-2xl font-semibold text-slate-900">
-                        Verificação em dois fatores
-                      </h2>
-                      <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                        Abra seu aplicativo autenticador e insira o código de 6 dígitos gerado para sua conta.
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <h2 className="font-heading text-xl sm:text-2xl font-semibold text-slate-900">
-                        Faça login
-                      </h2>
-                      <p className="text-xs sm:text-sm text-slate-500">
-                        Use seu e-mail corporativo para entrar
-                      </p>
-                    </>
-                  )}
+          {/* Right Column: Login Card */}
+          <div className="w-full max-w-[460px] mx-auto lg:mx-0 axr-reveal" style={{ animationDelay: '0.4s' }}>
+            <div className="axr-glass rounded-[40px] p-8 sm:p-12 relative overflow-hidden">
+              {/* Card decorative elements */}
+              <div className="absolute -top-24 -right-24 w-48 h-48 bg-[var(--color-primary)]/10 rounded-full blur-3xl pointer-events-none" />
+              
+              <div className="relative z-10 mb-8">
+                {show2FA ? (
+                  <>
+                    <div className="w-14 h-14 rounded-2xl bg-[var(--color-primary)]/10 flex items-center justify-center mb-6 axr-float">
+                      <KeyRound className="w-7 h-7 text-[var(--color-primary)]" />
+                    </div>
+                    <h3 className="axr-sora text-2xl font-bold text-slate-900 mb-2">Segurança em 2 passos</h3>
+                    <p className="text-sm text-slate-500 font-medium leading-relaxed">
+                      Insira o código de 6 dígitos gerado pelo seu aplicativo autenticador.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="axr-sora text-2xl font-bold text-slate-900 mb-2">Seja bem-vindo</h3>
+                    <p className="text-sm text-slate-500 font-medium">Use suas credenciais corporativas.</p>
+                  </>
+                )}
+              </div>
+
+              {expired && (
+                <div className="flex items-center gap-3 p-4 mb-6 rounded-2xl bg-amber-50 border border-amber-100 text-amber-700 animate-pulse">
+                  <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                  <span className="text-xs font-bold uppercase tracking-wider">Sessão Expirada</span>
                 </div>
+              )}
 
+              {authError && (
+                <div className="flex items-center gap-3 p-4 mb-6 rounded-2xl bg-rose-50 border border-rose-100 text-rose-700">
+                  <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                  <span className="text-sm font-semibold">{authError}</span>
+                </div>
+              )}
 
-                {/* Mensagem de sessao expirada */}
-                {expired && (
-                  <div className="flex items-center gap-2 p-3 mb-4 rounded-[var(--radius-md)] bg-amber-100 text-amber-700">
-                    <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                    <span className="text-sm">
-                      Sua sessao expirou. Faca login novamente.
-                    </span>
-                  </div>
-                )}
-
-                {/* Mensagem de erro */}
-                {authError && (
-                  <div className="flex items-center gap-2 p-3 mb-4 rounded-[var(--radius-md)] bg-rose-100 text-rose-700">
-                    <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                    <span className="text-sm">{authError}</span>
-                  </div>
-                )}
-
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                  {/* Email + Senha — ocultos na etapa do MFA */}
-                  {!show2FA && (
-                    <>
-                      {/* Email */}
-                      <div>
-                        <label
-                          htmlFor="email"
-                          className="text-sm font-medium text-slate-700"
-                        >
-                          Email
-                        </label>
-                        <div className="relative mt-2">
-                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                          <input
-                            {...register("email")}
-                            type="email"
-                            id="email"
-                            placeholder="seu@email.com"
-                            className={cn(
-                              `${inputBaseClasses} pl-10`,
-                              errors.email && "input-error"
-                            )}
-                            disabled={isLoading}
-                          />
-                        </div>
-                        {errors.email && (
-                          <span className="text-sm text-rose-600 mt-1">
-                            {errors.email.message}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Senha */}
-                      <div>
-                        <label
-                          htmlFor="password"
-                          className="text-sm font-medium text-slate-700"
-                        >
-                          Senha
-                        </label>
-                        <div className="relative mt-2">
-                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                          <input
-                            {...register("password")}
-                            type={showPassword ? "text" : "password"}
-                            id="password"
-                            placeholder="********"
-                            className={cn(
-                              `${inputBaseClasses} pl-10 pr-10`,
-                              errors.password && "input-error"
-                            )}
-                            disabled={isLoading}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
-                          >
-                            {showPassword ? (
-                              <EyeOff className="w-5 h-5" />
-                            ) : (
-                              <Eye className="w-5 h-5" />
-                            )}
-                          </button>
-                        </div>
-                        {errors.password && (
-                          <span className="text-sm text-rose-600 mt-1">
-                            {errors.password.message}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Link Esqueceu Senha */}
-                      <div className="flex justify-end">
-                        <a
-                          href="/forgot-password"
-                          className="text-sm text-sky-600 hover:text-sky-700 underline underline-offset-4"
-                        >
-                          Esqueceu sua senha?
-                        </a>
-                      </div>
-                    </>
-                  )}
-
-                  {/* Etapa do codigo 2FA */}
-                  {show2FA && (
-                    <div className="animate-fade-in space-y-4">
-                      <div>
-                        <label
-                          htmlFor="totpCode"
-                          className="text-sm font-medium text-slate-700"
-                        >
-                          Código de verificação
-                        </label>
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                {!show2FA && (
+                  <div className="axr-stagger">
+                    <div className="mb-5">
+                      <label htmlFor="email" className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">E-mail Corporativo</label>
+                      <div className="relative">
+                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
                         <input
-                          {...register("totpCode")}
-                          type="text"
-                          id="totpCode"
-                          placeholder="000000"
-                          maxLength={6}
-                          autoComplete="one-time-code"
-                          className={`${inputBaseClasses} mt-2 text-center text-2xl tracking-[0.5em] font-mono`}
+                          {...register("email")}
+                          type="email"
+                          id="email"
+                          placeholder="nome@empresa.com"
+                          className={cn(inputBaseClasses, "pl-12", errors.email && "border-rose-400 focus:ring-rose-100")}
                           disabled={isLoading}
-                          autoFocus
                         />
                       </div>
-
-                      <div className="rounded-xl bg-slate-50 border border-slate-100 p-3 flex gap-3 items-start">
-                        <ShieldCheck className="w-5 h-5 text-[var(--color-primary)] flex-shrink-0 mt-0.5" />
-                        <p className="text-xs text-slate-500 leading-relaxed">
-                          O código é gerado pelo seu aplicativo autenticador (Google Authenticator, Authy, etc.) e se renova a cada 30 segundos.
-                        </p>
-                      </div>
+                      {errors.email && <span className="text-[10px] text-rose-500 font-bold mt-2 ml-1 block">{errors.email.message}</span>}
                     </div>
-                  )}
 
-                  {/* Botao Submit */}
+                    <div className="mb-2">
+                       <label htmlFor="password" className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Sua Senha</label>
+                      <div className="relative">
+                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
+                        <input
+                          {...register("password")}
+                          type={showPassword ? "text" : "password"}
+                          id="password"
+                          placeholder="********"
+                          className={cn(inputBaseClasses, "pl-12 pr-12", errors.password && "border-rose-400 focus:ring-rose-100")}
+                          disabled={isLoading}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-600 transition-colors"
+                        >
+                          {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
+                      </div>
+                      {errors.password && <span className="text-[10px] text-rose-500 font-bold mt-2 ml-1 block">{errors.password.message}</span>}
+                    </div>
+
+                    <div className="flex justify-end">
+                      <a href="/forgot-password" className="text-xs font-bold text-[var(--color-primary)] hover:opacity-80 transition-opacity">
+                        Esqueceu sua senha?
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {show2FA && (
+                  <div className="space-y-6 axr-reveal">
+                    <div>
+                      <label htmlFor="totpCode" className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 text-center">Código de Verificação</label>
+                      <input
+                        {...register("totpCode")}
+                        type="text"
+                        id="totpCode"
+                        placeholder="000 000"
+                        maxLength={6}
+                        autoComplete="one-time-code"
+                        className="w-full bg-slate-50/50 border-2 border-slate-200 rounded-2xl py-5 text-center text-3xl font-black tracking-[0.3em] axr-sora focus:border-[var(--color-primary)] focus:ring-4 focus:ring-[var(--color-primary)]/10 outline-none transition-all placeholder:text-slate-200"
+                        disabled={isLoading}
+                        autoFocus
+                      />
+                    </div>
+                    <div className="p-4 rounded-2xl bg-[var(--color-primary)]/5 border border-[var(--color-primary)]/10 flex gap-4">
+                      <ShieldCheck className="w-6 h-6 text-[var(--color-primary)] flex-shrink-0" />
+                      <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+                        Abra seu app autenticador para obter o token dinâmico necessário para este acesso.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="pt-2">
                   <button
                     type="submit"
                     disabled={isLoading}
-                    style={{ backgroundColor: 'var(--color-primary, #0f172a)' }}
-                    className="w-full py-3 rounded-[var(--radius-md)] font-semibold text-white shadow-lg hover:opacity-90 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="axr-btn-shine w-full py-4 rounded-2xl axr-sora text-sm font-bold text-white shadow-2xl shadow-[var(--color-primary)]/40 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none"
+                    style={{ background: 'var(--color-primary, #2563EB)' }}
                   >
                     {isLoading ? (
-                      <>
+                      <div className="flex items-center justify-center gap-3">
                         <Loader2 className="w-5 h-5 animate-spin" />
-                        <span>{show2FA ? "Verificando..." : "Entrando..."}</span>
-                      </>
+                        <span>Verificando...</span>
+                      </div>
                     ) : (
-                      show2FA ? "Verificar código" : "Entrar"
+                      <div className="flex items-center justify-center gap-2">
+                        <span>{show2FA ? "Validar Acesso" : "Entrar no Ecossistema"}</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </div>
                     )}
                   </button>
 
-                  {/* Cancelar MFA */}
                   {show2FA && (
                     <button
                       type="button"
                       onClick={handleCancelMfa}
                       disabled={isLoading}
-                      className="w-full py-2.5 rounded-[var(--radius-md)] text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50"
+                      className="w-full mt-4 py-3 text-xs font-bold text-slate-400 hover:text-slate-900 transition-colors flex items-center justify-center gap-2"
                     >
                       <ArrowLeft className="w-4 h-4" />
-                      Cancelar e voltar ao login
+                      Alterar usuário ou senha
                     </button>
                   )}
-                </form>
-              </div>
+                </div>
+              </form>
             </div>
 
-            {/* Footer */}
-            <div className="animate-login-fade-up mt-6 text-center text-sm text-slate-500" style={{ animationDelay: "0.8s" }}>
-              {loginConfig.footerText || (
-                <>
-                  {loginConfig.showPoweredBy !== false && (
-                    <span>Powered by AxonRH</span>
-                  )}
-                </>
-              )}
+            <div className="mt-8 text-center">
+              <p className="text-xs font-bold text-slate-400 tracking-wider">
+                {loginConfig.footerText || (loginConfig.showPoweredBy !== false && "AXONRH ECOSYSTEM © 2026")}
+              </p>
             </div>
           </div>
         </div>

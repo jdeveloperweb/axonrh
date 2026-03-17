@@ -570,7 +570,7 @@ export default function ApresentacaoPage() {
           {/* Controls */}
           <div style={{
             display:'flex', alignItems:'center', justifyContent:'space-between',
-            padding:'10px 28px',
+            padding: isMobile ? '8px 16px' : '10px 28px',
             background: isDark ? 'rgba(7,9,26,0.85)' : 'rgba(247,249,255,0.92)',
             backdropFilter:'blur(16px)', WebkitBackdropFilter:'blur(16px)',
             borderTop: isDark ? '1px solid rgba(255,255,255,0.07)' : '1px solid #E2E8F0',
@@ -580,8 +580,8 @@ export default function ApresentacaoPage() {
               <span className="axr-sora" style={{ fontSize:13, fontWeight:700, color: isDark?'rgba(255,255,255,0.4)':'#94A3B8' }}>
                 {String(current+1).padStart(2,'0')} <span style={{ opacity:.4 }}>/</span> {String(SLIDES.length).padStart(2,'0')}
               </span>
-              <span style={{ fontSize:10, color: isDark?'rgba(255,255,255,0.2)':'#CBD5E1', letterSpacing:'0.05em' }}>
-                ← → espaço
+              <span className="axr-ctrl-hint" style={{ fontSize:10, color: isDark?'rgba(255,255,255,0.2)':'#CBD5E1', letterSpacing:'0.05em' }}>
+                {isMobile ? '← deslize →' : '← → espaço'}
               </span>
             </div>
 
@@ -953,9 +953,9 @@ function WorkflowSlide({ isMobile }: { isMobile: boolean }) {
         }}>
           Fluxo Contínuo e <span className="axr-grad-blue">100% Digital</span>
         </h2>
-        <p style={{ fontSize:18, color:'#64748B', fontFamily:'Manrope,sans-serif', maxWidth: 650, margin: '0 auto' }}>
+        {!isMobile && <p style={{ fontSize:18, color:'#64748B', fontFamily:'Manrope,sans-serif', maxWidth: 650, margin: '0 auto' }}>
           Eliminamos silos departamentais. Cada etapa do ciclo de vida do colaborador alimenta a próxima.
-        </p>
+        </p>}
       </div>
 
       <div className="axr-stagger" style={{ display:'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 12 : 16, width:'100%', maxWidth:1200, position:'relative', zIndex:1 }}>
@@ -1205,84 +1205,97 @@ function SecuritySlide({ isMobile }: { isMobile: boolean }) {
 function TechSlide({ isMobile }: { isMobile: boolean }) {
   return (
     <div style={{
-      width:'100%', height:'100%', background:'#F8FAFF',
+      width:'100%', minHeight:'100%', background:'#F8FAFF',
       display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
-      padding:'40px 64px',
-      position: 'relative', overflow: 'hidden'
+      padding: isMobile ? '20px 16px' : '40px 64px',
+      position: 'relative', overflow: 'hidden',
     }}>
       <div className="axr-bg-mesh" style={{ opacity: 0.2 }} />
 
-      <div className="axr-stagger-item" style={{ textAlign:'center', marginBottom:48, position:'relative', zIndex:1 }}>
+      <div className="axr-stagger-item" style={{ textAlign:'center', marginBottom: isMobile ? 20 : 48, position:'relative', zIndex:1 }}>
         <div style={{
           display:'inline-flex', alignItems:'center', gap:8,
-          padding:'8px 20px', borderRadius:999, marginBottom:16,
+          padding:'8px 20px', borderRadius:999, marginBottom: isMobile ? 10 : 16,
           background:'rgba(79,70,229,0.08)', color:'#4F46E5', border:'1px solid rgba(79,70,229,0.2)',
           fontSize:12, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.12em',
-          backdropFilter: 'blur(8px)'
+          backdropFilter: 'blur(8px)',
         }}>
           <Cpu style={{width:14,height:14}}/> Stack Tecnológico
         </div>
         <h2 className="axr-sora" style={{
-          fontSize:'clamp(36px,4.5vw,56px)', fontWeight:900, color:'#0F172A',
-          letterSpacing:'-0.045em', lineHeight:1, marginBottom:12,
+          fontSize: isMobile ? 'clamp(24px,7vw,32px)' : 'clamp(36px,4.5vw,56px)',
+          fontWeight:900, color:'#0F172A',
+          letterSpacing:'-0.045em', lineHeight:1, marginBottom: isMobile ? 0 : 12,
         }}>
           Construído para <span className="axr-grad-blue">Escalar</span>
         </h2>
-        <p style={{ fontSize:18, color:'#64748B', fontFamily:'Manrope,sans-serif', maxWidth: 600, margin: '0 auto' }}>
+        {!isMobile && <p style={{ fontSize:18, color:'#64748B', fontFamily:'Manrope,sans-serif', maxWidth: 600, margin: '0 auto' }}>
           Arquitetura moderna do banco à interface, garantindo performance e segurança.
-        </p>
+        </p>}
       </div>
 
       <div className="axr-stagger" style={{
-        display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:16, width:'100%', maxWidth:1000, marginBottom:32, position:'relative', zIndex:1
+        display:'grid',
+        gridTemplateColumns: isMobile ? 'repeat(4,1fr)' : 'repeat(4,1fr)',
+        gap: isMobile ? 8 : 16,
+        width:'100%', maxWidth:1000, marginBottom: isMobile ? 12 : 32, position:'relative', zIndex:1,
       }}>
         {TECH_STACK.map((tech,i)=>{
           const TI = tech.icon;
           return (
             <div key={i} className="axr-stagger-item axr-lift axr-glass" style={{
-              padding:'28px 20px', borderRadius:24, textAlign:'center',
+              padding: isMobile ? '14px 8px' : '28px 20px', borderRadius: isMobile ? 16 : 24, textAlign:'center',
               background:'rgba(255, 255, 255, 0.7)', border:'1.5px solid #E2E8F0',
               boxShadow:'0 4px 12px rgba(0,0,0,0.02)',
             }}>
               <div style={{
-                width:52, height:52, borderRadius:16, background: 'white', margin:'0 auto 16px',
+                width: isMobile ? 36 : 52, height: isMobile ? 36 : 52, borderRadius: isMobile ? 10 : 16,
+                background: 'white', margin:`0 auto ${isMobile ? 8 : 16}px`,
                 display:'flex', alignItems:'center', justifyContent:'center',
-                boxShadow: `0 8px 20px ${tech.color}15`, border: `1px solid ${tech.color}10`
+                boxShadow: `0 8px 20px ${tech.color}15`, border: `1px solid ${tech.color}10`,
               }}>
-                <TI style={{width:28,height:28,color:tech.color}}/>
+                <TI style={{width: isMobile ? 18 : 28, height: isMobile ? 18 : 28, color:tech.color}}/>
               </div>
-              <div className="axr-sora" style={{ fontWeight:800, color:'#0F172A', fontSize:14, marginBottom:4, letterSpacing: '-0.01em' }}>{tech.name}</div>
-              <div style={{ fontSize:12, color:'#94A3B8', fontWeight: 500 }}>{tech.desc}</div>
+              <div className="axr-sora" style={{ fontWeight:800, color:'#0F172A', fontSize: isMobile ? 10 : 14, marginBottom:2, letterSpacing: '-0.01em' }}>{tech.name}</div>
+              {!isMobile && <div style={{ fontSize:12, color:'#94A3B8', fontWeight: 500 }}>{tech.desc}</div>}
             </div>
           );
         })}
       </div>
 
       <div className="axr-stagger" style={{
-        display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:20, width:'100%', maxWidth:1000, position:'relative', zIndex:1
+        display:'grid',
+        gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)',
+        gap: isMobile ? 10 : 20,
+        width:'100%', maxWidth:1000, position:'relative', zIndex:1,
       }}>
         {[
           { icon:Globe,    color:'#2563EB', bg:'#DBEAFE', bd:'#BFDBFE', title:'Cloud-Native & Multi-Tenant',   desc:'Isolamento total de dados entre empresas com alta disponibilidade global.' },
           { icon:Activity, color:'#059669', bg:'#ECFDF5', bd:'#A7F3D0', title:'Tempo Real por Padrão',          desc:'Saldos, aprovações e métricas sempre sincronizadas em todos os dispositivos.' },
-          { icon:Zap,      color:'#D97706', bg:'#FFFBEB', bd:'#FDE68A', title:'Performance Enterprise', desc:'Next.js 15 com App Router para carregamento instantâneo e SEO nativo.' },
+          { icon:Zap,      color:'#D97706', bg:'#FFFBEB', bd:'#FDE68A', title:'Performance Enterprise',         desc:'Next.js 15 com App Router para carregamento instantâneo e SEO nativo.' },
         ].map((item,i)=>{
           const II = item.icon;
           return (
             <div key={i} className="axr-stagger-item axr-lift axr-glass" style={{
-              padding:'28px', borderRadius:28,
+              padding: isMobile ? '16px' : '28px', borderRadius: isMobile ? 18 : 28,
+              display: isMobile ? 'flex' : 'block', alignItems: isMobile ? 'center' : undefined, gap: isMobile ? 14 : undefined,
               background:'rgba(255, 255, 255, 0.8)', border:`1.5px solid #F1F5F9`,
               boxShadow:'0 8px 30px rgba(0,0,0,0.04)',
             }}>
               <div style={{
-                width:48,height:48,borderRadius:16,marginBottom:18,
-                display:'flex',alignItems:'center',justifyContent:'center',
-                background:item.bg,border:`1px solid ${item.bd}`,
-                boxShadow: `0 8px 16px ${item.color}15`
+                width: isMobile ? 40 : 48, height: isMobile ? 40 : 48,
+                borderRadius: isMobile ? 12 : 16, flexShrink: 0,
+                marginBottom: isMobile ? 0 : 18,
+                display:'flex', alignItems:'center', justifyContent:'center',
+                background:item.bg, border:`1px solid ${item.bd}`,
+                boxShadow: `0 8px 16px ${item.color}15`,
               }}>
-                <II style={{width:24,height:24,color:item.color}}/>
+                <II style={{width: isMobile ? 20 : 24, height: isMobile ? 20 : 24, color:item.color}}/>
               </div>
-              <div className="axr-sora" style={{ fontSize:16,fontWeight:800,color:'#0F172A',marginBottom:10, letterSpacing: '-0.02em' }}>{item.title}</div>
-              <p style={{ fontSize:14,color:'#64748B',lineHeight:1.65,fontFamily:'Manrope,sans-serif', fontWeight: 500 }}>{item.desc}</p>
+              <div>
+                <div className="axr-sora" style={{ fontSize: isMobile ? 13 : 16, fontWeight:800, color:'#0F172A', marginBottom: isMobile ? 0 : 10, letterSpacing: '-0.02em' }}>{item.title}</div>
+                {!isMobile && <p style={{ fontSize:14, color:'#64748B', lineHeight:1.65, fontFamily:'Manrope,sans-serif', fontWeight: 500 }}>{item.desc}</p>}
+              </div>
             </div>
           );
         })}
@@ -1293,46 +1306,52 @@ function TechSlide({ isMobile }: { isMobile: boolean }) {
 
 // ─── CTA SLIDE ────────────────────────────────────────────────────────────────
 
-function CTASlide({ onStart }: { onStart: () => void }) {
+function CTASlide({ onStart, isMobile }: { onStart: () => void; isMobile: boolean }) {
   return (
     <div style={{
       width:'100%', height:'100%', position:'relative', overflow:'hidden',
       background:'linear-gradient(135deg, #060A18 0%, #0D1232 40%, #0A0616 100%)',
       display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
-      padding:'40px 24px', textAlign:'center',
+      padding: isMobile ? '32px 20px' : '40px 24px', textAlign:'center',
     }}>
       {/* Background with mesh and blobs */}
       <div className="axr-bg-mesh" />
       <div style={{ position:'absolute', inset:0, backgroundImage:'radial-gradient(rgba(255,255,255,0.05) 1.5px, transparent 1.5px)', backgroundSize:'40px 40px', pointerEvents:'none', opacity:0.6 }}/>
-      
       <div className="axr-blob-a" style={{ position:'absolute', top:'15%', left:'8%', width:700, height:700, borderRadius:'50%', background:'radial-gradient(circle,rgba(37,99,235,0.2) 0%,transparent 70%)', filter:'blur(100px)', pointerEvents:'none' }}/>
       <div className="axr-blob-b" style={{ position:'absolute', bottom:'10%', right:'8%', width:600, height:600, borderRadius:'50%', background:'radial-gradient(circle,rgba(124,58,237,0.18) 0%,transparent 70%)', filter:'blur(100px)', pointerEvents:'none' }}/>
 
-      <div className="axr-stagger" style={{ position:'relative', zIndex:1, maxWidth:1000 }}>
-        <div className="axr-stagger-item axr-float" style={{
-          display:'inline-flex', alignItems:'center', gap:10,
-          padding:'10px 22px', borderRadius:999, marginBottom:36,
-          background:'rgba(99,102,241,0.15)', border:'1px solid rgba(99,102,241,0.3)',
-          backdropFilter: 'blur(10px)',
-          color:'#A5B4FC', fontSize:13, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.12em',
-        }}>
-          <PlayIcon style={{width:13,height:13,fill:'#A5B4FC'}}/> Experiência Pronta
-        </div>
+      <div className="axr-stagger" style={{ position:'relative', zIndex:1, maxWidth:1000, width:'100%' }}>
+        {!isMobile && (
+          <div className="axr-stagger-item axr-float" style={{
+            display:'inline-flex', alignItems:'center', gap:10,
+            padding:'10px 22px', borderRadius:999, marginBottom:36,
+            background:'rgba(99,102,241,0.15)', border:'1px solid rgba(99,102,241,0.3)',
+            backdropFilter: 'blur(10px)',
+            color:'#A5B4FC', fontSize:13, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.12em',
+          }}>
+            <PlayIcon style={{width:13,height:13,fill:'#A5B4FC'}}/> Experiência Pronta
+          </div>
+        )}
 
         <h2 className="axr-sora axr-stagger-item" style={{
-          fontSize:'clamp(48px,9vw,100px)', fontWeight:900,
-          color:'white', letterSpacing:'-0.05em', lineHeight:0.88, marginBottom:32,
+          fontSize: isMobile ? 'clamp(36px,11vw,52px)' : 'clamp(48px,9vw,100px)',
+          fontWeight:900, color:'white',
+          letterSpacing:'-0.05em', lineHeight: isMobile ? 0.95 : 0.88,
+          marginBottom: isMobile ? 20 : 32,
         }}>
           Assuma o controle<br/>
-          <span className="axr-grad axr-sora" style={{ display:'inline-block', paddingTop:12 }}>estratégico do RH</span>
+          <span className="axr-grad axr-sora" style={{ display:'inline-block', paddingTop: isMobile ? 8 : 12 }}>estratégico do RH</span>
         </h2>
 
         <p className="axr-stagger-item" style={{
-          fontSize:20, color:'rgba(148,163,184,0.9)',
-          maxWidth:600, margin:'0 auto 64px', lineHeight:1.6,
+          fontSize: isMobile ? 15 : 20, color:'rgba(148,163,184,0.9)',
+          maxWidth:600, margin: isMobile ? '0 auto 32px' : '0 auto 64px', lineHeight:1.6,
           fontWeight: 400,
         }}>
-          Junte-se à revolução digital. Todo o ecossistema AxonRH está pronto para impulsionar seu time.
+          {isMobile
+            ? 'Ecossistema completo pronto para impulsionar seu time de RH.'
+            : 'Junte-se à revolução digital. Todo o ecossistema AxonRH está pronto para impulsionar seu time.'
+          }
         </p>
 
         <div className="axr-stagger-item">
@@ -1340,33 +1359,33 @@ function CTASlide({ onStart }: { onStart: () => void }) {
             onClick={onStart}
             className="axr-btn-shine"
             style={{
-              display:'inline-flex', alignItems:'center', gap:22,
-              padding:'24px 64px', borderRadius:999, border:'none',
+              display:'inline-flex', alignItems:'center', gap: isMobile ? 14 : 22,
+              padding: isMobile ? '16px 36px' : '24px 64px', borderRadius:999, border:'none',
               background:'linear-gradient(135deg,#2563EB,#4F46E5)',
               color:'white', cursor:'pointer',
-              fontFamily:'Sora,sans-serif', fontWeight:800, fontSize:22,
+              fontFamily:'Sora,sans-serif', fontWeight:800, fontSize: isMobile ? 17 : 22,
               letterSpacing:'-0.02em',
               boxShadow:'0 24px 80px rgba(37,99,235,.45)',
             }}
           >
-            <div style={{ position:'relative', width:52, height:52, flexShrink:0 }}>
+            <div style={{ position:'relative', width: isMobile ? 38 : 52, height: isMobile ? 38 : 52, flexShrink:0 }}>
               <div style={{ position:'absolute', inset:-4, borderRadius:'50%', border:'2px solid rgba(255,255,255,.4)', animation:'axr-ping 2s ease infinite' }}/>
               <div style={{
-                width:52, height:52, borderRadius:'50%',
+                width: isMobile ? 38 : 52, height: isMobile ? 38 : 52, borderRadius:'50%',
                 display:'flex', alignItems:'center', justifyContent:'center',
                 background:'rgba(255,255,255,0.22)',
-                backdropFilter: 'blur(4px)'
+                backdropFilter: 'blur(4px)',
               }}>
-                <PlayIcon style={{width:20,height:20,fill:'white',marginLeft:3}}/>
+                <PlayIcon style={{width: isMobile ? 15 : 20, height: isMobile ? 15 : 20, fill:'white', marginLeft:2}}/>
               </div>
             </div>
             <span>Entrar no Sistema</span>
-            <ArrowRight className="axr-sora" style={{width:26,height:26, opacity: 0.8}}/>
+            <ArrowRight style={{width: isMobile ? 18 : 26, height: isMobile ? 18 : 26, opacity: 0.8}}/>
           </button>
 
-          <div style={{ marginTop:24, display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
+          <div style={{ marginTop: isMobile ? 18 : 24, display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
             <div style={{ width:6, height:6, borderRadius:'50%', background:'#4ade80', animation: 'axr-dot-pulse 1s infinite' }} />
-            <p style={{ fontSize:13, color:'rgba(148,163,184,0.4)', fontWeight: 500, letterSpacing: '0.05em' }}>
+            <p style={{ fontSize:12, color:'rgba(148,163,184,0.4)', fontWeight: 500, letterSpacing: '0.05em' }}>
               AMBIENTE CONFIGURADO E SEGURO
             </p>
           </div>
