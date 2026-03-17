@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ArrowRight, Shield, Calendar, Banknote, BrainCircuit, Award,
@@ -10,7 +10,7 @@ import {
   Lock, Database, Activity, Star, Play, Globe,
 } from 'lucide-react';
 
-// ─── Types ──────────────────────────────────────────────────────────────────
+// ─── Types ───────────────────────────────────────────────────────────────────
 
 interface Module {
   id: string;
@@ -34,7 +34,7 @@ const MODULES: Module[] = [
     accentColor: '#60A5FA',
     accentBg: 'rgba(59,130,246,0.12)',
     accentBorder: 'rgba(59,130,246,0.35)',
-    glowColor: 'rgba(59,130,246,0.1)',
+    glowColor: 'rgba(59,130,246,0.12)',
     title: 'Admissão e Contratação',
     subtitle: 'Digital do início ao fim',
     desc: 'Elimine o papel. Todo o processo admissional — da proposta à assinatura — acontece digitalmente, com validação automática de documentos por IA e OCR.',
@@ -53,7 +53,7 @@ const MODULES: Module[] = [
     accentColor: '#818CF8',
     accentBg: 'rgba(99,102,241,0.12)',
     accentBorder: 'rgba(99,102,241,0.35)',
-    glowColor: 'rgba(99,102,241,0.1)',
+    glowColor: 'rgba(99,102,241,0.12)',
     title: 'Gestão de Ponto',
     subtitle: 'Timesheet inteligente e geolocalizado',
     desc: 'Controle de jornada com geolocalização, banco de horas automatizado e aprovação de espelhos em 1 clique — tudo acessível pelo celular.',
@@ -72,7 +72,7 @@ const MODULES: Module[] = [
     accentColor: '#34D399',
     accentBg: 'rgba(16,185,129,0.12)',
     accentBorder: 'rgba(16,185,129,0.35)',
-    glowColor: 'rgba(16,185,129,0.1)',
+    glowColor: 'rgba(16,185,129,0.12)',
     title: 'Folha de Pagamento',
     subtitle: 'Cálculo dinâmico e preciso',
     desc: 'Motor de cálculo configurável que processa folha completa, adiantamentos, férias e rescisões com total aderência às normas trabalhistas vigentes.',
@@ -91,7 +91,7 @@ const MODULES: Module[] = [
     accentColor: '#FB7185',
     accentBg: 'rgba(244,63,94,0.12)',
     accentBorder: 'rgba(244,63,94,0.35)',
-    glowColor: 'rgba(244,63,94,0.1)',
+    glowColor: 'rgba(244,63,94,0.12)',
     title: 'Benefícios Inteligentes',
     subtitle: 'Regras automáticas por cargo',
     desc: 'Gerencie VA, VR, VT e Plano de Saúde com regras configuráveis por senioridade, categoria e vínculo. Zero planilha, zero erro.',
@@ -110,7 +110,7 @@ const MODULES: Module[] = [
     accentColor: '#FCD34D',
     accentBg: 'rgba(245,158,11,0.12)',
     accentBorder: 'rgba(245,158,11,0.35)',
-    glowColor: 'rgba(245,158,11,0.1)',
+    glowColor: 'rgba(245,158,11,0.12)',
     title: 'Desempenho e Carreira',
     subtitle: 'Crescimento contínuo das pessoas',
     desc: 'Ciclos de avaliação configuráveis, feedbacks contínuos, matriz 9-box e planos de desenvolvimento individual integrados à jornada.',
@@ -129,7 +129,7 @@ const MODULES: Module[] = [
     accentColor: '#C084FC',
     accentBg: 'rgba(168,85,247,0.12)',
     accentBorder: 'rgba(168,85,247,0.35)',
-    glowColor: 'rgba(168,85,247,0.1)',
+    glowColor: 'rgba(168,85,247,0.12)',
     title: 'Eventos Corporativos',
     subtitle: 'Engajamento e presença digital',
     desc: 'Plataforma completa para criar, publicar e gerenciar eventos internos com check-in por QR Code e controle de presença em tempo real.',
@@ -148,7 +148,7 @@ const MODULES: Module[] = [
     accentColor: '#22D3EE',
     accentBg: 'rgba(6,182,212,0.12)',
     accentBorder: 'rgba(6,182,212,0.35)',
-    glowColor: 'rgba(6,182,212,0.1)',
+    glowColor: 'rgba(6,182,212,0.12)',
     title: 'Assistente de IA',
     subtitle: '24/7 — sem fila, sem espera',
     desc: 'IA integrada que responde dúvidas sobre políticas, holerites e benefícios com precisão contextual, reduzindo chamados ao RH em até 80%.',
@@ -167,7 +167,7 @@ const MODULES: Module[] = [
     accentColor: '#2DD4BF',
     accentBg: 'rgba(20,184,166,0.12)',
     accentBorder: 'rgba(20,184,166,0.35)',
-    glowColor: 'rgba(20,184,166,0.1)',
+    glowColor: 'rgba(20,184,166,0.12)',
     title: 'Dashboards Gerenciais',
     subtitle: 'Visibilidade total ou granular',
     desc: 'Painéis analíticos em tempo real com visões baseadas em RBAC — gestores veem apenas sua equipe, admins têm visão consolidada de toda a empresa.',
@@ -186,7 +186,7 @@ const MODULES: Module[] = [
     accentColor: '#F472B6',
     accentBg: 'rgba(236,72,153,0.12)',
     accentBorder: 'rgba(236,72,153,0.35)',
-    glowColor: 'rgba(236,72,153,0.1)',
+    glowColor: 'rgba(236,72,153,0.12)',
     title: 'Mobile First / PWA',
     subtitle: 'Na palma da mão — sempre',
     desc: 'Progressive Web App instalável em Android e iOS. Todo o poder do AxonRH acessível do celular, com funcionalidades offline e sincronização automática.',
@@ -295,21 +295,64 @@ const WORKFLOW_STEPS = [
   },
 ];
 
+// ─── Stat Counter ─────────────────────────────────────────────────────────────
+
+function StatCounter({ value, started }: { value: string; started: boolean }) {
+  const match = value.match(/^(\d+)(.*)$/);
+  if (!match) return <>{value}</>;
+  const [, numStr, suffix] = match;
+  const target = parseInt(numStr, 10);
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    if (!started) return;
+    const duration = 2200;
+    let raf: number;
+    let startTs: number | null = null;
+    const tick = (ts: number) => {
+      if (!startTs) startTs = ts;
+      const p = Math.min((ts - startTs) / duration, 1);
+      const eased = 1 - Math.pow(1 - p, 4);
+      setCount(Math.floor(eased * target));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [started, target]);
+
+  return <>{count}{suffix}</>;
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function ApresentacaoPage() {
   const router = useRouter();
   const [activeModule, setActiveModule] = useState(0);
   const [transitioning, setTransitioning] = useState(false);
+  const [statsStarted, setStatsStarted] = useState(false);
+  const statsRef = useRef<HTMLDivElement>(null);
 
   // Scroll reveal
   useEffect(() => {
-    const els = document.querySelectorAll('.axon-reveal');
+    const els = document.querySelectorAll('.axr-reveal');
     const obs = new IntersectionObserver(
-      (entries) => entries.forEach((e) => { if (e.isIntersecting) (e.target as Element).classList.add('axon-revealed'); }),
-      { threshold: 0.08, rootMargin: '0px 0px -40px 0px' }
+      (entries) => entries.forEach((e) => {
+        if (e.isIntersecting) (e.target as Element).classList.add('axr-visible');
+      }),
+      { threshold: 0.06, rootMargin: '0px 0px -40px 0px' }
     );
     els.forEach((el) => obs.observe(el));
+    return () => obs.disconnect();
+  }, []);
+
+  // Stats counter trigger
+  useEffect(() => {
+    const el = statsRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) { setStatsStarted(true); obs.disconnect(); }
+    }, { threshold: 0.3 });
+    obs.observe(el);
     return () => obs.disconnect();
   }, []);
 
@@ -324,253 +367,322 @@ export default function ApresentacaoPage() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800;900&family=Manrope:wght@300;400;500;600;700;800&display=swap');
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'DM Sans', system-ui, sans-serif; }
-        .axon-display { font-family: 'Outfit', system-ui, sans-serif; }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Manrope', system-ui, sans-serif; background: #070B18; }
+        .axr-display { font-family: 'Sora', system-ui, sans-serif; }
 
-        /* Scroll reveal */
-        .axon-reveal {
+        /* ── Scroll reveal ── */
+        .axr-reveal {
           opacity: 0;
-          transform: translateY(28px);
-          transition: opacity 0.75s cubic-bezier(0.16,1,0.3,1), transform 0.75s cubic-bezier(0.16,1,0.3,1);
+          transform: translateY(36px);
+          transition: opacity 0.85s cubic-bezier(0.16,1,0.3,1), transform 0.85s cubic-bezier(0.16,1,0.3,1);
         }
-        .axon-reveal.axon-revealed { opacity: 1; transform: translateY(0); }
+        .axr-reveal.axr-visible { opacity: 1; transform: translateY(0); }
 
-        /* Keyframes */
-        @keyframes axon-fade-up {
-          from { opacity: 0; transform: translateY(24px); }
-          to   { opacity: 1; transform: translateY(0); }
+        /* ── Keyframes ── */
+        @keyframes axr-float-a {
+          0%,100% { transform: translateY(0) scale(1); }
+          50%      { transform: translateY(-22px) scale(1.03); }
         }
-        @keyframes axon-fade-in {
-          from { opacity: 0; } to { opacity: 1; }
-        }
-        @keyframes axon-scale-in {
-          from { opacity: 0; transform: scale(0.6); }
-          to   { opacity: 1; transform: scale(1); }
-        }
-        @keyframes axon-text-in {
-          from { opacity: 0; transform: translateY(8px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes axon-float {
+        @keyframes axr-float-b {
           0%,100% { transform: translateY(0) rotate(0deg); }
-          50%      { transform: translateY(-18px) rotate(2deg); }
+          50%      { transform: translateY(-16px) rotate(4deg); }
         }
-        @keyframes axon-float-r {
-          0%,100% { transform: translateY(0) rotate(0deg); }
-          50%      { transform: translateY(-14px) rotate(-2deg); }
+        @keyframes axr-float-c {
+          0%,100% { transform: translateY(0); }
+          50%      { transform: translateY(-12px); }
         }
-        @keyframes axon-gradient {
+        @keyframes axr-grad-shift {
           0%,100% { background-position: 0% 50%; }
           50%      { background-position: 100% 50%; }
         }
-        @keyframes axon-ping {
-          0%   { transform: scale(1); opacity: 0.4; }
+        @keyframes axr-glow-pulse {
+          0%,100% { opacity: 0.5; transform: scale(1); }
+          50%      { opacity: 0.85; transform: scale(1.12); }
+        }
+        @keyframes axr-ping {
+          0%   { transform: scale(1); opacity: 0.5; }
           100% { transform: scale(2); opacity: 0; }
         }
-        @keyframes axon-grid-in {
-          from { opacity: 0; } to { opacity: 1; }
+        @keyframes axr-fade-up {
+          from { opacity: 0; transform: translateY(28px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
-        @keyframes axon-slide-detail {
-          from { opacity: 0; transform: translateX(-16px); }
-          to   { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes axon-overlay-in {
-          from { opacity: 0; } to { opacity: 1; }
-        }
-        @keyframes axon-logo-pop {
-          0%   { opacity: 0; transform: scale(0.4) rotate(-8deg); }
+        @keyframes axr-scale-pop {
+          0%   { opacity: 0; transform: scale(0.5) rotate(-8deg); }
           70%  { transform: scale(1.1) rotate(2deg); }
           100% { opacity: 1; transform: scale(1) rotate(0deg); }
         }
-        @keyframes axon-logo-text {
-          from { opacity: 0; transform: translateY(12px); }
+        @keyframes axr-name-in {
+          from { opacity: 0; transform: translateY(14px); }
           to   { opacity: 1; transform: translateY(0); }
         }
-        @keyframes axon-dot-pulse {
-          0%,80%,100% { transform: scale(0.8); opacity: 0.4; }
-          40%          { transform: scale(1.2); opacity: 1; }
+        @keyframes axr-dot-pulse {
+          0%,80%,100% { transform: scale(0.7); opacity: 0.4; }
+          40%          { transform: scale(1.3); opacity: 1; }
+        }
+        @keyframes axr-shimmer {
+          0%   { background-position: -200% center; }
+          100% { background-position: 200% center; }
+        }
+        @keyframes axr-overlay-in {
+          from { opacity: 0; } to { opacity: 1; }
+        }
+        @keyframes axr-panel-in {
+          from { opacity: 0; transform: translateX(-18px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes axr-noise {
+          0%   { transform: translate(0,0); }
+          25%  { transform: translate(-3%,-4%); }
+          50%  { transform: translate(4%,3%); }
+          75%  { transform: translate(-2%,4%); }
+          100% { transform: translate(0,0); }
+        }
+        @keyframes axr-border-spin {
+          to { transform: rotate(360deg); }
         }
 
-        /* Utility animations */
-        .axon-hero-badge { animation: axon-fade-up 0.8s cubic-bezier(0.16,1,0.3,1) forwards; }
-        .axon-hero-h1    { animation: axon-fade-up 0.9s cubic-bezier(0.16,1,0.3,1) 0.1s both; }
-        .axon-hero-sub   { animation: axon-fade-up 0.9s cubic-bezier(0.16,1,0.3,1) 0.22s both; }
-        .axon-hero-cta   { animation: axon-fade-up 0.9s cubic-bezier(0.16,1,0.3,1) 0.34s both; }
-        .axon-hero-stats { animation: axon-fade-up 0.9s cubic-bezier(0.16,1,0.3,1) 0.46s both; }
+        /* ── Ambient orbs ── */
+        .axr-orb-a { animation: axr-float-a 10s ease-in-out infinite; }
+        .axr-orb-b { animation: axr-float-b 14s ease-in-out infinite; animation-delay: -5s; }
+        .axr-orb-c { animation: axr-float-c 12s ease-in-out infinite; animation-delay: -3s; }
 
-        .axon-orb-1 { animation: axon-float   9s ease-in-out infinite; }
-        .axon-orb-2 { animation: axon-float-r 13s ease-in-out infinite; animation-delay: -5s; }
-        .axon-orb-3 { animation: axon-float   11s ease-in-out infinite; animation-delay: -3s; }
-
-        .axon-gradient-text {
-          background-size: 250% 250%;
-          animation: axon-gradient 5s ease infinite;
+        /* ── Gradient text ── */
+        .axr-grad {
+          background: linear-gradient(90deg, #60A5FA, #818CF8, #C084FC, #F472B6, #60A5FA);
+          background-size: 300% 100%;
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
+          animation: axr-grad-shift 6s ease infinite;
         }
 
-        /* Grid BG */
-        .axon-grid-bg {
-          background-image:
-            linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
-          background-size: 56px 56px;
-          animation: axon-grid-in 2s ease forwards;
+        /* ── Noise texture ── */
+        .axr-noise {
+          position: absolute;
+          inset: -80px;
+          width: calc(100% + 160px);
+          height: calc(100% + 160px);
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+          opacity: 0.022;
+          pointer-events: none;
+          animation: axr-noise 9s steps(2) infinite;
         }
 
-        /* Module detail animation */
-        .axon-mod-detail { animation: axon-slide-detail 0.45s cubic-bezier(0.16,1,0.3,1) forwards; }
-
-        /* Module tabs */
-        .axon-tab { transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease; }
-
-        /* Cards */
-        .axon-card {
-          transition: transform 0.3s cubic-bezier(0.16,1,0.3,1), box-shadow 0.3s ease, border-color 0.3s ease;
-        }
-        .axon-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 24px 48px rgba(0,0,0,0.35);
-          border-color: rgba(99,102,241,0.28) !important;
+        /* ── Glass utility ── */
+        .axr-glass {
+          background: rgba(255,255,255,0.04);
+          backdrop-filter: blur(18px);
+          -webkit-backdrop-filter: blur(18px);
+          border: 1px solid rgba(255,255,255,0.09);
         }
 
-        /* Tech badge */
-        .axon-tech { transition: transform 0.2s ease, background 0.2s ease; }
-        .axon-tech:hover { transform: translateY(-3px); background: rgba(255,255,255,0.06) !important; }
+        /* ── Lift card ── */
+        .axr-lift {
+          transition: transform 0.38s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.38s ease, border-color 0.38s ease;
+          cursor: default;
+        }
+        .axr-lift:hover {
+          transform: translateY(-7px);
+          box-shadow: 0 32px 72px rgba(0,0,0,0.45);
+        }
 
-        /* Start button */
-        .axon-start-btn {
+        /* ── Primary button ── */
+        .axr-btn {
           position: relative;
           overflow: hidden;
           transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.35s ease;
         }
-        .axon-start-btn::before {
+        .axr-btn::after {
           content: '';
           position: absolute; inset: 0;
-          background: linear-gradient(135deg, #2563EB 0%, #4F46E5 50%, #7C3AED 100%);
+          background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.18) 50%, transparent 65%);
+          background-size: 250% 100%;
+          background-position: -200% center;
+          transition: background-position 0.5s ease;
+          pointer-events: none;
+        }
+        .axr-btn:hover::after { background-position: 200% center; }
+        .axr-btn:hover { transform: scale(1.055); box-shadow: 0 20px 60px rgba(99,102,241,0.5); }
+        .axr-btn:active { transform: scale(0.97); }
+
+        /* ── CTA big button ── */
+        .axr-cta-btn {
+          position: relative;
+          overflow: hidden;
+          transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.4s ease;
+        }
+        .axr-cta-btn::before {
+          content: '';
+          position: absolute; inset: 0;
+          background: linear-gradient(135deg, #2563EB 0%, #4F46E5 40%, #7C3AED 100%);
           opacity: 0;
-          transition: opacity 0.3s ease;
+          transition: opacity 0.35s ease;
         }
-        .axon-start-btn:hover::before { opacity: 1; }
-        .axon-start-btn:hover {
-          transform: scale(1.06);
-          box-shadow: 0 20px 60px rgba(99,102,241,0.45);
+        .axr-cta-btn:hover::before { opacity: 1; }
+        .axr-cta-btn:hover { transform: scale(1.04); box-shadow: 0 28px 90px rgba(99,102,241,0.55); }
+        .axr-cta-btn:active { transform: scale(0.97); }
+        .axr-cta-btn > * { position: relative; z-index: 1; }
+        .axr-cta-arrow { transition: transform 0.25s ease; }
+        .axr-cta-btn:hover .axr-cta-arrow { transform: translateX(6px); }
+
+        /* ── Hero entrance ── */
+        .axr-h-badge { animation: axr-fade-up 0.85s cubic-bezier(0.16,1,0.3,1) both; }
+        .axr-h-title { animation: axr-fade-up 0.9s cubic-bezier(0.16,1,0.3,1) 0.1s both; }
+        .axr-h-sub   { animation: axr-fade-up 0.9s cubic-bezier(0.16,1,0.3,1) 0.22s both; }
+        .axr-h-cta   { animation: axr-fade-up 0.9s cubic-bezier(0.16,1,0.3,1) 0.34s both; }
+        .axr-h-stats { animation: axr-fade-up 0.9s cubic-bezier(0.16,1,0.3,1) 0.48s both; }
+
+        /* ── Overlay transition ── */
+        .axr-ov-wrap { animation: axr-overlay-in 0.5s ease both; }
+        .axr-ov-logo { animation: axr-scale-pop 0.65s cubic-bezier(0.34,1.56,0.64,1) 0.2s both; }
+        .axr-ov-name { animation: axr-name-in 0.5s ease 0.65s both; }
+        .axr-d1 { animation: axr-dot-pulse 1.2s 0s infinite; }
+        .axr-d2 { animation: axr-dot-pulse 1.2s 0.2s infinite; }
+        .axr-d3 { animation: axr-dot-pulse 1.2s 0.4s infinite; }
+
+        /* ── Module panel ── */
+        .axr-panel { animation: axr-panel-in 0.42s cubic-bezier(0.16,1,0.3,1) both; }
+
+        /* ── Module tab ── */
+        .axr-tab { transition: all 0.22s ease; }
+        .axr-tab:hover { background: rgba(255,255,255,0.045) !important; }
+
+        /* ── Dot indicator ── */
+        .axr-dot-ind { transition: width 0.3s ease, background 0.3s ease; }
+
+        /* ── Workflow card ── */
+        .axr-wf-card {
+          transition: transform 0.28s cubic-bezier(0.16,1,0.3,1), box-shadow 0.28s ease;
         }
-        .axon-start-btn:active { transform: scale(0.98); }
-        .axon-start-btn > * { position: relative; z-index: 1; }
+        .axr-wf-card:hover {
+          transform: translateX(6px);
+        }
 
-        /* Arrow in start button */
-        .axon-arrow { transition: transform 0.25s ease; }
-        .axon-start-btn:hover .axon-arrow { transform: translateX(4px); }
+        /* ── Tech badge ── */
+        .axr-tech { transition: transform 0.25s ease, background 0.25s ease; }
+        .axr-tech:hover { transform: translateY(-5px); background: rgba(255,255,255,0.055) !important; }
 
-        /* Transition overlay */
-        .axon-overlay { animation: axon-overlay-in 0.5s ease forwards; }
-        .axon-overlay-logo { animation: axon-logo-pop 0.6s cubic-bezier(0.34,1.56,0.64,1) 0.25s both; }
-        .axon-overlay-text { animation: axon-logo-text 0.5s ease 0.65s both; }
-        .axon-dot-1 { animation: axon-dot-pulse 1.2s 0s infinite; }
-        .axon-dot-2 { animation: axon-dot-pulse 1.2s 0.2s infinite; }
-        .axon-dot-3 { animation: axon-dot-pulse 1.2s 0.4s infinite; }
+        /* ── Nav link ── */
+        .axr-nav { transition: color 0.2s ease; }
+        .axr-nav:hover { color: #E2E8F0 !important; }
 
-        /* Scrollbar */
+        /* ── Section divider ── */
+        .axr-divider {
+          height: 1px;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08) 30%, rgba(255,255,255,0.08) 70%, transparent);
+        }
+
+        /* ── Feature row hover ── */
+        .axr-feat {
+          transition: background 0.2s ease, transform 0.2s ease;
+        }
+        .axr-feat:hover {
+          background: rgba(255,255,255,0.055) !important;
+          transform: translateX(2px);
+        }
+
+        /* ── Security item hover ── */
+        .axr-sec-item { transition: transform 0.25s ease, box-shadow 0.25s ease; }
+        .axr-sec-item:hover { transform: translateX(5px); }
+
+        /* ── RBAC row hover ── */
+        .axr-rbac-row { transition: background 0.2s ease; }
+        .axr-rbac-row:hover { background: rgba(255,255,255,0.045) !important; }
+
+        /* ── Scrollbar ── */
         ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: #06091A; }
-        ::-webkit-scrollbar-thumb { background: #1E2940; border-radius: 2px; }
-
-        /* Dot indicator */
-        .axon-dot-ind { transition: width 0.3s ease, background 0.3s ease; }
+        ::-webkit-scrollbar-track { background: #070B18; }
+        ::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.35); border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(99,102,241,0.55); }
       `}</style>
 
-      {/* ── Transition Overlay ─────────────────────────────────────────────── */}
+      {/* ── Transition overlay ── */}
       {transitioning && (
-        <div
-          className="axon-overlay"
-          style={{
-            position: 'fixed', inset: 0, zIndex: 9999,
-            background: 'linear-gradient(135deg, #030712 0%, #0D0F1E 50%, #030712 100%)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}
-        >
-          <div
-            style={{
-              position: 'absolute', inset: 0,
-              backgroundImage: 'linear-gradient(rgba(59,130,246,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.07) 1px, transparent 1px)',
-              backgroundSize: '40px 40px',
-            }}
-          />
+        <div className="axr-ov-wrap" style={{
+          position: 'fixed', inset: 0, zIndex: 9999,
+          background: 'linear-gradient(135deg, #070B18 0%, #0E1130 50%, #070B18 100%)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <div style={{
+            position: 'absolute', inset: 0,
+            backgroundImage: 'linear-gradient(rgba(99,102,241,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.05) 1px, transparent 1px)',
+            backgroundSize: '48px 48px',
+          }} />
+          <div className="axr-noise" />
           <div style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
-            <div className="axon-overlay-logo" style={{ margin: '0 auto 24px' }}>
+            <div className="axr-ov-logo" style={{ margin: '0 auto 24px' }}>
               <div style={{
-                width: 88, height: 88, borderRadius: 24,
-                background: 'linear-gradient(135deg, #3B82F6 0%, #6366F1 100%)',
+                width: 88, height: 88, borderRadius: 26, margin: '0 auto',
+                background: 'linear-gradient(135deg, #3B82F6, #6366F1)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 40, fontWeight: 900, color: 'white',
-                fontFamily: 'Outfit, sans-serif',
-                boxShadow: '0 0 80px rgba(99,102,241,0.5)',
-                margin: '0 auto',
+                fontSize: 42, fontWeight: 900, color: 'white',
+                fontFamily: 'Sora, sans-serif',
+                boxShadow: '0 0 80px rgba(99,102,241,0.7), 0 0 160px rgba(99,102,241,0.3)',
               }}>A</div>
             </div>
-            <div className="axon-overlay-text" style={{ fontFamily: 'Outfit, sans-serif' }}>
-              <div style={{ fontSize: 32, fontWeight: 800, color: 'white', letterSpacing: '-0.02em', marginBottom: 12 }}>AxonRH</div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                <div className="axon-dot-1" style={{ width: 8, height: 8, borderRadius: '50%', background: '#3B82F6' }} />
-                <div className="axon-dot-2" style={{ width: 8, height: 8, borderRadius: '50%', background: '#6366F1' }} />
-                <div className="axon-dot-3" style={{ width: 8, height: 8, borderRadius: '50%', background: '#8B5CF6' }} />
+            <div className="axr-ov-name" style={{ fontFamily: 'Sora, sans-serif' }}>
+              <div style={{ fontSize: 34, fontWeight: 800, color: 'white', letterSpacing: '-0.02em', marginBottom: 18 }}>AxonRH</div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
+                <div className="axr-d1" style={{ width: 9, height: 9, borderRadius: '50%', background: '#3B82F6' }} />
+                <div className="axr-d2" style={{ width: 9, height: 9, borderRadius: '50%', background: '#6366F1' }} />
+                <div className="axr-d3" style={{ width: 9, height: 9, borderRadius: '50%', background: '#8B5CF6' }} />
               </div>
             </div>
           </div>
         </div>
       )}
 
-      <div style={{ background: '#06091A', color: '#E2E8F0', minHeight: '100vh', overflowX: 'hidden' }}>
+      <div style={{ background: '#070B18', color: '#CBD5E1', minHeight: '100vh', overflowX: 'hidden' }}>
 
-        {/* ── Header ──────────────────────────────────────────────────────── */}
+        {/* ── Header ── */}
         <header style={{
           position: 'sticky', top: 0, zIndex: 50,
-          background: 'rgba(6,9,26,0.75)', backdropFilter: 'blur(20px)',
+          background: 'rgba(7,11,24,0.82)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
           borderBottom: '1px solid rgba(255,255,255,0.07)',
-          padding: '0 24px',
+          padding: '0 32px',
         }}>
-          <div style={{ maxWidth: 1280, margin: '0 auto', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ maxWidth: 1300, margin: '0 auto', height: 66, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{
-                width: 36, height: 36, borderRadius: 10,
-                background: 'linear-gradient(135deg, #3B82F6 0%, #6366F1 100%)',
+                width: 38, height: 38, borderRadius: 11,
+                background: 'linear-gradient(135deg, #3B82F6, #6366F1)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontWeight: 900, fontSize: 16, color: 'white',
-                fontFamily: 'Outfit, sans-serif',
+                fontWeight: 900, fontSize: 17, color: 'white',
+                fontFamily: 'Sora, sans-serif',
+                boxShadow: '0 0 22px rgba(99,102,241,0.45)',
               }}>A</div>
-              <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 20, color: 'white', letterSpacing: '-0.02em' }}>AxonRH</span>
+              <span style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, fontSize: 20, color: 'white', letterSpacing: '-0.02em' }}>AxonRH</span>
               <span style={{
-                marginLeft: 4, fontSize: 11, fontWeight: 600, padding: '2px 10px', borderRadius: 20,
-                background: 'rgba(59,130,246,0.12)', color: '#60A5FA',
-                border: '1px solid rgba(59,130,246,0.3)', letterSpacing: '0.05em', textTransform: 'uppercase',
+                marginLeft: 4, fontSize: 11, fontWeight: 700, padding: '3px 11px', borderRadius: 999,
+                background: 'rgba(59,130,246,0.1)', color: '#60A5FA',
+                border: '1px solid rgba(59,130,246,0.25)', letterSpacing: '0.07em', textTransform: 'uppercase',
               }}>Apresentação</span>
             </div>
-            <nav style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
+
+            <nav style={{ display: 'flex', alignItems: 'center', gap: 38 }}>
               {[['#modulos','Módulos'],['#fluxos','Fluxo'],['#diferenciais','Diferenciais'],['#seguranca','Segurança']].map(([href, label]) => (
-                <a key={href} href={href} style={{ fontSize: 13, fontWeight: 500, color: '#64748B', textDecoration: 'none', transition: 'color 0.2s' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = '#E2E8F0')}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = '#64748B')}
-                >{label}</a>
+                <a key={href} href={href} className="axr-nav" style={{ fontSize: 13, fontWeight: 500, color: '#4B5563', textDecoration: 'none' }}>{label}</a>
               ))}
             </nav>
+
             <button
               onClick={handleStart}
+              className="axr-btn"
               style={{
                 display: 'flex', alignItems: 'center', gap: 8,
-                padding: '8px 18px', borderRadius: 99, border: 'none', cursor: 'pointer',
-                background: 'linear-gradient(135deg, #3B82F6 0%, #6366F1 100%)',
+                padding: '9px 22px', borderRadius: 999, border: 'none', cursor: 'pointer',
+                background: 'linear-gradient(135deg, #3B82F6, #6366F1)',
                 color: 'white', fontSize: 13, fontWeight: 700,
-                fontFamily: 'Outfit, sans-serif',
-                boxShadow: '0 0 20px rgba(99,102,241,0.3)',
-                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                fontFamily: 'Sora, sans-serif',
+                boxShadow: '0 0 24px rgba(99,102,241,0.4)',
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.boxShadow = '0 0 32px rgba(99,102,241,0.5)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 0 20px rgba(99,102,241,0.3)'; }}
             >
               <Play style={{ width: 12, height: 12, fill: 'white' }} />
               Iniciar
@@ -578,141 +690,205 @@ export default function ApresentacaoPage() {
           </div>
         </header>
 
-        {/* ── Hero ────────────────────────────────────────────────────────── */}
-        <section style={{ position: 'relative', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px', textAlign: 'center', overflow: 'hidden' }}>
+        {/* ── HERO ── */}
+        <section style={{
+          position: 'relative', minHeight: '100vh',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          padding: '0 24px', textAlign: 'center', overflow: 'hidden',
+        }}>
           {/* Grid */}
-          <div className="axon-grid-bg" style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }} />
+          <div style={{
+            position: 'absolute', inset: 0, pointerEvents: 'none',
+            backgroundImage: 'linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px)',
+            backgroundSize: '64px 64px',
+          }} />
+          <div className="axr-noise" />
 
           {/* Orbs */}
-          <div className="axon-orb-1" style={{ position: 'absolute', top: '-20%', left: '-8%', width: 700, height: 700, borderRadius: '50%', background: 'radial-gradient(circle, rgba(59,130,246,0.13) 0%, transparent 70%)', filter: 'blur(60px)', pointerEvents: 'none' }} />
-          <div className="axon-orb-2" style={{ position: 'absolute', bottom: '-20%', right: '-10%', width: 900, height: 900, borderRadius: '50%', background: 'radial-gradient(circle, rgba(99,102,241,0.1) 0%, transparent 70%)', filter: 'blur(80px)', pointerEvents: 'none' }} />
-          <div className="axon-orb-3" style={{ position: 'absolute', top: '35%', right: '15%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(139,92,246,0.07) 0%, transparent 70%)', filter: 'blur(60px)', pointerEvents: 'none' }} />
+          <div className="axr-orb-a" style={{
+            position: 'absolute', top: '-18%', left: '-8%', width: 850, height: 850,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(59,130,246,0.16) 0%, transparent 70%)',
+            filter: 'blur(90px)', pointerEvents: 'none',
+            animation: 'axr-glow-pulse 9s ease-in-out infinite',
+          }} />
+          <div className="axr-orb-b" style={{
+            position: 'absolute', bottom: '-22%', right: '-6%', width: 1000, height: 1000,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(99,102,241,0.13) 0%, transparent 70%)',
+            filter: 'blur(110px)', pointerEvents: 'none',
+          }} />
+          <div className="axr-orb-c" style={{
+            position: 'absolute', top: '38%', right: '14%', width: 550, height: 550,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(192,132,252,0.09) 0%, transparent 70%)',
+            filter: 'blur(70px)', pointerEvents: 'none',
+          }} />
 
           {/* Content */}
-          <div style={{ position: 'relative', zIndex: 1, maxWidth: 960 }}>
-            <div className="axon-hero-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 18px', borderRadius: 99, marginBottom: 28, fontSize: 13, fontWeight: 600, background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.22)', color: '#93C5FD' }}>
-              <Sparkles style={{ width: 14, height: 14 }} />
+          <div style={{ position: 'relative', zIndex: 1, maxWidth: 1020 }}>
+            <div className="axr-h-badge" style={{
+              display: 'inline-flex', alignItems: 'center', gap: 9,
+              padding: '10px 22px', borderRadius: 999, marginBottom: 34,
+              fontSize: 13, fontWeight: 600,
+              background: 'rgba(59,130,246,0.1)',
+              border: '1px solid rgba(59,130,246,0.25)',
+              color: '#93C5FD',
+            }}>
+              <Sparkles style={{ width: 15, height: 15 }} />
               Plataforma SaaS de RH e DP com Inteligência Artificial
             </div>
 
-            <h1
-              className="axon-hero-h1 axon-display"
-              style={{ fontSize: 'clamp(52px, 8vw, 96px)', fontWeight: 900, lineHeight: 0.92, letterSpacing: '-0.04em', color: 'white', marginBottom: 28 }}
-            >
+            <h1 className="axr-h-title axr-display" style={{
+              fontSize: 'clamp(58px, 9.5vw, 108px)',
+              fontWeight: 900, lineHeight: 0.88,
+              letterSpacing: '-0.045em',
+              color: 'white', marginBottom: 34,
+            }}>
               O Futuro do<br />
-              <span
-                className="axon-display"
-                style={{
-                  background: 'linear-gradient(90deg, #3B82F6, #818CF8, #C084FC, #3B82F6)',
-                  backgroundSize: '250% 250%',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                  animation: 'axon-gradient 5s ease infinite',
-                }}
-              >
-                RH já chegou
-              </span>
+              <span className="axr-grad axr-display">RH já chegou</span>
             </h1>
 
-            <p className="axon-hero-sub" style={{ fontSize: 'clamp(16px, 2.2vw, 22px)', color: '#94A3B8', maxWidth: 720, margin: '0 auto 40px', lineHeight: 1.65 }}>
+            <p className="axr-h-sub" style={{
+              fontSize: 'clamp(17px, 2.4vw, 24px)', color: '#94A3B8',
+              maxWidth: 760, margin: '0 auto 52px', lineHeight: 1.72,
+            }}>
               Do recrutamento ao offboarding — controle de ponto, folha de pagamento, benefícios, desempenho e IA em um único ecossistema seguro, inteligente e totalmente digital.
             </p>
 
-            <div className="axon-hero-cta" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginBottom: 64, flexWrap: 'wrap' }}>
-              <a href="#modulos" style={{
-                display: 'inline-flex', alignItems: 'center', gap: 8, padding: '16px 32px', borderRadius: 99,
-                background: 'linear-gradient(135deg, #3B82F6 0%, #6366F1 100%)',
-                color: 'white', fontWeight: 700, fontSize: 16, textDecoration: 'none',
-                fontFamily: 'Outfit, sans-serif',
-                boxShadow: '0 0 48px rgba(99,102,241,0.35)',
-                transition: 'transform 0.2s ease',
-              }}
-                onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.04)')}
-                onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
-              >
+            <div className="axr-h-cta" style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              gap: 16, marginBottom: 76, flexWrap: 'wrap',
+            }}>
+              <a href="#modulos" className="axr-btn" style={{
+                display: 'inline-flex', alignItems: 'center', gap: 10,
+                padding: '18px 38px', borderRadius: 999,
+                background: 'linear-gradient(135deg, #3B82F6, #6366F1)',
+                color: 'white', fontWeight: 700, fontSize: 16,
+                textDecoration: 'none', fontFamily: 'Sora, sans-serif',
+                boxShadow: '0 0 56px rgba(99,102,241,0.4)',
+              }}>
                 Explorar Módulos <ArrowRight style={{ width: 18, height: 18 }} />
               </a>
               <a href="#diferenciais" style={{
-                display: 'inline-flex', alignItems: 'center', gap: 8, padding: '16px 32px', borderRadius: 99,
-                background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
-                color: '#CBD5E1', fontWeight: 600, fontSize: 16, textDecoration: 'none',
-                transition: 'border-color 0.2s ease',
+                display: 'inline-flex', alignItems: 'center', gap: 10,
+                padding: '18px 38px', borderRadius: 999,
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: '#CBD5E1', fontWeight: 600, fontSize: 16,
+                textDecoration: 'none',
+                transition: 'border-color 0.2s ease, background 0.2s ease',
               }}
-                onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.25)')}
-                onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)')}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.22)'; e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
               >
                 Ver Diferenciais
               </a>
             </div>
 
             {/* Stats */}
-            <div className="axon-hero-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+            <div ref={statsRef} className="axr-h-stats" style={{
+              display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16,
+            }}>
               {[
-                { val: '9+',   label: 'Módulos Integrados' },
-                { val: '80%',  label: 'Menos Chamados ao RH' },
-                { val: '100%', label: 'Digital & Cloud' },
-                { val: '24/7', label: 'Assistente de IA' },
+                { val: '9+',   isNum: true,  label: 'Módulos Integrados',   color: '#60A5FA', glow: 'rgba(59,130,246,0.3)'  },
+                { val: '80%',  isNum: true,  label: 'Menos Chamados ao RH', color: '#818CF8', glow: 'rgba(99,102,241,0.3)'  },
+                { val: '100%', isNum: true,  label: 'Digital & Cloud',      color: '#34D399', glow: 'rgba(16,185,129,0.3)'  },
+                { val: '24/7', isNum: false, label: 'Assistente de IA',     color: '#F472B6', glow: 'rgba(244,114,182,0.3)' },
               ].map((s, i) => (
-                <div key={i} className="axon-card" style={{ padding: '24px 16px', borderRadius: 20, textAlign: 'center', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                  <div className="axon-display" style={{ fontSize: 32, fontWeight: 900, color: 'white', letterSpacing: '-0.02em' }}>{s.val}</div>
-                  <div style={{ fontSize: 12, color: '#64748B', fontWeight: 500, marginTop: 4 }}>{s.label}</div>
+                <div key={i} className="axr-glass axr-lift" style={{
+                  padding: '30px 20px', borderRadius: 26, textAlign: 'center',
+                }}>
+                  <div className="axr-display" style={{
+                    fontSize: 42, fontWeight: 900, letterSpacing: '-0.03em',
+                    color: s.color, marginBottom: 10,
+                    textShadow: `0 0 32px ${s.glow}`,
+                  }}>
+                    {s.isNum ? <StatCounter value={s.val} started={statsStarted} /> : s.val}
+                  </div>
+                  <div style={{ fontSize: 12, color: '#4B5563', fontWeight: 600, lineHeight: 1.45 }}>{s.label}</div>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Scroll cue */}
-          <div style={{ position: 'absolute', bottom: 32, left: '50%', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, color: '#334155' }}>
-            <span style={{ fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase' }}>scroll</span>
-            <div style={{ width: 1, height: 36, background: 'linear-gradient(to bottom, #3B82F6, transparent)', borderRadius: 1 }} />
+          <div style={{
+            position: 'absolute', bottom: 36, left: '50%', transform: 'translateX(-50%)',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, color: '#1E293B',
+          }}>
+            <span style={{ fontSize: 10, letterSpacing: '0.28em', textTransform: 'uppercase', fontWeight: 700 }}>scroll</span>
+            <div style={{ width: 1, height: 44, background: 'linear-gradient(to bottom, #3B82F6, transparent)' }} />
           </div>
         </section>
 
-        {/* ── Modules ─────────────────────────────────────────────────────── */}
-        <section id="modulos" style={{ padding: '120px 24px', position: 'relative' }}>
-          <div style={{ maxWidth: 1280, margin: '0 auto' }}>
-            <div className="axon-reveal" style={{ textAlign: 'center', marginBottom: 64 }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 16px', borderRadius: 99, marginBottom: 16, fontSize: 12, fontWeight: 600, background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.25)', color: '#818CF8', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+        <div className="axr-divider" />
+
+        {/* ── MODULES ── */}
+        <section id="modulos" style={{ padding: '140px 24px', position: 'relative', overflow: 'hidden' }}>
+          <div style={{
+            position: 'absolute', top: '-15%', left: '-8%', width: 700, height: 700,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%)',
+            filter: 'blur(80px)', pointerEvents: 'none',
+          }} />
+
+          <div style={{ maxWidth: 1300, margin: '0 auto' }}>
+            <div className="axr-reveal" style={{ textAlign: 'center', marginBottom: 76 }}>
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                padding: '7px 18px', borderRadius: 999, marginBottom: 20,
+                fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
+                background: 'rgba(99,102,241,0.1)', color: '#818CF8',
+                border: '1px solid rgba(99,102,241,0.25)',
+              }}>
                 <Layers style={{ width: 13, height: 13 }} /> Módulos do Sistema
               </div>
-              <h2 className="axon-display" style={{ fontSize: 'clamp(36px, 5vw, 56px)', fontWeight: 900, color: 'white', letterSpacing: '-0.03em', marginBottom: 16, lineHeight: 1.05 }}>
+              <h2 className="axr-display" style={{
+                fontSize: 'clamp(40px, 5.5vw, 62px)', fontWeight: 900,
+                color: 'white', letterSpacing: '-0.035em', marginBottom: 18, lineHeight: 1.04,
+              }}>
                 Tudo que seu RH precisa.<br />Em um único lugar.
               </h2>
-              <p style={{ fontSize: 18, color: '#64748B', maxWidth: 560, margin: '0 auto' }}>
+              <p style={{ fontSize: 19, color: '#4B5563', maxWidth: 580, margin: '0 auto' }}>
                 9 módulos interdependentes, projetados para trabalhar juntos e eliminar as integrações problemáticas.
               </p>
             </div>
 
-            <div className="axon-reveal" style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+            <div className="axr-reveal" style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
               {/* Tabs */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: 268, flexShrink: 0 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 5, width: 278, flexShrink: 0 }}>
                 {MODULES.map((m, i) => {
                   const Icon = m.icon;
                   const active = activeModule === i;
                   return (
                     <button
                       key={m.id}
-                      className="axon-tab"
+                      className="axr-tab"
                       onClick={() => setActiveModule(i)}
                       style={{
-                        display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px',
-                        borderRadius: 14, border: `1px solid ${active ? m.accentBorder : 'rgba(255,255,255,0.07)'}`,
+                        display: 'flex', alignItems: 'center', gap: 12,
+                        padding: '12px 16px', borderRadius: 14,
+                        border: `1px solid ${active ? m.accentBorder : 'rgba(255,255,255,0.06)'}`,
                         background: active ? m.accentBg : 'rgba(255,255,255,0.02)',
-                        color: active ? '#E2E8F0' : '#64748B',
+                        color: active ? '#F1F5F9' : '#374151',
                         cursor: 'pointer', textAlign: 'left', width: '100%',
-                        fontFamily: 'DM Sans, sans-serif',
+                        fontFamily: 'Manrope, sans-serif',
+                        transform: active ? 'translateX(5px)' : 'translateX(0)',
+                        transition: 'all 0.25s cubic-bezier(0.16,1,0.3,1)',
+                        boxShadow: active ? `0 0 20px ${m.glowColor}` : 'none',
                       }}
                     >
                       <div style={{
-                        width: 34, height: 34, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                        background: active ? m.accentBg : 'rgba(255,255,255,0.05)',
-                        border: `1px solid ${active ? m.accentBorder : 'rgba(255,255,255,0.08)'}`,
+                        width: 34, height: 34, borderRadius: 10, flexShrink: 0,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        background: active ? m.accentBg : 'rgba(255,255,255,0.04)',
+                        border: `1px solid ${active ? m.accentBorder : 'rgba(255,255,255,0.07)'}`,
                       }}>
-                        <Icon style={{ width: 15, height: 15, color: active ? m.accentColor : '#475569' }} />
+                        <Icon style={{ width: 15, height: 15, color: active ? m.accentColor : '#374151' }} />
                       </div>
-                      <span style={{ fontSize: 13, fontWeight: active ? 600 : 500, lineHeight: 1.3 }}>{m.title}</span>
-                      {active && <ChevronRight style={{ width: 14, height: 14, marginLeft: 'auto', flexShrink: 0, color: m.accentColor }} />}
+                      <span style={{ fontSize: 13, fontWeight: active ? 700 : 500, lineHeight: 1.3, flex: 1 }}>{m.title}</span>
+                      {active && <ChevronRight style={{ width: 14, height: 14, flexShrink: 0, color: m.accentColor }} />}
                     </button>
                   );
                 })}
@@ -721,64 +897,92 @@ export default function ApresentacaoPage() {
               {/* Detail panel */}
               <div
                 key={activeModule}
-                className="axon-mod-detail"
+                className="axr-panel axr-glass"
                 style={{
-                  flex: 1, minWidth: 300, borderRadius: 28, padding: '44px 48px', position: 'relative', overflow: 'hidden',
-                  background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.08)',
+                  flex: 1, minWidth: 320, borderRadius: 32, padding: '50px 56px',
+                  position: 'relative', overflow: 'hidden',
+                  border: `1px solid ${mod.accentBorder}`,
+                  boxShadow: `0 0 80px ${mod.glowColor}`,
                 }}
               >
-                {/* Glow */}
-                <div style={{ position: 'absolute', top: '-20%', right: '-10%', width: 400, height: 400, borderRadius: '50%', background: `radial-gradient(circle, ${mod.glowColor} 0%, transparent 70%)`, filter: 'blur(60px)', pointerEvents: 'none' }} />
+                <div style={{
+                  position: 'absolute', top: '-20%', right: '-8%', width: 520, height: 520,
+                  borderRadius: '50%',
+                  background: `radial-gradient(circle, ${mod.glowColor} 0%, transparent 70%)`,
+                  filter: 'blur(80px)', pointerEvents: 'none',
+                }} />
 
                 <div style={{ position: 'relative', zIndex: 1 }}>
-                  {/* Header */}
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20, marginBottom: 24 }}>
-                    <div style={{ padding: 16, borderRadius: 20, background: mod.accentBg, border: `1px solid ${mod.accentBorder}`, flexShrink: 0 }}>
-                      <ModIcon style={{ width: 32, height: 32, color: mod.accentColor }} />
+                  {/* Panel header */}
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 22, marginBottom: 28 }}>
+                    <div style={{
+                      padding: 18, borderRadius: 22, flexShrink: 0,
+                      background: mod.accentBg,
+                      border: `1.5px solid ${mod.accentBorder}`,
+                      boxShadow: `0 0 40px ${mod.glowColor}`,
+                    }}>
+                      <ModIcon style={{ width: 36, height: 36, color: mod.accentColor }} />
                     </div>
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: mod.accentColor, marginBottom: 6 }}>
+                      <div style={{
+                        fontSize: 11, fontWeight: 700, letterSpacing: '0.12em',
+                        textTransform: 'uppercase', color: mod.accentColor, marginBottom: 8,
+                      }}>
                         {mod.subtitle}
                       </div>
-                      <h3 className="axon-display" style={{ fontSize: 30, fontWeight: 800, color: 'white', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
+                      <h3 className="axr-display" style={{
+                        fontSize: 34, fontWeight: 800, color: 'white',
+                        letterSpacing: '-0.025em', lineHeight: 1.08,
+                      }}>
                         {mod.title}
                       </h3>
                     </div>
                   </div>
 
-                  <p style={{ fontSize: 17, color: '#94A3B8', lineHeight: 1.7, marginBottom: 36, maxWidth: 620 }}>
+                  <p style={{ fontSize: 17, color: '#94A3B8', lineHeight: 1.78, marginBottom: 38, maxWidth: 640 }}>
                     {mod.desc}
                   </p>
 
-                  {/* Features grid */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
+                  {/* Features */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: 11 }}>
                     {mod.features.map((feat, fi) => (
-                      <div key={fi} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '14px 16px', borderRadius: 14, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                        <div style={{ width: 20, height: 20, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1, background: mod.accentBg, border: `1px solid ${mod.accentBorder}` }}>
+                      <div key={fi} className="axr-feat" style={{
+                        display: 'flex', alignItems: 'flex-start', gap: 12,
+                        padding: '14px 16px', borderRadius: 14,
+                        background: 'rgba(255,255,255,0.028)',
+                        border: '1px solid rgba(255,255,255,0.065)',
+                      }}>
+                        <div style={{
+                          width: 22, height: 22, borderRadius: '50%', flexShrink: 0, marginTop: 1,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          background: mod.accentBg, border: `1px solid ${mod.accentBorder}`,
+                        }}>
                           <CheckCircle2 style={{ width: 11, height: 11, color: mod.accentColor }} />
                         </div>
-                        <span style={{ fontSize: 13, color: '#CBD5E1', lineHeight: 1.55 }}>{feat}</span>
+                        <span style={{ fontSize: 13, color: '#CBD5E1', lineHeight: 1.62 }}>{feat}</span>
                       </div>
                     ))}
                   </div>
 
-                  {/* Pagination dots */}
-                  <div style={{ marginTop: 36, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  {/* Pagination */}
+                  <div style={{ marginTop: 42, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', gap: 5 }}>
                       {MODULES.map((_, di) => (
                         <button
                           key={di}
-                          className="axon-dot-ind"
+                          className="axr-dot-ind"
                           onClick={() => setActiveModule(di)}
                           style={{
                             height: 6, borderRadius: 3, border: 'none', cursor: 'pointer',
-                            width: di === activeModule ? 28 : 6,
-                            background: di === activeModule ? mod.accentColor : 'rgba(255,255,255,0.15)',
+                            width: di === activeModule ? 30 : 6,
+                            background: di === activeModule ? mod.accentColor : 'rgba(255,255,255,0.12)',
                           }}
                         />
                       ))}
                     </div>
-                    <span style={{ fontSize: 12, color: '#334155', fontWeight: 500 }}>{activeModule + 1} / {MODULES.length}</span>
+                    <span style={{ fontSize: 12, color: '#1E293B', fontWeight: 600, fontFamily: 'Sora, sans-serif' }}>
+                      {String(activeModule + 1).padStart(2, '0')} / {String(MODULES.length).padStart(2, '0')}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -786,44 +990,80 @@ export default function ApresentacaoPage() {
           </div>
         </section>
 
-        {/* ── Workflow ─────────────────────────────────────────────────────── */}
-        <section id="fluxos" style={{ padding: '120px 24px', background: 'rgba(255,255,255,0.008)', borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: '10%', right: '-5%', width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(99,102,241,0.06) 0%, transparent 70%)', filter: 'blur(80px)', pointerEvents: 'none' }} />
-          <div style={{ maxWidth: 860, margin: '0 auto' }}>
-            <div className="axon-reveal" style={{ textAlign: 'center', marginBottom: 72 }}>
-              <h2 className="axon-display" style={{ fontSize: 'clamp(36px, 5vw, 56px)', fontWeight: 900, color: 'white', letterSpacing: '-0.03em', marginBottom: 16, lineHeight: 1.05 }}>
+        <div className="axr-divider" />
+
+        {/* ── WORKFLOW ── */}
+        <section id="fluxos" style={{
+          padding: '140px 24px', position: 'relative', overflow: 'hidden',
+          background: 'linear-gradient(180deg, transparent 0%, rgba(59,130,246,0.025) 50%, transparent 100%)',
+        }}>
+          <div style={{
+            position: 'absolute', top: '15%', right: '-4%', width: 650, height: 650,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(99,102,241,0.07) 0%, transparent 70%)',
+            filter: 'blur(80px)', pointerEvents: 'none',
+          }} />
+          <div className="axr-noise" />
+
+          <div style={{ maxWidth: 920, margin: '0 auto' }}>
+            <div className="axr-reveal" style={{ textAlign: 'center', marginBottom: 84 }}>
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                padding: '7px 18px', borderRadius: 999, marginBottom: 20,
+                fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
+                background: 'rgba(59,130,246,0.1)', color: '#60A5FA',
+                border: '1px solid rgba(59,130,246,0.25)',
+              }}>
+                <Activity style={{ width: 13, height: 13 }} /> Fluxo Operacional
+              </div>
+              <h2 className="axr-display" style={{
+                fontSize: 'clamp(40px, 5.5vw, 62px)', fontWeight: 900,
+                color: 'white', letterSpacing: '-0.035em', marginBottom: 18, lineHeight: 1.04,
+              }}>
                 Fluxo Operacional<br />de Ponta a Ponta
               </h2>
-              <p style={{ fontSize: 18, color: '#64748B' }}>Como as operações da empresa fluem naturalmente dentro do sistema.</p>
+              <p style={{ fontSize: 19, color: '#4B5563' }}>Como as operações da empresa fluem naturalmente dentro do sistema.</p>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               {WORKFLOW_STEPS.map((step, i) => {
                 const StepIcon = step.icon;
                 return (
-                  <div key={i} className="axon-reveal" style={{ display: 'flex', gap: 24, alignItems: 'flex-start', transitionDelay: `${i * 90}ms` }}>
+                  <div key={i} className="axr-reveal" style={{ display: 'flex', gap: 28, alignItems: 'flex-start', transitionDelay: `${i * 95}ms` }}>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
                       <div style={{
-                        width: 56, height: 56, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 18, color: step.color,
-                        background: `${step.color}18`, border: `1px solid ${step.color}35`, position: 'relative',
+                        width: 60, height: 60, borderRadius: 18, position: 'relative',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontFamily: 'Sora, sans-serif', fontWeight: 900, fontSize: 17, color: step.color,
+                        background: `${step.color}14`,
+                        border: `1.5px solid ${step.color}40`,
+                        boxShadow: `0 0 24px ${step.color}20`,
                       }}>
                         {step.n}
-                        <div style={{ position: 'absolute', inset: 0, borderRadius: 16, border: `1px solid ${step.color}25`, animation: 'axon-ping 2s ease infinite' }} />
+                        <div style={{
+                          position: 'absolute', inset: -2, borderRadius: 20,
+                          border: `1px solid ${step.color}28`,
+                          animation: 'axr-ping 2.8s ease infinite',
+                        }} />
                       </div>
                       {i < WORKFLOW_STEPS.length - 1 && (
-                        <div style={{ width: 1, height: 32, marginTop: 8, background: `linear-gradient(to bottom, ${step.color}40, transparent)` }} />
+                        <div style={{
+                          width: 2, height: 36, marginTop: 8,
+                          background: `linear-gradient(to bottom, ${step.color}50, transparent)`,
+                          borderRadius: 1,
+                        }} />
                       )}
                     </div>
-                    <div style={{ flex: 1, padding: '20px 24px', borderRadius: 20, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', transition: 'transform 0.25s ease' }}
-                      onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateX(4px)')}
-                      onMouseLeave={(e) => (e.currentTarget.style.transform = 'translateX(0)')}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                    <div className="axr-glass axr-wf-card" style={{
+                      flex: 1, padding: '24px 28px', borderRadius: 22,
+                      border: '1px solid rgba(255,255,255,0.075)',
+                      borderLeft: `2px solid ${step.color}45`,
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 11, marginBottom: 12 }}>
                         <StepIcon style={{ width: 16, height: 16, color: step.color, flexShrink: 0 }} />
-                        <h3 className="axon-display" style={{ fontSize: 18, fontWeight: 700, color: 'white' }}>{step.title}</h3>
+                        <h3 className="axr-display" style={{ fontSize: 18, fontWeight: 700, color: 'white', letterSpacing: '-0.01em' }}>{step.title}</h3>
                       </div>
-                      <p style={{ fontSize: 14, color: '#94A3B8', lineHeight: 1.7 }}>{step.desc}</p>
+                      <p style={{ fontSize: 14, color: '#64748B', lineHeight: 1.78 }}>{step.desc}</p>
                     </div>
                   </div>
                 );
@@ -832,31 +1072,68 @@ export default function ApresentacaoPage() {
           </div>
         </section>
 
-        {/* ── Differentials ────────────────────────────────────────────────── */}
-        <section id="diferenciais" style={{ padding: '120px 24px' }}>
-          <div style={{ maxWidth: 1280, margin: '0 auto' }}>
-            <div className="axon-reveal" style={{ textAlign: 'center', marginBottom: 64 }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 16px', borderRadius: 99, marginBottom: 16, fontSize: 12, fontWeight: 600, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)', color: '#34D399', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+        <div className="axr-divider" />
+
+        {/* ── DIFFERENTIALS ── */}
+        <section id="diferenciais" style={{ padding: '140px 24px', position: 'relative', overflow: 'hidden' }}>
+          <div style={{
+            position: 'absolute', bottom: '-10%', right: '-6%', width: 750, height: 750,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(16,185,129,0.07) 0%, transparent 70%)',
+            filter: 'blur(90px)', pointerEvents: 'none',
+          }} />
+
+          <div style={{ maxWidth: 1300, margin: '0 auto' }}>
+            <div className="axr-reveal" style={{ textAlign: 'center', marginBottom: 76 }}>
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                padding: '7px 18px', borderRadius: 999, marginBottom: 20,
+                fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
+                background: 'rgba(16,185,129,0.1)', color: '#34D399',
+                border: '1px solid rgba(16,185,129,0.25)',
+              }}>
                 <Star style={{ width: 13, height: 13 }} /> Diferenciais Competitivos
               </div>
-              <h2 className="axon-display" style={{ fontSize: 'clamp(36px, 5vw, 56px)', fontWeight: 900, color: 'white', letterSpacing: '-0.03em', marginBottom: 16, lineHeight: 1.05 }}>
-                Por que o AxonRH é diferente?
+              <h2 className="axr-display" style={{
+                fontSize: 'clamp(40px, 5.5vw, 62px)', fontWeight: 900,
+                color: 'white', letterSpacing: '-0.035em', marginBottom: 18, lineHeight: 1.04,
+              }}>
+                Por que o AxonRH<br />é diferente?
               </h2>
-              <p style={{ fontSize: 18, color: '#64748B', maxWidth: 520, margin: '0 auto' }}>
+              <p style={{ fontSize: 19, color: '#4B5563', maxWidth: 540, margin: '0 auto' }}>
                 Não é mais um sistema de RH. É um ecossistema inteligente criado para eliminar fricções.
               </p>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 20 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(348px, 1fr))', gap: 20 }}>
               {DIFFERENTIALS.map((d, i) => {
                 const DIcon = d.icon;
                 return (
-                  <div key={i} className="axon-reveal axon-card" style={{ padding: '36px', borderRadius: 28, background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)', transitionDelay: `${i * 70}ms` }}>
-                    <div style={{ width: 56, height: 56, borderRadius: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24, background: d.accentBg, border: `1px solid ${d.accentColor}25` }}>
-                      <DIcon style={{ width: 26, height: 26, color: d.accentColor }} />
+                  <div key={i} className="axr-reveal axr-glass axr-lift" style={{
+                    padding: '42px', borderRadius: 30,
+                    background: 'rgba(255,255,255,0.028)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    transitionDelay: `${i * 65}ms`,
+                    position: 'relative', overflow: 'hidden',
+                  }}>
+                    <div style={{
+                      position: 'absolute', top: -40, right: -40, width: 220, height: 220,
+                      borderRadius: '50%',
+                      background: `radial-gradient(circle, ${d.accentColor}09 0%, transparent 70%)`,
+                      pointerEvents: 'none',
+                    }} />
+                    <div style={{
+                      width: 62, height: 62, borderRadius: 20, flexShrink: 0,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      marginBottom: 28,
+                      background: d.accentBg,
+                      border: `1px solid ${d.accentColor}30`,
+                      boxShadow: `0 0 28px ${d.accentColor}15`,
+                    }}>
+                      <DIcon style={{ width: 28, height: 28, color: d.accentColor }} />
                     </div>
-                    <h3 className="axon-display" style={{ fontSize: 20, fontWeight: 700, color: 'white', marginBottom: 12, letterSpacing: '-0.01em' }}>{d.title}</h3>
-                    <p style={{ fontSize: 14, color: '#64748B', lineHeight: 1.7 }}>{d.desc}</p>
+                    <h3 className="axr-display" style={{ fontSize: 20, fontWeight: 700, color: 'white', marginBottom: 14, letterSpacing: '-0.01em' }}>{d.title}</h3>
+                    <p style={{ fontSize: 14, color: '#64748B', lineHeight: 1.78 }}>{d.desc}</p>
                   </div>
                 );
               })}
@@ -864,36 +1141,68 @@ export default function ApresentacaoPage() {
           </div>
         </section>
 
-        {/* ── Security ─────────────────────────────────────────────────────── */}
-        <section id="seguranca" style={{ padding: '120px 24px', background: 'rgba(255,255,255,0.008)', borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-          <div style={{ maxWidth: 1280, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: 80, alignItems: 'center' }}>
+        <div className="axr-divider" />
+
+        {/* ── SECURITY ── */}
+        <section id="seguranca" style={{
+          padding: '140px 24px', position: 'relative', overflow: 'hidden',
+          background: 'linear-gradient(180deg, transparent 0%, rgba(16,185,129,0.03) 50%, transparent 100%)',
+        }}>
+          <div style={{
+            position: 'absolute', top: '10%', left: '-6%', width: 650, height: 650,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(16,185,129,0.09) 0%, transparent 70%)',
+            filter: 'blur(80px)', pointerEvents: 'none',
+          }} />
+          <div className="axr-noise" />
+
+          <div style={{ maxWidth: 1300, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 80, alignItems: 'center' }}>
             {/* Left */}
-            <div className="axon-reveal">
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 16px', borderRadius: 99, marginBottom: 24, fontSize: 12, fontWeight: 600, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)', color: '#34D399', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+            <div className="axr-reveal">
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                padding: '7px 18px', borderRadius: 999, marginBottom: 28,
+                fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
+                background: 'rgba(16,185,129,0.1)', color: '#34D399',
+                border: '1px solid rgba(16,185,129,0.25)',
+              }}>
                 <Shield style={{ width: 13, height: 13 }} /> Segurança & Compliance
               </div>
-              <h2 className="axon-display" style={{ fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 900, color: 'white', letterSpacing: '-0.03em', marginBottom: 20, lineHeight: 1.05 }}>
+              <h2 className="axr-display" style={{
+                fontSize: 'clamp(36px, 4.5vw, 54px)', fontWeight: 900,
+                color: 'white', letterSpacing: '-0.035em', marginBottom: 24, lineHeight: 1.04,
+              }}>
                 LGPD by Design.<br />RBAC por padrão.
               </h2>
-              <p style={{ fontSize: 17, color: '#94A3B8', lineHeight: 1.7, marginBottom: 36 }}>
+              <p style={{ fontSize: 17, color: '#94A3B8', lineHeight: 1.78, marginBottom: 40 }}>
                 Privacidade e compliance não são recursos adicionais — estão integrados na arquitetura desde o primeiro dia.
               </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 {[
-                  { icon: Lock,     title: 'MFA e Recuperação Inteligente',     desc: 'Autenticação com 2FA por token numérico e recuperação segura de conta via email verificado.' },
-                  { icon: Eye,      title: 'RBAC Granular',                     desc: 'Permissões funcionais específicas (ex: DASHBOARD:READ) para cada papel dentro da empresa.' },
+                  { icon: Lock,     title: 'MFA e Recuperação Inteligente',      desc: 'Autenticação com 2FA por token numérico e recuperação segura de conta via email verificado.' },
+                  { icon: Eye,      title: 'RBAC Granular',                      desc: 'Permissões funcionais específicas (ex: DASHBOARD:READ) para cada papel dentro da empresa.' },
                   { icon: FileText, title: 'Política de Privacidade Versionada', desc: 'Editor Markdown interno para atualização contínua de políticas e versionamento de consentimentos.' },
                   { icon: Database, title: 'Auditoria Completa',                 desc: 'Log de todas as ações sensíveis com rastreabilidade total de quem fez o quê e quando.' },
                 ].map((item, i) => {
                   const II = item.icon;
                   return (
-                    <div key={i} style={{ display: 'flex', gap: 16, padding: '16px', borderRadius: 16, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                      <div style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)' }}>
-                        <II style={{ width: 18, height: 18, color: '#34D399' }} />
+                    <div key={i} className="axr-glass axr-sec-item" style={{
+                      display: 'flex', gap: 18, padding: '18px 20px', borderRadius: 18,
+                      border: '1px solid rgba(255,255,255,0.07)',
+                    }}>
+                      <div style={{
+                        width: 46, height: 46, borderRadius: 14, flexShrink: 0,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        background: 'rgba(16,185,129,0.1)',
+                        border: '1px solid rgba(16,185,129,0.25)',
+                        boxShadow: '0 0 20px rgba(16,185,129,0.1)',
+                      }}>
+                        <II style={{ width: 20, height: 20, color: '#34D399' }} />
                       </div>
                       <div>
-                        <div style={{ fontSize: 14, fontWeight: 600, color: 'white', marginBottom: 4 }}>{item.title}</div>
-                        <div style={{ fontSize: 13, color: '#64748B', lineHeight: 1.55 }}>{item.desc}</div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: 'white', marginBottom: 6 }}>{item.title}</div>
+                        <div style={{ fontSize: 13, color: '#64748B', lineHeight: 1.62 }}>{item.desc}</div>
                       </div>
                     </div>
                   );
@@ -902,83 +1211,145 @@ export default function ApresentacaoPage() {
             </div>
 
             {/* Right — RBAC visual */}
-            <div className="axon-reveal" style={{ transitionDelay: '150ms' }}>
-              <div style={{ padding: 32, borderRadius: 28, background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.09)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 20, marginBottom: 20, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 600, color: 'white', fontSize: 15 }}>
-                    <Fingerprint style={{ width: 18, height: 18, color: '#34D399' }} />
-                    Cargos e Permissões
-                  </div>
-                  <div style={{ fontSize: 11, padding: '4px 10px', borderRadius: 99, background: 'rgba(16,185,129,0.1)', color: '#34D399', border: '1px solid rgba(16,185,129,0.25)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>RBAC Ativo</div>
+            <div className="axr-reveal axr-glass" style={{
+              transitionDelay: '160ms',
+              padding: 36, borderRadius: 32,
+              border: '1px solid rgba(52,211,153,0.18)',
+              boxShadow: '0 0 80px rgba(16,185,129,0.06)',
+            }}>
+              <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                paddingBottom: 24, marginBottom: 24,
+                borderBottom: '1px solid rgba(255,255,255,0.07)',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontWeight: 700, color: 'white', fontSize: 16, fontFamily: 'Sora, sans-serif' }}>
+                  <Fingerprint style={{ width: 20, height: 20, color: '#34D399' }} />
+                  Cargos e Permissões
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {[
-                    { role: 'Administrador RH',  access: 'Acesso Total',       color: '#34D399', bg: 'rgba(16,185,129,0.1)',  perms: ['ADMIN:*','PAYROLL:*','EMPLOYEES:*'] },
-                    { role: 'Gestor de Equipe',   access: 'Equipe Própria',     color: '#60A5FA', bg: 'rgba(59,130,246,0.1)',  perms: ['TEAM:READ','TIMESHEET:APPROVE'] },
-                    { role: 'Gestor Financeiro',  access: 'Folha / Relatórios', color: '#818CF8', bg: 'rgba(99,102,241,0.1)', perms: ['PAYROLL:READ','REPORTS:EXPORT'] },
-                    { role: 'Colaborador',        access: 'Próprio Perfil',     color: '#94A3B8', bg: 'rgba(148,163,184,0.1)', perms: ['SELF:READ','TIMESHEET:WRITE'] },
-                    { role: 'Contabilidade Ext.', access: 'Exportações',        color: '#FCD34D', bg: 'rgba(252,211,77,0.1)',  perms: ['REPORTS:EXPORT'] },
-                  ].map((item, i) => (
-                    <div key={i} style={{ padding: '14px 16px', borderRadius: 14, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                        <span style={{ fontSize: 14, fontWeight: 600, color: '#E2E8F0' }}>{item.role}</span>
-                        <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 99, fontWeight: 700, background: item.bg, color: item.color, border: `1px solid ${item.color}30` }}>{item.access}</span>
-                      </div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                        {item.perms.map((p, j) => (
-                          <span key={j} style={{ fontSize: 10, padding: '2px 7px', borderRadius: 5, background: 'rgba(255,255,255,0.05)', color: '#475569', fontFamily: 'monospace' }}>{p}</span>
-                        ))}
-                      </div>
+                <div style={{
+                  fontSize: 11, padding: '5px 12px', borderRadius: 999,
+                  background: 'rgba(16,185,129,0.1)', color: '#34D399',
+                  border: '1px solid rgba(16,185,129,0.3)',
+                  fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
+                }}>RBAC Ativo</div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
+                {[
+                  { role: 'Administrador RH',  access: 'Acesso Total',       color: '#34D399', bg: 'rgba(16,185,129,0.1)',   perms: ['ADMIN:*','PAYROLL:*','EMPLOYEES:*'] },
+                  { role: 'Gestor de Equipe',   access: 'Equipe Própria',     color: '#60A5FA', bg: 'rgba(59,130,246,0.1)',   perms: ['TEAM:READ','TIMESHEET:APPROVE'] },
+                  { role: 'Gestor Financeiro',  access: 'Folha / Relatórios', color: '#818CF8', bg: 'rgba(99,102,241,0.1)',  perms: ['PAYROLL:READ','REPORTS:EXPORT'] },
+                  { role: 'Colaborador',        access: 'Próprio Perfil',     color: '#94A3B8', bg: 'rgba(148,163,184,0.1)', perms: ['SELF:READ','TIMESHEET:WRITE'] },
+                  { role: 'Contabilidade Ext.', access: 'Exportações',        color: '#FCD34D', bg: 'rgba(252,211,77,0.1)',  perms: ['REPORTS:EXPORT'] },
+                ].map((item, i) => (
+                  <div key={i} className="axr-rbac-row" style={{
+                    padding: '15px 18px', borderRadius: 16,
+                    background: 'rgba(255,255,255,0.02)',
+                    border: '1px solid rgba(255,255,255,0.065)',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                      <span style={{ fontSize: 14, fontWeight: 600, color: '#E2E8F0' }}>{item.role}</span>
+                      <span style={{
+                        fontSize: 11, padding: '4px 11px', borderRadius: 999, fontWeight: 700,
+                        background: item.bg, color: item.color, border: `1px solid ${item.color}32`,
+                      }}>{item.access}</span>
                     </div>
-                  ))}
-                </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                      {item.perms.map((p, j) => (
+                        <span key={j} style={{
+                          fontSize: 10, padding: '3px 8px', borderRadius: 6,
+                          background: 'rgba(255,255,255,0.05)', color: '#374151',
+                          fontFamily: 'monospace',
+                        }}>{p}</span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         </section>
 
-        {/* ── Tech Stack ───────────────────────────────────────────────────── */}
-        <section id="tecnologia" style={{ padding: '120px 24px' }}>
-          <div style={{ maxWidth: 1280, margin: '0 auto' }}>
-            <div className="axon-reveal" style={{ textAlign: 'center', marginBottom: 64 }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 16px', borderRadius: 99, marginBottom: 16, fontSize: 12, fontWeight: 600, background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.25)', color: '#818CF8', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+        <div className="axr-divider" />
+
+        {/* ── TECH STACK ── */}
+        <section id="tecnologia" style={{ padding: '140px 24px', position: 'relative', overflow: 'hidden' }}>
+          <div style={{
+            position: 'absolute', top: '25%', right: '-4%', width: 600, height: 600,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(99,102,241,0.07) 0%, transparent 70%)',
+            filter: 'blur(80px)', pointerEvents: 'none',
+          }} />
+
+          <div style={{ maxWidth: 1300, margin: '0 auto' }}>
+            <div className="axr-reveal" style={{ textAlign: 'center', marginBottom: 76 }}>
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                padding: '7px 18px', borderRadius: 999, marginBottom: 20,
+                fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
+                background: 'rgba(99,102,241,0.1)', color: '#818CF8',
+                border: '1px solid rgba(99,102,241,0.25)',
+              }}>
                 <Cpu style={{ width: 13, height: 13 }} /> Stack Tecnológico
               </div>
-              <h2 className="axon-display" style={{ fontSize: 'clamp(36px, 5vw, 56px)', fontWeight: 900, color: 'white', letterSpacing: '-0.03em', marginBottom: 16, lineHeight: 1.05 }}>
-                Construído com as melhores tecnologias
+              <h2 className="axr-display" style={{
+                fontSize: 'clamp(40px, 5.5vw, 62px)', fontWeight: 900,
+                color: 'white', letterSpacing: '-0.035em', marginBottom: 18, lineHeight: 1.04,
+              }}>
+                Construído com as<br />melhores tecnologias
               </h2>
-              <p style={{ fontSize: 18, color: '#64748B', maxWidth: 520, margin: '0 auto' }}>
+              <p style={{ fontSize: 19, color: '#4B5563', maxWidth: 520, margin: '0 auto' }}>
                 Arquitetura moderna, cloud-native e type-safe do banco à interface.
               </p>
             </div>
 
-            <div className="axon-reveal" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 14, marginBottom: 48 }}>
+            <div className="axr-reveal" style={{
+              display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(196px, 1fr))',
+              gap: 14, marginBottom: 52,
+            }}>
               {TECH_STACK.map((tech, i) => {
                 const TI = tech.icon;
                 return (
-                  <div key={i} className="axon-tech" style={{ padding: '24px 20px', borderRadius: 20, textAlign: 'center', background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                    <TI style={{ width: 28, height: 28, color: tech.color, margin: '0 auto 12px' }} />
-                    <div className="axon-display" style={{ fontWeight: 700, color: 'white', fontSize: 15, marginBottom: 4 }}>{tech.name}</div>
-                    <div style={{ fontSize: 11, color: '#475569' }}>{tech.desc}</div>
+                  <div key={i} className="axr-glass axr-tech" style={{
+                    padding: '30px 24px', borderRadius: 24, textAlign: 'center',
+                    background: 'rgba(255,255,255,0.025)',
+                    border: '1px solid rgba(255,255,255,0.075)',
+                  }}>
+                    <TI style={{ width: 30, height: 30, color: tech.color, margin: '0 auto 14px' }} />
+                    <div className="axr-display" style={{ fontWeight: 700, color: 'white', fontSize: 15, marginBottom: 5 }}>{tech.name}</div>
+                    <div style={{ fontSize: 11, color: '#374151' }}>{tech.desc}</div>
                   </div>
                 );
               })}
             </div>
 
-            <div className="axon-reveal" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16, transitionDelay: '120ms' }}>
+            <div className="axr-reveal" style={{
+              display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(328px, 1fr))',
+              gap: 20, transitionDelay: '130ms',
+            }}>
               {[
-                { icon: Globe,    color: '#60A5FA', border: 'rgba(59,130,246,0.3)',   bg: 'rgba(59,130,246,0.08)',   title: 'Cloud-Native & Multi-Tenant',       desc: 'Arquitetura desenhada para escalar de 10 a 100.000 colaboradores com isolamento completo de dados entre empresas.' },
-                { icon: Activity, color: '#34D399', border: 'rgba(16,185,129,0.3)',  bg: 'rgba(16,185,129,0.08)',  title: 'Tempo Real por Padrão',              desc: 'WebSockets e Server-Sent Events para que saldos, aprovações e dados críticos sejam sempre atualizados sem refresh.' },
-                { icon: Zap,      color: '#FCD34D', border: 'rgba(245,158,11,0.3)',   bg: 'rgba(245,158,11,0.08)',   title: 'Performance de Primeira Classe',     desc: 'Next.js 15 com App Router, React Server Components e edge caching para carregamento em milissegundos.' },
+                { icon: Globe,    color: '#60A5FA', border: 'rgba(59,130,246,0.22)',  bg: 'rgba(59,130,246,0.08)',  title: 'Cloud-Native & Multi-Tenant',   desc: 'Arquitetura desenhada para escalar de 10 a 100.000 colaboradores com isolamento completo de dados entre empresas.' },
+                { icon: Activity, color: '#34D399', border: 'rgba(16,185,129,0.22)', bg: 'rgba(16,185,129,0.08)', title: 'Tempo Real por Padrão',          desc: 'WebSockets e Server-Sent Events para que saldos, aprovações e dados críticos sejam sempre atualizados sem refresh.' },
+                { icon: Zap,      color: '#FCD34D', border: 'rgba(245,158,11,0.22)',  bg: 'rgba(245,158,11,0.08)',  title: 'Performance de Primeira Classe', desc: 'Next.js 15 com App Router, React Server Components e edge caching para carregamento em milissegundos.' },
               ].map((item, i) => {
                 const II = item.icon;
                 return (
-                  <div key={i} className="axon-card" style={{ padding: '32px', borderRadius: 24, background: 'rgba(255,255,255,0.02)', border: `1px solid ${item.border}` }}>
-                    <div style={{ width: 48, height: 48, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20, background: item.bg, border: `1px solid ${item.border}` }}>
-                      <II style={{ width: 22, height: 22, color: item.color }} />
+                  <div key={i} className="axr-glass axr-lift" style={{
+                    padding: '38px', borderRadius: 28,
+                    background: 'rgba(255,255,255,0.022)',
+                    border: `1px solid ${item.border}`,
+                  }}>
+                    <div style={{
+                      width: 54, height: 54, borderRadius: 18,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      marginBottom: 24, background: item.bg,
+                      border: `1px solid ${item.border}`,
+                      boxShadow: `0 0 30px ${item.color}15`,
+                    }}>
+                      <II style={{ width: 24, height: 24, color: item.color }} />
                     </div>
-                    <h3 className="axon-display" style={{ fontSize: 18, fontWeight: 700, color: 'white', marginBottom: 10, letterSpacing: '-0.01em' }}>{item.title}</h3>
-                    <p style={{ fontSize: 14, color: '#64748B', lineHeight: 1.7 }}>{item.desc}</p>
+                    <h3 className="axr-display" style={{ fontSize: 19, fontWeight: 700, color: 'white', marginBottom: 12, letterSpacing: '-0.01em' }}>{item.title}</h3>
+                    <p style={{ fontSize: 14, color: '#64748B', lineHeight: 1.78 }}>{item.desc}</p>
                   </div>
                 );
               })}
@@ -986,71 +1357,103 @@ export default function ApresentacaoPage() {
           </div>
         </section>
 
-        {/* ── CTA ──────────────────────────────────────────────────────────── */}
-        <section id="cta" style={{ padding: '140px 24px', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 60%, rgba(99,102,241,0.1) 0%, transparent 65%)' }} />
-          <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px)', backgroundSize: '40px 40px', pointerEvents: 'none' }} />
+        <div className="axr-divider" />
 
-          <div style={{ maxWidth: 800, margin: '0 auto', textAlign: 'center', position: 'relative', zIndex: 1 }}>
-            <div className="axon-reveal">
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 16px', borderRadius: 99, marginBottom: 28, fontSize: 12, fontWeight: 600, background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.3)', color: '#818CF8', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+        {/* ── CTA ── */}
+        <section id="cta" style={{ padding: '168px 24px', position: 'relative', overflow: 'hidden' }}>
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: 'radial-gradient(ellipse at 50% 50%, rgba(99,102,241,0.13) 0%, transparent 60%)',
+          }} />
+          <div style={{
+            position: 'absolute', inset: 0,
+            backgroundImage: 'linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px)',
+            backgroundSize: '48px 48px', pointerEvents: 'none',
+          }} />
+          <div className="axr-noise" />
+
+          <div style={{ maxWidth: 840, margin: '0 auto', textAlign: 'center', position: 'relative', zIndex: 1 }}>
+            <div className="axr-reveal">
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                padding: '7px 18px', borderRadius: 999, marginBottom: 34,
+                fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
+                background: 'rgba(99,102,241,0.1)', color: '#818CF8',
+                border: '1px solid rgba(99,102,241,0.3)',
+              }}>
                 <Play style={{ width: 12, height: 12, fill: '#818CF8' }} /> Pronto para começar
               </div>
 
-              <h2 className="axon-display" style={{ fontSize: 'clamp(44px, 7vw, 84px)', fontWeight: 900, color: 'white', letterSpacing: '-0.04em', lineHeight: 0.92, marginBottom: 28 }}>
+              <h2 className="axr-display" style={{
+                fontSize: 'clamp(50px, 8.5vw, 100px)', fontWeight: 900,
+                color: 'white', letterSpacing: '-0.045em', lineHeight: 0.88, marginBottom: 34,
+              }}>
                 Transforme seu RH<br />
-                <span className="axon-display" style={{
-                  background: 'linear-gradient(90deg, #3B82F6, #818CF8, #C084FC, #3B82F6)',
-                  backgroundSize: '250% 250%',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                  animation: 'axon-gradient 5s ease infinite',
-                }}>
-                  agora mesmo
-                </span>
+                <span className="axr-display axr-grad">agora mesmo</span>
               </h2>
 
-              <p style={{ fontSize: 20, color: '#94A3B8', marginBottom: 56, maxWidth: 560, margin: '0 auto 56px', lineHeight: 1.65 }}>
+              <p style={{
+                fontSize: 20, color: '#94A3B8',
+                maxWidth: 560, margin: '0 auto 64px', lineHeight: 1.72,
+              }}>
                 O sistema está pronto. Os módulos estão configurados. Clique abaixo para entrar no AxonRH.
               </p>
 
               <button
                 onClick={handleStart}
-                className="axon-start-btn"
+                className="axr-cta-btn"
                 style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 20,
-                  padding: '22px 44px', borderRadius: 99, border: '1px solid rgba(99,102,241,0.45)',
-                  background: 'linear-gradient(135deg, #111827 0%, #1E1B4B 100%)',
+                  display: 'inline-flex', alignItems: 'center', gap: 22,
+                  padding: '26px 52px', borderRadius: 999,
+                  border: '1.5px solid rgba(99,102,241,0.5)',
+                  background: 'linear-gradient(135deg, #111827, #1E1B4B)',
                   color: 'white', cursor: 'pointer',
-                  fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 20,
+                  fontFamily: 'Sora, sans-serif', fontWeight: 800, fontSize: 22,
                   letterSpacing: '-0.01em',
-                  boxShadow: '0 0 80px rgba(99,102,241,0.2), inset 0 1px 0 rgba(255,255,255,0.08)',
+                  boxShadow: '0 0 100px rgba(99,102,241,0.25), inset 0 1px 0 rgba(255,255,255,0.1)',
                 }}
               >
-                <div style={{ width: 48, height: 48, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #3B82F6 0%, #6366F1 100%)', boxShadow: '0 0 24px rgba(99,102,241,0.6)', flexShrink: 0 }}>
-                  <Play style={{ width: 20, height: 20, fill: 'white', marginLeft: 2 }} />
+                <div style={{
+                  width: 54, height: 54, borderRadius: '50%', flexShrink: 0, position: 'relative',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: 'linear-gradient(135deg, #3B82F6, #6366F1)',
+                  boxShadow: '0 0 36px rgba(99,102,241,0.7)',
+                }}>
+                  <div style={{
+                    position: 'absolute', inset: -2, borderRadius: '50%',
+                    border: '2px solid rgba(99,102,241,0.4)',
+                    animation: 'axr-ping 2.2s ease infinite',
+                  }} />
+                  <Play style={{ width: 22, height: 22, fill: 'white', marginLeft: 2 }} />
                 </div>
                 Iniciar Apresentação
-                <ArrowRight className="axon-arrow" style={{ width: 22, height: 22 }} />
+                <ArrowRight className="axr-cta-arrow" style={{ width: 24, height: 24 }} />
               </button>
 
-              <p style={{ marginTop: 20, fontSize: 13, color: '#334155' }}>
+              <p style={{ marginTop: 24, fontSize: 13, color: '#1E293B' }}>
                 Você será redirecionado para a tela de login do sistema
               </p>
             </div>
           </div>
         </section>
 
-        {/* ── Footer ───────────────────────────────────────────────────────── */}
-        <footer style={{ padding: '40px 24px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ width: 30, height: 30, borderRadius: 9, background: 'linear-gradient(135deg, #3B82F6 0%, #6366F1 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 14, color: 'white', fontFamily: 'Outfit, sans-serif' }}>A</div>
-              <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, color: 'white', fontSize: 16 }}>AxonRH</span>
-              <span style={{ fontSize: 12, color: '#334155' }}>— Plataforma de Gestão de Pessoas</span>
+        {/* ── Footer ── */}
+        <footer style={{ padding: '46px 32px', borderTop: '1px solid rgba(255,255,255,0.055)' }}>
+          <div style={{
+            maxWidth: 1300, margin: '0 auto',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{
+                width: 32, height: 32, borderRadius: 10,
+                background: 'linear-gradient(135deg, #3B82F6, #6366F1)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontWeight: 900, fontSize: 14, color: 'white', fontFamily: 'Sora, sans-serif',
+              }}>A</div>
+              <span style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, color: 'white', fontSize: 17 }}>AxonRH</span>
+              <span style={{ fontSize: 13, color: '#1E293B' }}>— Plataforma de Gestão de Pessoas</span>
             </div>
-            <div style={{ fontSize: 12, color: '#334155' }}>
+            <div style={{ fontSize: 13, color: '#1E293B' }}>
               © {new Date().getFullYear()} AxonRH Cloud Systems. Todos os direitos reservados.
             </div>
           </div>

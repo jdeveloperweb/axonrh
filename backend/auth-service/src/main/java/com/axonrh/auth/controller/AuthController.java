@@ -1,10 +1,13 @@
 package com.axonrh.auth.controller;
 
 import com.axonrh.auth.dto.ChangePasswordRequest;
+import com.axonrh.auth.dto.ForgotPasswordRequest;
 import com.axonrh.auth.dto.LoginRequest;
 import com.axonrh.auth.dto.LoginResponse;
 import com.axonrh.auth.dto.RefreshTokenRequest;
+import com.axonrh.auth.dto.ResetPasswordRequest;
 import com.axonrh.auth.service.AuthService;
+import com.axonrh.auth.service.PasswordResetService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final PasswordResetService passwordResetService;
 
     @PostMapping("/login")
     @Operation(summary = "Realizar login", description = "Autentica o usuario e retorna tokens JWT")
@@ -73,6 +77,21 @@ public class AuthController {
             @RequestHeader("X-User-Id") String userId,
             @Valid @RequestBody ChangePasswordRequest request) {
         authService.changePassword(userId, request.getCurrentPassword(), request.getNewPassword());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/forgot-password")
+    @Operation(summary = "Solicitar reset de senha", description = "Envia email com link para redefinição de senha")
+    public ResponseEntity<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        passwordResetService.requestReset(request.getEmail());
+        // Sempre retorna 200 para não expor se o email existe
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/reset-password")
+    @Operation(summary = "Redefinir senha", description = "Redefine a senha usando o token recebido por email")
+    public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        passwordResetService.resetPassword(request.getToken(), request.getNewPassword());
         return ResponseEntity.noContent().build();
     }
 

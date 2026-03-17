@@ -35,6 +35,7 @@ public class JwtAuthFilter extends AbstractGatewayFilterFactory<JwtAuthFilter.Co
             "/api/v1/auth/register",
             "/api/v1/auth/refresh",
             "/api/v1/auth/forgot-password",
+            "/api/v1/auth/reset-password",
             "/api/v1/auth/mfa/complete-mandatory-setup",
             "/api/v1/auth/mfa/resend-setup-email",
             "/actuator/health",

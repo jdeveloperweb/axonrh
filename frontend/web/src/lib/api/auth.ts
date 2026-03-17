@@ -97,14 +97,14 @@ export const authApi = {
    * Solicita reset de senha.
    */
   requestPasswordReset: async (email: string): Promise<void> => {
-    await apiClient.post('/auth/password/reset-request', { email });
+    await apiClient.post('/auth/forgot-password', { email });
   },
 
   /**
    * Confirma reset de senha.
    */
   confirmPasswordReset: async (token: string, newPassword: string): Promise<void> => {
-    await apiClient.post('/auth/password/reset-confirm', { token, newPassword });
+    await apiClient.post('/auth/reset-password', { token, newPassword });
   },
 
   /**
