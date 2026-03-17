@@ -292,6 +292,14 @@ export default function WellbeingPage() {
         return true;
     });
 
+    if (loading || !statsData) {
+        return (
+            <div className="p-6 flex items-center justify-center min-h-[400px]">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
+
     return (
         <div className="p-6 space-y-8 max-w-[1600px] mx-auto animate-in fade-in duration-700">
             {/* Header Section */}
@@ -348,7 +356,7 @@ export default function WellbeingPage() {
             </div>
 
             {/* Stats Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 px-1">
                 <Card className="border-none shadow-sm bg-white hover:shadow-xl transition-all group overflow-hidden relative">
                     <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                         <Users className="w-16 h-16" />
@@ -356,13 +364,14 @@ export default function WellbeingPage() {
                     <CardContent className="p-6">
                         <div className="flex justify-between items-start relative z-10">
                             <div>
-                                <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Check-ins Totais</p>
+                                <p className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Check-ins Totais</p>
                                 <div className="flex items-baseline gap-2 mt-2">
-                                    <h3 className="text-4xl font-black text-gray-900">{statsData?.totalCheckins || 0}</h3>
-                                    <span className="text-xs font-bold text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded">+12%</span>
+                                    <h3 className="text-4xl font-black text-gray-900 leading-none">{statsData.totalCheckins}</h3>
+                                    <span className="text-xs font-bold text-emerald-500 bg-emerald-50 px-1.5 py-0.5 rounded-lg">+12%</span>
                                 </div>
+                                <p className="text-xs font-medium text-gray-400 mt-1">Dados analisados hoje</p>
                             </div>
-                            <div className="p-3.5 bg-blue-50 text-blue-600 rounded-2xl group-hover:scale-110 transition-transform">
+                            <div className="p-3.5 bg-indigo-50 text-indigo-600 rounded-2xl group-hover:scale-110 transition-transform shadow-sm shadow-indigo-100">
                                 <Users className="w-6 h-6" />
                             </div>
                         </div>
@@ -376,36 +385,34 @@ export default function WellbeingPage() {
                     <CardContent className="p-6">
                         <div className="flex justify-between items-start relative z-10">
                             <div>
-                                <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Média de Humor</p>
+                                <p className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Média de Humor</p>
                                 <div className="flex items-baseline gap-2 mt-2">
-                                    <h3 className="text-4xl font-black text-gray-900">
-                                        {statsData?.averageScore ? statsData.averageScore.toFixed(1) : '0.0'}
-                                    </h3>
-                                    <span className="text-[10px] text-gray-400 font-bold uppercase">/ 5.0</span>
+                                    <h3 className="text-4xl font-black text-gray-900 leading-none">{statsData.averageScore.toFixed(1)}</h3>
+                                    <span className="text-sm font-bold text-gray-400">/ 5.0</span>
                                 </div>
+                                <p className="text-xs font-medium text-gray-400 mt-1">Nível de satisfação</p>
                             </div>
-                            <div className={`p-3.5 rounded-2xl group-hover:scale-110 transition-transform ${statsData && statsData.averageScore >= 4 ? 'bg-green-50 text-green-600' :
-                                statsData && statsData.averageScore <= 2 ? 'bg-red-50 text-red-600' : 'bg-yellow-50 text-yellow-600'
-                                }`}>
-                                <TrendingUp className="w-6 h-6" />
+                            <div className={cn(
+                                "p-3.5 rounded-2xl group-hover:scale-110 transition-transform shadow-sm",
+                                statsData.averageScore >= 4 ? "bg-emerald-50 text-emerald-600 shadow-emerald-100" :
+                                statsData.averageScore <= 2.5 ? "bg-rose-50 text-rose-600 shadow-rose-100" : "bg-amber-50 text-amber-600 shadow-amber-100"
+                            )}>
+                                <Activity className="w-6 h-6" />
                             </div>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="border-none shadow-sm bg-white hover:shadow-xl transition-all group overflow-hidden relative border-t-4 border-t-red-400">
+                <Card className="border-none shadow-sm bg-white hover:shadow-xl transition-all group overflow-hidden relative">
                     <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                         <AlertCircle className="w-16 h-16" />
                     </div>
                     <CardContent className="p-6">
                         <div className="flex justify-between items-start relative z-10">
                             <div>
-                                <div className="flex items-center gap-1.5 mb-1">
-                                    <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Em Alerta</p>
-                                    <span className="flex h-2 w-2 rounded-full bg-red-500 animate-ping" />
-                                </div>
-                                <h3 className="text-4xl font-black text-red-600 mt-2">{statsData?.highRiskCount || 0}</h3>
-                                <p className="text-xs font-medium text-gray-400 mt-1">Colaboradores em risco</p>
+                                <p className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Em Alerta <span className="text-red-500 text-lg">●</span></p>
+                                <h3 className="text-4xl font-black text-rose-600 mt-2">{statsData.highRiskCount}</h3>
+                                <p className="text-xs font-medium text-rose-400 mt-1">Colaboradores em risco</p>
                             </div>
                             <div className="p-3.5 bg-red-50 text-red-600 rounded-2xl group-hover:scale-110 transition-transform shadow-sm shadow-red-100">
                                 <AlertCircle className="w-6 h-6" />
@@ -423,7 +430,7 @@ export default function WellbeingPage() {
                             <div>
                                 <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Apoio EAP</p>
                                 <h3 className="text-4xl font-black text-primary mt-2">
-                                    {statsData?.eapRequests.filter(r => !r.handled).length || 0}
+                                    {(statsData.eapRequests || []).filter(r => !r.handled).length}
                                 </h3>
                                 <p className="text-xs font-medium text-gray-400 mt-1">Pendentes de triagem</p>
                             </div>
@@ -651,25 +658,25 @@ export default function WellbeingPage() {
 
 
                 {/* Sentiment Distribution and Resources */}
-                <div className="space-y-8 flex flex-col h-[600px]">
-                    <Card className="border-none shadow-lg bg-white overflow-hidden border border-gray-100 flex-1">
-                        <div className="p-6 border-b border-gray-100 bg-gray-50/30">
-                            <CardTitle className="text-lg font-bold flex items-center gap-2">
-                                <Activity className="w-5 h-5 text-blue-500" />
+                <div className="space-y-8 flex flex-col min-h-[650px]">
+                    <Card className="border-none shadow-lg bg-white overflow-hidden border border-gray-100 flex-1 min-h-[300px]">
+                        <div className="p-5 border-b border-gray-100 bg-gray-50/30">
+                            <CardTitle className="text-base font-bold flex items-center gap-2">
+                                <Activity className="w-4 h-4 text-blue-500" />
                                 Distribuição de Sentimentos
                             </CardTitle>
                         </div>
                         <CardContent className="p-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center h-full pt-4">
-                                <div className="h-[230px]">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center h-full">
+                                <div className="h-[180px]">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <PieChart>
                                             <Pie
                                                 data={displaySentimentData}
                                                 cx="50%"
                                                 cy="50%"
-                                                innerRadius={60}
-                                                outerRadius={80}
+                                                innerRadius={50}
+                                                outerRadius={70}
                                                 paddingAngle={8}
                                                 dataKey="value"
                                             >
@@ -683,51 +690,51 @@ export default function WellbeingPage() {
                                         </PieChart>
                                     </ResponsiveContainer>
                                 </div>
-                                <div className="space-y-4">
-                                    <div className="p-3 rounded-xl bg-green-50 border border-green-100 flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-3 h-3 rounded-full bg-green-500" />
-                                            <span className="text-sm font-semibold text-green-700">Positivo</span>
+                                <div className="space-y-3">
+                                    <div className="p-2.5 rounded-xl bg-green-50/50 border border-green-100 flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
+                                            <span className="text-xs font-semibold text-green-700">Positivo</span>
                                         </div>
-                                        <span className="text-sm font-black text-green-700">{statsData?.sentimentDistribution?.['POSITIVE'] || 0}</span>
+                                        <span className="text-xs font-black text-green-700">{statsData.sentimentDistribution?.['POSITIVE'] || 0}</span>
                                     </div>
-                                    <div className="p-3 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-3 h-3 rounded-full bg-gray-400" />
-                                            <span className="text-sm font-semibold text-gray-600">Neutro</span>
+                                    <div className="p-2.5 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-2.5 h-2.5 rounded-full bg-gray-400" />
+                                            <span className="text-xs font-semibold text-gray-600">Neutro</span>
                                         </div>
-                                        <span className="text-sm font-black text-gray-600">{statsData?.sentimentDistribution?.['NEUTRAL'] || 0}</span>
+                                        <span className="text-xs font-black text-gray-600">{statsData.sentimentDistribution?.['NEUTRAL'] || 0}</span>
                                     </div>
-                                    <div className="p-3 rounded-xl bg-red-50 border border-red-100 flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-3 h-3 rounded-full bg-red-500" />
-                                            <span className="text-sm font-semibold text-red-700">Alerta IA</span>
+                                    <div className="p-2.5 rounded-xl bg-red-50/50 border border-red-100 flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
+                                            <span className="text-xs font-semibold text-red-700">Alerta IA</span>
                                         </div>
-                                        <span className="text-sm font-black text-red-700">{statsData?.sentimentDistribution?.['NEGATIVE'] || 0}</span>
+                                        <span className="text-xs font-black text-red-700">{statsData.sentimentDistribution?.['NEGATIVE'] || 0}</span>
                                     </div>
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
 
-                    <Card className="border-none shadow-lg bg-white overflow-hidden border border-gray-100 flex-1">
-                        <div className="p-6 border-b border-gray-100 bg-gray-50/30">
-                            <CardTitle className="text-lg font-bold flex items-center gap-2">
-                                <ShieldCheck className="w-5 h-5 text-emerald-500" />
+                    <Card className="border-none shadow-lg bg-white overflow-hidden border border-gray-100 flex-1 min-h-[300px]">
+                        <div className="p-5 border-b border-gray-100 bg-gray-50/30">
+                            <CardTitle className="text-base font-bold flex items-center gap-2">
+                                <ShieldCheck className="w-4 h-4 text-emerald-500" />
                                 Índices de Conclusão EAP
                             </CardTitle>
                         </div>
                         <CardContent className="p-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center h-full pt-4">
-                                <div className="h-[230px]">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center h-full">
+                                <div className="h-[180px]">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <PieChart>
                                             <Pie
                                                 data={displayEvaluationData}
                                                 cx="50%"
                                                 cy="50%"
-                                                innerRadius={60}
-                                                outerRadius={80}
+                                                innerRadius={50}
+                                                outerRadius={70}
                                                 paddingAngle={8}
                                                 dataKey="value"
                                             >
@@ -741,13 +748,13 @@ export default function WellbeingPage() {
                                         </PieChart>
                                     </ResponsiveContainer>
                                 </div>
-                                <div className="space-y-3">
-                                    {evaluationDataArr.map((item, idx) => (
+                                <div className="space-y-2.5">
+                                    {evaluationDataArr.length > 0 ? evaluationDataArr.map((item, idx) => (
                                         <div key={idx} className="flex flex-col">
                                             <div className="flex items-center justify-between mb-1">
                                                 <div className="flex items-center gap-2">
                                                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
-                                                    <span className="text-xs font-bold text-gray-600">{item.name}</span>
+                                                    <span className="text-[11px] font-bold text-gray-600">{item.name}</span>
                                                 </div>
                                                 <span className="text-xs font-black text-gray-900">{item.value}</span>
                                             </div>
@@ -761,54 +768,46 @@ export default function WellbeingPage() {
                                                 />
                                             </div>
                                         </div>
-                                    ))}
-                                    {evaluationDataArr.length === 0 && (
-                                        <p className="text-xs text-gray-400 text-center py-4 italic">Nenhum atendimento finalizado ainda.</p>
+                                    )) : (
+                                        <div className="flex flex-col items-center justify-center h-full text-center py-4">
+                                            <p className="text-xs text-gray-400 italic">Nenhum atendimento finalizado ainda.</p>
+                                        </div>
                                     )}
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-[250px]">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <Card
-                            className="border-none shadow-lg bg-gradient-to-br from-indigo-600 to-purple-700 text-white group cursor-pointer hover:scale-[1.02] transition-transform"
+                            className="border-none shadow-lg bg-gradient-to-br from-indigo-600 to-purple-700 text-white group cursor-pointer hover:scale-[1.02] transition-transform min-h-[140px]"
                             onClick={() => setIsGuideModalOpen(true)}
                         >
                             <CardContent className="p-6 flex flex-col justify-between h-full">
-                                <Brain className="w-8 h-8 opacity-80" />
-                                <div>
-                                    <h4 className="text-lg font-bold">{statsData?.preventionGuides?.[0]?.title || 'Guia de Prevenção'}</h4>
-                                    <p className="text-white/70 text-sm mt-1">{statsData?.preventionGuides?.[0]?.description || 'Materiais para gestores sobre saúde mental.'}</p>
-                                </div>
-                                <div className="flex items-center gap-2 text-sm font-bold mt-4">
-                                    Acessar Agora
+                                <div className="flex items-center justify-between">
+                                    <Brain className="w-6 h-6 opacity-80" />
                                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                </div>
+                                <div className="mt-4">
+                                    <h4 className="text-sm font-bold leading-tight">{statsData.preventionGuides?.[0]?.title || 'Guia de Apoio'}</h4>
+                                    <p className="text-white/70 text-[11px] mt-1 line-clamp-2">{statsData.preventionGuides?.[0]?.description || 'Materiais de suporte.'}</p>
                                 </div>
                             </CardContent>
                         </Card>
                         <Card
-                            className="border-none shadow-lg bg-white border border-primary/20 group cursor-pointer hover:scale-[1.02] transition-transform overflow-hidden relative"
+                            className="border-none shadow-lg bg-white border border-primary/10 group cursor-pointer hover:scale-[1.02] transition-transform overflow-hidden min-h-[140px]"
                             onClick={() => setIsCampaignModalOpen(true)}
                         >
-                            <div className="absolute top-0 right-0 p-4">
-                                <Lightbulb className="w-12 h-12 text-yellow-500/10 group-hover:text-yellow-500/20 transition-colors" />
-                            </div>
                             <CardContent className="p-6 flex flex-col justify-between h-full relative z-10">
-                                <Smile className="w-8 h-8 text-primary" />
-                                <div>
-                                    <h4 className="text-lg font-bold text-gray-900">{statsData?.activeCampaigns?.[0]?.title || 'Campanhas'}</h4>
-                                    <p className="text-gray-500 text-sm mt-1">
-                                        {statsData?.activeCampaigns?.[0]?.description ? (
-                                            <>Próximo: "{statsData.activeCampaigns[0].description}"</>
-                                        ) : (
-                                            'Próximo workshop: "Mindfulness no Trabalho".'
-                                        )}
-                                    </p>
+                                <div className="flex items-center justify-between">
+                                    <Smile className="w-6 h-6 text-primary" />
+                                    <ChevronRight className="w-4 h-4 text-primary group-hover:translate-x-1 transition-transform" />
                                 </div>
-                                <div className="flex items-center gap-2 text-sm font-bold text-primary mt-4">
-                                    Ver Agenda
-                                    <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                <div className="mt-4">
+                                    <h4 className="text-sm font-bold text-gray-900 leading-tight">{statsData.activeCampaigns?.[0]?.title || 'Campanhas'}</h4>
+                                    <p className="text-gray-500 text-[11px] mt-1 line-clamp-2">
+                                        {statsData.activeCampaigns?.[0]?.description || 'Workshop: Mindfulness no Trabalho.'}
+                                    </p>
                                 </div>
                             </CardContent>
                         </Card>
