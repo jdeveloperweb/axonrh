@@ -634,7 +634,7 @@ export default function LearningManagementPage() {
                                         </div>
                                     </div>
                                     <div className="space-y-4">
-                                        <label className="text-xs font-black uppercase text-slate-400 tracking-widest">Dependência (Pré-requisito)</label>
+                                        <label className="text-xs font-black uppercase text-slate-400 tracking-widest">Treinamento de Pré-requisito (Obrigatório)</label>
                                         <div className="relative">
                                             <select
                                                 className="w-full h-14 rounded-xl border border-slate-200 bg-white px-4 font-bold text-slate-700 appearance-none outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all cursor-pointer shadow-sm"
@@ -663,26 +663,16 @@ export default function LearningManagementPage() {
                                     />
                                 </div>
 
-                                <div className="grid md:grid-cols-2 gap-8">
-                                    <div className="space-y-4">
-                                        <label className="text-xs font-black uppercase text-slate-400 tracking-widest">O que você vai aprender (um por linha)</label>
-                                        <textarea
-                                            className="w-full min-h-[120px] p-4 rounded-xl border border-slate-200 bg-white font-medium text-slate-600 leading-relaxed outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm"
-                                            placeholder="Ex: Dominar técnicas de fechamento&#10;Criar gatilhos mentais poderosos"
-                                            value={formData.objectives}
-                                            onChange={e => setFormData({ ...formData, objectives: e.target.value })}
-                                        />
-                                    </div>
-                                    <div className="space-y-4">
-                                        <label className="text-xs font-black uppercase text-slate-400 tracking-widest">Pré-requisitos</label>
-                                        <textarea
-                                            className="w-full min-h-[120px] p-4 rounded-xl border border-slate-200 bg-white font-medium text-slate-600 leading-relaxed outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm"
-                                            placeholder="Ex: Ter concluído o treinamento básico de vendas."
-                                            value={formData.prerequisites}
-                                            onChange={e => setFormData({ ...formData, prerequisites: e.target.value })}
-                                        />
-                                    </div>
+                                <div className="space-y-4">
+                                    <label className="text-xs font-black uppercase text-slate-400 tracking-widest">O que você vai aprender (um por linha)</label>
+                                    <textarea
+                                        className="w-full min-h-[120px] p-4 rounded-xl border border-slate-200 bg-white font-medium text-slate-600 leading-relaxed outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm"
+                                        placeholder="Ex: Dominar técnicas de fechamento&#10;Criar gatilhos mentais poderosos"
+                                        value={formData.objectives}
+                                        onChange={e => setFormData({ ...formData, objectives: e.target.value })}
+                                    />
                                 </div>
+
 
                                 <div className="space-y-4">
                                     <label className="text-xs font-black uppercase text-slate-400 tracking-widest">Público Alvo</label>
