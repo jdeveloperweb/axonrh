@@ -68,7 +68,7 @@ export default function EmployeeServiceLanding() {
                         <ValueCard
                             icon={<Database className="w-8 h-8 text-emerald-500" />}
                             title="Single Source of Truth"
-                            description="Uma única fonte de verdade para todos os dados dos colaboradores, integrando perfeitamente com folha, benefícios e performance."
+                            description="Uma única fonte de verdade para todos os dados dos colaboradores, integrando perfeitamente com financeiro, benefícios e performance."
                         />
                         <ValueCard
                             icon={<ShieldCheck className="w-8 h-8 text-purple-500" />}

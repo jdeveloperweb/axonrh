@@ -60,17 +60,7 @@ const services: ServiceModule[] = [
         businessLink: '/servicos/ai-assistant-service',
         color: 'purple'
     },
-    {
-        id: 'payroll-service',
-        name: 'Folha de Pagamento',
-        category: 'Finance',
-        description: 'Cálculo de salários, encargos e conformidade financeira total.',
-        icon: <Coins />,
-        status: 'Documented',
-        technicalLink: '/backend/payroll-service/docs/technical.md',
-        businessLink: '/servicos/payroll-service',
-        color: 'emerald'
-    },
+
     {
         id: 'vacation-service',
         name: 'Férias e Afastamentos',

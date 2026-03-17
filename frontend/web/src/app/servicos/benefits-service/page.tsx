@@ -65,7 +65,7 @@ export default function BenefitsLanding() {
                         <BenefitPillar
                             icon={<Utensils className="w-8 h-8" />}
                             title="Alimentação & Refição"
-                            desc="Controle preciso de cargas e descontos em folha conforme o PAT."
+                            desc="Controle preciso de cargas e descontos em contracheque conforme o PAT."
                             color="text-orange-500"
                         />
                         <BenefitPillar

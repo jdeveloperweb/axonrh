@@ -38,14 +38,7 @@ const MODULES: Module[] = [
     desc: 'Controle de jornada com geolocalização, banco de horas automatizado e aprovação de espelhos em 1 clique — tudo acessível pelo celular.',
     features: ['Registro via GPS com validação de cerca geográfica (Geofencing)','Reconhecimento facial para autenticação biométrica opcional','Banco de horas com saldo em tempo real por colaborador','Horas extras, adicional noturno e interjornada calculados automaticamente','Espelho de ponto digital — colaborador aprova, contesta ou justifica ausência','Dashboard de ausências, atrasos e pontualidade por equipe'],
   },
-  {
-    id: 'folha', icon: Banknote,
-    accentColor: '#059669', accentBg: 'rgba(5,150,105,0.07)',
-    accentBorder: 'rgba(5,150,105,0.22)', glowColor: 'rgba(5,150,105,0.06)',
-    title: 'Folha de Pagamento', subtitle: 'Cálculo dinâmico e preciso',
-    desc: 'Motor de cálculo configurável que processa folha completa, adiantamentos, férias e rescisões com total aderência às normas trabalhistas vigentes.',
-    features: ['Cálculo dinâmico de INSS, IRRF, FGTS e descontos de convênios','Adiantamento salarial com controle de parcelas e datas','Férias proporcionais, 1/3 constitucional e abono pecuniário','Rescisão completa com TRCT e homologação digital','Exportação de SEFIP, DIRF, RAIS e arquivos eSocial','Holerite PDF gerado automaticamente e disponível no app do colaborador'],
-  },
+
   {
     id: 'beneficios', icon: HeartHandshake,
     accentColor: '#DC2626', accentBg: 'rgba(220,38,38,0.07)',
@@ -97,7 +90,7 @@ const MODULES: Module[] = [
 ];
 
 const DIFFERENTIALS = [
-  { icon: Zap,          title: 'Tudo em um único ecossistema', desc: 'Fim às integrações quebradas entre sistemas de ponto, folha, benefícios e DP. Um ecossistema coeso, projetado para trabalhar junto.', color: '#D97706', bg: '#FFFBEB', bd: '#FDE68A' },
+  { icon: Zap,          title: 'Tudo em um único ecossistema', desc: 'Fim às integrações quebradas entre sistemas de ponto, benefícios e DP. Um ecossistema coeso, projetado para trabalhar junto.', color: '#D97706', bg: '#FFFBEB', bd: '#FDE68A' },
   { icon: BrainCircuit, title: 'IA que realmente funciona',     desc: 'Não é um chatbot genérico. A IA conhece os dados reais de cada colaborador e responde com precisão contextual, sem inventar.',       color: '#0891B2', bg: '#ECFEFF', bd: '#A5F3FC' },
   { icon: Shield,       title: 'LGPD by Design',                desc: 'Privacidade integrada na arquitetura desde o dia 1. Controle granular de consentimentos, direitos dos titulares e auditoria completa.',   color: '#059669', bg: '#ECFDF5', bd: '#A7F3D0' },
   { icon: Activity,     title: 'Tudo em tempo real',            desc: 'Saldos de banco de horas, aprovações pendentes, check-ins em eventos. Dados atualizados em tempo real sem refresh, sem atraso.',          color: '#2563EB', bg: '#DBEAFE', bd: '#BFDBFE' },
@@ -120,7 +113,7 @@ const WORKFLOW_STEPS = [
   { n:'01', title:'Abertura de Vaga & Admissão Digital',  color:'#2563EB', icon:UserPlus,      desc:'O gestor solicita uma contratação. Após aprovação pelo RH, o candidato acessa o portal, envia seus documentos e o OCR valida os dados automaticamente. O contrato é assinado digitalmente em minutos.' },
   { n:'02', title:'Onboarding e Configuração de Benefícios',color:'#4F46E5', icon:HeartHandshake,desc:'Com base no cargo e vínculo, o sistema provisiona automaticamente VA, VR, VT e plano de saúde. O colaborador recebe onboarding digital com vídeos, políticas internas e questionário de integração.' },
   { n:'03', title:'Rotina de Ponto e Jornada',            color:'#7C3AED', icon:Clock,         desc:'Diariamente, o colaborador registra o ponto pelo PWA com geolocalização. O sistema calcula automaticamente atrasos, horas extras e adicional noturno, atualizando o dashboard do gestor em tempo real.' },
-  { n:'04', title:'Fechamento de Folha em 1 Clique',      color:'#0891B2', icon:Banknote,      desc:'No fechamento mensal, todas as conciliações de ponto, descontos de convênio, adiantamentos e premiações são consolidadas automaticamente. A folha é processada e o holerite enviado ao app do colaborador.' },
+  { n:'04', title:'Gestão Estratégica em 1 Clique',      color:'#0891B2', icon:Layers,        desc:'No fechamento mensal, todas as conciliações de ponto, descontos de convênio, adiantamentos e premiações são consolidadas automaticamente. Os dados são processados e os relatórios enviados ao dashboard do gestor.' },
   { n:'05', title:'Engajamento Contínuo via Mobile e IA', color:'#059669', icon:BrainCircuit,  desc:'O colaborador acessa o holerite PDF pelo celular, tira dúvidas com a IA sobre co-participação médica e VT, e faz check-in em eventos corporativos pelo QR Code — tudo sem precisar contatar o RH.' },
 ];
 
@@ -728,8 +721,8 @@ function HeroSlide({ current, isMobile }: { current: number; isMobile: boolean }
           maxWidth:680, margin: isMobile ? '0 auto 24px' : '0 auto 52px', lineHeight:1.72,
         }}>
           {isMobile
-            ? 'Ponto, folha, benefícios, desempenho e IA em um único ecossistema digital.'
-            : 'Do recrutamento ao offboarding — controle de ponto, folha de pagamento, benefícios, desempenho e IA em um único ecossistema seguro, inteligente e totalmente digital.'
+            ? 'Ponto, benefícios, desempenho e IA em um único ecossistema digital.'
+            : 'Do recrutamento ao offboarding — controle de ponto, benefícios, desempenho e IA em um único ecossistema seguro, inteligente e totalmente digital.'
           }
         </p>
 
@@ -1166,7 +1159,7 @@ function SecuritySlide({ isMobile }: { isMobile: boolean }) {
           {[
             { role:'Administrador Geral',  access:'Full Access',       color:'#059669', bg:'#ECFDF5', bd:'#A7F3D0', perms:['SYSTEM:*','AUTH:*','CORE:*'] },
             { role:'Liderança Estratégica', access:'Analytics / Team',   color:'#2563EB', bg:'#DBEAFE', bd:'#BFDBFE', perms:['REPORTS:READ','TEAM:WRITE'] },
-            { role:'Operacional DP',       access:'Workflow / Payroll', color:'#4F46E5', bg:'#EEF2FF', bd:'#C7D2FE', perms:['PAYROLL:WRITE','EMP:READ'] },
+            { role:'Operacional DP',       access:'Workflow / Financeiro', color:'#4F46E5', bg:'#EEF2FF', bd:'#C7D2FE', perms:['FINANCE:WRITE','EMP:READ'] },
             { role:'Colaborador',           access:'Self Service',      color:'#64748B', bg:'#F8FAFC', bd:'#E2E8F0', perms:['PROFILE:READ','PWA:ACCESS'] },
           ].map((item,i)=>(
             <div key={i} className="axr-stagger-item" style={{

@@ -95,7 +95,7 @@ export default function SecurityLanding() {
                         <div>
                             <Mail className="w-12 h-12 text-slate-400 mx-auto mb-6" />
                             <h4 className="font-bold text-xl mb-3">E-mails Dinâmicos</h4>
-                            <p className="text-slate-500 text-sm">Templates profissionais para admissão, folha e comunicados internos.</p>
+                            <p className="text-slate-500 text-sm">Templates profissionais para admissão, remuneração e comunicados internos.</p>
                         </div>
                         <div>
                             <Smartphone className="w-12 h-12 text-slate-400 mx-auto mb-6" />

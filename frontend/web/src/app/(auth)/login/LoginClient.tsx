@@ -85,7 +85,13 @@ export default function LoginClient() {
     showPoweredBy?: boolean;
   }>({});
 
-  const expired = searchParams.get("expired") === "true";
+  const [showExpiredMessage, setShowExpiredMessage] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("expired") === "true") {
+      setShowExpiredMessage(true);
+    }
+  }, [searchParams]);
 
   const {
     register,
@@ -159,6 +165,7 @@ export default function LoginClient() {
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
     clearError();
+    setShowExpiredMessage(false);
 
     if (show2FA && (!data.totpCode || data.totpCode.length < 6)) {
       setIsLoading(false);
@@ -351,7 +358,7 @@ export default function LoginClient() {
             </h2>
             
             <p className="text-lg sm:text-xl text-slate-500 max-w-xl font-medium mx-auto lg:mx-0">
-              {loginConfig.welcomeMessage || "Toda a gestão de pessoas, processamento de folha e inteligência artificial em um único ecossistema premium."}
+              {loginConfig.welcomeMessage || "Toda a gestão de pessoas, estratégia de talentos e inteligência artificial em um único ecossistema premium."}
             </p>
 
             <div className="hidden sm:grid grid-cols-2 gap-4 mt-4">
@@ -399,7 +406,7 @@ export default function LoginClient() {
                 )}
               </div>
 
-              {expired && (
+              {showExpiredMessage && (
                 <div className="flex items-center gap-3 p-4 mb-6 rounded-2xl bg-amber-50 border border-amber-100 text-amber-700 animate-pulse">
                   <AlertCircle className="w-5 h-5 flex-shrink-0" />
                   <span className="text-xs font-bold uppercase tracking-wider">Sessão Expirada</span>

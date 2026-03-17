@@ -85,11 +85,11 @@ export default function TimesheetLanding() {
                 <div className="container mx-auto px-6 relative z-10">
                     <div className="flex flex-col lg:flex-row gap-20 items-center">
                         <div className="flex-1">
-                            <h2 className="text-4xl font-bold mb-8">Fechamento de Folha em <span className="text-orange-500">Minutos</span>, não Dias.</h2>
+                            <h2 className="text-4xl font-bold mb-8">Fechamento Mensal em <span className="text-orange-500">Minutos</span>, não Dias.</h2>
                             <div className="space-y-6">
                                 <AccuracyItem
                                     title="Consolidação Automática"
-                                    desc="Integração nativa com o módulo de folha, enviando atrasos e extras sem CSVs."
+                                    desc="Integração nativa com o módulo de remuneração, enviando atrasos e extras sem CSVs."
                                 />
                                 <AccuracyItem
                                     title="Justificativas Inteligentes"
