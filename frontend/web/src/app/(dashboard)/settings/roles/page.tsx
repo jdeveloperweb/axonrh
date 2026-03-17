@@ -175,9 +175,13 @@ export default function RolesPage() {
                                             </td>
                                             <td className="px-6 py-4">
                                                 {role.systemRole ? (
-                                                    <Badge variant="warning">Sistema</Badge>
+                                                    <Badge variant="secondary">Sistema</Badge>
                                                 ) : (
-                                                    <Badge variant="outline">Personalizado</Badge>
+                                                    <Badge
+                                                        className="border-[var(--color-primary)] text-[var(--color-primary)] bg-transparent"
+                                                    >
+                                                        Personalizado
+                                                    </Badge>
                                                 )}
                                             </td>
                                             <td className="px-6 py-4">
