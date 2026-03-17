@@ -640,7 +640,7 @@ export default function ApresentacaoPage() {
             </div>
 
             {/* Right: slide dots */}
-            <div style={{ display:'flex', alignItems:'center', gap:5, minWidth:120, justifyContent:'flex-end', flexWrap:'wrap' }}>
+            <div className="axr-slide-dots" style={{ display:'flex', alignItems:'center', gap:5, minWidth:120, justifyContent:'flex-end', flexWrap:'wrap' }}>
               {SLIDES.map((s, i) => (
                 <button
                   key={s.id}
