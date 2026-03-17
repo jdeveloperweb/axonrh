@@ -56,6 +56,12 @@ public class CourseService {
         if (updates.getObjectives() != null) {
             course.setObjectives(updates.getObjectives());
         }
+        if (updates.getTargetAudience() != null) {
+            course.setTargetAudience(updates.getTargetAudience());
+        }
+        if (updates.getPrerequisites() != null) {
+            course.setPrerequisites(updates.getPrerequisites());
+        }
         if (updates.getCategoryId() != null) {
             course.setCategoryId(updates.getCategoryId());
         }
@@ -70,6 +76,21 @@ public class CourseService {
         }
         if (updates.getPassingScore() != null) {
             course.setPassingScore(updates.getPassingScore());
+        }
+        if (updates.getIsMandatory() != null) {
+            course.setIsMandatory(updates.getIsMandatory());
+        }
+        if (updates.getRequiresApproval() != null) {
+            course.setRequiresApproval(updates.getRequiresApproval());
+        }
+        if (updates.getModality() != null) {
+            course.setModality(updates.getModality());
+        }
+        if (updates.getInstructorName() != null) {
+            course.setInstructorName(updates.getInstructorName());
+        }
+        if (updates.getInstructorId() != null) {
+            course.setInstructorId(updates.getInstructorId());
         }
 
         course.setPrerequisiteCourseId(updates.getPrerequisiteCourseId());

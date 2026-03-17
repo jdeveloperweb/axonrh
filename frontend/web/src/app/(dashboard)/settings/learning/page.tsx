@@ -105,6 +105,9 @@ export default function LearningManagementPage() {
     const [formData, setFormData] = useState<Partial<Course>>({
         title: '',
         description: '',
+        objectives: '',
+        targetAudience: '',
+        prerequisites: '',
         courseType: 'ONLINE' as CourseType,
         difficultyLevel: 'INICIANTE' as DifficultyLevel,
         status: 'DRAFT' as CourseStatus,
@@ -271,6 +274,9 @@ export default function LearningManagementPage() {
         setFormData({
             title: '',
             description: '',
+            objectives: '',
+            targetAudience: '',
+            prerequisites: '',
             courseType: 'ONLINE' as CourseType,
             difficultyLevel: 'INICIANTE' as DifficultyLevel,
             status: 'DRAFT' as CourseStatus,
@@ -663,26 +669,37 @@ export default function LearningManagementPage() {
                                     />
                                 </div>
 
-                                <div className="space-y-4">
-                                    <label className="text-xs font-black uppercase text-slate-400 tracking-widest">O que você vai aprender (um por linha)</label>
-                                    <textarea
-                                        className="w-full min-h-[120px] p-4 rounded-xl border border-slate-200 bg-white font-medium text-slate-600 leading-relaxed outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm"
-                                        placeholder="Ex: Dominar técnicas de fechamento&#10;Criar gatilhos mentais poderosos"
-                                        value={formData.objectives}
-                                        onChange={e => setFormData({ ...formData, objectives: e.target.value })}
-                                    />
+                                <div className="grid md:grid-cols-2 gap-8">
+                                    <div className="space-y-4">
+                                        <label className="text-xs font-black uppercase text-slate-400 tracking-widest">O que você vai aprender (um por linha)</label>
+                                        <textarea
+                                            className="w-full min-h-[120px] p-4 rounded-xl border border-slate-200 bg-white font-medium text-slate-600 leading-relaxed outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm"
+                                            placeholder="Ex: Dominar técnicas de fechamento&#10;Criar gatilhos mentais poderosos"
+                                            value={formData.objectives}
+                                            onChange={e => setFormData({ ...formData, objectives: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="space-y-4">
+                                        <label className="text-xs font-black uppercase text-slate-400 tracking-widest">Pré-requisitos Adicionais (Texto informativo)</label>
+                                        <textarea
+                                            className="w-full min-h-[120px] p-4 rounded-xl border border-slate-200 bg-white font-medium text-slate-600 leading-relaxed outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm"
+                                            placeholder="Ex: Ter conhecimentos básicos de negociação."
+                                            value={formData.prerequisites}
+                                            onChange={e => setFormData({ ...formData, prerequisites: e.target.value })}
+                                        />
+                                    </div>
                                 </div>
-
 
                                 <div className="space-y-4">
                                     <label className="text-xs font-black uppercase text-slate-400 tracking-widest">Público Alvo</label>
-                                    <Input
-                                        className="h-14 rounded-xl border-slate-200 bg-white font-bold shadow-sm"
+                                    <textarea
+                                        className="w-full min-h-[100px] p-4 rounded-xl border border-slate-200 bg-white font-medium text-slate-600 leading-relaxed outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm"
                                         placeholder="Ex: Líderes, Gestores e Equipe de Vendas"
                                         value={formData.targetAudience}
                                         onChange={e => setFormData({ ...formData, targetAudience: e.target.value })}
                                     />
                                 </div>
+
 
 
                                 <div className="flex items-center justify-between p-6 bg-slate-50 rounded-2xl border border-slate-100">

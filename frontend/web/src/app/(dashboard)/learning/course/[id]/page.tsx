@@ -271,17 +271,27 @@ export default function CourseDetails() {
 
                             <div className="space-y-4">
                                 <h3 className="text-2xl font-bold">Pré-requisitos</h3>
-                                <p className="text-muted-foreground">
-                                    {course.prerequisites || 'Não há pré-requisitos específicos para este treinamento. Mente aberta e vontade de aprender são as únicas necessidades!'}
-                                </p>
+                                <div className="text-muted-foreground">
+                                    {course.prerequisites ? (
+                                        <p>{course.prerequisites}</p>
+                                    ) : prerequisiteCourse ? (
+                                        <div className="flex items-center gap-2 text-rose-600 font-semibold bg-rose-50 p-4 rounded-xl border border-rose-100 italic">
+                                            <Lock className="h-4 w-4" />
+                                            Este treinamento exige a conclusão prévia de: {prerequisiteCourse.title}
+                                        </div>
+                                    ) : (
+                                        <p>Não há pré-requisitos específicos para este treinamento. Mente aberta e vontade de aprender são as únicas necessidades!</p>
+                                    )}
+                                </div>
                             </div>
 
                             <div className="space-y-4">
                                 <h3 className="text-2xl font-bold">Público Alvo</h3>
                                 <p className="text-muted-foreground">
-                                    {course.targetAudience ?? 'Todos os colaboradores interessados no tema.'}
+                                    {course.targetAudience || 'Todos os colaboradores interessados no tema.'}
                                 </p>
                             </div>
+
                         </TabsContent>
 
                         <TabsContent value="syllabus" className="animate-in fade-in slide-in-from-bottom-2 duration-300">
