@@ -53,6 +53,11 @@ public class EmployeeWellbeing {
     private boolean handled = false;
 
     private LocalDateTime handledAt;
-
+    
     private UUID handledBy;
+
+    @Column(length = 2000, columnDefinition = "TEXT")
+    private String actionTaken;
+
+    private String evaluation; // EXCELLENT, NORMAL, ATTENTION, CRITICAL
 }

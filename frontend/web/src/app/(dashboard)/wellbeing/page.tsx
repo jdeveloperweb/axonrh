@@ -73,6 +73,9 @@ export default function WellbeingPage() {
     const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
     const [isCampaignModalOpen, setIsCampaignModalOpen] = useState(false);
     const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
+    const [isFinalizeModalOpen, setIsFinalizeModalOpen] = useState(false);
+    const [selectedRequest, setSelectedRequest] = useState<EapRequest | null>(null);
+    const [finalizeData, setFinalizeData] = useState({ actionTaken: '', evaluation: 'NORMAL' });
 
     // Registration States
     const [isNewCampaignModalOpen, setIsNewCampaignModalOpen] = useState(false);
@@ -111,12 +114,22 @@ export default function WellbeingPage() {
         }
     }
 
-    const handleMarkAsHandled = async (id: string) => {
+    const handleFinalizeClick = (req: EapRequest) => {
+        setSelectedRequest(req);
+        setFinalizeData({ actionTaken: '', evaluation: 'NORMAL' });
+        setIsFinalizeModalOpen(true);
+    };
+
+    const handleConfirmFinalize = async () => {
+        if (!selectedRequest) return;
         try {
-            await wellbeingApi.markAsHandled(id);
-            await loadStats(); // Refresh
+            await wellbeingApi.markAsHandled(selectedRequest.id, finalizeData);
+            success('Atendimento Finalizado', 'O registro foi atualizado com sucesso.');
+            setIsFinalizeModalOpen(false);
+            await loadStats();
         } catch (error) {
-            console.error('Error marking request as handled:', error);
+            console.error('Error finalizing request:', error);
+            toastError('Erro ao finalizar', 'Não foi possível salvar as informações.');
         }
     };
 
@@ -263,6 +276,15 @@ export default function WellbeingPage() {
 
     // If all are 0, add a placeholder
     const displaySentimentData = sentimentDataArr.length > 0 ? sentimentDataArr : [{ name: 'Sem dados', value: 1, color: '#e2e8f0' }];
+
+    const evaluationDataArr = [
+        { name: 'Estável', value: statsData?.evaluationDistribution?.['EXCELLENT'] || 0, color: '#10b981' },
+        { name: 'Monitoramento', value: statsData?.evaluationDistribution?.['NORMAL'] || 0, color: '#0ea5e9' },
+        { name: 'Alerta', value: statsData?.evaluationDistribution?.['ATTENTION'] || 0, color: '#f59e0b' },
+        { name: 'Crítico', value: statsData?.evaluationDistribution?.['CRITICAL'] || 0, color: '#ef4444' },
+    ].filter(d => d.value > 0);
+
+    const displayEvaluationData = evaluationDataArr.length > 0 ? evaluationDataArr : [{ name: 'Sem atendimentos', value: 1, color: '#f1f5f9' }];
 
     const filteredRequests = (statsData?.eapRequests || []).filter(req => {
         if (filter === 'PENDING') return !req.handled;
@@ -667,22 +689,82 @@ export default function WellbeingPage() {
                                             <div className="w-3 h-3 rounded-full bg-green-500" />
                                             <span className="text-sm font-semibold text-green-700">Positivo</span>
                                         </div>
-                                        <span className="text-sm font-black text-green-700">{statsData?.sentimentDistribution['POSITIVE'] || 0}</span>
+                                        <span className="text-sm font-black text-green-700">{statsData?.sentimentDistribution?.['POSITIVE'] || 0}</span>
                                     </div>
                                     <div className="p-3 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-between">
                                         <div className="flex items-center gap-3">
                                             <div className="w-3 h-3 rounded-full bg-gray-400" />
                                             <span className="text-sm font-semibold text-gray-600">Neutro</span>
                                         </div>
-                                        <span className="text-sm font-black text-gray-600">{statsData?.sentimentDistribution['NEUTRAL'] || 0}</span>
+                                        <span className="text-sm font-black text-gray-600">{statsData?.sentimentDistribution?.['NEUTRAL'] || 0}</span>
                                     </div>
                                     <div className="p-3 rounded-xl bg-red-50 border border-red-100 flex items-center justify-between">
                                         <div className="flex items-center gap-3">
                                             <div className="w-3 h-3 rounded-full bg-red-500" />
                                             <span className="text-sm font-semibold text-red-700">Alerta IA</span>
                                         </div>
-                                        <span className="text-sm font-black text-red-700">{statsData?.sentimentDistribution['NEGATIVE'] || 0}</span>
+                                        <span className="text-sm font-black text-red-700">{statsData?.sentimentDistribution?.['NEGATIVE'] || 0}</span>
                                     </div>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="border-none shadow-lg bg-white overflow-hidden border border-gray-100 flex-1">
+                        <div className="p-6 border-b border-gray-100 bg-gray-50/30">
+                            <CardTitle className="text-lg font-bold flex items-center gap-2">
+                                <ShieldCheck className="w-5 h-5 text-emerald-500" />
+                                Índices de Conclusão EAP
+                            </CardTitle>
+                        </div>
+                        <CardContent className="p-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center h-full pt-4">
+                                <div className="h-[230px]">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <PieChart>
+                                            <Pie
+                                                data={displayEvaluationData}
+                                                cx="50%"
+                                                cy="50%"
+                                                innerRadius={60}
+                                                outerRadius={80}
+                                                paddingAngle={8}
+                                                dataKey="value"
+                                            >
+                                                {displayEvaluationData.map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={entry.color} />
+                                                ))}
+                                            </Pie>
+                                            <Tooltip
+                                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                                            />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                </div>
+                                <div className="space-y-3">
+                                    {evaluationDataArr.map((item, idx) => (
+                                        <div key={idx} className="flex flex-col">
+                                            <div className="flex items-center justify-between mb-1">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
+                                                    <span className="text-xs font-bold text-gray-600">{item.name}</span>
+                                                </div>
+                                                <span className="text-xs font-black text-gray-900">{item.value}</span>
+                                            </div>
+                                            <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
+                                                <div 
+                                                    className="h-full rounded-full transition-all duration-500" 
+                                                    style={{ 
+                                                        width: `${(item.value / (evaluationDataArr.reduce((acc, curr) => acc + curr.value, 0) || 1)) * 100}%`,
+                                                        backgroundColor: item.color 
+                                                    }} 
+                                                />
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {evaluationDataArr.length === 0 && (
+                                        <p className="text-xs text-gray-400 text-center py-4 italic">Nenhum atendimento finalizado ainda.</p>
+                                    )}
                                 </div>
                             </div>
                         </CardContent>
@@ -797,7 +879,7 @@ export default function WellbeingPage() {
                                             </div>
                                             {!isHandled && (
                                                 <button
-                                                    onClick={() => handleMarkAsHandled(req.id)}
+                                                    onClick={() => handleFinalizeClick(req)}
                                                     className="px-4 py-2.5 text-xs font-bold bg-white border-2 border-primary text-primary hover:bg-primary hover:text-white rounded-xl transition-all flex items-center gap-2 group shadow-sm active:scale-95"
                                                 >
                                                     <CheckCircle className="w-4 h-4" />
@@ -849,6 +931,36 @@ export default function WellbeingPage() {
                                                 <p className="text-sm text-gray-700 italic leading-relaxed relative z-10 font-medium whitespace-pre-wrap">
                                                     "{req.notes}"
                                                 </p>
+                                            </div>
+                                        )}
+
+                                        {isHandled && (req.actionTaken || req.evaluation) && (
+                                            <div className="mt-4 p-4 bg-emerald-50 rounded-2xl border border-emerald-100 relative overflow-hidden group">
+                                                <div className="absolute top-0 right-0 p-2 opacity-10">
+                                                    <CheckCircle className="w-8 h-8 text-emerald-600" />
+                                                </div>
+                                                <p className="text-[10px] text-emerald-700 uppercase font-black tracking-widest mb-2">Resolução do Atendimento</p>
+                                                {req.evaluation && (
+                                                    <div className="mb-2">
+                                                        <span className={cn(
+                                                            "text-[10px] font-black px-2 py-0.5 rounded-lg uppercase tracking-wider",
+                                                            req.evaluation === 'EXCELLENT' ? 'bg-emerald-100 text-emerald-700' :
+                                                            req.evaluation === 'NORMAL' ? 'bg-blue-100 text-blue-700' :
+                                                            req.evaluation === 'ATTENTION' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'
+                                                        )}>
+                                                            Avaliação: {
+                                                                req.evaluation === 'EXCELLENT' ? 'Estável' :
+                                                                req.evaluation === 'NORMAL' ? 'Monitoramento' :
+                                                                req.evaluation === 'ATTENTION' ? 'Sinal de Alerta' : 'Crítico'
+                                                            }
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {req.actionTaken && (
+                                                    <p className="text-sm text-gray-700 leading-relaxed font-medium">
+                                                        {req.actionTaken}
+                                                    </p>
+                                                )}
                                             </div>
                                         )}
                                     </div>
@@ -1107,6 +1219,65 @@ export default function WellbeingPage() {
                     <DialogFooter>
                         <Button variant="ghost" onClick={() => setIsNewGuideModalOpen(false)}>Cancelar</Button>
                         <Button className="bg-primary hover:bg-primary/90" onClick={handleSaveGuide}>Salvar Material</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Finalize EAP Modal */}
+            <Dialog open={isFinalizeModalOpen} onOpenChange={setIsFinalizeModalOpen}>
+                <DialogContent className="max-w-md bg-white rounded-3xl p-6">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                            <CheckCircle className="w-6 h-6 text-primary" />
+                            Finalizar Atendimento
+                        </DialogTitle>
+                        <DialogDescription>
+                            Registre o que foi feito para apoiar o colaborador {selectedRequest?.employeeName}.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-gray-700">O que foi feito?</label>
+                            <Textarea
+                                placeholder="Descreva as providências tomadas..."
+                                value={finalizeData.actionTaken}
+                                onChange={e => setFinalizeData({ ...finalizeData, actionTaken: e.target.value })}
+                                className="min-h-[100px]"
+                            />
+                        </div>
+                        <div className="space-y-3">
+                            <label className="text-sm font-bold text-gray-700">Avaliação do Colaborador</label>
+                            <div className="grid grid-cols-1 gap-2">
+                                {[
+                                    { id: 'EXCELLENT', label: 'Estável - Atendimento Eficaz', color: 'border-emerald-200 hover:bg-emerald-50 text-emerald-700', active: 'bg-emerald-100 border-emerald-500' },
+                                    { id: 'NORMAL', label: 'Em Monitoramento - Sem Alerta', color: 'border-blue-200 hover:bg-blue-50 text-blue-700', active: 'bg-blue-100 border-blue-500' },
+                                    { id: 'ATTENTION', label: 'Sinal de Alerta - Precisa Atenção', color: 'border-amber-200 hover:bg-amber-50 text-amber-700', active: 'bg-amber-100 border-amber-500' },
+                                    { id: 'CRITICAL', label: 'Crítico - Necessita Intervenção', color: 'border-rose-200 hover:bg-rose-50 text-rose-700', active: 'bg-rose-100 border-rose-500' },
+                                ].map((opt) => (
+                                    <button
+                                        key={opt.id}
+                                        onClick={() => setFinalizeData({ ...finalizeData, evaluation: opt.id })}
+                                        className={cn(
+                                            "flex items-center justify-between p-3 rounded-xl border-2 transition-all font-semibold text-sm text-left",
+                                            finalizeData.evaluation === opt.id ? opt.active : opt.color
+                                        )}
+                                    >
+                                        {opt.label}
+                                        {finalizeData.evaluation === opt.id && <CheckCircle className="w-4 h-4" />}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                    <DialogFooter className="gap-2">
+                        <Button variant="ghost" onClick={() => setIsFinalizeModalOpen(false)}>Cancelar</Button>
+                        <Button 
+                            className="bg-primary hover:bg-primary/90 rounded-xl px-8" 
+                            onClick={handleConfirmFinalize}
+                            disabled={!finalizeData.actionTaken}
+                        >
+                            Confirmar e Finalizar
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

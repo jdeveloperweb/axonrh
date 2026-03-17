@@ -23,4 +23,6 @@ public class EapRequestDTO {
     private String riskLevel;
     private boolean handled;
     private LocalDateTime createdAt;
+    private String actionTaken;
+    private String evaluation;
 }

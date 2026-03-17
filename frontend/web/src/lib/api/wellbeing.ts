@@ -26,6 +26,8 @@ export interface EapRequest {
     riskLevel: string;
     handled: boolean;
     createdAt: string;
+    actionTaken?: string;
+    evaluation?: string;
 }
 
 export interface PreventionGuide {
@@ -50,6 +52,7 @@ export interface WellbeingStats {
     totalCheckins: number;
     averageScore: number;
     sentimentDistribution: Record<string, number>;
+    evaluationDistribution: Record<string, number>;
     highRiskCount: number;
     totalEapRequests: number;
     eapRequests: EapRequest[];
@@ -70,7 +73,7 @@ export const wellbeingApi = {
         return await api.get('/employees/wellbeing/stats');
     },
 
-    markAsHandled: async (id: string): Promise<void> => {
-        return await api.post(`/employees/wellbeing/${id}/handle`, {});
+    markAsHandled: async (id: string, data: { actionTaken: string, evaluation: string }): Promise<void> => {
+        return await api.post(`/employees/wellbeing/${id}/handle`, data);
     }
 };

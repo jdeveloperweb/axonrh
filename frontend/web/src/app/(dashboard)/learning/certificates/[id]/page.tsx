@@ -25,13 +25,30 @@ export default function CertificateViewPage() {
             if (!id) return;
             try {
                 setLoading(true);
-                // Buscar certificado e configuração em paralelo
-                const [certRes, configRes] = await Promise.all([
-                    certificatesApi.get(id as string),
-                    certificateConfigsApi.get()
-                ]);
-                setCertificate(certRes as any);
-                setConfig(configRes);
+                // 1. Primeiro buscar o certificado
+                const certRes = await certificatesApi.get(id as string) as any;
+                setCertificate(certRes);
+
+                // 2. Com o courseId do certificado, busca a config específica
+                if (certRes.courseId) {
+                  try {
+                    const configRes = await certificateConfigsApi.get(certRes.courseId);
+                    if (configRes) {
+                      setConfig(configRes);
+                    } else {
+                        // Fallback para config global
+                        const globalConfig = await certificateConfigsApi.get();
+                        setConfig(globalConfig);
+                    }
+                  } catch (e) {
+                      // Fallback para config global se der erro na específica
+                      const globalConfig = await certificateConfigsApi.get();
+                      setConfig(globalConfig);
+                  }
+                } else {
+                    const configRes = await certificateConfigsApi.get();
+                    setConfig(configRes);
+                }
             } catch (error) {
                 console.error('Erro ao carregar dados:', error);
                 toast.error('Certificado não encontrado');

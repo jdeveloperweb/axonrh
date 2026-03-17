@@ -17,6 +17,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import com.axonrh.employee.config.TenantContext;
 import com.axonrh.employee.dto.EapRequestDTO;
+import com.axonrh.employee.dto.WellbeingHandleRequest;
 import com.axonrh.employee.dto.WellbeingStats;
 import com.axonrh.employee.repository.EventRepository;
 import com.axonrh.employee.dto.EventDTO;
@@ -147,6 +148,8 @@ public class WellbeingService {
                     .highRiskCount(0)
                     .totalEapRequests(0)
                     .eapRequests(java.util.Collections.emptyList())
+                    .sentimentDistribution(java.util.Collections.emptyMap())
+                    .evaluationDistribution(java.util.Collections.emptyMap())
                     .preventionGuides(java.util.Collections.emptyList())
                     .activeCampaigns(java.util.Collections.emptyList())
                     .build();
@@ -164,6 +167,10 @@ public class WellbeingService {
         long highRiskCount = all.stream()
                 .filter(w -> "HIGH".equalsIgnoreCase(w.getRiskLevel()))
                 .count();
+
+        java.util.Map<String, Long> evaluationMap = all.stream()
+                .filter(w -> w.getEvaluation() != null)
+                .collect(java.util.stream.Collectors.groupingBy(EmployeeWellbeing::getEvaluation, java.util.stream.Collectors.counting()));
 
         // Fix N+1: map all employees in the tenant
         List<Employee> employees = employeeRepository.findByTenantId(tenantId);
@@ -189,6 +196,8 @@ public class WellbeingService {
                             .riskLevel(w.getRiskLevel())
                             .handled(w.isHandled())
                             .createdAt(w.getCreatedAt())
+                            .actionTaken(w.getActionTaken())
+                            .evaluation(w.getEvaluation())
                             .build();
                 })
                 .collect(Collectors.toList());
@@ -197,6 +206,7 @@ public class WellbeingService {
                 .totalCheckins(all.size())
                 .averageScore(averageScore)
                 .sentimentDistribution(sentimentMap)
+                .evaluationDistribution(evaluationMap)
                 .highRiskCount(highRiskCount)
                 .totalEapRequests(eapRequests.stream().filter(r -> !r.isHandled()).count())
                 .eapRequests(eapRequests)
@@ -252,7 +262,7 @@ public class WellbeingService {
     }
 
     @Transactional
-    public void markAsHandled(UUID id) {
+    public void markAsHandled(UUID id, WellbeingHandleRequest request) {
         UUID tenantId = getTenantId();
         EmployeeWellbeing wellbeing = repository.findById(id)
                 .filter(w -> w.getTenantId().equals(tenantId))
@@ -260,6 +270,9 @@ public class WellbeingService {
         
         wellbeing.setHandled(true);
         wellbeing.setHandledAt(LocalDateTime.now());
+        wellbeing.setActionTaken(request.getActionTaken());
+        wellbeing.setEvaluation(request.getEvaluation());
+        
         // For now not tracking WHO handled it as we don't have the user ID easily here without more extraction
         repository.save(wellbeing);
     }

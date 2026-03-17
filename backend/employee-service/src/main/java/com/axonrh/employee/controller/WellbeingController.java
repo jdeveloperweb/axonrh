@@ -1,6 +1,7 @@
 package com.axonrh.employee.controller;
 
 import com.axonrh.employee.dto.WellbeingCheckInRequest;
+import com.axonrh.employee.dto.WellbeingHandleRequest;
 import com.axonrh.employee.entity.EmployeeWellbeing;
 import com.axonrh.employee.service.WellbeingService;
 import lombok.RequiredArgsConstructor;
@@ -34,8 +35,8 @@ public class WellbeingController {
     }
 
     @PostMapping("/{id}/handle")
-    public ResponseEntity<Void> markAsHandled(@PathVariable UUID id) {
-        wellbeingService.markAsHandled(id);
+    public ResponseEntity<Void> markAsHandled(@PathVariable UUID id, @RequestBody WellbeingHandleRequest request) {
+        wellbeingService.markAsHandled(id, request);
         return ResponseEntity.ok().build();
     }
 }

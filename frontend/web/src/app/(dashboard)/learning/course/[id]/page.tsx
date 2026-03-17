@@ -27,7 +27,7 @@ import {
     LogOut
 } from 'lucide-react';
 import Image from "next/image";
-import { coursesApi, enrollmentsApi, Course, Enrollment } from '@/lib/api/learning';
+import { coursesApi, enrollmentsApi, certificateConfigsApi, Course, Enrollment, CertificateConfig } from '@/lib/api/learning';
 import { useAuthStore } from '@/stores/auth-store';
 import { toast } from 'sonner';
 
@@ -42,6 +42,7 @@ export default function CourseDetails() {
     const [enrolling, setEnrolling] = useState(false);
     const [prerequisiteCourse, setPrerequisiteCourse] = useState<Course | null>(null);
     const [isPrerequisiteMet, setIsPrerequisiteMet] = useState(true);
+    const [certificateConfig, setCertificateConfig] = useState<CertificateConfig | null>(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -82,6 +83,16 @@ export default function CourseDetails() {
                 toast.error('Erro ao carregar detalhes do curso');
             } finally {
                 setLoading(false);
+            }
+
+            // Fetch certificate config in background
+            if (id) {
+                try {
+                    const config = await certificateConfigsApi.get(id as string);
+                    if (config) setCertificateConfig(config);
+                } catch (e) {
+                    console.error('Erro ao buscar config de certificado', e);
+                }
             }
         };
 
@@ -229,11 +240,11 @@ export default function CourseDetails() {
 
                     <div className="flex items-center gap-4 p-4 rounded-xl bg-muted/30 border border-muted-foreground/10">
                         <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">
-                            {course.instructorName?.split(' ').map(n => n[0]).join('') || 'IA'}
+                            {(certificateConfig?.instructorName || course.instructorName)?.split(' ').map(n => n[0]).join('') || 'IA'}
                         </div>
                         <div>
                             <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold">Instrutor</p>
-                            <p className="font-semibold text-lg">{course.instructorName || 'Especialista Axon'}</p>
+                            <p className="font-semibold text-lg">{certificateConfig?.instructorName || course.instructorName || 'Especialista Axon'}</p>
                         </div>
                     </div>
 

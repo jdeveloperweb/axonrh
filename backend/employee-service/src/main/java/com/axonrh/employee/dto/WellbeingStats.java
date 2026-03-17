@@ -15,6 +15,7 @@ public class WellbeingStats {
     private int totalCheckins;
     private double averageScore;
     private Map<String, Long> sentimentDistribution;
+    private Map<String, Long> evaluationDistribution;
     private long highRiskCount;
     private long totalEapRequests;
     private java.util.List<EapRequestDTO> eapRequests;
