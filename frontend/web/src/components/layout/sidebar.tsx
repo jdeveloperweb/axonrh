@@ -127,14 +127,14 @@ export function Sidebar() {
       >
         {/* Logo */}
         <div className="flex items-center justify-between h-[var(--header-height)] px-4 border-b border-[var(--color-border)]">
-          <div className="flex items-center gap-2 overflow-hidden">
+          <div className="flex items-center gap-2">
             {tenantTheme?.logoUrl ? (
               <div
                 key={`${tenantTheme.logoUrl}-${tenantTheme.logoWidth}`}
-                className="relative flex items-center justify-start overflow-hidden"
+                className="relative flex items-center justify-start"
                 style={{
                   width: isSidebarCollapsed ? '32px' : 'auto',
-                  height: '56px',
+                  height: '40px',
                   transition: 'all 0.3s ease'
                 }}
               >
@@ -146,7 +146,7 @@ export function Sidebar() {
                     isSidebarCollapsed ? "min-w-[32px]" : ""
                   )}
                   style={{
-                    maxWidth: isSidebarCollapsed ? '32px' : `${tenantTheme.logoWidth || 150}px`,
+                    maxWidth: isSidebarCollapsed ? '32px' : `${Math.min(tenantTheme.logoWidth || 150, 180)}px`,
                   }}
                 />
               </div>
