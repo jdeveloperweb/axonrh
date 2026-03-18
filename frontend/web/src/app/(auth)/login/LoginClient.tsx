@@ -30,14 +30,11 @@ import type { LoginResponse } from "@/lib/api/auth";
 // ==================== Schema ====================
 
 const loginSchema = z.object({
-  email: z
-    .string()
-    .min(1, "Email e obrigatorio")
-    .email("Email invalido"),
+  email: z.string().min(1, "Email é obrigatório").email("Email inválido"),
   password: z
     .string()
-    .min(1, "Senha e obrigatoria")
-    .min(8, "Senha deve ter no minimo 8 caracteres"),
+    .min(1, "Senha é obrigatória")
+    .min(8, "Senha deve ter no mínimo 8 caracteres"),
   totpCode: z.string().optional(),
 });
 
@@ -145,9 +142,7 @@ export default function LoginClient() {
     }
   }, [isAuthenticated, router]);
 
-  useEffect(() => {
-    clearError();
-  }, [clearError]);
+  useEffect(() => { clearError(); }, [clearError]);
 
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
@@ -168,10 +163,7 @@ export default function LoginClient() {
       });
 
       if (response.mfaSetupRequired && response.mfaSetupToken && response.maskedEmail) {
-        setMfaSetupState({
-          setupToken: response.mfaSetupToken,
-          maskedEmail: response.maskedEmail,
-        });
+        setMfaSetupState({ setupToken: response.mfaSetupToken, maskedEmail: response.maskedEmail });
         return;
       }
 
@@ -211,283 +203,401 @@ export default function LoginClient() {
   const logoWidth = useThemeStore.getState().tenantTheme?.logoWidth || 180;
 
   const features = [
-    { icon: ShieldCheck, title: "LGPD Compliance", desc: "Segurança em nível bancário.", color: "#10B981" },
-    { icon: Bot, title: "IA Generativa", desc: "Decisões baseadas em dados reais.", color: "#3B82F6" },
-    { icon: Zap, title: "Processamento Realtime", desc: "Sincronização imediata.", color: "#F59E0B" },
-    { icon: Layers, title: "Arquitetura Modular", desc: "Flexível à sua cultura.", color: "#8B5CF6" },
+    { icon: ShieldCheck, title: "LGPD Compliance",         desc: "Sua segurança em nível bancário.",      color: "#059669" },
+    { icon: Bot,         title: "IA Generativa",           desc: "Decisões baseadas em dados reais.",      color: "#2563EB" },
+    { icon: Zap,         title: "Processamento Realtime",  desc: "Sincronização imediata de dados.",        color: "#D97706" },
+    { icon: Layers,      title: "Arquitetura Modular",     desc: "Flexível à sua cultura interna.",         color: "#7C3AED" },
   ];
 
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap');
 
         :root {
-          --axr-primary: ${primaryColor};
-          --axr-primary-rgb: 37, 99, 235;
+          --lp-primary: ${primaryColor};
+          --lp-primary-10: ${primaryColor}1A;
+          --lp-primary-20: ${primaryColor}33;
         }
 
-        .axr-bricolage { font-family: 'Bricolage Grotesque', sans-serif; }
-        .axr-dm { font-family: 'DM Sans', sans-serif; }
+        .lp-sora    { font-family: 'Sora', sans-serif; }
+        .lp-manrope { font-family: 'Manrope', sans-serif; }
 
-        /* ── Dark Panel ─────────────────────────────── */
-        .axr-dark-panel {
-          background: linear-gradient(155deg, #070D1B 0%, #0C1628 60%, #091220 100%);
+        /* ── Background ─────────────────────────────────── */
+        .lp-scene {
           position: relative;
+          min-height: 100vh;
+          background: #F0F4FF;
           overflow: hidden;
         }
 
-        /* Aurora blobs */
-        @keyframes axr-drift {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          33%       { transform: translate(40px, -30px) scale(1.12); }
-          66%       { transform: translate(-25px, 40px) scale(0.9); }
+        /* Animated mesh blobs */
+        @keyframes lp-blob {
+          0%, 100% { transform: translate(0, 0) scale(1);   opacity: 1;   }
+          30%       { transform: translate(35px, -25px) scale(1.08); opacity: 0.85; }
+          65%       { transform: translate(-20px, 30px) scale(0.94); opacity: 0.9;  }
         }
-
-        .axr-aurora {
+        .lp-blob {
           position: absolute;
           border-radius: 50%;
-          filter: blur(80px);
+          filter: blur(90px);
           pointer-events: none;
+          will-change: transform;
         }
-        .axr-aurora-a {
-          width: 560px; height: 560px;
-          top: -160px; left: -120px;
-          background: radial-gradient(circle, rgba(37,99,235,0.28) 0%, transparent 70%);
-          animation: axr-drift 20s ease-in-out infinite;
+        .lp-blob-1 {
+          width: 700px; height: 700px;
+          top: -200px; left: -150px;
+          background: radial-gradient(circle, rgba(37,99,235,0.18) 0%, transparent 65%);
+          animation: lp-blob 22s ease-in-out infinite;
         }
-        .axr-aurora-b {
-          width: 420px; height: 420px;
-          bottom: -120px; right: -100px;
-          background: radial-gradient(circle, rgba(99,102,241,0.22) 0%, transparent 70%);
-          animation: axr-drift 26s ease-in-out infinite reverse;
+        .lp-blob-2 {
+          width: 500px; height: 500px;
+          bottom: -150px; right: -100px;
+          background: radial-gradient(circle, rgba(124,58,237,0.13) 0%, transparent 65%);
+          animation: lp-blob 28s ease-in-out infinite reverse;
         }
-        .axr-aurora-c {
-          width: 320px; height: 320px;
-          top: 45%; left: 45%;
-          background: radial-gradient(circle, rgba(14,165,233,0.12) 0%, transparent 70%);
-          animation: axr-drift 16s ease-in-out infinite 7s;
-        }
-
-        /* Decorative rings */
-        .axr-ring {
-          position: absolute;
-          border-radius: 50%;
-          border: 1px solid rgba(255,255,255,0.04);
-          pointer-events: none;
-        }
-        .axr-ring-lg {
-          width: 560px; height: 560px;
-          top: -220px; right: -220px;
-        }
-        .axr-ring-md {
-          width: 280px; height: 280px;
-          bottom: 40px; left: -80px;
-        }
-        .axr-ring-sm {
-          width: 160px; height: 160px;
-          top: 38%; right: 12%;
-          border-color: rgba(37,99,235,0.12);
+        .lp-blob-3 {
+          width: 400px; height: 400px;
+          top: 40%; left: 55%;
+          background: radial-gradient(circle, rgba(5,150,105,0.1) 0%, transparent 65%);
+          animation: lp-blob 18s ease-in-out infinite 8s;
         }
 
         /* Dot grid */
-        .axr-grid {
+        .lp-grid {
           position: absolute;
           inset: 0;
-          background-image: radial-gradient(rgba(255,255,255,0.035) 1px, transparent 1px);
-          background-size: 28px 28px;
+          background-image: radial-gradient(rgba(37,99,235,0.12) 1px, transparent 1px);
+          background-size: 32px 32px;
           pointer-events: none;
+          mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
+          -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
         }
 
-        /* Feature cards */
-        .axr-feat-card {
+        /* Floating decorative rings */
+        @keyframes lp-ring-spin {
+          from { transform: rotate(0deg); }
+          to   { transform: rotate(360deg); }
+        }
+        .lp-ring {
+          position: absolute;
+          border-radius: 50%;
+          border: 1px solid rgba(37,99,235,0.08);
+          pointer-events: none;
+        }
+        .lp-ring-1 {
+          width: 480px; height: 480px;
+          top: -160px; right: 20%;
+          animation: lp-ring-spin 80s linear infinite;
+        }
+        .lp-ring-2 {
+          width: 240px; height: 240px;
+          bottom: 60px; left: 10%;
+          border-color: rgba(124,58,237,0.07);
+          animation: lp-ring-spin 55s linear infinite reverse;
+        }
+        .lp-ring-1::after, .lp-ring-2::after {
+          content: '';
+          position: absolute;
+          width: 6px; height: 6px;
+          background: rgba(37,99,235,0.25);
+          border-radius: 50%;
+          top: 50%; left: -3px;
+          transform: translateY(-50%);
+        }
+
+        /* ── Entrance animations ─────────────────────────── */
+        @keyframes lp-slide-up {
+          from { opacity: 0; transform: translateY(28px); filter: blur(4px); }
+          to   { opacity: 1; transform: translateY(0);    filter: blur(0); }
+        }
+        @keyframes lp-slide-right {
+          from { opacity: 0; transform: translateX(28px); filter: blur(4px); }
+          to   { opacity: 1; transform: translateX(0);    filter: blur(0); }
+        }
+
+        .lp-stagger > * { opacity: 0; }
+        .lp-stagger > *:nth-child(1) { animation: lp-slide-up 0.8s cubic-bezier(0.22,1,0.36,1) 0.05s forwards; }
+        .lp-stagger > *:nth-child(2) { animation: lp-slide-up 0.8s cubic-bezier(0.22,1,0.36,1) 0.18s forwards; }
+        .lp-stagger > *:nth-child(3) { animation: lp-slide-up 0.8s cubic-bezier(0.22,1,0.36,1) 0.30s forwards; }
+        .lp-stagger > *:nth-child(4) { animation: lp-slide-up 0.8s cubic-bezier(0.22,1,0.36,1) 0.42s forwards; }
+
+        .lp-card-in {
+          animation: lp-slide-right 0.9s cubic-bezier(0.22,1,0.36,1) 0.35s both;
+        }
+
+        /* ── Float ───────────────────────────────────────── */
+        @keyframes lp-float {
+          0%, 100% { transform: translateY(0px); }
+          50%       { transform: translateY(-10px); }
+        }
+        .lp-float { animation: lp-float 7s ease-in-out infinite; }
+
+        /* ── Feature cards ───────────────────────────────── */
+        .lp-feat {
+          background: rgba(255,255,255,0.55);
+          backdrop-filter: blur(16px) saturate(160%);
+          -webkit-backdrop-filter: blur(16px) saturate(160%);
+          border: 1px solid rgba(255,255,255,0.65);
+          border-radius: 18px;
+          padding: 18px;
           display: flex;
           align-items: flex-start;
           gap: 14px;
-          padding: 16px;
-          background: rgba(255,255,255,0.03);
-          border: 1px solid rgba(255,255,255,0.06);
-          border-radius: 14px;
-          transition: background 0.3s ease, border-color 0.3s ease;
+          transition: transform 0.3s cubic-bezier(0.22,1,0.36,1),
+                      box-shadow 0.3s ease,
+                      border-color 0.3s ease,
+                      background 0.3s ease;
+          cursor: default;
         }
-        .axr-feat-card:hover {
-          background: rgba(255,255,255,0.055);
-          border-color: rgba(255,255,255,0.1);
+        .lp-feat:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 20px 60px -10px rgba(15,23,42,0.12);
+          background: rgba(255,255,255,0.78);
+          border-color: rgba(255,255,255,0.9);
         }
-        .axr-feat-icon {
-          width: 38px; height: 38px;
-          border-radius: 10px;
-          background: rgba(255,255,255,0.06);
+        .lp-feat-icon {
+          width: 40px; height: 40px;
+          border-radius: 12px;
           display: flex; align-items: center; justify-content: center;
           flex-shrink: 0;
+          transition: transform 0.3s cubic-bezier(0.22,1,0.36,1);
+        }
+        .lp-feat:hover .lp-feat-icon {
+          transform: scale(1.12) rotate(-4deg);
         }
 
-        /* Left panel stagger */
-        @keyframes axr-up {
-          from { opacity: 0; transform: translateY(22px); }
-          to   { opacity: 1; transform: translateY(0); }
+        /* ── Login card ──────────────────────────────────── */
+        .lp-card {
+          background: rgba(255,255,255,0.72);
+          backdrop-filter: blur(28px) saturate(180%);
+          -webkit-backdrop-filter: blur(28px) saturate(180%);
+          border: 1px solid rgba(255,255,255,0.55);
+          border-radius: 32px;
+          box-shadow:
+            0 40px 100px -20px rgba(15,23,42,0.14),
+            0 0 0 1px rgba(255,255,255,0.3) inset;
+          padding: 44px 40px;
+          position: relative;
+          overflow: hidden;
         }
-        .axr-left-content > * { opacity: 0; }
-        .axr-left-content > *:nth-child(1) { animation: axr-up 0.75s cubic-bezier(0.2,0.8,0.2,1) 0.1s forwards; }
-        .axr-left-content > *:nth-child(2) { animation: axr-up 0.75s cubic-bezier(0.2,0.8,0.2,1) 0.22s forwards; }
-        .axr-left-content > *:nth-child(3) { animation: axr-up 0.75s cubic-bezier(0.2,0.8,0.2,1) 0.36s forwards; }
-        .axr-left-content > *:nth-child(4) { animation: axr-up 0.75s cubic-bezier(0.2,0.8,0.2,1) 0.48s forwards; }
-
-        /* Right panel reveal */
-        @keyframes axr-right-in {
-          from { opacity: 0; transform: translateX(20px); }
-          to   { opacity: 1; transform: translateX(0); }
-        }
-        .axr-right-reveal      { animation: axr-right-in 0.65s cubic-bezier(0.2,0.8,0.2,1) 0.25s both; }
-        .axr-right-reveal-slow { animation: axr-right-in 0.65s cubic-bezier(0.2,0.8,0.2,1) 0.4s both; }
-        .axr-right-reveal-btn  { animation: axr-right-in 0.65s cubic-bezier(0.2,0.8,0.2,1) 0.5s both; }
-
-        /* Form inputs */
-        .axr-input-wrap { position: relative; }
-        .axr-input-icon {
+        .lp-card::before {
+          content: '';
           position: absolute;
-          left: 14px;
-          top: 50%;
-          transform: translateY(-50%);
-          width: 18px; height: 18px;
-          color: #B0BEC7;
+          top: -60px; right: -60px;
+          width: 180px; height: 180px;
+          background: radial-gradient(circle, var(--lp-primary-10) 0%, transparent 70%);
+          border-radius: 50%;
           pointer-events: none;
-          transition: color 0.2s;
         }
-        .axr-input-wrap:focus-within .axr-input-icon {
-          color: var(--axr-primary);
+        .lp-card::after {
+          content: '';
+          position: absolute;
+          bottom: -40px; left: -40px;
+          width: 130px; height: 130px;
+          background: radial-gradient(circle, rgba(124,58,237,0.07) 0%, transparent 70%);
+          border-radius: 50%;
+          pointer-events: none;
         }
 
-        .axr-input {
+        /* ── Inputs ──────────────────────────────────────── */
+        .lp-field { position: relative; }
+        .lp-field-icon {
+          position: absolute;
+          left: 14px; top: 50%;
+          transform: translateY(-50%);
+          width: 17px; height: 17px;
+          color: #CBD5E1;
+          pointer-events: none;
+          transition: color 0.25s ease;
+        }
+        .lp-field:focus-within .lp-field-icon { color: var(--lp-primary); }
+
+        .lp-input {
           width: 100%;
-          padding: 13px 16px 13px 44px;
-          background: #F7F9FF;
-          border: 1.5px solid #E4EAF2;
-          border-radius: 12px;
-          font-family: 'DM Sans', sans-serif;
-          font-size: 15px;
-          font-weight: 400;
+          padding: 13px 16px 13px 42px;
+          background: rgba(248,250,255,0.8);
+          border: 1.5px solid #E2EAF4;
+          border-radius: 14px;
+          font-family: 'Manrope', sans-serif;
+          font-size: 14.5px;
+          font-weight: 500;
           color: #0F172A;
           outline: none;
-          transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+          transition:
+            border-color 0.25s ease,
+            box-shadow 0.25s ease,
+            background 0.25s ease;
         }
-        .axr-input::placeholder { color: #B8C4CE; }
-        .axr-input:hover { border-color: #C8D4E0; background: #F2F6FF; }
-        .axr-input:focus {
+        .lp-input::placeholder { color: #B8C9D9; font-weight: 400; }
+        .lp-input:hover:not(:disabled) {
+          border-color: #C4D4E8;
+          background: rgba(248,250,255,1);
+        }
+        .lp-input:focus {
           background: #FFFFFF;
-          border-color: var(--axr-primary);
-          box-shadow: 0 0 0 4px rgba(var(--axr-primary-rgb), 0.1);
+          border-color: var(--lp-primary);
+          box-shadow: 0 0 0 4px var(--lp-primary-10), 0 1px 2px rgba(0,0,0,0.04);
         }
-        .axr-input-err { border-color: #F43F5E !important; }
-        .axr-input-err:focus { box-shadow: 0 0 0 4px rgba(244,63,94,0.1) !important; }
+        .lp-input-pr { padding-right: 46px; }
+        .lp-input-error { border-color: #FB7185 !important; }
+        .lp-input-error:focus { box-shadow: 0 0 0 4px rgba(251,113,133,0.12) !important; }
 
-        .axr-input-pr { padding-right: 48px; }
-        .axr-eye-btn {
+        .lp-eye {
           position: absolute;
-          right: 14px;
-          top: 50%;
+          right: 13px; top: 50%;
           transform: translateY(-50%);
-          color: #B0BEC7;
-          background: none;
-          border: none;
+          color: #94A3B8;
+          background: none; border: none;
           cursor: pointer;
-          display: flex;
-          align-items: center;
-          transition: color 0.2s;
+          display: flex; align-items: center;
+          padding: 4px;
+          border-radius: 6px;
+          transition: color 0.2s, background 0.2s;
         }
-        .axr-eye-btn:hover { color: #64748B; }
+        .lp-eye:hover { color: #475569; background: rgba(0,0,0,0.04); }
 
-        /* Submit button */
-        .axr-submit-btn {
+        /* ── Submit button ───────────────────────────────── */
+        .lp-btn {
+          position: relative;
           width: 100%;
-          padding: 14px 28px;
-          background: var(--axr-primary);
+          padding: 14px 24px;
+          background: var(--lp-primary);
           color: #fff;
           border: none;
-          border-radius: 12px;
-          font-family: 'DM Sans', sans-serif;
-          font-size: 15px;
-          font-weight: 600;
+          border-radius: 14px;
+          font-family: 'Sora', sans-serif;
+          font-size: 14px;
+          font-weight: 700;
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
           gap: 8px;
-          transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
-          box-shadow: 0 4px 20px rgba(var(--axr-primary-rgb), 0.35);
+          overflow: hidden;
+          transition:
+            transform 0.22s cubic-bezier(0.22,1,0.36,1),
+            box-shadow 0.22s ease,
+            filter 0.22s ease;
+          box-shadow: 0 4px 24px -4px var(--lp-primary-20), 0 2px 8px rgba(0,0,0,0.08);
         }
-        .axr-submit-btn:hover:not(:disabled) {
+        .lp-btn::after {
+          content: '';
+          position: absolute;
+          top: 0; left: -100%;
+          width: 60%; height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+          transform: skewX(-15deg);
+          transition: left 0.55s ease;
+        }
+        .lp-btn:hover:not(:disabled)::after { left: 150%; }
+        .lp-btn:hover:not(:disabled) {
           transform: translateY(-2px);
-          box-shadow: 0 10px 32px rgba(var(--axr-primary-rgb), 0.45);
-          filter: brightness(1.06);
+          box-shadow: 0 12px 36px -6px var(--lp-primary-20), 0 4px 12px rgba(0,0,0,0.1);
+          filter: brightness(1.05);
         }
-        .axr-submit-btn:active:not(:disabled) { transform: translateY(0); }
-        .axr-submit-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+        .lp-btn:active:not(:disabled) { transform: translateY(0); }
+        .lp-btn:disabled { opacity: 0.55; cursor: not-allowed; }
 
-        /* 2FA code input */
-        .axr-totp-input {
+        /* ── TOTP input ──────────────────────────────────── */
+        .lp-totp {
           width: 100%;
-          background: #F7F9FF;
-          border: 2px solid #E4EAF2;
-          border-radius: 14px;
-          padding: 20px 16px;
+          background: rgba(248,250,255,0.8);
+          border: 2px solid #E2EAF4;
+          border-radius: 16px;
+          padding: 22px 16px;
           text-align: center;
-          font-family: 'Bricolage Grotesque', sans-serif;
-          font-size: 32px;
-          font-weight: 700;
-          letter-spacing: 0.28em;
+          font-family: 'Sora', sans-serif;
+          font-size: 34px;
+          font-weight: 800;
+          letter-spacing: 0.32em;
           color: #0F172A;
           outline: none;
-          transition: border-color 0.2s, box-shadow 0.2s;
+          transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
         }
-        .axr-totp-input::placeholder { color: #D1D8E0; letter-spacing: 0.2em; }
-        .axr-totp-input:focus {
-          border-color: var(--axr-primary);
-          box-shadow: 0 0 0 4px rgba(var(--axr-primary-rgb), 0.1);
+        .lp-totp::placeholder { color: #D1DCE8; letter-spacing: 0.22em; }
+        .lp-totp:focus {
           background: #fff;
+          border-color: var(--lp-primary);
+          box-shadow: 0 0 0 4px var(--lp-primary-10);
         }
 
-        /* Alert banners */
-        .axr-alert {
+        /* ── Alerts ──────────────────────────────────────── */
+        .lp-alert {
           display: flex;
           align-items: center;
           gap: 10px;
-          padding: 12px 16px;
-          border-radius: 10px;
-          font-family: 'DM Sans', sans-serif;
+          padding: 11px 15px;
+          border-radius: 12px;
+          font-family: 'Manrope', sans-serif;
           font-size: 13.5px;
           font-weight: 500;
         }
-        .axr-alert-error { background: #FFF1F3; border: 1px solid #FEE0E5; color: #BE123C; }
-        .axr-alert-warn  { background: #FFFBEB; border: 1px solid #FDE68A; color: #92400E; }
-
-        /* Logo float */
-        @keyframes axr-float {
-          0%, 100% { transform: translateY(0); }
-          50%       { transform: translateY(-8px); }
+        .lp-alert-error {
+          background: rgba(254,226,226,0.7);
+          border: 1px solid rgba(252,165,165,0.5);
+          color: #B91C1C;
         }
-        .axr-float { animation: axr-float 7s ease-in-out infinite; }
-
-        /* Mobile form panel background dots */
-        .axr-form-panel {
-          background: #ffffff;
-          position: relative;
-        }
-        .axr-form-panel::before {
-          content: "";
-          position: absolute;
-          inset: 0;
-          background-image: radial-gradient(rgba(37,99,235,0.04) 1px, transparent 1px);
-          background-size: 24px 24px;
-          pointer-events: none;
+        .lp-alert-warn {
+          background: rgba(254,243,199,0.7);
+          border: 1px solid rgba(253,211,77,0.5);
+          color: #92400E;
         }
 
-        /* Divider line on form panel top (desktop) */
-        .axr-accent-bar {
-          position: absolute;
-          top: 0; left: 0; right: 0;
-          height: 3px;
-          background: linear-gradient(90deg, var(--axr-primary), rgba(99,102,241,0.6));
+        /* ── Label style ─────────────────────────────────── */
+        .lp-label {
+          display: block;
+          margin-bottom: 7px;
+          margin-left: 1px;
+          font-family: 'Manrope', sans-serif;
+          font-size: 10.5px;
+          font-weight: 700;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          color: #94A3B8;
+        }
+
+        /* ── Forgot link ─────────────────────────────────── */
+        .lp-forgot {
+          font-family: 'Manrope', sans-serif;
+          font-size: 13px;
+          font-weight: 700;
+          color: var(--lp-primary);
+          text-decoration: none;
+          opacity: 0.85;
+          transition: opacity 0.2s;
+        }
+        .lp-forgot:hover { opacity: 1; }
+
+        /* ── Back button ─────────────────────────────────── */
+        .lp-back {
+          width: 100%;
+          margin-top: 12px;
+          padding: 10px;
+          background: none; border: none;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          font-family: 'Manrope', sans-serif;
+          font-size: 13px;
+          font-weight: 600;
+          color: #94A3B8;
+          border-radius: 10px;
+          transition: color 0.2s, background 0.2s;
+        }
+        .lp-back:hover { color: #475569; background: rgba(0,0,0,0.03); }
+
+        /* 2FA info box */
+        .lp-2fa-info {
+          background: var(--lp-primary-10);
+          border: 1px solid var(--lp-primary-20);
+          border-radius: 12px;
+          padding: 12px 14px;
+          display: flex;
+          gap: 10px;
+          align-items: flex-start;
         }
       `}</style>
 
@@ -500,310 +610,228 @@ export default function LoginClient() {
         />
       )}
 
-      <div className="axr-dm min-h-screen flex flex-col lg:flex-row">
-        {/* ── Left: Dark Brand Panel ──────────────────────────────────── */}
-        <div className="axr-dark-panel hidden lg:flex lg:w-[54%] xl:w-[56%] flex-col justify-between p-14 xl:p-20">
-          {/* Background layers */}
-          <div className="axr-aurora axr-aurora-a" />
-          <div className="axr-aurora axr-aurora-b" />
-          <div className="axr-aurora axr-aurora-c" />
-          <div className="axr-ring axr-ring-lg" />
-          <div className="axr-ring axr-ring-md" />
-          <div className="axr-ring axr-ring-sm" />
-          <div className="axr-grid" />
+      <div className="lp-scene lp-manrope flex items-center justify-center p-6 sm:p-10">
+        {/* Background layers */}
+        <div className="lp-blob lp-blob-1" />
+        <div className="lp-blob lp-blob-2" />
+        <div className="lp-blob lp-blob-3" />
+        <div className="lp-grid" />
+        <div className="lp-ring lp-ring-1" />
+        <div className="lp-ring lp-ring-2" />
 
-          {/* Content stacked with spacing */}
-          <div className="relative z-10 flex flex-col h-full axr-left-content">
+        {/* Main layout */}
+        <div className="relative z-10 w-full max-w-[1180px] grid lg:grid-cols-[1.15fr_0.85fr] gap-10 lg:gap-20 items-center">
+
+          {/* ── Left: Branding ──────────────────────────── */}
+          <div className="lp-stagger flex flex-col gap-7 text-center lg:text-left">
             {/* Logo */}
-            <div className="flex items-center gap-3 mb-auto">
+            <div className="flex items-center justify-center lg:justify-start">
               {loginConfig.logoUrl ? (
                 <img
                   src={getPhotoUrl(loginConfig.logoUrl, new Date().getTime().toString(), "logo") || ""}
                   alt="Logo"
-                  className="h-10 w-auto object-contain axr-float"
+                  className="h-12 w-auto object-contain lp-float"
                   style={{ maxWidth: `${logoWidth}px` }}
                 />
               ) : (
-                <div className="flex items-center gap-1 axr-float">
-                  <span className="axr-bricolage text-white text-[28px] font-bold tracking-tight">Axon</span>
-                  <span className="axr-bricolage text-[28px] font-bold tracking-tight" style={{ color: "var(--axr-primary)" }}>RH</span>
-                </div>
+                <h1 className="lp-sora text-5xl sm:text-6xl font-black tracking-tight flex items-center gap-2 lp-float">
+                  <span className="text-slate-900">Axon</span>
+                  <span style={{ color: "var(--lp-primary)" }}>RH</span>
+                </h1>
               )}
             </div>
 
             {/* Headline */}
-            <div className="flex-1 flex flex-col justify-center py-10">
-              <h2 className="axr-bricolage text-[2.4rem] xl:text-[2.75rem] font-bold text-white leading-[1.18] mb-5">
-                A revolução inteligente do seu{" "}
-                <span style={{ color: "var(--axr-primary)" }}>Capital Humano.</span>
-              </h2>
-              <p className="text-[#7A98BB] text-lg leading-relaxed max-w-lg font-normal">
-                {loginConfig.welcomeMessage ||
-                  "Toda a gestão de pessoas, estratégia de talentos e inteligência artificial em um único ecossistema premium."}
-              </p>
+            <h2 className="lp-sora text-3xl sm:text-[2.6rem] font-extrabold text-slate-900 leading-[1.12] tracking-tight">
+              A revolução inteligente do seu{" "}
+              <span style={{ color: "var(--lp-primary)" }}>Capital Humano.</span>
+            </h2>
 
-              {/* Feature grid */}
-              <div className="grid grid-cols-2 gap-3 mt-10">
-                {features.map((item) => (
-                  <div className="axr-feat-card" key={item.title}>
-                    <div className="axr-feat-icon" style={{ color: item.color }}>
-                      <item.icon className="w-4.5 h-4.5" style={{ width: 18, height: 18 }} />
+            {/* Subtitle */}
+            <p className="text-slate-500 text-lg leading-relaxed max-w-xl mx-auto lg:mx-0 font-medium">
+              {loginConfig.welcomeMessage ||
+                "Toda a gestão de pessoas, estratégia de talentos e inteligência artificial em um único ecossistema premium."}
+            </p>
+
+            {/* Feature cards grid */}
+            <div className="hidden sm:grid grid-cols-2 gap-3 mt-2">
+              {features.map((item) => (
+                <div className="lp-feat" key={item.title}>
+                  <div className="lp-feat-icon" style={{ background: `${item.color}15`, color: item.color }}>
+                    <item.icon style={{ width: 18, height: 18 }} />
+                  </div>
+                  <div>
+                    <p className="lp-sora text-[13px] font-bold text-slate-800 leading-snug">{item.title}</p>
+                    <p className="text-[12px] text-slate-500 mt-0.5 font-medium leading-relaxed">{item.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Right: Login Card ────────────────────────── */}
+          <div className="w-full max-w-[440px] mx-auto lg:mx-0 lp-card-in">
+            <div className="lp-card">
+              {/* Card header */}
+              <div className="relative z-10 mb-7">
+                {show2FA ? (
+                  <>
+                    <div
+                      className="w-12 h-12 rounded-2xl flex items-center justify-center mb-5"
+                      style={{ background: "var(--lp-primary-10)", color: "var(--lp-primary)" }}
+                    >
+                      <KeyRound style={{ width: 22, height: 22 }} />
                     </div>
+                    <h3 className="lp-sora text-[1.5rem] font-bold text-slate-900 mb-1.5">Segurança em 2 passos</h3>
+                    <p className="text-slate-400 text-sm leading-relaxed font-medium">
+                      Insira o código de 6 dígitos gerado pelo seu aplicativo autenticador.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="lp-sora text-[1.5rem] font-bold text-slate-900 mb-1">Seja bem-vindo</h3>
+                    <p className="text-slate-400 text-sm font-medium">Use suas credenciais corporativas.</p>
+                  </>
+                )}
+              </div>
+
+              {/* Alerts */}
+              {showExpiredMessage && (
+                <div className="lp-alert lp-alert-warn mb-5">
+                  <AlertCircle style={{ width: 16, height: 16, flexShrink: 0 }} />
+                  <span className="text-[11px] font-bold uppercase tracking-wider">Sessão Expirada</span>
+                </div>
+              )}
+              {authError && (
+                <div className="lp-alert lp-alert-error mb-5">
+                  <AlertCircle style={{ width: 16, height: 16, flexShrink: 0 }} />
+                  <span>{authError}</span>
+                </div>
+              )}
+
+              {/* Form */}
+              <form onSubmit={handleSubmit(onSubmit)} className="relative z-10 space-y-0">
+                {!show2FA && (
+                  <div className="space-y-4">
+                    {/* Email */}
                     <div>
-                      <p className="axr-bricolage text-white text-[13.5px] font-semibold leading-snug">{item.title}</p>
-                      <p style={{ color: "#5A7898", fontSize: 12, marginTop: 3, fontWeight: 400 }}>{item.desc}</p>
+                      <label htmlFor="email" className="lp-label">E-mail Corporativo</label>
+                      <div className="lp-field">
+                        <Mail className="lp-field-icon" />
+                        <input
+                          {...register("email")}
+                          type="email"
+                          id="email"
+                          placeholder="nome@empresa.com"
+                          className={cn("lp-input", errors.email && "lp-input-error")}
+                          disabled={isLoading}
+                          autoComplete="email"
+                        />
+                      </div>
+                      {errors.email && (
+                        <span style={{ display: "block", marginTop: 5, marginLeft: 2, fontSize: 11.5, fontWeight: 600, color: "#E11D48" }}>
+                          {errors.email.message}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Password */}
+                    <div>
+                      <label htmlFor="password" className="lp-label">Sua Senha</label>
+                      <div className="lp-field">
+                        <Lock className="lp-field-icon" />
+                        <input
+                          {...register("password")}
+                          type={showPassword ? "text" : "password"}
+                          id="password"
+                          placeholder="••••••••"
+                          className={cn("lp-input lp-input-pr", errors.password && "lp-input-error")}
+                          disabled={isLoading}
+                          autoComplete="current-password"
+                        />
+                        <button
+                          type="button"
+                          className="lp-eye"
+                          onClick={() => setShowPassword(!showPassword)}
+                          tabIndex={-1}
+                        >
+                          {showPassword
+                            ? <EyeOff style={{ width: 16, height: 16 }} />
+                            : <Eye style={{ width: 16, height: 16 }} />}
+                        </button>
+                      </div>
+                      {errors.password && (
+                        <span style={{ display: "block", marginTop: 5, marginLeft: 2, fontSize: 11.5, fontWeight: 600, color: "#E11D48" }}>
+                          {errors.password.message}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Forgot */}
+                    <div className="flex justify-end pt-0.5">
+                      <a href="/forgot-password" className="lp-forgot">Esqueceu sua senha?</a>
                     </div>
                   </div>
-                ))}
-              </div>
+                )}
+
+                {/* 2FA */}
+                {show2FA && (
+                  <div className="space-y-4 mb-2">
+                    <div>
+                      <label htmlFor="totpCode" className="lp-label text-center block">
+                        Código de Verificação
+                      </label>
+                      <input
+                        {...register("totpCode")}
+                        type="text"
+                        id="totpCode"
+                        placeholder="000 000"
+                        maxLength={6}
+                        autoComplete="one-time-code"
+                        className="lp-totp"
+                        disabled={isLoading}
+                        autoFocus
+                      />
+                    </div>
+                    <div className="lp-2fa-info">
+                      <ShieldCheck style={{ width: 16, height: 16, color: "var(--lp-primary)", flexShrink: 0, marginTop: 1 }} />
+                      <p style={{ fontSize: 12.5, color: "#475569", lineHeight: 1.55, fontWeight: 500 }}>
+                        Abra seu app autenticador para obter o token dinâmico necessário para este acesso.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Submit */}
+                <div className="pt-5">
+                  <button type="submit" disabled={isLoading} className="lp-btn">
+                    {isLoading ? (
+                      <>
+                        <Loader2 style={{ width: 17, height: 17 }} className="animate-spin" />
+                        <span>Verificando...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>{show2FA ? "Validar Acesso" : "Entrar no Ecossistema"}</span>
+                        <ArrowRight style={{ width: 16, height: 16 }} />
+                      </>
+                    )}
+                  </button>
+
+                  {show2FA && (
+                    <button type="button" onClick={handleCancelMfa} disabled={isLoading} className="lp-back">
+                      <ArrowLeft style={{ width: 14, height: 14 }} />
+                      Alterar usuário ou senha
+                    </button>
+                  )}
+                </div>
+              </form>
             </div>
 
             {/* Footer */}
-            <p className="axr-bricolage text-[11px] font-semibold tracking-[0.18em] uppercase" style={{ color: "#2A405A" }}>
-              AXONRH ECOSYSTEM © 2026
-            </p>
-          </div>
-        </div>
-
-        {/* ── Right: Form Panel ──────────────────────────────────────── */}
-        <div className="axr-form-panel flex-1 flex flex-col items-center justify-center px-8 py-14 sm:px-12">
-          <div className="axr-accent-bar" />
-
-          <div className="w-full max-w-[420px] relative z-10">
-            {/* Mobile logo */}
-            <div className="lg:hidden flex items-center justify-center gap-1 mb-10">
-              {loginConfig.logoUrl ? (
-                <img
-                  src={getPhotoUrl(loginConfig.logoUrl, new Date().getTime().toString(), "logo") || ""}
-                  alt="Logo"
-                  className="h-10 w-auto object-contain"
-                  style={{ maxWidth: `${logoWidth}px` }}
-                />
-              ) : (
-                <>
-                  <span className="axr-bricolage text-slate-900 text-2xl font-bold">Axon</span>
-                  <span className="axr-bricolage text-2xl font-bold" style={{ color: "var(--axr-primary)" }}>RH</span>
-                </>
-              )}
-            </div>
-
-            {/* Heading */}
-            <div className="mb-8 axr-right-reveal">
-              {show2FA ? (
-                <>
-                  <div
-                    className="w-12 h-12 rounded-2xl flex items-center justify-center mb-5"
-                    style={{ background: `rgba(var(--axr-primary-rgb), 0.1)`, color: "var(--axr-primary)" }}
-                  >
-                    <KeyRound className="w-6 h-6" />
-                  </div>
-                  <h1 className="axr-bricolage text-[1.75rem] font-bold text-slate-900 mb-1.5 leading-snug">
-                    Segurança em 2 passos
-                  </h1>
-                  <p className="text-slate-400 text-[14.5px] leading-relaxed">
-                    Insira o código de 6 dígitos do seu aplicativo autenticador.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <h1 className="axr-bricolage text-[1.75rem] font-bold text-slate-900 mb-1.5 leading-snug">
-                    Seja bem-vindo
-                  </h1>
-                  <p className="text-slate-400 text-[14.5px]">Use suas credenciais corporativas.</p>
-                </>
-              )}
-            </div>
-
-            {/* Alerts */}
-            {showExpiredMessage && (
-              <div className="axr-alert axr-alert-warn mb-5">
-                <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                <span className="text-xs font-bold uppercase tracking-wider">Sessão Expirada</span>
-              </div>
-            )}
-            {authError && (
-              <div className="axr-alert axr-alert-error mb-5">
-                <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                <span>{authError}</span>
-              </div>
-            )}
-
-            {/* Form */}
-            <form onSubmit={handleSubmit(onSubmit)}>
-              {!show2FA && (
-                <div className="axr-right-reveal-slow">
-                  {/* Email */}
-                  <div className="mb-4">
-                    <label
-                      htmlFor="email"
-                      className="block mb-1.5 ml-0.5"
-                      style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#94A3B8" }}
-                    >
-                      E-mail Corporativo
-                    </label>
-                    <div className="axr-input-wrap">
-                      <Mail className="axr-input-icon" />
-                      <input
-                        {...register("email")}
-                        type="email"
-                        id="email"
-                        placeholder="nome@empresa.com"
-                        className={cn("axr-input", errors.email && "axr-input-err")}
-                        disabled={isLoading}
-                        autoComplete="email"
-                      />
-                    </div>
-                    {errors.email && (
-                      <span style={{ display: "block", marginTop: 6, marginLeft: 2, fontSize: 11.5, fontWeight: 600, color: "#F43F5E" }}>
-                        {errors.email.message}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Password */}
-                  <div className="mb-2">
-                    <label
-                      htmlFor="password"
-                      className="block mb-1.5 ml-0.5"
-                      style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#94A3B8" }}
-                    >
-                      Senha
-                    </label>
-                    <div className="axr-input-wrap">
-                      <Lock className="axr-input-icon" />
-                      <input
-                        {...register("password")}
-                        type={showPassword ? "text" : "password"}
-                        id="password"
-                        placeholder="••••••••"
-                        className={cn("axr-input axr-input-pr", errors.password && "axr-input-err")}
-                        disabled={isLoading}
-                        autoComplete="current-password"
-                      />
-                      <button
-                        type="button"
-                        className="axr-eye-btn"
-                        onClick={() => setShowPassword(!showPassword)}
-                        tabIndex={-1}
-                      >
-                        {showPassword ? <EyeOff className="w-4.5 h-4.5" style={{ width: 17, height: 17 }} /> : <Eye className="w-4.5 h-4.5" style={{ width: 17, height: 17 }} />}
-                      </button>
-                    </div>
-                    {errors.password && (
-                      <span style={{ display: "block", marginTop: 6, marginLeft: 2, fontSize: 11.5, fontWeight: 600, color: "#F43F5E" }}>
-                        {errors.password.message}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Forgot password */}
-                  <div className="flex justify-end mb-6 mt-2.5">
-                    <a
-                      href="/forgot-password"
-                      style={{ fontSize: 13, fontWeight: 600, color: "var(--axr-primary)", textDecoration: "none", opacity: 0.9, transition: "opacity 0.15s" }}
-                      onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
-                      onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.9")}
-                    >
-                      Esqueceu sua senha?
-                    </a>
-                  </div>
-                </div>
-              )}
-
-              {/* 2FA code */}
-              {show2FA && (
-                <div className="space-y-4 mb-6 axr-right-reveal-slow">
-                  <div>
-                    <label
-                      htmlFor="totpCode"
-                      className="block mb-2 text-center"
-                      style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#94A3B8" }}
-                    >
-                      Código de Verificação
-                    </label>
-                    <input
-                      {...register("totpCode")}
-                      type="text"
-                      id="totpCode"
-                      placeholder="000 000"
-                      maxLength={6}
-                      autoComplete="one-time-code"
-                      className="axr-totp-input"
-                      disabled={isLoading}
-                      autoFocus
-                    />
-                  </div>
-                  <div
-                    style={{
-                      padding: "12px 14px",
-                      borderRadius: 10,
-                      background: "rgba(var(--axr-primary-rgb), 0.05)",
-                      border: "1px solid rgba(var(--axr-primary-rgb), 0.1)",
-                      display: "flex",
-                      gap: 12,
-                      alignItems: "flex-start",
-                    }}
-                  >
-                    <ShieldCheck style={{ width: 17, height: 17, color: "var(--axr-primary)", flexShrink: 0, marginTop: 1 }} />
-                    <p style={{ fontSize: 12.5, color: "#64748B", lineHeight: 1.5, fontWeight: 400 }}>
-                      Abra seu app autenticador para obter o token dinâmico necessário para este acesso.
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* Submit */}
-              <div className="axr-right-reveal-btn">
-                <button type="submit" disabled={isLoading} className="axr-submit-btn">
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Verificando...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>{show2FA ? "Validar Acesso" : "Entrar no Ecossistema"}</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
-
-                {show2FA && (
-                  <button
-                    type="button"
-                    onClick={handleCancelMfa}
-                    disabled={isLoading}
-                    style={{
-                      width: "100%",
-                      marginTop: 14,
-                      padding: "10px",
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 7,
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color: "#94A3B8",
-                      transition: "color 0.2s",
-                      fontFamily: "DM Sans, sans-serif",
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.color = "#334155")}
-                    onMouseLeave={(e) => (e.currentTarget.style.color = "#94A3B8")}
-                  >
-                    <ArrowLeft className="w-3.5 h-3.5" style={{ width: 14, height: 14 }} />
-                    Alterar usuário ou senha
-                  </button>
-                )}
-              </div>
-            </form>
-
-            {/* Footer (mobile/solo) */}
             <p
-              className="text-center mt-10 tracking-widest uppercase lg:hidden"
-              style={{ fontSize: 10.5, fontWeight: 700, color: "#CBD5E1" }}
+              className="text-center mt-6 tracking-[0.18em] uppercase"
+              style={{ fontSize: 10.5, fontWeight: 700, color: "#94A3B8" }}
             >
               {loginConfig.footerText ||
                 (loginConfig.showPoweredBy !== false && "AXONRH ECOSYSTEM © 2026")}
