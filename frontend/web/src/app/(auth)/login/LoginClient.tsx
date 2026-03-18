@@ -340,24 +340,24 @@ export default function LoginClient() {
           to   { opacity: 1; transform: translateY(0);    filter: blur(0); }
         }
 
-        /* Smoky card entrance */
+        /* Smoky card entrance — saturate+blur para efeito névoa sem conflito com backdrop-filter */
         @keyframes lp-smoke-in {
           0%   {
             opacity: 0;
-            transform: translateY(24px) scale(0.97);
-            filter: blur(18px);
+            transform: translateY(32px) scale(0.95);
+            filter: blur(14px) saturate(0) brightness(1.3);
           }
-          40%  {
-            opacity: 0.7;
-            filter: blur(6px);
+          35%  {
+            opacity: 0.65;
+            filter: blur(5px) saturate(0.3) brightness(1.1);
           }
-          70%  {
-            filter: blur(1.5px);
+          65%  {
+            filter: blur(1px) saturate(0.8) brightness(1.02);
           }
           100% {
             opacity: 1;
             transform: translateY(0) scale(1);
-            filter: blur(0);
+            filter: blur(0px) saturate(1) brightness(1);
           }
         }
 
@@ -368,7 +368,7 @@ export default function LoginClient() {
         .lp-stagger > *:nth-child(4) { animation: lp-slide-up 0.9s cubic-bezier(0.22,1,0.36,1) 0.46s forwards; }
 
         .lp-card-in {
-          animation: lp-smoke-in 1.1s cubic-bezier(0.22,1,0.36,1) 0.3s both;
+          animation: lp-smoke-in 1.3s cubic-bezier(0.22,1,0.36,1) 0.2s both;
         }
 
         /* ── Float ───────────────────────────────────────── */
