@@ -3,7 +3,7 @@ package com.axonrh.employee.entity.enums;
 import com.fasterxml.jackson.annotation.JsonAlias;
 
 public enum BankAccountType {
-    @JsonAlias({"CORRENTE", "CHECKING"})
+    @JsonAlias({"CORRENTE", "CHECKING", "CURRENT"})
     CORRENTE,
     
     @JsonAlias({"POUPANCA", "SAVINGS"})

@@ -60,6 +60,35 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(org.springframework.http.converter.HttpMessageNotReadableException ex) {
+        log.warn("Corpo da requisição inválido: {}", ex.getMessage());
+        
+        String message = "Erro ao processar os dados enviados. Verifique o formato dos campos.";
+        Throwable cause = ex.getCause();
+        
+        if (cause instanceof com.fasterxml.jackson.databind.exc.InvalidFormatException) {
+            com.fasterxml.jackson.databind.exc.InvalidFormatException ife = (com.fasterxml.jackson.databind.exc.InvalidFormatException) cause;
+            String fieldName = ife.getPath().isEmpty() ? "desconhecido" : ife.getPath().get(ife.getPath().size()-1).getFieldName();
+            
+            if (ife.getTargetType() != null && ife.getTargetType().isEnum()) {
+                message = String.format("O valor '%s' não é válido para o campo '%s'. Valores aceitos: %s",
+                        ife.getValue(), fieldName, java.util.Arrays.toString(ife.getTargetType().getEnumConstants()));
+            } else {
+                message = "Formato inválido para o campo '" + fieldName + "'.";
+            }
+        } else if (ex.getMessage() != null && ex.getMessage().contains("UUID")) {
+            message = "Formato de ID (UUID) inválido encontrado em um ou mais campos.";
+        }
+
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                message,
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ValidationErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();

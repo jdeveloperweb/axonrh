@@ -293,7 +293,7 @@ export function MassExportModal({
                   size="sm"
                   className={cn(
                     "w-full h-11 flex items-center justify-center gap-2 border-2",
-                    format === 'pdf' ? "border-primary bg-primary/10 text-primary hover:bg-primary/20" : "border-muted"
+                    format === 'pdf' ? "border-primary" : "border-transparent"
                   )}
                   onClick={() => setFormat('pdf')}
                 >
@@ -305,7 +305,7 @@ export function MassExportModal({
                   size="sm"
                   className={cn(
                     "w-full h-11 flex items-center justify-center gap-2 border-2",
-                    format === 'excel' ? "border-primary bg-primary/10 text-primary hover:bg-primary/20" : "border-muted"
+                    format === 'excel' ? "border-primary" : "border-transparent"
                   )}
                   onClick={() => setFormat('excel')}
                 >

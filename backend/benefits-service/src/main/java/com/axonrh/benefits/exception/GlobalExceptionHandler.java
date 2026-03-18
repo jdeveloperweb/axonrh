@@ -10,6 +10,8 @@ import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -47,11 +49,20 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Object> handleValidation(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
+        log.error("Erro de validação: {}", ex.getMessage());
+        Map<String, Object> response = new HashMap<>();
+        response.put("error", "Validation Error");
+        
+        Map<String, String> details = new HashMap<>();
         ex.getBindingResult().getFieldErrors().forEach(e ->
-                errors.put(e.getField(), e.getDefaultMessage())
+                details.put(e.getField(), e.getDefaultMessage())
         );
-        return ResponseEntity.badRequest().body(errors);
+        
+        String summary = details.values().stream().findFirst().orElse("Erro de validação nos campos.");
+        response.put("message", summary);
+        response.put("details", details);
+        
+        return ResponseEntity.badRequest().body(response);
     }
 
     @ExceptionHandler(MissingRequestHeaderException.class)
@@ -73,9 +84,25 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
         log.error("Erro ao processar JSON: {}", ex.getMessage());
-        Map<String, String> error = new HashMap<>();
+        Map<String, Object> error = new HashMap<>();
         error.put("error", "Bad Request");
-        error.put("message", "Erro ao processar os dados enviados. Verifique o formulario.");
+        
+        String message = "Erro ao processar os dados enviados. Verifique o formulário.";
+        Throwable cause = ex.getCause();
+        
+        if (cause instanceof InvalidFormatException) {
+            InvalidFormatException ife = (InvalidFormatException) cause;
+            String fieldName = ife.getPath().isEmpty() ? "campo" : ife.getPath().get(ife.getPath().size()-1).getFieldName();
+            
+            if (ife.getTargetType() != null && ife.getTargetType().isEnum()) {
+                message = String.format("O valor '%s' não é válido para o campo '%s'. Valores aceitos: %s",
+                        ife.getValue(), fieldName, java.util.Arrays.toString(ife.getTargetType().getEnumConstants()));
+            } else {
+                message = "Formato inválido para o campo '" + fieldName + "'.";
+            }
+        }
+        
+        error.put("message", message);
         return ResponseEntity.badRequest().body(error);
     }
 

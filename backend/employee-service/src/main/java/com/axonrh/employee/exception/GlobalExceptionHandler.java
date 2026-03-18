@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -59,11 +61,22 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Object> handleValidation(MethodArgumentNotValidException ex) {
         log.error(">>> [DEBUG-CRITICAL] VALIDATION FAILED: {}", ex.getMessage());
-        Map<String, String> errors = new HashMap<>();
+        Map<String, Object> response = new HashMap<>();
+        response.put("error", "Validation Error");
+        
+        Map<String, String> details = new HashMap<>();
         ex.getBindingResult().getFieldErrors().forEach(error -> 
-            errors.put(error.getField(), error.getDefaultMessage())
+            details.put(error.getField(), error.getDefaultMessage())
         );
-        return ResponseEntity.badRequest().body(errors);
+        
+        String summary = details.values().stream()
+                .findFirst()
+                .orElse("Erro de validação nos campos.");
+        
+        response.put("message", summary);
+        response.put("details", details);
+        
+        return ResponseEntity.badRequest().body(response);
     }
 
     @ExceptionHandler(MissingRequestHeaderException.class)
@@ -90,13 +103,32 @@ public class GlobalExceptionHandler {
         Map<String, String> error = new HashMap<>();
         error.put("error", "Bad Request");
 
-        String message = ex.getMessage();
-        if (message != null && message.contains("UUID")) {
-            error.put("message", "Formato de ID inválido. Verifique se todos os campos obrigatórios estão preenchidos corretamente.");
-        } else if (message != null && message.contains("Cannot deserialize")) {
-            error.put("message", "Dados inválidos no formulário. Verifique os campos e tente novamente.");
+        Throwable cause = ex.getCause();
+        if (cause instanceof InvalidFormatException) {
+            InvalidFormatException ife = (InvalidFormatException) cause;
+            String fieldName = "";
+            if (!ife.getPath().isEmpty()) {
+                JsonMappingException.Reference lastRef = ife.getPath().get(ife.getPath().size() - 1);
+                fieldName = lastRef.getFieldName();
+            }
+
+            if (ife.getTargetType() != null && ife.getTargetType().isEnum()) {
+                String allowedValues = java.util.Arrays.toString(ife.getTargetType().getEnumConstants());
+                String message = String.format("O valor '%s' não é válido para o campo '%s'. Valores aceitos: %s",
+                        ife.getValue(), fieldName, allowedValues);
+                error.put("message", message);
+                error.put("field", fieldName);
+            } else {
+                error.put("message", "Formato inválido para o campo '" + fieldName + "'. Verifique os dados enviados.");
+                error.put("field", fieldName);
+            }
         } else {
-            error.put("message", "Erro ao processar os dados enviados. Verifique o formulário.");
+            String message = ex.getMessage();
+            if (message != null && message.contains("UUID")) {
+                error.put("message", "Formato de ID inválido. Verifique se todos os campos obrigatórios estão preenchidos corretamente.");
+            } else {
+                error.put("message", "Erro ao processar os dados enviados. Verifique o formulário.");
+            }
         }
 
         return ResponseEntity.badRequest().body(error);

@@ -77,47 +77,44 @@ public class TimesheetExportService {
         return target.toByteArray();
     }
 
-    public byte[] exportMassToPdf(LocalDate startDate, LocalDate endDate, UUID managerId) {
+    public byte[] exportMassToPdf(LocalDate startDate, LocalDate endDate, UUID managerId, List<UUID> employeeIds) {
         UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
-        List<UUID> employeeIds;
+        List<UUID> finalEmployeeIds = employeeIds;
 
         try {
-            if (managerId != null) {
-                // Se informou gestor, busca subordinados via Feign Client
-                log.info("Buscando subordinados do gestor {} para exportação em massa", managerId);
-                List<com.axonrh.timesheet.dto.EmployeeDTO> subordinates = employeeClient.getSubordinates(managerId);
-                employeeIds = subordinates.stream().map(com.axonrh.timesheet.dto.EmployeeDTO::getId).toList();
-            } else {
-                // Caso contrário (Admin/RH), busca todos os colaboradores que tiveram atividade no período
-                // ou melhor ainda, buscar todos os funcionários ativos para garantir que todos apareçam
-                log.info("Buscando todos os colaboradores ativos para exportação em massa");
-                List<com.axonrh.timesheet.entity.DailySummary> summaries = dailySummaryRepository
-                        .findByTenantIdAndSummaryDateBetweenOrderBySummaryDateAsc(tenantId, startDate, endDate);
-                
-                employeeIds = summaries.stream()
-                        .map(com.axonrh.timesheet.entity.DailySummary::getEmployeeId)
-                        .distinct()
-                        .toList();
+            if (finalEmployeeIds == null || finalEmployeeIds.isEmpty()) {
+                if (managerId != null) {
+                    log.info("Buscando subordinados do gestor {} para exportação em massa", managerId);
+                    List<com.axonrh.timesheet.dto.EmployeeDTO> subordinates = employeeClient.getSubordinates(managerId);
+                    finalEmployeeIds = subordinates.stream().map(com.axonrh.timesheet.dto.EmployeeDTO::getId).toList();
+                } else {
+                    log.info("Buscando todos os colaboradores ativos para exportação em massa");
+                    List<com.axonrh.timesheet.entity.DailySummary> summaries = dailySummaryRepository
+                            .findByTenantIdAndSummaryDateBetweenOrderBySummaryDateAsc(tenantId, startDate, endDate);
+                    
+                    finalEmployeeIds = summaries.stream()
+                            .map(com.axonrh.timesheet.entity.DailySummary::getEmployeeId)
+                            .distinct()
+                            .toList();
+                }
             }
         } catch (Exception e) {
             log.error("Erro ao obter lista de colaboradores para exportação: {}", e.getMessage());
             return new byte[0];
         }
  
-        if (employeeIds.isEmpty()) {
+        if (finalEmployeeIds == null || finalEmployeeIds.isEmpty()) {
             log.warn("Nenhum colaborador encontrado para exportação em massa no período {} a {}", startDate, endDate);
             return new byte[0];
         }
 
-        log.info("Iniciando exportação em massa para {} colaboradores", employeeIds.size());
+        log.info("Iniciando exportação em massa para {} colaboradores", finalEmployeeIds.size());
         
-        List<ExportData> exportList = employeeIds.stream().map(id -> {
+        List<ExportData> exportList = finalEmployeeIds.stream().map(id -> {
             try {
-                // Garante que o resumo diário exista para o período, se não existir, tenta carregar
                 List<DailySummaryResponse> timesheet = dailySummaryService.getTimesheetByPeriod(id, startDate, endDate);
                 DailySummaryService.PeriodTotals totals = dailySummaryService.getPeriodTotals(id, startDate, endDate);
                 
-                // Só inclui se tiver registros ou se for esperado registros (carga horária > 0)
                 if (timesheet.isEmpty() && totals.workedMinutes() == 0) {
                     return null;
                 }
@@ -158,6 +155,69 @@ public class TimesheetExportService {
         return target.toByteArray();
     }
 
+    public byte[] exportMassToExcel(LocalDate startDate, LocalDate endDate, UUID managerId, List<UUID> employeeIds) {
+        UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
+        List<UUID> finalEmployeeIds = employeeIds;
+
+        try {
+            if (finalEmployeeIds == null || finalEmployeeIds.isEmpty()) {
+                if (managerId != null) {
+                    List<com.axonrh.timesheet.dto.EmployeeDTO> subordinates = employeeClient.getSubordinates(managerId);
+                    finalEmployeeIds = subordinates.stream().map(com.axonrh.timesheet.dto.EmployeeDTO::getId).toList();
+                } else {
+                    List<com.axonrh.timesheet.entity.DailySummary> summaries = dailySummaryRepository
+                            .findByTenantIdAndSummaryDateBetweenOrderBySummaryDateAsc(tenantId, startDate, endDate);
+                    finalEmployeeIds = summaries.stream().map(com.axonrh.timesheet.entity.DailySummary::getEmployeeId).distinct().toList();
+                }
+            }
+        } catch (Exception e) {
+            log.error("Erro ao obter lista para excel em massa: {}", e.getMessage());
+            return new byte[0];
+        }
+
+        if (finalEmployeeIds == null || finalEmployeeIds.isEmpty()) return new byte[0];
+
+        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            ConfigServiceClient.ThemeConfigResponse theme = null;
+            try {
+                theme = configServiceClient.getThemeConfig(tenantId);
+            } catch (Exception e) {}
+
+            com.axonrh.timesheet.client.CoreServiceClient.CompanyProfileDTO company = null;
+            try {
+                company = coreServiceClient.getCompanyProfile(tenantId);
+            } catch (Exception e) {}
+
+            for (UUID id : finalEmployeeIds) {
+                List<DailySummaryResponse> timesheet = dailySummaryService.getTimesheetByPeriod(id, startDate, endDate);
+                if (timesheet.isEmpty()) continue;
+
+                com.axonrh.timesheet.dto.EmployeeDTO employee = null;
+                try { employee = employeeClient.getEmployee(id); } catch (Exception e) {}
+                
+                String empName = employee != null ? employee.getFullName() : getEmployeeName(tenantId, id);
+                String safeSheetName = empName.replaceAll("[\\\\*?/\\[\\]]", "_");
+                if (safeSheetName.length() > 30) safeSheetName = safeSheetName.substring(0, 30);
+                
+                // Evitar nomes duplicados de abas
+                String finalSheetName = safeSheetName;
+                int count = 1;
+                while (workbook.getSheet(finalSheetName) != null) {
+                    finalSheetName = safeSheetName.substring(0, Math.min(27, safeSheetName.length())) + "(" + count++ + ")";
+                }
+
+                Sheet sheet = workbook.createSheet(finalSheetName);
+                fillExcelSheet(sheet, id, empName, employee, timesheet, startDate, endDate, company, theme, workbook);
+            }
+
+            workbook.write(out);
+            return out.toByteArray();
+        } catch (Exception e) {
+            log.error("Erro ao gerar Excel em massa", e);
+            return new byte[0];
+        }
+    }
+
     public byte[] exportToExcel(UUID employeeId, LocalDate startDate, LocalDate endDate) {
         UUID tenantId = UUID.fromString(TenantContext.getCurrentTenant());
         List<DailySummaryResponse> timesheet = dailySummaryService.getTimesheetByPeriod(employeeId, startDate, endDate);
@@ -175,15 +235,22 @@ public class TimesheetExportService {
         ConfigServiceClient.ThemeConfigResponse theme = null;
         try {
             theme = configServiceClient.getThemeConfig(tenantId);
-        } catch (Exception e) {
-            log.debug("Erro ao buscar tema para excel: {}", e.getMessage());
-        }
+        } catch (Exception e) {}
 
         String employeeName = employee != null ? employee.getFullName() : getEmployeeName(tenantId, employeeId);
 
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Sheet sheet = workbook.createSheet("Espelho de Ponto");
-            
+            fillExcelSheet(sheet, employeeId, employeeName, employee, timesheet, startDate, endDate, company, theme, workbook);
+            workbook.write(out);
+            return out.toByteArray();
+        } catch (Exception e) {
+            log.error("Erro ao gerar Excel", e);
+            return new byte[0];
+        }
+    }
+
+    private void fillExcelSheet(Sheet sheet, UUID employeeId, String employeeName, com.axonrh.timesheet.dto.EmployeeDTO employee, List<DailySummaryResponse> timesheet, LocalDate startDate, LocalDate endDate, com.axonrh.timesheet.client.CoreServiceClient.CompanyProfileDTO company, ConfigServiceClient.ThemeConfigResponse theme, Workbook workbook) {
             // Header Color from Theme
             String primaryHex = (theme != null && theme.getPrimaryColor() != null) ? theme.getPrimaryColor() : "#2563EB";
             Color awtColor;
@@ -348,13 +415,6 @@ public class TimesheetExportService {
             for (int i = 0; i < columns.length; i++) {
                 sheet.autoSizeColumn(i);
             }
-            
-            workbook.write(out);
-            return out.toByteArray();
-        } catch (Exception e) {
-            log.error("Erro ao gerar Excel", e);
-            return new byte[0];
-        }
     }
 
 

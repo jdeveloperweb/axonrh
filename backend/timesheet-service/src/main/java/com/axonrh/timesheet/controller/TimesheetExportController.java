@@ -57,15 +57,17 @@ public class TimesheetExportController {
     }
 
     @GetMapping("/export/mass")
-    @Operation(summary = "Exportar espelho em massa", description = "Gera um único PDF com o espelho de ponto de todos os colaboradores")
+    @Operation(summary = "Exportar espelho em massa", description = "Gera um único PDF ou Excel com o espelho de ponto dos colaboradores selecionados")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'RH', 'GESTOR_RH', 'ANALISTA_DP', 'MANAGER', 'GESTOR', 'LIDER', 'TIMESHEET:READ', 'REPORT:EXPORT')")
     public ResponseEntity<byte[]> exportMass(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) String format,
             @RequestParam(required = false) java.util.UUID managerId,
+            @RequestParam(required = false) java.util.List<java.util.UUID> employeeIds,
             @AuthenticationPrincipal org.springframework.security.oauth2.jwt.Jwt jwt) {
 
-        // Se o usuário não for do RH/Admin, ele só pode exportar seus próprios subordinados
+        // Se o usuário não for do RH/Admin, ele só pode exportar seus próprios subordinados (se não houver lista explícita)
         java.util.List<String> roles = jwt.getClaimAsStringList("roles");
         if (roles == null) roles = java.util.Collections.emptyList();
         
@@ -79,18 +81,29 @@ public class TimesheetExportController {
 
         java.util.UUID finalManagerId = managerId;
         
-        // Se não for RH e não informou managerId, tenta resolver o ID do colaborador atual como gestor
-        if (!isHR && finalManagerId == null) {
+        // Se não for RH e não informou filtros, tenta realizar para si mesmo como gestor
+        if (!isHR && finalManagerId == null && (employeeIds == null || employeeIds.isEmpty())) {
             finalManagerId = resolveEmployeeId("me", jwt);
             log.info("Resolvido gestor atual {} para exportação em massa (não RH)", finalManagerId);
         }
 
-        byte[] data = exportService.exportMassToPdf(startDate, endDate, finalManagerId);
-        String filename = "espelho-ponto-massa.pdf";
+        byte[] data;
+        String filename;
+        MediaType mediaType;
+
+        if ("excel".equalsIgnoreCase(format)) {
+            data = exportService.exportMassToExcel(startDate, endDate, finalManagerId, employeeIds);
+            filename = "espelho-ponto-massa.xlsx";
+            mediaType = MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        } else {
+            data = exportService.exportMassToPdf(startDate, endDate, finalManagerId, employeeIds);
+            filename = "espelho-ponto-massa.pdf";
+            mediaType = MediaType.APPLICATION_PDF;
+        }
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
-                .contentType(MediaType.APPLICATION_PDF)
+                .contentType(mediaType)
                 .body(data);
     }
 
