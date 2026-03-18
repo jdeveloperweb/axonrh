@@ -232,46 +232,64 @@ export default function LoginClient() {
         }
 
         /* Animated mesh blobs */
-        @keyframes lp-blob {
-          0%, 100% { transform: translate(0, 0) scale(1);   opacity: 1;   }
-          30%       { transform: translate(35px, -25px) scale(1.08); opacity: 0.85; }
-          65%       { transform: translate(-20px, 30px) scale(0.94); opacity: 0.9;  }
+        @keyframes lp-blob-a {
+          0%   { transform: translate(0, 0) scale(1); }
+          25%  { transform: translate(60px, -50px) scale(1.15); }
+          50%  { transform: translate(20px, 40px) scale(0.92); }
+          75%  { transform: translate(-40px, -20px) scale(1.08); }
+          100% { transform: translate(0, 0) scale(1); }
+        }
+        @keyframes lp-blob-b {
+          0%   { transform: translate(0, 0) scale(1); }
+          30%  { transform: translate(-50px, 30px) scale(1.12); }
+          60%  { transform: translate(30px, -40px) scale(0.88); }
+          100% { transform: translate(0, 0) scale(1); }
+        }
+        @keyframes lp-blob-c {
+          0%   { transform: translate(0, 0) scale(1); }
+          40%  { transform: translate(40px, 50px) scale(1.1); }
+          70%  { transform: translate(-30px, -30px) scale(0.9); }
+          100% { transform: translate(0, 0) scale(1); }
         }
         .lp-blob {
           position: absolute;
           border-radius: 50%;
-          filter: blur(90px);
+          filter: blur(60px);
           pointer-events: none;
           will-change: transform;
         }
         .lp-blob-1 {
-          width: 700px; height: 700px;
-          top: -200px; left: -150px;
-          background: radial-gradient(circle, rgba(37,99,235,0.18) 0%, transparent 65%);
-          animation: lp-blob 22s ease-in-out infinite;
+          width: 750px; height: 750px;
+          top: -220px; left: -180px;
+          background: radial-gradient(circle, rgba(37,99,235,0.32) 0%, rgba(37,99,235,0.12) 45%, transparent 70%);
+          animation: lp-blob-a 18s ease-in-out infinite;
         }
         .lp-blob-2 {
-          width: 500px; height: 500px;
-          bottom: -150px; right: -100px;
-          background: radial-gradient(circle, rgba(124,58,237,0.13) 0%, transparent 65%);
-          animation: lp-blob 28s ease-in-out infinite reverse;
+          width: 550px; height: 550px;
+          bottom: -160px; right: -120px;
+          background: radial-gradient(circle, rgba(124,58,237,0.26) 0%, rgba(124,58,237,0.08) 45%, transparent 70%);
+          animation: lp-blob-b 24s ease-in-out infinite reverse;
         }
         .lp-blob-3 {
-          width: 400px; height: 400px;
-          top: 40%; left: 55%;
-          background: radial-gradient(circle, rgba(5,150,105,0.1) 0%, transparent 65%);
-          animation: lp-blob 18s ease-in-out infinite 8s;
+          width: 420px; height: 420px;
+          top: 35%; left: 50%;
+          background: radial-gradient(circle, rgba(5,150,105,0.2) 0%, rgba(5,150,105,0.06) 45%, transparent 70%);
+          animation: lp-blob-c 15s ease-in-out infinite 4s;
+        }
+        .lp-blob-4 {
+          width: 360px; height: 360px;
+          top: 10%; right: 8%;
+          background: radial-gradient(circle, rgba(14,165,233,0.22) 0%, rgba(14,165,233,0.06) 45%, transparent 70%);
+          animation: lp-blob-a 20s ease-in-out infinite 9s reverse;
         }
 
         /* Dot grid */
         .lp-grid {
           position: absolute;
           inset: 0;
-          background-image: radial-gradient(rgba(37,99,235,0.12) 1px, transparent 1px);
-          background-size: 32px 32px;
+          background-image: radial-gradient(rgba(37,99,235,0.22) 1.5px, transparent 1.5px);
+          background-size: 30px 30px;
           pointer-events: none;
-          mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
-          -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
         }
 
         /* Floating decorative rings */
@@ -282,48 +300,75 @@ export default function LoginClient() {
         .lp-ring {
           position: absolute;
           border-radius: 50%;
-          border: 1px solid rgba(37,99,235,0.08);
           pointer-events: none;
         }
         .lp-ring-1 {
-          width: 480px; height: 480px;
-          top: -160px; right: 20%;
-          animation: lp-ring-spin 80s linear infinite;
+          width: 500px; height: 500px;
+          top: -170px; right: 18%;
+          border: 1.5px solid rgba(37,99,235,0.18);
+          animation: lp-ring-spin 60s linear infinite;
         }
         .lp-ring-2 {
-          width: 240px; height: 240px;
-          bottom: 60px; left: 10%;
-          border-color: rgba(124,58,237,0.07);
-          animation: lp-ring-spin 55s linear infinite reverse;
+          width: 260px; height: 260px;
+          bottom: 50px; left: 8%;
+          border: 1px solid rgba(124,58,237,0.16);
+          animation: lp-ring-spin 40s linear infinite reverse;
         }
-        .lp-ring-1::after, .lp-ring-2::after {
+        .lp-ring-3 {
+          width: 160px; height: 160px;
+          top: 55%; right: 5%;
+          border: 1px solid rgba(14,165,233,0.14);
+          animation: lp-ring-spin 30s linear infinite;
+        }
+        .lp-ring-1::after, .lp-ring-2::after, .lp-ring-3::after {
           content: '';
           position: absolute;
-          width: 6px; height: 6px;
-          background: rgba(37,99,235,0.25);
+          width: 8px; height: 8px;
+          background: rgba(37,99,235,0.5);
           border-radius: 50%;
-          top: 50%; left: -3px;
+          top: 50%; left: -4px;
           transform: translateY(-50%);
+          box-shadow: 0 0 8px rgba(37,99,235,0.4);
         }
+        .lp-ring-2::after { background: rgba(124,58,237,0.5); box-shadow: 0 0 8px rgba(124,58,237,0.4); }
+        .lp-ring-3::after { background: rgba(14,165,233,0.5); box-shadow: 0 0 8px rgba(14,165,233,0.4); width: 6px; height: 6px; left: -3px; }
 
         /* ── Entrance animations ─────────────────────────── */
         @keyframes lp-slide-up {
-          from { opacity: 0; transform: translateY(28px); filter: blur(4px); }
+          from { opacity: 0; transform: translateY(32px); filter: blur(8px); }
+          60%  { filter: blur(2px); }
           to   { opacity: 1; transform: translateY(0);    filter: blur(0); }
         }
-        @keyframes lp-slide-right {
-          from { opacity: 0; transform: translateX(28px); filter: blur(4px); }
-          to   { opacity: 1; transform: translateX(0);    filter: blur(0); }
+
+        /* Smoky card entrance */
+        @keyframes lp-smoke-in {
+          0%   {
+            opacity: 0;
+            transform: translateY(24px) scale(0.97);
+            filter: blur(18px);
+          }
+          40%  {
+            opacity: 0.7;
+            filter: blur(6px);
+          }
+          70%  {
+            filter: blur(1.5px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            filter: blur(0);
+          }
         }
 
         .lp-stagger > * { opacity: 0; }
-        .lp-stagger > *:nth-child(1) { animation: lp-slide-up 0.8s cubic-bezier(0.22,1,0.36,1) 0.05s forwards; }
-        .lp-stagger > *:nth-child(2) { animation: lp-slide-up 0.8s cubic-bezier(0.22,1,0.36,1) 0.18s forwards; }
-        .lp-stagger > *:nth-child(3) { animation: lp-slide-up 0.8s cubic-bezier(0.22,1,0.36,1) 0.30s forwards; }
-        .lp-stagger > *:nth-child(4) { animation: lp-slide-up 0.8s cubic-bezier(0.22,1,0.36,1) 0.42s forwards; }
+        .lp-stagger > *:nth-child(1) { animation: lp-slide-up 0.9s cubic-bezier(0.22,1,0.36,1) 0.05s forwards; }
+        .lp-stagger > *:nth-child(2) { animation: lp-slide-up 0.9s cubic-bezier(0.22,1,0.36,1) 0.2s  forwards; }
+        .lp-stagger > *:nth-child(3) { animation: lp-slide-up 0.9s cubic-bezier(0.22,1,0.36,1) 0.33s forwards; }
+        .lp-stagger > *:nth-child(4) { animation: lp-slide-up 0.9s cubic-bezier(0.22,1,0.36,1) 0.46s forwards; }
 
         .lp-card-in {
-          animation: lp-slide-right 0.9s cubic-bezier(0.22,1,0.36,1) 0.35s both;
+          animation: lp-smoke-in 1.1s cubic-bezier(0.22,1,0.36,1) 0.3s both;
         }
 
         /* ── Float ───────────────────────────────────────── */
@@ -615,9 +660,11 @@ export default function LoginClient() {
         <div className="lp-blob lp-blob-1" />
         <div className="lp-blob lp-blob-2" />
         <div className="lp-blob lp-blob-3" />
+        <div className="lp-blob lp-blob-4" />
         <div className="lp-grid" />
         <div className="lp-ring lp-ring-1" />
         <div className="lp-ring lp-ring-2" />
+        <div className="lp-ring lp-ring-3" />
 
         {/* Main layout */}
         <div className="relative z-10 w-full max-w-[1180px] grid lg:grid-cols-[1.15fr_0.85fr] gap-10 lg:gap-20 items-center">
