@@ -233,9 +233,10 @@ menu() {
     echo -e "  6) Ver logs dos serviços"
     echo -e "  7) Parar todos os containers (AxonRH apenas)"
     echo -e "  8) Parar e limpar tudo (AxonRH apenas)"
-    echo -e "  9) Exit"
+    echo -e "  9) Limpar pastas compiladas (Resolve erro Cache/Flyway) "
+    echo -e "  10) Exit"
 
-    read -r -p "Enter your choice [1-9]: " choice
+    read -r -p "Enter your choice [1-10]: " choice
 
     case "$choice" in
         1)
@@ -283,6 +284,53 @@ menu() {
             echo -e "${GREEN}✓ Ambiente limpo com sucesso.${NC}"
             ;;
         9)
+            echo -e "\n${YELLOW}Limpar pasta 'target' (cache Maven) de serviço específico:${NC}"
+            
+            local services=(
+                "config-service"
+                "auth-service"
+                "core-service"
+                "employee-service"
+                "timesheet-service"
+                "vacation-service"
+                "performance-service"
+                "learning-service"
+                "ai-assistant-service"
+                "notification-service"
+                "integration-service"
+                "benefits-service"
+                "payroll-service"
+                "api-gateway"
+                "TODOS"
+            )
+
+            select srv in "${services[@]}"; do
+                if [ "$srv" == "TODOS" ]; then
+                    cd "$PROJECT_ROOT/backend"
+                    for d in */ ; do
+                        if [ -d "$d/target" ]; then
+                            echo -e "Limpando $d..."
+                            rm -rf "$d/target"
+                        fi
+                    done
+                    echo -e "${GREEN}✓ Todas as pastas target foram limpas!${NC}"
+                    break
+                elif [ -n "$srv" ]; then
+                    if [ -d "$PROJECT_ROOT/backend/$srv/target" ]; then
+                        rm -rf "$PROJECT_ROOT/backend/$srv/target"
+                        echo -e "${GREEN}✓ Pasta target de $srv limpa com sucesso!${NC}"
+                    else
+                        echo -e "${YELLOW}A pasta target de $srv não existe ou já foi limpa.${NC}"
+                    fi
+                    break
+                else
+                    echo -e "${RED}Opção inválida.${NC}"
+                fi
+            done
+            pause_for_user
+            menu
+            ;;
+        10)
             echo -e "${YELLOW}Exiting.${NC}"
             exit 0
             ;;
