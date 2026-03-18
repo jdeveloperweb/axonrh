@@ -195,10 +195,10 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
         bankAgencyDigit: '',
         bankAccount: '',
         bankAccountDigit: '',
-        bankAccountType: 'CURRENT',
+        bankAccountType: 'CORRENTE',
         pixKey: '',
         pixKeyType: 'CPF',
-        salaryType: 'MONTHLY',
+        salaryType: 'MENSAL',
         emergencyContactName: '',
         emergencyContactPhone: '',
         emergencyContactRelationship: '',
@@ -629,7 +629,8 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                             email: formData.email,
                             password: formData.platformPassword,
                             status: 'ACTIVE',
-                            roles: formData.platformRoles
+                            roles: formData.platformRoles,
+                            twoFactorEnabled: false
                         });
                         setHasExistingAccess(true);
                         toast({ title: 'Acesso Criado', description: 'O usuário foi criado.' });
@@ -651,7 +652,8 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                                 email: formData.email,
                                 password: formData.platformPassword,
                                 status: 'ACTIVE',
-                                roles: formData.platformRoles
+                                roles: formData.platformRoles,
+                                twoFactorEnabled: false
                             });
                             setHasExistingAccess(true);
                             toast({ title: 'Acesso Criado', description: 'O usuário foi criado com sucesso.' });
@@ -666,7 +668,8 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                                 name: formData.fullName,
                                 email: formData.email,
                                 status: 'ACTIVE',
-                                roles: formData.platformRoles
+                                roles: formData.platformRoles,
+                                twoFactorEnabled: false
                             });
                             toast({ title: 'Acessos Atualizados', description: 'Os perfis de acesso foram sincronizados.' });
                         } catch (e) {
@@ -700,7 +703,7 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
             });
             toast({
                 title: 'Erro ao Salvar',
-                description: error.response?.data?.message || 'Falha ao processar requisição no servidor.',
+                description: error.message || 'Falha ao processar requisição no servidor.',
                 variant: 'destructive',
             });
         } finally {
@@ -1298,9 +1301,9 @@ export function EmployeeForm({ initialData, employeeId: initialId, isEditing = f
                                 <div>
                                     <label className="block text-sm font-medium mb-1">Tipo de Conta</label>
                                     <select name="bankAccountType" value={formData.bankAccountType} onChange={handleChange} className="w-full px-3 py-2 border border-gray-200 rounded-lg">
-                                        <option value="CURRENT">Conta Corrente</option>
-                                        <option value="SAVINGS">Conta Poupança</option>
-                                        <option value="SALARY">Conta Salário</option>
+                                        <option value="CORRENTE">Conta Corrente</option>
+                                        <option value="POUPANCA">Conta Poupança</option>
+                                        <option value="SALARIO">Conta Salário</option>
                                     </select>
                                 </div>
                                 <div className="md:col-span-2">

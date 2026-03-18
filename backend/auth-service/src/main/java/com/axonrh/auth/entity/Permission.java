@@ -64,6 +64,8 @@ public class Permission {
     public static final String RESOURCE_CONFIG = "CONFIG";
     public static final String RESOURCE_USER = "USER";
     public static final String RESOURCE_ROLE = "ROLE";
+    public static final String RESOURCE_WELLBEING = "WELLBEING";
+    public static final String RESOURCE_AI_ASSISTANT = "AI_ASSISTANT";
 
     // Constantes de acoes
     public static final String ACTION_CREATE = "CREATE";
@@ -73,4 +75,5 @@ public class Permission {
     public static final String ACTION_APPROVE = "APPROVE";
     public static final String ACTION_EXPORT = "EXPORT";
     public static final String ACTION_IMPORT = "IMPORT";
+    public static final String ACTION_ATTEND = "ATTEND";
 }

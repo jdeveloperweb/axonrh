@@ -6,6 +6,7 @@ import ChatWidget from '@/components/ai/ChatWidget';
 import { useSearchParams } from 'next/navigation';
 import { chatApi, Conversation } from '@/lib/api/ai';
 import { ChatIcons } from '@/components/ai/ChatIcons';
+import { usePermissions } from '@/hooks/use-permissions';
 import { cn } from '@/lib/utils';
 
 export default function AssistantPage() {
@@ -14,6 +15,18 @@ export default function AssistantPage() {
   const initialQuery = searchParams.get('q');
   const [activeConversationId, setActiveConversationId] = useState<string | undefined>();
   const [refreshKey, setRefreshKey] = useState(0);
+  const { hasPermission } = usePermissions();
+
+  if (!hasPermission('AI_ASSISTANT:READ' as any)) {
+    return (
+      <div className="flex h-[80vh] items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Acesso Negado</h2>
+          <p className="text-gray-500">Você não tem permissão para acessar o Assistente IA.</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleConversationSelect = (id: string | undefined) => {
     setActiveConversationId(id);

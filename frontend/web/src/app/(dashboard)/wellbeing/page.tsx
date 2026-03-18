@@ -50,6 +50,7 @@ import {
 } from '@/components/ui/tooltip';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { useAuthStore } from '@/stores/auth-store';
+import { usePermissions } from '@/hooks/use-permissions';
 import { wellbeingApi, WellbeingStats, EapRequest } from '@/lib/api/wellbeing';
 import { eventsApi, Event as AppEvent } from '@/lib/api/events';
 import { cn } from '@/lib/utils'; // Assuming this exists based on sidebar import
@@ -96,7 +97,10 @@ export default function WellbeingPage() {
         date: new Date().toISOString()
     });
 
-    const isManagement = user?.roles?.some(r => ['ADMIN', 'RH', 'GESTOR_RH', 'HEALTH_PROFESSIONAL'].includes(r));
+    const { hasPermission } = usePermissions();
+    const canWrite = hasPermission('WELLBEING:WRITE' as any);
+    const canAttend = hasPermission('WELLBEING:ATTEND' as any);
+    const isManagement = canWrite || canAttend;
 
     useEffect(() => {
         loadStats();
@@ -343,7 +347,7 @@ export default function WellbeingPage() {
                         <MessageCircle className="w-4 h-4" />
                         Gerar Relatório Completo
                     </button>
-                    {isManagement && (
+                    {canWrite && (
                         <button
                             onClick={() => setIsNewCampaignModalOpen(true)}
                             className="flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-primary text-primary rounded-xl font-bold shadow-sm hover:bg-primary/5 transition-all active:scale-95"
@@ -430,7 +434,7 @@ export default function WellbeingPage() {
                             <div>
                                 <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Apoio EAP</p>
                                 <h3 className="text-4xl font-black text-primary mt-2">
-                                    {(statsData.eapRequests || []).filter(r => !r.handled).length}
+                                    {canAttend ? (statsData.eapRequests || []).filter(r => !r.handled).length : '--'}
                                 </h3>
                                 <p className="text-xs font-medium text-gray-400 mt-1">Pendentes de triagem</p>
                             </div>
@@ -815,8 +819,9 @@ export default function WellbeingPage() {
                 </div>
             </div>
 
-            {/* Requests List */}
-            <Card className="border-none shadow-xl bg-white min-h-[500px] flex flex-col border border-gray-100 overflow-hidden">
+            {/* Requests List - Apenas para quem Atende */}
+            {canAttend && (
+                <Card className="border-none shadow-xl bg-white min-h-[500px] flex flex-col border border-gray-100 overflow-hidden">
                 <CardHeader className="flex flex-row items-center justify-between pb-4 bg-gray-50/50 border-b border-gray-100">
                     <div>
                         <CardTitle className="text-xl font-black text-gray-900 tracking-tight">Solicitações de Apoio (EAP)</CardTitle>
@@ -975,6 +980,7 @@ export default function WellbeingPage() {
                     )}
                 </CardContent>
             </Card>
+            )}
 
             {/* Campaigns Modal */}
             <Dialog open={isCampaignModalOpen} onOpenChange={setIsCampaignModalOpen}>
@@ -991,7 +997,7 @@ export default function WellbeingPage() {
                             <DialogDescription className="text-white opacity-80 text-lg mt-2">
                                 Fique por dentro de todas as ações de saúde mental da AxonRH.
                             </DialogDescription>
-                            {isManagement && (
+                            {canWrite && (
                                 <Button
                                     className="mt-4 bg-white/20 hover:bg-white/30 text-white border-white/30"
                                     onClick={() => setIsNewCampaignModalOpen(true)}
@@ -1042,7 +1048,7 @@ export default function WellbeingPage() {
                                         >
                                             {camp.isUserRegistered ? 'Inscrito' : 'Participar'}
                                         </button>
-                                        {isManagement && (
+                                        {canWrite && (
                                             <button
                                                 className="p-3 bg-red-50 text-red-500 hover:bg-red-100 rounded-xl transition-all"
                                                 onClick={(e) => handleDeleteCampaign(camp.id, e)}
@@ -1081,7 +1087,7 @@ export default function WellbeingPage() {
                             <DialogDescription className="text-white opacity-80 text-lg mt-2">
                                 Materiais educativos para apoiar gestores e colaboradores.
                             </DialogDescription>
-                            {isManagement && (
+                            {canWrite && (
                                 <Button
                                     className="mt-4 bg-white/20 hover:bg-white/30 text-white border-white/30"
                                     onClick={() => setIsNewGuideModalOpen(true)}
@@ -1112,7 +1118,7 @@ export default function WellbeingPage() {
                                             Ver Material
                                             <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
                                         </div>
-                                        {isManagement && (
+                                        {canWrite && (
                                             <button
                                                 className="p-1.5 text-red-300 hover:text-red-500 transition-colors"
                                                 onClick={(e) => handleDeleteGuide(guide.id, e)}
