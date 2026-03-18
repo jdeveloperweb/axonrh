@@ -335,9 +335,8 @@ export default function LoginClient() {
 
         /* ── Entrance animations ─────────────────────────── */
         @keyframes lp-slide-up {
-          from { opacity: 0; transform: translateY(32px); filter: blur(8px); }
-          60%  { filter: blur(2px); }
-          to   { opacity: 1; transform: translateY(0);    filter: blur(0); }
+          from { opacity: 0; transform: translateY(28px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
 
         /* Card rise — sem filter para não conflitar com backdrop-filter dos filhos */
