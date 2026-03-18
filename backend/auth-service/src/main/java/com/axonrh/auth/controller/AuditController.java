@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -24,8 +25,9 @@ public class AuditController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('AUDIT:READ')")
     public ResponseEntity<Page<AuditLog>> getLogs(
-            @RequestHeader("X-Tenant-Id") UUID tenantId,
+            @RequestHeader(value = "X-Tenant-Id", required = false) UUID tenantId,
             Pageable pageable) {
         return ResponseEntity.ok(auditService.getLogs(tenantId, pageable));
     }

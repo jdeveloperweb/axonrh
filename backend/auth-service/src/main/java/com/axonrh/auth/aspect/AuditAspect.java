@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
+import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.security.core.Authentication;
@@ -35,7 +36,16 @@ public class AuditAspect {
     public void controllerClasses() {}
 
     @AfterReturning(pointcut = "controllerClasses() && mutationEndpoints()", returning = "result")
-    public void auditLog(JoinPoint joinPoint, Object result) {
+    public void auditLogSuccess(JoinPoint joinPoint, Object result) {
+        logAudit(joinPoint, "SUCCESS", null);
+    }
+
+    @AfterThrowing(pointcut = "controllerClasses() && mutationEndpoints()", throwing = "e")
+    public void auditLogFailure(JoinPoint joinPoint, Exception e) {
+        logAudit(joinPoint, "FAILURE", e.getMessage());
+    }
+
+    private void logAudit(JoinPoint joinPoint, String status, String errorMsg) {
         try {
             // Se for o log de auditoria, não loga novamente (evita loop)
             if (joinPoint.getSignature().getDeclaringTypeName().contains("AuditController")) {
@@ -43,8 +53,6 @@ public class AuditAspect {
             }
 
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            // No auth-service, o principal pode ser o User object se já estiver autenticado
-            // ou uma string se for o Gateway
             if (auth == null) {
                 return;
             }
@@ -56,25 +64,24 @@ public class AuditAspect {
 
             // Tenta extrair informações do usuário se disponível
             Object principal = auth.getPrincipal();
-            if (principal instanceof com.axonrh.auth.entity.User) {
-                com.axonrh.auth.entity.User user = (com.axonrh.auth.entity.User) principal;
+            if (principal instanceof com.axonrh.auth.entity.User user) {
                 userId = user.getId();
                 userName = user.getName();
                 userEmail = user.getEmail();
                 tenantId = user.getTenantId();
             } else if (auth.getDetails() instanceof java.util.Map) {
-                // Se vier do Gateway via JwtAuthFilter (que preenche o context)
                 @SuppressWarnings("unchecked")
                 java.util.Map<String, Object> details = (java.util.Map<String, Object>) auth.getDetails();
-                userId = (UUID) details.get("user_id");
+                userId = (java.util.UUID) details.get("user_id");
                 userEmail = (String) details.get("email");
-                tenantId = (UUID) details.get("tenant_id");
+                tenantId = (java.util.UUID) details.get("tenant_id");
             }
 
             HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
             String method = request.getMethod();
             String path = request.getRequestURI();
             String ipAddress = request.getRemoteAddr();
+            String userAgent = request.getHeader("User-Agent");
 
             String action = mapMethodToAction(method);
             String resource = extractResourceFromPath(path);
@@ -82,10 +89,15 @@ public class AuditAspect {
             String resourceId = null;
             Object[] args = joinPoint.getArgs();
             for (Object arg : args) {
-                if (arg instanceof UUID) {
-                    resourceId = arg.toString();
+                if (arg instanceof java.util.UUID uuid) {
+                    resourceId = uuid.toString();
                     break;
                 }
+            }
+
+            String details = "Executed " + method + " on " + path;
+            if (errorMsg != null) {
+                details += " - Error: " + errorMsg;
             }
 
             auditService.log(AuditLog.builder()
@@ -97,8 +109,9 @@ public class AuditAspect {
                     .resource(resource)
                     .resourceId(resourceId)
                     .ipAddress(ipAddress)
-                    .details("Executed " + method + " on " + path)
-                    .status("SUCCESS")
+                    .userAgent(userAgent)
+                    .details(details)
+                    .status(status)
                     .build());
             
         } catch (Exception e) {

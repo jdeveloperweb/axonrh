@@ -141,30 +141,32 @@ export default function SettingsHubPage() {
                 })}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-12">
-                <div className="p-6 rounded-[var(--radius-lg)] bg-[var(--color-surface-variant)]/50 border border-[var(--color-border)]">
-                    <div className="flex items-center gap-3 mb-4">
-                        <ShieldCheck className="w-5 h-5 text-emerald-500" />
-                        <h4 className="font-bold">Segurança e Auditoria</h4>
+            {isAdmin && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-12">
+                    <div className="p-6 rounded-[var(--radius-lg)] bg-[var(--color-surface-variant)]/50 border border-[var(--color-border)]">
+                        <div className="flex items-center gap-3 mb-4">
+                            <ShieldCheck className="w-5 h-5 text-emerald-500" />
+                            <h4 className="font-bold">Segurança e Auditoria</h4>
+                        </div>
+                        <p className="text-sm text-[var(--color-text-secondary)] mb-4">Logs de acesso, política de senhas e autenticação mútua (2FA).</p>
+                        <button
+                            className="text-xs font-bold uppercase tracking-wider text-[var(--color-primary)] hover:underline"
+                            onClick={() => router.push('/settings/audit')}
+                        >
+                            Ver Logs →
+                        </button>
                     </div>
-                    <p className="text-sm text-[var(--color-text-secondary)] mb-4">Logs de acesso, política de senhas e autenticação mútua (2FA).</p>
-                    <button
-                        className="text-xs font-bold uppercase tracking-wider text-[var(--color-primary)] hover:underline"
-                        onClick={() => router.push('/settings/audit')}
-                    >
-                        Ver Logs →
-                    </button>
-                </div>
 
-                <div className="p-6 rounded-[var(--radius-lg)] bg-[var(--color-surface-variant)]/50 border border-[var(--color-border)]">
-                    <div className="flex items-center gap-3 mb-4">
-                        <Database className="w-5 h-5 text-indigo-500" />
-                        <h4 className="font-bold">Dados e Integrações</h4>
+                    <div className="p-6 rounded-[var(--radius-lg)] bg-[var(--color-surface-variant)]/50 border border-[var(--color-border)]">
+                        <div className="flex items-center gap-3 mb-4">
+                            <Database className="w-5 h-5 text-indigo-500" />
+                            <h4 className="font-bold">Dados e Integrações</h4>
+                        </div>
+                        <p className="text-sm text-[var(--color-text-secondary)] mb-4">Configuração de APIs, Webhooks e conexões com sistemas externos.</p>
+                        <button className="text-xs font-bold uppercase tracking-wider text-[var(--color-primary)] hover:underline">Gerar Chave API →</button>
                     </div>
-                    <p className="text-sm text-[var(--color-text-secondary)] mb-4">Configuração de APIs, Webhooks e conexões com sistemas externos.</p>
-                    <button className="text-xs font-bold uppercase tracking-wider text-[var(--color-primary)] hover:underline">Gerar Chave API →</button>
                 </div>
-            </div>
+            )}
         </div>
     );
 }

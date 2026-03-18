@@ -25,6 +25,9 @@ public class AuditService {
     }
 
     public Page<AuditLog> getLogs(UUID tenantId, Pageable pageable) {
+        if (tenantId == null) {
+            return auditLogRepository.findAll(pageable);
+        }
         return auditLogRepository.findByTenantId(tenantId, pageable);
     }
 }
