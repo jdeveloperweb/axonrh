@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -13,14 +12,13 @@ import {
   AlertCircle,
   Lock,
   Mail,
-  Sparkles,
   ShieldCheck,
   Bot,
   Zap,
   ArrowLeft,
   KeyRound,
   Layers,
-  ArrowRight
+  ArrowRight,
 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import { useThemeStore } from "@/stores/theme-store";
@@ -29,7 +27,7 @@ import { cn, getPhotoUrl } from "@/lib/utils";
 import MfaSetupRequiredModal from "@/components/auth/MfaSetupRequiredModal";
 import type { LoginResponse } from "@/lib/api/auth";
 
-// ==================== Schema de Validacao ====================
+// ==================== Schema ====================
 
 const loginSchema = z.object({
   email: z
@@ -71,12 +69,10 @@ export default function LoginClient() {
 
   const setMfaSetupState = (state: { setupToken: string; maskedEmail: string } | null) => {
     setMfaSetupStateRaw(state);
-    if (state) {
-      sessionStorage.setItem("mfa_setup_pending", JSON.stringify(state));
-    } else {
-      sessionStorage.removeItem("mfa_setup_pending");
-    }
+    if (state) sessionStorage.setItem("mfa_setup_pending", JSON.stringify(state));
+    else sessionStorage.removeItem("mfa_setup_pending");
   };
+
   const [loginConfig, setLoginConfig] = useState<{
     logoUrl?: string;
     backgroundUrl?: string;
@@ -88,9 +84,7 @@ export default function LoginClient() {
   const [showExpiredMessage, setShowExpiredMessage] = useState(false);
 
   useEffect(() => {
-    if (searchParams.get("expired") === "true") {
-      setShowExpiredMessage(true);
-    }
+    if (searchParams.get("expired") === "true") setShowExpiredMessage(true);
   }, [searchParams]);
 
   const {
@@ -101,17 +95,14 @@ export default function LoginClient() {
     resetField,
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-      totpCode: "",
-    },
+    defaultValues: { email: "", password: "", totpCode: "" },
   });
 
   useEffect(() => {
-    const tenantId = process.env.NEXT_PUBLIC_DEFAULT_TENANT_ID ||
-      localStorage.getItem('tenantId') ||
-      localStorage.getItem('setup_tenant_id');
+    const tenantId =
+      process.env.NEXT_PUBLIC_DEFAULT_TENANT_ID ||
+      localStorage.getItem("tenantId") ||
+      localStorage.getItem("setup_tenant_id");
 
     if (tenantId) {
       configApi
@@ -124,23 +115,22 @@ export default function LoginClient() {
             footerText: config.loginFooterText,
             showPoweredBy: config.showPoweredBy,
           });
-
           setTenantTheme({
             tenantId: config.tenantId,
             logoUrl: config.logoUrl,
             logoWidth: (config.extraSettings?.logoWidth as number) || 150,
             colors: {
-              primary: config.primaryColor || '#1E40AF',
-              secondary: config.secondaryColor || '#1E293B',
-              accent: config.accentColor || '#3B82F6',
-              background: config.backgroundColor || '#F8FAFC',
-              surface: config.surfaceColor || '#FFFFFF',
-              textPrimary: config.textPrimaryColor || '#0F172A',
-              textSecondary: config.textSecondaryColor || '#475569',
+              primary: config.primaryColor || "#1E40AF",
+              secondary: config.secondaryColor || "#1E293B",
+              accent: config.accentColor || "#3B82F6",
+              background: config.backgroundColor || "#F8FAFC",
+              surface: config.surfaceColor || "#FFFFFF",
+              textPrimary: config.textPrimaryColor || "#0F172A",
+              textSecondary: config.textSecondaryColor || "#475569",
             },
             baseFontSize: (config.extraSettings?.baseFontSize as number) || 16,
             customCss: config.customCss,
-            faviconUrl: config.faviconUrl
+            faviconUrl: config.faviconUrl,
           });
         })
         .catch(() => {});
@@ -149,12 +139,9 @@ export default function LoginClient() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      const setupTenantId = localStorage.getItem('setup_tenant_id');
-      if (setupTenantId) {
-        router.replace(`/setup?tenantId=${setupTenantId}`);
-      } else {
-        router.replace("/dashboard");
-      }
+      const setupTenantId = localStorage.getItem("setup_tenant_id");
+      if (setupTenantId) router.replace(`/setup?tenantId=${setupTenantId}`);
+      else router.replace("/dashboard");
     }
   }, [isAuthenticated, router]);
 
@@ -194,12 +181,9 @@ export default function LoginClient() {
         return;
       }
 
-      const setupTenantId = localStorage.getItem('setup_tenant_id');
-      if (setupTenantId) {
-        router.replace(`/setup?tenantId=${setupTenantId}`);
-      } else {
-        router.replace("/dashboard");
-      }
+      const setupTenantId = localStorage.getItem("setup_tenant_id");
+      if (setupTenantId) router.replace(`/setup?tenantId=${setupTenantId}`);
+      else router.replace("/dashboard");
     } catch (error) {
     } finally {
       setIsLoading(false);
@@ -219,103 +203,292 @@ export default function LoginClient() {
       await useThemeStore.getState().fetchBranding();
     }
     const setupTenantId = localStorage.getItem("setup_tenant_id");
-    if (setupTenantId) {
-      router.replace(`/setup?tenantId=${setupTenantId}`);
-    } else {
-      router.replace("/dashboard");
-    }
+    if (setupTenantId) router.replace(`/setup?tenantId=${setupTenantId}`);
+    else router.replace("/dashboard");
   };
 
-  const inputBaseClasses = "w-full px-4 py-3 bg-white/50 border border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-xl focus:ring-4 focus:ring-sky-100 focus:border-sky-400 transition-all outline-none backdrop-blur-sm font-medium";
+  const primaryColor = useThemeStore.getState().tenantTheme?.colors?.primary || "#2563EB";
+  const logoWidth = useThemeStore.getState().tenantTheme?.logoWidth || 180;
+
+  const features = [
+    { icon: ShieldCheck, title: "LGPD Compliance", desc: "Segurança em nível bancário.", color: "#10B981" },
+    { icon: Bot, title: "IA Generativa", desc: "Decisões baseadas em dados reais.", color: "#3B82F6" },
+    { icon: Zap, title: "Processamento Realtime", desc: "Sincronização imediata.", color: "#F59E0B" },
+    { icon: Layers, title: "Arquitetura Modular", desc: "Flexível à sua cultura.", color: "#8B5CF6" },
+  ];
 
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Manrope:wght@400;500;600;700&display=swap');
-        
+        @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
+
         :root {
-          --color-primary: ${useThemeStore.getState().tenantTheme?.colors?.primary || '#2563EB'};
+          --axr-primary: ${primaryColor};
+          --axr-primary-rgb: 37, 99, 235;
         }
 
-        .axr-sora { font-family: 'Sora', sans-serif; }
-        .axr-manrope { font-family: 'Manrope', sans-serif; }
+        .axr-bricolage { font-family: 'Bricolage Grotesque', sans-serif; }
+        .axr-dm { font-family: 'DM Sans', sans-serif; }
 
-        @keyframes axr-mesh-flow {
-          0% { transform: scale(1) translate(0, 0); }
-          33% { transform: scale(1.1) translate(20px, -20px); }
-          66% { transform: scale(0.9) translate(-20px, 20px); }
-          100% { transform: scale(1) translate(0, 0); }
-        }
-
-        .axr-bg-mesh {
-          position: absolute;
-          inset: 0;
-          background: #F8FAFF;
-          overflow: hidden;
-          z-index: 0;
-        }
-
-        .axr-bg-mesh::after {
-          content: "";
-          position: absolute;
-          inset: -50%;
-          background: 
-            radial-gradient(circle at 20% 30%, rgba(37, 99, 235, 0.15) 0%, transparent 40%),
-            radial-gradient(circle at 80% 20%, rgba(79, 70, 229, 0.15) 0%, transparent 40%),
-            radial-gradient(circle at 50% 80%, rgba(5, 150, 105, 0.1) 0%, transparent 40%),
-            radial-gradient(circle at 10% 90%, rgba(217, 119, 6, 0.1) 0%, transparent 40%);
-          filter: blur(80px);
-          animation: axr-mesh-flow 25s ease-in-out infinite;
-        }
-
-        @keyframes axr-reveal {
-          from { opacity: 0; transform: translateY(20px); filter: blur(8px); }
-          to { opacity: 1; transform: translateY(0); filter: blur(0); }
-        }
-
-        .axr-reveal {
-          animation: axr-reveal 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-        }
-
-        .axr-glass {
-          background: rgba(255, 255, 255, 0.7);
-          backdrop-filter: blur(24px) saturate(180%);
-          -webkit-backdrop-filter: blur(24px) saturate(180%);
-          border: 1px solid rgba(255, 255, 255, 0.4);
-          box-shadow: 0 32px 128px -16px rgba(15, 23, 42, 0.12);
-        }
-
-        .axr-lift { transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
-        .axr-lift:hover { transform: translateY(-4px); box-shadow: 0 40px 160px -12px rgba(15, 23, 42, 0.18); }
-
-        .axr-btn-shine {
+        /* ── Dark Panel ─────────────────────────────── */
+        .axr-dark-panel {
+          background: linear-gradient(155deg, #070D1B 0%, #0C1628 60%, #091220 100%);
           position: relative;
           overflow: hidden;
-          transition: all 0.3s ease;
         }
-        .axr-btn-shine::after {
-          content: "";
-          position: absolute;
-          top: -50%; left: -50%;
-          width: 200%; height: 200%;
-          background: linear-gradient(45deg, transparent, rgba(255,255,255,0.2), transparent);
-          transform: rotate(45deg);
-          transition: 0.5s;
-        }
-        .axr-btn-shine:hover::after { left: 100%; }
 
+        /* Aurora blobs */
+        @keyframes axr-drift {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          33%       { transform: translate(40px, -30px) scale(1.12); }
+          66%       { transform: translate(-25px, 40px) scale(0.9); }
+        }
+
+        .axr-aurora {
+          position: absolute;
+          border-radius: 50%;
+          filter: blur(80px);
+          pointer-events: none;
+        }
+        .axr-aurora-a {
+          width: 560px; height: 560px;
+          top: -160px; left: -120px;
+          background: radial-gradient(circle, rgba(37,99,235,0.28) 0%, transparent 70%);
+          animation: axr-drift 20s ease-in-out infinite;
+        }
+        .axr-aurora-b {
+          width: 420px; height: 420px;
+          bottom: -120px; right: -100px;
+          background: radial-gradient(circle, rgba(99,102,241,0.22) 0%, transparent 70%);
+          animation: axr-drift 26s ease-in-out infinite reverse;
+        }
+        .axr-aurora-c {
+          width: 320px; height: 320px;
+          top: 45%; left: 45%;
+          background: radial-gradient(circle, rgba(14,165,233,0.12) 0%, transparent 70%);
+          animation: axr-drift 16s ease-in-out infinite 7s;
+        }
+
+        /* Decorative rings */
+        .axr-ring {
+          position: absolute;
+          border-radius: 50%;
+          border: 1px solid rgba(255,255,255,0.04);
+          pointer-events: none;
+        }
+        .axr-ring-lg {
+          width: 560px; height: 560px;
+          top: -220px; right: -220px;
+        }
+        .axr-ring-md {
+          width: 280px; height: 280px;
+          bottom: 40px; left: -80px;
+        }
+        .axr-ring-sm {
+          width: 160px; height: 160px;
+          top: 38%; right: 12%;
+          border-color: rgba(37,99,235,0.12);
+        }
+
+        /* Dot grid */
+        .axr-grid {
+          position: absolute;
+          inset: 0;
+          background-image: radial-gradient(rgba(255,255,255,0.035) 1px, transparent 1px);
+          background-size: 28px 28px;
+          pointer-events: none;
+        }
+
+        /* Feature cards */
+        .axr-feat-card {
+          display: flex;
+          align-items: flex-start;
+          gap: 14px;
+          padding: 16px;
+          background: rgba(255,255,255,0.03);
+          border: 1px solid rgba(255,255,255,0.06);
+          border-radius: 14px;
+          transition: background 0.3s ease, border-color 0.3s ease;
+        }
+        .axr-feat-card:hover {
+          background: rgba(255,255,255,0.055);
+          border-color: rgba(255,255,255,0.1);
+        }
+        .axr-feat-icon {
+          width: 38px; height: 38px;
+          border-radius: 10px;
+          background: rgba(255,255,255,0.06);
+          display: flex; align-items: center; justify-content: center;
+          flex-shrink: 0;
+        }
+
+        /* Left panel stagger */
+        @keyframes axr-up {
+          from { opacity: 0; transform: translateY(22px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .axr-left-content > * { opacity: 0; }
+        .axr-left-content > *:nth-child(1) { animation: axr-up 0.75s cubic-bezier(0.2,0.8,0.2,1) 0.1s forwards; }
+        .axr-left-content > *:nth-child(2) { animation: axr-up 0.75s cubic-bezier(0.2,0.8,0.2,1) 0.22s forwards; }
+        .axr-left-content > *:nth-child(3) { animation: axr-up 0.75s cubic-bezier(0.2,0.8,0.2,1) 0.36s forwards; }
+        .axr-left-content > *:nth-child(4) { animation: axr-up 0.75s cubic-bezier(0.2,0.8,0.2,1) 0.48s forwards; }
+
+        /* Right panel reveal */
+        @keyframes axr-right-in {
+          from { opacity: 0; transform: translateX(20px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
+        .axr-right-reveal      { animation: axr-right-in 0.65s cubic-bezier(0.2,0.8,0.2,1) 0.25s both; }
+        .axr-right-reveal-slow { animation: axr-right-in 0.65s cubic-bezier(0.2,0.8,0.2,1) 0.4s both; }
+        .axr-right-reveal-btn  { animation: axr-right-in 0.65s cubic-bezier(0.2,0.8,0.2,1) 0.5s both; }
+
+        /* Form inputs */
+        .axr-input-wrap { position: relative; }
+        .axr-input-icon {
+          position: absolute;
+          left: 14px;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 18px; height: 18px;
+          color: #B0BEC7;
+          pointer-events: none;
+          transition: color 0.2s;
+        }
+        .axr-input-wrap:focus-within .axr-input-icon {
+          color: var(--axr-primary);
+        }
+
+        .axr-input {
+          width: 100%;
+          padding: 13px 16px 13px 44px;
+          background: #F7F9FF;
+          border: 1.5px solid #E4EAF2;
+          border-radius: 12px;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 15px;
+          font-weight: 400;
+          color: #0F172A;
+          outline: none;
+          transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        }
+        .axr-input::placeholder { color: #B8C4CE; }
+        .axr-input:hover { border-color: #C8D4E0; background: #F2F6FF; }
+        .axr-input:focus {
+          background: #FFFFFF;
+          border-color: var(--axr-primary);
+          box-shadow: 0 0 0 4px rgba(var(--axr-primary-rgb), 0.1);
+        }
+        .axr-input-err { border-color: #F43F5E !important; }
+        .axr-input-err:focus { box-shadow: 0 0 0 4px rgba(244,63,94,0.1) !important; }
+
+        .axr-input-pr { padding-right: 48px; }
+        .axr-eye-btn {
+          position: absolute;
+          right: 14px;
+          top: 50%;
+          transform: translateY(-50%);
+          color: #B0BEC7;
+          background: none;
+          border: none;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          transition: color 0.2s;
+        }
+        .axr-eye-btn:hover { color: #64748B; }
+
+        /* Submit button */
+        .axr-submit-btn {
+          width: 100%;
+          padding: 14px 28px;
+          background: var(--axr-primary);
+          color: #fff;
+          border: none;
+          border-radius: 12px;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 15px;
+          font-weight: 600;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+          box-shadow: 0 4px 20px rgba(var(--axr-primary-rgb), 0.35);
+        }
+        .axr-submit-btn:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 32px rgba(var(--axr-primary-rgb), 0.45);
+          filter: brightness(1.06);
+        }
+        .axr-submit-btn:active:not(:disabled) { transform: translateY(0); }
+        .axr-submit-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+        /* 2FA code input */
+        .axr-totp-input {
+          width: 100%;
+          background: #F7F9FF;
+          border: 2px solid #E4EAF2;
+          border-radius: 14px;
+          padding: 20px 16px;
+          text-align: center;
+          font-family: 'Bricolage Grotesque', sans-serif;
+          font-size: 32px;
+          font-weight: 700;
+          letter-spacing: 0.28em;
+          color: #0F172A;
+          outline: none;
+          transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .axr-totp-input::placeholder { color: #D1D8E0; letter-spacing: 0.2em; }
+        .axr-totp-input:focus {
+          border-color: var(--axr-primary);
+          box-shadow: 0 0 0 4px rgba(var(--axr-primary-rgb), 0.1);
+          background: #fff;
+        }
+
+        /* Alert banners */
+        .axr-alert {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 12px 16px;
+          border-radius: 10px;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 13.5px;
+          font-weight: 500;
+        }
+        .axr-alert-error { background: #FFF1F3; border: 1px solid #FEE0E5; color: #BE123C; }
+        .axr-alert-warn  { background: #FFFBEB; border: 1px solid #FDE68A; color: #92400E; }
+
+        /* Logo float */
         @keyframes axr-float {
           0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-10px); }
+          50%       { transform: translateY(-8px); }
         }
-        .axr-float { animation: axr-float 6s ease-in-out infinite; }
+        .axr-float { animation: axr-float 7s ease-in-out infinite; }
 
-        .axr-stagger > * { opacity: 0; }
-        .axr-stagger > *:nth-child(1) { animation: axr-reveal 0.8s 0.1s forwards; }
-        .axr-stagger > *:nth-child(2) { animation: axr-reveal 0.8s 0.2s forwards; }
-        .axr-stagger > *:nth-child(3) { animation: axr-reveal 0.8s 0.3s forwards; }
-        .axr-stagger > *:nth-child(4) { animation: axr-reveal 0.8s 0.4s forwards; }
-        .axr-stagger > *:nth-child(5) { animation: axr-reveal 0.8s 0.5s forwards; }
+        /* Mobile form panel background dots */
+        .axr-form-panel {
+          background: #ffffff;
+          position: relative;
+        }
+        .axr-form-panel::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background-image: radial-gradient(rgba(37,99,235,0.04) 1px, transparent 1px);
+          background-size: 24px 24px;
+          pointer-events: none;
+        }
+
+        /* Divider line on form panel top (desktop) */
+        .axr-accent-bar {
+          position: absolute;
+          top: 0; left: 0; right: 0;
+          height: 3px;
+          background: linear-gradient(90deg, var(--axr-primary), rgba(99,102,241,0.6));
+        }
       `}</style>
 
       {mfaSetupState && (
@@ -327,214 +500,314 @@ export default function LoginClient() {
         />
       )}
 
-      <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden axr-manrope">
-        {/* New Animated Background */}
-        <div className="axr-bg-mesh" />
-        <div className="absolute inset-0 opacity-20 pointer-events-none" 
-             style={{ backgroundImage: 'radial-gradient(#2563EB 0.5px, transparent 0.5px)', backgroundSize: '32px 32px' }} />
+      <div className="axr-dm min-h-screen flex flex-col lg:flex-row">
+        {/* ── Left: Dark Brand Panel ──────────────────────────────────── */}
+        <div className="axr-dark-panel hidden lg:flex lg:w-[54%] xl:w-[56%] flex-col justify-between p-14 xl:p-20">
+          {/* Background layers */}
+          <div className="axr-aurora axr-aurora-a" />
+          <div className="axr-aurora axr-aurora-b" />
+          <div className="axr-aurora axr-aurora-c" />
+          <div className="axr-ring axr-ring-lg" />
+          <div className="axr-ring axr-ring-md" />
+          <div className="axr-ring axr-ring-sm" />
+          <div className="axr-grid" />
 
-        <div className="relative z-10 w-full max-w-[1240px] grid lg:grid-cols-[1.1fr,0.9fr] gap-12 lg:gap-24 items-center">
-          
-          {/* Left Column: Branding & Features */}
-          <div className="axr-stagger flex flex-col gap-8 text-center lg:text-left">
-            <div className="flex items-center justify-center lg:justify-start gap-4">
+          {/* Content stacked with spacing */}
+          <div className="relative z-10 flex flex-col h-full axr-left-content">
+            {/* Logo */}
+            <div className="flex items-center gap-3 mb-auto">
               {loginConfig.logoUrl ? (
                 <img
-                  src={getPhotoUrl(loginConfig.logoUrl, new Date().getTime().toString(), 'logo') || ''}
+                  src={getPhotoUrl(loginConfig.logoUrl, new Date().getTime().toString(), "logo") || ""}
                   alt="Logo"
-                  className="h-12 w-auto object-contain axr-float"
-                  style={{ maxWidth: `${useThemeStore.getState().tenantTheme?.logoWidth || 180}px` }}
+                  className="h-10 w-auto object-contain axr-float"
+                  style={{ maxWidth: `${logoWidth}px` }}
                 />
               ) : (
-                <h1 className="axr-sora text-4xl sm:text-6xl font-black tracking-tight flex items-center gap-2">
-                  <span className="text-slate-900">Axon</span>
-                  <span className="text-[var(--color-primary)]">RH</span>
-                </h1>
+                <div className="flex items-center gap-1 axr-float">
+                  <span className="axr-bricolage text-white text-[28px] font-bold tracking-tight">Axon</span>
+                  <span className="axr-bricolage text-[28px] font-bold tracking-tight" style={{ color: "var(--axr-primary)" }}>RH</span>
+                </div>
               )}
             </div>
 
-            <h2 className="axr-sora text-3xl sm:text-5xl font-extrabold text-slate-900 leading-[1.1] tracking-tight">
-              A revolução inteligente do seu <span className="text-[var(--color-primary)]">Capital Humano.</span>
-            </h2>
-            
-            <p className="text-lg sm:text-xl text-slate-500 max-w-xl font-medium mx-auto lg:mx-0">
-              {loginConfig.welcomeMessage || "Toda a gestão de pessoas, estratégia de talentos e inteligência artificial em um único ecossistema premium."}
-            </p>
+            {/* Headline */}
+            <div className="flex-1 flex flex-col justify-center py-10">
+              <h2 className="axr-bricolage text-[2.4rem] xl:text-[2.75rem] font-bold text-white leading-[1.18] mb-5">
+                A revolução inteligente do seu{" "}
+                <span style={{ color: "var(--axr-primary)" }}>Capital Humano.</span>
+              </h2>
+              <p className="text-[#7A98BB] text-lg leading-relaxed max-w-lg font-normal">
+                {loginConfig.welcomeMessage ||
+                  "Toda a gestão de pessoas, estratégia de talentos e inteligência artificial em um único ecossistema premium."}
+              </p>
 
-            <div className="hidden sm:grid grid-cols-2 gap-4 mt-4">
-              {[
-                { icon: ShieldCheck, title: "LGPD Compliance", desc: "Sua segurança em nível bancário.", color: '#059669' },
-                { icon: Bot, title: "IA Generativa", desc: "Decisões baseadas em dados reais.", color: '#2563EB' },
-                { icon: Zap, title: "Processamento Realtime", desc: "Sincronização imediata de dados.", color: '#D97706' },
-                { icon: Layers, title: "Arquitetura Modular", desc: "Flexível à sua cultura interna.", color: '#7C3AED' },
-              ].map((item, idx) => (
-                <div key={idx} className="axr-lift axr-glass p-5 rounded-2xl text-left">
-                  <div className="flex items-center gap-4 mb-2">
-                    <div className="p-2.5 rounded-xl flex items-center justify-center" style={{ background: `${item.color}10`, color: item.color }}>
-                      <item.icon className="w-5 h-5" />
+              {/* Feature grid */}
+              <div className="grid grid-cols-2 gap-3 mt-10">
+                {features.map((item) => (
+                  <div className="axr-feat-card" key={item.title}>
+                    <div className="axr-feat-icon" style={{ color: item.color }}>
+                      <item.icon className="w-4.5 h-4.5" style={{ width: 18, height: 18 }} />
                     </div>
-                    <span className="axr-sora text-sm font-bold text-slate-900">{item.title}</span>
-                  </div>
-                  <p className="text-xs text-slate-500 font-medium leading-relaxed">{item.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Right Column: Login Card */}
-          <div className="w-full max-w-[460px] mx-auto lg:mx-0 axr-reveal" style={{ animationDelay: '0.4s' }}>
-            <div className="axr-glass rounded-[40px] p-8 sm:p-12 relative overflow-hidden">
-              {/* Card decorative elements */}
-              <div className="absolute -top-24 -right-24 w-48 h-48 bg-[var(--color-primary)]/10 rounded-full blur-3xl pointer-events-none" />
-              
-              <div className="relative z-10 mb-8">
-                {show2FA ? (
-                  <>
-                    <div className="w-14 h-14 rounded-2xl bg-[var(--color-primary)]/10 flex items-center justify-center mb-6 axr-float">
-                      <KeyRound className="w-7 h-7 text-[var(--color-primary)]" />
-                    </div>
-                    <h3 className="axr-sora text-2xl font-bold text-slate-900 mb-2">Segurança em 2 passos</h3>
-                    <p className="text-sm text-slate-500 font-medium leading-relaxed">
-                      Insira o código de 6 dígitos gerado pelo seu aplicativo autenticador.
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <h3 className="axr-sora text-2xl font-bold text-slate-900 mb-2">Seja bem-vindo</h3>
-                    <p className="text-sm text-slate-500 font-medium">Use suas credenciais corporativas.</p>
-                  </>
-                )}
-              </div>
-
-              {showExpiredMessage && (
-                <div className="flex items-center gap-3 p-4 mb-6 rounded-2xl bg-amber-50 border border-amber-100 text-amber-700 animate-pulse">
-                  <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                  <span className="text-xs font-bold uppercase tracking-wider">Sessão Expirada</span>
-                </div>
-              )}
-
-              {authError && (
-                <div className="flex items-center gap-3 p-4 mb-6 rounded-2xl bg-rose-50 border border-rose-100 text-rose-700">
-                  <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                  <span className="text-sm font-semibold">{authError}</span>
-                </div>
-              )}
-
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                {!show2FA && (
-                  <div className="axr-stagger">
-                    <div className="mb-5">
-                      <label htmlFor="email" className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">E-mail Corporativo</label>
-                      <div className="relative">
-                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
-                        <input
-                          {...register("email")}
-                          type="email"
-                          id="email"
-                          placeholder="nome@empresa.com"
-                          className={cn(inputBaseClasses, "pl-12", errors.email && "border-rose-400 focus:ring-rose-100")}
-                          disabled={isLoading}
-                        />
-                      </div>
-                      {errors.email && <span className="text-[10px] text-rose-500 font-bold mt-2 ml-1 block">{errors.email.message}</span>}
-                    </div>
-
-                    <div className="mb-2">
-                       <label htmlFor="password" className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Sua Senha</label>
-                      <div className="relative">
-                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
-                        <input
-                          {...register("password")}
-                          type={showPassword ? "text" : "password"}
-                          id="password"
-                          placeholder="********"
-                          className={cn(inputBaseClasses, "pl-12 pr-12", errors.password && "border-rose-400 focus:ring-rose-100")}
-                          disabled={isLoading}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-600 transition-colors"
-                        >
-                          {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                        </button>
-                      </div>
-                      {errors.password && <span className="text-[10px] text-rose-500 font-bold mt-2 ml-1 block">{errors.password.message}</span>}
-                    </div>
-
-                    <div className="flex justify-end">
-                      <a href="/forgot-password" className="text-xs font-bold text-[var(--color-primary)] hover:opacity-80 transition-opacity">
-                        Esqueceu sua senha?
-                      </a>
-                    </div>
-                  </div>
-                )}
-
-                {show2FA && (
-                  <div className="space-y-6 axr-reveal">
                     <div>
-                      <label htmlFor="totpCode" className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 text-center">Código de Verificação</label>
+                      <p className="axr-bricolage text-white text-[13.5px] font-semibold leading-snug">{item.title}</p>
+                      <p style={{ color: "#5A7898", fontSize: 12, marginTop: 3, fontWeight: 400 }}>{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <p className="axr-bricolage text-[11px] font-semibold tracking-[0.18em] uppercase" style={{ color: "#2A405A" }}>
+              AXONRH ECOSYSTEM © 2026
+            </p>
+          </div>
+        </div>
+
+        {/* ── Right: Form Panel ──────────────────────────────────────── */}
+        <div className="axr-form-panel flex-1 flex flex-col items-center justify-center px-8 py-14 sm:px-12">
+          <div className="axr-accent-bar" />
+
+          <div className="w-full max-w-[420px] relative z-10">
+            {/* Mobile logo */}
+            <div className="lg:hidden flex items-center justify-center gap-1 mb-10">
+              {loginConfig.logoUrl ? (
+                <img
+                  src={getPhotoUrl(loginConfig.logoUrl, new Date().getTime().toString(), "logo") || ""}
+                  alt="Logo"
+                  className="h-10 w-auto object-contain"
+                  style={{ maxWidth: `${logoWidth}px` }}
+                />
+              ) : (
+                <>
+                  <span className="axr-bricolage text-slate-900 text-2xl font-bold">Axon</span>
+                  <span className="axr-bricolage text-2xl font-bold" style={{ color: "var(--axr-primary)" }}>RH</span>
+                </>
+              )}
+            </div>
+
+            {/* Heading */}
+            <div className="mb-8 axr-right-reveal">
+              {show2FA ? (
+                <>
+                  <div
+                    className="w-12 h-12 rounded-2xl flex items-center justify-center mb-5"
+                    style={{ background: `rgba(var(--axr-primary-rgb), 0.1)`, color: "var(--axr-primary)" }}
+                  >
+                    <KeyRound className="w-6 h-6" />
+                  </div>
+                  <h1 className="axr-bricolage text-[1.75rem] font-bold text-slate-900 mb-1.5 leading-snug">
+                    Segurança em 2 passos
+                  </h1>
+                  <p className="text-slate-400 text-[14.5px] leading-relaxed">
+                    Insira o código de 6 dígitos do seu aplicativo autenticador.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h1 className="axr-bricolage text-[1.75rem] font-bold text-slate-900 mb-1.5 leading-snug">
+                    Seja bem-vindo
+                  </h1>
+                  <p className="text-slate-400 text-[14.5px]">Use suas credenciais corporativas.</p>
+                </>
+              )}
+            </div>
+
+            {/* Alerts */}
+            {showExpiredMessage && (
+              <div className="axr-alert axr-alert-warn mb-5">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <span className="text-xs font-bold uppercase tracking-wider">Sessão Expirada</span>
+              </div>
+            )}
+            {authError && (
+              <div className="axr-alert axr-alert-error mb-5">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <span>{authError}</span>
+              </div>
+            )}
+
+            {/* Form */}
+            <form onSubmit={handleSubmit(onSubmit)}>
+              {!show2FA && (
+                <div className="axr-right-reveal-slow">
+                  {/* Email */}
+                  <div className="mb-4">
+                    <label
+                      htmlFor="email"
+                      className="block mb-1.5 ml-0.5"
+                      style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#94A3B8" }}
+                    >
+                      E-mail Corporativo
+                    </label>
+                    <div className="axr-input-wrap">
+                      <Mail className="axr-input-icon" />
                       <input
-                        {...register("totpCode")}
-                        type="text"
-                        id="totpCode"
-                        placeholder="000 000"
-                        maxLength={6}
-                        autoComplete="one-time-code"
-                        className="w-full bg-slate-50/50 border-2 border-slate-200 rounded-2xl py-5 text-center text-3xl font-black tracking-[0.3em] axr-sora focus:border-[var(--color-primary)] focus:ring-4 focus:ring-[var(--color-primary)]/10 outline-none transition-all placeholder:text-slate-200"
+                        {...register("email")}
+                        type="email"
+                        id="email"
+                        placeholder="nome@empresa.com"
+                        className={cn("axr-input", errors.email && "axr-input-err")}
                         disabled={isLoading}
-                        autoFocus
+                        autoComplete="email"
                       />
                     </div>
-                    <div className="p-4 rounded-2xl bg-[var(--color-primary)]/5 border border-[var(--color-primary)]/10 flex gap-4">
-                      <ShieldCheck className="w-6 h-6 text-[var(--color-primary)] flex-shrink-0" />
-                      <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
-                        Abra seu app autenticador para obter o token dinâmico necessário para este acesso.
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                <div className="pt-2">
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="axr-btn-shine w-full py-4 rounded-2xl axr-sora text-sm font-bold text-white shadow-2xl shadow-[var(--color-primary)]/40 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none"
-                    style={{ background: 'var(--color-primary, #2563EB)' }}
-                  >
-                    {isLoading ? (
-                      <div className="flex items-center justify-center gap-3">
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        <span>Verificando...</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center gap-2">
-                        <span>{show2FA ? "Validar Acesso" : "Entrar no Ecossistema"}</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </div>
+                    {errors.email && (
+                      <span style={{ display: "block", marginTop: 6, marginLeft: 2, fontSize: 11.5, fontWeight: 600, color: "#F43F5E" }}>
+                        {errors.email.message}
+                      </span>
                     )}
-                  </button>
+                  </div>
 
-                  {show2FA && (
-                    <button
-                      type="button"
-                      onClick={handleCancelMfa}
-                      disabled={isLoading}
-                      className="w-full mt-4 py-3 text-xs font-bold text-slate-400 hover:text-slate-900 transition-colors flex items-center justify-center gap-2"
+                  {/* Password */}
+                  <div className="mb-2">
+                    <label
+                      htmlFor="password"
+                      className="block mb-1.5 ml-0.5"
+                      style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#94A3B8" }}
                     >
-                      <ArrowLeft className="w-4 h-4" />
-                      Alterar usuário ou senha
-                    </button>
-                  )}
-                </div>
-              </form>
-            </div>
+                      Senha
+                    </label>
+                    <div className="axr-input-wrap">
+                      <Lock className="axr-input-icon" />
+                      <input
+                        {...register("password")}
+                        type={showPassword ? "text" : "password"}
+                        id="password"
+                        placeholder="••••••••"
+                        className={cn("axr-input axr-input-pr", errors.password && "axr-input-err")}
+                        disabled={isLoading}
+                        autoComplete="current-password"
+                      />
+                      <button
+                        type="button"
+                        className="axr-eye-btn"
+                        onClick={() => setShowPassword(!showPassword)}
+                        tabIndex={-1}
+                      >
+                        {showPassword ? <EyeOff className="w-4.5 h-4.5" style={{ width: 17, height: 17 }} /> : <Eye className="w-4.5 h-4.5" style={{ width: 17, height: 17 }} />}
+                      </button>
+                    </div>
+                    {errors.password && (
+                      <span style={{ display: "block", marginTop: 6, marginLeft: 2, fontSize: 11.5, fontWeight: 600, color: "#F43F5E" }}>
+                        {errors.password.message}
+                      </span>
+                    )}
+                  </div>
 
-            <div className="mt-8 text-center">
-              <p className="text-xs font-bold text-slate-400 tracking-wider">
-                {loginConfig.footerText || (loginConfig.showPoweredBy !== false && "AXONRH ECOSYSTEM © 2026")}
-              </p>
-            </div>
+                  {/* Forgot password */}
+                  <div className="flex justify-end mb-6 mt-2.5">
+                    <a
+                      href="/forgot-password"
+                      style={{ fontSize: 13, fontWeight: 600, color: "var(--axr-primary)", textDecoration: "none", opacity: 0.9, transition: "opacity 0.15s" }}
+                      onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
+                      onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.9")}
+                    >
+                      Esqueceu sua senha?
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              {/* 2FA code */}
+              {show2FA && (
+                <div className="space-y-4 mb-6 axr-right-reveal-slow">
+                  <div>
+                    <label
+                      htmlFor="totpCode"
+                      className="block mb-2 text-center"
+                      style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#94A3B8" }}
+                    >
+                      Código de Verificação
+                    </label>
+                    <input
+                      {...register("totpCode")}
+                      type="text"
+                      id="totpCode"
+                      placeholder="000 000"
+                      maxLength={6}
+                      autoComplete="one-time-code"
+                      className="axr-totp-input"
+                      disabled={isLoading}
+                      autoFocus
+                    />
+                  </div>
+                  <div
+                    style={{
+                      padding: "12px 14px",
+                      borderRadius: 10,
+                      background: "rgba(var(--axr-primary-rgb), 0.05)",
+                      border: "1px solid rgba(var(--axr-primary-rgb), 0.1)",
+                      display: "flex",
+                      gap: 12,
+                      alignItems: "flex-start",
+                    }}
+                  >
+                    <ShieldCheck style={{ width: 17, height: 17, color: "var(--axr-primary)", flexShrink: 0, marginTop: 1 }} />
+                    <p style={{ fontSize: 12.5, color: "#64748B", lineHeight: 1.5, fontWeight: 400 }}>
+                      Abra seu app autenticador para obter o token dinâmico necessário para este acesso.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Submit */}
+              <div className="axr-right-reveal-btn">
+                <button type="submit" disabled={isLoading} className="axr-submit-btn">
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Verificando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>{show2FA ? "Validar Acesso" : "Entrar no Ecossistema"}</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+
+                {show2FA && (
+                  <button
+                    type="button"
+                    onClick={handleCancelMfa}
+                    disabled={isLoading}
+                    style={{
+                      width: "100%",
+                      marginTop: 14,
+                      padding: "10px",
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 7,
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: "#94A3B8",
+                      transition: "color 0.2s",
+                      fontFamily: "DM Sans, sans-serif",
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = "#334155")}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = "#94A3B8")}
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" style={{ width: 14, height: 14 }} />
+                    Alterar usuário ou senha
+                  </button>
+                )}
+              </div>
+            </form>
+
+            {/* Footer (mobile/solo) */}
+            <p
+              className="text-center mt-10 tracking-widest uppercase lg:hidden"
+              style={{ fontSize: 10.5, fontWeight: 700, color: "#CBD5E1" }}
+            >
+              {loginConfig.footerText ||
+                (loginConfig.showPoweredBy !== false && "AXONRH ECOSYSTEM © 2026")}
+            </p>
           </div>
         </div>
       </div>
