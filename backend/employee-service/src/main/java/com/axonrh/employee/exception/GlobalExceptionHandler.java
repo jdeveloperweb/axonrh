@@ -104,22 +104,29 @@ public class GlobalExceptionHandler {
         error.put("error", "Bad Request");
 
         Throwable cause = ex.getCause();
-        if (cause instanceof InvalidFormatException) {
-            InvalidFormatException ife = (InvalidFormatException) cause;
+        if (cause instanceof JsonMappingException) {
+            JsonMappingException jme = (JsonMappingException) cause;
             String fieldName = "";
-            if (!ife.getPath().isEmpty()) {
-                JsonMappingException.Reference lastRef = ife.getPath().get(ife.getPath().size() - 1);
+            if (!jme.getPath().isEmpty()) {
+                JsonMappingException.Reference lastRef = jme.getPath().get(jme.getPath().size() - 1);
                 fieldName = lastRef.getFieldName();
             }
 
-            if (ife.getTargetType() != null && ife.getTargetType().isEnum()) {
-                String allowedValues = java.util.Arrays.toString(ife.getTargetType().getEnumConstants());
-                String message = String.format("O valor '%s' não é válido para o campo '%s'. Valores aceitos: %s",
-                        ife.getValue(), fieldName, allowedValues);
-                error.put("message", message);
-                error.put("field", fieldName);
+            if (cause instanceof InvalidFormatException) {
+                InvalidFormatException ife = (InvalidFormatException) cause;
+                
+                if (ife.getTargetType() != null && ife.getTargetType().isEnum()) {
+                    String allowedValues = java.util.Arrays.toString(ife.getTargetType().getEnumConstants());
+                    String message = String.format("O valor '%s' não é válido para o campo '%s'. Valores aceitos: %s",
+                            ife.getValue(), fieldName, allowedValues);
+                    error.put("message", message);
+                    error.put("field", fieldName);
+                } else {
+                    error.put("message", "Formato inválido para o campo '" + fieldName + "'. Verifique os dados enviados.");
+                    error.put("field", fieldName);
+                }
             } else {
-                error.put("message", "Formato inválido para o campo '" + fieldName + "'. Verifique os dados enviados.");
+                error.put("message", "Valor inválido ou incompatível para o campo '" + fieldName + "'. Verifique o formulário.");
                 error.put("field", fieldName);
             }
         } else {

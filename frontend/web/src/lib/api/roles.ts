@@ -33,30 +33,30 @@ export interface RoleRequest {
 
 export const rolesApi = {
     list: async () => {
-        return api.get<Role[]>("/roles");
+        return api.get<Role[], Role[]>("/roles");
     },
 
     get: async (id: string) => {
-        return api.get<Role>(`/roles/${id}`);
+        return api.get<Role, Role>(`/roles/${id}`);
     },
 
     create: async (data: RoleRequest) => {
-        return api.post<Role>("/roles", data);
+        return api.post<Role, Role>("/roles", data);
     },
 
     update: async (id: string, data: RoleRequest) => {
-        return api.put<Role>(`/roles/${id}`, data);
+        return api.put<Role, Role>(`/roles/${id}`, data);
     },
 
     delete: async (id: string) => {
-        return api.delete<void>(`/roles/${id}`);
+        return api.delete<void, void>(`/roles/${id}`);
     },
 
     listPermissions: async () => {
-        return api.get<Permission[]>("/permissions");
+        return api.get<Permission[], Permission[]>("/permissions");
     },
 
     listPermissionsGrouped: async () => {
-        return api.get<Record<string, Permission[]>>("/permissions/grouped");
+        return api.get<Record<string, Permission[]>, Record<string, Permission[]>>("/permissions/grouped");
     },
 };

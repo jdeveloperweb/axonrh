@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { userApi, UserDTO } from '@/lib/api/users';
 import { useToast } from '@/hooks/use-toast';
 import { UserDialog } from '@/components/users/user-dialog';
@@ -211,13 +212,10 @@ export default function UsersPage() {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${user.status === 'ACTIVE'
-                                                    ? 'bg-emerald-100 text-emerald-700'
-                                                    : 'bg-red-100 text-red-700'
-                                                    }`}>
+                                                <Badge variant={user.status === 'ACTIVE' ? 'success-soft' : 'destructive-soft'} className="gap-1.5">
                                                     {user.status === 'ACTIVE' ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
                                                     {user.status === 'ACTIVE' ? 'Ativo' : 'Inativo'}
-                                                </span>
+                                                </Badge>
                                                 {user.twoFactorEnabled && (
                                                     <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 text-[10px] font-bold">
                                                         <Lock className="w-2.5 h-2.5" />

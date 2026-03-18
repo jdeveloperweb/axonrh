@@ -185,7 +185,7 @@ export default function RolesPage() {
                                                 )}
                                             </td>
                                             <td className="px-6 py-4">
-                                                <Badge variant={role.active ? "default" : "destructive"}>
+                                                <Badge variant={role.active ? "success-soft" : "destructive-soft"}>
                                                     {role.active ? "Ativo" : "Inativo"}
                                                 </Badge>
                                             </td>

@@ -134,7 +134,7 @@ export function Sidebar() {
                 className="relative flex items-center justify-start overflow-hidden"
                 style={{
                   width: isSidebarCollapsed ? '32px' : 'auto',
-                  height: '48px',
+                  height: '56px',
                   transition: 'all 0.3s ease'
                 }}
               >

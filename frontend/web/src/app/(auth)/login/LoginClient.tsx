@@ -692,7 +692,7 @@ export default function LoginClient() {
                 <img
                   src={getPhotoUrl(loginConfig.logoUrl, new Date().getTime().toString(), "logo") || ""}
                   alt="Logo"
-                  className="h-12 w-auto object-contain lp-float"
+                  className="h-16 w-auto object-contain lp-float"
                   style={{ maxWidth: `${logoWidth}px` }}
                 />
               ) : (

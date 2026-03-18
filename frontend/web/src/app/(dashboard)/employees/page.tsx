@@ -57,18 +57,27 @@ import { formatDate, formatCpf, getPhotoUrl, formatCurrency } from '@/lib/utils'
 import { TerminationModal } from '@/components/employees/TerminationModal';
 import { ExtractDataModal } from '@/components/employees/ExtractDataModal';
 import { PermissionGate } from '@/components/auth/permission-gate';
+import { Badge } from '@/components/ui/badge';
 
 // ... imports
 
 
 
 
-const statusColors: Record<EmployeeStatus, { bg: string; text: string; label: string }> = {
-  ACTIVE: { bg: 'bg-green-100', text: 'text-green-800', label: 'Ativo' },
-  INACTIVE: { bg: 'bg-gray-100', text: 'text-gray-800', label: 'Inativo' },
-  ON_LEAVE: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Afastado' },
-  TERMINATED: { bg: 'bg-red-100', text: 'text-red-800', label: 'Desligado' },
-  PENDING: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Pendente' },
+const statusVariants: Record<EmployeeStatus, "success-soft" | "destructive-soft" | "warning-soft" | "info-soft" | "outline"> = {
+  ACTIVE: 'success-soft',
+  INACTIVE: 'destructive-soft',
+  ON_LEAVE: 'warning-soft',
+  TERMINATED: 'outline',
+  PENDING: 'info-soft',
+};
+
+const statusLabels: Record<EmployeeStatus, string> = {
+  ACTIVE: 'Ativo',
+  INACTIVE: 'Inativo',
+  ON_LEAVE: 'Afastado',
+  TERMINATED: 'Desligado',
+  PENDING: 'Pendente',
 };
 
 const workRegimeLabels: Record<WorkRegime, string> = {
@@ -732,9 +741,9 @@ export default function EmployeesPage() {
                           {deptEmployees.length} {deptEmployees.length === 1 ? 'colaborador' : 'colaboradores'}
                         </span>
                         {!isCollapsed && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-green-50 text-green-700 border border-green-100">
+                          <Badge variant="success-soft" className="px-2 py-0.5 lowercase font-medium">
                             {deptEmployees.filter(e => e.status === 'ACTIVE').length} ativos
-                          </span>
+                          </Badge>
                         )}
                       </div>
                     </div>
@@ -829,7 +838,8 @@ export default function EmployeesPage() {
                                   <ExpandablePhoto
                                     src={getPhotoUrl(employee.photoUrl, employee.updatedAt)}
                                     alt={employee.fullName}
-                                    containerClassName={`w-16 h-16 rounded-2xl shadow-sm overflow-hidden border-2 ${statusColors[employee.status]?.bg.replace('bg-', 'border-') || 'border-gray-100'
+                                    containerClassName={`w-16 h-16 rounded-2xl shadow-sm overflow-hidden border-2 transition-colors ${employee.status === 'ACTIVE' ? 'border-emerald-500/20' :
+                                      employee.status === 'ON_LEAVE' ? 'border-orange-500/20' : 'border-gray-100'
                                       }`}
                                     fallback={
                                       <div className={`w-full h-full bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center text-xl font-bold text-gray-400`}>
@@ -990,9 +1000,9 @@ export default function EmployeesPage() {
                           {employee.position?.title || '-'}
                         </td>
                         <td className="px-6 py-4">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusColors[employee.status]?.bg || 'bg-gray-100'} ${statusColors[employee.status]?.text || 'text-gray-800'}`}>
-                            {statusColors[employee.status]?.label || employee.status}
-                          </span>
+                          <Badge variant={statusVariants[employee.status] || 'outline'}>
+                            {statusLabels[employee.status] || employee.status}
+                          </Badge>
                         </td>
                         <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                           <DropdownMenu>
@@ -1098,9 +1108,9 @@ export default function EmployeesPage() {
                           </p>
                         </div>
                       </div>
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${statusColors[employee.status]?.bg || 'bg-gray-100'} ${statusColors[employee.status]?.text || 'text-gray-800'}`}>
-                        {statusColors[employee.status]?.label || employee.status}
-                      </span>
+                      <Badge variant={statusVariants[employee.status] || 'outline'}>
+                        {statusLabels[employee.status] || employee.status}
+                      </Badge>
                     </div>
                     <div className="grid grid-cols-2 gap-y-2 text-xs">
                       <div>

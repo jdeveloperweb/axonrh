@@ -493,13 +493,13 @@ export default function ApresentacaoPage() {
           {/* Logo */}
           <div style={{ display:'flex', alignItems:'center', gap:8 }}>
             <div style={{
-              width:32, height:32, borderRadius:9, flexShrink:0,
+              width:40, height:40, borderRadius:11, flexShrink:0,
               background:'linear-gradient(135deg,#2563EB,#4F46E5)',
               display:'flex', alignItems:'center', justifyContent:'center',
-              fontWeight:900, fontSize:15, color:'white', fontFamily:'Sora,sans-serif',
+              fontWeight:900, fontSize:19, color:'white', fontFamily:'Sora,sans-serif',
               boxShadow:'0 4px 14px rgba(37,99,235,.35)',
             }}>A</div>
-            <span className="axr-sora" style={{ fontWeight:800, fontSize:16, color: isDark?'white':'#0F172A', letterSpacing:'-0.02em' }}>AxonRH</span>
+            <span className="axr-sora" style={{ fontWeight:800, fontSize:20, color: isDark?'white':'#0F172A', letterSpacing:'-0.02em' }}>AxonRH</span>
           </div>
 
           {/* Slide title — hidden on mobile via CSS */}
