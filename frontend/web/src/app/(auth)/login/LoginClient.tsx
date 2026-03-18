@@ -340,25 +340,23 @@ export default function LoginClient() {
           to   { opacity: 1; transform: translateY(0);    filter: blur(0); }
         }
 
-        /* Smoky card entrance — saturate+blur para efeito névoa sem conflito com backdrop-filter */
-        @keyframes lp-smoke-in {
-          0%   {
+        /* Card rise — sem filter para não conflitar com backdrop-filter dos filhos */
+        @keyframes lp-card-rise {
+          from {
             opacity: 0;
-            transform: translateY(32px) scale(0.95);
-            filter: blur(14px) saturate(0) brightness(1.3);
+            transform: translateY(22px) scale(0.97);
           }
-          35%  {
-            opacity: 0.65;
-            filter: blur(5px) saturate(0.3) brightness(1.1);
-          }
-          65%  {
-            filter: blur(1px) saturate(0.8) brightness(1.02);
-          }
-          100% {
+          to {
             opacity: 1;
             transform: translateY(0) scale(1);
-            filter: blur(0px) saturate(1) brightness(1);
           }
+        }
+
+        /* Pseudo-elemento névoa que dissolve sobre o card */
+        @keyframes lp-mist-out {
+          0%   { opacity: 1;   transform: scale(1.25) translateY(-6px); }
+          60%  { opacity: 0.3; transform: scale(1.08) translateY(-2px); }
+          100% { opacity: 0;   transform: scale(1) translateY(0); }
         }
 
         .lp-stagger > * { opacity: 0; }
@@ -368,7 +366,25 @@ export default function LoginClient() {
         .lp-stagger > *:nth-child(4) { animation: lp-slide-up 0.9s cubic-bezier(0.22,1,0.36,1) 0.46s forwards; }
 
         .lp-card-in {
-          animation: lp-smoke-in 1.3s cubic-bezier(0.22,1,0.36,1) 0.2s both;
+          position: relative;
+          animation: lp-card-rise 0.65s cubic-bezier(0.22,1,0.36,1) 0s both;
+        }
+
+        /* Névoa: overlay radial que some sobre o card enquanto ele sobe */
+        .lp-card-in::before {
+          content: '';
+          position: absolute;
+          inset: -40px;
+          border-radius: 52px;
+          background: radial-gradient(
+            ellipse 75% 65% at 50% 55%,
+            rgba(225, 234, 255, 0.95) 0%,
+            rgba(235, 241, 255, 0.6) 38%,
+            transparent 68%
+          );
+          pointer-events: none;
+          z-index: 20;
+          animation: lp-mist-out 1.0s ease-out 0s both;
         }
 
         /* ── Float ───────────────────────────────────────── */
