@@ -384,12 +384,15 @@ export const timesheetApi = {
     startDate: string,
     endDate: string,
     format: 'pdf' | 'excel',
-    managerId?: string
+    managerId?: string,
+    employeeIds?: string[]
   ): Promise<Blob> => {
-    // Se tiver managerId, use o endpoint para subordinados (se existir) ou apenas passe o filtro
-    // O backend deve suportar filtro por managerId no endpoint de massa
+    const params: any = { startDate, endDate, format, managerId };
+    if (employeeIds && employeeIds.length > 0) {
+      params.employeeIds = employeeIds.join(',');
+    }
     return api.get('/timesheet/timesheet/export/mass', {
-      params: { startDate, endDate, format, managerId },
+      params,
       responseType: 'blob',
       headers: {
         Accept: format === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'

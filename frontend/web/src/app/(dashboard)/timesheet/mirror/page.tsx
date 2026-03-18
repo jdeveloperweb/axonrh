@@ -54,6 +54,7 @@ import { timesheetApi, DailySummary, PeriodTotals } from '@/lib/api/timesheet';
 import { employeesApi, Employee } from '@/lib/api/employees';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { MassExportModal } from '@/components/timesheet/MassExportModal';
 
 // ... imports
 import { useAuthStore } from '@/stores/auth-store';
@@ -87,6 +88,7 @@ export default function TimesheetMirrorPage() {
   const [employeeSearch, setEmployeeSearch] = useState('');
   const [timesheet, setTimesheet] = useState<DailySummary[]>([]);
   const [totals, setTotals] = useState<PeriodTotals | null>(null);
+  const [isMassExportModalOpen, setIsMassExportModalOpen] = useState(false);
 
   const filteredEmployees = employees.filter(emp =>
     emp.fullName.toLowerCase().includes(employeeSearch.toLowerCase()) ||
@@ -265,9 +267,9 @@ export default function TimesheetMirrorPage() {
             Solicitar Ajuste
           </Button>
           {canViewOthers && (
-            <Button variant="outline" size="sm" onClick={() => handleExport('pdf', true)} disabled={exporting} className="flex-1 md:flex-none">
+            <Button variant="outline" size="sm" onClick={() => setIsMassExportModalOpen(true)} className="flex-1 md:flex-none">
               <Download className="mr-2 h-4 w-4" />
-              Exportação em Massa (PDF)
+              Exportação em Massa
             </Button>
           )}
           <Button variant="outline" size="sm" onClick={() => handleExport('excel')} disabled={exporting} className="flex-1 md:flex-none">
@@ -614,6 +616,17 @@ export default function TimesheetMirrorPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Mass Export Modal */}
+      <MassExportModal
+        isOpen={isMassExportModalOpen}
+        onClose={() => setIsMassExportModalOpen(false)}
+        employees={employees}
+        startDate={getDateRange().startDate}
+        endDate={getDateRange().endDate}
+        selectedYear={selectedYear}
+        selectedMonth={selectedMonth}
+      />
     </div>
   );
 }
