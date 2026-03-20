@@ -19,7 +19,8 @@ import {
     Sparkles,
     BookMarked,
     TrendingUp,
-    Zap
+    Zap,
+    Lock
 } from 'lucide-react';
 import Image from "next/image";
 import Link from 'next/link';
@@ -32,6 +33,7 @@ const MOCK_COURSES: Course[] = [
         id: '11111111-1111-1111-1111-111111111111',
         title: 'Liderança Alpha: Gestão de Times Remotos',
         description: 'Desenvolva as soft skills necessárias para liderar times de alto impacto no modelo remoto.',
+        prerequisites: 'Cultura Axon',
         courseType: 'ONLINE' as CourseType,
         difficultyLevel: 'AVANCADO' as DifficultyLevel,
         status: 'PUBLISHED' as CourseStatus,
@@ -387,6 +389,15 @@ function CourseCard({ course, viewMode }: { course: Course, viewMode: 'grid' | '
                                     {diffLabel(course.difficultyLevel)}
                                 </div>
                             </div>
+                            {(course.prerequisites || course.prerequisiteCourseId) && (
+                                <div>
+                                    <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-1.5">Requisito</p>
+                                    <div className="flex items-center gap-2 text-amber-500 font-black text-[10px] uppercase tracking-widest">
+                                        <Lock className="h-4 w-4" />
+                                        SIM
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <div className="flex items-center gap-3 bg-blue-600 text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all shadow-lg shadow-blue-500/20">
@@ -444,6 +455,15 @@ function CourseCard({ course, viewMode }: { course: Course, viewMode: 'grid' | '
                             <span className="text-slate-400">
                                 {course.categoryName || 'GERAL'}
                             </span>
+                            {(course.prerequisites || course.prerequisiteCourseId) && (
+                                <>
+                                    <span className="text-slate-300">•</span>
+                                    <span className="text-amber-500 flex items-center gap-1">
+                                        <Lock className="h-3 w-3" />
+                                        PRÉ-REQUISITO
+                                    </span>
+                                </>
+                            )}
                         </div>
 
                         {/* Title */}

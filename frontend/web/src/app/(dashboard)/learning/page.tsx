@@ -16,6 +16,7 @@ import {
   ChevronRight,
   Award,
   BarChart3,
+  Lock,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -473,6 +474,15 @@ function CourseCard({ course, isEnrolled }: { course: any, isEnrolled?: boolean 
                 <BarChart3 className="h-3.5 w-3.5" />
                 <span className="text-[10px] font-black uppercase tracking-widest">Iniciante</span>
               </div>
+              {(course.prerequisites || course.prerequisiteCourseId) && (
+                <>
+                  <div className="h-1 w-1 rounded-full bg-slate-200" />
+                  <div className="flex items-center gap-2 text-amber-500">
+                    <Lock className="h-3.5 w-3.5" />
+                    <span className="text-[10px] font-black uppercase tracking-widest">Pré-requisito</span>
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="h-9 w-9 rounded-xl bg-slate-50 text-slate-300 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
