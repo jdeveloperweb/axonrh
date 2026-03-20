@@ -22,6 +22,7 @@ import {
     Zap,
     Lock
 } from 'lucide-react';
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import Image from "next/image";
 import Link from 'next/link';
 import { coursesApi, categoriesApi, Course, TrainingCategory, CourseType, DifficultyLevel, CourseStatus } from '@/lib/api/learning';
@@ -390,13 +391,22 @@ function CourseCard({ course, viewMode }: { course: Course, viewMode: 'grid' | '
                                 </div>
                             </div>
                             {(course.prerequisites || course.prerequisiteCourseId) && (
-                                <div>
-                                    <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-1.5">Requisito</p>
-                                    <div className="flex items-center gap-2 text-amber-500 font-black text-[10px] uppercase tracking-widest">
-                                        <Lock className="h-4 w-4" />
-                                        SIM
-                                    </div>
-                                </div>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <div className="flex flex-col cursor-help">
+                                                <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-1.5 text-center">Requisito</p>
+                                                <div className="flex items-center gap-1.5 text-amber-500 font-black text-[10px] uppercase tracking-widest leading-none">
+                                                    <Lock className="h-3 w-3" />
+                                                    PRE-REQ
+                                                </div>
+                                            </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent className="bg-slate-900 text-white border-slate-700">
+                                            <p className="max-w-xs">{course.prerequisites || "Este curso possui pré-requisitos específicos."}</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
                             )}
                         </div>
 
@@ -456,13 +466,22 @@ function CourseCard({ course, viewMode }: { course: Course, viewMode: 'grid' | '
                                 {course.categoryName || 'GERAL'}
                             </span>
                             {(course.prerequisites || course.prerequisiteCourseId) && (
-                                <>
-                                    <span className="text-slate-300">•</span>
-                                    <span className="text-amber-500 flex items-center gap-1">
-                                        <Lock className="h-3 w-3" />
-                                        PRÉ-REQUISITO
-                                    </span>
-                                </>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <div className="flex items-center gap-1.5 cursor-help">
+                                                <span className="text-slate-300">•</span>
+                                                <span className="text-amber-500 flex items-center gap-1 text-[9px] font-black uppercase tracking-widest">
+                                                    <Lock className="h-2.5 w-2.5" />
+                                                    PRE-REQ
+                                                </span>
+                                            </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent className="bg-slate-900 text-white border-slate-700">
+                                            <p className="max-w-xs">{course.prerequisites || "Este curso possui pré-requisitos específicos."}</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
                             )}
                         </div>
 

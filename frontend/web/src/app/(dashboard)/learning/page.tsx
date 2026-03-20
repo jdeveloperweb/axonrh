@@ -38,6 +38,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 
 export default function LearningDashboard() {
   const { user } = useAuthStore();
@@ -475,13 +476,20 @@ function CourseCard({ course, isEnrolled }: { course: any, isEnrolled?: boolean 
                 <span className="text-[10px] font-black uppercase tracking-widest">Iniciante</span>
               </div>
               {(course.prerequisites || course.prerequisiteCourseId) && (
-                <>
-                  <div className="h-1 w-1 rounded-full bg-slate-200" />
-                  <div className="flex items-center gap-2 text-amber-500">
-                    <Lock className="h-3.5 w-3.5" />
-                    <span className="text-[10px] font-black uppercase tracking-widest">Pré-requisito</span>
-                  </div>
-                </>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center gap-2 text-amber-500 cursor-help">
+                        <div className="h-1 w-1 rounded-full bg-slate-200 mr-2" />
+                        <Lock className="h-3 w-3" />
+                        <span className="text-[10px] font-black uppercase tracking-widest">PRE-REQ</span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-slate-900 text-white border-slate-700">
+                      <p className="max-w-xs">{course.prerequisites || "Este curso possui pré-requisitos específicos."}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               )}
             </div>
 
