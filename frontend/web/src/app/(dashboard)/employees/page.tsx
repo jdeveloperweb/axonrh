@@ -957,21 +957,37 @@ export default function EmployeesPage() {
                                       <TooltipTrigger asChild>
                                         <button
                                           onClick={(e) => handleSmartFill(employee, e)}
-                                          className="inline-flex ml-2 cursor-pointer hover:bg-orange-50 p-1 rounded-full transition-colors group"
+                                          className="inline-flex ml-2 cursor-pointer p-1.5 rounded-xl transition-all duration-300 ai-glass animate-ai-pulse group"
                                         >
-                                          <AlertCircle className="w-4 h-4 text-orange-500 group-hover:text-orange-600" />
+                                          <Sparkles className="w-3.5 h-3.5 text-purple-600 group-hover:text-pink-500 fill-purple-600/20" />
                                         </button>
                                       </TooltipTrigger>
-                                      <TooltipContent>
-                                        <div className="text-xs">
-                                          <p className="font-bold mb-1">Dados pendentes:</p>
-                                          <ul className="list-disc pl-4 mb-2">
-                                            {employee.missingFields.map((field) => (
-                                              <li key={field}>{field}</li>
-                                            ))}
-                                          </ul>
-                                          <p className="text-[10px] text-purple-600 font-bold border-t border-gray-100 pt-1 mt-1 flex items-center gap-1">
-                                            <TrendingUp className="w-3 h-3" /> Clique para completar com IA
+                                      <TooltipContent className="p-0 border-none shadow-2xl rounded-2xl overflow-hidden">
+                                        <div className="bg-gradient-to-br from-purple-600 to-pink-600 p-4 text-white w-64">
+                                          <div className="flex items-center gap-2 mb-3">
+                                            <div className="p-1.5 bg-white/20 rounded-lg backdrop-blur-md">
+                                              <Sparkles className="w-4 h-4 text-white" />
+                                            </div>
+                                            <p className="font-bold text-sm tracking-tight">Axon AI - Completar Dados</p>
+                                          </div>
+                                          <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/10">
+                                            <p className="text-[11px] opacity-90 mb-2 leading-relaxed">
+                                              Identificamos <span className="font-bold">{employee.missingFields.length} campos</span> pendentes que nossa IA pode extrair do currículo automaticamente:
+                                            </p>
+                                            <ul className="space-y-1">
+                                              {employee.missingFields.slice(0, 3).map((field) => (
+                                                <li key={field} className="text-[10px] flex items-center gap-2">
+                                                  <div className="w-1 h-1 bg-pink-300 rounded-full" />
+                                                  {field}
+                                                </li>
+                                              ))}
+                                              {employee.missingFields.length > 3 && (
+                                                <li className="text-[9px] opacity-70 ml-3">...e mais {employee.missingFields.length - 3} itens</li>
+                                              )}
+                                            </ul>
+                                          </div>
+                                          <p className="text-[10px] mt-3 font-medium flex items-center justify-center gap-2 bg-white/20 py-2 rounded-lg hover:bg-white/30 transition-colors cursor-pointer">
+                                            Clique para Iniciar Mágica <TrendingUp className="w-3 h-3" />
                                           </p>
                                         </div>
                                       </TooltipContent>
@@ -1024,10 +1040,10 @@ export default function EmployeesPage() {
                                     e.stopPropagation();
                                     handleSmartFill(employee, e as any);
                                   }}
-                                  className="text-purple-600 font-medium"
+                                  className="text-purple-600 font-bold bg-purple-50/50"
                                 >
                                   <Sparkles className="w-4 h-4 mr-2" />
-                                  Completar com IA
+                                  Mágica de IA
                                 </DropdownMenuItem>
                               )}
                               <DropdownMenuSeparator />
@@ -1092,9 +1108,9 @@ export default function EmployeesPage() {
                             {employee.missingFields && employee.missingFields.length > 0 && (
                               <button
                                 onClick={(e) => handleSmartFill(employee, e)}
-                                className="inline-flex ml-2 cursor-pointer p-1 rounded-full active:bg-orange-100"
+                                className="inline-flex ml-2 cursor-pointer p-1 rounded-lg ai-glass animate-ai-pulse"
                               >
-                                <AlertCircle className="w-3 h-3 text-orange-500" />
+                                <Sparkles className="w-3 h-3 text-purple-600" />
                               </button>
                             )}
                           </p>
@@ -1165,8 +1181,8 @@ export default function EmployeesPage() {
                 ))
               )}
             </div>
-          </CardContent >
-        </Card >
+          </CardContent>
+        </Card>
       )}
 
 
